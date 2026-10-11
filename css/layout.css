@@ -1,0 +1,46 @@
+@charset "utf-8";
+/* El Banquillo · layout.css — menú lateral, barra móvil, simulación y vista 2D */
+/* v6: app shell with sidebar + mobile bottom bar */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--line);padding:18px 12px 28px;display:flex;flex-direction:column;gap:16px}
+.brand{font-family:var(--f-display);font-weight:900;font-size:25px;text-transform:uppercase;letter-spacing:.02em;line-height:1;padding:0 8px}
+.brand small{display:block;font-family:var(--f-num);font-weight:600;font-size:11.5px;letter-spacing:.08em;color:var(--muted);margin-top:5px}
+.sclub{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface2)}
+.sclub .n{font-weight:700;font-size:14px;line-height:1.2}
+.ngroup{display:flex;flex-direction:column;gap:2px}
+.ngroup .gt{font-family:var(--f-num);font-weight:600;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 10px 4px}
+.nitem{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px 10px;border-radius:6px;font-weight:600;font-size:14.5px;color:var(--ink);text-align:left}
+.nitem svg{width:19px;height:19px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+.nitem:hover{background:var(--surface2)}
+.nitem[aria-current="true"]{background:var(--ink);color:var(--surface)}
+.nitem[aria-current="true"] svg{opacity:1}
+.nitem .badge{margin-left:auto;background:var(--accent);color:var(--accent-ink);font-family:var(--f-num);font-size:11px;font-weight:700;border-radius:9px;padding:0 6px;min-width:18px;text-align:center}
+.mainc{min-width:0;padding-inline:22px;padding-block:16px 60px}
+.top2{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;justify-content:space-between;padding-bottom:16px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.top2 .club{align-items:flex-start}
+.top2 h1{font-size:clamp(24px,3.4vw,38px)}
+.top2 .kpi b{font-size:19px}
+.cta{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 8px 8px 12px;box-shadow:var(--shadow);max-width:100%}
+.cta .l{display:flex;flex-direction:column;min-width:0}
+.cta .l b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.bnav{display:none}
+@media (max-width:980px){
+ .app{grid-template-columns:minmax(0,1fr)}
+ .side{display:none}
+ .mainc{padding-inline:16px;padding-block:12px calc(86px + env(safe-area-inset-bottom,0px))}
+ .bnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+ .bnav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--f-num);font-weight:600;font-size:12px;color:var(--muted);padding:4px 0}
+ .bnav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+ .bnav button[aria-current="true"]{color:var(--ink)}
+ .bnav button[aria-current="true"] svg{stroke-width:2.3}
+ .cta{width:100%}
+ .cta .l{flex:1}
+}
+.sheet{position:fixed;inset:0;z-index:45;background:rgba(8,14,10,.5);display:flex;align-items:flex-end}
+.sheet .in{background:var(--surface);width:100%;border-radius:14px 14px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sheet .nitem{flex-direction:column;gap:6px;text-align:center;border:1px solid var(--line);padding:12px 6px;font-size:13px;justify-content:center}
+.simov{position:fixed;inset:0;z-index:55;background:rgba(8,14,10,.6);display:grid;place-items:center;padding:16px}
+.simov .box{background:var(--surface);border-radius:10px;padding:22px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.p2d{border-radius:8px;overflow:hidden;background:#2f7d46;margin:14px auto 0;max-width:780px;box-shadow:var(--shadow)}
+.p2d canvas{display:block;width:100%;height:auto;aspect-ratio:100/62}
+textarea:focus-visible{outline:2px solid var(--focus)}
