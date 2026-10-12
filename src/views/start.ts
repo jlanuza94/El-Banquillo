@@ -51,14 +51,6 @@ ${step==='c'?pickC:step==='d'?pickD:chosen+`
 }
 export function jobsView(){
  const J=S.jobless;
- const step=RT.startStep||'c',nT=c=>c.lv*20;
- const pickC=`<div class="eyebrow" style="margin-bottom:8px">1 · Elige país</div>
- <div class="cgrid">${COUNTRIES.map((c,i)=>`<button class="ccard" data-a="start-c" data-v="${i}">${flag(c.code)}<span class="cn">${esc(c.n)}</span><span class="small muted">${c.lv} divisiones · ${nT(c)} clubes</span></button>`).join('')}</div>`;
- const pickD=`<div class="row" style="margin-bottom:10px"><button class="btn sm" data-a="start-step" data-v="c">← Países</button><span class="cpick">${flag(C.code,'sm')}<b>${esc(C.n)}</b></span></div>
- <div class="eyebrow" style="margin-bottom:8px">2 · Elige división</div>
- <div class="dlist">${Array.from({length:C.lv},(_,i)=>{const Li=findLg(RT.startC,i),ts=lgTeams(Li.id).map(t=>strength(t.id)/10),lo=Math.min(...ts),hi=Math.max(...ts);
-  return `<button class="dcard" data-a="start-lv" data-v="${i}"><span class="dn">${LV_SH[i]}</span><span class="dt"><b>${esc((S.lgNames||{})[Li.id]||LV_NAMES[i])}</b><span class="small muted">${i===0?'La élite: pelea por el título. Bajan los tres últimos.':i===C.lv-1?'Última categoría: sin descenso, suben los tres primeros.':'Suben los tres primeros y bajan los tres últimos.'}</span></span><span class="dl"><span class="eyebrow">Nivel</span><b>${lo.toFixed(1)}–${hi.toFixed(1)}</b></span>${i===C.lv-1?'<span class="dtag">Para empezar desde abajo</span>':i===0?'<span class="dtag top">Máximo reto</span>':''}</button>`;}).join('')}</div>`;
- const chosen=`<div class="row cchosen" style="margin-bottom:14px">${flag(C.code)}<div style="min-width:0;flex:1"><b>${esc(C.n)}</b><div class="small muted">${esc((S.lgNames||{})[L.id]||LV_NAMES[L.lv])}</div></div><button class="btn sm" data-a="start-step" data-v="d">Cambiar división</button><button class="btn sm" data-a="start-step" data-v="c">Cambiar país</button></div>`;
  return `<div class="wrap"><section class="hero"><div class="eyebrow">${J.reason==='despido'?'Te han despedido':J.reason==='dimisión'?'Has dimitido':'Se acabó tu contrato'} · Reputación ${Math.round(S.mgr.rep)}/100 · Ahorros ${money(S.mgr.savings)}</div><h1>Sin club</h1>
  <p>Estos clubes quieren contratarte. Elige tu próximo reto.</p></section>
  <div class="teams">${J.offers.map((o,i)=>{const t=T(o.team);return `<button class="tcard" data-a="jobless-take" data-i="${i}">${crest(t,'lg')}<div><div class="tn">${esc(t.name)}</div><div class="muted small">${esc(lgName(t.lg))}</div></div>

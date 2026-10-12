@@ -5,7 +5,7 @@
 //   node dist-test/test.cjs 3        tres temporadas (después de npm test)
 import './dom-stub';
 // @ts-nocheck
-import { S, setS, dirty } from '../src/state';
+import { S, setS, dirty, RT } from '../src/state';
 import { money } from '../src/core';
 import { pickTeam } from '../src/world';
 import { table } from '../src/tactics';
@@ -53,6 +53,9 @@ const app = document.getElementById('app')!;
   setS(null); dirty(); render();
   ok(S.teams.length === 860, 'se crean 860 clubes');
   ok(app.textContent!.includes('Empieza tu carrera'), 'pantalla de inicio');
+  ok(app.querySelectorAll('.ccard svg.flag').length === 10, 'países con bandera');
+  for (const st of ['d', 'club', 'c']) { RT.startStep = st; render(); }
+  ok(app.querySelector('.ccard'), 'pasos de inicio: país, división y club');
   const team = S.teams.filter(t => S.leagues[t.lg].c === 0 && S.leagues[t.lg].lv === 4).sort((a, b) => b.rep - a.rep)[0].id;
   pickTeam(team);
   ok(S.user === team && S.slot === 1, 'se elige club (partida 1)');
@@ -67,6 +70,8 @@ const app = document.getElementById('app')!;
     S.view = v; shell(); render();
   }
   ok(true, 'todas las pantallas se pintan sin errores');
+  { const keep = S.jobless; S.jobless = { reason: 'despido', offers: [{ team: S.teams[5].id, sal: .01, yrs: 2 }] }; render(); ok(app.textContent.includes('Sin club'), 'pantalla sin club'); S.jobless = keep; render(); }
+  S.view = 'plantilla'; render(); ok(app.querySelector('.nflag svg.flag'), 'banderas de nacionalidad');
   // Un clic real recorre events.ts y morphdom
   S.view = 'inicio'; S.modal = null; render();
   const btn = app.querySelector('[data-a="view"][data-v="plantilla"]') as HTMLElement | null;

@@ -15,3 +15,5 @@ const F:Record<string,string>={
 };
 /** Bandera del país por su código (ESP, ING…). */
 export const flag=(code:string,cls='')=>`<svg class="flag ${cls}" viewBox="0 0 30 20" aria-hidden="true">${F[code]||H('#999')}</svg>`;
+/** Bandera pequeña de la nacionalidad (índice de país), con el nombre al pasar el dedo o el ratón. */
+export const natFlag=(nat:number,names:{n:string,code:string}[])=>{const c=names[nat];return c?`<span class="nflag" title="${c.n}">${flag(c.code,'xs')}</span>`:'';};

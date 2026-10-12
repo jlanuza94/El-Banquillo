@@ -1,5 +1,6 @@
 /* El Banquillo · views/competitions.js — Ligas, copas y competiciones continentales. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {flag} from '../flags';
 import {clamp,esc,money,pick,r2} from '../core';
 import {COUNTRIES,LV_NAMES,W,posChip} from '../data';
 import {LG,S,T,crest,lgTeams,seasonLabel,squad,uLg,unit} from '../state';
@@ -43,7 +44,7 @@ export function ligaView(){
  const ld=S.ldTab||'g',pl=squadsInLeague(lg);
  const scorers=ld==='g'?pl.filter(p=>p.goals>0).sort((a,b)=>b.goals-a.goals||a.apps-b.apps).slice(0,10):ld==='a'?pl.filter(p=>p.st&&p.st.a>0).sort((a,b)=>b.st.a-a.st.a).slice(0,10):pl.filter(p=>p.st&&p.st.pj>=5).sort((a,b)=>b.st.rs/b.st.pj-a.st.rs/a.st.pj).slice(0,10);
  const ldVal=p=>ld==='g'?p.goals:ld==='a'?p.st.a:(p.st.rs/p.st.pj).toFixed(2);
- return `<div class="row" style="margin-bottom:14px;align-items:flex-end"><label class="f"><span class="eyebrow">País</span><select id="lgC">${COUNTRIES.map((c,i)=>`<option value="${i}" ${i===L.c?'selected':''}>${c.n}</option>`).join('')}</select></label>
+ return `<div class="row" style="margin-bottom:14px;align-items:flex-end"><label class="f"><span class="eyebrow">País</span><select id="lgC">${COUNTRIES.map((c,i)=>`<option value="${i}" ${i===L.c?'selected':''}>${c.n}</option>`).join('')}</select></label>${flag(C.code)}
  <div class="seg" style="max-width:100%;overflow-x:auto">${Array.from({length:C.lv},(_,i)=>`<button data-a="liga-lv" data-v="${i}" aria-pressed="${L.lv===i}">${LV_NAMES[i]}</button>`).join('')}</div>
  ${lg!==uLg()?`<button class="btn sm" data-a="liga-mine">Ir a mi liga</button>`:''}</div>
  <div class="grid"><section class="panel"><div class="panel-h"><h2>${esc(C.n)} · ${LV_NAMES[L.lv]}</h2><span class="eyebrow">Tras ${S.week} jornada${S.week===1?'':'s'}</span></div>${tableHTML(tb,lg,false)}</section>

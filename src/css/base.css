@@ -270,3 +270,5 @@ tr.dim td{opacity:.55}
 .startscr .ccard,.startscr .dcard,.startscr .tcard,.startscr .panel,.startscr .cchosen,.startscr .btn:not(.primary):not(.dark){color:var(--ink)}
 .startscr .tcard dt,.startscr .panel .small.muted{color:var(--muted)}
 body:has(.startscr){background:#0b3024}
+.nflag{display:inline-flex;vertical-align:-1px;margin-right:5px}
+.flag.xs{width:16px;height:11px;border-radius:2px;display:inline-block}

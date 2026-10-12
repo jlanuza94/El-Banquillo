@@ -1,5 +1,6 @@
 /* El Banquillo · views/staff.ts — Pantalla del cuerpo técnico. */
 // @ts-nocheck — usa el estado heredado S.
+import {nf} from './common';
 import {esc,money} from '../core';
 import {COUNTRIES} from '../data';
 import {S,atCell,qc} from '../state';
@@ -10,7 +11,7 @@ const pct=x=>`${x>=1?'+':''}${Math.round((x-1)*100)}%`;
 
 function memberRow(m){
  const R=ST_ROLES[m.role];
- return `<div class="offer"><span class="t"><b>${esc(m.name)}</b>${m.ex?' <span class="tag">Ex jugador</span>':''} <span class="small muted">· ${m.age} años · ${esc(COUNTRIES[m.nat].code)} · ${money(m.wage)}/sem · contrato ${m.yrs<=1?'<b style="color:var(--loss)">acaba en junio</b>':m.yrs+' temporadas'}</span>
+ return `<div class="offer"><span class="t"><b>${esc(m.name)}</b>${m.ex?' <span class="tag">Ex jugador</span>':''} <span class="small muted">· ${m.age} años · ${nf(m.nat)} ${esc(COUNTRIES[m.nat].code)} · ${money(m.wage)}/sem · contrato ${m.yrs<=1?'<b style="color:var(--loss)">acaba en junio</b>':m.yrs+' temporadas'}</span>
  <span class="row" style="gap:10px;margin-top:4px">${atRow(m,R.at)}</span>${m.role==='dd'?`<br><span class="small muted">Contactos en: <b>${esc(contactNames(m))}</b> (mejores precios y más información de esos países)</span>`:''}</span>
  ${m.yrs<=1?`<button class="btn sm" data-a="st-renew" data-id="${m.id}">Renovar</button>`:''}<button class="btn sm danger" data-a="st-fire" data-id="${m.id}">Despedir</button></div>`;
 }

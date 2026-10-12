@@ -1,5 +1,7 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {natFlag,flag} from '../flags';
+export const nf=nat=>natFlag(nat,COUNTRIES);
 import {themeBtn} from '../theme';
 import {DEEP_ONLY,quick} from '../quick';
 import {importData} from '../mods';
@@ -10,7 +12,7 @@ import {EXACT,knowledge,seen} from '../scouting';
 import {staffView} from './staff';
 import morphdom from 'morphdom';
 import {$app,esc,money,r2} from '../core';
-import {AT_COLS,AT_NAME,AT_SH,ATTRS,FORMS,GRP,SPN} from '../data';
+import {COUNTRIES,AT_COLS,AT_NAME,AT_SH,ATTRS,FORMS,GRP,SPN} from '../data';
 /** Cabecera de las columnas de atributos de las tablas. */
 export const attrHead=()=>AT_COLS.map(k=>`<th class="r" title="${AT_NAME[k]}">${AT_SH[k]}</th>`).join('');
 import {RT,LG,PL,S,T,atCell,available,crest,crestStyle,lgName,lowest,pBadge,qc,rt,seasonLabel} from '../state';
@@ -35,7 +37,7 @@ export function formDots(arr){return `<span class="formdots">${arr.slice(-5).map
 export function energyBar(e){return `<span class="bar" title="Energía ${Math.round(e)}%"><i class="${e>=75?'':e>=55?'mid':'low'}" style="width:${Math.round(e)}%"></i></span>`;}
 export function formCell(f){return f>0?`<span class="fm up">▲${f}</span>`:f<0?`<span class="fm dn">▼${-f}</span>`:`<span class="fm eq">–</span>`;}
 export function status(p,xi){if(p.inj)return `<span class="tag bad" title="${esc(p.injT||'Lesión')}">${esc(String(p.injT||'Lesión').split(' ')[0])} ${p.inj}p</span>`;if(p.susp)return `<span class="tag bad">Sanción ${p.susp}</span>`;if(p.recov>0)return `<span class="tag" title="Recién recuperado: más riesgo de recaída">Recién recuperado</span>`;return xi?`<span class="tag xi">Titular</span>`:`<span class="tag">Suplente</span>`;}
-export const nameBtn=p=>`<button class="linkname" data-a="ficha" data-id="${p.id}">${esc(p.name)}</button>`;
+export const nameBtn=p=>`${nf(p.nat)}<button class="linkname" data-a="ficha" data-id="${p.id}">${esc(p.name)}</button>`;
 export const keyAttrs=p=>({POR:['por','col','dec','pas'],DEF:['def','col','cab','vel','fis'],MED:['pas','vis','dec','res','reg'],DEL:['tir','col','vel','reg','cab']})[GRP[p.sp]||p.pos];
 /** Celda de atributo tal como la conoces: exacta o como rango «6-8». */
 export function atCellS(p,k,sn){sn=sn||seen(p);if(sn.exact)return atCell(p.at[k]);const [a,b]=sn.at[k];return `<span class="at rng ${qc((a+b)/2)}" title="Aún no lo conoces bien">${a}-${b}</span>`;}
