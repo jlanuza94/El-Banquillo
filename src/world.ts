@@ -1,5 +1,6 @@
 /* El Banquillo · world.js — Creación del mundo, objetivos, calendario de liga y elección de club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {tutStart} from './tutorial';
 import {setWageCap} from './clubplus';
 import {applyStyle,initCoaches,setExpectations} from './living';
 import {diff} from './difficulty';
@@ -65,7 +66,7 @@ export function pickTeam(ti){
  S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,grace:diff().grace,clubs:[{season:seasonLabel(),club:t.name}]};
  initClub(t);defaultCrew();genScoutPool();academyIntake(3);setupYouth();setWageCap();assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));
  news(`Bienvenido a ${t.name}, de ${lgName(t.lg)}. Firmas hasta junio de ${2025+S.seasonN+S.mgr.yrs} por ${money(S.mgr.sal)} a la semana. La directiva te pide: ${S.obj.txt.toLowerCase()}.`,'good');
- cwcWelcome();ctWelcome();advance();
+ cwcWelcome();ctWelcome();advance();tutStart();
  saveNow();render();window.scrollTo(0,0);
 }
 /** Noticia en el inicio y mensaje en la bandeja de entrada. o: opciones de mail() (categoría, asunto, botones…). */

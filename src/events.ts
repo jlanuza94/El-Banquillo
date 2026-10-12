@@ -1,5 +1,7 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {saveName} from './saveio';
+import {tutEnd,tutGo,tutStart} from './tutorial';
 import {matchFx,soundOn,startReplay,stopReplay,toggleSound} from './replay';
 import {dropReto,startReto} from './retos';
 import {applyNT,autoCall,leaveNT,takeNT,toggleCall} from './nations';
@@ -26,7 +28,7 @@ import {answerPress,boardAsk,spDesc,startBuild} from './club';
 import {chatOpt} from './squad';
 import {clubReq,jobCandidates,loseJob,makeJobOffer,takeJob} from './career';
 import {promoteYouth,regionOf,signProspect} from './academy';
-import {deleteSlot,exportCode,importCode,loadSlot,save,saveNow} from './persist';
+import {deleteSlot,exportCode,freeSlot,importCode,loadSlot,save,saveNow} from './persist';
 import {render,toast} from './views/common';
 import {markAll,markRead} from './inbox';
 import {mkList} from './views/market';
@@ -148,6 +150,8 @@ document.addEventListener('click',e=>{
   case'replay':if(m&&!m.done&&!m.paused){m.paused=true;clearInterval(RT.timer);RT.timer=null;}S.v2d=true;startReplay(+d.i);render();window.document.getElementById('pitch2d')?.scrollIntoView({block:'center'});return;
   case'replay-stop':stopReplay();break;
   case'sound':{const v=toggleSound();toast(v?'Sonido y vibración activados':'Sonido y vibración desactivados');break;}
+  case'save-file':{const n=saveName();download(n,exportCode(),'text/plain');break;}
+  case'save-share':{const n=saveName(),code=exportCode();try{const f=new File([code],n,{type:'text/plain'});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Partida de El Banquillo'}).catch(()=>{});}else{download(n,code,'text/plain');}}catch(err){download(n,code,'text/plain');}break;}
   case'backup':{const code=exportCode();S.modal={type:'backup',code};try{navigator.clipboard.writeText(code).then(()=>toast('Copia de seguridad copiada al portapapeles.'),()=>{});}catch(err){}break;}
   case'bk-select':{const ta=document.getElementById('bkTxt');if(ta){ta.focus();ta.select();}return;}
   case'restore':S.modal={type:'restore'};break;
@@ -195,6 +199,10 @@ document.addEventListener('click',e=>{
   case'nt-auto':if(S.nt)S.nt.call=autoCall(S.nt.c);break;
   case'reto-start':{const e=startReto(d.v);if(e)toast(e);break;}
   case'reto-drop':dropReto(d.v);break;
+  case'tut-next':tutGo(1);window.scrollTo(0,0);break;
+  case'tut-prev':tutGo(-1);window.scrollTo(0,0);break;
+  case'tut-skip':tutEnd();break;
+  case'tut-again':tutStart(true);window.scrollTo(0,0);break;
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
@@ -223,6 +231,7 @@ document.addEventListener('keydown',e=>{
  if((e.key==='Enter'||e.key===' ')&&e.target.matches('tr[data-a]')){e.preventDefault();e.target.click();}
 });
 document.addEventListener('change',e=>{
+ if(e.target.id==='saveFile'){const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{if(freeSlot()==null){toast('Ya tienes 5 partidas guardadas: borra una en «Mis partidas» para abrir otra.');return;}if(S&&S.user!=null)saveNow();if(importCode(String(rd.result),true))toast(`Partida «${f.name}» abierta.`);else toast('Ese archivo no es una partida válida de El Banquillo.');};rd.readAsText(f);return;}
  if(e.target.id==='ioFile'||e.target.id==='modFile'){const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{
    if(e.target.id==='modFile'){RT.mod=String(rd.result);try{const o=JSON.parse(RT.mod);if(o&&o.seed!=null)RT.seed=o.seed;}catch(err){}setS(null);render();toast(`Mod «${f.name}» cargado: se aplicará al mundo nuevo.`);return;}
    S.ioMsg=importData(String(rd.result));save();render();};rd.readAsText(f);return;}

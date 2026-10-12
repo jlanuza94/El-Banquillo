@@ -25,7 +25,7 @@ import { lgName, squad, T } from '../src/state';
 import { editClub, editNames, editPlayer, exportClubsCSV, exportMod, importData } from '../src/mods';
 import { quickWeekly, search, suggestions } from '../src/quick';
 import { ylTable } from '../src/youth';
-import { agentFee, askPrice, makeBid, makeTerms, refuses, sell } from '../src/market';
+import { agentFee, askPrice, inWindow, makeBid, makeTerms, refuses, sell } from '../src/market';
 import { r3 } from '../src/core';
 import { deadlineDeals, rumoursWeekly, sellOnIn } from '../src/market2';
 import { agentOf, contacts, trackLoans, vestMult } from '../src/connected';
@@ -44,6 +44,8 @@ import { sellAbonos, shopWeekly, sociosFor, aboBase } from '../src/club';
 import { initIntl, playTournament, tournamentsIn, fifaWeek, takeNT, toggleCall, callOf, ranking, summerYear } from '../src/nations';
 import { startReto, retosMatch, retosWeekly, medals } from '../src/retos';
 import { goalPlay, playAt, matchFx } from '../src/replay';
+import { tutStart, tutGo, TUT } from '../src/tutorial';
+import { saveName } from '../src/saveio';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -141,8 +143,8 @@ const app = document.getElementById('app')!;
     ok(target.team === S.user && swapP.team === from && S.debts.length === 1 && S.debts[0].left === 2, 'fichaje completado: plazos pendientes y el otro jugador se va');
     ok(Math.abs(b0 - S.budget - (r3(amt / 3) + agentFee(target, amt))) < .01, 'solo se paga el primer plazo (y la comisión del agente)');
     S.offers[target.id] = { team: from, amount: 2, incoming: true }; S.view = 'inicio';
-    S.week = 3; sell(target.id, true);
-    ok(target.team === from && target.son && target.son.team === S.user, 'venta con % de futura venta');
+    S.week = 3; const why = `plantilla ${squad(S.user).length}, ${target.pos}, porteros ${squad(S.user).filter(x => x.pos === 'POR').length}, cedido ${!!target.loan}, mercado ${inWindow()}`; sell(target.id, true);
+    ok(target.team === from && target.son && target.son.team === S.user, 'venta con % de futura venta (' + why + ')');
     const bb = S.budget; sellOnIn(target, 10); ok(Math.abs(S.budget - bb - 1.5) < .01 && !target.son, 'cobras el % cuando lo vuelven a vender');
     S.week = 4; deadlineDeals(); const dk = Object.keys(S.deals || {});
     ok(dk.every(id => askPrice(PL(id)) === S.deals[id]), `gangas del día de cierre (${dk.length})`); S.week = 3; S.deals = {};
@@ -235,6 +237,11 @@ const app = document.getElementById('app')!;
     const m = { ref: { k: 'lg' }, h: 1, a: 2, us: 'h', lu: { h: squad(S.user).slice(0, 11).map(p => p.id), a: [] }, ev: [{ t: 'goal', s: 'h', pid: squad(S.user)[9].id, min: 30, tx: '¡Gol de córner!' }], min: 30, score: { h: 1, a: 0 }, done: false, paused: false };
     const P = goalPlay(m, 0); ok(P && P.K.length >= 3 && playAt(P, 0).who && playAt(P, P.end).goal, 'repetición de un gol: jugada y balón dentro');
     matchFx(m); m.ev.push({ t: 'goal', s: 'h', pid: m.lu.h[9], min: 31, tx: '' }); matchFx(m); ok(true, 'efectos de sonido sin errores'); }
+  { // Tutorial y pasar la partida
+    tutStart(true); render(); ok(app.querySelector('.tutcard') && S.view === TUT[0].v, 'el tutorial aparece');
+    for (let i = 0; i < TUT.length; i++) tutGo(1); render(); ok(S.tut == null && !app.querySelector('.tutcard'), 'el tutorial se completa');
+    ok(/^El-Banquillo-.+\.ebsave$/.test(saveName()), 'nombre del archivo de partida: ' + saveName());
+    S.view = 'club'; render(); ok(app.querySelector('[data-a=save-file]') && app.querySelector('#saveFile'), 'botones para pasar la partida'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

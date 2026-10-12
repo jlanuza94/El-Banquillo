@@ -141,3 +141,11 @@ aside.side .nitem[aria-current="true"] .badge{background:var(--menu);color:var(-
 .hero{position:relative}
 .thbtn.onhero{right:0;top:18px;background:var(--menu2);border-color:var(--menu-line);color:var(--menu-ink)}
 aside.side .nitem[style*="--loss"]{color:#ff8a7a!important}
+/* Tutorial */
+.tutcard{position:fixed;right:16px;bottom:16px;z-index:44;width:min(380px,calc(100vw - 32px));background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.3)}
+.tutcard h3{margin:4px 0 6px;font-family:var(--f-display);text-transform:uppercase;font-size:20px}
+.tutcard p{margin:0 0 10px;font-size:14px}
+.tutdots{display:flex;gap:5px;margin-bottom:10px}.tutdots i{width:8px;height:8px;border-radius:50%;background:var(--line)}.tutdots i.on{background:var(--accent)}
+.tuthl{box-shadow:inset 0 0 0 2px var(--accent);animation:tutp 1.4s ease-in-out infinite}
+@keyframes tutp{50%{box-shadow:inset 0 0 0 2px transparent}}
+@media (max-width:980px){.tutcard{bottom:calc(76px + env(safe-area-inset-bottom,0px))}}

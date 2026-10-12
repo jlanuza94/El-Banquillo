@@ -24,11 +24,11 @@ export function unpack(str){
 }
 export let saveWarned=false;
 export function exportCode(){return 'EB1:'+LZString.compressToBase64(pack());}
-export function importCode(txt){
+export function importCode(txt,newSlot){
  txt=String(txt||'').trim();let str=null;
  try{if(txt.startsWith('EB1:'))str=LZString.decompressFromBase64(txt.slice(4));else if(txt.startsWith('EB0:'))str=txt.slice(4);else if(txt.startsWith('{'))str=txt;}catch(e){str=null;}
  if(!str)return false;let o=null;try{o=unpack(str);}catch(e){o=null;}if(!o||o.user==null)return false;
- o.slot=S&&S.slot||freeSlot()||1;
+ o.slot=newSlot?freeSlot()||(S&&S.slot)||1:S&&S.slot||freeSlot()||1;
  clearInterval(RT.timer);RT.timer=null;boot(o);saveNow();return true;
 }
 

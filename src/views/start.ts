@@ -21,6 +21,7 @@ export function startView(){
  const saved=slots.length?`<section class="panel" style="margin-bottom:22px"><div class="panel-h"><h2>Tus partidas</h2><span class="eyebrow">${slots.length} de ${MAX_SLOTS}</span></div>
  ${slots.slice().sort((a,b)=>b.updated-a.updated).map(x=>`<div class="offer">${crest({c1:x.c1,c2:x.c2,short:x.short},'')}<span class="t"><b>${esc(x.club)}</b><br><span class="small muted">${esc(x.lg)} · ${esc(x.season)} · jornada ${x.week+1} · ${new Date(x.updated).toLocaleDateString('es')}</span></span>${RT.delConfirm===x.id?`<button class="btn sm danger" data-a="slot-del-ok" data-id="${x.id}">Sí, borrar</button><button class="btn sm" data-a="slot-del-no">No</button>`:`<button class="btn sm" data-a="slot-del" data-id="${x.id}">Borrar</button><button class="btn sm primary" data-a="slot-load" data-id="${x.id}">Continuar</button>`}</div>`).join('')}
  ${slots.length>=MAX_SLOTS?'<p class="small muted" style="margin:8px 0 0">Tienes el máximo de partidas. Borra una para empezar otra.</p>':''}</section>`:'';
+ const openF=`<div class="row" style="margin:0 0 18px"><label class="btn" style="cursor:pointer">Abrir partida desde archivo<input type="file" id="saveFile" accept=".ebsave,.txt,text/plain" hidden></label><span class="small muted">¿Vienes de otro móvil u ordenador? Abre aquí el archivo de tu partida.</span></div>`;
  const step=RT.startStep||'c',nT=c=>c.lv*20;
  const pickC=`<div class="eyebrow" style="margin-bottom:8px">1 · Elige país</div>
  <div class="cgrid">${COUNTRIES.map((c,i)=>`<button class="ccard" data-a="start-c" data-v="${i}">${flag(c.code)}<span class="cn">${esc(c.n)}</span><span class="small muted">${c.lv} divisiones · ${nT(c)} clubes</span></button>`).join('')}</div>`;
@@ -31,7 +32,7 @@ export function startView(){
  const chosen=`<div class="row cchosen" style="margin-bottom:14px">${flag(C.code)}<div style="min-width:0;flex:1"><b>${esc(C.n)}</b><div class="small muted">${esc((S.lgNames||{})[L.id]||LV_NAMES[L.lv])}</div></div><button class="btn sm" data-a="start-step" data-v="d">Cambiar división</button><button class="btn sm" data-a="start-step" data-v="c">Cambiar país</button></div>`;
  return `<div class="wrap"><section class="hero">${themeBtn('onhero')}<div class="eyebrow">10 países · 43 ligas de 20 equipos · 860 clubes · 3 ascensos y 3 descensos</div><h1>El Banquillo</h1>
  <p>Elige país y división. Coge un club modesto de la última categoría y súbelo hasta Primera, o ve directo a pelear el título. Monta tu formación, rebusca gangas en el mercado de todo el mundo y negocia cada fichaje.</p></section>
- ${saved}<h2 id="nuevo" style="margin:0 0 12px;scroll-margin-top:12px">${slots.length?'Nueva partida':'Empieza tu carrera'}</h2>
+ ${saved}${openF}<h2 id="nuevo" style="margin:0 0 12px;scroll-margin-top:12px">${slots.length?'Nueva partida':'Empieza tu carrera'}</h2>
 ${step==='c'?pickC:step==='d'?pickD:chosen+`
  <div class="eyebrow" style="margin-bottom:8px">3 · Dificultad</div>
  <div class="seg" style="margin-bottom:6px">${Object.entries(DIFF).map(([k,v])=>`<button data-a="start-diff" data-v="${k}" aria-pressed="${(RT.diff||'normal')===k}">${v.n}</button>`).join('')}</div>

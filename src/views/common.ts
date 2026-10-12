@@ -1,5 +1,6 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {tutCard,tutView} from '../tutorial';
 import {seleccionesView} from './nations';
 import {natFlag,flag} from '../flags';
 export const nf=nat=>natFlag(nat,COUNTRIES);
@@ -63,7 +64,7 @@ export function header(){
 }
 export function nav(){
  const cur=S.view==='partido'?'':S.view,badge={inicio:Object.values(S.offers).filter(o=>o.incoming).length+(S.jobOffers||[]).length,buzon:unread(),mercado:inWindow()?'●':''};
- const it=([v,l,i])=>`<button class="nitem" data-a="view" data-v="${v}" aria-current="${cur===v}">${icon(i)}<span>${l}</span>${badge[v]?`<span class="badge">${badge[v]}</span>`:''}</button>`;
+ const tv=tutView(),it=([v,l,i])=>`<button class="nitem${tv===v&&cur!==v?' tuthl':''}" data-a="view" data-v="${v}" aria-current="${cur===v}">${icon(i)}<span>${l}</span>${badge[v]?`<span class="badge">${badge[v]}</span>`:''}</button>`;
  const t=T(S.user);
  const side=`<aside class="side"><div class="brand">El Banquillo<small>${esc(S.mgr?'Reputación '+Math.round(S.mgr.rep)+'/100':'')}</small></div>
  <div class="sclub">${crest(t)}<div style="min-width:0"><div class="n">${esc(t.name)}</div><div class="small muted">${esc(lgName(t.lg,true))} · ${money(S.budget)}</div></div></div>
@@ -79,7 +80,7 @@ export function shell(){
  switch(S.view){case'partido':body=matchView();break;case'buzon':body=buzonView();break;case'staff':body=staffView();break;case'premios':body=premiosView();break;case'selecciones':body=seleccionesView();break;case'analisis':body=analisisView();break;case'editor':body=editorView();break;case'plantilla':body=plantillaView();break;case'tacticas':body=tacticasView();break;case'calendario':body=calendarioView();break;case'historia':body=historiaView();break;case'copas':body=copasView();break;case'entreno':body=entrenoView();break;case'cantera':body=canteraView();break;case'liga':body=ligaView();break;case'mercado':body=mercadoView();break;case'club':body=clubView();break;default:body=ended?seasonEndView():inicioView();}
  const more=S.moreOpen?`<div class="sheet" data-a="more-close"><div class="in">${NAVG.flatMap(g=>g.it).map(([v,l,i])=>`<button class="nitem" data-a="view" data-v="${v}" aria-current="${S.view===v}">${icon(i)}<span>${l}</span></button>`).join('')}</div></div>`:'';
  const sim=simState?`<div class="simov"><div class="box"><div class="eyebrow">Simulando</div><h2 style="margin:6px 0">${simState.n} partido${simState.n===1?'':'s'}</h2><p class="small muted">${esc(simState.txt)}</p><button class="btn" data-a="sim-stop">Detener</button></div></div>`:'';
- return `<div class="app">${nav()}<div class="mainc">${S.view==='partido'?'':header()}<main>${body}</main></div></div>${more}${sim}`;
+ return `<div class="app">${nav()}<div class="mainc">${S.view==='partido'?'':header()}<main>${body}</main></div></div>${more}${sim}${tutCard()}`;
 }
 export function cmpRow(lbl,a,b){const mx=Math.max(a,b,1);return `<div class="cmp"><span class="a">${(a/10).toFixed(1)}</span><span class="l"><i style="width:${a/mx*100}%"></i></span><span class="lbl">${lbl}</span><span class="r2"><i style="width:${b/mx*100}%"></i></span><span class="b">${(b/10).toFixed(1)}</span></div>`;}
 export function resRow(f,r,tags){
