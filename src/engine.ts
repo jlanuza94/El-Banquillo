@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {coachResult} from './living';
 import {enforceLoanMinutes,trackLoans,vestMult} from './connected';
 import {cornerMult,famMult,learnTactic,spOf} from './plans';
 import {matchDetail,recordMatch} from './analysis';
@@ -232,7 +233,7 @@ export function applyResult(m){
  Object.keys(m.played).forEach(id=>{const p=PL(id);if(!p)return;const s=p.team===m.h?'h':'a';
   p.apps++;p.playedWk=true;p.energy=Math.round(clamp(m.en[id]??p.energy,20,100));
   p.form=clamp(Math.round(p.form*.6+res[s]*1.2+(gl[id]||0)*.9+gauss()*.6),-3,3);});
- recordMatch(m);trackLoans(m);
+ recordMatch(m);trackLoans(m);coachResult(m);
  if(m.us&&m.ref.k!=='fr')learnTactic(m.tac[m.us]);
  if(m.us&&m.ref.k!=='fr')S.tg=(S.tg||0)+1;
  if(m.us&&m.ref.k!=='fr'){const my0=m.score[m.us],op0=m.score[m.us==='h'?'a':'h'];if(my0-op0>=5)unlock('manita');const xi=m.xi0[m.us].filter(Boolean).map(PL).filter(Boolean);if(xi.filter(p=>p.home).length>=5)unlock('casa');if(xi.some(p=>p.age<=17&&p.st&&p.st.pj<=1))unlock('joven');makePress(m);}

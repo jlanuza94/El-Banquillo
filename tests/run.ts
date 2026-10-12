@@ -193,6 +193,10 @@ const app = document.getElementById('app')!;
     S.modal = null; S.view = 'inicio'; render(); const na = (S.awards || []).length; newSeason();
     ok(S.awards.length === na + 1 && S.awards[na].ballon.length === 10 && S.awards[na].boot && S.awards[na].xi.filter(([, c]) => c).length >= 9, `premios de la temporada (Balón de Oro: ${S.awards[na].ballon[0].name})`);
     ok(S.week === 0, 'empieza la temporada siguiente');
+    ok(Object.keys(S.coaches).length === S.teams.length - 1 && !S.coaches[S.user], 'cada club rival tiene entrenador con nombre');
+    ok(Object.keys(S.chist).length > 800 && S.chist[S.user] && S.chist[S.user].s.length >= 1, 'historia de cada club');
+    { const sacks = S.inbox.filter(m => /^(Destitución|Relevo) en/.test(m.subj)).length; console.log(`     relevos de entrenadores esta temporada: ${sacks}`); }
+    S.modal = { type: 'club', id: S.user }; render(); ok(app.textContent.includes('Palmarés'), 'ficha de club con palmarés e historia'); S.modal = null;
   }
 
   // Guardado en IndexedDB y varias partidas

@@ -10,7 +10,7 @@ const pct=x=>`${x>=1?'+':''}${Math.round((x-1)*100)}%`;
 
 function memberRow(m){
  const R=ST_ROLES[m.role];
- return `<div class="offer"><span class="t"><b>${esc(m.name)}</b> <span class="small muted">· ${m.age} años · ${esc(COUNTRIES[m.nat].code)} · ${money(m.wage)}/sem · contrato ${m.yrs<=1?'<b style="color:var(--loss)">acaba en junio</b>':m.yrs+' temporadas'}</span>
+ return `<div class="offer"><span class="t"><b>${esc(m.name)}</b>${m.ex?' <span class="tag">Ex jugador</span>':''} <span class="small muted">· ${m.age} años · ${esc(COUNTRIES[m.nat].code)} · ${money(m.wage)}/sem · contrato ${m.yrs<=1?'<b style="color:var(--loss)">acaba en junio</b>':m.yrs+' temporadas'}</span>
  <span class="row" style="gap:10px;margin-top:4px">${atRow(m,R.at)}</span>${m.role==='dd'?`<br><span class="small muted">Contactos en: <b>${esc(contactNames(m))}</b> (mejores precios y más información de esos países)</span>`:''}</span>
  ${m.yrs<=1?`<button class="btn sm" data-a="st-renew" data-id="${m.id}">Renovar</button>`:''}<button class="btn sm danger" data-a="st-fire" data-id="${m.id}">Despedir</button></div>`;
 }
@@ -22,7 +22,7 @@ export function staffView(){
  <p class="small muted" style="margin:8px 0 0">Los ojeadores se gestionan en <button class="linkname" data-a="view" data-v="cantera">Cantera y ojeo</button>.</p></section>`;
  const pool=(S.staffPool||[]).slice().sort((a,b)=>a.role.localeCompare(b.role));
  const cands=`<section class="panel"><div class="panel-h"><h2>Candidatos disponibles</h2><span class="eyebrow">Cambian cada 10 jornadas</span></div>
- ${pool.length?pool.map(m=>{const R=ST_ROLES[m.role],full=crew(m.role).length>=R.max;return `<div class="offer"><span class="t"><b>${esc(m.name)}</b> <span class="tag">${R.n}</span> <span class="small muted">· ${m.age} años · ${money(m.wage)}/sem</span><span class="row" style="gap:10px;margin-top:4px">${atRow(m,R.at)}</span>${m.role==='dd'?`<span class="small muted">Contactos en: ${esc(contactNames(m))}</span>`:''}</span><button class="btn sm primary" data-a="st-hire" data-id="${m.id}" ${full?'disabled title="Puesto completo"':''}>Contratar</button></div>`;}).join(''):'<div class="empty">No hay candidatos ahora mismo.</div>'}
+ ${pool.length?pool.map(m=>{const R=ST_ROLES[m.role],full=crew(m.role).length>=R.max;return `<div class="offer"><span class="t"><b>${esc(m.name)}</b> <span class="tag">${R.n}</span>${m.ex?' <span class="tag xi">Ex jugador</span>':''} <span class="small muted">· ${m.age} años · ${money(m.wage)}/sem</span><span class="row" style="gap:10px;margin-top:4px">${atRow(m,R.at)}</span>${m.role==='dd'?`<span class="small muted">Contactos en: ${esc(contactNames(m))}</span>`:''}</span><button class="btn sm primary" data-a="st-hire" data-id="${m.id}" ${full?'disabled title="Puesto completo"':''}>Contratar</button></div>`;}).join(''):'<div class="empty">No hay candidatos ahora mismo.</div>'}
  <p class="small muted" style="margin:8px 0 0">Firman por 2 temporadas. Despedir a alguien cuesta unas 12 semanas de sueldo por cada temporada de contrato que le quede.</p></section>`;
  return `<div class="grid"><div class="stack">${roles}</div><div class="stack">${eff}${cands}</div></div>`;
 }

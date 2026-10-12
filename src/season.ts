@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {livingSeasonEnd,onRetire} from './living';
 import {loanReview} from './connected';
 import {recordRound} from './analysis';
 import {markKey} from './inbox';
@@ -157,7 +158,7 @@ export function newSeason(){
   setValue(p);
   if(p.team===S.user||p.home){p.ph=(p.ph||[]).concat([[seasonLabel(S.seasonN+1),p.ovr]]).slice(-12);}
   p.sg=0;p.goals=0;p.apps=0;p.yc=0;p.inj=0;p.susp=0;p.pInj=0;p.pSusp=0;p.energy=100;p.form=0;
-  if(p.team===null||(p.age>=34&&rnd()<(p.age-33)*.35)){if(p.team!==null&&p.car&&(p.car[1]>=40||p.car[0]>=320)){S.legends=(S.legends||[]).concat([{name:p.name,nat:p.nat,pos:p.sp,pj:p.car[0],g:p.car[1],a:p.car[2],club:T(p.team).short,end:seasonLabel()}]).sort((a,b)=>b.g-a.g).slice(0,60);}if(p.team===S.user)retired.push(p.name);delete S.players[p.id];}
+  if(p.team===null||(p.age>=34&&rnd()<(p.age-33)*.35)){if(p.team!==null&&p.car&&(p.car[1]>=40||p.car[0]>=320)){S.legends=(S.legends||[]).concat([{name:p.name,nat:p.nat,pos:p.sp,pj:p.car[0],g:p.car[1],a:p.car[2],club:T(p.team).short,end:seasonLabel()}]).sort((a,b)=>b.g-a.g).slice(0,60);}if(p.team===S.user)retired.push(p.name);onRetire(p);delete S.players[p.id];}
  });
  dirty();
  // expired contracts
@@ -176,7 +177,7 @@ export function newSeason(){
   ensureSquad(t.id);
  });
  const leftAc=S.academy.filter(p=>p.age+1>=19).map(p=>p.name);S.academy=S.academy.filter(p=>p.age+1<19);S.academy.forEach(p=>p.age++);
- crewSeasonEnd();scoutingSeasonEnd();const youth=academyIntake(3);setupYouth();genScoutPool();aiTransfers(160);
+ crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();const youth=academyIntake(3);setupYouth();genScoutPool();aiTransfers(160);
  genFreeAgents();
  S.short=S.short.filter(id=>PL(id));
  S.seasonN++;setupSeason();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(mgrOut)loseJob('fin de contrato');else advance();

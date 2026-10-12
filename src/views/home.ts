@@ -1,5 +1,6 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {STYLES} from '../living';
 import {segAt} from '../staff';
 import {unread} from '../inbox';
 import {esc,money} from '../core';
@@ -52,8 +53,9 @@ export function reportHTML(oid,compact){
  const tips=[];if(tac.est==='con')tips.push('Juegan al contragolpe: no adelantes la línea defensiva.');if(tac.pre==='alt')tips.push('Presionan arriba: el juego directo o el contragolpe les hacen daño.');if(tac.pre==='baj')tips.push('Presionan poco: el estilo de posesión les incomoda.');if(tac.lin==='alt')tips.push('Defienden con la línea alta: el contragolpe es tu mejor arma.');
  tips.push(`Su punto débil es ${lines[0][0]==='defensa'?'la defensa: ataca con decisión':lines[0][0]==='medio'?'el centro del campo: busca la posesión':'el ataque: puedes arriesgar más'}.`);
  if(key)tips.push(`Su mejor jugador es ${key.name} (${SPN[key.sp].toLowerCase()}, ${rt(key)}). La orden «Marcar a su estrella» reduce su peligro.`);
- return `<section class="panel"><div class="panel-h"><h2>Informe del rival</h2><span class="eyebrow">${esc(o.name)}</span></div>
- <div class="kv" style="margin-top:0"><span>Formación</span><b>${o.formation}</b><span>Estilo</span><b>${TACS.est.o[tac.est]} · presión ${TACS.pre.o[tac.pre].toLowerCase()}</b>${sc?`<span>Máximo goleador</span><b>${esc(sc.name)} (${sc.st.g})</b>`:''}<span>Nivel</span><b>${(tp.ovr/10).toFixed(1)}</b></div>
+ const co=S.coaches&&S.coaches[oid];
+ return `<section class="panel"><div class="panel-h"><h2>Informe del rival</h2><button class="linkname eyebrow" data-a="club-open" data-id="${oid}">${esc(o.name)}</button></div>
+ <div class="kv" style="margin-top:0">${co?`<span>Entrenador</span><b>${esc(co.name)} · ${STYLES[co.st].n.toLowerCase()}</b>`:''}<span>Formación</span><b>${o.formation}</b><span>Estilo</span><b>${TACS.est.o[tac.est]} · presión ${TACS.pre.o[tac.pre].toLowerCase()}</b>${sc?`<span>Máximo goleador</span><b>${esc(sc.name)} (${sc.st.g})</b>`:''}<span>Nivel</span><b>${(tp.ovr/10).toFixed(1)}</b></div>
  <ul class="news" style="margin-top:8px">${tips.slice(0,Math.min(compact?3:6,segAt('tac')>=7?6:segAt('tac')>=4?4:2)).map(t=>`<li><span class="wk"></span><span class="t">${esc(t)}</span></li>`).join('')}</ul></section>`;
 }
 export function calendarioView(){

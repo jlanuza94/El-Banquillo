@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {bigTransfer} from './living';
 import {agentName,agentOf,inContacts} from './connected';
 import {esc} from './core';
 import {diff} from './difficulty';
@@ -37,7 +38,7 @@ export function aiTransfers(n){
   const sq2=squad(b.id);if(sq2.length>25){const w=sq2.filter(p=>p!==best).sort((x,y)=>x.ovr-y.ovr)[0];if(w)setTeam(w,null);}
   if(fee)sellOnIn(best,fee);
   done++;tlog({name:best.name,pid:best.id,from:from===null?null:from,to:b.id,fee});
-  if((from!==null&&T(from).lg===myLg)||b.lg===myLg||fee>=5)news(`Mercado: ${best.name} ficha por ${b.name}${from!==null?' desde '+T(from).name:' como agente libre'}${fee?' por '+money(fee):''}.`);
+  if(!bigTransfer(best,from,b.id,fee)&&((from!==null&&T(from).lg===myLg)||b.lg===myLg||fee>=5))news(`Mercado: ${best.name} ficha por ${b.name}${from!==null?' desde '+T(from).name:' como agente libre'}${fee?' por '+money(fee):''}.`);
  }
  return done;
 }

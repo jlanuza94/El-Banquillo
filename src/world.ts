@@ -1,5 +1,6 @@
 /* El Banquillo · world.js — Creación del mundo, objetivos, calendario de liga y elección de club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {applyStyle,initCoaches,setExpectations} from './living';
 import {diff} from './difficulty';
 import {setupYouth} from './youth';
 import {defaultCrew} from './staff';
@@ -52,12 +53,13 @@ export function setupSeason(){
  S.fixtures=S.leagues.map(L=>makeFixtures(lgTeams(L.id).map(t=>t.id)));
  S.week=0;S.fin=[];S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.ligaRound=0;S.ligaLg=uLg();
  S.obj=objectiveFor(S.user);
- S.teams.forEach(t=>{if(t.id!==S.user&&rnd()<.4)t.formation=pick(Object.keys(FORMS));});
+ if(S.coaches)S.teams.forEach(applyStyle);else S.teams.forEach(t=>{if(t.id!==S.user&&rnd()<.4)t.formation=pick(Object.keys(FORMS));});
+ setExpectations();
  S.cal=buildCal();S.ci=0;S.tl=[];S.tg=0;S.pre={left:3,opts:null};S.fr=[];setupCups();setupConts();S.titles=S.titles||[];S.lastXI=[];if(!S.famil[T(S.user).formation])S.famil[T(S.user).formation]=70;
 }
 export function pickTeam(ti){
  const slot=freeSlot();if(slot==null){toast('Ya tienes '+MAX_SLOTS+' partidas guardadas. Borra una para empezar otra.');return;}
- S.slot=slot;S.diff=RT.diff||'normal';S.user=ti;const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
+ S.slot=slot;S.diff=RT.diff||'normal';S.user=ti;initCoaches();const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
  setupSeason();t.lineup=autoLineup(ti,t.formation);
  S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,grace:diff().grace,clubs:[{season:seasonLabel(),club:t.name}]};
  initClub(t);defaultCrew();genScoutPool();academyIntake(3);setupYouth();assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));

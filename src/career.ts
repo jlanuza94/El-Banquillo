@@ -1,5 +1,6 @@
 /* El Banquillo · career.js — Carrera del entrenador: contrato, confianza, despidos y ofertas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {coachHandover} from './living';
 import {diff,inGrace} from './difficulty';
 import {setupYouth} from './youth';
 import {defaultCrew} from './staff';
@@ -18,7 +19,7 @@ export function jobCandidates(maxReq,minReq,n){return shuffle(S.teams.filter(t=>
 export function makeJobOffer(t){return{team:t.id,sal:r3(mgrSalary(t)*(.9+rnd()*.3)),yrs:ri(2,3)};}
 export function loseJob(reason){const r=S.mgr.rep;let c=jobCandidates(r,Math.max(0,r-30),5);if(c.length<3)c=c.concat(jobCandidates(r+8,0,5-c.length));S.jobless={reason,offers:c.map(makeJobOffer)};S.jobOffers=[];S.modal=null;}
 export function takeJob(o){
- const t=T(o.team),old=S.user;if(old!=null)T(old).lineup=[];
+ const t=T(o.team),old=S.user;if(old!=null)T(old).lineup=[];coachHandover(old,t.id);
  S.user=t.id;Object.assign(S.mgr,{sal:o.sal,yrs:o.yrs,conf:60,warned:0,grace:S.week+diff().grace});S.mgr.countries=Array.from(new Set((S.mgr.countries||[]).concat([LG(t.lg).c])));if(S.mgr.countries.length>=3)unlock('nomad');S.press=null;S.breq=null;S.mgr.clubs.push({season:seasonLabel(),club:t.name});
  initClub(t);S.budget=startBudget(t);S.chem=50;S.famil={};S.famil[t.formation]=60;S.lastXI=[];defaultCrew();setupYouth();S.scouts=[];S.prospects=[];S.academy=[];genScoutPool();academyIntake(3);
  S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.fin=[];S.jobOffers=[];S.jobless=null;S.obj=objectiveFor(t.id);S.sel=null;
