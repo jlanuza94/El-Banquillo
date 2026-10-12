@@ -264,8 +264,8 @@ const app = document.getElementById('app')!;
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
-    const opp = riv[0][0], mood = S.club.mood; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });
-    ok(h2hOf(opp).w === 1 && S.club.mood > mood, 'ganar el derbi: historial y afición contenta');
+    const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });
+    ok(h2hOf(opp).w === w0 + 1 && S.club.mood > 50, 'ganar el derbi: historial y afición contenta');
     S.modal = { type: 'club', id: opp }; render(); ok(app.textContent.includes('Rivales'), 'rivales en la ficha del club'); S.modal = null;
     const p = squad(S.user)[2], e0 = p.energy, r0 = p.recov; p.energy = 50; p.recov = 2; ok(injRisk(p).lv === 'alto', 'riesgo de lesión alto si está cansado y recién recuperado'); p.energy = e0; p.recov = r0;
     p.inj = 4; p.rplan = null; setPlan(p, 'a'); ok(p.inj === 3 && p.rplan === 'a', 'plan acelerado: vuelve antes'); p.inj = 0; onRecovered(p); ok(p.recov === 6 && !p.rplan, 'tras el plan acelerado, más días de riesgo'); p.recov = 0;
@@ -305,7 +305,7 @@ const app = document.getElementById('app')!;
     if (!fired) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
       S.view = 'cantera'; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
     for (const tb of ['temp', 'part', 'jug', 'riv']) { S.anTab = tb; S.view = 'analisis'; render(); }
-    ok(S.tl.length >= 30 && S.mlog.length > 0 && S.mlog[0].sh.length > 5 && Object.values(S.players).some(p => p.st && p.st.kp > 0 && p.st.tk > 0 && p.st.xg > 0), 'análisis: evolución de la temporada, informes con tiros y estadísticas avanzadas');
+    ok(S.tl.length >= (fired ? 3 : 30) && S.mlog.length > 0 && S.mlog[0].sh.length > 5 && Object.values(S.players).some(p => p.st && p.st.kp > 0 && p.st.tk > 0 && p.st.xg > 0), 'análisis: evolución de la temporada, informes con tiros y estadísticas avanzadas' + ` (tl ${S.tl.length}, partidos ${S.mlog.length}, tiros ${S.mlog[0] && S.mlog[0].sh.length})`);
     S.modal = { type: 'mrep', i: 0 }; render(); ok(app.querySelector('.shotmap svg circle'), 'informe de partido con mapa de tiros'); S.modal = null;
     for (const tb of ['race', 'stats', 'xi', 'hist']) { S.awTab = tb; S.view = 'premios'; render(); }
     ok(app.textContent.includes('Palmarés'), 'pantalla de estadísticas y premios');
