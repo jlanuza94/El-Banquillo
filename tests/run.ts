@@ -43,6 +43,7 @@ import { learnTactic, loadPlan, planFam, planInMatch, savePlan } from '../src/pl
 import { sellAbonos, shopWeekly, sociosFor, aboBase } from '../src/club';
 import { initIntl, playTournament, tournamentsIn, fifaWeek, takeNT, toggleCall, callOf, ranking, summerYear } from '../src/nations';
 import { startReto, retosMatch, retosWeekly, medals } from '../src/retos';
+import { goalPlay, playAt, matchFx } from '../src/replay';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -230,6 +231,10 @@ const app = document.getElementById('app')!;
     for (let i = 0; i < 10; i++) retosMatch(fake(2, 0)); ok(S.retos.done.racha && medals().b === 1, 'reto conseguido: medalla de bronce');
     const b0 = S.budget; S.budget = 12; retosWeekly(false); S.budget = b0; ok(S.retos.done.hucha, 'reto de presupuesto');
     S.view = 'historia'; S.hiTab = 'ach'; render(); ok(app.textContent.includes('Racha de hierro') && app.querySelector('.medal'), 'pantalla de retos con medallas'); }
+  { // Repeticiones de goles
+    const m = { ref: { k: 'lg' }, h: 1, a: 2, us: 'h', lu: { h: squad(S.user).slice(0, 11).map(p => p.id), a: [] }, ev: [{ t: 'goal', s: 'h', pid: squad(S.user)[9].id, min: 30, tx: '¡Gol de córner!' }], min: 30, score: { h: 1, a: 0 }, done: false, paused: false };
+    const P = goalPlay(m, 0); ok(P && P.K.length >= 3 && playAt(P, 0).who && playAt(P, P.end).goal, 'repetición de un gol: jugada y balón dentro');
+    matchFx(m); m.ev.push({ t: 'goal', s: 'h', pid: m.lu.h[9], min: 31, tx: '' }); matchFx(m); ok(true, 'efectos de sonido sin errores'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

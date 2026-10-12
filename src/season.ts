@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {matchFx} from './replay';
 import {retosNewSeason,retosSeason} from './retos';
 import {ntOffers,summerTournaments} from './nations';
 import {fixFilialMoves,setWageCap} from './clubplus';
@@ -37,7 +38,7 @@ export function runTimer(){
  clearInterval(RT.timer);RT.timer=null;const m=S&&S.match;
  if(!m||m.paused||m.done)return;
  RT.timer=setInterval(()=>{const m=S&&S.match;if(!m||m.paused||m.done){clearInterval(RT.timer);RT.timer=null;return;}
-  step(m);if(m.min%10===0||m.paused)save();if(S.view==='partido')render();},SPEEDS[m.speed]);
+  step(m);matchFx(m);if(m.min%10===0||m.paused)save();if(S.view==='partido')render();},SPEEDS[m.speed]);
 }
 export function simToEnd(){const m=S.match;m.auto=true;m.subOpen=false;m.alert='';while(!m.done)step(m);m.paused=true;clearInterval(RT.timer);RT.timer=null;save();render();}
 export function finishCore(){

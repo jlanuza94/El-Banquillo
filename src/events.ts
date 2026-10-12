@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {matchFx,soundOn,startReplay,stopReplay,toggleSound} from './replay';
 import {dropReto,startReto} from './retos';
 import {applyNT,autoCall,leaveNT,takeNT,toggleCall} from './nations';
 import {meetAnswer,onOfferRejected} from './talks';
@@ -113,7 +114,7 @@ document.addEventListener('click',e=>{
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}
   case'play':playMatch();return;
-  case'm-play':m.paused=false;m.alert='';m.subOpen=false;render();runTimer();return;
+  case'm-play':stopReplay();matchFx(m);m.paused=false;m.alert='';m.subOpen=false;render();runTimer();return;
   case'm-pause':m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-speed':m.speed=+d.v;render();runTimer();return;
   case'm-ment':if(m.ment[m.us]!==d.v){m.ment[m.us]=d.v;addEv(m,'sys',null,`${T(m[m.us]).short} cambia a mentalidad ${MENT[d.v].label.toLowerCase()}`);}break;
@@ -144,6 +145,9 @@ document.addEventListener('click',e=>{
   case'tac':{const t=T(S.user);t.tac=Object.assign({},TAC0,t.tac||{});t.tac[d.k]=d.v;break;}
   case'hi-tab':S.hiTab=d.v;break;
   case'v2d':S.v2d=d.v==='1';break;
+  case'replay':if(m&&!m.done&&!m.paused){m.paused=true;clearInterval(RT.timer);RT.timer=null;}S.v2d=true;startReplay(+d.i);render();window.document.getElementById('pitch2d')?.scrollIntoView({block:'center'});return;
+  case'replay-stop':stopReplay();break;
+  case'sound':{const v=toggleSound();toast(v?'Sonido y vibración activados':'Sonido y vibración desactivados');break;}
   case'backup':{const code=exportCode();S.modal={type:'backup',code};try{navigator.clipboard.writeText(code).then(()=>toast('Copia de seguridad copiada al portapapeles.'),()=>{});}catch(err){}break;}
   case'bk-select':{const ta=document.getElementById('bkTxt');if(ta){ta.focus();ta.select();}return;}
   case'restore':S.modal={type:'restore'};break;

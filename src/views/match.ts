@@ -1,10 +1,11 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {goalsOf,soundOn} from '../replay';
 import {shotMap} from './analysis';
 import {matchRecord} from '../analysis';
 import {esc,fill} from '../core';
 import {MENT,OIS,TACS} from '../data';
-import {PL,S,T,crest,lastNm,rt} from '../state';
+import {PL,RT,S,T,crest,lastNm,rt} from '../state';
 import {TALKS,bench,liveRatings} from '../engine';
 import {pitchHTML} from './common';
 export const ICON={goal:'<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#fff" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.6l2.6 1.9-1 3.1H6.4l-1-3.1z" fill="currentColor"/></svg>',
@@ -35,15 +36,17 @@ export function matchView(){
   ${Object.keys(ut.plans||{}).length?`<div class="seg" aria-label="Tácticas guardadas">${['A','B','C'].filter(k=>ut.plans[k]).map(k=>`<button data-a="m-plan" data-v="${k}" aria-pressed="${m.plan===k}" title="${esc(ut.plans[k].name)}">Táctica ${k}</button>`).join('')}</div>`:''}
   <div class="chips" aria-label="Instrucciones al rival">${Object.entries(OIS).map(([k,v])=>`<button class="btn sm ${m.oi&&m.oi[us]&&m.oi[us][k]?'dark':''}" data-a="m-oi" data-v="${k}" title="${esc(v.d)}" aria-pressed="${!!(m.oi&&m.oi[us]&&m.oi[us][k])}">${v.n}</button>`).join('')}</div>
   <button class="btn" data-a="m-subs" ${m.subs[us]>=5||m.min===0?'disabled':''}>Cambios ${m.subs[us]}/5</button><span class="spacer"></span><button class="btn" data-a="m-sim">Simular hasta el final</button>`;
- const feed=m.ev.slice().reverse().map(e=>`<div class="ev ${e.t==='goal'?'goal':e.t==='sys'?'sys':''}"><span class="m">${e.min}'</span><span>${ICON[e.t]||''}</span><span class="tx">${e.s?`<b>${T(m[e.s]).short}</b> · `:''}${esc(e.tx)}</span></div>`).join('')||`<div class="empty">${esc(H.name)} recibe a ${esc(A.name)}. Pulsa “Comenzar partido” cuando quieras.</div>`;
+ const feed=m.ev.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<div class="ev ${e.t==='goal'?'goal':e.t==='sys'?'sys':''}"><span class="m">${e.min}'</span><span>${ICON[e.t]||''}</span><span class="tx">${e.s?`<b>${T(m[e.s]).short}</b> · `:''}${esc(e.tx)}${e.t==='goal'?` <button class="btn sm rpbtn" data-a="replay" data-i="${i}">▶ Repetición</button>`:''}</span></div>`).join('')||`<div class="empty">${esc(H.name)} recibe a ${esc(A.name)}. Pulsa “Comenzar partido” cuando quieras.</div>`;
  const scorers=s=>m.ev.filter(e=>e.t==='goal'&&e.s===s).map(e=>`${lastNm(e.pid)} ${e.min}'`).join(', ');
- return `<div class="row" style="margin-bottom:10px"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button><span class="small muted mhint">El partido sigue en pausa si sales; vuelve desde el menú.</span><span class="spacer"></span><div class="seg"><button data-a="v2d" data-v="1" aria-pressed="${S.v2d!==false}">Vista 2D</button><button data-a="v2d" data-v="0" aria-pressed="${S.v2d===false}">Solo texto</button></div></div>
+ return `<div class="row" style="margin-bottom:10px"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button><span class="small muted mhint">El partido sigue en pausa si sales; vuelve desde el menú.</span><span class="spacer"></span><button class="btn sm" data-a="sound" aria-pressed="${soundOn()}" title="Sonido y vibración">${soundOn()?'Sonido: sí':'Sonido: no'}</button><div class="seg"><button data-a="v2d" data-v="1" aria-pressed="${S.v2d!==false}">Vista 2D</button><button data-a="v2d" data-v="0" aria-pressed="${S.v2d===false}">Solo texto</button></div></div>
  ${m.label?`<div class="eyebrow" style="margin-bottom:8px">${esc(m.label)}${m.agg?` · vuelta: ida ${m.agg[1]}-${m.agg[0]}, si el global empata hay penaltis`:m.ko?' · eliminatoria: si hay empate, penaltis':''}</div>`:''}
  <div class="board ${flash?'flash':''}"><div class="bs">${crest(H,'lg')}<div class="tn">${esc(H.name)}</div><div class="small" style="color:var(--board-dim)">${esc(scorers('h'))}</div></div>
  <div class="sc">${m.score.h}<span style="opacity:.4">:</span>${m.score.a}</div>
  <div class="bs">${crest(A,'lg')}<div class="tn">${esc(A.name)}</div><div class="small" style="color:var(--board-dim)">${esc(scorers('a'))}</div></div>
  <div class="mn">${label}${m.agg?` · global ${m.score.h+m.agg[0]}-${m.score.a+m.agg[1]}`:''}${m.pen?` · pen. ${m.pen[0]}-${m.pen[1]}`:''}</div><div class="prog"><i style="width:${Math.min(100,m.min/m.end*100)}%"></i></div></div>
  ${S.v2d!==false?'<div class="p2d"><canvas id="pitch2d" width="800" height="512" aria-label="Vista del partido en 2D"></canvas></div>':''}
+ ${RT.replay?`<div class="row" style="justify-content:center;margin-top:8px"><span class="small muted">Viendo la repetición</span><button class="btn sm dark" data-a="replay-stop">Cerrar repetición</button></div>`:''}
+ ${m.done&&goalsOf(m).length?`<section class="panel" style="margin-top:12px"><div class="panel-h"><h2>Resumen: los goles</h2><span class="eyebrow">Toca para ver la repetición</span></div><div class="chips">${goalsOf(m).map(({e,i})=>`<button class="btn sm" data-a="replay" data-i="${i}">▶ ${e.min}' ${esc(T(m[e.s]).short)} · ${esc(lastNm(e.pid))}</button>`).join('')}</div></section>`:''}
  <div class="mctl">${ctl}</div>
  <div class="grid"><section class="panel">${m.alert&&!m.done?`<div class="alert">${esc(m.alert)}</div>`:''}${m.adv&&!m.done?`<div class="negmsg" style="margin:0 0 10px"><b>${m.adv.min}'</b> · ${esc(m.adv.tx)}</div>`:''}${talkP}${talkDone}${subsP}<div class="panel-h"><h2>Minuto a minuto</h2></div><div class="feed">${feed}</div></section>
  <div class="stack"><section class="panel"><div class="panel-h"><h2>Estadísticas</h2></div>
