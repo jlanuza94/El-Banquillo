@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {isAffiliate,wageCheck} from './clubplus';
 import {bigTransfer} from './living';
 import {agentName,agentOf,inContacts} from './connected';
 import {esc} from './core';
@@ -43,7 +44,7 @@ export function aiTransfers(n){
  return done;
 }
 export function isKey(p){if(p.team===null)return false;if(!RT.keyCache){RT.keyCache=new Set();S.teams.forEach(t=>squad(t.id).sort((a,b)=>b.ovr-a.ovr).slice(0,3).forEach(x=>RT.keyCache.add(x.id)));}return RT.keyCache.has(p.id);}
-export const askPrice=p=>{const d=dealPrice(p.id);if(d!=null)return d;return p.team===null?r2(Math.max(.005,p.value*.25*buyMult())):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1)*buyMult()*hotMult(p)*diff().price*(inContacts(p)?.94:1));};
+export const askPrice=p=>{const d=dealPrice(p.id);if(d!=null)return d;return p.team===null?r2(Math.max(.005,p.value*.25*buyMult())):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1)*buyMult()*hotMult(p)*diff().price*(inContacts(p)?.94:1)*(isAffiliate(p.team)?.85:1));};
 export function refuses(p){const e=econ(uLg()),my=LG(uLg()).rep;return p.ovr>e.cap&&(p.team===null||LG(T(p.team).lg).rep>my||p.ovr>e.cap+4);}
 export function negState(id){return S.neg[id]||(S.neg[id]={tries:0,counter:null,msg:'',kind:'',closed:false});}
 /** opt: {inst: nº de plazos, son: ofrecer % de futura venta, swap: id de un jugador tuyo que entra en la operación} */
@@ -99,6 +100,7 @@ export function makeTerms(id,mode,t){
   if(t.yrs-1>maxExtra(p)){st.msg=`A sus ${p.age} años, ${p.name} solo firma hasta junio de ${2025+S.seasonN+maxExtra(p)+1}.`;st.kind='no';return;}}
  else if(t.yrs>maxExtra(p)+1){st.msg=`A sus ${p.age} años, ${p.name} solo firma ${maxExtra(p)+1} temporadas.`;st.kind='no';return;}
  const cost=(mode==='buy'?firstPay(st.agreed,st.deal)+agentFee(p,st.agreed):0)+(t.bonus||0);if(cost>S.budget){st.msg=`No te llega el presupuesto (${money(S.budget)}) para pagar ${money(cost)}.`;st.kind='no';return;}
+ {const w=wageCheck(t.w,mode==='renew'?p.wage:0);if(w){st.msg=w;st.kind='no';return;}}
  st.ttries=(st.ttries||0)+1;const ratio=evalTerms(p,mode,t);let ok=ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;
  if(ok){if(mode==='buy'){completeBuy(p,st.agreed,t);}else{p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;S.budget=r3(S.budget-(t.bonus||0));p.hap=clamp(p.hap+6,0,100);if(p.prom&&p.prom.type==='ren'){p.prom=null;p.hap=clamp(p.hap+4,0,100);}delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)}: ${money(p.wage)}/sem, ${ROLES[p.role].n.toLowerCase()}, cláusula ${money(p.cl)}.`,'good');toast(`${p.name} ha renovado.`);}return;}
  if(st.ttries>=3){st.closed=true;st.msg=`${p.name} rompe las negociaciones hasta la próxima jornada.`;st.kind='no';return;}

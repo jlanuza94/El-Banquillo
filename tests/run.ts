@@ -9,7 +9,7 @@ import { S, setS, dirty } from '../src/state';
 import { money } from '../src/core';
 import { pickTeam } from '../src/world';
 import { table } from '../src/tactics';
-import { finishRound, friendlyOpts, newSeason, playFriendly, playMatch, simRun, simState, simToEnd } from '../src/season';
+import { finishRound, friendlyOpts, newSeason, playFriendly, playMatch, simLoop, simRun, simState, simToEnd } from '../src/season';
 import { takeJob } from '../src/career';
 import { answerPress } from '../src/club';
 import { exportCode, importCode, loadAsync, loadSlot, deleteSlot, pack, unpack, saveNow, slots, MAX_SLOTS } from '../src/persist';
@@ -27,6 +27,7 @@ import { agentFee, askPrice, makeBid, makeTerms, refuses, sell } from '../src/ma
 import { r3 } from '../src/core';
 import { deadlineDeals, rumoursWeekly, sellOnIn } from '../src/market2';
 import { agentOf, contacts, trackLoans, vestMult } from '../src/connected';
+import { addAffiliate, affCandidates, affiliates, bankWeekly, createFilial, filial, fixFilialMoves, fromFilial, moveBudget, takeBankLoan, toFilial, wageCheck } from '../src/clubplus';
 import { acceptLoanOut, makeLoanOut } from '../src/contracts';
 import { renState } from '../src/contracts';
 import { devSeason, rateOld, signWage } from '../src/players';
@@ -118,7 +119,7 @@ const app = document.getElementById('app')!;
   }
   {
     // Mercado: plazos, intercambio y % de futura venta
-    const realBudget = S.budget; S.budget = 500; const b0 = S.budget;
+    const realBudget = S.budget, realCap = S.wageCap; S.budget = 500; S.wageCap = 99; const b0 = S.budget;
     const myLg = S.teams[S.user].lg, cands = Object.values(S.players).filter(p => p.team !== null && p.team !== S.user && S.teams[p.team].lg === myLg && !p.loan && p.age < 30 && !refuses(p));
     const target = cands[0], from = target.team, swapP = squad(S.user).filter(p => !p.loan).sort((a, b) => a.value - b.value)[0];
     const amt = askPrice(target) * 1.5; makeBid(target.id, amt, { inst: 3, swap: swapP.id });
@@ -135,7 +136,7 @@ const app = document.getElementById('app')!;
     ok(dk.every(id => askPrice(PL(id)) === S.deals[id]), `gangas del día de cierre (${dk.length})`); S.week = 3; S.deals = {};
     for (let i = 0; i < 30; i++) rumoursWeekly();
     ok(Object.keys(S.interest).length > 0, 'rumores de interés por tus jugadores');
-    fixLineup(); S.budget = realBudget; S.debts = [];
+    fixLineup(); S.budget = realBudget; S.wageCap = realCap; S.debts = [];
   }
   { const a = squad(S.user)[0], b = Object.values(S.players).find(p => p.team !== S.user && p.team !== null);
     S.modal = { type: 'cmp', a: a.id, b: b.id }; render(); ok(app.querySelector('.cmpgrid'), 'comparador de jugadores'); S.modal = null; }
@@ -212,6 +213,24 @@ const app = document.getElementById('app')!;
   ok((await loadSlot(1))?.user === me, 'la primera partida sigue intacta');
   await deleteSlot(2);
   ok(slots.length === 1 && !(await loadSlot(2)), 'se puede borrar una partida');
+  { // club: filial, afiliados, límite salarial y préstamos (con un club de 4ª para poder tener filial)
+    setS(null); dirty(); render(); const pick4 = S.teams.find(t => S.leagues[t.lg].c === 0 && S.leagues[t.lg].lv === 3); pickTeam(pick4.id);
+    ok(createFilial() === '' && filial() && S.leagues[filial().lg].lv === 4, 'se crea el filial en la última división');
+    const young = squad(S.user).sort((a, b) => a.age - b.age)[0]; ok(toFilial(young.id) === '' && young.team === filial().id, 'un joven baja al filial'); ok(fromFilial(young.id) === '' && young.team === S.user, 'y vuelve a subir');
+    // el filial queda 1º pero el primer equipo sigue en 4ª: no puede subir
+    const tabs = S.leagues.map(L => table(L.id)); const bi = S.leagues.indexOf(S.leagues[filial().lg]); const b = tabs[bi].findIndex(r => r.id === filial().id); const tb = tabs[bi]; [tb[0], tb[b]] = [tb[b], tb[0]];
+    const moves = []; S.leagues.forEach((L, i) => { if (L.lv > 0) tabs[i].slice(0, 3).forEach(r => moves.push([r.id, S.leagues.find(x => x.c === L.c && x.lv === L.lv - 1).id])); });
+    const fixed = fixFilialMoves(tabs, moves); ok(!fixed.some(m => m[0] === filial().id) && fixed.filter(m => S.leagues[m[1]].c === 0 && S.leagues[m[1]].lv === 3 && S.leagues[T(m[0]).lg].lv === 4).length === 3, 'el filial no puede subir a la división de su primer equipo (sube el siguiente)');
+    const cap = S.wageCap; ok(wageCheck(cap * 2) !== '' && wageCheck(0.0001) === '', 'el límite salarial frena sueldos que no caben');
+    S.budget = 50; ok(moveBudget(1) === '' && S.wageCap > cap, 'se puede pasar dinero de fichajes a sueldos');
+    const b0 = S.budget; ok(takeBankLoan(0) === '' && S.budget > b0 && S.bank.length === 1, 'préstamo bancario'); const pay = bankWeekly(); ok(pay > 0 && S.bank[0].left === S.bank[0].yrs * 38 - 1, 'se devuelve cada semana');
+    const aff = affCandidates()[0]; ok(addAffiliate(aff.id) === '' && affiliates().length === 1, 'club afiliado');
+    S.view = 'club'; render(); ok(app.textContent.includes('Filial') && app.textContent.includes('Préstamos bancarios'), 'pantalla del club con filial, afiliados y presupuestos');
+    S.pre.left = 0; await simLoop('season', false, { stopped: () => false, progress: () => {}, yield: async () => {} }); if (S.jobless) takeJob(S.jobless.offers[0]); else { S.modal = null; newSeason(); }
+    ok(S.leagues.every(L => S.teams.filter(t => t.lg === L.id).length === 20), 'tras una temporada con filial, todas las ligas siguen teniendo 20 equipos');
+    ok(!filial() || S.leagues[filial().lg].lv > S.leagues[T(S.user).lg].lv, 'y el filial sigue por debajo de su primer equipo');
+    saveNow(); await flush(); await deleteSlot(S.slot);
+  }
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 
   { // una partida de la versión anterior (sin bandeja, cuerpo técnico, sub-19…) se convierte al cargarla

@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {bankWeekly,wageBill} from './clubplus';
 import {coachesWeekly} from './living';
 import {contactsWeekly,vestWeekly} from './connected';
 import {learnTactic} from './plans';
@@ -98,7 +99,7 @@ export function weeklyTeamTraining(){
 export function processWeek(){
  const wk=S.week,fx=nextFixture();
  playerTick(true);weeklyTeamTraining();
- const home=fx.h===S.user,wages=squad(S.user).reduce((a,p)=>a+p.wage,0)+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,tix=home?ticket():0;
+ const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,tix=home?ticket():0;
  const my=home?fx.hg:fx.ag,op=home?fx.ag:fx.hg;
  if(home){S.club.lastAtt=attendance();if(S.club.lastAtt>=S.club.cap)S.fullHomes=(S.fullHomes||0)+1;if(!S.rec)S.rec={};if(!S.rec.att||S.club.lastAtt>S.rec.att.v)S.rec.att={v:S.club.lastAtt,season:seasonLabel()};}
  if(!S.sponsor&&S.week>=3&&S.spOffers&&S.spOffers.length){S.sponsor=S.spOffers[0];news(`La directiva firma con ${S.sponsor.name} como patrocinador al no elegir tú.`);}

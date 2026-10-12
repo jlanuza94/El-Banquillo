@@ -1,5 +1,6 @@
 /* El Banquillo · career.js — Carrera del entrenador: contrato, confianza, despidos y ofertas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {setWageCap} from './clubplus';
 import {coachHandover} from './living';
 import {diff,inGrace} from './difficulty';
 import {setupYouth} from './youth';
@@ -21,9 +22,10 @@ export function loseJob(reason){const r=S.mgr.rep;let c=jobCandidates(r,Math.max
 export function takeJob(o){
  const t=T(o.team),old=S.user;if(old!=null)T(old).lineup=[];coachHandover(old,t.id);
  S.user=t.id;Object.assign(S.mgr,{sal:o.sal,yrs:o.yrs,conf:60,warned:0,grace:S.week+diff().grace});S.mgr.countries=Array.from(new Set((S.mgr.countries||[]).concat([LG(t.lg).c])));if(S.mgr.countries.length>=3)unlock('nomad');S.press=null;S.breq=null;S.mgr.clubs.push({season:seasonLabel(),club:t.name});
- initClub(t);S.budget=startBudget(t);S.chem=50;S.famil={};S.famil[t.formation]=60;S.lastXI=[];defaultCrew();setupYouth();S.scouts=[];S.prospects=[];S.academy=[];genScoutPool();academyIntake(3);
+ initClub(t);S.budget=startBudget(t);S.chem=50;S.famil={};S.famil[t.formation]=60;S.lastXI=[];defaultCrew();setupYouth();S.affil=[];S.bank=[];S.scouts=[];S.prospects=[];S.academy=[];genScoutPool();academyIntake(3);
  S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.fin=[];S.jobOffers=[];S.jobless=null;S.obj=objectiveFor(t.id);S.sel=null;
  t.lineup=autoLineup(t.id,t.formation);S.view='inicio';S.modal=null;S.ligaLg=t.lg;assignRoles(true);squad(S.user).forEach(p=>{p.hap=65;p.req=0;p.prom=null;if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;
+ setWageCap();
  news(`Nuevo reto: firmas por ${t.name} (${lgName(t.lg)}) hasta junio de ${mgrEnd()} por ${money(o.sal)}/semana. Objetivo: ${S.obj.txt.toLowerCase()}.`,'good');
  advance();
 }

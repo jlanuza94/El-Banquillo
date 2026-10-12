@@ -1,11 +1,13 @@
 /* El Banquillo · views/club.js — Club y finanzas, historia, récords y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {nameBtn} from './common';
+import {MAX_AFF,MAX_BANK,affCandidates,affiliates,filial,loanOffers,wageBill} from '../clubplus';
 import {DIFF} from '../difficulty';
 import {debtTotal} from '../market2';
 import {installBtn} from '../pwa';
 import {clamp,esc,fill,money} from '../core';
-import {COUNTRIES} from '../data';
-import {LG,S,T,crest,econ,lgName,qc,seasonLabel,squad,uLg} from '../state';
+import {COUNTRIES,posChip} from '../data';
+import {LG,S,T,crest,econ,lgName,pBadge,qc,seasonLabel,squad,uLg} from '../state';
 import {news} from '../world';
 import {table} from '../tactics';
 import {CONTS} from '../competitions';
@@ -60,5 +62,26 @@ export function clubView(){
  <div class="row"><button class="btn primary" data-a="backup">Copiar copia de seguridad</button><button class="btn" data-a="restore">Restaurar una copia</button><button class="btn" data-a="to-saves">Mis partidas</button>${installBtn()}</div></section>`;
  const used=S.breq&&S.breq.s===S.seasonN?S.breq.used:{};
  const board=`<section class="panel"><div class="panel-h"><h2>Peticiones a la directiva</h2><span class="eyebrow">Una vez por temporada · confianza ${Math.round(M.conf)}</span></div>${Object.entries(BREQ).map(([k,v])=>`<div class="offer"><span class="t"><b>${v.n}</b><br><span class="small muted">${v.d}${v.min?' Confianza mínima: '+v.min+'.':''}</span></span><button class="btn sm" data-a="board" data-k="${k}" ${used[k]?'disabled':''}>${used[k]?'Ya pedido':'Pedir'}</button></div>`).join('')}${S.boardMsg?`<div class="negmsg ${S.boardMsg[1]}">${esc(S.boardMsg[0])}</div>`:''}</section>`;
- return `<div class="grid"><div class="stack">${board}${stadium}${spo}${fac}</div><div class="stack">${finP}${mgrP}${save}</div></div>`;
+ const wb=wageBill(),cap=S.wageCap??wb;
+ const budP=`<section class="panel"><div class="panel-h"><h2>Presupuestos</h2><span class="eyebrow">Fichajes y sueldos</span></div>
+ <div class="kv" style="margin-top:0"><span>Para fichajes</span><b>${money(S.budget)}</b><span>Límite salarial</span><b>${money(cap)}/sem</b><span>Sueldos actuales</span><b class="${wb>cap?'bad':''}">${money(wb)}/sem</b><span>Margen para sueldos</span><b>${money(Math.max(0,cap-wb))}/sem</b></div>
+ <div class="row" style="margin-top:10px"><button class="btn sm" data-a="bud-move" data-v="1">Subir el límite un 10% (cuesta ${money((cap*.1)*40)})</button><button class="btn sm" data-a="bud-move" data-v="-1">Bajarlo un 10% (+${money(cap*.1*32)} para fichajes)</button></div>
+ <p class="small muted" style="margin:8px 0 0">La directiva no aprueba fichajes, renovaciones ni subidas que superen el límite salarial. Cada verano lo revisa según lo que pagas.</p></section>`;
+ const offers=loanOffers(),bank=S.bank||[];
+ const bankP=`<section class="panel"><div class="panel-h"><h2>Préstamos bancarios</h2><span class="eyebrow">${bank.length} de ${MAX_BANK}</span></div>
+ ${bank.map(b=>`<div class="offer"><span class="t"><b>${money(b.amt)}</b><br><span class="small muted">Pagas ${money(b.weekly)}/sem · quedan ${b.left} semanas (${money(b.weekly*b.left)})</span></span></div>`).join('')}
+ ${bank.length<MAX_BANK?offers.map(([a,y],i)=>`<div class="offer"><span class="t">${money(a)} a ${y} temporadas<br><span class="small muted">${money(a*(1+.06*y)/(y*38))}/sem · 6% de interés al año</span></span><button class="btn sm" data-a="bank-take" data-i="${i}">Pedir</button></div>`).join(''):''}
+ <p class="small muted" style="margin:8px 0 0">Te da dinero ya para fichar o mejorar el club, pero lo devuelves cada semana con intereses. A la directiva no le gusta mucho.</p></section>`;
+ const B=filial();
+ const filP=`<section class="panel"><div class="panel-h"><h2>Filial</h2>${B?`<button class="linkname eyebrow" data-a="club-open" data-id="${B.id}">${esc(lgName(B.lg))}</button>`:''}</div>
+ ${B?`<p class="small muted" style="margin:0 0 8px">${esc(B.name)} juega en ${esc(lgName(B.lg))}. Sus partidos dan minutos de verdad a tus jóvenes (y los minutos los hacen mejorar). Nunca puede jugar en la misma división que tu primer equipo. Sus sueldos cuentan en tu límite salarial.</p>
+  <div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th class="r">Edad</th><th class="r">Media</th><th class="r">PJ</th><th></th></tr></thead><tbody>${squad(B.id).sort((a,b)=>b.ovr-a.ovr).map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${p.st?p.st.pj:0}</td><td class="r"><button class="btn sm" data-a="fil-up" data-id="${p.id}">Subir</button></td></tr>`).join('')}</tbody></table></div>
+  <div class="row" style="margin-top:8px;align-items:flex-end"><label class="f"><span class="eyebrow">Bajar al filial</span><select id="filDown">${squad(S.user).filter(p=>!p.loan).sort((a,b)=>a.age-b.age).map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.age} · ${(p.ovr/10).toFixed(1)}</option>`).join('')}</select></label><button class="btn sm" data-a="fil-down">Bajar</button></div>`
+ :`<p class="small muted" style="margin:0 0 8px">Crea un equipo B que juegue en la última división de tu país. Un club de esa liga pasará a ser tu filial, con sus jugadores. Sirve para dar minutos a los jóvenes sin cederlos.</p><button class="btn sm primary" data-a="fil-create">Crear filial</button>`}</section>`;
+ const A=affiliates(),affC=affCandidates();
+ const affP=`<section class="panel"><div class="panel-h"><h2>Clubes afiliados</h2><span class="eyebrow">${A.length} de ${MAX_AFF}</span></div>
+ ${A.map(id=>`<div class="offer">${crest(T(id),'sm')}<span class="t"><button class="linkname" data-a="club-open" data-id="${id}">${esc(T(id).name)}</button> <span class="divtag">${lgName(T(id).lg,true)}</span></span><button class="btn sm" data-a="aff-del" data-id="${id}">Romper</button></div>`).join('')}
+ ${A.length<MAX_AFF?affC.map(t=>`<div class="offer">${crest(t,'sm')}<span class="t">${esc(t.name)} <span class="divtag">${lgName(t.lg,true)}</span></span><button class="btn sm" data-a="aff-add" data-id="${t.id}">Afiliar</button></div>`).join(''):''}
+ <p class="small muted" style="margin:8px 0 0">Un afiliado acepta siempre a tus cedidos (y les da minutos), conoces a todos sus jugadores y te los deja más baratos.</p></section>`;
+ return `<div class="grid"><div class="stack">${board}${budP}${filP}${stadium}${spo}${fac}</div><div class="stack">${finP}${bankP}${affP}${mgrP}${save}</div></div>`;
 }

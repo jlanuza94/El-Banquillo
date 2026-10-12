@@ -1,5 +1,6 @@
 /* El Banquillo · scouting.ts — Conocimiento de jugadores: rangos de atributos, ojear jugadores e informes. */
 // @ts-nocheck — usa el estado heredado S.
+import {isAffiliate} from './clubplus';
 import {inContacts} from './connected';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
 import {ATTRS,COUNTRIES,GRP,POS_NAME,SPN} from './data';
@@ -10,7 +11,7 @@ import {crew,judge} from './staff';
 
 /** Cuánto conoces a un jugador, de 0 a 100. Con 80 o más ves sus atributos exactos. */
 export function knowledge(p){
- if(!p)return 0;if(p.id[0]==='y'||p.team===S.user||(p.loan&&p.loan.from===S.user))return 100;
+ if(!p)return 0;if(p.id[0]==='y'||p.team===S.user||(p.team!==null&&(isAffiliate(p.team)||T(p.team).parent===S.user))||(p.loan&&p.loan.from===S.user))return 100;
  let k;const mine=uLg();
  if(p.team===null)k=18;
  else{const L=LG(T(p.team).lg),U=LG(mine);k=L.id===mine?52:L.c===U.c?34:regionOf(L.c)===regionOf(U.c)?20:10;}

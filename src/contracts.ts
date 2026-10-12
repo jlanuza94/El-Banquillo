@@ -1,5 +1,6 @@
 /* El Banquillo · contracts.js — Contratos, renovaciones, cesiones y opciones de compra. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {isAffiliate,wageCheck} from './clubplus';
 import {LOAN_OBJ} from './connected';
 import {agentOf} from './connected';
 import {clamp,money,pick,r2,r3,rnd} from './core';
@@ -17,6 +18,7 @@ export function makeRenew(id,w,n){
  if(!(w>0)){st.msg='Escribe un sueldo válido.';st.kind='no';return;}
  if(!(n>p.contract)){st.msg='Elige una fecha posterior a la de su contrato actual.';st.kind='no';return;}
  if(n-1>maxExtra(p)){st.msg=`A sus ${p.age} años, ${p.name} solo firma hasta junio de ${2025+S.seasonN+maxExtra(p)+1}.`;st.kind='no';return;}
+ {const wc=wageCheck(w,p.wage);if(wc){st.msg=wc;st.kind='no';return;}}
  st.tries++;
  const ratio=w/st.demand;let ok=ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;
  if(ok){p.wage=r3(w);p.contract=n;delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)} por ${money(p.wage)}/semana.`,'good');toast(`${p.name} ha renovado.`);return;}
@@ -33,6 +35,7 @@ export function requestLoan(id,withOpt){
  if(loansIn()>=4){st.msg='Ya tienes 4 cedidos, que es el máximo.';st.kind='no';return;}
  if(squad(S.user).length>=30){st.msg='Tu plantilla ya tiene 30 jugadores.';st.kind='no';return;}
  if(fee>S.budget){st.msg=`No te llega para la cuota de ${money(fee)}.`;st.kind='no';return;}
+ {const wc=wageCheck(p.wage);if(wc){st.msg=wc;st.kind='no';return;}}
  const rank=squad(from).sort((a,b)=>b.ovr-a.ovr).indexOf(p);
  st.closed=true;
  if(rank<11&&p.age>21){st.msg=`${T(from).name} no cede a un titular.`;st.kind='no';return;}
@@ -54,8 +57,8 @@ export function makeLoanOut(id){
  const c=S.teams.filter(t=>t.id!==S.user&&t.rep<=p.ovr+4&&t.rep>=p.ovr-10&&Math.abs(LG(t.lg).rep-my)<=18);
  return S.lo[id]=c.length?{team:pick(c).id}:{none:true};
 }
-export function acceptLoanOut(id,obj){
- const p=PL(id),o=S.lo[id],sq=squad(S.user);
+export function acceptLoanOut(id,obj,to){
+ const p=PL(id),sq=squad(S.user);let o=S.lo[id];if(to&&isAffiliate(+to))o={team:+to};else if(!o||o.none)return toast('Ningún club lo quiere cedido ahora mismo.');
  if(!inWindow())return toast('El mercado está cerrado.');
  if(sq.length<=16)return toast('Necesitas al menos 16 jugadores en plantilla.');
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');

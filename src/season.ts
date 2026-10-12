@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {fixFilialMoves,setWageCap} from './clubplus';
 import {livingSeasonEnd,onRetire} from './living';
 import {loanReview} from './connected';
 import {recordRound} from './analysis';
@@ -143,7 +144,7 @@ export function newSeason(){
  S.leagues.forEach((L,i)=>{const tb=tabs[i];
   if(L.lv>0){const up=findLg(L.c,L.lv-1);tb.slice(0,3).forEach(r=>moves.push([r.id,up.id]));}
   if(!lowest(L)){const dn=findLg(L.c,L.lv+1);tb.slice(17).forEach(r=>moves.push([r.id,dn.id]));}});
- moves.forEach(([id,lg])=>{T(id).lg=lg;});
+ fixFilialMoves(tabs,moves).forEach(([id,lg])=>{T(id).lg=lg;});
  // aging, development, retirements
  const retired=[],devNews=[];
  Object.values(S.players).forEach(p=>{
@@ -180,7 +181,7 @@ export function newSeason(){
  crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();const youth=academyIntake(3);setupYouth();genScoutPool();aiTransfers(160);
  genFreeAgents();
  S.short=S.short.filter(id=>PL(id));
- S.seasonN++;setupSeason();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(mgrOut)loseJob('fin de contrato');else advance();
+ S.seasonN++;setupSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(mgrOut)loseJob('fin de contrato');else advance();
  devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${(p.ovr/10).toFixed(1)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
  if(retired.length)news(`Se retiran: ${retired.join(', ')}.`);
  if(freed.length)news(`Acaban contrato y se van libres: ${freed.join(', ')}.`,'bad');

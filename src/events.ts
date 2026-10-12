@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {addAffiliate,createFilial,fromFilial,moveBudget,removeAffiliate,takeBankLoan,toFilial} from './clubplus';
 import {loadPlan,planInMatch,savePlan} from './plans';
 import {addPair,removePair} from './mentor';
 import {DIFF} from './difficulty';
@@ -54,6 +55,13 @@ document.addEventListener('click',e=>{
   case'mentor-add':{const err=addPair(document.getElementById('mtY')?.value,document.getElementById('mtM')?.value);toast(err||'Tutelaje en marcha.');break;}
   case'mentor-del':removePair(d.id);break;
   case'club-open':S.modal={type:'club',id:+d.id};break;
+  case'bud-move':{const e=moveBudget(+d.v);if(e)toast(e);break;}
+  case'bank-take':{const e=takeBankLoan(+d.i);if(e)toast(e);break;}
+  case'fil-create':{const e=createFilial();toast(e||'Ya tienes filial.');break;}
+  case'fil-up':{const e=fromFilial(d.id);toast(e||'Sube al primer equipo.');break;}
+  case'fil-down':{const id=document.getElementById('filDown')?.value;const e=id?toFilial(id):'Elige un jugador.';toast(e||'Baja al filial.');break;}
+  case'aff-add':{const e=addAffiliate(d.id);if(e)toast(e);break;}
+  case'aff-del':removeAffiliate(d.id);break;
   case'an-tab':S.anTab=d.v;break;
   case'an-p90':S.anP90=d.v==='1';break;
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
@@ -149,7 +157,7 @@ document.addEventListener('click',e=>{
   case'loan-ok':requestLoan(d.id,d.o==='1');break;
   case'buy-opt':buyOption(d.id);break;
   case'loanout':if(PL(d.id).loan)break;makeLoanOut(d.id);S.modal={type:'loanout',id:d.id};break;
-  case'loanout-ok':acceptLoanOut(d.id,document.getElementById('loanObj')?.value||'');break;
+  case'loanout-ok':acceptLoanOut(d.id,document.getElementById('loanObj')?.value||'',document.getElementById('loanTo')?.value||'');break;
   case'sell':if(!inWindow()){toast('El mercado está cerrado.');break;}makeOffer(d.id);S.modal={type:'sell',id:d.id};break;
   case'sell-ok':sell(d.id);return;
   case'offer-no':{const o=S.offers[d.id];if(!o)break;delete S.offers[d.id];const p=PL(d.id);news(`Rechazas la oferta de ${T(o.team).name} por ${p.name}.`);if(LG(T(o.team).lg).rep>LG(uLg()).rep+3&&(p.per==='amb'||p.hap<60)){p.hap=clamp(p.hap-12,0,100);news(`${p.name} quería ese traspaso a un club más grande y está molesto.`,'bad');if(p.hap<25&&!p.req){p.req=1;news(`${p.name} pide salir del club.`,'bad');}}break;}

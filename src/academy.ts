@@ -1,5 +1,6 @@
 /* El Banquillo · academy.js — Cantera y ojeadores. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wageCheck} from './clubplus';
 import {scoutAttrs,youthMult} from './staff';
 import {clamp,gauss,money,pick,r2,r3,ri,rnd} from './core';
 import {COUNTRIES,NAMES,POS_NAME,W} from './data';
@@ -29,6 +30,7 @@ export function academyWeekly(){S.academy.forEach(p=>{const pl=p.ypw;p.ypw=0;if(
  if(S.week===30){const old=S.academy.filter(p=>p.age>=18);if(old.length)news(`Cantera: ${old.map(p=>p.name).join(', ')} cumple${old.length>1?'n':''} 19 la próxima temporada. Súbelos al primer equipo o se marcharán.`,'bad');}}
 export function promoteYouth(id){
  const i=S.academy.findIndex(p=>p.id===id);if(i<0)return;if(squad(S.user).length>=30)return toast('Tu plantilla ya tiene 30 jugadores.');
+ {const wc=wageCheck(baseWage(S.academy[i]));if(wc)return toast(wc);}
  const p=S.academy.splice(i,1)[0];p.id='p'+(S.nextId++);p.team=S.user;p.contract=3;p.wage=baseWage(p);p.energy=100;p.role='jo';p.hap=80;p.home=1;p.ph=[[seasonLabel(),p.ovr]];S.players[p.id]=p;dirty();assignNum(p);
  news(`${p.name} sube de la cantera al primer equipo.`,'good');toast(`${p.name} ya está en el primer equipo.`);
 }
