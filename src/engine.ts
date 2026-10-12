@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {laneTip,learnRoles,phaseMods} from './tactics2';
 import {posMult,posTeam,userPos} from './positions';
 import {injWeight,onRecovered,relapseMult} from './medical';
 import {isDerby,recordH2H} from './rivals';
@@ -76,6 +77,7 @@ export function tacMods(m,s){
  if(OI.ban)own*=1-Math.max(0,w)/220;if(MY.ban)own*=.992;
  if(OI.sal){poss-=.03;const dq=avgAt(m,s,'DEF','pas');own*=dq<5?.97:.99;}if(MY.sal)drain*=1.06;
  if(OI.dur)own*=.975;
+ {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);own*=ph.own;opp*=ph.opp;drain*=ph.drain;poss+=ph.poss;}
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)own*=1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4);
  return{own,opp,drain,poss};
 }
@@ -183,6 +185,7 @@ export function assistantTip(m){
  if(diff>0&&m.min>=70)tips.push('Vamos ganando: cerremos el partido con mentalidad defensiva y ritmo lento.');
  if(tired)tips.push(`${PL(tired).name} está muy cansado (${Math.round(m.en[tired])}%). Yo lo cambiaría.`);
  if(bad&&m.min>=30)tips.push(`${PL(bad).name} está teniendo un mal día (${live[bad].toFixed(1)}).`);
+ {const lt=laneTip(m);if(lt)tips.push(lt);}
  if((m.wide&&m.wide[o]||0)>4&&b.sh>=a.sh&&b.sh>=3&&!(m.oi&&m.oi[us]&&m.oi[us].ban))tips.push('Nos hacen mucho daño por las bandas: la instrucción «Cerrar las bandas» ayudaría.');
  m.adv={min:m.min,tx:`${who}: «${tips.length?pick(tips):'Lo estamos haciendo bien, sigamos así.'}»`};
  addEv(m,'sys',null,m.adv.tx);
@@ -210,6 +213,7 @@ export function phaseLog(m,pm){
  if(sp&&/^(EI|MI|LI)$/.test(sp))lane='l';else if(sp&&/^(ED|MD|LD)$/.test(sp))lane='r';
  else{const w=(m.tac[s]&&m.tac[s].anc)==='anc'?.7:(m.tac[s]&&m.tac[s].anc)==='est'?.35:.55;const r=Math.random();lane=r<w/2?'l':r<w?'r':'c';}
  m.pl=(m.pl||[]).slice(-5).concat([{min:m.min,s,out,pid,ast,kind,lane}]);
+ if(out!=='build'){m.lz=m.lz||{h:{l:0,c:0,r:0},a:{l:0,c:0,r:0}};m.lz[s][lane]+=out==='lost'?1:2;}
 }
 export function step(m){
  if(m.done)return;
@@ -257,6 +261,7 @@ export function applyResult(m){
   p.form=clamp(Math.round(p.form*.6+res[s]*1.2+(gl[id]||0)*.9+gauss()*.6),-3,3);});
  recordMatch(m);trackLoans(m);coachResult(m);
  if(m.us&&m.ref.k!=='fr')learnTactic(m.tac[m.us]);
+ if(m.us&&m.ref.k!=='fr')learnRoles(m);
  if(m.us&&m.ref.k!=='fr')S.tg=(S.tg||0)+1;
  retosMatch(m);
  if(m.us&&m.ref.k!=='fr'){const my0=m.score[m.us],op0=m.score[m.us==='h'?'a':'h'];if(my0-op0>=5)unlock('manita');const xi=m.xi0[m.us].filter(Boolean).map(PL).filter(Boolean);if(xi.filter(p=>p.home).length>=5)unlock('casa');if(xi.some(p=>p.age<=17&&p.st&&p.st.pj<=1))unlock('joven');makePress(m);}

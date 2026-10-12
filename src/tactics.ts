@@ -19,7 +19,7 @@ export function influence(p,sq){sq=sq||squad(S.user);const rank=sq.slice().sort(
 export function leaders(n){const sq=squad(S.user).filter(p=>!p.loan);return sq.map(p=>[p,influence(p,sq)]).sort((a,b)=>b[1]-a[1]).slice(0,n||3);}
 export function setAdapt(p){const same=squad(S.user).filter(x=>x!==p&&langOf(x)===langOf(p)).length;p.adapt=same>=3?2:same>=1?5:8;if(same>=3)p.hap=clamp((p.hap||70)+5,0,100);}
 export const slotRate=(p,slot,role)=>roleRate(p,slot,role)*10*prof(p,slot)*footF(p,slot)+traitBonus(p,slot);
-export function eff(p,slot,en,role){const e=en==null?p.energy:en;return slotRate(p,slot,role)*(.75+.25*e/100)*hapMult(p)+p.form;}
+export function eff(p,slot,en,role){const e=en==null?p.energy:en;return slotRate(p,slot,role)*(.75+.25*e/100)*hapMult(p)*(role&&p.rf?.97+.05*(p.rf[role]??50)/100:1)+p.form;}
 /** Roles del once de tu equipo (uno por hueco de la formación). */
 export function userRoles(){const t=T(S.user),sl=slotsOf(t.formation);if(!t.roles||t.roles.length!==sl.length)t.roles=defaultRoles(sl);return t.roles;}
 export function autoLineup(tid,f){

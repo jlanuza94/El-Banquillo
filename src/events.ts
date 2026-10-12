@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {PRESETS,applyPreset} from './tactics2';
 import {userPos} from './positions';
 import {removeFromTeam,setSub,subsOf} from './tactics';
 import {continueDay} from './calendar';
@@ -72,6 +73,7 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;document.querySelector('main')?.scrollTo?.(0,0);break;
+  case'preset':applyPreset(d.v);toast('Sistema cargado: '+PRESETS[d.v].n+'.');break;
   case'pos-sel':S.posSel=+d.i;break;
   case'duty':{const t=T(S.user);userPos(slotsOf(t.formation));t.duty[+d.i]=d.v;break;}
   case'pi-tog':{const t=T(S.user),sl=slotsOf(t.formation);userPos(sl);const L=t.pi[+d.i]=t.pi[+d.i]||[],k=L.indexOf(d.v);if(k>=0)L.splice(k,1);else{if(L.length>=3){toast('Máximo 3 instrucciones por puesto.');break;}L.push(d.v);}break;}
@@ -272,7 +274,7 @@ document.addEventListener('change',e=>{
  else if(id==='t-cap'||id==='t-pk'||id==='t-fk'||id==='t-ck'){T(S.user)[id.slice(2)]=v||null;}
  else if(e.target.dataset&&e.target.dataset.role!=null){userRoles()[+e.target.dataset.role]=v;}
  else if(e.target.dataset&&e.target.dataset.ord){const t=T(S.user);t.orders=t.orders||{};t.orders[e.target.dataset.ord]=v;}
- else if((id==='m-est'||id==='m-pre')&&S.match){S.match.tac[S.match.us][id.slice(2)]=v;addEv(S.match,'sys',null,`Cambio táctico: ${id==='m-est'?'estilo':'presión'} ${(id==='m-est'?TACS.est.o:TACS.pre.o)[v].toLowerCase()}`);}
+ else if((id==='m-est'||id==='m-pre'||id==='m-per'||id==='m-rec')&&S.match){const k=id.slice(2);S.match.tac[S.match.us][k]=v;addEv(S.match,'sys',null,`Cambio táctico: ${TACS[k].n.toLowerCase()} · ${TACS[k].o[v].toLowerCase()}`);}
  else if(e.target.dataset&&e.target.dataset.job){const sc=S.scouts.find(x=>x.id===e.target.dataset.job);if(sc)sc.job=v;}
  else if(e.target.dataset&&e.target.dataset.reg){const sc=S.scouts.find(x=>x.id===e.target.dataset.reg);if(sc)sc.reg=+v;}
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}

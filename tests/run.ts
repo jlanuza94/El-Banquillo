@@ -12,6 +12,7 @@ import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics'
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
 import { PL } from '../src/state';
 import { cellVal } from '../src/sorttable';
+import { applyPreset, famMult, laneShare, laneTip, learnRoles, phaseMods, rivalAdvice } from '../src/tactics2';
 import { posMult, posTeam, userPos } from '../src/positions';
 import { FORMS } from '../src/data';
 import { slotsOf } from '../src/tactics';
@@ -300,6 +301,20 @@ const app = document.getElementById('app')!;
     const f0 = t.formation, other = Object.keys(FORMS).find(f => f !== f0 && slotsOf(f).includes('DC')); setFormation(other);
     const j = slotsOf(other).indexOf('DC'); ok(t.duty.length === slotsOf(other).length && t.duty[j] === 'def' && t.pi[j].includes('esp'), 'al cambiar de formación se conserva lo del puesto');
     setFormation(f0); t.duty[i] = d0; t.pi[i] = []; S.vt = {}; S.view = 'inicio'; }
+  { // Táctica que engancha: fases, sistemas famosos, dominio del rol, consejos del rival y carriles
+    const n = phaseMods({ per: 'nor', rec: 'nor' }, {}, 5, 'bal'); ok(n.own === 1 && n.opp === 1 && n.poss === 0, 'fases normales: sin efecto');
+    const cp = phaseMods({ per: 'cpr' }, {}, 5, 'bal'), ct = phaseMods({ rec: 'cont' }, { lin: 'alt' }, 7, 'bal');
+    ok(cp.opp < 1 && cp.drain > 1 && ct.own > 1.04, 'contrapresión y contraataque contra línea alta');
+    const t = T(S.user), f0 = t.formation, tac0 = Object.assign({}, t.tac), m0 = t.ment, r0 = (t.roles || []).slice();
+    applyPreset('cate'); ok(t.formation === '5-3-2' && t.tac.per === 'rep' && t.ment === 'def', 'cargar el catenaccio');
+    S.view = 'tacticas'; S.vt = { tac: 'plan' }; render(); ok(app.textContent.includes('Gegenpress'), 'sistemas famosos en tácticas');
+    const opp = S.teams.find(x => x.id !== S.user).id; ok(Array.isArray(rivalAdvice(opp)), 'consejos contra el rival');
+    S.vt = { tac: 'rival' }; render();
+    setFormation(f0); t.tac = tac0; t.ment = m0; if (r0.length) t.roles = r0; S.vt = {};
+    const p0 = PL(t.lineup[3]); const fm = { us: 'h', h: S.user, f: { h: t.formation }, lu: { h: t.lineup.slice() }, ro: { h: userRoles().slice() } }; learnRoles(fm);
+    ok(p0.rf && p0.rf[fm.ro.h[3]] > 50 && famMult(p0, fm.ro.h[3]) > 1, 'el jugador aprende el rol que juega');
+    const lm = { us: 'h', lz: { h: { l: 2, c: 2, r: 2 }, a: { l: 12, c: 2, r: 2 } } }; ok(laneShare(lm, 'a').l > 60 && /derecha/.test(laneTip(lm)), 'el ayudante ve por dónde nos atacan');
+    S.view = 'inicio'; render(); }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });

@@ -162,3 +162,9 @@ main thead th[data-dir="asc"]::after{content:" ▲";font-size:.8em}
 .pi span{font-size:11px;color:var(--muted)}
 .pi.on{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
 @media (orientation:landscape) and (max-height:500px){.pcard{flex-basis:84px;padding:2px 3px}.pfield{gap:4px;padding:6px 4px}.pi{padding:4px 6px}.pi span{display:none}}
+/* Por dónde se ataca */
+.lanes{display:grid;grid-template-columns:48px repeat(3,1fr);gap:6px;align-items:end;margin:6px 0}
+.ln-t{font-weight:700;font-size:12px;align-self:center}
+.ln-c{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px}
+.ln-c i{display:block;width:100%;height:calc(var(--v) * .5px + 4px);max-height:54px;background:var(--accent);border-radius:4px 4px 0 0;opacity:calc(.35 + var(--v) / 120)}
+.ln-c small{color:var(--muted)}

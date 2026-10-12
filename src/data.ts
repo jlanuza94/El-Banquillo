@@ -84,8 +84,10 @@ export const TACS={pre:{n:'Presión',o:{baj:'Baja',med:'Media',alt:'Alta'},d:'Al
  lin:{n:'Línea defensiva',o:{baj:'Baja',med:'Media',alt:'Alta'},d:'Alta: ayuda a atacar pero deja espacio a la espalda. Baja: sólida atrás, pero creas menos.'},
  rit:{n:'Ritmo',o:{len:'Lento',nor:'Normal',rap:'Rápido'},d:'Rápido: más ocasiones para los dos y más cansancio. Lento: partido controlado y cerrado.'},
  anc:{n:'Anchura',o:{est:'Estrecho',nor:'Normal',anc:'Ancho'},d:'Ancho: aprovecha laterales y extremos buenos. Estrecho: juega por dentro si tus medios son mejores.'},
+ per:{n:'Al perder el balón',o:{nor:'Normal',cpr:'Contrapresión',rep:'Replegar'},d:'Contrapresión: a por el balón en cuanto se pierde (robas arriba, cansa y te expone a la contra). Replegar: todos atrás a defender (sólido, pero atacas menos).'},
+ rec:{n:'Al recuperar el balón',o:{nor:'Normal',cont:'Contraataque',pau:'Pausar'},d:'Contraataque: rápido a la espalda del rival (mortal si tiene la línea alta o está volcado; mejor con delanteros rápidos). Pausar: guardar el balón y ordenarse.'},
  est:{n:'Estilo',o:{equ:'Equilibrado',pos:'Posesión',dir:'Directo',con:'Contragolpe'},d:'Posesión: castiga la presión baja. Directo: bueno con delanteros fuertes. Contragolpe: mortal contra líneas altas y rivales ofensivos.'}};
-export const TAC0={pre:'med',lin:'med',rit:'nor',anc:'nor',est:'equ'};
+export const TAC0={pre:'med',lin:'med',rit:'nor',anc:'nor',est:'equ',per:'nor',rec:'nor'};
 export const ORDERS={'':'Sin orden',sube:'Sube al ataque',libre:'Libertad creativa',marca:'Marcar a su estrella',fija:'Quédate atrás'};
 /** Instrucciones al rival (se aplican a todo su equipo). */
 export const OIS={ban:{n:'Cerrar las bandas',d:'Frena a los rivales que atacan por fuera, a cambio de un poco menos de ataque propio.'},

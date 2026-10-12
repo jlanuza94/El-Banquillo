@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {PRESETS,rivalAdvice} from '../tactics2';
 import {posicionesHTML} from './positions';
 import {medHTML} from './staff';
 import {MAX_SUBS,subsOf} from '../tactics';
@@ -127,9 +128,16 @@ export function tacticasView(){
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
  const tb=vtab('tac',[['ali','Alineación'],['tac','Táctica'],['ord','Posiciones'],['bp','Balón parado'],['rival','Rival'],['piz','Pizarra libre'],['plan','Tácticas guardadas']],'ali');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two(opp!=null?reportHTML(opp,false):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>',oiP):tb.cur==='piz'?boardHTML():two(planP,famP);
+ const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP,presetsHTML());
  return tb.bar+body;
 }
+/* ---------- Sistemas famosos y consejos contra el rival ---------- */
+function presetsHTML(){return `<section class="panel"><div class="panel-h"><h2>Sistemas famosos</h2><span class="eyebrow">Cárgalo y retócalo</span></div>
+ ${Object.entries(PRESETS).map(([k,P])=>`<div class="offer"><span class="t"><b>${esc(P.n)}</b> <span class="small muted">· ${P.f} · ${MENT[P.ment].label.toLowerCase()}</span><br><span class="small muted">${esc(P.d)}</span></span><button class="btn sm" data-a="preset" data-v="${k}">Cargar</button></div>`).join('')}
+ <p class="small muted" style="margin:8px 0 0">Cambia formación, mentalidad, instrucciones, roles y cometidos. Una táctica nueva hay que trabajarla: el dominio empieza bajo.</p></section>`;}
+function adviceHTML(oid,tac){const A=rivalAdvice(oid);if(!A.length)return '';
+ return `<section class="panel"><div class="panel-h"><h2>Cómo ganarle</h2><span class="eyebrow">Puntos débiles de ${esc(T(oid).short)}</span></div>
+ ${A.map(x=>`<div class="offer"><span class="t">${esc(x.t)}</span>${tac[x.k]===x.v?'<span class="tag onxi">Aplicado</span>':`<button class="btn sm" data-a="tac" data-k="${x.k}" data-v="${x.v}">${esc(x.l)}</button>`}</div>`).join('')}</section>`;}
 /* ---------- Alineación estilo FM ---------- */
 const suitOf=(p,s)=>{const v=prof(p,s)*footF(p,s);return v>=.99?1:v>=.94?2:v>=.8?3:4;};
 const SUIT_N={1:'Natural',2:'Competente',3:'Poco habitual',4:'Fuera de sitio'};
