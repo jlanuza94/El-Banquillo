@@ -65,10 +65,10 @@ export function tacMods(m,s){
 export function addEv(m,t,s,tx,pid){m.ev.push({min:m.min,t,s,tx,pid:pid||null});}
 export const scoreStr=m=>`${m.score.h}-${m.score.a}`;
 export function pickScorer(m,s){
- const sl=slotsOf(m.f[s]),w={POR:.02,DEF:.8,MED:2.4,DEL:6};const c=[];
+ const sl=slotsOf(m.f[s]),w={POR:.02,DEF:.85,MED:2.3,DEL:4.6};const c=[];
  m.lu[s].forEach((id,i)=>{if(!id)return;const p=PL(id),g=GRP[sl[i]];let t=1;if(hasTr(p,'gol'))t*=1.35;if(hasTr(p,'lej')&&g==='MED')t*=1.3;if(hasTr(p,'cab'))t*=1.2;if(hasTr(p,'bal'))t*=1.1;
   if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;if(m.marked&&m.marked[s]===id)t*=.6;t*=roleMult(sl[i],m.ro&&m.ro[s]&&m.ro[s][i],'sc');
-  c.push([id,w[g]*t*Math.pow((p.at.tir*.6+p.at.reg*.4+2)/7,2)*(.88+.03*(p.wf||3))*(m.hurt[id]?.4:1)]);});
+  c.push([id,w[g]*t*Math.pow((p.at.tir*.6+p.at.reg*.4+2)/7,1.25)*(.88+.03*(p.wf||3))*(m.hurt[id]?.4:1)]);});
  let tot=c.reduce((a,x)=>a+x[1],0),r=rnd()*tot;for(const [id,wt] of c){r-=wt;if(r<=0)return id;}return c.length?c[0][0]:null;
 }
 export function pickAssist(m,s,scorer){

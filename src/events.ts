@@ -39,6 +39,10 @@ document.addEventListener('click',e=>{
   case'row':{if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'ficha':S.modal={type:'ficha',id:d.id};break;
   case'scout':{const err=queueScout(d.id);toast(err||`${PL(d.id).name} queda en la lista de ojeo. Tendrás el informe en ${scoutWeeks()} jornada${scoutWeeks()>1?'s':''}.`);break;}
+  case'aw-tab':S.awTab=d.v;break;
+  case'aw-stat':S.awStat=d.v;break;
+  case'aw-lv':{const L=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(L.c,+d.v).id;break;}
+  case'cmp':{if(S.cmpA&&S.cmpA!==d.id&&PL(S.cmpA)){S.modal={type:'cmp',a:S.cmpA,b:d.id};S.cmpA=null;}else{S.cmpA=d.id;S.modal=null;toast(`Ahora abre la ficha de otro jugador y pulsa «Comparar».`);}break;}
   case'mail-open':S.mailSel=d.id;markRead(d.id);break;
   case'mail-back':S.mailSel=null;break;
   case'mail-cat':S.mailCat=d.v;S.mailSel=null;break;
@@ -155,6 +159,7 @@ document.addEventListener('change',e=>{
  else if(e.target.dataset&&e.target.dataset.job){const sc=S.scouts.find(x=>x.id===e.target.dataset.job);if(sc)sc.job=v;}
  else if(e.target.dataset&&e.target.dataset.reg){const sc=S.scouts.find(x=>x.id===e.target.dataset.reg);if(sc)sc.reg=+v;}
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}
+ else if(id==='awC'){const c=+v,cur=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}
  else if(map[id]){S.mk[map[id]]=v;S.mk.limit=40;}
  else if(id==='mkok'){S.mk.ok=e.target.checked;S.mk.limit=40;}

@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {seasonAwards} from './awards';
 import {payDebts} from './market2';
 import {setupYouth} from './youth';
 import {scoutingSeasonEnd} from './scouting';
@@ -115,6 +116,7 @@ export function newSeason(){
  const sm=seasonSummary(),tabs=S.leagues.map(L=>table(L.id));
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
  const mgrOut=mgrSeasonEnd(sm);achSeason(sm);
+ seasonAwards();
  // hall of fame
  {const h={season:seasonLabel(),lg:COUNTRIES.map((C,c)=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}
  {const best=squad(S.user).filter(p=>p.st&&p.st.g).sort((a,b)=>b.st.g-a.st.g)[0];if(best){if(!S.rec)S.rec={};if(!S.rec.goals||best.st.g>S.rec.goals.g)S.rec.goals={name:best.name,g:best.st.g,season:seasonLabel()};}}

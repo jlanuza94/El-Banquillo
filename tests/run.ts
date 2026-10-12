@@ -131,6 +131,8 @@ const app = document.getElementById('app')!;
     ok(Object.keys(S.interest).length > 0, 'rumores de interés por tus jugadores');
     fixLineup(); S.budget = realBudget; S.debts = [];
   }
+  { const a = squad(S.user)[0], b = Object.values(S.players).find(p => p.team !== S.user && p.team !== null);
+    S.modal = { type: 'cmp', a: a.id, b: b.id }; render(); ok(app.querySelector('.cmpgrid'), 'comparador de jugadores'); S.modal = null; }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
@@ -145,9 +147,13 @@ const app = document.getElementById('app')!;
     const gpm = fx.reduce((a, f) => a + f.hg + f.ag, 0) / fx.length;
     console.log(`     temporada ${seasonLabel()}: puesto ${pos}, presupuesto ${money(S.budget)}, ${gpm.toFixed(2)} goles por partido`);
     ok(gpm > 2 && gpm < 4, 'goles por partido razonables');
+    { const top = Object.values(S.players).filter(p => p.st && p.team !== null).sort((a, b) => b.st.g - a.st.g).slice(0, 5); console.log('     máximos goleadores (todas las comp.): ' + top.map(p => p.st.g + ' en ' + p.st.pj).join(', ')); }
     if (!S.jobless) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
       S.view = 'cantera'; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
-    S.modal = null; S.view = 'inicio'; render(); newSeason();
+    for (const tb of ['race', 'stats', 'xi', 'hist']) { S.awTab = tb; S.view = 'premios'; render(); }
+    ok(app.textContent.includes('Palmarés'), 'pantalla de estadísticas y premios');
+    S.modal = null; S.view = 'inicio'; render(); const na = (S.awards || []).length; newSeason();
+    ok(S.awards.length === na + 1 && S.awards[na].ballon.length === 10 && S.awards[na].boot && S.awards[na].xi.filter(([, c]) => c).length >= 9, `premios de la temporada (Balón de Oro: ${S.awards[na].ballon[0].name})`);
     ok(S.week === 0, 'empieza la temporada siguiente');
   }
 
