@@ -55,7 +55,7 @@ async function buildApp() {
     `<link rel="stylesheet" href="${FONTS}">`,
     `<link rel="stylesheet" href="app.css?v=${v}">`,
   ].join('\n');
-  const body = `<div id="app"></div>\n<script src="app.js?v=${v}" charset="utf-8"></script>`;
+  const body = `<div id="app"></div>\n<div class="rotate" aria-hidden="true"><div><svg viewBox="0 0 64 64" width="72" height="72" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="6" width="24" height="40" rx="4"/><path d="M8 52a24 24 0 0 0 40 4"/><path d="M48 50v6h-6"/></svg><b>Gira el móvil</b><span>El Banquillo se juega en horizontal</span></div></div>\n<script src="app.js?v=${v}" charset="utf-8"></script>`;
   writeFileSync(join(DIST, 'index.html'), read('public/index.html').replace('<!--HEAD-->', head).replace('<!--BODY-->', body));
   writeFileSync(join(DIST, 'artifact.html'), head + '\n\n' + body + '\n');
 

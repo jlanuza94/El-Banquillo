@@ -1,5 +1,9 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {nextMatch} from '../competitions';
+import {lineupIssues} from '../tactics';
+import {dateTxt} from '../calendar';
+import {derbyName,h2hTxt,isDerby} from '../rivals';
 import {BB_MULT,BB_YEARS,counterTxt} from '../negotiate';
 const counterBox=(st,p,m)=>st&&st.counters&&!st.closed?`<div class="negmsg"><b>Contraoferta de su agente</b><div class="row" style="margin-top:6px">${st.counters.map((c,i)=>`<button class="btn sm primary" data-a="terms-counter" data-id="${p.id}" data-m="${m}" data-i="${i}">Aceptar: ${esc(counterTxt(c,p))}</button>`).join('')}</div></div>`:'';
 import {ANSWERS,TOPICS,cred} from '../talks';
@@ -91,6 +95,12 @@ export function modalView(){
   <div class="acts"><button class="btn" data-a="cwc-open">Ver el Mundial</button><button class="btn primary" data-a="modal-close">Continuar</button></div>`;}
  else if(md.type==='resign'){body=`<h2>¿Dimitir?</h2><p>Dejarás ${esc(T(S.user).name)} ahora mismo. Tu reputación bajará un poco y tendrás que elegir entre los clubes que te quieran.</p><div class="acts"><button class="btn" data-a="modal-close">Seguir en el club</button><button class="btn danger" data-a="resign-ok">Dimitir</button></div>`;}
  else if(md.type==='joboffer'){const o=md.o,t=T(o.team);body=`<div class="eyebrow">Candidatura aceptada</div><h2 style="margin-top:4px">${esc(t.name)} te quiere</h2><div class="kv"><span>Liga</span><b>${esc(lgName(t.lg))}</b><span>Salario</span><b>${money(o.sal)}/sem</b><span>Contrato</span><b>${o.yrs} temporadas</b><span>Presupuesto del club</span><b>${money(startBudget(t))}</b><span>Objetivo</span><b>${objectiveFor(t.id).txt}</b></div><p class="small muted">Si aceptas, dejas tu club actual de inmediato. Tu cantera, ojeadores y cuerpo técnico se quedan en el club que dejas.</p><div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn primary" data-a="joboffer-ok">Firmar</button></div>`;}
+ else if(md.type==='matchday'){const nm=nextMatch();if(!nm){S.modal=null;return '';}const home=nm.fx.h===S.user,opp=T(home?nm.fx.a:nm.fx.h),dv=isDerby(S.user,opp.id),iss=lineupIssues();
+  body=`<div class="eyebrow">${esc(dateTxt(S.day,true))} · Día de partido</div><h2 style="margin:4px 0 6px">${home?'':'En '}${esc(home?T(S.user).name+' - '+opp.name:opp.name)}</h2>
+  ${dv?`<div class="derbytag">🔥 ${derbyName(S.user,opp.id)}</div>`:''}<div class="small muted">${esc(nm.label)} · ${home?'en casa':'a domicilio'} · tu historial: ${esc(h2hTxt(opp.id))}</div>
+  ${iss.length?`<div class="warnbox" style="margin-top:10px"><span>Tu once tiene ${iss.length} hueco${iss.length>1?'s':''} o jugadores no disponibles.</span><button class="btn sm" data-a="fixlu">Completar</button></div>`:''}
+  <div class="stack" style="gap:8px;margin-top:14px"><button class="btn primary big" data-a="play">Jugar el partido</button><button class="btn" data-a="sim-go" data-v="next">Simular: lo dirige tu segundo</button><button class="btn" data-a="view" data-v="tacticas">Revisar tácticas antes</button></div>
+  <div class="acts"><button class="btn" data-a="modal-close">Ahora no</button></div>`;}
  else if(md.type==='sim'){body=`<h2>Simular</h2><p class="small muted">Se juegan tus partidos sin verlos, con tu alineación y tácticas actuales. Los cambios y la rotación los hace tu ayudante.</p>
   <div class="stack" style="gap:8px;margin-top:12px">${[['next','Solo el próximo partido'],['5','Próximos 5 partidos'],['win','Hasta que cierre el mercado'],['season','Hasta el final de la temporada']].map(([k,l])=>`<button class="btn" data-a="sim-go" data-v="${k}" ${k==='win'&&!inWindow()?'disabled':''}>${l}</button>`).join('')}</div>
   <label class="chk" style="margin-top:12px"><input type="checkbox" id="simStop" ${S.simStop!==false?'checked':''}> Parar si llega una oferta por un jugador o por ti</label>

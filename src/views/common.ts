@@ -1,5 +1,6 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {agenda,dateTxt,daysToMatch,isMatchDay,syncDay} from '../calendar';
 import {FREE,formRows,freeCoords} from '../freeboard';
 import {riskTag} from '../medical';
 import {tutCard,tutView} from '../tutorial';
@@ -57,12 +58,15 @@ export const NAVG=[{g:'',it:[['inicio','Inicio','home'],['buzon','Bandeja de ent
 export const NAVL={};NAVG.forEach(g=>g.it.forEach(([v,l,i])=>NAVL[v]=[l,i]));
 export function header(){
  const t=T(S.user),pos=posOf(S.user),o=S.obj,played=S.week>0,nm=S.match?null:nextMatch(),ended=S.week>=nRounds();
- let cta='';
- if(S.match)cta=`<div class="cta"><div class="l"><span class="eyebrow">En juego · ${S.match.min}'</span><b>${esc(T(S.match.h).short)} ${S.match.score.h}-${S.match.score.a} ${esc(T(S.match.a).short)}</b></div><button class="btn primary" data-a="view" data-v="partido">Volver al partido</button></div>`;
- else if(ended)cta=`<div class="cta"><div class="l"><span class="eyebrow">Temporada terminada</span><b>Mira el resumen</b></div><button class="btn primary" data-a="view" data-v="inicio">Ver resumen</button></div>`;
- else if(nm){const opp=T(nm.fx.h===S.user?nm.fx.a:nm.fx.h);cta=`<div class="cta"><div class="l"><span class="eyebrow">${esc(nm.label)}</span><b>${nm.fx.h===S.user?'vs':'en'} ${esc(opp.name)}</b></div><button class="btn primary" data-a="play">Jugar</button><button class="btn" data-a="sim-menu">Simular</button></div>`;}
- return `<header class="top2">${themeBtn()}<button class="gsbtn" data-a="gsearch" aria-label="Buscar" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button><div class="club">${crest(t,'lg')}<div style="min-width:0"><div class="eyebrow">${lgName(t.lg)} · ${seasonLabel()} · ${ended?'Fin de temporada':'Jornada '+(S.week+1)+'/'+nRounds()}${inWindow()&&!ended?' · <span style="color:var(--win)">Mercado abierto</span>':''}</div><h1>${esc(t.name)}</h1>
- <div class="kpis" style="margin-top:6px"><div class="kpi"><span class="eyebrow">Presupuesto</span><b>${money(S.budget)}</b></div><div class="kpi"><span class="eyebrow">Posición</span><b class="${played?(pos<=o.max?'ok':'bad'):''}">${played?pos+'º':'—'}</b></div><div class="kpi"><span class="eyebrow">Objetivo</span><b style="font-size:16px">${o.txt}</b></div><div class="kpi"><span class="eyebrow">Confianza</span><b class="${S.mgr.conf>=50?'ok':S.mgr.conf<25?'bad':''}">${Math.round(S.mgr.conf)}</b></div></div></div></div>${cta}</header>`;
+ syncDay();const md=!S.match&&!ended&&isMatchDay(),dtm=daysToMatch();
+ let cont;
+ if(S.match)cont=`<button class="contbtn live" data-a="view" data-v="partido"><span>Volver al partido</span><small>${esc(T(S.match.h).short)} ${S.match.score.h}-${S.match.score.a} ${esc(T(S.match.a).short)} · ${S.match.min}'</small></button>`;
+ else if(ended)cont=`<button class="contbtn" data-a="view" data-v="inicio"><span>Fin de temporada</span><small>Ver resumen</small></button>`;
+ else{const opp=nm?T(nm.fx.h===S.user?nm.fx.a:nm.fx.h):null;
+  cont=`<button class="contbtn${md?' md':''}" data-a="continue" title="Continuar (Espacio)"><span>${md?'Día de partido':'Continuar'} ▶</span><small>${opp?`${nm.fx.h===S.user?'vs':'en'} ${esc(opp.short)} · ${md?'hoy':dtm===1?'mañana':'en '+dtm+' días'}`:'Sin partidos'}</small></button><button class="btn sm simbtn" data-a="sim-menu" title="Simular varias jornadas" aria-label="Simular varias jornadas">⏩</button>`;}
+ return `<header class="top2 topbar"><div class="club">${crest(t,'')}<div style="min-width:0"><div class="eyebrow">${esc(dateTxt(S.day,true))} · ${esc(agenda())}${inWindow()&&!ended?' · <span style="color:var(--win)">Mercado abierto</span>':''}</div><h1>${esc(t.name)}</h1></div></div>
+ <div class="kpis"><div class="kpi"><span class="eyebrow">Presupuesto</span><b>${money(S.budget)}</b></div><div class="kpi"><span class="eyebrow">${esc(lgName(t.lg,true))}</span><b class="${played?(pos<=o.max?'ok':'bad'):''}">${played?pos+'º':'—'}</b></div><div class="kpi"><span class="eyebrow">Objetivo</span><b class="obj">${o.txt}</b></div><div class="kpi"><span class="eyebrow">Confianza</span><b class="${S.mgr.conf>=50?'ok':S.mgr.conf<25?'bad':''}">${Math.round(S.mgr.conf)}</b></div></div>
+ <div class="tbtns"><button class="gsbtn" data-a="gsearch" aria-label="Buscar" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>${themeBtn()}${cont}</div></header>`;
 }
 export function nav(){
  const cur=S.view==='partido'?'':S.view,badge={inicio:Object.values(S.offers).filter(o=>o.incoming).length+(S.jobOffers||[]).length,buzon:unread(),mercado:inWindow()?'●':''};
@@ -77,12 +81,15 @@ export function nav(){
  const bnav=`<nav class="bnav" aria-label="Secciones">${mob.map(v=>`<button data-a="view" data-v="${v}" aria-current="${cur===v}">${icon(NAVL[v][1])}<span>${v==='buzon'?'Bandeja':NAVL[v][0].split(' ')[0]}</span>${badge[v]&&v==='buzon'?`<span class="badge">${badge[v]}</span>`:''}</button>`).join('')}<button data-a="more" aria-current="${!mob.includes(cur)&&cur!==''}">${icon('more')}<span>Más</span></button></nav>`;
  return side+bnav;
 }
+/** Submenú de la sección: las pantallas del mismo grupo (Equipo, Competición, Club…). */
+function subnav(){const cur=S.view||'inicio',g=NAVG.find(g=>g.it.some(([v])=>v===cur));if(!g||!g.g)return '';const items=g.it.filter(([v])=>!quick()||!DEEP_ONLY.includes(v)||v===cur);if(items.length<2)return '';
+ return `<nav class="subnav" aria-label="${esc(g.g)}">${items.map(([v,l])=>`<button data-a="view" data-v="${v}" aria-current="${v===cur}">${esc(l)}</button>`).join('')}</nav>`;}
 export function shell(){
  const ended=S.week>=nRounds();let body='';
  switch(S.view){case'partido':body=matchView();break;case'buzon':body=buzonView();break;case'staff':body=staffView();break;case'premios':body=premiosView();break;case'selecciones':body=seleccionesView();break;case'analisis':body=analisisView();break;case'editor':body=editorView();break;case'plantilla':body=plantillaView();break;case'tacticas':body=tacticasView();break;case'calendario':body=calendarioView();break;case'historia':body=historiaView();break;case'copas':body=copasView();break;case'entreno':body=entrenoView();break;case'cantera':body=canteraView();break;case'liga':body=ligaView();break;case'mercado':body=mercadoView();break;case'club':body=clubView();break;default:body=ended?seasonEndView():inicioView();}
  const more=S.moreOpen?`<div class="sheet" data-a="more-close"><div class="in">${NAVG.flatMap(g=>g.it).map(([v,l,i])=>`<button class="nitem" data-a="view" data-v="${v}" aria-current="${S.view===v}">${icon(i)}<span>${l}</span></button>`).join('')}</div></div>`:'';
  const sim=simState?`<div class="simov"><div class="box"><div class="eyebrow">Simulando</div><h2 style="margin:6px 0">${simState.n} partido${simState.n===1?'':'s'}</h2><p class="small muted">${esc(simState.txt)}</p><button class="btn" data-a="sim-stop">Detener</button></div></div>`:'';
- return `<div class="app">${nav()}<div class="mainc">${S.view==='partido'?'':header()}<main>${body}</main></div></div>${more}${sim}${tutCard()}`;
+ return `<div class="app">${nav()}<div class="mainc">${S.view==='partido'?'':header()}<main>${S.view==='partido'?'':subnav()}${body}</main></div></div>${more}${sim}${tutCard()}`;
 }
 export function cmpRow(lbl,a,b){const mx=Math.max(a,b,1);return `<div class="cmp"><span class="a">${(a/10).toFixed(1)}</span><span class="l"><i style="width:${a/mx*100}%"></i></span><span class="lbl">${lbl}</span><span class="r2"><i style="width:${b/mx*100}%"></i></span><span class="b">${(b/10).toFixed(1)}</span></div>`;}
 export function resRow(f,r,tags){
@@ -110,7 +117,7 @@ export function pitchHTML(t,lu,f,opts={}){
   if(!p)cls='empty';else{sh=p.num;nm=p.name.split(' ').slice(1).join(' ');rtv=(eff(p,s,opts.en?opts.en[p.id]:null,opts.roles?opts.roles[sx]:null)/10).toFixed(1);if(!available(p)||p.team!==S.user)cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';}
   if(opts.sel===sx)cls+=' sel';
   const rate=opts.rat&&p&&opts.rat[p.id]!=null?`<span class="rt" style="background:${opts.mvp===p.id?'#c99a06':'rgba(0,0,0,.6)'}">${opts.rat[p.id].toFixed(1)}${opts.mvp===p.id?' · MVP':''}</span>`:'';
-  h+=`<button class="slot ${cls}" style="left:${x}%;top:${y}%;${crestStyle(t)}" ${opts.click?`data-a="slot" data-i="${sx}"`:'tabindex="-1"'} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}"><span class="sh">${sh}</span><span class="nm">${esc(nm)}</span>${rate||(rtv!==''?`<span class="rt">${s} ${rtv}${p&&p.sp!==s?' · '+p.sp:''}</span>`:`<span class="rt">${s}</span>`)}</button>`;
+  h+=`<button class="slot ${cls}" style="left:${x}%;top:${y}%;${crestStyle(t)}" ${opts.click?`data-a="slot" data-i="${sx}"${p?` data-pid="${p.id}" data-drag="slot"`:''}`:'tabindex="-1"'} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}"><span class="sh">${sh}</span><span class="nm">${esc(nm)}</span>${rate||(rtv!==''?`<span class="rt">${s} ${rtv}${p&&p.sp!==s?' · '+p.sp:''}</span>`:`<span class="rt">${s}</span>`)}</button>`;
  }));
  return `<div class="pitch"><span class="ln out"></span><span class="ln half"></span><span class="ln circ"></span><span class="ln box1"></span><span class="ln box2"></span>${h}</div>`;
 }

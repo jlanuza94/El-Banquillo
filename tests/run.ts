@@ -8,7 +8,9 @@ import './dom-stub';
 import { S, setS, dirty, RT } from '../src/state';
 import { money } from '../src/core';
 import { pickTeam } from '../src/world';
-import { table } from '../src/tactics';
+import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics';
+import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
+import { PL } from '../src/state';
 import { finishRound, friendlyOpts, newSeason, playFriendly, playMatch, simLoop, simRun, simState, simToEnd } from '../src/season';
 import { takeJob } from '../src/career';
 import { answerPress } from '../src/club';
@@ -266,6 +268,24 @@ const app = document.getElementById('app')!;
     S.view = 'plantilla'; S.plTab = 'prof'; render(); ok(app.querySelector('.dgrid') && app.textContent.includes('Valor de la plantilla'), 'pestaña de profundidad');
     S.view = 'liga'; S.ldTab = 'eco'; render(); ok(app.textContent.includes('Valor plantilla'), 'tabla del dinero de los clubes');
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
+  { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
+    const t = T(S.user); t.subs = []; S.view = 'plantilla'; S.plTab = 'ali'; render();
+    ok(app.querySelector('.fmlist') && app.querySelectorAll('.bslot').length === MAX_SUBS && app.querySelectorAll('.fmrow[data-fit]').length > 0, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
+    ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho menús en la plantilla');
+    const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
+    const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
+    setSub(out.id, 0); ok(subsOf(t)[0] === out.id && subsOf(t).length <= MAX_SUBS, 'poner a un suplente en el banquillo');
+    const st = t.lineup[5]; setSub(st, 1); ok(!t.lineup.includes(st) && subsOf(t)[1] === st && t.lineup[5], 'del once al banquillo: entra el que estaba en su sitio');
+    removeFromTeam(st); ok(!subsOf(t).includes(st), 'quitar del banquillo');
+    for (const tb of ['jug', 'plan', 'med']) { S.plTab = tb; render(); }
+        S.plTab = 'plan'; render(); ok(app.textContent.includes('próxima temporada'), 'planificación de la plantilla');
+    t.subs = []; S.plTab = 'ali';
+    syncDay(); const d0 = S.day, ci0 = S.ci; let r = 'day', n = 0; while (r !== 'match' && n < 30) { r = continueDay(); n++; }
+    ok(r === 'match' && S.day > d0 && S.ci === ci0 && isMatchDay(), `Continuar avanza día a día hasta el partido (${n} días)`);
+    ok(continueDay() === 'match' && S.day === dayOfEvent(S.ci), 'el día de partido no se pasa sin jugar');
+    S.modal = { type: 'matchday' }; render(); ok(app.textContent.includes('Jugar el partido'), 'aviso de día de partido'); S.modal = null;
+    S.view = 'calendario'; render(); ok(app.querySelectorAll('.cday').length >= 28 && app.querySelector('.cday.today'), 'calendario mensual con el día de hoy');
+    ok(app.querySelector('[data-a="continue"]'), 'botón Continuar en la barra superior'); S.view = 'inicio'; }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });

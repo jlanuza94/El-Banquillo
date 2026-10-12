@@ -149,3 +149,57 @@ aside.side .nitem[style*="--loss"]{color:#ff8a7a!important}
 .tuthl{box-shadow:inset 0 0 0 2px var(--accent);animation:tutp 1.4s ease-in-out infinite}
 @keyframes tutp{50%{box-shadow:inset 0 0 0 2px transparent}}
 @media (max-width:980px){.tutcard{bottom:calc(76px + env(safe-area-inset-bottom,0px))}}
+/* Solo horizontal: en un móvil en vertical se pide girarlo */
+.rotate{display:none}
+@media (orientation:portrait) and (max-width:900px){
+ .rotate{display:grid;position:fixed;inset:0;z-index:100;place-items:center;background:var(--menu);color:var(--menu-ink);text-align:center}
+ .rotate div{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px}
+ .rotate b{font-family:var(--f-display);font-size:28px;text-transform:uppercase}
+ .rotate span{color:var(--menu-dim)}
+ .rotate svg{animation:rot 2.2s ease-in-out infinite}
+ #app{visibility:hidden}
+}
+@keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+
+/* ===== Cabecera con «Continuar» arriba a la derecha (estilo FM) ===== */
+.topbar{display:flex;flex-wrap:nowrap;align-items:center;gap:10px 16px;padding:6px 0 8px;margin-bottom:8px;padding-right:0}
+.topbar .club{flex:1;min-width:0;gap:10px}
+.topbar .club .eyebrow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar h1{font-size:clamp(20px,2.4vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .kpis{flex-wrap:nowrap;flex:none}
+.topbar .kpi{padding:0 10px}
+.topbar .kpi b{font-size:16px}.topbar .kpi b.obj{font-size:13px;white-space:nowrap}
+.topbar .tbtns{display:flex;align-items:center;gap:8px;flex:none}
+.topbar .gsbtn,.topbar .thbtn{position:static}
+.contbtn{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;border-radius:10px;padding:7px 16px 7px 14px;background:var(--accent);color:var(--accent-ink);font-family:var(--f-num);cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.18);min-width:150px}
+.contbtn span{font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.05em;line-height:1.1}
+.contbtn small{font-size:12px;font-weight:600;opacity:.8;white-space:nowrap}
+.contbtn.md{background:#c0392b;color:#fff;animation:mdp 1.6s ease-in-out infinite}
+.contbtn.live{background:var(--loss);color:#fff}
+@keyframes mdp{50%{box-shadow:0 0 0 5px rgba(192,57,43,.25)}}
+.simbtn{align-self:stretch}
+/* Submenú de la sección (los hermanos del grupo) */
+.subnav{display:flex;gap:4px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px;flex:none}
+.subnav button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-family:var(--f-num);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;color:var(--muted);cursor:pointer}
+.subnav button[aria-current="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+/* ===== Todo en una sola pantalla: la página no se desplaza; cada panel tiene su propio scroll ===== */
+@media (min-width:700px){
+ .app{height:100vh;height:100dvh;overflow:hidden}
+ aside.side{height:100vh;height:100dvh}
+ .mainc{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding-block:8px}
+ .mainc>main{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
+ .mainc>main>.grid{flex:1;min-height:0;align-items:stretch}
+ .mainc>main>.grid>*{min-height:0;overflow:auto;overscroll-behavior:contain}
+ .mainc>main>.grid>.stack{padding-right:2px}
+}
+@media (orientation:landscape) and (max-height:540px){
+ .topbar{padding:2px 0 6px;margin-bottom:6px}
+ .topbar .club .crest{display:none}
+ .topbar .kpi:nth-child(3){display:none}
+ .contbtn{min-width:120px;padding:5px 12px}
+ .contbtn span{font-size:15px}
+ .subnav{margin-bottom:6px}.subnav button{padding:3px 10px;font-size:12px}
+ .mainc>main>.grid{gap:10px}
+ .panel{padding:12px}
+}
+@media (max-width:699px){.topbar{flex-wrap:wrap}.topbar .kpis{order:3;width:100%}}

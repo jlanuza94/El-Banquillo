@@ -16,7 +16,7 @@ import {AT_NAME,GRP,TAC0,TX,W,WIDE,newSt} from './data';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
 import {rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
-import {autoLineup,chemMult,eff,famOf,hasTr,slotsOf,teamPower,userRoles,xg} from './tactics';
+import {autoLineup,chemMult,eff,famOf,hasTr,slotsOf,subsOf,teamPower,userRoles,xg} from './tactics';
 import {getFx} from './competitions';
 import {makePress,unlock} from './club';
 import {recBonus,trainPlayer} from './squad';
@@ -109,7 +109,7 @@ export function calcRatings(m){
   p.car=p.car||[0,0,0];p.car[0]++;p.car[1]+=gl[id]||0;p.car[2]+=as[id]||0;});
  if(best&&m.ref.k!=='fr')PL(best).st.mv++;m.rat=rat;m.mvp=best;
 }
-export function bench(m,s){return squad(m[s]).filter(p=>available(p)&&!m.lu[s].includes(p.id)&&!m.out.includes(p.id)&&!m.off.includes(p.id));}
+export function bench(m,s){const t=T(m[s]),pick=m[s]===S.user&&(t.subs||[]).length?subsOf(t).concat(t.lineup):null;return squad(m[s]).filter(p=>(!pick||pick.includes(p.id))&&available(p)&&!m.lu[s].includes(p.id)&&!m.out.includes(p.id)&&!m.off.includes(p.id));}
 export function doSub(m,s,outId,inId){
  const i=m.lu[s].indexOf(outId);if(i<0||m.subs[s]>=5)return false;
  m.lu[s][i]=inId;m.out.push(outId);m.outM[outId]=m.min;m.inM[inId]=m.min;m.en[inId]=PL(inId).energy;m.played[inId]=1;delete m.hurt[outId];m.subs[s]++;

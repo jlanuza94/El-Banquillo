@@ -1,5 +1,8 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {medHTML} from './staff';
+import {MAX_SUBS,subsOf} from '../tactics';
+import {footF,removeFromTeam,setSub} from '../tactics';
 import {boardHTML} from './freeboard';
 import {FREE} from '../freeboard';
 import {YT_WEEK,goldenChance} from '../youthplus';
@@ -119,16 +122,49 @@ export function tacticasView(){
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
  return `<div class="grid"><div class="stack">${boardHTML()}${planP}${inst}${famP}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${oiP}${sp}${spP}${ords}</div></div>`;
 }
+/* ---------- Alineación estilo FM ---------- */
+const suitOf=(p,s)=>{const v=prof(p,s)*footF(p,s);return v>=.99?1:v>=.94?2:v>=.8?3:4;};
+const SUIT_N={1:'Natural',2:'Competente',3:'Poco habitual',4:'Fuera de sitio'};
+/** Banquillo: hasta 9 suplentes. Si no eliges, entran los mejores disponibles. */
+function benchHTML(t){
+ const subs=subsOf(t),chosen=(t.subs||[]).length>0;
+ return `<div class="bench"><div class="row" style="justify-content:space-between;margin:10px 0 4px"><span class="eyebrow">Banquillo (${subs.length}/${MAX_SUBS})${chosen?'':' · automático'}</span>${chosen?'<button class="btn sm" data-a="subs-auto">Automático</button>':''}</div>
+ <div class="bslots">${Array.from({length:MAX_SUBS},(_,k)=>{const p=PL(subs[k]);return `<div class="bslot${p?'':' empty'}${p&&S.sel&&S.sel.id===p.id?' sel':''}" data-a="bslot" data-k="${k}" ${p?`data-drag="bench" data-pid="${p.id}"`:''}>${p?`${posChip(p)}<span class="nm">${esc(p.name.split(' ').slice(1).join(' '))}</span>${pBadge(p)}`:'<span class="small muted">Arrastra aquí</span>'}</div>`;}).join('')}</div></div>`;
+}
+/** Lista de jugadores para arrastrar: titulares, banquillo y el resto, con su idoneidad para cada hueco. */
+function fmList(t,sq,selSlot,selPid){
+ const slots=slotsOf(t.formation),subs=subsOf(t),xiIdx=id=>t.lineup.indexOf(id);
+ const order=p=>{const i=xiIdx(p.id);return i>=0?i:subs.includes(p.id)?100+subs.indexOf(p.id):200+POS_ORD[p.pos]*10-p.ovr/10;};
+ const L=sq.filter(p=>!p.loan).slice().sort((a,b)=>order(a)-order(b));
+ const sel=selSlot!=null?slots[selSlot]:null;
+ return `<div class="fmlist"><div class="fmh"><span></span><span>Pos</span><span>Jugador</span><span>${sel?esc(sel):'Media'}</span><span>Energía</span><span>Moral</span><span>Estado</span></div>
+ ${L.map(p=>{const i=xiIdx(p.id),inB=subs.includes(p.id),fit=slots.map(sl=>suitOf(p,sl)).join(''),r=sel?eff(p,sel)/10:p.ovr/10,su=sel?suitOf(p,sel):null;
+  return `<div class="fmrow${i>=0?' xi':inB?' sb':''}${selPid===p.id?' sel':''}${available(p)?'':' dim'}" data-a="row" data-id="${p.id}" data-pid="${p.id}" data-fit="${fit}" data-drag="list" tabindex="0">
+  <span class="grip" aria-hidden="true">⠿</span><span>${posChip(p)}</span><span class="nmc">${nameBtn(p)}</span><span>${su?`<span class="q ${qc(r)} su${su}" title="${SUIT_N[su]}">${r.toFixed(1)}</span>`:pBadge(p)}</span><span>${energyBar(p.energy)}</span><span>${hapTag(p)}</span><span>${i>=0?`<span class="tag onxi">${esc(slots[i])}</span>`:inB?'<span class="tag">Banquillo</span>':status(p,false)}</span></div>`;}).join('')}</div>
+ <p class="small muted" style="margin:8px 0 0">Arrastra a un jugador (desde ⠿ en el móvil) a un hueco del campo o del banquillo. Al cogerlo, los huecos se colorean: <b style="color:#2b8a4b">natural</b>, <b style="color:#9bb31d">competente</b>, <b style="color:#e07a2a">poco habitual</b> y <b style="color:#c23a2e">fuera de sitio</b>. También puedes tocar un hueco y luego un jugador.</p>`;
+}
+/** Planificación: cómo queda la plantilla la próxima temporada (edades, contratos y futuro). */
+function planHTML(sq){
+ const fut=p=>p.age<=21&&p.pot*10>p.ovr+5?['Mejorará mucho','xi']:p.age<=24&&p.pot*10>p.ovr?['Aún mejora','xi']:p.age>=31?['En declive','bad']:['En su mejor momento',''];
+ const G=[['Porteros','POR'],['Defensas','DEF'],['Centrocampistas','MED'],['Delanteros','DEL']];
+ return `<p class="small muted" style="margin:0 0 10px">Así queda tu plantilla la próxima temporada: en rojo, los que acaban contrato (se irán si no renuevas); la edad ya es la del año que viene.</p>
+ ${G.map(([n,g])=>{const ps=sq.filter(p=>!p.loan&&(GRP[p.sp]||p.pos)===g).sort((a,b)=>b.ovr-a.ovr),stay=ps.filter(p=>p.contract>1).length;
+  return `<h3 style="margin:12px 0 4px">${n} <span class="small muted">· ${stay} seguros${ps.length-stay?` · ${ps.length-stay} acaban contrato`:''}</span></h3><div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th class="r">Edad</th><th class="r">Media</th><th>Contrato</th><th class="r">Valor</th><th>Futuro</th></tr></thead><tbody>
+  ${ps.map(p=>{const f=fut(p);return `<tr class="${p.contract<=1?'endc':''}"><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age+1}</td><td class="r">${pBadge(p)}</td><td>${contractTxt(p)}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td><span class="tag ${f[1]}">${f[0]}</span></td></tr>`;}).join('')}</tbody></table></div>`;}).join('')}`;
+}
 export function plantillaView(){
- const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=S.plTab||'xi';
+ const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=S.plTab==='xi'||!S.plTab?'ali':S.plTab;
  const sel=S.sel,selSlot=sel&&sel.type==='slot'?sel.i:null,selPid=sel&&sel.type==='player'?sel.id:null;
  const pw=teamPower(t.lineup,t.formation,null,null,1,userRoles());
  const hint=selSlot!=null?`Hueco de ${SPN[slotsOf(t.formation)[selSlot]].toLowerCase()} seleccionado. Toca un jugador de la lista para colocarlo.`:selPid?`${PL(selPid).name} seleccionado. Toca un hueco del campo para colocarlo.`:'Toca un hueco del campo y luego un jugador (o al revés). Bajo cada jugador ves el puesto y su nota en él: fuera de su posición o con el pie cambiado en banda rinde menos. Toca un nombre para ver su ficha.';
  let table='';
- if(tab==='xi'){table=`<p class="small muted" style="margin:0 0 10px">${esc(hint)}</p><div class="tbl"><table><thead><tr><th class="r">#</th><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th>${attrHead()}<th>Pie</th><th>Energía</th><th>Forma</th><th>Ánimo</th><th>Estado</th></tr></thead><tbody>${sq.map(p=>{const xi=t.lineup.includes(p.id);return `<tr class="click ${xi?'me':''} ${selPid===p.id?'sel':''} ${available(p)?'':'dim'}" data-a="row" data-id="${p.id}" tabindex="0">
+ if(tab==='jug'||tab==='xi'){table=`<p class="small muted" style="margin:0 0 10px">${esc(hint)}</p><div class="tbl"><table><thead><tr><th class="r">#</th><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th>${attrHead()}<th>Pie</th><th>Energía</th><th>Forma</th><th>Ánimo</th><th>Estado</th></tr></thead><tbody>${sq.map(p=>{const xi=t.lineup.includes(p.id);return `<tr class="click ${xi?'me':''} ${selPid===p.id?'sel':''} ${available(p)?'':'dim'}" data-a="row" data-id="${p.id}" tabindex="0">
   <td class="n">${p.num}</td><td>${posChip(p)}${p.alt&&p.alt.length?` <span class="small muted">${p.alt.join(' ')}</span>`:''}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td>${attrCells(p)}<td class="small">${p.foot==='A'?'Ambi':p.foot==='I'?'Zurdo':'Diestro'}</td><td>${energyBar(p.energy)}</td><td>${formCell(p.form)}</td><td>${hapTag(p)}</td><td>${status(p,xi)}</td></tr>`;}).join('')}</tbody></table></div>`;}
  else if(tab==='stats'){const sorted=sq.slice().sort((a,b)=>(b.st?b.st.pj:0)-(a.st?a.st.pj:0));table=`<p class="small muted" style="margin:0 0 10px">Todas las competiciones de esta temporada. La nota es la media de sus partidos (de 3 a 10).</p><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">PJ</th><th class="r">Min</th><th class="r">Goles</th><th class="r">Asist</th><th class="r">Nota</th><th class="r">MVP</th><th class="r">TA</th><th class="r">TR</th><th class="r">Port. a 0</th></tr></thead><tbody>${sorted.map(p=>{const s=p.st||newSt();return `<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${s.pj}</td><td class="n">${s.mi}</td><td class="n">${s.g}</td><td class="n">${s.a}</td><td class="r">${s.pj?qBadge(s.rs/s.pj):'<span class="muted">—</span>'}</td><td class="n">${s.mv}</td><td class="n">${s.yc}</td><td class="n">${s.rc}</td><td class="n">${GRP[p.sp]==='POR'||GRP[p.sp]==='DEF'?s.cs:'—'}</td></tr>`;}).join('')}</tbody></table></div>`;}
  else if(tab==='prof'){table=depthHTML(sq);}
+ else if(tab==='plan'){table=planHTML(sq);}
+ else if(tab==='med'){table=medHTML();}
+ else if(tab==='ali'){table='';}
  else if(tab==='vest'){const L=leaders(5),groups={};sq.forEach(p=>{const l=langOf(p);(groups[l]=groups[l]||[]).push(p);});const LN={es:'Hispanohablantes',en:'Angloparlantes',it:'Italianos',de:'Germanoparlantes',fr:'Francófonos',pt:'Lusófonos',nl:'Neerlandeses',tr:'Turcos',ja:'Japoneses'};
   const avg=sq.length?Math.round(sq.reduce((a,p)=>a+(p.hap||70),0)/sq.length):70,vm=vestMult();
   table=`<div class="arow" style="grid-template-columns:150px minmax(0,1fr) 34px;margin-bottom:6px"><span>Ambiente del vestuario</span><span class="abar" style="display:block"><i class="${qc(avg/10)}" style="width:${avg}%"></i></span><b class="num">${avg}</b></div>
@@ -139,18 +175,19 @@ export function plantillaView(){
   ${Object.entries(groups).sort((a,b)=>b[1].length-a[1].length).map(([l,ps])=>`<div class="offer"><span class="t"><b>${LN[l]||l}</b> · ${ps.length}<br><span class="small muted">${ps.map(p=>esc(p.name)+(p.adapt>0?' (adaptándose)':'')).join(', ')}</span></span></div>`).join('')}`;}
  else {const pr=activeProms();table=`<div class="offer" style="margin-bottom:10px"><span class="t"><b>Credibilidad en el vestuario: ${Math.round(cred())}/100</b><br><span class="small muted">Sube al cumplir promesas y baja al romperlas.</span></span></div>${pr.length?`<h3 style="margin:0 0 6px">Promesas activas</h3>${pr.map(x=>`<div class="offer">${posChip(x.p)}<span class="t">${nameBtn(x.p)}<br><span class="small muted">${PROM_N[x.type]} · ${x.type==='sell'?'hasta final de temporada':x.left?`quedan ${x.left} jornada${x.left>1?'s':''}`:'vence esta jornada'}</span></span></div>`).join('')}`:''}<p class="small muted" style="margin:0 0 10px">Rol prometido, sueldo, cláusula y felicidad de cada jugador. Si un jugador juega menos de lo que corresponde a su rol, se irá enfadando.</p><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Rol</th><th class="r">Jugado</th><th class="r">Valor</th><th class="r">Sueldo</th><th class="r">Cláusula</th><th>Contrato</th><th>Ánimo</th><th></th></tr></thead><tbody>${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}${p.req?' <span class="tag bad">Pide salir</span>':''}</td><td class="small">${ROLES[p.role||'ro'].n}</td><td class="n">${(S.tg||0)?Math.round(minShare(p)*100)+'%':'—'}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td class="n">${money(p.wage)}</td><td class="n">${p.loan?'—':money(p.cl||0)}</td><td>${contractTxt(p)}</td><td>${hapTag(p)}</td><td class="r"><span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="chat" data-id="${p.id}">Hablar</button>${p.loan?'':`<button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button>`}</span></td></tr>`).join('')}</tbody></table></div>`;}
  const out=Object.values(S.players).filter(p=>p.loan&&p.loan.from===S.user);
- return `<div class="grid"><section class="panel"><div class="panel-h"><h2>Formación</h2><span class="eyebrow">Media del once ${(pw.ovr/10).toFixed(1)} · Química ${Math.round(S.chem)} · Dominio ${Math.round(famOf(t.formation))}%</span></div>
-  <div class="row" style="margin-bottom:12px"><label class="f"><span class="eyebrow">Sistema</span><select id="formSel">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?'Libre (pizarra)':f} · dominio ${Math.round(famOf(f))}%</option>`).join('')}</select></label>
+ const TABS=[['ali','Alineación'],['jug','Jugadores'],['stats','Estadísticas'],['prof','Profundidad'],['plan','Planificación'],['cont','Contratos y ánimo'],['vest','Vestuario'],['med','Médico']];
+ const tabsBar=`<div class="seg pltabs" style="margin-bottom:10px;max-width:100%;overflow-x:auto;flex:none">${TABS.map(([k,l])=>`<button data-a="pl-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
+ if(tab==='ali')return tabsBar+`<div class="grid fmgrid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Formación</h2><span class="eyebrow">Media del once ${(pw.ovr/10).toFixed(1)} · Química ${Math.round(S.chem)} · Dominio ${Math.round(famOf(t.formation))}%</span></div>
+  <div class="row fmctl" style="margin-bottom:12px"><label class="f"><span class="eyebrow">Sistema</span><select id="formSel">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?'Libre (pizarra)':f} · dominio ${Math.round(famOf(f))}%</option>`).join('')}</select></label>
   <div style="display:flex;flex-direction:column;gap:3px"><span class="eyebrow">Mentalidad</span><div class="seg">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>
   <span class="spacer"></span><button class="btn" data-a="auto" style="align-self:flex-end">Alinear mejores</button></div>
   ${pitchHTML(t,t.lineup,t.formation,{click:true,sel:selSlot,roles:userRoles()})}
+  ${benchHTML(t)}
   <div class="offer" style="margin-top:10px"><span class="t"><b>Rotación del segundo</b><br><span class="small muted">Al simular, cambia a los titulares cansados (por debajo del ${(S.rot&&S.rot.th)||72}% de energía), lesionados o sancionados por el mejor suplente. Tu once de referencia es el que pongas aquí.</span></span>
   <select id="rotTh" aria-label="Energía mínima">${[[60,'Poca rotación'],[72,'Normal'],[82,'Mucha rotación']].map(([v,l])=>`<option value="${v}" ${((S.rot&&S.rot.th)||72)===v?'selected':''}>${l}</option>`).join('')}</select>
   <button class="btn sm ${S.autoRot!==false?'dark':''}" data-a="rot-tog" aria-pressed="${S.autoRot!==false}">${S.autoRot!==false?'Activada':'Desactivada'}</button><button class="btn sm" data-a="rot-now">Rotar ahora</button></div>
-  <div class="row small muted" style="margin-top:10px;justify-content:center;gap:14px"><span>Ataque ${(pw.atk/10).toFixed(1)}</span><span>Medio ${(pw.mid/10).toFixed(1)}</span><span>Defensa ${(pw.def/10).toFixed(1)}</span></div></section>
-  <section class="panel"><div class="panel-h"><div class="seg"><button data-a="pl-tab" data-v="xi" aria-pressed="${tab==='xi'}">Plantilla</button><button data-a="pl-tab" data-v="stats" aria-pressed="${tab==='stats'}">Estadísticas</button><button data-a="pl-tab" data-v="cont" aria-pressed="${tab==='cont'}">Contratos y ánimo</button><button data-a="pl-tab" data-v="prof" aria-pressed="${tab==='prof'}">Profundidad</button><button data-a="pl-tab" data-v="vest" aria-pressed="${tab==='vest'}">Vestuario</button></div><span class="eyebrow">${sq.length} jugadores</span></div>
-  ${table}
-  ${out.length?`<h3 style="margin-top:18px">Cedidos en otros clubes</h3><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Media</th><th class="r">PJ</th><th class="r">Goles</th></tr></thead><tbody>${out.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="r">${pBadge(p)}</td><td class="n">${p.st?p.st.pj:0}</td><td class="n">${p.st?p.st.g:0}</td></tr>`).join('')}</tbody></table></div>`:''}</section></div>`;
+  <div class="row small muted" style="margin-top:10px;justify-content:center;gap:14px"><span>Ataque ${(pw.atk/10).toFixed(1)}</span><span>Medio ${(pw.mid/10).toFixed(1)}</span><span>Defensa ${(pw.def/10).toFixed(1)}</span></div></section></div><div class="stack"><section class="panel"><div class="panel-h"><h2>Jugadores</h2><span class="eyebrow">Arrastra al campo o al banquillo</span></div>${fmList(t,sq,selSlot,selPid)}</section></div></div>`;
+ return tabsBar+`<section class="panel">${table}${tab==='jug'?`${out.length?`<h3 style="margin-top:18px">Cedidos en otros clubes</h3><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Media</th><th class="r">PJ</th><th class="r">Goles</th></tr></thead><tbody>${out.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="r">${pBadge(p)}</td><td class="n">${p.st?p.st.pj:0}</td><td class="n">${p.st?p.st.g:0}</td></tr>`).join('')}</tbody></table></div>`:''}`:''}</section>`;
 }
 const DEPTH=[['Portería',['POR']],['Defensa',['LD','DFC','LI']],['Medio',['MCD','MC','MCO','MD','MI']],['Ataque',['ED','EI','DC']]];
 /** Profundidad de plantilla al estilo FM: los 3 mejores de cada puesto, puntos débiles y resumen económico. */

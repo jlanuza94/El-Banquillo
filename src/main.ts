@@ -19,6 +19,8 @@ import { setupPWA, promptInstall } from './pwa';
 import { applyTheme } from './theme';
 
 applyTheme();
+// En la app instalada se bloquea la pantalla en horizontal (en el navegador se pide girar el móvil).
+try { (screen.orientation as any)?.lock?.('landscape').catch(() => {}); } catch (e) { /* no disponible */ }
 
 declare const __BUILD__: string;
 declare global {
