@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {addPair,removePair} from './mentor';
 import {DIFF} from './difficulty';
 import {queueScout,scoutWeeks} from './scouting';
 import {fireStaff,hireStaff,renewStaff} from './staff';
@@ -49,6 +50,8 @@ document.addEventListener('click',e=>{
   case'cmp':{if(S.cmpA&&S.cmpA!==d.id&&PL(S.cmpA)){S.modal={type:'cmp',a:S.cmpA,b:d.id};S.cmpA=null;}else{S.cmpA=d.id;S.modal=null;toast(`Ahora abre la ficha de otro jugador y pulsa «Comparar».`);}break;}
   case'rot-tog':S.autoRot=S.autoRot===false;break;
   case'rot-now':{const n=rotateLineup();toast(n?`Tu segundo hace ${n} cambio${n>1?'s':''} en el once.`:'No hace falta rotar: todos están frescos.');break;}
+  case'mentor-add':{const err=addPair(document.getElementById('mtY')?.value,document.getElementById('mtM')?.value);toast(err||'Tutelaje en marcha.');break;}
+  case'mentor-del':removePair(d.id);break;
   case'set-diff':S.diff=d.v;toast(`Dificultad: ${DIFF[d.v].n}.`);break;
   case'mail-open':S.mailSel=d.id;markRead(d.id);break;
   case'mail-back':S.mailSel=null;break;

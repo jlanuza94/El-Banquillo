@@ -4,7 +4,7 @@ import {KEY,rngState} from './core';
 import {ATTRS,COUNTRIES,NAMES,ST_K,newSt} from './data';
 import {RT,S,rt,T,seasonLabel,lgName,uLg} from './state';
 import LZString from 'lz-string';
-import {rateA,setValue} from './players';
+import {deriveAttrs,rateA,setValue} from './players';
 import {toast} from './views/common';
 import {boot} from './boot';
 export const PF_V4=['id','name','nat','pos','age','pot','team','num','energy','form','goals','apps','yc','inj','susp','pInj','pSusp','contract','wage','tf','sg'];
@@ -19,7 +19,7 @@ export function pack(){
 export function unpack(str){
  const o=JSON.parse(str);if(!o||o.v!==4||!o.pk)return null;const pf=o.pf||PF_V4;delete o.pf;
  o.fixtures=o.fk.map(lg=>lg.map(rd=>rd.map(a=>a.length>2?{h:a[0],a:a[1],hg:a[2],ag:a[3],played:true,ev:a[4]||[]}:{h:a[0],a:a[1],hg:null,ag:null,played:false,ev:[]})));delete o.fk;
- o.players={};o.pk.forEach(a=>{const p={};pf.forEach((k,i)=>p[k]=a[i]);if(pf.length>PF_V4.length){p.alt=p.alt?p.alt.split(','):[];p.tr=p.tr?p.tr.split(','):[];if(p.st){const v=p.st;p.st={};ST_K.forEach((x,j)=>p.st[x]=x==='rs'?v[j]/10:v[j]);}else p.st=newSt();if(!p.prom)p.prom=null;}p.id='p'+p.id;if(/^\d+\.\d+$/.test(p.name)){const L=NAMES[COUNTRIES[p.nat].lang],[x,y]=p.name.split('.');p.name=L[0][+x]+' '+L[1][+y];}p.at={};ATTRS.forEach((k,i)=>p.at[k]=a[pf.length].charCodeAt(i)-96);{const L=a[pf.length+1];p.loan=Array.isArray(L)?{from:L[0],opt:L[1]}:L>=0?{from:L}:null;}if(!p.ph)p.ph=null;p.playedWk=!!a[pf.length+2];p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);o.players[p.id]=p;});
+ o.players={};o.pk.forEach(a=>{const p={};pf.forEach((k,i)=>p[k]=a[i]);if(pf.length>PF_V4.length){p.alt=p.alt?p.alt.split(','):[];p.tr=p.tr?p.tr.split(','):[];if(p.st){const v=p.st;p.st={};ST_K.forEach((x,j)=>p.st[x]=x==='rs'?v[j]/10:v[j]);}else p.st=newSt();if(!p.prom)p.prom=null;}p.id='p'+p.id;if(/^\d+\.\d+$/.test(p.name)){const L=NAMES[COUNTRIES[p.nat].lang],[x,y]=p.name.split('.');p.name=L[0][+x]+' '+L[1][+y];}{const s=a[pf.length];p.at={};ATTRS.forEach((k,i)=>{if(i<s.length)p.at[k]=s.charCodeAt(i)-96;});if(s.length<ATTRS.length){if(!p.h)p.h=180;deriveAttrs(p);}}{const L=a[pf.length+1];p.loan=Array.isArray(L)?{from:L[0],opt:L[1]}:L>=0?{from:L}:null;}if(!p.ph)p.ph=null;p.playedWk=!!a[pf.length+2];p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);o.players[p.id]=p;});
  delete o.pk;return o;
 }
 export let saveWarned=false;

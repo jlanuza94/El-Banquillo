@@ -82,10 +82,26 @@ export const MENT={def:{own:.78,opp:.84,label:'Defensiva'},bal:{own:1,opp:1,labe
 export const POS_ORD={POR:0,DEF:1,MED:2,DEL:3};
 export const POS_NAME={POR:'Portero',DEF:'Defensa',MED:'Centrocampista',DEL:'Delantero'};
 export const posChip=p=>`<span class="pos ${GRP[p.sp]||p.pos}" title="${SPN[p.sp]||''}">${p.sp||p.pos}</span>`;
-export const ATTRS=['tir','pas','reg','def','fis','por'];
-export const AT_NAME={tir:'Tiro',pas:'Pase',reg:'Regate',def:'Defensa',fis:'Físico',por:'Portería'};
-export const AT_SH={tir:'TIR',pas:'PAS',reg:'REG',def:'DEF',fis:'FÍS',por:'POR'};
-export const W={POR:{por:.75,fis:.15,pas:.1},DEF:{def:.55,fis:.25,pas:.15,reg:.05},MED:{pas:.4,reg:.2,def:.15,tir:.1,fis:.15},DEL:{tir:.5,reg:.25,fis:.15,pas:.1}};
+/*
+ * Atributos del 1 al 10. Los seis primeros son los de siempre (el orden importa: así se guardan las partidas).
+ * Liderazgo, Regularidad y Partidos grandes no cuentan para la media, pero sí en el partido y el vestuario.
+ */
+export const ATTRS=['tir','pas','reg','def','fis','por','cab','vis','col','dec','vel','res','lid','con','gra'];
+export const ATTRS_OLD=['tir','pas','reg','def','fis','por'];
+export const AT_NAME={tir:'Remate',pas:'Pase',reg:'Regate',def:'Entradas',fis:'Fuerza',por:'Portería',cab:'Cabezazo',vis:'Visión',col:'Colocación',dec:'Decisiones',vel:'Velocidad',res:'Resistencia',lid:'Liderazgo',con:'Regularidad',gra:'Partidos grandes'};
+export const AT_SH={tir:'REM',pas:'PAS',reg:'REG',def:'ENT',fis:'FUE',por:'POR',cab:'CAB',vis:'VIS',col:'COL',dec:'DEC',vel:'VEL',res:'RES',lid:'LID',con:'REGU',gra:'GRA'};
+export const AT_GROUPS=[['Técnica',['tir','pas','reg','cab','def']],['Mental',['vis','col','dec','lid','con','gra']],['Física',['vel','res','fis']],['Portero',['por']]];
+/** Columnas que se ven en las tablas (la ficha enseña todos). */
+export const AT_COLS=['tir','pas','reg','def','vel','fis','por'];
+/** Atributos que cambian con la edad como los físicos (pierden antes) o los mentales (mejoran hasta tarde). */
+export const AT_PHYS=['vel','res','fis'],AT_MENT=['vis','col','dec','lid','con','gra'];
+/** Peso de cada atributo en la media según la línea (suman 1). */
+export const W={POR:{por:.62,col:.12,dec:.1,pas:.08,fis:.04,vel:.04},
+ DEF:{def:.3,col:.18,cab:.12,fis:.1,vel:.1,dec:.08,pas:.08,res:.04},
+ MED:{pas:.26,vis:.16,dec:.12,reg:.1,res:.1,def:.08,col:.06,tir:.06,fis:.06},
+ DEL:{tir:.3,reg:.14,col:.12,vel:.12,cab:.1,dec:.08,fis:.08,vis:.06}};
+/** Pesos antiguos (6 atributos), para convertir partidas sin cambiar la media de nadie. */
+export const W_OLD={POR:{por:.75,fis:.15,pas:.1},DEF:{def:.55,fis:.25,pas:.15,reg:.05},MED:{pas:.4,reg:.2,def:.15,tir:.1,fis:.15},DEL:{tir:.5,reg:.25,fis:.15,pas:.1}};
 export const SPEEDS={1:650,2:300,4:110};
 export const TX={
  goal:['¡GOOOL de {p}! Remate cruzado, imposible para el portero.','¡Gol! {p} la empuja a la red tras un centro desde la banda.','¡Golazo de {p} desde fuera del área, a la escuadra!','¡{p} no perdona en el mano a mano!','¡Gol de cabeza de {p} a la salida de un córner!','¡Gol! {p} aprovecha un rechace dentro del área.','¡{p} define con clase por encima del portero!'],

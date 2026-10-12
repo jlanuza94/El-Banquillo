@@ -23,6 +23,9 @@ export function createMatch(ref){
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
  prepTactics(m);
+ // regularidad (días buenos y malos) y partidos grandes
+ ['h','a'].forEach(s=>{const xi=m.lu[s].filter(Boolean).map(PL),av=k=>xi.reduce((a,p)=>a+(p.at[k]??5),0)/Math.max(1,xi.length);
+  m.mult[s]*=1+gauss()*.035*(1.3-av('con')/10);if(m.ref.k!=='lg'&&m.ref.k!=='fr')m.mult[s]*=1+.012*(av('gra')-5);});
  ['h','a'].forEach(s=>{if(m.us===s)return;const o=s==='h'?'a':'h';const d=teamPower(m.lu[s],m.f[s]).ovr-teamPower(m.lu[o],m.f[o]).ovr+(s==='h'?1.5:-1.5);m.ment[s]=d>4?'att':d<-4?'def':'bal';});
  return m;
 }
@@ -51,7 +54,7 @@ export function tacMods(m,s){
  if(A.rit==='rap'){own*=1.06;opp*=1.03;drain*=1.06;}else if(A.rit==='len'){own*=.93;opp*=.95;drain*=.92;poss+=.02;}
  const w=(m.wide&&m.wide[s])||0;if(A.anc==='anc')own*=1+w/150;else if(A.anc==='est')own*=1-w/150;
  const mq=(m.mq&&m.mq[s])||[50,50];
- if(A.est==='pos'){poss+=.05;own*=B.pre==='baj'?1.06:B.pre==='alt'?.93:1;}else if(A.est==='dir'){own*=mq[1]>mq[0]?1.05:.98;poss-=.02;}else if(A.est==='con'){own*=(B.lin==='alt'||m.ment[o]==='att')?1.09:.95;poss-=.05;}
+ if(A.est==='pos'){poss+=.05;own*=B.pre==='baj'?1.06:B.pre==='alt'?.93:1;}else if(A.est==='dir'){own*=mq[1]>mq[0]?1.05:.98;poss-=.02;}else if(A.est==='con'){own*=((B.lin==='alt'||m.ment[o]==='att')?1.09:.95)*(1+.012*(avgAt(m,s,'DEL','vel')-5));poss-=.05;}
  const ords=m.lu[s].map(id=>id&&m.ord[s][id]).filter(Boolean);const up=ords.filter(x=>x==='sube').length,back=ords.filter(x=>x==='fija').length;
  own*=1+.015*up-.01*back;opp*=1+.012*up-.012*back;
  {const re=roleEffects(slotsOf(m.f[s]),m.ro&&m.ro[s]);own*=re.own;opp*=re.opp;poss+=re.poss;}
@@ -60,7 +63,7 @@ export function tacMods(m,s){
  if(OI.ban)own*=1-Math.max(0,w)/220;if(MY.ban)own*=.992;
  if(OI.sal){poss-=.03;const dq=avgAt(m,s,'DEF','pas');own*=dq<5?.97:.99;}if(MY.sal)drain*=1.06;
  if(OI.dur)own*=.975;
- const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)own*=cap.per==='lid'?1.02:1.005;
+ const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)own*=1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4);
  return{own,opp,drain,poss};
 }
 export function addEv(m,t,s,tx,pid){m.ev.push({min:m.min,t,s,tx,pid:pid||null});}
@@ -137,7 +140,7 @@ export function extraStats(m,xs,live){
  ['h','a'].forEach(s=>{const o=s==='h'?'a':'h',st=m.st[s];['co','fo','pa','pc'].forEach(k=>{if(st[k]==null)st[k]=0;});
   const share=s==='h'?poss:1-poss;
   if(rnd()<.025+xs[s]*2){st.co++;
-   const ck=PL(m.ck&&m.lu[s].includes(m.ck[s])?m.ck[s]:m.lu[s].find(Boolean));const heads=m.lu[s].filter(Boolean).map(PL).filter(p=>p.h>=184||hasTr(p,'cab'));
+   const ck=PL(m.ck&&m.lu[s].includes(m.ck[s])?m.ck[s]:m.lu[s].find(Boolean));const heads=m.lu[s].filter(Boolean).map(PL).filter(p=>(p.at.cab??0)>=7||p.h>=187||hasTr(p,'cab'));
    const sid=heads.length?pick(heads).id:pickScorer(m,s);
    if(ck&&sid&&rnd()<TUNE.corner*(1+.08*(ck.at.pas-5))*(1+.25*heads.length/3)*(hasTr(ck,'bal')?1.2:1)){const id=sid;
     m.score[s]++;st.sh++;st.ot++;st.xg+=.3;if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Gol de córner! ${ck.name} la pone y ${PL(id).name} remata de cabeza. (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ck.id!==id?ck.id:null;}}
@@ -181,7 +184,7 @@ export function step(m){
  const Th=tacMods(m,'h'),Ta=tacMods(m,'a');
  const xs={h:xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)/90*Th.own*Ta.opp*TUNE.open,a:xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)/90*Ta.own*Th.opp*TUNE.open}; // el resto llega por los córners
  m.possSum+=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.drain={h:Th.drain,a:Ta.drain};
- ['h','a'].forEach(s=>m.lu[s].forEach(id=>{if(id){const P=PL(id),fis=P.at.fis;m.en[id]=Math.max(10,m.en[id]-(m.ment[s]==='att'?.26:.21)*(1.25-fis*.05)*(P.per==='tra'?.8:1)*(m.drain?m.drain[s]:1));}}));
+ ['h','a'].forEach(s=>m.lu[s].forEach(id=>{if(id){const P=PL(id),fis=P.at.fis;m.en[id]=Math.max(10,m.en[id]-(m.ment[s]==='att'?.26:.21)*(1.25-(P.at.res??fis)*.05)*(P.per==='tra'?.8:1)*(m.drain?m.drain[s]:1));}}));
  const live=!!m.us;
  ['h','a'].forEach(s=>{
   const o=s==='h'?'a':'h',x=xs[s],r=rnd();

@@ -42,3 +42,5 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 .cmpgrid .vs{font-family:var(--f-display);font-weight:900;color:var(--muted)}
 .cmp2{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr);gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);text-align:center}
 .cmp2 .abar{flex:1;min-width:40px}
+/* Atributos de la ficha agrupados: técnica, mental y física */
+.atgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 18px;margin-top:6px}

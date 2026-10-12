@@ -27,7 +27,8 @@ import { agentFee, askPrice, makeBid, makeTerms, refuses, sell } from '../src/ma
 import { r3 } from '../src/core';
 import { deadlineDeals, rumoursWeekly, sellOnIn } from '../src/market2';
 import { renState } from '../src/contracts';
-import { signWage } from '../src/players';
+import { devSeason, rateOld, signWage } from '../src/players';
+import { addPair, mentorWeekly, pairs, removePair } from '../src/mentor';
 import { PL } from '../src/state';
 import { fixLineup } from '../src/tactics';
 import { TUNE, createMatch, liveRatings, quickMatch, step } from '../src/engine';
@@ -139,12 +140,15 @@ const app = document.getElementById('app')!;
     const saved = pack(), run = () => { setS(unpack(saved)); dirty(); const o = []; for (let i = 0; i < 10; i++) { S.fr.push(mkTie(S.teams[i].id, S.teams[i + 1].id)); const m = quickMatch({ k: 'fr', i: S.fr.length - 1 }); o.push(m.score.h + '-' + m.score.a); } return o.join(','); };
     const a = run(), b = run(); ok(a === b, 'motor con semilla: la misma partida da los mismos resultados'); setS(unpack(saved)); dirty(); S.fr = [];
   }
+  { const y = squad(S.user).find(p => p.age <= 21) || squad(S.user)[0]; const mt = squad(S.user).find(p => p.age >= 27); if (y.age <= 21 && mt) { mt.per = 'pro'; mt.at.lid = 8; const e = addPair(y.id, mt.id); ok(e === '' && pairs().length === 1, 'tutelaje: se asigna un tutor'); for (let i = 0; i < 60; i++) mentorWeekly(); ok(y.per === 'pro', 'tutelaje: el joven adopta el carácter del tutor'); removePair(y.id); } }
+  { let boom = 0, stag = 0; const ps = Object.values(S.players).filter(p => p.age <= 21).slice(0, 2000); ps.forEach(p => { const c = JSON.parse(JSON.stringify(p)); c.st = { mi: 2000 }; const e = devSeason(c, {}); if (e === 'boom') boom++; if (e === 'stag') stag++; }); ok(boom > 0 && stag > 0, `desarrollo: hay jóvenes que explotan (${boom}) y que se estancan (${stag}) de ${ps.length}`); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
     ok(S.crew.filter(m => m.role === 'ent').length === 3 && S.crew.filter(m => m.role === 'fis').length === 1, 'migración del cuerpo técnico antiguo'); S.crew = keep; }
 
   for (let s = 0; s < seasons; s++) {
+    if (S.jobless) { console.log('     (sin contrato: se acepta la primera oferta)'); takeJob(S.jobless.offers[0]); }
     simRun('season', false);
     await until(() => !simState);
     { const c = {}; S.inbox.filter(m => !m.read).forEach(m => { const k = m.cat + ':' + m.subj.replace(/[0-9€.,]+/g, '#').slice(0, 28); c[k] = (c[k] || 0) + 1; }); console.log('     no leídos: ' + Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 14).map(([k, v]) => k + '×' + v).join(' | ')); }
@@ -153,6 +157,7 @@ const app = document.getElementById('app')!;
     const pos = table(uLg()).findIndex(r => r.id === S.user) + 1;
     const fx = S.fixtures.flat(2).filter(f => f.played);
     const gpm = fx.reduce((a, f) => a + f.hg + f.ag, 0) / fx.length;
+    { const ps = Object.values(S.players).filter(p => p.team !== null), avg = ps.reduce((a, p) => a + p.ovr, 0) / ps.length, top = ps.filter(p => S.leagues[S.teams[p.team].lg].lv === 0), at = top.reduce((a, p) => a + p.ovr, 0) / top.length; console.log(`     media de los jugadores: ${(avg / 10).toFixed(2)} (Primera ${(at / 10).toFixed(2)}), jóvenes ≤21: ${ps.filter(p => p.age <= 21).length}, ≥33: ${ps.filter(p => p.age >= 33).length}`); }
     console.log(`     temporada ${seasonLabel()}: puesto ${pos}, presupuesto ${money(S.budget)}, ${gpm.toFixed(2)} goles por partido`);
     ok(gpm > 2 && gpm < 4, 'goles por partido razonables');
     { const top = Object.values(S.players).filter(p => p.st && p.team !== null).sort((a, b) => b.st.g - a.st.g).slice(0, 5); console.log('     máximos goleadores (todas las comp.): ' + top.map(p => p.st.g + ' en ' + p.st.pj).join(', ')); }
@@ -182,9 +187,14 @@ const app = document.getElementById('app')!;
 
   { // una partida de la versión anterior (sin bandeja, cuerpo técnico, sub-19…) se convierte al cargarla
     const o = JSON.parse(pack()); for (const k of ['inbox', 'crew', 'staffPool', 'yl', 'know', 'scoutQ', 'awards', 'debts', 'interest', 'hot', 'deals']) delete o[k];
+    const pf = o.pf, before = {}; o.pk.forEach(a => { a[pf.length] = a[pf.length].slice(0, 6); before['p' + a[0]] = null; });
+    Object.values(S.players).forEach(p => { if (before[p.id] === null) before[p.id] = Math.round(rateOld(p.at, p.pos) * 10); });
+    o.academy.forEach(p => { for (const k of ['cab', 'vis', 'col', 'dec', 'vel', 'res', 'lid', 'con', 'gra']) delete p.at[k]; });
     o.staff = { pre: 2, fis: 2 }; o.teams.forEach(t => { delete t.roles; delete t.oi; }); o.scouts.forEach(sc => { delete sc.jui; delete sc.jpo; delete sc.job; });
     boot(unpack(JSON.stringify(o)));
     ok(S.inbox.length > 0 && S.crew.length >= 3 && S.yl && S.scouts.every(sc => sc.jui), 'una partida antigua se actualiza al cargarla');
+    const diffs = Object.values(S.players).filter(p => before[p.id] != null).map(p => Math.abs(p.ovr - before[p.id]));
+    ok(Object.values(S.players).every(p => Object.keys(p.at).length === 15) && S.academy.every(p => p.at.cab != null) && diffs.reduce((a, b) => a + b, 0) / diffs.length < 1.5, `jugadores antiguos con 15 atributos y la misma media (diferencia media ${(diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(2)})`);
     for (const v of ['inicio', 'buzon', 'plantilla', 'tacticas', 'entreno', 'cantera', 'staff', 'mercado', 'premios', 'club']) { S.view = v; render(); }
     ok(true, 'y todas las pantallas funcionan con ella');
   }

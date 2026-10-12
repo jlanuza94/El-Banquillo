@@ -5,7 +5,9 @@ import {EXACT,knowledge,seen} from '../scouting';
 import {staffView} from './staff';
 import morphdom from 'morphdom';
 import {$app,esc,money,r2} from '../core';
-import {ATTRS,FORMS,GRP,SPN} from '../data';
+import {AT_COLS,AT_NAME,AT_SH,ATTRS,FORMS,GRP,SPN} from '../data';
+/** Cabecera de las columnas de atributos de las tablas. */
+export const attrHead=()=>AT_COLS.map(k=>`<th class="r" title="${AT_NAME[k]}">${AT_SH[k]}</th>`).join('');
 import {RT,LG,PL,S,T,atCell,available,crest,crestStyle,lgName,lowest,pBadge,qc,rt,seasonLabel} from '../state';
 import {buildWorld} from '../world';
 import {eff,footF,nRounds,posOf,prof,slotsOf,table,zoneOf} from '../tactics';
@@ -29,10 +31,10 @@ export function energyBar(e){return `<span class="bar" title="Energía ${Math.ro
 export function formCell(f){return f>0?`<span class="fm up">▲${f}</span>`:f<0?`<span class="fm dn">▼${-f}</span>`:`<span class="fm eq">–</span>`;}
 export function status(p,xi){if(p.inj)return `<span class="tag bad" title="${esc(p.injT||'Lesión')}">${esc(String(p.injT||'Lesión').split(' ')[0])} ${p.inj}p</span>`;if(p.susp)return `<span class="tag bad">Sanción ${p.susp}</span>`;if(p.recov>0)return `<span class="tag" title="Recién recuperado: más riesgo de recaída">Recién recuperado</span>`;return xi?`<span class="tag xi">Titular</span>`:`<span class="tag">Suplente</span>`;}
 export const nameBtn=p=>`<button class="linkname" data-a="ficha" data-id="${p.id}">${esc(p.name)}</button>`;
-export const keyAttrs=p=>p.pos==='POR'?['por','pas','fis']:['tir','pas','reg','def','fis'];
+export const keyAttrs=p=>({POR:['por','col','dec','pas'],DEF:['def','col','cab','vel','fis'],MED:['pas','vis','dec','res','reg'],DEL:['tir','col','vel','reg','cab']})[GRP[p.sp]||p.pos];
 /** Celda de atributo tal como la conoces: exacta o como rango «6-8». */
 export function atCellS(p,k,sn){sn=sn||seen(p);if(sn.exact)return atCell(p.at[k]);const [a,b]=sn.at[k];return `<span class="at rng ${qc((a+b)/2)}" title="Aún no lo conoces bien">${a}-${b}</span>`;}
-export const attrCells=p=>{const sn=seen(p);return ATTRS.map(k=>`<td class="r">${p.pos!=='POR'&&k==='por'?'<span class="muted">–</span>':atCellS(p,k,sn)}</td>`).join('');};
+export const attrCells=p=>{const sn=seen(p);return AT_COLS.map(k=>`<td class="r">${p.pos!=='POR'&&k==='por'?'<span class="muted">–</span>':atCellS(p,k,sn)}</td>`).join('');};
 /** Media tal como la conoces. */
 export function pBadgeS(p,cls=''){const sn=seen(p);if(sn.exact)return pBadge(p).replace('class="q ','class="q '+cls+' ');const [a,b]=sn.ovr;return `<span class="q rng ${cls} ${qc((a+b)/20)}" title="Media estimada: aún no lo conoces bien">${(a/10).toFixed(1)}–${(b/10).toFixed(1)}</span>`;}
 export const potTxt=p=>{if(p.age>23)return '—';const r=seen(p).pot;return r[0]===r[1]?`~${r[0].toFixed(1)}`:`${r[0].toFixed(1)}–${r[1].toFixed(1)}`;};

@@ -6,7 +6,7 @@ import {RT,LG,PL,S,T,crest,lgName,pBadge,rt,seasonLabel,squad} from '../state';
 import {table} from '../tactics';
 import {askPrice,inWindow,refuses,sell,windowTxt} from '../market';
 import {contractTxt} from '../contracts';
-import {attrCells,clubCell,nameBtn,pBadgeS,potTxt} from './common';
+import {attrCells,attrHead,clubCell,nameBtn,pBadgeS,potTxt} from './common';
 import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
 export function marketRow(p){
  const pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id);
@@ -21,7 +21,7 @@ export function mkList(){
   return `<div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Valor</th><th class="r">Sueldo/sem</th><th>Contrato</th><th></th></tr></thead><tbody>
   ${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${money(p.value)}</td><td class="n">${money(p.wage)}</td><td>${contractTxt(p)}</td><td class="r">${p.loan?'':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="sell" data-id="${p.id}">Buscar oferta</button><button class="btn sm" data-a="loanout" data-id="${p.id}">Ceder</button><button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button></span>`}</td></tr>`).join('')}</tbody></table></div>`;
  }
- const head=`<thead><tr><th></th><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Pot.</th>${ATTRS.map(k=>`<th class="r" title="${AT_NAME[k]}">${AT_SH[k]}</th>`).join('')}<th>Contrato</th><th class="r">Precio</th><th></th></tr></thead>`;
+ const head=`<thead><tr><th></th><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Pot.</th>${attrHead()}<th>Contrato</th><th class="r">Precio</th><th></th></tr></thead>`;
  if(mk.tab==='short'){
   const l=S.short.map(PL).filter(p=>p&&p.team!==S.user);
   return l.length?`<div class="tbl"><table>${head}<tbody>${l.map(marketRow).join('')}</tbody></table></div>`:'<div class="empty">Aún no sigues a nadie. Marca la estrella ☆ de un jugador en Buscar para tenerlo aquí.</div>';
@@ -63,7 +63,7 @@ export function mercadoView(){
   <label class="f"><span class="eyebrow">Media mín.</span>${sel('mkmin',mk.min,[['','Cualquiera'],['4','4+'],['5','5+'],['6','6+'],['6.5','6.5+'],['7','7+'],['8','8+']])}</label>
   <label class="f"><span class="eyebrow">Edad máx.</span>${sel('mkage',mk.age,[['','Cualquiera'],['21','21'],['23','23'],['26','26'],['30','30']])}</label>
   <label class="f"><span class="eyebrow">Precio máx.</span>${sel('mkmax',mk.max,[['','Sin límite'],['0.05','€50k'],['0.1','€100k'],['0.25','€250k'],['0.5','€500k'],['1','€1M'],['2','€2M'],['5','€5M']])}</label>
-  <label class="f"><span class="eyebrow">Ordenar por</span>${sel('mksort',mk.sort,[['ovr','Media'],['pot','Potencial'],['ganga','Mejor calidad-precio'],['price','Precio'],['age','Edad'],['tir','Tiro'],['pas','Pase'],['reg','Regate'],['def','Defensa'],['fis','Físico'],['por','Portería']])}</label>
+  <label class="f"><span class="eyebrow">Ordenar por</span>${sel('mksort',mk.sort,[['ovr','Media'],['pot','Potencial'],['ganga','Mejor calidad-precio'],['price','Precio'],['age','Edad'],...ATTRS.map(k=>[k,AT_NAME[k]])])}</label>
   <label class="chk"><input type="checkbox" id="mkok" ${mk.ok?'checked':''}> Solo los que vendrían</label>
   <label class="chk"><input type="checkbox" id="mklast" ${mk.last?'checked':''}> Último año de contrato (más baratos)</label></div>`:mk.tab==='sell'?'<p class="small muted" style="margin:0 0 10px">Pide una oferta, cede a un jugador hasta final de temporada (el otro club paga su sueldo) o renueva su contrato. Cada club responde una vez por jornada.</p>':''}
  <div id="mklist">${mkList()}</div></section>`;

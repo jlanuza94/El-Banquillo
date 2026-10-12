@@ -9,7 +9,8 @@ import {crewSeasonEnd} from './staff';
 import {clamp,gauss,money,pick,r2,r3,ri,rnd} from './core';
 import {COUNTRIES,SPEEDS,newSt} from './data';
 import {RT,LG,PL,S,T,dirty,econ,findLg,lgName,lowest,rt,seasonLabel,setS,squad,uLg,unit} from './state';
-import {assignNum,baseWage,decline,ensureSquad,genFreeAgents,genPlayer,improve,setValue,strength} from './players';
+import {assignNum,baseWage,decline,devSeason,ensureSquad,genFreeAgents,genPlayer,improve,setValue,strength} from './players';
+import {trainMult} from './staff';
 import {news,setupSeason} from './world';
 import {fixLineup,lineupIssues,nRounds,rotateLineup,table} from './tactics';
 import {applyResult,createMatch,playerTick,quickMatch,step} from './engine';
@@ -140,11 +141,12 @@ export function newSeason(){
   if(!lowest(L)){const dn=findLg(L.c,L.lv+1);tb.slice(17).forEach(r=>moves.push([r.id,dn.id]));}});
  moves.forEach(([id,lg])=>{T(id).lg=lg;});
  // aging, development, retirements
- const retired=[];
+ const retired=[],devNews=[];
  Object.values(S.players).forEach(p=>{
   p.age++;
   const ovr0=p.ovr;
-  if(p.age<=23)improve(p,ri(0,2));else if(p.age<=28){const x=ri(-1,1);x>0?improve(p,x):x<0?decline(p,1):0;}else if(p.age<=31)decline(p,ri(0,2));else decline(p,ri(1,3));
+  const mine=p.team===S.user,ev=devSeason(p,{train:mine?trainMult()*(S.club?1+.06*(S.club.fac.ent-1):1):1,mentor:mine&&(S.mentors||[]).some(x=>x.y===p.id)});
+  if(ev&&(mine||p.home))devNews.push([p,ev]);
   if(p.st&&p.st.pj&&p.team!==null&&(p.team===S.user||T(p.team).lg===uLg()||(p.hist&&p.hist.length))){p.hist=(p.hist||[]).concat([[seasonLabel(),T(p.team).short,p.st.pj,p.st.g,p.st.a,Math.round(p.st.rs/p.st.pj*10)/10]]).slice(-8);}
   p.st=newSt();
   if(p.team!==null)p.contract--;
@@ -174,6 +176,7 @@ export function newSeason(){
  genFreeAgents();
  S.short=S.short.filter(id=>PL(id));
  S.seasonN++;setupSeason();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(mgrOut)loseJob('fin de contrato');else advance();
+ devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${(p.ovr/10).toFixed(1)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
  if(retired.length)news(`Se retiran: ${retired.join(', ')}.`);
  if(freed.length)news(`Acaban contrato y se van libres: ${freed.join(', ')}.`,'bad');
  if(back.length)news(`Vuelven de su cesión: ${back.join(', ')}.`);
