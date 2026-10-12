@@ -77,19 +77,55 @@ export function publicWeekly(){
 }
 export function fineHim(pid){const p=PL(pid);if(!p)return;p.hap=clamp((p.hap??70)-6,0,100);squad(S.user).forEach(q=>{if(q!==p)q.hap=clamp((q.hap??70)+1,0,100);});news(`Multa a ${p.name} por sus declaraciones. El vestuario aplaude la mano dura; él, no tanto.`,'',{cat:'pla'});}
 
-/* ---------- 8. Proyecto a 3 años con la directiva ---------- */
-export const PROJ={asc:{n:'Ascender',d:'Subir al menos una división en 3 temporadas.'},can:{n:'Apostar por la cantera',d:'En la tercera temporada, al menos 4 canteranos con 10 partidos o más.'},eco:{n:'Sanear las cuentas',d:'Terminar la tercera temporada con un 50% más de presupuesto que ahora.'},tit:{n:'Ganar un título',d:'Ganar cualquier título (liga o copa) en 3 temporadas.'}};
-export function projOffer(){if(S.proj||S.projOff===S.seasonN)return;S.projOff=S.seasonN;news('La directiva quiere pactar contigo un proyecto a 3 años. Te juzgarán por él, no solo por cada temporada.','',{cat:'dir',subj:'Proyecto a 3 años',act:Object.entries(PROJ).map(([k,v])=>({l:v.n,a:'proj',v:k}))});}
-export function startProject(k){if(S.proj||!PROJ[k])return;S.proj={k,start:S.seasonN,end:S.seasonN+2,lv:LG(uLg()).lv,budget:S.budget,titles:(S.titles||[]).length};news(`Proyecto pactado con la directiva: ${PROJ[k].n.toLowerCase()}. ${PROJ[k].d}`,'good',{cat:'dir'});}
-export function projState(){const P=S.proj;if(!P)return null;const sq=squad(S.user);
- const done=P.k==='asc'?LG(uLg()).lv<P.lv:P.k==='can'?sq.filter(p=>p.home&&p.st&&p.st.pj>=10).length>=4:P.k==='eco'?S.budget>=P.budget*1.5:(S.titles||[]).length>P.titles;
- return {done,left:P.end-S.seasonN};}
-/** Al terminar cada temporada: cómo va el proyecto. */
-export function projSeasonEnd(){
- const P=S.proj;if(!P)return;const st=projState(),M=S.mgr;
- if(st.done&&(P.k!=='can'||S.seasonN>=P.end)){M.rep=clamp(M.rep+8,0,100);M.conf=clamp(M.conf+20,0,100);const b=r2(Math.max(.2,S.budget*.1));S.budget=r3(S.budget+b);news(`¡Proyecto cumplido: ${PROJ[P.k].n.toLowerCase()}! La directiva te premia con ${money(b)} y su total confianza.`,'good',{cat:'dir',subj:'Proyecto cumplido'});S.proj=null;S.projHist=(S.projHist||[]).concat([{k:P.k,ok:1,season:seasonLabel()}]);return;}
- if(S.seasonN>=P.end){M.conf=clamp(M.conf-15,0,100);news(`El proyecto (${PROJ[P.k].n.toLowerCase()}) no se ha cumplido. La directiva está decepcionada.`,'bad',{cat:'dir',subj:'Proyecto fallido'});S.proj=null;S.projHist=(S.projHist||[]).concat([{k:P.k,ok:0,season:seasonLabel()}]);return;}
- M.conf=clamp(M.conf+3,0,100);news(`Proyecto (${PROJ[P.k].n.toLowerCase()}): queda${P.end-S.seasonN===1?' 1 temporada':'n '+(P.end-S.seasonN)+' temporadas'}. La directiva sigue confiando.`,'',{cat:'dir'});
+/* ---------- 8. Proyecto con la directiva: cambia según tu club y crece con los años ---------- */
+/** Proyectos posibles según dónde estás: división, nivel del club en su liga, cuentas y cantera.
+ *  Cada uno tiene su duración y su exigencia; tras cumplir uno, el siguiente pide más. */
+export function projOptions(){
+ const L=LG(uLg()),lv=L.lv,t=T(S.user),rivals=S.teams.filter(x=>x.lg===t.lg).sort((a,b)=>b.rep-a.rep),rank=rivals.findIndex(x=>x.id===S.user)+1,n=(S.projHist||[]).filter(x=>x.ok).length,O=[];
+ const add=(k,n_,d,yrs,need)=>O.push({k,n:n_,d,yrs,need});
+ if(lv>=2){add('asc','Ascender',`Subir al menos una división en ${2+(n>0?0:1)} temporadas.`,2+(n>0?0:1),1);add('asc','Subir dos divisiones',`Subir dos divisiones en ${4-(n>1?1:0)} temporadas.`,4-(n>1?1:0),2);}
+ else if(lv===1)add('asc','Llegar a Primera',`Ascender a Primera en ${rank<=4?2:3} temporadas.`,rank<=4?2:3,1);
+ else{
+  if(rank>=12)add('perm','Asentarse en Primera','No descender en ninguna de las próximas 3 temporadas.',3,0);
+  if(rank<=12){const top=rank<=4?4:6;add('eur','Jugar en Europa',`Terminar entre los ${top} primeros de la liga en alguna de las próximas ${rank<=6?2:3} temporadas.`,rank<=6?2:3,top);}
+  if(rank<=5)add('liga','Campeones de liga',`Ganar la liga en ${rank<=2?2:4} temporadas.`,rank<=2?2:4,1);
+  if(rank<=3)add('cont','Conquistar el continente','Ganar la competición continental en 4 temporadas.',4,1);
+ }
+ const homes=Math.min(6,3+(lv===0?0:1)+n);add('can','Apostar por la cantera',`En la última temporada, al menos ${homes} canteranos con 10 partidos o más (${lv>=2?3:4} temporadas).`,lv>=2?3:4,homes);
+ const debt=S.budget<0||(S.debts||[]).length>0;add('eco',debt?'Salir de los números rojos':'Sanear las cuentas',debt?'Terminar las próximas 2 temporadas con presupuesto positivo y sin deudas de traspasos.':`Terminar con un ${50+20*n}% más de presupuesto que ahora en 3 temporadas.`,debt?2:3,debt?0:1.5+.2*n);
+ if(lv<=2)add('tit','Ganar un título',`Ganar cualquier título (liga, copa o continental) en ${lv===0?3:4} temporadas.`,lv===0?3:4,1);
+ return O.slice(0,4);
+}
+export const PROJ={asc:{n:'Ascender'},perm:{n:'Asentarse en Primera'},eur:{n:'Jugar en Europa'},liga:{n:'Campeones de liga'},cont:{n:'Conquistar el continente'},can:{n:'Apostar por la cantera'},eco:{n:'Sanear las cuentas'},tit:{n:'Ganar un título'}};
+export function projOffer(){if(S.proj||S.projOff===S.seasonN)return;S.projOff=S.seasonN;S.projOpts=projOptions();
+ news('La directiva quiere pactar contigo un proyecto. Según cómo esté el club te propone varios caminos, cada uno con su plazo. Te juzgarán por él, no solo por cada temporada.','',{cat:'dir',subj:'Proyecto con la directiva',act:S.projOpts.map((o,i)=>({l:o.n,a:'proj',v:String(i)}))});}
+export function startProject(i){
+ if(S.proj)return;const O=S.projOpts||projOptions(),o=typeof i==='string'&&PROJ[i]?O.find(x=>x.k===i):O[+i];if(!o)return;
+ S.proj={k:o.k,n:o.n,d:o.d,need:o.need,start:S.seasonN,end:S.seasonN+o.yrs-1,yrs:o.yrs,lv:LG(uLg()).lv,lvNow:LG(uLg()).lv,budget:Math.max(S.budget,.05),titles:(S.titles||[]).length,hit:0,fail:0};S.projOpts=null;
+ news(`Proyecto pactado con la directiva: ${o.n.toLowerCase()}. ${o.d}`,'good',{cat:'dir',subj:`Proyecto: ${o.n}`});}
+/** ¿Se está cumpliendo? (con el resumen de la temporada si acaba de terminar). */
+export function projState(sm){const P=S.proj;if(!P)return null;const sq=squad(S.user),lvNow=sm?P.lv-0+(LG(uLg()).lv-P.lv)-(sm.up?1:0)+(sm.down?1:0):LG(uLg()).lv;
+ let done=!!P.hit;const fail=!!P.fail;
+ if(P.k==='asc')done=P.lv-lvNow>=P.need;
+ else if(P.k==='perm')done=!fail&&lvNow===0;
+ else if(P.k==='can')done=sq.filter(p=>p.home&&p.st&&p.st.pj>=10).length>=P.need;
+ else if(P.k==='eco')done=P.need?S.budget>=P.budget*P.need:S.budget>=0&&!(S.debts||[]).length;
+ else if(P.k==='tit')done=done||(S.titles||[]).length>P.titles||(sm&&sm.champ);
+ return {done,fail,left:P.end-S.seasonN,lvNow};}
+/** Al terminar cada temporada: revisión anual del proyecto, premio, fracaso o siguiente paso más ambicioso. */
+export function projSeasonEnd(sm){
+ const P=S.proj;if(!P)return;const M=S.mgr;
+ if(sm){if(P.k==='eur'&&sm.pos<=P.need&&sm.L.lv===0)P.hit=1;if(P.k==='liga'&&sm.champ&&sm.L.lv===0)P.hit=1;if(P.k==='cont'&&(S.titles||[]).slice(P.titles).some(x=>/Champions|Copa Libertad|Liga de Campeones|Continental/i.test(x.name)))P.hit=1;if(P.k==='perm'&&sm.down)P.fail=1;}
+ const st=projState(sm),last=S.seasonN>=P.end,early=st.done&&!['can','perm','eco'].includes(P.k);
+ const close=(ok)=>{S.projHist=(S.projHist||[]).concat([{k:P.k,n:P.n,ok:ok?1:0,season:seasonLabel()}]);S.proj=null;S.projOff=null;};
+ if(st.fail){M.conf=clamp(M.conf-20,0,100);news(`El proyecto «${P.n}» se ha roto: era el objetivo y no se ha cumplido. La directiva está muy decepcionada.`,'bad',{cat:'dir',subj:'Proyecto fallido'});close(0);return;}
+ if(early||(last&&st.done)){const b=r2(Math.max(.2,Math.abs(S.budget)*.1+.1*P.yrs));M.rep=clamp(M.rep+5+P.yrs,0,100);M.conf=clamp(M.conf+20,0,100);S.budget=r3(S.budget+b);
+  news(`¡Proyecto cumplido${early&&!last?' antes de tiempo':''}: ${P.n.toLowerCase()}! La directiva te premia con ${money(b)} y su total confianza. El próximo proyecto será más ambicioso.`,'good',{cat:'dir',subj:'Proyecto cumplido'});close(1);return;}
+ if(last){M.conf=clamp(M.conf-15,0,100);news(`El plazo del proyecto «${P.n}» ha terminado sin cumplirlo. La directiva está decepcionada.`,'bad',{cat:'dir',subj:'Proyecto fallido'});close(0);return;}
+ // revisión anual: ¿vas bien encaminado?
+ const yr=S.seasonN-P.start+1,good=st.done||(P.k==='asc'&&P.lv-st.lvNow>=Math.ceil(P.need*yr/P.yrs))||((P.k==='eur'||P.k==='liga')&&sm&&sm.pos<=Math.max(P.need+3,4))||(P.k==='eco'&&S.budget>=P.budget)||(P.k==='can'&&squad(S.user).filter(p=>p.home&&p.st&&p.st.pj>=5).length>=Math.ceil(P.need/2))||P.k==='perm'||P.k==='tit';
+ M.conf=clamp(M.conf+(good?4:-4),0,100);
+ news(`Revisión del proyecto «${P.n}» (año ${yr} de ${P.yrs}): ${good?'vas bien encaminado, la directiva sigue confiando.':'la directiva ve el proyecto en peligro: quiere una reacción.'}`,good?'good':'bad',{cat:'dir',subj:`Proyecto: año ${yr} de ${P.yrs}`});
 }
 
 /* ---------- 9. Estadio nuevo ---------- */
