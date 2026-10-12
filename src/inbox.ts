@@ -39,7 +39,9 @@ export function autoSubj(txt){
 export function mail(txt,o={}){
  if(!S)return;S.inbox=S.inbox||[];
  const cat=o.cat||autoCat(txt);
- S.inbox.unshift({id:'m'+(S.nextId++),wk:S.week+1,sn:seasonLabel(),cat,from:o.from||CATS[cat].from,subj:o.subj||autoSubj(txt),txt,kind:o.kind||'',act:o.act||null,read:0});
+ // las noticias del mundo y los resultados de cada jornada llegan ya leídos: así el contador solo avisa de lo importante
+ const quiet=o.quiet||cat==='not'||/^Jornada \d+:/.test(txt);
+ S.inbox.unshift({id:'m'+(S.nextId++),wk:S.week+1,sn:seasonLabel(),cat,from:o.from||CATS[cat].from,subj:o.subj||autoSubj(txt),txt,kind:o.kind||'',act:o.act||null,read:quiet?1:0});
  if(S.inbox.length>150){const keep=S.inbox.filter((m,i)=>i<120||(!m.read&&i<150));S.inbox=keep.slice(0,150);}
 }
 export const unread=()=>(S.inbox||[]).filter(m=>!m.read).length;

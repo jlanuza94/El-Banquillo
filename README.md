@@ -6,6 +6,8 @@ Juego de mánager de fútbol para el navegador y el móvil: 10 países, 43 ligas
 - **Simulación en segundo plano:** al simular varias jornadas, el cálculo va en un Web Worker y la pantalla no se bloquea.
 - **Hasta 5 partidas guardadas** en el navegador (IndexedDB), más copia de seguridad en texto.
 
+Además: bandeja de entrada con mensajes de la directiva, el cuerpo técnico, los ojeadores y la prensa; cuerpo técnico con atributos; ojeo con conocimiento de jugadores (rangos de atributos e informes); roles por posición; instrucciones al rival, córners, xG y consejos del segundo en el partido; liga sub-19; mercado con plazos, % de futura venta, intercambios, rumores y gangas de cierre; estadísticas, once ideal, premios de temporada (Balón de Oro…) y comparador de jugadores.
+
 ## Cómo jugar
 
 - **En claude.ai:** el enlace del artifact (todo funciona salvo instalarlo como app).
@@ -58,6 +60,13 @@ src/
   career.ts           carrera del entrenador
   academy.ts          cantera y ojeadores
   persist.ts          guardado en IndexedDB (5 partidas), copia de seguridad y migraciones
+  inbox.ts            bandeja de entrada (mensajes, categorías, botones de acción)
+  staff.ts            cuerpo técnico: segundo, entrenadores, fisios, director deportivo
+  scouting.ts         conocimiento de jugadores, rangos de atributos, informes de ojeo
+  roles.ts            roles por posición (lateral ofensivo, falso nueve…)
+  youth.ts            liga sub-19
+  market2.ts          plazos, % de futura venta, intercambios, rumores, gangas de cierre
+  awards.ts           premios de temporada, once ideal, Balón de Oro
   events.ts           clics, formularios y teclado
   match2d.ts          animación del partido en 2D
   boot.ts             carga de una partida (y migración de partidas antiguas)
@@ -76,5 +85,6 @@ Los módulos que vienen de la versión anterior llevan `// @ts-nocheck`: funcion
 1. Pon la lógica en el módulo de su zona (algo del mercado en `src/market.ts`) y la pantalla en `src/views/`. Importa lo que uses: cada archivo es un módulo.
 2. El estado de la partida es `S` (importado de `./state`). Para sustituirlo entero usa `setS()`.
 3. Lo que se ejecuta durante una simulación corre también dentro del Web Worker: ahí no hay `document` ni `window`. No toques la pantalla desde la lógica; deja eso para `views/` y `events.ts`.
-4. Si guardas datos nuevos en los jugadores, añade el campo a `PF` en `src/persist.ts`. Si cambias el formato de partidas ya guardadas, añade la migración en `boot()` (`src/boot.ts`).
-5. Ejecuta `npm test` y `npm run check`. No debe salir ningún `FALLO`.
+4. Si guardas datos nuevos en los jugadores, añade el campo a `PF` en `src/persist.ts`. Si cambias el formato de partidas ya guardadas, añade la migración en `boot()` (`src/boot.ts`) y compruébala en la prueba «una partida antigua se actualiza al cargarla».
+5. Para avisar al jugador de algo, usa `news(texto, tipo, {cat, subj, act})`: sale en Inicio y en la bandeja de entrada, con botones si pasas `act`.
+6. Ejecuta `npm test` y `npm run check`. No debe salir ningún `FALLO`.

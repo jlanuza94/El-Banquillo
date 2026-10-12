@@ -12,8 +12,9 @@ import { table } from '../src/tactics';
 import { finishRound, friendlyOpts, newSeason, playFriendly, playMatch, simRun, simState, simToEnd } from '../src/season';
 import { takeJob } from '../src/career';
 import { answerPress } from '../src/club';
-import { exportCode, importCode, loadAsync, loadSlot, deleteSlot, pack, saveNow, slots, MAX_SLOTS } from '../src/persist';
+import { exportCode, importCode, loadAsync, loadSlot, deleteSlot, pack, unpack, saveNow, slots, MAX_SLOTS } from '../src/persist';
 import { render, shell } from '../src/views/common';
+import { boot } from '../src/boot';
 import { matchView } from '../src/views/match';
 import { modalView } from '../src/views/modals';
 import { seasonLabel, uLg } from '../src/state';
@@ -22,7 +23,8 @@ import { hireStaff, migrateCrew } from '../src/staff';
 import { queueScout, scoutingWeekly, seen } from '../src/scouting';
 import { squad, T } from '../src/state';
 import { ylTable } from '../src/youth';
-import { askPrice, makeBid, makeTerms, sell } from '../src/market';
+import { agentFee, askPrice, makeBid, makeTerms, refuses, sell } from '../src/market';
+import { r3 } from '../src/core';
 import { deadlineDeals, rumoursWeekly, sellOnIn } from '../src/market2';
 import { renState } from '../src/contracts';
 import { signWage } from '../src/players';
@@ -113,14 +115,14 @@ const app = document.getElementById('app')!;
   {
     // Mercado: plazos, intercambio y % de futura venta
     const realBudget = S.budget; S.budget = 500; const b0 = S.budget;
-    const myLg = S.teams[S.user].lg, cands = Object.values(S.players).filter(p => p.team !== null && p.team !== S.user && S.teams[p.team].lg === myLg && !p.loan && p.age < 30);
+    const myLg = S.teams[S.user].lg, cands = Object.values(S.players).filter(p => p.team !== null && p.team !== S.user && S.teams[p.team].lg === myLg && !p.loan && p.age < 30 && !refuses(p));
     const target = cands[0], from = target.team, swapP = squad(S.user).filter(p => !p.loan).sort((a, b) => a.value - b.value)[0];
-    makeBid(target.id, askPrice(target) * 1.5, { inst: 3, swap: swapP.id });
-    ok(S.neg[target.id].agreed != null, 'oferta a plazos con jugador incluido aceptada');
+    const amt = askPrice(target) * 1.5; makeBid(target.id, amt, { inst: 3, swap: swapP.id });
+    ok(S.neg[target.id].agreed != null, 'oferta a plazos con jugador incluido aceptada' + (S.neg[target.id].agreed != null ? '' : ': ' + S.neg[target.id].msg));
     const D = renState; void D;
     makeTerms(target.id, 'buy', { w: signWage(target) * 3, yrs: 2, role: 'ti', cl: target.value * 3, bonus: 0 });
     ok(target.team === S.user && swapP.team === from && S.debts.length === 1 && S.debts[0].left === 2, 'fichaje completado: plazos pendientes y el otro jugador se va');
-    ok(b0 - S.budget < askPrice(target) * 1.5 * .5, 'solo se paga el primer plazo');
+    ok(Math.abs(b0 - S.budget - (r3(amt / 3) + agentFee(target, amt))) < .01, 'solo se paga el primer plazo (y la comisión del agente)');
     S.offers[target.id] = { team: from, amount: 2, incoming: true }; S.view = 'inicio';
     S.week = 3; sell(target.id, true);
     ok(target.team === from && target.son && target.son.team === S.user, 'venta con % de futura venta');
@@ -141,6 +143,7 @@ const app = document.getElementById('app')!;
   for (let s = 0; s < seasons; s++) {
     simRun('season', false);
     await until(() => !simState);
+    const fired = !!S.jobless;
     if (S.jobless) { console.log('     (despedido: se acepta la primera oferta)'); takeJob(S.jobless.offers[0]); }
     const pos = table(uLg()).findIndex(r => r.id === S.user) + 1;
     const fx = S.fixtures.flat(2).filter(f => f.played);
@@ -148,7 +151,7 @@ const app = document.getElementById('app')!;
     console.log(`     temporada ${seasonLabel()}: puesto ${pos}, presupuesto ${money(S.budget)}, ${gpm.toFixed(2)} goles por partido`);
     ok(gpm > 2 && gpm < 4, 'goles por partido razonables');
     { const top = Object.values(S.players).filter(p => p.st && p.team !== null).sort((a, b) => b.st.g - a.st.g).slice(0, 5); console.log('     máximos goleadores (todas las comp.): ' + top.map(p => p.st.g + ' en ' + p.st.pj).join(', ')); }
-    if (!S.jobless) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
+    if (!fired) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
       S.view = 'cantera'; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
     for (const tb of ['race', 'stats', 'xi', 'hist']) { S.awTab = tb; S.view = 'premios'; render(); }
     ok(app.textContent.includes('Palmarés'), 'pantalla de estadísticas y premios');
@@ -172,6 +175,14 @@ const app = document.getElementById('app')!;
   ok(slots.length === 1 && !(await loadSlot(2)), 'se puede borrar una partida');
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 
+  { // una partida de la versión anterior (sin bandeja, cuerpo técnico, sub-19…) se convierte al cargarla
+    const o = JSON.parse(pack()); for (const k of ['inbox', 'crew', 'staffPool', 'yl', 'know', 'scoutQ', 'awards', 'debts', 'interest', 'hot', 'deals']) delete o[k];
+    o.staff = { pre: 2, fis: 2 }; o.teams.forEach(t => { delete t.roles; delete t.oi; }); o.scouts.forEach(sc => { delete sc.jui; delete sc.jpo; delete sc.job; });
+    boot(unpack(JSON.stringify(o)));
+    ok(S.inbox.length > 0 && S.crew.length >= 3 && S.yl && S.scouts.every(sc => sc.jui), 'una partida antigua se actualiza al cargarla');
+    for (const v of ['inicio', 'buzon', 'plantilla', 'tacticas', 'entreno', 'cantera', 'staff', 'mercado', 'premios', 'club']) { S.view = v; render(); }
+    ok(true, 'y todas las pantallas funcionan con ella');
+  }
   const code = exportCode();
   ok(importCode(code) === true, 'copia de seguridad: exportar e importar');
   const kb = Math.round(pack().length / 1024);
