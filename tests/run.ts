@@ -22,6 +22,12 @@ import { hireStaff, migrateCrew } from '../src/staff';
 import { queueScout, scoutingWeekly, seen } from '../src/scouting';
 import { squad, T } from '../src/state';
 import { ylTable } from '../src/youth';
+import { askPrice, makeBid, makeTerms, sell } from '../src/market';
+import { deadlineDeals, rumoursWeekly, sellOnIn } from '../src/market2';
+import { renState } from '../src/contracts';
+import { signWage } from '../src/players';
+import { PL } from '../src/state';
+import { fixLineup } from '../src/tactics';
 import { TUNE, createMatch, liveRatings, step } from '../src/engine';
 import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
@@ -103,6 +109,27 @@ const app = document.getElementById('app')!;
     T(S.user).oi = { ban: true, dur: true }; S.fr.push(mkTie(S.user, pairs[0][0])); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; let tips = 0;
     while (!m.done) { step(m); if (m.adv && m.adv.min === m.min) tips++; } S.fr = []; T(S.user).oi = {};
     ok(tips >= 3 && Object.keys(liveRatings(m)).length >= 22, `consejos del segundo (${tips}) y notas en directo`);
+  }
+  {
+    // Mercado: plazos, intercambio y % de futura venta
+    const realBudget = S.budget; S.budget = 500; const b0 = S.budget;
+    const myLg = S.teams[S.user].lg, cands = Object.values(S.players).filter(p => p.team !== null && p.team !== S.user && S.teams[p.team].lg === myLg && !p.loan && p.age < 30);
+    const target = cands[0], from = target.team, swapP = squad(S.user).filter(p => !p.loan).sort((a, b) => a.value - b.value)[0];
+    makeBid(target.id, askPrice(target) * 1.5, { inst: 3, swap: swapP.id });
+    ok(S.neg[target.id].agreed != null, 'oferta a plazos con jugador incluido aceptada');
+    const D = renState; void D;
+    makeTerms(target.id, 'buy', { w: signWage(target) * 3, yrs: 2, role: 'ti', cl: target.value * 3, bonus: 0 });
+    ok(target.team === S.user && swapP.team === from && S.debts.length === 1 && S.debts[0].left === 2, 'fichaje completado: plazos pendientes y el otro jugador se va');
+    ok(b0 - S.budget < askPrice(target) * 1.5 * .5, 'solo se paga el primer plazo');
+    S.offers[target.id] = { team: from, amount: 2, incoming: true }; S.view = 'inicio';
+    S.week = 3; sell(target.id, true);
+    ok(target.team === from && target.son && target.son.team === S.user, 'venta con % de futura venta');
+    const bb = S.budget; sellOnIn(target, 10); ok(Math.abs(S.budget - bb - 1.5) < .01 && !target.son, 'cobras el % cuando lo vuelven a vender');
+    S.week = 4; deadlineDeals(); const dk = Object.keys(S.deals || {});
+    ok(dk.every(id => askPrice(PL(id)) === S.deals[id]), `gangas del día de cierre (${dk.length})`); S.week = 3; S.deals = {};
+    for (let i = 0; i < 30; i++) rumoursWeekly();
+    ok(Object.keys(S.interest).length > 0, 'rumores de interés por tus jugadores');
+    fixLineup(); S.budget = realBudget; S.debts = [];
   }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');

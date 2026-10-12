@@ -8,7 +8,7 @@ import {rateA,setValue} from './players';
 import {toast} from './views/common';
 import {boot} from './boot';
 export const PF_V4=['id','name','nat','pos','age','pot','team','num','energy','form','goals','apps','yc','inj','susp','pInj','pSusp','contract','wage','tf','sg'];
-export const PF=PF_V4.concat(['sp','alt','foot','wf','h','per','tr','hap','role','cl','st','car','hist','req','prom','tw','injT','pInjT','prone','recov','agc','ph','adapt','home','paid','boomS']);
+export const PF=PF_V4.concat(['sp','alt','foot','wf','h','per','tr','hap','role','cl','st','car','hist','req','prom','tw','injT','pInjT','prone','recov','agc','ph','adapt','home','paid','boomS','son']);
 export const packName=p=>{const L=NAMES[COUNTRIES[p.nat].lang],i=p.name.indexOf(' '),a=L[0].indexOf(p.name.slice(0,i)),b=L[1].indexOf(p.name.slice(i+1));return a>=0&&b>=0?a+'.'+b:p.name;};
 export function pack(){
  const o=Object.assign({},S);o.players=undefined;

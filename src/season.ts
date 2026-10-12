@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {payDebts} from './market2';
 import {setupYouth} from './youth';
 import {scoutingSeasonEnd} from './scouting';
 import {crewSeasonEnd} from './staff';
@@ -120,7 +121,7 @@ export function newSeason(){
  if(S.sponsor&&S.sponsor.type==='obj'&&sm.ok){S.budget=r3(S.budget+S.sponsor.obj);news(`${S.sponsor.name} paga ${money(S.sponsor.obj)} por cumplir el objetivo.`,'good');}
  if(S.club){const C=S.club;C.fans=Math.round(clamp(C.fans*(1+(sm.ok?.05:-.03)+(sm.up?.15:0)+(sm.down?-.12:0)+(sm.champ?.08:0)),300,C.cap*1.6));if(C.build&&C.build.until<=999)finishBuild();}
  S.history.unshift({club:T(S.user).name,season:seasonLabel(),lg:lgName(sm.lg),pos:sm.pos,pts:sm.tb[sm.pos-1].pts,champ:T(sm.tb[0].id).name,top:top?`${top.name} (${top.goals})`:'—',obj:sm.ok,res:sm.L.lv===0&&sm.champ?'Campeón':sm.champ?'Campeón y ascenso':sm.up?'Ascenso':sm.down?'Descenso':''});
- S.budget=r3(S.budget+sm.prize);
+ S.budget=r3(S.budget+sm.prize);payDebts();
  if(sm.champ)S.titles.push({season:seasonLabel(),name:`Liga · ${lgName(sm.lg)}`});
  { const champ=COUNTRIES.map((C,c)=>tabs[findLg(c,0).id]);
    S.cwcQual=[...champ.map(tb=>tb[0].id),...COUNTRIES.map((C,c)=>c).sort((a,b)=>COUNTRIES[b].top-COUNTRIES[a].top).slice(0,6).map(c=>champ[c][1].id)];

@@ -2,7 +2,7 @@
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {queueScout,scoutWeeks} from './scouting';
 import {fireStaff,hireStaff,renewStaff} from './staff';
-import {KEY,clamp,pick,rnd} from './core';
+import {KEY,clamp,pick,r2,rnd} from './core';
 import {COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
 import {news,pickTeam} from './world';
@@ -113,7 +113,8 @@ document.addEventListener('click',e=>{
   case'mk-more':S.mk.limit+=40;break;
   case'fav':{const i=S.short.indexOf(d.id);if(i>=0)S.short.splice(i,1);else{S.short.push(d.id);toast('Añadido a Seguimiento.');}break;}
   case'neg':negState(d.id);S.modal={type:'neg',id:d.id};break;
-  case'bid':{const v=parseFloat(String(document.getElementById('bidAmt')?.value||'').replace(',','.'));makeBid(d.id,v);break;}
+  case'bid':{const g=x=>document.getElementById(x),v=parseFloat(String(g('bidAmt')?.value||'').replace(',','.'));makeBid(d.id,v,{inst:+(g('bidInst')?.value||1),son:!!g('bidSon')?.checked,swap:g('bidSwap')?.value||null});break;}
+  case'sell-son':{const o=S.offers[d.id];if(o&&!o.son){o.amount=r2(o.amount*.9);o.son=1;}sell(d.id,true);return;}
   case'pay-clause':{const p=PL(d.id),n=negState(d.id);if(!inWindow()){n.msg='El mercado está cerrado.';n.kind='no';break;}if(refuses(p)){n.msg=`${p.name} no quiere jugar en ${lgName(uLg())}.`;n.kind='no';n.closed=true;break;}if(p.cl>S.budget){n.msg='No te llega para pagar la cláusula.';n.kind='no';break;}n.agreed=p.cl;n.viaClause=1;n.tries=0;n.msg='';break;}
   case'terms-ok':makeTerms(d.id,d.m,readTerms());break;
   case'chat':S.modal={type:'chat',id:d.id};break;

@@ -1,9 +1,10 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {SON_PCT,dealPrice,swapValue} from '../market2';
 import {fireModal} from './staff';
 import {esc,money,r2} from '../core';
 import {AT_SH,PERS,ROLES,posChip} from '../data';
-import {PL,S,T,atCell,crest,lgName,pBadge,uLg} from '../state';
+import {PL,S,T,atCell,crest,lgName,pBadge,squad,uLg} from '../state';
 import {news,objectiveFor,startBudget} from '../world';
 import {step} from '../engine';
 import {CONTS,CT_STAGES,CWC_NAMES,cupName,cupRoundName} from '../competitions';
@@ -22,7 +23,11 @@ export function modalView(){
    <div class="acts"><button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button>${n.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="buy">Proponer contrato</button>`}</div>`;}
   else body=head+`<div class="kv"><span>Valor de mercado</span><b>${money(p.value)}</b>${p.team!==null?`<span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Cláusula de rescisión</span><b>${money(p.cl)}</b>`:''}<span>${p.team===null?'Prima que pide':'Precio que piden'}</span><b>${money(ask)}</b>${n.counter?`<span>Su última contraoferta</span><b>${money(n.counter)}</b>`:''}<span>Tu presupuesto</span><b>${money(S.budget)}</b></div>
   ${n.closed?'':`<div class="row" style="margin-top:14px;align-items:flex-end"><label class="f"><span class="eyebrow">Tu oferta (en millones de €)</span><input type="number" id="bidAmt" min="0" step="0.01" value="${suggest.toFixed(3)}"></label></div>
-  <p class="small muted" style="margin:6px 0 0">Ejemplo: 0.25 = €250k. Si ofreces menos de lo que piden pueden aceptar, rechazar o contraofertar. Tienes 3 intentos por jornada. Si el club acepta, después negocias el contrato con el jugador.</p>`}
+  ${p.team!==null?`<div class="filters" style="margin-top:10px"><label class="f"><span class="eyebrow">Forma de pago</span><select id="bidInst">${[[1,'Todo ahora'],[2,'2 plazos (hoy y en un año)'],[3,'3 plazos (hoy y en dos años)']].map(([v,l])=>`<option value="${v}" ${(n.opt&&n.opt.inst||1)===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <label class="f"><span class="eyebrow">Incluir a un jugador tuyo</span><select id="bidSwap"><option value="">Nadie</option>${squad(S.user).filter(q=>!q.loan).sort((a,b)=>b.value-a.value).map(q=>`<option value="${q.id}" ${n.opt&&n.opt.swap===q.id?'selected':''}>${esc(q.name)} · ${q.sp} · lo valoran en ${money(swapValue(q,p.team))}</option>`).join('')}</select></label>
+  <label class="chk"><input type="checkbox" id="bidSon" ${n.opt&&n.opt.son?'checked':''}> Ofrecer un ${Math.round(SON_PCT*100)}% de una futura venta</label></div>`:''}
+  ${dealPrice(p.id)!=null?`<div class="negmsg ok">Ganga del día de cierre: lo dejan ir por ${money(dealPrice(p.id))} si cerráis hoy.</div>`:''}
+  <p class="small muted" style="margin:6px 0 0">Ejemplo: 0.25 = €250k. Pagar a plazos te deja más dinero ahora, pero el club lo valora un 5% menos por cada plazo. Ofrecer un % de futura venta o incluir a un jugador tuyo hace la oferta más atractiva. Si ofreces menos de lo que piden pueden aceptar, rechazar o contraofertar. Tienes 3 intentos por jornada. Si el club acepta, después negocias el contrato con el jugador.</p>`}
   ${n.msg?`<div class="negmsg ${n.kind}">${esc(n.msg)}</div>`:''}
   <div class="acts"><button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button>${n.closed?'':`${p.team!==null&&p.cl<=S.budget?`<button class="btn" data-a="pay-clause" data-id="${p.id}">Pagar cláusula · ${money(p.cl)}</button>`:''}<button class="btn primary" data-a="bid" data-id="${p.id}">Enviar oferta</button>`}</div>`;}
  else if(md.type==='renew'){const p=PL(md.id),st=renState(md.id);
@@ -54,7 +59,8 @@ export function modalView(){
   <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn primary" data-a="loanout-ok" data-id="${p.id}">Aceptar cesión</button></div>`;}
  else if(md.type==='sell'){const p=PL(md.id),o=S.offers[md.id];body=`<div class="eyebrow">Oferta recibida</div><h2 style="margin-top:4px">${esc(T(o.team).name)} quiere a ${esc(p.name)}</h2>
   <div class="kv"><span>Liga del club</span><b>${esc(lgName(T(o.team).lg))}</b><span>Oferta</span><b>${money(o.amount)}</b><span>Valor de mercado</span><b>${money(p.value)}</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>
-  <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn primary" data-a="sell-ok" data-id="${p.id}">Aceptar ${money(o.amount)}</button></div>`;}
+  <p class="small muted" style="margin:10px 0 0">Si pides un ${Math.round(SON_PCT*100)}% de futura venta, cobras un 10% menos ahora, pero si algún día lo traspasan, te llevas el ${Math.round(SON_PCT*100)}% de lo que paguen.</p>
+  <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn" data-a="sell-son" data-id="${p.id}">${money(o.amount*.9)} + ${Math.round(SON_PCT*100)}% de futura venta</button><button class="btn primary" data-a="sell-ok" data-id="${p.id}">Aceptar ${money(o.amount)}</button></div>`;}
  else if(md.type==='round'){const fx=S.fixtures[uLg()][md.round];body=`<div class="eyebrow">${esc(lgName(uLg()))} · Resultados</div><h2 style="margin:4px 0 8px">Jornada ${md.round+1}</h2>${fx.map(f=>resRow(f,null)).join('')}
   <div class="acts"><button class="btn primary" data-a="modal-close">Continuar</button></div>`;}
  else if(md.type==='cupres'){const rd=S.cups[md.c].rounds[md.r];body=`<div class="eyebrow">${esc(cupName(md.c))}</div><h2 style="margin:4px 0 8px">${cupRoundName(rd)}</h2>${rd.matches.slice().sort((a,b)=>((b.h===S.user||b.a===S.user)?1:0)-((a.h===S.user||a.a===S.user)?1:0)).map(f=>resRow(f,null,true)).join('')}

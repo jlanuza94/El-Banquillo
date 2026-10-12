@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {deadlineDeals,interested,rumoursWeekly,sellOnOut} from './market2';
 import {youthRound} from './youth';
 import {scoutingWeekly} from './scouting';
 import {sellMult} from './staff';
@@ -59,7 +60,7 @@ export function clauseWeekly(){
  const c=squad(S.user).filter(p=>!p.loan&&p.cl&&p.cl<p.value*1.7&&p.ovr>=my);if(!c.length)return;const p=pick(c);
  const buyers=S.teams.filter(t=>t.id!==S.user&&LG(t.lg).rep>=my&&t.rep>=p.ovr-4);if(!buyers.length||rnd()>.35)return;const t=pick(buyers);
  if(squad(S.user).length<=16)return;
- const paid=p.cl;S.budget=r3(S.budget+paid);setTeam(p,t.id);assignNum(p);p.cl=r2(p.value*(2+rnd()*2));p.req=0;p.prom=null;const tm=T(S.user),i=tm.lineup.indexOf(p.id);if(i>=0)tm.lineup[i]=null;fixLineup();
+ const paid=p.cl;S.budget=r3(S.budget+paid);sellOnOut(p,paid);setTeam(p,t.id);assignNum(p);p.cl=r2(p.value*(2+rnd()*2));p.req=0;p.prom=null;const tm=T(S.user),i=tm.lineup.indexOf(p.id);if(i>=0)tm.lineup[i]=null;fixLineup();
  news(`${t.name} paga la cláusula de ${p.name} (${money(paid)}) y se lo lleva.`,'bad');
 }
 export const FOCUS={eq:{n:'Equilibrado',d:'Mejora lo propio de cada posición.',at:null,g:1},ata:{n:'Ataque',d:'Tiro y regate.',at:['tir','reg'],g:1.05},def:{n:'Defensa',d:'Defensa y físico.',at:['def','fis'],g:1.05},tec:{n:'Técnica',d:'Pase y regate.',at:['pas','reg'],g:1.05},fis:{n:'Físico',d:'Físico y mejor recuperación.',at:['fis'],g:1,rec:.05},tac:{n:'Táctica y química',d:'Sube la química y el dominio de la formación. Mejora poco a los jugadores.',at:null,g:.4},des:{n:'Descanso',d:'Recuperan mucha energía. No mejoran.',at:null,g:0,rec:.2}};
@@ -107,6 +108,7 @@ export function processWeek(){
  if(S.week===4||S.week===22)news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
  S.week++;S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};
+ rumoursWeekly();deadlineDeals();
  if(S.week===Math.floor(nRounds()/2)){const ex=squad(S.user).filter(p=>!p.loan&&p.contract<=1);if(ex.length)news(`Mitad de temporada: ${ex.length} jugador${ex.length>1?'es acaban':' acaba'} contrato en junio. Renuévalos desde Inicio o su ficha, o se irán libres.`,'bad',{cat:'dir',subj:'Contratos que acaban en junio',act:[{l:'Ver contratos',a:'pl-open',v:'cont'}]});}
  incomingOffer();
  if(S.week>=nRounds())news('Termina la temporada. Mira cómo ha quedado todo en Inicio.','good');
@@ -119,7 +121,7 @@ export function incomingOffer(){
   const mine=squad(S.user).filter(p=>!p.loan).sort((a,b)=>b.value-a.value).slice(0,10);if(!mine.length)return;
   const p=pick(mine),cur=S.offers[p.id];
   const cands=S.teams.filter(t=>t.id!==S.user&&(!cur||t.id!==cur.team)&&LG(t.lg).rep>=myRep-4&&LG(t.lg).rep<=myRep+20&&t.rep>=p.ovr-6&&t.rep<=p.ovr+12);if(!cands.length)continue;
-  const t=pick(cands);
+  const intr=interested(p.id).filter(id=>id!==(cur&&cur.team)),t=intr.length&&rnd()<.6?T(pick(intr)):pick(cands);
   if(cur&&cur.incoming){const amount=r2(cur.amount*(1.1+rnd()*.15));news(`¡Puja! ${t.name} supera la oferta de ${T(cur.team).name} por ${p.name}: ${money(amount)}.`,'good',{cat:'mer',subj:`Puja por ${p.name}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});S.offers[p.id]={team:t.id,amount,incoming:true,rival:cur.team};}
   else{const amount=r2(p.value*(.9+rnd()*.45)*(LG(t.lg).rep>myRep?1.15:1)*sellMult());S.offers[p.id]={team:t.id,amount,incoming:true};news(`${t.name} (${lgName(t.lg)}) ofrece ${money(amount)} por ${p.name}. Responde antes de la próxima jornada.`,'',{cat:'mer',from:T(t.id).name,subj:`Oferta por ${p.name}: ${money(amount)}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});}
  }
