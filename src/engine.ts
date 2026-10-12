@@ -194,6 +194,20 @@ export function liveRatings(m){
   rat[id]=clamp(Math.round(r*10)/10,3,10);});
  return rat;
 }
+/** Lo que pasó en este minuto, para que la vista 2D lo dibuje: quién atacó, por qué banda, quién chutó y cómo acabó.
+ *  Usa Math.random (no el generador del juego) para no cambiar los resultados de las partidas. */
+export function phaseLog(m,pm){
+ const sh=(m.sh||[]).filter(x=>x[4]===m.min),gl=m.ev.filter(e=>e.min===m.min&&e.t==='goal');
+ let s,out='build',pid=null,ast=null,kind='open';
+ const last=sh[sh.length-1];
+ if(gl.length){const e=gl[gl.length-1];s=e.s;out='goal';pid=e.pid;ast=e.ast||null;const tx=String(e.tx||'').toLowerCase();kind=/penalti/.test(tx)?'pen':/córner|corner/.test(tx)?'corner':/falta/.test(tx)?'fk':'open';}
+ else if(last){s=last[0]?'a':'h';pid=last[1];out=last[3]==='s'?'save':last[3]==='p'?'post':'miss';}
+ else{s=Math.random()<pm?'h':'a';out=Math.random()<.45?'lost':'build';}
+ let lane='c';const sl=slotsOf(m.f[s]),i=pid?m.lu[s].indexOf(pid):-1,sp=i>=0?sl[i]:null;
+ if(sp&&/^(EI|MI|LI)$/.test(sp))lane='l';else if(sp&&/^(ED|MD|LD)$/.test(sp))lane='r';
+ else{const w=(m.tac[s]&&m.tac[s].anc)==='anc'?.7:(m.tac[s]&&m.tac[s].anc)==='est'?.35:.55;const r=Math.random();lane=r<w/2?'l':r<w?'r':'c';}
+ m.pl=(m.pl||[]).slice(-5).concat([{min:m.min,s,out,pid,ast,kind,lane}]);
+}
 export function step(m){
  if(m.done)return;
  m.min++;
@@ -214,6 +228,7 @@ export function step(m){
  });
  setPiece(m,live);
  extraStats(m,xs,live);
+ if(live)phaseLog(m,clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8));
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
  {const dh=m.oi&&m.oi.h&&m.oi.h.dur?1.6:1,da=m.oi&&m.oi.a&&m.oi.a.dur?1.6:1,ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
   if(rnd()<.034*(ph+pa)*(m.derby?1.3:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
