@@ -6,7 +6,7 @@ import {COUNTRIES,LV_NAMES,MENT,SPN,TAC0,TACS} from '../data';
 import {LG,PL,S,T,crest,lgName,rt,seasonLabel,squad,uLg} from '../state';
 import {strength} from '../players';
 import {news} from '../world';
-import {autoLineup,chemMult,lineupIssues,posOf,table,teamPower} from '../tactics';
+import {autoLineup,chemMult,lineupIssues,posOf,table,teamPower,userRoles} from '../tactics';
 import {CONTS,CT_STAGES,compLabel,ctOf,ctStatus,cupName,cupSlotRound,cupStatus,cwcStatus,getFx,nextMatch,userCup,userRefFor} from '../competitions';
 import {friendlyOpts,seasonSummary} from '../season';
 import {sell,windowTxt} from '../market';
@@ -23,7 +23,7 @@ export function offersPanel(){
 export function inicioView(){
  const nm=nextMatch(),lg=uLg(),tb=table(lg),t=T(S.user);if(!nm)return '<div class="empty">Cargando la siguiente fecha…</div>';
  const fx=nm.fx,home=fx.h===S.user,opp=T(home?fx.a:fx.h);
- const myP=teamPower(t.lineup,t.formation,null,null,chemMult(t.formation)),opP=teamPower(autoLineup(opp.id,opp.formation),opp.formation);
+ const myP=teamPower(t.lineup,t.formation,null,null,chemMult(t.formation),userRoles()),opP=teamPower(autoLineup(opp.id,opp.formation),opp.formation);
  const issues=lineupIssues(),rowT=id=>tb.find(r=>r.id===id);
  const side=tm=>`<div class="side">${crest(tm,'lg')}<div class="tn">${esc(tm.name)}</div><div class="row small muted">${rowT(tm.id)?`${S.week?posOf(tm.id)+'º · ':''}${formDots(rowT(tm.id).form)}`:`<span class="divtag">${lgName(tm.lg,true)}</span>`}</div></div>`;
  const L=home?myP:opP,R=home?opP:myP;

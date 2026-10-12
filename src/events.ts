@@ -6,7 +6,7 @@ import {KEY,clamp,pick,rnd} from './core';
 import {COUNTRIES,MENT,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
 import {news,pickTeam} from './world';
-import {autoLineup,fixLineup,nRounds,setFormation} from './tactics';
+import {autoLineup,fixLineup,nRounds,setFormation,userRoles} from './tactics';
 import {addEv,doSub,talkEffect} from './engine';
 import {finishRound,newSeason,playFriendly,playMatch,runTimer,simRun,simState,simToEnd,stopSim} from './season';
 import {inWindow,makeBid,makeOffer,makeTerms,negState,readTerms,refuses,sell} from './market';
@@ -146,6 +146,7 @@ document.addEventListener('change',e=>{
  else if(id==='cupC'){S.cupC=+v;}
  else if(id==='hiC'){S.hiC=+v;}
  else if(id==='t-cap'||id==='t-pk'||id==='t-fk'){T(S.user)[id.slice(2)]=v||null;}
+ else if(e.target.dataset&&e.target.dataset.role!=null){userRoles()[+e.target.dataset.role]=v;}
  else if(e.target.dataset&&e.target.dataset.ord){const t=T(S.user);t.orders=t.orders||{};t.orders[e.target.dataset.ord]=v;}
  else if((id==='m-est'||id==='m-pre')&&S.match){S.match.tac[S.match.us][id.slice(2)]=v;addEv(S.match,'sys',null,`Cambio táctico: ${id==='m-est'?'estilo':'presión'} ${(id==='m-est'?TACS.est.o:TACS.pre.o)[v].toLowerCase()}`);}
  else if(e.target.dataset&&e.target.dataset.job){const sc=S.scouts.find(x=>x.id===e.target.dataset.job);if(sc)sc.job=v;}

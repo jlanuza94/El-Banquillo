@@ -21,6 +21,7 @@ import '../src/events';
 import { hireStaff, migrateCrew } from '../src/staff';
 import { queueScout, scoutingWeekly, seen } from '../src/scouting';
 import { squad } from '../src/state';
+import { setFormation, teamPower, userRoles } from '../src/tactics';
 
 const seasons = +(process.argv[2] || 1);
 let fails = 0;
@@ -76,6 +77,12 @@ const app = document.getElementById('app')!;
     S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render();
     ok(app.querySelector('.at.rng'), 'el mercado muestra rangos');
     S.modal = { type: 'ficha', id: far.id }; render(); S.modal = null;
+  }
+  {
+    const t = S.teams[S.user], base = teamPower(t.lineup, t.formation).ovr, withRoles = teamPower(t.lineup, t.formation, null, null, 1, userRoles()).ovr;
+    ok(Math.abs(base - withRoles) < 3, `los roles por defecto no cambian mucho la fuerza (${(base/10).toFixed(2)} → ${(withRoles/10).toFixed(2)})`);
+    const keep = t.formation; setFormation('3-5-2'); ok(t.roles.length === 11, 'roles al cambiar de formación'); setFormation(keep);
+    S.view = 'tacticas'; render(); ok(app.querySelector('[data-role]'), 'panel de roles en tácticas');
   }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');

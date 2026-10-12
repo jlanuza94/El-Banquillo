@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {roleEffects,roleMult} from './roles';
 import {learnFromMatch} from './scouting';
 import {segAt} from './staff';
 import {clamp,fill,gauss,pick,r3,ri,rnd} from './core';
@@ -7,7 +8,7 @@ import {AT_NAME,GRP,TAC0,TX,W,WIDE,newSt} from './data';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
 import {rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
-import {autoLineup,chemMult,eff,famOf,hasTr,slotsOf,teamPower,xg} from './tactics';
+import {autoLineup,chemMult,eff,famOf,hasTr,slotsOf,teamPower,userRoles,xg} from './tactics';
 import {getFx} from './competitions';
 import {makePress,unlock} from './club';
 import {recBonus,trainPlayer} from './squad';
@@ -18,6 +19,7 @@ export function createMatch(ref){
  ['h','a'].forEach(s=>{const t=T(m[s]);m.f[s]=t.formation;m.lu[s]=m.us===s?t.lineup.slice():autoLineup(t.id,t.formation);m.ment[s]=m.us===s?t.ment:'bal';
   m.lu[s].forEach(id=>{if(id){m.en[id]=PL(id).energy;m.played[id]=1;}});m.mult[s]=m.us===s?chemMult(m.f[s]):(S.rivalBoost&&S.rivalBoost.team===m[s]&&m.us?1+S.rivalBoost.v:1);if(m.us&&S.rivalBoost&&S.rivalBoost.team===m[s])S.rivalBoost=null;m.xi0[s]=m.lu[s].slice();
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
+ m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
  prepTactics(m);
  ['h','a'].forEach(s=>{if(m.us===s)return;const o=s==='h'?'a':'h';const d=teamPower(m.lu[s],m.f[s]).ovr-teamPower(m.lu[o],m.f[o]).ovr+(s==='h'?1.5:-1.5);m.ment[s]=d>4?'att':d<-4?'def':'bal';});
  return m;
@@ -47,6 +49,7 @@ export function tacMods(m,s){
  if(A.est==='pos'){poss+=.05;own*=B.pre==='baj'?1.06:B.pre==='alt'?.93:1;}else if(A.est==='dir'){own*=mq[1]>mq[0]?1.05:.98;poss-=.02;}else if(A.est==='con'){own*=(B.lin==='alt'||m.ment[o]==='att')?1.09:.95;poss-=.05;}
  const ords=m.lu[s].map(id=>id&&m.ord[s][id]).filter(Boolean);const up=ords.filter(x=>x==='sube').length,back=ords.filter(x=>x==='fija').length;
  own*=1+.015*up-.01*back;opp*=1+.012*up-.012*back;
+ {const re=roleEffects(slotsOf(m.f[s]),m.ro&&m.ro[s]);own*=re.own;opp*=re.opp;poss+=re.poss;}
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)own*=cap.per==='lid'?1.02:1.005;
  return{own,opp,drain,poss};
 }
@@ -55,13 +58,13 @@ export const scoreStr=m=>`${m.score.h}-${m.score.a}`;
 export function pickScorer(m,s){
  const sl=slotsOf(m.f[s]),w={POR:.02,DEF:.8,MED:2.4,DEL:6};const c=[];
  m.lu[s].forEach((id,i)=>{if(!id)return;const p=PL(id),g=GRP[sl[i]];let t=1;if(hasTr(p,'gol'))t*=1.35;if(hasTr(p,'lej')&&g==='MED')t*=1.3;if(hasTr(p,'cab'))t*=1.2;if(hasTr(p,'bal'))t*=1.1;
-  if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;if(m.marked&&m.marked[s]===id)t*=.6;
+  if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;if(m.marked&&m.marked[s]===id)t*=.6;t*=roleMult(sl[i],m.ro&&m.ro[s]&&m.ro[s][i],'sc');
   c.push([id,w[g]*t*Math.pow((p.at.tir*.6+p.at.reg*.4+2)/7,2)*(.88+.03*(p.wf||3))*(m.hurt[id]?.4:1)]);});
  let tot=c.reduce((a,x)=>a+x[1],0),r=rnd()*tot;for(const [id,wt] of c){r-=wt;if(r<=0)return id;}return c.length?c[0][0]:null;
 }
 export function pickAssist(m,s,scorer){
  if(rnd()<.17)return null;const sl=slotsOf(m.f[s]),w={POR:.05,DEF:1,MED:3,DEL:2.2};const c=[];
- m.lu[s].forEach((id,i)=>{if(!id||id===scorer)return;const p=PL(id);let t=1;if(hasTr(p,'pas'))t*=1.4;if(hasTr(p,'reg'))t*=1.15;if(hasTr(p,'vel'))t*=1.1;if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;c.push([id,w[GRP[sl[i]]]*t*Math.pow((p.at.pas+p.at.reg*.5+2)/8,2)]);});
+ m.lu[s].forEach((id,i)=>{if(!id||id===scorer)return;const p=PL(id);let t=1;if(hasTr(p,'pas'))t*=1.4;if(hasTr(p,'reg'))t*=1.15;if(hasTr(p,'vel'))t*=1.1;if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;t*=roleMult(sl[i],m.ro&&m.ro[s]&&m.ro[s][i],'as');c.push([id,w[GRP[sl[i]]]*t*Math.pow((p.at.pas+p.at.reg*.5+2)/8,2)]);});
  let tot=c.reduce((a,x)=>a+x[1],0),r=rnd()*tot;for(const [id,wt] of c){r-=wt;if(r<=0)return id;}return null;
 }
 export function calcRatings(m){
@@ -118,7 +121,7 @@ export function card(m,s,straight){
 export function step(m){
  if(m.done)return;
  m.min++;
- const Ph=teamPower(m.lu.h,m.f.h,m.en,m.hurt,m.mult.h),Pa=teamPower(m.lu.a,m.f.a,m.en,m.hurt,m.mult.a);
+ const Ph=teamPower(m.lu.h,m.f.h,m.en,m.hurt,m.mult.h,m.ro&&m.ro.h),Pa=teamPower(m.lu.a,m.f.a,m.en,m.hurt,m.mult.a,m.ro&&m.ro.a);
  const Th=tacMods(m,'h'),Ta=tacMods(m,'a');
  const xs={h:xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)/90*Th.own*Ta.opp,a:xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)/90*Ta.own*Th.opp};
  m.possSum+=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.drain={h:Th.drain,a:Ta.drain};
@@ -192,7 +195,7 @@ export const shootout=()=>{let a=0,b=0;for(let i=0;i<5;i++){if(rnd()<.76)a++;if(
 export function poisson(l){let L=Math.exp(-l),k=0,p=1;do{k++;p*=rnd();}while(p>L);return k-1;}
 export function quickMatch(ref){
  const m=createMatch(ref);m.auto=true;
- const Ph=teamPower(m.lu.h,m.f.h,null,null,m.mult.h),Pa=teamPower(m.lu.a,m.f.a,null,null,m.mult.a),Th=tacMods(m,'h'),Ta=tacMods(m,'a');
+ const Ph=teamPower(m.lu.h,m.f.h,null,null,m.mult.h,m.ro&&m.ro.h),Pa=teamPower(m.lu.a,m.f.a,null,null,m.mult.a,m.ro&&m.ro.a),Th=tacMods(m,'h'),Ta=tacMods(m,'a');
  const xh=xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)*Th.own*Ta.opp*1.1,xa=xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)*Ta.own*Th.opp*1.1;
  m.min=m.end;const poss=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.possSum=poss*m.min;
  const goals=[];['h','a'].forEach(s=>{const n=poisson(s==='h'?xh:xa);m.st[s].sh=n+poisson(5.5);m.st[s].ot=n+poisson(1.6);for(let i=0;i<n;i++)goals.push([ri(1,m.end),s]);});

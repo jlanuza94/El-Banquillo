@@ -91,7 +91,7 @@ export function pitchHTML(t,lu,f,opts={}){
   if(n===5&&GRP[s]==='MED'&&(k===0||k===4))y-=5;
   if(s==='MCD'&&list.some(x=>x!=='MCD'))y+=7;
   const p=PL(lu[sx]);let cls='',sh='+',nm=s,rtv='';
-  if(!p)cls='empty';else{sh=p.num;nm=p.name.split(' ').slice(1).join(' ');rtv=(eff(p,s,opts.en?opts.en[p.id]:null)/10).toFixed(1);if(!available(p)||p.team!==S.user)cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';}
+  if(!p)cls='empty';else{sh=p.num;nm=p.name.split(' ').slice(1).join(' ');rtv=(eff(p,s,opts.en?opts.en[p.id]:null,opts.roles?opts.roles[sx]:null)/10).toFixed(1);if(!available(p)||p.team!==S.user)cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';}
   if(opts.sel===sx)cls+=' sel';
   const rate=opts.rat&&p&&opts.rat[p.id]!=null?`<span class="rt" style="background:${opts.mvp===p.id?'#c99a06':'rgba(0,0,0,.6)'}">${opts.rat[p.id].toFixed(1)}${opts.mvp===p.id?' · MVP':''}</span>`:'';
   h+=`<button class="slot ${cls}" style="left:${x}%;top:${y}%;${crestStyle(t)}" ${opts.click?`data-a="slot" data-i="${sx}"`:'tabindex="-1"'} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}"><span class="sh">${sh}</span><span class="nm">${esc(nm)}</span>${rate||(rtv!==''?`<span class="rt">${s} ${rtv}${p&&p.sp!==s?' · '+p.sp:''}</span>`:`<span class="rt">${s}</span>`)}</button>`;

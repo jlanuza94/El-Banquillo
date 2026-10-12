@@ -5,7 +5,8 @@ import {esc,fill,money} from '../core';
 import {ATTRS,AT_NAME,AT_SH,COUNTRIES,FOOT,FORMS,GRP,MENT,ORDERS,PERS,POS_ORD,ROLES,SPN,SPXY,TAC0,TACS,TRAITS,W,newSt,posChip} from '../data';
 import {PL,S,T,atCell,available,lgName,pBadge,qBadge,qc,seasonLabel,squad} from '../state';
 import {news} from '../world';
-import {famOf,langOf,leaders,prof,slotsOf,table,teamPower} from '../tactics';
+import {eff,famOf,langOf,leaders,prof,slotsOf,table,teamPower,userRoles} from '../tactics';
+import {roleDef,roleList,roleRate} from '../roles';
 import {nextMatch} from '../competitions';
 import {askPrice,refuses,sell} from '../market';
 import {contractLabel,contractTxt} from '../contracts';
@@ -73,12 +74,17 @@ export function tacticasView(){
  const ords=`<section class="panel"><div class="panel-h"><h2>Órdenes individuales</h2><span class="eyebrow">Once titular</span></div>
  ${xi.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th>Orden</th></tr></thead><tbody>${xi.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td><select data-ord="${p.id}" aria-label="Orden para ${esc(p.name)}">${Object.entries(ORDERS).map(([k,v])=>`<option value="${k}" ${(t.orders||{})[p.id]===k?'selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Primero elige tu once en Plantilla.</div>'}
  <p class="small muted" style="margin:8px 0 0">Subir al ataque: más ocasiones a cambio de dejar huecos. Libertad creativa: más goles y asistencias para ese jugador. Marcar a su estrella: su mejor jugador marca y asiste menos. Quédate atrás: más seguridad, menos ataque.</p></section>`;
- return `<div class="grid"><div class="stack">${inst}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${sp}${ords}</div></div>`;
+ const ro=userRoles(),sl=slotsOf(t.formation);
+ const roles=`<section class="panel"><div class="panel-h"><h2>Roles del once</h2><span class="eyebrow">Cómo juega cada puesto</span></div>
+ ${sl.map((s,i)=>{const p=PL(t.lineup[i]);return `<div class="offer" style="align-items:flex-start"><span class="pos ${GRP[s]}">${s}</span><span class="t">${p?nameBtn(p):'<span class="muted">Vacío</span>'}${p?' '+qBadge(eff(p,s,null,ro[i])/10):''}
+  <select data-role="${i}" aria-label="Rol del puesto ${s}" style="display:block;margin-top:4px;max-width:100%">${roleList(s).map(r=>`<option value="${r[0]}" ${ro[i]===r[0]?'selected':''}>${esc(r[1])}${p?' · '+(eff(p,s,null,r[0])/10).toFixed(1):''}</option>`).join('')}</select><span class="small muted">${esc(roleDef(s,ro[i])[4])}</span></span></div>`;}).join('')}
+ <p class="small muted" style="margin:8px 0 0">Cada rol pide unos atributos: un falso nueve necesita pase y regate; un delantero de área, tiro y físico. Los roles ofensivos dan más ocasiones a cambio de dejar huecos atrás. Al cambiar de formación se mantienen los roles que encajan.</p></section>`;
+ return `<div class="grid"><div class="stack">${inst}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${sp}${ords}</div></div>`;
 }
 export function plantillaView(){
  const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=S.plTab||'xi';
  const sel=S.sel,selSlot=sel&&sel.type==='slot'?sel.i:null,selPid=sel&&sel.type==='player'?sel.id:null;
- const pw=teamPower(t.lineup,t.formation);
+ const pw=teamPower(t.lineup,t.formation,null,null,1,userRoles());
  const hint=selSlot!=null?`Hueco de ${SPN[slotsOf(t.formation)[selSlot]].toLowerCase()} seleccionado. Toca un jugador de la lista para colocarlo.`:selPid?`${PL(selPid).name} seleccionado. Toca un hueco del campo para colocarlo.`:'Toca un hueco del campo y luego un jugador (o al revés). Bajo cada jugador ves el puesto y su nota en él: fuera de su posición o con el pie cambiado en banda rinde menos. Toca un nombre para ver su ficha.';
  let table='';
  if(tab==='xi'){table=`<p class="small muted" style="margin:0 0 10px">${esc(hint)}</p><div class="tbl"><table><thead><tr><th class="r">#</th><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th>${ATTRS.map(k=>`<th class="r" title="${AT_NAME[k]}">${AT_SH[k]}</th>`).join('')}<th>Pie</th><th>Energía</th><th>Forma</th><th>Ánimo</th><th>Estado</th></tr></thead><tbody>${sq.map(p=>{const xi=t.lineup.includes(p.id);return `<tr class="click ${xi?'me':''} ${selPid===p.id?'sel':''} ${available(p)?'':'dim'}" data-a="row" data-id="${p.id}" tabindex="0">
@@ -97,7 +103,7 @@ export function plantillaView(){
   <div class="row" style="margin-bottom:12px"><label class="f"><span class="eyebrow">Sistema</span><select id="formSel">${Object.keys(FORMS).map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f} · dominio ${Math.round(famOf(f))}%</option>`).join('')}</select></label>
   <div style="display:flex;flex-direction:column;gap:3px"><span class="eyebrow">Mentalidad</span><div class="seg">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>
   <span class="spacer"></span><button class="btn" data-a="auto" style="align-self:flex-end">Alinear mejores</button></div>
-  ${pitchHTML(t,t.lineup,t.formation,{click:true,sel:selSlot})}
+  ${pitchHTML(t,t.lineup,t.formation,{click:true,sel:selSlot,roles:userRoles()})}
   <div class="row small muted" style="margin-top:10px;justify-content:center;gap:14px"><span>Ataque ${(pw.atk/10).toFixed(1)}</span><span>Medio ${(pw.mid/10).toFixed(1)}</span><span>Defensa ${(pw.def/10).toFixed(1)}</span></div></section>
   <section class="panel"><div class="panel-h"><div class="seg"><button data-a="pl-tab" data-v="xi" aria-pressed="${tab==='xi'}">Plantilla</button><button data-a="pl-tab" data-v="stats" aria-pressed="${tab==='stats'}">Estadísticas</button><button data-a="pl-tab" data-v="cont" aria-pressed="${tab==='cont'}">Contratos y ánimo</button><button data-a="pl-tab" data-v="vest" aria-pressed="${tab==='vest'}">Vestuario</button></div><span class="eyebrow">${sq.length} jugadores</span></div>
   ${table}

@@ -1,5 +1,6 @@
 /* El Banquillo · tactics.js — Valoración de jugadores por puesto, alineaciones, fuerza del equipo y clasificación. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {defaultRoles,remapRoles,roleRate} from './roles';
 import {clamp} from './core';
 import {COUNTRIES,FORMS,GRP,MENT,POS_ORD,WIDE} from './data';
 import {LG,PL,S,T,available,lgTeams,lowest,squad,uLg} from './state';
@@ -15,17 +16,19 @@ export const langOf=p=>COUNTRIES[p.nat].lang;
 export function influence(p,sq){sq=sq||squad(S.user);const rank=sq.slice().sort((a,b)=>b.ovr-a.ovr).indexOf(p);return Math.round(clamp((p.age-18)*3,0,40)+((p.st&&S.tg)?p.st.pj/S.tg*20:10)+(rank<3?20:rank<8?10:0)+(p.per==='lid'?25:0)+(T(S.user).cap===p.id?10:0));}
 export function leaders(n){const sq=squad(S.user).filter(p=>!p.loan);return sq.map(p=>[p,influence(p,sq)]).sort((a,b)=>b[1]-a[1]).slice(0,n||3);}
 export function setAdapt(p){const same=squad(S.user).filter(x=>x!==p&&langOf(x)===langOf(p)).length;p.adapt=same>=3?2:same>=1?5:8;if(same>=3)p.hap=clamp((p.hap||70)+5,0,100);}
-export const slotRate=(p,slot)=>rateA(p.at,GRP[slot])*10*prof(p,slot)*footF(p,slot)+traitBonus(p,slot);
-export function eff(p,slot,en){const e=en==null?p.energy:en;return slotRate(p,slot)*(.75+.25*e/100)*hapMult(p)+p.form;}
+export const slotRate=(p,slot,role)=>roleRate(p,slot,role)*10*prof(p,slot)*footF(p,slot)+traitBonus(p,slot);
+export function eff(p,slot,en,role){const e=en==null?p.energy:en;return slotRate(p,slot,role)*(.75+.25*e/100)*hapMult(p)+p.form;}
+/** Roles del once de tu equipo (uno por hueco de la formación). */
+export function userRoles(){const t=T(S.user),sl=slotsOf(t.formation);if(!t.roles||t.roles.length!==sl.length)t.roles=defaultRoles(sl);return t.roles;}
 export function autoLineup(tid,f){
  const slots=slotsOf(f),pool=squad(tid).filter(available),used=new Set(),lu=Array(slots.length).fill(null);
  const pass=ok=>slots.forEach((s,i)=>{if(lu[i])return;let b=null,bv=-1;for(const p of pool){if(used.has(p.id)||!ok(p,s))continue;const v=eff(p,s);if(v>bv){bv=v;b=p;}}if(b){lu[i]=b.id;used.add(b.id);}});
  pass((p,s)=>p.sp===s);pass((p,s)=>GRP[p.sp]===GRP[s]&&(s!=='POR'||p.sp==='POR'));pass(()=>true);
  return lu;
 }
-export function teamPower(lu,f,en,hurt,mult=1){
+export function teamPower(lu,f,en,hurt,mult=1,roles=null){
  const slots=slotsOf(f),g={POR:[],DEF:[],MED:[],DEL:[]},all=[];
- slots.forEach((s,i)=>{const p=PL(lu[i]);let v=p?eff(p,s,en?en[p.id]:null):20;if(p&&hurt&&hurt[p.id])v*=.55;g[GRP[s]].push(v);all.push(v);});
+ slots.forEach((s,i)=>{const p=PL(lu[i]);let v=p?eff(p,s,en?en[p.id]:null,roles?roles[i]:null):20;if(p&&hurt&&hurt[p.id])v*=.55;g[GRP[s]].push(v);all.push(v);});
  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:20;
  const c=counts(f);
  const G=avg(g.POR),D=avg(g.DEF)*(1+.05*(c.DEF-4)),M=avg(g.MED)*(1+.05*(c.MED-4)),A=avg(g.DEL)*(1+.06*(c.DEL-2));
@@ -46,7 +49,7 @@ export function setFormation(f){
  const pass=ok=>slots.forEach((s,i)=>{if(lu[i])return;const k=left.findIndex(id=>ok(PL(id),s));if(k>=0){lu[i]=left[k];left.splice(k,1);}});
  pass((p,s)=>p.sp===s);pass((p,s)=>p.alt&&p.alt.includes(s));pass((p,s)=>GRP[p.sp]===GRP[s]);
  slots.forEach((s,i)=>{if(lu[i]||!left.length)return;left.sort((x,y)=>eff(PL(y),s)-eff(PL(x),s));lu[i]=left.shift();});
- t.formation=f;t.lineup=lu;fixLineup();
+ t.roles=remapRoles(t.formation?slotsOf(t.formation):[],t.roles,slots);t.formation=f;t.lineup=lu;fixLineup();
 }
 export function table(lg){
  const t={};lgTeams(lg).forEach(tm=>t[tm.id]={id:tm.id,pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0,form:[]});
