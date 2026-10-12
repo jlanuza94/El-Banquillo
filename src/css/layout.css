@@ -74,3 +74,48 @@ textarea:focus-visible{outline:2px solid var(--focus)}
 .gsbtn{position:absolute;top:0;right:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink);z-index:2}
 .gsbtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 .top2{padding-right:48px}
+
+/* Móvil en horizontal: menú lateral compacto en vez de la barra inferior, cabecera más baja y campo 2D que cabe en la pantalla */
+@media (orientation:landscape) and (max-height:540px){
+ .app{grid-template-columns:168px minmax(0,1fr)}
+ .side{display:flex;gap:8px;padding:8px 6px calc(10px + env(safe-area-inset-bottom,0px)) calc(6px + env(safe-area-inset-left,0px))}
+ .brand{font-size:17px;padding:2px 8px 0}
+ .brand small,.sclub,.ngroup .gt{display:none}
+ .ngroup{gap:1px}
+ .nitem{padding:5px 8px;font-size:13px;gap:8px}
+ .nitem svg{width:17px;height:17px}
+ .bnav{display:none}
+ .mainc{padding-block:8px 24px;padding-inline:14px calc(14px + env(safe-area-inset-right,0px))}
+ .top2{gap:8px 14px;padding-bottom:8px;margin-bottom:10px}
+ .top2 h1{font-size:22px}
+ .top2 .kpi b{font-size:16px}
+ .top2 .crest.lg{width:40px;height:40px}
+ .top2{flex-wrap:nowrap;align-items:center}
+ .top2 .club{flex:1;gap:10px}
+ .top2 .kpis .eyebrow{font-size:10px}
+ .cta{width:auto;flex:none;padding:6px 6px 6px 10px}
+ .cta .l .eyebrow{display:none}
+ .cta .l b{max-width:150px;font-size:13.5px}
+ .board{padding:8px 12px;gap:4px 12px}
+ .board .crest{display:none}
+ .board .tn{font-size:18px}
+ .board .sc{font-size:46px}
+ .board .mn{font-size:13px;padding:1px 10px}
+ .mhint{display:none}
+ .nitem span:not(.badge){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .top2 .kpis{flex-wrap:nowrap}
+ .top2 .kpi:nth-child(3){display:none}
+ .top2 .kpi{padding-inline:9px}
+ .top2 .club .eyebrow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .grid{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+ .p2d{max-width:calc((100vh - 70px)*100/62);margin-top:8px}
+ .ov{padding:8px}
+ .modal{max-height:94vh;padding:14px}
+ .sheet .in{grid-template-columns:repeat(5,minmax(0,1fr));padding-bottom:12px}
+ .simov .box{padding:14px}
+}
+@media (orientation:landscape) and (max-height:540px) and (max-width:780px){
+ .app{grid-template-columns:150px minmax(0,1fr)}
+ .top2{flex-wrap:wrap}
+ .top2 .club{flex-basis:100%}
+}
