@@ -1,5 +1,6 @@
 /* El Banquillo · academy.js — Cantera y ojeadores. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {dcaPotBonus} from './youthplus';
 import {wageCheck} from './clubplus';
 import {scoutAttrs,youthMult} from './staff';
 import {clamp,gauss,money,pick,r2,r3,ri,rnd} from './core';
@@ -16,7 +17,7 @@ export function makeYouth(nat,potT){
  const p={id:'y'+(S.nextId++),name:pick(F)+' '+pick(L),nat,pos,age,at:genAttrs(pos,cur),pot,team:null,num:0,energy:100,form:0,goals:0,apps:0,yc:0,inj:0,susp:0,pInj:0,pSusp:0,playedWk:false,contract:3,loan:null,sg:0,tf:'auto'};
  decorate(p,null,true);p.wage=baseWage(p);p.role='jo';return p;
 }
-export function academyIntake(n){const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=S.club?S.club.fac.can:1;n+=Math.floor((fl-1)/2);const got=[];for(let i=0;i<n&&S.academy.length<14;i++){const y=makeYouth(c,lvl+.3+.15*(fl-1)+gauss()*.9);S.academy.push(y);got.push(y.name);}return got;}
+export function academyIntake(n){const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=S.club?S.club.fac.can:1;n+=Math.floor((fl-1)/2);const got=[];for(let i=0;i<n&&S.academy.length<14;i++){const y=makeYouth(c,lvl+.3+.15*(fl-1)+dcaPotBonus()+gauss()*.9);S.academy.push(y);got.push(y.name);}return got;}
 export function genScoutPool(){const [F,L]=NAMES[COUNTRIES[LG(uLg()).c].lang];S.scoutPool=[0,1,2,3].map(()=>{const q=clamp(Math.round(1+rnd()*4.4),1,5);return scoutAttrs({id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:r3(Math.max(.0005,unit(LG(uLg()).rep)*.012*q))});});}
 export function scoutsWeekly(){
  S.prospects=S.prospects.filter(x=>x.until>S.week);

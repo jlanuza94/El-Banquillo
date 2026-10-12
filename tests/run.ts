@@ -51,6 +51,8 @@ import { table as lgTable } from '../src/tactics';
 import { initRivals, rivalsOf, isDerby, recordH2H, h2hOf } from '../src/rivals';
 import { injRisk, setPlan, onRecovered } from '../src/medical';
 import { bonusWeekly, counters, applyTerms, weeklyBonuses, setBuyback, canBuyback, doBuyback } from '../src/negotiate';
+import { youthTournament, goldenChance, YT_WEEK } from '../src/youthplus';
+import { ST_ROLES } from '../src/staff';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -96,7 +98,7 @@ const app = document.getElementById('app')!;
   ok(S.mailSel && S.inbox.find(m => m.id === S.mailSel).read === 1 && app.querySelector('.mdetail h2'), 'abrir un mensaje lo marca como leído');
   for (const m of S.inbox.filter(m => m.act)) { S.mailSel = m.id; render(); }
   ok(true, 'los mensajes con botones se pintan');
-  ok(S.crew.length === 3 && S.staffPool.length === 8, 'cuerpo técnico inicial y candidatos');
+  ok(S.crew.length === 3 && S.staffPool.length === 10, 'cuerpo técnico inicial y candidatos');
   const cand = S.staffPool.find(m => m.role === 'dd');
   hireStaff(cand.id);
   ok(S.crew.some(m => m.id === cand.id), 'se contrata un director deportivo');
@@ -275,6 +277,11 @@ const app = document.getElementById('app')!;
     ok(Math.abs(paid - .002) < 1e-9 && Math.abs(b0 - S.budget - paid) < 1e-9 && p.rel === 1, `primas pagadas por partidos y goles (${paid})`);
     const q = Object.values(S.players).find(x => x.team !== null && x.team !== S.user && !x.loan); setBuyback(q, 1); ok(canBuyback(q), 'cláusula de recompra vigente');
     S.budget = 10; doBuyback(q); ok(q.team === S.user && !q.bb, 'recompra ejecutada'); S.budget = b0; p.bon = null; p.rel = 0; }
+  { // Cantera con más vida
+    ok(!!ST_ROLES.dca && goldenChance() > 0, 'director de cantera y generación dorada posibles');
+    const wk = S.week, t0 = S.titles.length, ac = S.academy.length; while (S.academy.length < 8) S.academy.push({ ...S.academy[0], id: 'yx' + S.academy.length, at: { ...S.academy[0].at } });
+    S.week = YT_WEEK; youthTournament(); S.week = wk; ok((S.ytHist || []).length >= 1, 'se juega el Torneo Internacional Sub-19: campeón ' + S.ytHist[S.ytHist.length - 1].champ);
+    S.academy = S.academy.slice(0, Math.max(ac, 0)); S.view = 'cantera'; render(); ok(app.textContent.includes('Vida de la cantera'), 'panel de vida de la cantera'); }
   S.view = 'staff'; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');

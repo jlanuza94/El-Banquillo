@@ -14,6 +14,7 @@ export const ST_ROLES={
  seg:{n:'Segundo entrenador',pl:'Segundo entrenador',max:1,at:['tac','mot','ent'],d:'Prepara los informes del rival, te aconseja durante el partido y dirige al equipo cuando simulas. Su motivación potencia las charlas.'},
  ent:{n:'Entrenador',pl:'Entrenadores',max:3,at:['ent','jov','tac'],d:'Cuanto mejor entrenan, más rápido mejoran tus jugadores. «Trabajo con jóvenes» acelera a la cantera.'},
  fis:{n:'Fisioterapeuta',pl:'Fisioterapeutas',max:2,at:['fis','ent'],d:'Recuperan la energía antes, acortan las lesiones y evitan las de entrenamiento.'},
+ dca:{n:'Director de cantera',pl:'Director de cantera',max:1,at:['jov','jpo'],d:'Mejora el potencial de los juveniles que llegan cada verano, acelera su desarrollo y hace más probable una generación dorada.'},
  dd:{n:'Director deportivo',pl:'Director deportivo',max:1,at:['neg','jui','jpo'],d:'Negocia los traspasos (pagas menos y vendes más caro) y conoce mejor a los jugadores de otros clubes.'},
 };
 export const crew=role=>(S.crew||[]).filter(x=>x.role===role);
@@ -25,7 +26,7 @@ function slotAvg(role,k,empty){const c=crew(role),n=ST_ROLES[role].max;let s=c.r
 /** Multiplicador de la mejora en el entrenamiento (≈1 con entrenadores normales; hasta ×1.5). */
 export const trainMult=()=>.85+.065*slotAvg('ent','ent',1.5);
 /** Multiplicador de la mejora de la cantera. */
-export const youthMult=()=>.85+.065*slotAvg('ent','jov',1.5);
+export const youthMult=()=>.85+.065*slotAvg('ent','jov',1.5)+(crew('dca')[0]?(crew('dca')[0].at.jov-5)*.025:0);
 /** Nivel médico de 0 (sin fisios) a 10. */
 export const medLevel=()=>slotAvg('fis','fis',0);
 // Con un solo fisio normal (nivel médico ≈2) no hay ni bonus ni penalización.
@@ -63,7 +64,7 @@ export function migrateCrew(){
 export function scoutAttrs(sc){if(sc.jui==null){sc.jui=clamp(sc.q*2-1+ri(0,1),1,10);sc.jpo=clamp(sc.q*2-1+ri(0,1),1,10);}if(!sc.job)sc.job='jov';return sc;}
 export function genStaffPool(){
  const l=crewLevel();S.staffPool=[];
- ['seg','ent','ent','ent','fis','fis','dd','dd'].forEach(r=>S.staffPool.push(makeStaff(r,l+gauss()*1.1)));
+ ['seg','ent','ent','ent','fis','fis','dd','dd','dca','dca'].forEach(r=>S.staffPool.push(makeStaff(r,l+gauss()*1.1)));
  // ex-jugadores retirados que quieren empezar a entrenar
  takeExPlayers(2).forEach(x=>{const role=x.at.lid>=7?'seg':x.at.dec>=7?'ent':'dd',m=makeStaff(role,l);m.name=x.name;m.nat=x.nat;m.age=x.age+1;m.ex=1;
   const b=(v)=>clamp(Math.round(v+gauss()*.8),1,10);m.at.tac=b((x.at.dec+x.at.vis)/2);m.at.mot=b(x.at.lid);m.at.ent=b((x.at.con+x.at.dec)/2);m.at.jui=b((x.at.vis+x.at.col)/2);m.wage=staffWage(m);S.staffPool.push(m);});

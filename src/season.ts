@@ -1,5 +1,7 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {maybeGolden} from './youthplus';
+import {makeYouth} from './academy';
 import {seasonContracts} from './negotiate';
 import {aiSummerPlan,clubSeasonFinance,crisisSales} from './economy';
 import {matchFx} from './replay';
@@ -182,7 +184,7 @@ export function newSeason(){
   ensureSquad(t.id);
  });
  const leftAc=S.academy.filter(p=>p.age+1>=19).map(p=>p.name);S.academy=S.academy.filter(p=>p.age+1<19);S.academy.forEach(p=>p.age++);
- crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();const youth=academyIntake(3);setupYouth();genScoutPool();aiTransfers(160);
+ crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();const youth=academyIntake(3);maybeGolden(makeYouth);setupYouth();genScoutPool();aiTransfers(160);
  genFreeAgents();crisisSales(poorClubs);
  S.short=S.short.filter(id=>PL(id));
  S.seasonN++;setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
