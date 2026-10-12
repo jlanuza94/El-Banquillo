@@ -61,8 +61,8 @@ textarea:focus-visible{outline:2px solid var(--focus)}
 .mdetail p.bad{border-left:3px solid var(--loss);padding-left:10px}
 .bnav button{position:relative}
 .bnav .badge{position:absolute;top:0;left:calc(50% + 6px);background:var(--accent);color:var(--accent-ink);font-family:var(--f-num);font-size:10px;font-weight:700;border-radius:9px;padding:0 5px;min-width:16px;line-height:16px}
-@media (min-width:881px){.inbox .mdetail [data-a="mail-back"]{display:none}}
-@media (max-width:880px){.inbox.has-sel .mlistp{display:none}.inbox .mempty{display:none}}
+@media (min-width:700px){.inbox .mdetail [data-a="mail-back"]{display:none}}
+@media (max-width:699px){.inbox.has-sel .mlistp{display:none}.inbox .mempty{display:none}}
 /* Análisis */
 .shotmaps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px}
 .shotmap{margin:0}.shotmap svg{width:100%;height:auto;border-radius:6px;display:block}

@@ -1,5 +1,6 @@
 /* El Banquillo · views/staff.ts — Pantalla del cuerpo técnico. */
 // @ts-nocheck — usa el estado heredado S.
+import {vtab} from './common';
 import {PLANS,injRisk} from '../medical';
 import {nf,nameBtn} from './common';
 import {esc,money} from '../core';
@@ -35,6 +36,7 @@ export function staffView(){
  ${pool.length?pool.map(m=>{const R=ST_ROLES[m.role],full=crew(m.role).length>=R.max;return `<div class="offer"><span class="t"><b>${esc(m.name)}</b> <span class="tag">${R.n}</span>${m.ex?' <span class="tag xi">Ex jugador</span>':''} <span class="small muted">· ${m.age} años · ${money(m.wage)}/sem</span><span class="row" style="gap:10px;margin-top:4px">${atRow(m,R.at)}</span>${m.role==='dd'?`<span class="small muted">Contactos en: ${esc(contactNames(m))}</span>`:''}</span><button class="btn sm primary" data-a="st-hire" data-id="${m.id}" ${full?'disabled title="Puesto completo"':''}>Contratar</button></div>`;}).join(''):'<div class="empty">No hay candidatos ahora mismo.</div>'}
  <p class="small muted" style="margin:8px 0 0">Firman por 2 temporadas. Despedir a alguien cuesta unas 12 semanas de sueldo por cada temporada de contrato que le quede.</p></section>`;
  const med=`<section class="panel">${medHTML()}</section>`;
- return `<div class="grid"><div class="stack">${med}${roles}</div><div class="stack">${eff}${cands}</div></div>`;
+ const tb=vtab('st',[['eq','Tu cuerpo técnico'],['fich','Contratar'],['ef','Efectos'],['med','Parte médico']],'eq');
+ return tb.bar+(tb.cur==='eq'?`<div class="grid">${roles}</div>`:tb.cur==='fich'?cands:tb.cur==='ef'?eff:med);
 }
 export function fireModal(m){return `<h2>¿Despedir a ${esc(m.name)}?</h2><p>Tendrás que pagarle una indemnización de <b>${money(fireCost(m))}</b>.</p><div class="acts"><button class="btn" data-a="modal-close">Cancelar</button><button class="btn danger" data-a="st-fire-ok" data-id="${m.id}">Despedir</button></div>`;}

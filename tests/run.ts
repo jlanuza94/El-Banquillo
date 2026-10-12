@@ -11,6 +11,7 @@ import { pickTeam } from '../src/world';
 import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics';
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
 import { PL } from '../src/state';
+import { cellVal } from '../src/sorttable';
 import { finishRound, friendlyOpts, newSeason, playFriendly, playMatch, simLoop, simRun, simState, simToEnd } from '../src/season';
 import { takeJob } from '../src/career';
 import { answerPress } from '../src/club';
@@ -125,7 +126,7 @@ const app = document.getElementById('app')!;
     const t = S.teams[S.user], base = teamPower(t.lineup, t.formation).ovr, withRoles = teamPower(t.lineup, t.formation, null, null, 1, userRoles()).ovr;
     ok(Math.abs(base - withRoles) < 3, `los roles por defecto no cambian mucho la fuerza (${(base/10).toFixed(2)} → ${(withRoles/10).toFixed(2)})`);
     const keep = t.formation; setFormation('3-5-2'); ok(t.roles.length === 11, 'roles al cambiar de formación'); setFormation(keep);
-    S.view = 'tacticas'; render(); ok(app.querySelector('[data-role]'), 'panel de roles en tácticas');
+    S.view = 'tacticas'; S.vt = { tac: 'ord' }; render(); ok(app.querySelector('[data-role]'), 'panel de roles en tácticas');
   }
   {
     // Mismos partidos (IA contra IA, sin tu equipo) con y sin las novedades del motor, para que no cambie el número de goles.
@@ -177,7 +178,7 @@ const app = document.getElementById('app')!;
     ok(t.formation === f0 && t.plans.B.formation === '3-5-2', 'tácticas guardadas A y B');
     S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; for (let i = 0; i < 30; i++) step(m);
     ok(planInMatch(m, 'B') && m.f[m.us] === '3-5-2' && m.lu[m.us].filter(Boolean).length >= 10 && m.tac[m.us].est === 'pos', 'cambio de táctica en pleno partido'); while (!m.done) step(m); S.fr = [];
-    const before = planFam(t.tac); learnTactic(t.tac); ok(planFam(t.tac) > before, 'el equipo aprende la táctica que usa'); render(); S.view = 'tacticas'; render(); ok(app.textContent.includes('Jugadas ensayadas'), 'pantalla de tácticas con planes y jugadas'); }
+    const before = planFam(t.tac); learnTactic(t.tac); ok(planFam(t.tac) > before, 'el equipo aprende la táctica que usa'); render(); S.view = 'tacticas'; S.vt = { tac: 'bp' }; render(); ok(app.textContent.includes('Jugadas ensayadas'), 'pantalla de tácticas con planes y jugadas'); }
   { // sistemas conectados
     const ags = {}; Object.values(S.players).slice(0, 3000).forEach(p => { const a = agentOf(p); ags[a.n] = (ags[a.n] || 0) + 1; });
     ok(Object.keys(ags).length === 4, 'agentes: ' + Object.entries(ags).map(([k, v]) => k + ' ' + v).join(', '));
@@ -269,9 +270,9 @@ const app = document.getElementById('app')!;
     S.view = 'liga'; S.ldTab = 'eco'; render(); ok(app.textContent.includes('Valor plantilla'), 'tabla del dinero de los clubes');
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
   { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
-    const t = T(S.user); t.subs = []; S.view = 'plantilla'; S.plTab = 'ali'; render();
+    const t = T(S.user); t.subs = []; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
     ok(app.querySelector('.fmlist') && app.querySelectorAll('.bslot').length === MAX_SUBS && app.querySelectorAll('.fmrow[data-fit]').length > 0, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
-    ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho menús en la plantilla');
+    ok(app.querySelectorAll('[data-a="vtab"]').length === 7, 'siete pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 7, 'siete pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
     setSub(out.id, 0); ok(subsOf(t)[0] === out.id && subsOf(t).length <= MAX_SUBS, 'poner a un suplente en el banquillo');
@@ -279,7 +280,7 @@ const app = document.getElementById('app')!;
     removeFromTeam(st); ok(!subsOf(t).includes(st), 'quitar del banquillo');
     for (const tb of ['jug', 'plan', 'med']) { S.plTab = tb; render(); }
         S.plTab = 'plan'; render(); ok(app.textContent.includes('próxima temporada'), 'planificación de la plantilla');
-    t.subs = []; S.plTab = 'ali';
+    t.subs = []; S.plTab = 'jug'; S.vt = {};
     syncDay(); const d0 = S.day, ci0 = S.ci; let r = 'day', n = 0; while (r !== 'match' && n < 30) { r = continueDay(); n++; }
     ok(r === 'match' && S.day > d0 && S.ci === ci0 && isMatchDay(), `Continuar avanza día a día hasta el partido (${n} días)`);
     ok(continueDay() === 'match' && S.day === dayOfEvent(S.ci), 'el día de partido no se pasa sin jugar');
@@ -305,7 +306,7 @@ const app = document.getElementById('app')!;
     ok(!!ST_ROLES.dca && goldenChance() > 0, 'director de cantera y generación dorada posibles');
     const wk = S.week, t0 = S.titles.length, ac = S.academy.length; while (S.academy.length < 8) S.academy.push({ ...S.academy[0], id: 'yx' + S.academy.length, at: { ...S.academy[0].at } });
     S.week = YT_WEEK; youthTournament(); S.week = wk; ok((S.ytHist || []).length >= 1, 'se juega el Torneo Internacional Sub-19: campeón ' + S.ytHist[S.ytHist.length - 1].champ);
-    S.academy = S.academy.slice(0, Math.max(ac, 0)); S.view = 'cantera'; render(); ok(app.textContent.includes('Vida de la cantera'), 'panel de vida de la cantera'); }
+    S.academy = S.academy.slice(0, Math.max(ac, 0)); S.view = 'cantera'; S.vt = { can: 'vida' }; render(); ok(app.textContent.includes('Vida de la cantera'), 'panel de vida de la cantera'); }
   { // Historia del mundo
     const tabs = S.leagues.map(L => lgTable(L.id)); recordSeason(sSum(), tabs); transferRecord({ name: 'Prueba', fee: 99, from: S.teams[3].id, to: S.teams[4].id });
     S.view = 'historia'; S.hiTab = 'enc'; render(); ok(app.textContent.includes('Campeones de liga') && (S.ency || []).length >= 1, 'enciclopedia de la temporada');
@@ -316,9 +317,9 @@ const app = document.getElementById('app')!;
     ok(spAt(50, 70) === 'DFC' && spAt(10, 20) === 'EI' && spAt(50, 30) === 'MCO', 'el puesto sale de la zona del campo');
     const t = T(S.user), f0 = t.formation; t.free = coordsOf('4-4-2'); setF(FREE); moveDot(9, 10, 18);
     ok(slotsF(FREE).length === 11 && slotsF(FREE)[10] === 'EI' && countsF(FREE).DEL === 2, 'formación libre: 11 huecos y el jugador movido pasa a extremo');
-    S.view = 'tacticas'; render(); ok(app.querySelector('.fbpitch .fbdot'), 'pizarra en tácticas'); setF(f0); }
-  S.view = 'staff'; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
-  S.view = 'staff'; render();
+    S.view = 'tacticas'; S.vt = { tac: 'piz' }; render(); ok(app.querySelector('.fbpitch .fbdot'), 'pizarra en tácticas'); setF(f0); }
+  S.view = 'staff'; S.vt = { st: 'med' }; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
+  S.view = 'staff'; S.vt = {}; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
     ok(S.crew.filter(m => m.role === 'ent').length === 3 && S.crew.filter(m => m.role === 'fis').length === 1, 'migración del cuerpo técnico antiguo'); S.crew = keep; }
@@ -338,7 +339,7 @@ const app = document.getElementById('app')!;
     ok(gpm > 2 && gpm < 4, 'goles por partido razonables');
     { const top = Object.values(S.players).filter(p => p.st && p.team !== null).sort((a, b) => b.st.g - a.st.g).slice(0, 5); console.log('     máximos goleadores (todas las comp.): ' + top.map(p => p.st.g + ' en ' + p.st.pj).join(', ')); }
     if (!fired) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
-      S.view = 'cantera'; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
+      S.view = 'cantera'; S.vt = { can: 'sub19' }; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
     for (const tb of ['temp', 'part', 'jug', 'riv']) { S.anTab = tb; S.view = 'analisis'; render(); }
     if (!fired && s > 0) { S.view = 'historia'; for (const tb of ['enc', 'fame']) { S.hiTab = tb; render(); } ok((S.ency || []).length >= 1 && app.textContent.includes('Récords del mundo'), `enciclopedia (${(S.ency || []).length} temporadas) y salón de la fama`); S.hiTab = 'club'; }
     ok(S.tl.length >= (fired ? 3 : 30) && S.mlog.length > 0 && S.mlog[0].sh.length > 5 && Object.values(S.players).some(p => p.st && p.st.kp > 0 && p.st.tk > 0 && p.st.xg > 0), 'análisis: evolución de la temporada, informes con tiros y estadísticas avanzadas' + ` (tl ${S.tl.length}, partidos ${S.mlog.length}, tiros ${S.mlog[0] && S.mlog[0].sh.length})`);
@@ -399,6 +400,8 @@ const app = document.getElementById('app')!;
     const diffs = Object.values(S.players).filter(p => before[p.id] != null).map(p => Math.abs(p.ovr - before[p.id]));
     ok(Object.values(S.players).every(p => Object.keys(p.at).length === 15) && S.academy.every(p => p.at.cab != null) && diffs.reduce((a, b) => a + b, 0) / diffs.length < 1.5, `jugadores antiguos con 15 atributos y la misma media (diferencia media ${(diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(2)})`);
     for (const v of ['inicio', 'buzon', 'plantilla', 'tacticas', 'entreno', 'cantera', 'staff', 'mercado', 'premios', 'club']) { S.view = v; render(); }
+    for (const v of ['tacticas', 'entreno', 'cantera', 'staff']) { S.view = v; render(); for (const b of [...app.querySelectorAll('[data-a="vtab"]')].map(x => [x.dataset.k, x.dataset.v])) { S.vt = { [b[0]]: b[1] }; render(); } } S.vt = {};
+    ok(cellVal({ dataset: {}, textContent: '€1.5M' }) === 1.5e6 && cellVal({ dataset: {}, textContent: 'DFC LI' }) > cellVal({ dataset: {}, textContent: 'DC' }), 'ordenar tablas: dinero y posiciones');
     ok(true, 'y todas las pantallas funcionan con ella');
   }
   const code = exportCode();

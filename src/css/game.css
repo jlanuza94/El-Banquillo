@@ -141,3 +141,8 @@ tr.endc td{background:rgba(194,58,46,.10)}
  .fmgrid .fmctl .eyebrow{display:none}.fmgrid .panel-h .eyebrow{font-size:10px}
  .fmgrid .panel-h h2{font-size:18px}
  .pltabs button{padding:6px 10px;font-size:12px}}
+/* Tablas ordenables */
+main thead th{cursor:pointer;user-select:none;-webkit-user-select:none}
+main thead th.sorted{color:var(--accent)}
+main thead th[data-dir="desc"]::after{content:" ▼";font-size:.8em}
+main thead th[data-dir="asc"]::after{content:" ▲";font-size:.8em}

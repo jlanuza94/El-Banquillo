@@ -28,6 +28,7 @@ import {contractLabel,contractTxt} from '../contracts';
 import {crew,medLevel,trainMult} from '../staff';
 import {FOCUS,INTS,growChance,hapTag,minShare,staffCost,staffTotal} from '../squad';
 import {REGIONS,scoutWages} from '../academy';
+import {vtab} from './common';
 import {atCellS,attrHead,attrCells,clubCell,energyBar,formCell,knowTag,nameBtn,pBadgeS,pitchHTML,potTxt,status} from './common';
 import {reportHTML} from './home';
 import {start} from '../boot';
@@ -59,7 +60,9 @@ export function entrenoView(){
  <p class="small muted" style="margin:0 0 8px">Un veterano (27 años o más, líder o profesional) se encarga de un joven de 21 o menos: el joven mejora más rápido, está más contento y, con el tiempo, adopta su carácter y su mentalidad (liderazgo, regularidad, partidos grandes).</p>
  ${P.map(x=>{const Y=PL(x.y),M=PL(x.m);return `<div class="offer"><span class="t">${nameBtn(Y)} <span class="small muted">(${Y.age} años · ${PERS[Y.per].n})</span><br><span class="small muted">Tutor:</span> ${nameBtn(M)} <span class="small muted">(${PERS[M.per].n} · liderazgo ${M.at.lid??'?'})</span></span><button class="btn sm" data-a="mentor-del" data-id="${Y.id}">Quitar</button></div>`;}).join('')}
  ${young.length&&vets.length&&P.length<MAX_PAIRS?`<div class="row" style="margin-top:8px;align-items:flex-end"><label class="f"><span class="eyebrow">Joven</span><select id="mtY">${young.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.age} · ${PERS[p.per].n}</option>`).join('')}</select></label><label class="f"><span class="eyebrow">Tutor</span><select id="mtM">${vets.map(p=>`<option value="${p.id}">${esc(p.name)} · ${PERS[p.per].n} · LID ${p.at.lid??'?'}</option>`).join('')}</select></label><button class="btn sm primary" data-a="mentor-add">Asignar</button></div>`:P.length?'':`<div class="empty">${!young.length?'No tienes jugadores de 21 años o menos.':'Ningún veterano puede ser tutor (27+ años, líder o profesional).'}</div>`}</section>`;
- return `<div class="grid"><div class="stack">${plan}${indiv}</div><div class="stack">${mentor}${chem}${staff}${log}</div></div>`;
+ const tb=vtab('ent',[['plan','Plan semanal'],['ind','Individual'],['tut','Tutelaje'],['quim','Química'],['staff','Cuerpo técnico']],'plan');
+ const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
+ return tb.bar+(tb.cur==='plan'?two(plan,log):tb.cur==='ind'?indiv:tb.cur==='tut'?mentor:tb.cur==='quim'?chem:staff);
 }
 export function canteraView(){
  const regSel=(sc)=>`<select data-reg="${sc.id}" aria-label="Región de ${esc(sc.name)}">${REGIONS.map((R,i)=>`<option value="${i}" ${sc.reg===i?'selected':''}>${R.n}</option>`).join('')}</select>`;
@@ -85,7 +88,8 @@ export function canteraView(){
   ${L?`<div class="res me"><div class="h"><span>${esc(ylName(L.h))}</span></div><div class="s">${L.hg} - ${L.ag}</div><div class="a"><span>${esc(ylName(L.a))}</span></div><div class="sc">Último partido · jornada ${L.round+1}</div></div>`:'<p class="small muted" style="margin:0 0 8px">La liga juvenil se juega cada dos jornadas de liga.</p>'}
   <div class="tbl"><table><thead><tr><th>#</th><th>Equipo</th><th class="r">PJ</th><th class="r">DG</th><th class="r">Pts</th></tr></thead><tbody>${tb.map((r,i)=>`<tr class="${r.id===YOUTH_USER?'me':''}"><td class="n">${i+1}</td><td>${esc(ylName(r.id))}</td><td class="n">${r.pj}</td><td class="n">${r.gf-r.gc>0?'+':''}${r.gf-r.gc}</td><td class="pts">${r.pts}</td></tr>`).join('')}</tbody></table></div>
   <p class="small muted" style="margin:8px 0 0">Juegan tus 11 mejores canteranos y algún suplente; si no llegas a 11, completan el equipo chavales sin ficha de nivel bajo. Los que juegan mejoran más rápido. Tu fuerza: ${(userYouthStr()/10).toFixed(1)}.</p></section>`;}
- return `<div class="grid"><div class="stack">${academy}${reports}</div><div class="stack">${life}${yl}${scouts}</div></div>`;
+ const tb=vtab('can',[['can','Cantera'],['vida','Vida de la cantera'],['ojeo','Ojeadores'],['inf','Informes'],...(yl?[['sub19','Liga sub-19']]:[])],'can');
+ return tb.bar+(tb.cur==='can'?academy:tb.cur==='vida'?life:tb.cur==='ojeo'?scouts:tb.cur==='inf'?reports:yl||academy);
 }
 export function tacticasView(){
  const t=T(S.user),tac=Object.assign({},TAC0,t.tac||{}),xi=t.lineup.filter(id=>id&&PL(id)).map(PL),sq=squad(S.user).filter(p=>!p.inj);
@@ -120,7 +124,10 @@ export function tacticasView(){
  const spT=spOf(t),spP=`<section class="panel"><div class="panel-h"><h2>Jugadas ensayadas</h2><span class="eyebrow">Ensayo ${Math.round(S.spFam??40)}%</span></div>
  ${Object.entries(SP).map(([k,v])=>`<div style="margin-bottom:10px"><div class="eyebrow" style="margin-bottom:4px">${v.n}</div><div class="seg">${Object.entries(v.o).map(([o,[l]])=>`<button data-a="sp" data-k="${k}" data-v="${o}" aria-pressed="${spT[k]===o}">${l}</button>`).join('')}</div><p class="small muted" style="margin:4px 0 0">${esc(v.o[spT[k]][1])}</p></div>`).join('')}
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
- return `<div class="grid"><div class="stack">${boardHTML()}${planP}${inst}${famP}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${oiP}${sp}${spP}${ords}</div></div>`;
+ const tb=vtab('tac',[['ali','Alineación'],['tac','Táctica'],['ord','Roles y órdenes'],['bp','Balón parado'],['rival','Rival'],['piz','Pizarra libre'],['plan','Tácticas guardadas']],'ali');
+ const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
+ const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?two(roles,ords):tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two(opp!=null?reportHTML(opp,false):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>',oiP):tb.cur==='piz'?boardHTML():two(planP,famP);
+ return tb.bar+body;
 }
 /* ---------- Alineación estilo FM ---------- */
 const suitOf=(p,s)=>{const v=prof(p,s)*footF(p,s);return v>=.99?1:v>=.94?2:v>=.8?3:4;};
@@ -152,11 +159,27 @@ function planHTML(sq){
   return `<h3 style="margin:12px 0 4px">${n} <span class="small muted">· ${stay} seguros${ps.length-stay?` · ${ps.length-stay} acaban contrato`:''}</span></h3><div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th class="r">Edad</th><th class="r">Media</th><th>Contrato</th><th class="r">Valor</th><th>Futuro</th></tr></thead><tbody>
   ${ps.map(p=>{const f=fut(p);return `<tr class="${p.contract<=1?'endc':''}"><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age+1}</td><td class="r">${pBadge(p)}</td><td>${contractTxt(p)}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td><span class="tag ${f[1]}">${f[0]}</span></td></tr>`;}).join('')}</tbody></table></div>`;}).join('')}`;
 }
-export function plantillaView(){
- const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=S.plTab==='xi'||!S.plTab?'ali':S.plTab;
+/** Alineación estilo FM: campo, banquillo y lista para arrastrar (dentro de Tácticas). */
+function alineacionHTML(){
+ const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr);
  const sel=S.sel,selSlot=sel&&sel.type==='slot'?sel.i:null,selPid=sel&&sel.type==='player'?sel.id:null;
  const pw=teamPower(t.lineup,t.formation,null,null,1,userRoles());
- const hint=selSlot!=null?`Hueco de ${SPN[slotsOf(t.formation)[selSlot]].toLowerCase()} seleccionado. Toca un jugador de la lista para colocarlo.`:selPid?`${PL(selPid).name} seleccionado. Toca un hueco del campo para colocarlo.`:'Toca un hueco del campo y luego un jugador (o al revés). Bajo cada jugador ves el puesto y su nota en él: fuera de su posición o con el pie cambiado en banda rinde menos. Toca un nombre para ver su ficha.';
+ return `<div class="grid fmgrid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Formación</h2><span class="eyebrow">Media del once ${(pw.ovr/10).toFixed(1)} · Química ${Math.round(S.chem)} · Dominio ${Math.round(famOf(t.formation))}%</span></div>
+  <div class="row fmctl" style="margin-bottom:12px"><label class="f"><span class="eyebrow">Sistema</span><select id="formSel">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?'Libre (pizarra)':f} · dominio ${Math.round(famOf(f))}%</option>`).join('')}</select></label>
+  <div style="display:flex;flex-direction:column;gap:3px"><span class="eyebrow">Mentalidad</span><div class="seg">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>
+  <span class="spacer"></span><button class="btn" data-a="auto" style="align-self:flex-end">Alinear mejores</button></div>
+  ${pitchHTML(t,t.lineup,t.formation,{click:true,sel:selSlot,roles:userRoles()})}
+  ${benchHTML(t)}
+  <div class="offer" style="margin-top:10px"><span class="t"><b>Rotación del segundo</b><br><span class="small muted">Al simular, cambia a los titulares cansados (por debajo del ${(S.rot&&S.rot.th)||72}% de energía), lesionados o sancionados por el mejor suplente. Tu once de referencia es el que pongas aquí.</span></span>
+  <select id="rotTh" aria-label="Energía mínima">${[[60,'Poca rotación'],[72,'Normal'],[82,'Mucha rotación']].map(([v,l])=>`<option value="${v}" ${((S.rot&&S.rot.th)||72)===v?'selected':''}>${l}</option>`).join('')}</select>
+  <button class="btn sm ${S.autoRot!==false?'dark':''}" data-a="rot-tog" aria-pressed="${S.autoRot!==false}">${S.autoRot!==false?'Activada':'Desactivada'}</button><button class="btn sm" data-a="rot-now">Rotar ahora</button></div>
+  <div class="row small muted" style="margin-top:10px;justify-content:center;gap:14px"><span>Ataque ${(pw.atk/10).toFixed(1)}</span><span>Medio ${(pw.mid/10).toFixed(1)}</span><span>Defensa ${(pw.def/10).toFixed(1)}</span></div></section></div><div class="stack"><section class="panel"><div class="panel-h"><h2>Jugadores</h2><span class="eyebrow">Arrastra al campo o al banquillo</span></div>${fmList(t,sq,selSlot,selPid)}</section></div></div>`;
+}
+export function plantillaView(){
+ const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=!S.plTab||S.plTab==='xi'||S.plTab==='ali'?'jug':S.plTab;
+ const sel=S.sel,selSlot=sel&&sel.type==='slot'?sel.i:null,selPid=sel&&sel.type==='player'?sel.id:null;
+ const pw=teamPower(t.lineup,t.formation,null,null,1,userRoles());
+ const hint=selSlot!=null?`Hueco de ${SPN[slotsOf(t.formation)[selSlot]].toLowerCase()} seleccionado. Toca un jugador de la lista para colocarlo.`:selPid?`${PL(selPid).name} seleccionado. Toca un hueco del campo para colocarlo.`:'Toca un nombre para ver su ficha y una cabecera (#, Pos, Nombre, Media…) para ordenar la lista. La alineación se hace en Tácticas.';
  let table='';
  if(tab==='jug'||tab==='xi'){table=`<p class="small muted" style="margin:0 0 10px">${esc(hint)}</p><div class="tbl"><table><thead><tr><th class="r">#</th><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th>${attrHead()}<th>Pie</th><th>Energía</th><th>Forma</th><th>Ánimo</th><th>Estado</th></tr></thead><tbody>${sq.map(p=>{const xi=t.lineup.includes(p.id);return `<tr class="click ${xi?'me':''} ${selPid===p.id?'sel':''} ${available(p)?'':'dim'}" data-a="row" data-id="${p.id}" tabindex="0">
   <td class="n">${p.num}</td><td>${posChip(p)}${p.alt&&p.alt.length?` <span class="small muted">${p.alt.join(' ')}</span>`:''}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td>${attrCells(p)}<td class="small">${p.foot==='A'?'Ambi':p.foot==='I'?'Zurdo':'Diestro'}</td><td>${energyBar(p.energy)}</td><td>${formCell(p.form)}</td><td>${hapTag(p)}</td><td>${status(p,xi)}</td></tr>`;}).join('')}</tbody></table></div>`;}
@@ -164,7 +187,6 @@ export function plantillaView(){
  else if(tab==='prof'){table=depthHTML(sq);}
  else if(tab==='plan'){table=planHTML(sq);}
  else if(tab==='med'){table=medHTML();}
- else if(tab==='ali'){table='';}
  else if(tab==='vest'){const L=leaders(5),groups={};sq.forEach(p=>{const l=langOf(p);(groups[l]=groups[l]||[]).push(p);});const LN={es:'Hispanohablantes',en:'Angloparlantes',it:'Italianos',de:'Germanoparlantes',fr:'Francófonos',pt:'Lusófonos',nl:'Neerlandeses',tr:'Turcos',ja:'Japoneses'};
   const avg=sq.length?Math.round(sq.reduce((a,p)=>a+(p.hap||70),0)/sq.length):70,vm=vestMult();
   table=`<div class="arow" style="grid-template-columns:150px minmax(0,1fr) 34px;margin-bottom:6px"><span>Ambiente del vestuario</span><span class="abar" style="display:block"><i class="${qc(avg/10)}" style="width:${avg}%"></i></span><b class="num">${avg}</b></div>
@@ -175,18 +197,8 @@ export function plantillaView(){
   ${Object.entries(groups).sort((a,b)=>b[1].length-a[1].length).map(([l,ps])=>`<div class="offer"><span class="t"><b>${LN[l]||l}</b> · ${ps.length}<br><span class="small muted">${ps.map(p=>esc(p.name)+(p.adapt>0?' (adaptándose)':'')).join(', ')}</span></span></div>`).join('')}`;}
  else {const pr=activeProms();table=`<div class="offer" style="margin-bottom:10px"><span class="t"><b>Credibilidad en el vestuario: ${Math.round(cred())}/100</b><br><span class="small muted">Sube al cumplir promesas y baja al romperlas.</span></span></div>${pr.length?`<h3 style="margin:0 0 6px">Promesas activas</h3>${pr.map(x=>`<div class="offer">${posChip(x.p)}<span class="t">${nameBtn(x.p)}<br><span class="small muted">${PROM_N[x.type]} · ${x.type==='sell'?'hasta final de temporada':x.left?`quedan ${x.left} jornada${x.left>1?'s':''}`:'vence esta jornada'}</span></span></div>`).join('')}`:''}<p class="small muted" style="margin:0 0 10px">Rol prometido, sueldo, cláusula y felicidad de cada jugador. Si un jugador juega menos de lo que corresponde a su rol, se irá enfadando.</p><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Rol</th><th class="r">Jugado</th><th class="r">Valor</th><th class="r">Sueldo</th><th class="r">Cláusula</th><th>Contrato</th><th>Ánimo</th><th></th></tr></thead><tbody>${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}${p.req?' <span class="tag bad">Pide salir</span>':''}</td><td class="small">${ROLES[p.role||'ro'].n}</td><td class="n">${(S.tg||0)?Math.round(minShare(p)*100)+'%':'—'}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td class="n">${money(p.wage)}</td><td class="n">${p.loan?'—':money(p.cl||0)}</td><td>${contractTxt(p)}</td><td>${hapTag(p)}</td><td class="r"><span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="chat" data-id="${p.id}">Hablar</button>${p.loan?'':`<button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button>`}</span></td></tr>`).join('')}</tbody></table></div>`;}
  const out=Object.values(S.players).filter(p=>p.loan&&p.loan.from===S.user);
- const TABS=[['ali','Alineación'],['jug','Jugadores'],['stats','Estadísticas'],['prof','Profundidad'],['plan','Planificación'],['cont','Contratos y ánimo'],['vest','Vestuario'],['med','Médico']];
+ const TABS=[['jug','Jugadores'],['stats','Estadísticas'],['prof','Profundidad'],['plan','Planificación'],['cont','Contratos y ánimo'],['vest','Vestuario'],['med','Médico']];
  const tabsBar=`<div class="seg pltabs" style="margin-bottom:10px;max-width:100%;overflow-x:auto;flex:none">${TABS.map(([k,l])=>`<button data-a="pl-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
- if(tab==='ali')return tabsBar+`<div class="grid fmgrid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Formación</h2><span class="eyebrow">Media del once ${(pw.ovr/10).toFixed(1)} · Química ${Math.round(S.chem)} · Dominio ${Math.round(famOf(t.formation))}%</span></div>
-  <div class="row fmctl" style="margin-bottom:12px"><label class="f"><span class="eyebrow">Sistema</span><select id="formSel">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?'Libre (pizarra)':f} · dominio ${Math.round(famOf(f))}%</option>`).join('')}</select></label>
-  <div style="display:flex;flex-direction:column;gap:3px"><span class="eyebrow">Mentalidad</span><div class="seg">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>
-  <span class="spacer"></span><button class="btn" data-a="auto" style="align-self:flex-end">Alinear mejores</button></div>
-  ${pitchHTML(t,t.lineup,t.formation,{click:true,sel:selSlot,roles:userRoles()})}
-  ${benchHTML(t)}
-  <div class="offer" style="margin-top:10px"><span class="t"><b>Rotación del segundo</b><br><span class="small muted">Al simular, cambia a los titulares cansados (por debajo del ${(S.rot&&S.rot.th)||72}% de energía), lesionados o sancionados por el mejor suplente. Tu once de referencia es el que pongas aquí.</span></span>
-  <select id="rotTh" aria-label="Energía mínima">${[[60,'Poca rotación'],[72,'Normal'],[82,'Mucha rotación']].map(([v,l])=>`<option value="${v}" ${((S.rot&&S.rot.th)||72)===v?'selected':''}>${l}</option>`).join('')}</select>
-  <button class="btn sm ${S.autoRot!==false?'dark':''}" data-a="rot-tog" aria-pressed="${S.autoRot!==false}">${S.autoRot!==false?'Activada':'Desactivada'}</button><button class="btn sm" data-a="rot-now">Rotar ahora</button></div>
-  <div class="row small muted" style="margin-top:10px;justify-content:center;gap:14px"><span>Ataque ${(pw.atk/10).toFixed(1)}</span><span>Medio ${(pw.mid/10).toFixed(1)}</span><span>Defensa ${(pw.def/10).toFixed(1)}</span></div></section></div><div class="stack"><section class="panel"><div class="panel-h"><h2>Jugadores</h2><span class="eyebrow">Arrastra al campo o al banquillo</span></div>${fmList(t,sq,selSlot,selPid)}</section></div></div>`;
  return tabsBar+`<section class="panel">${table}${tab==='jug'?`${out.length?`<h3 style="margin-top:18px">Cedidos en otros clubes</h3><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Media</th><th class="r">PJ</th><th class="r">Goles</th></tr></thead><tbody>${out.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="r">${pBadge(p)}</td><td class="n">${p.st?p.st.pj:0}</td><td class="n">${p.st?p.st.g:0}</td></tr>`).join('')}</tbody></table></div>`:''}`:''}</section>`;
 }
 const DEPTH=[['Portería',['POR']],['Defensa',['LD','DFC','LI']],['Medio',['MCD','MC','MCO','MD','MI']],['Ataque',['ED','EI','DC']]];

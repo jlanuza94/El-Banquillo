@@ -1,5 +1,6 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {applySorts} from '../sorttable';
 import {agenda,dateTxt,daysToMatch,isMatchDay,syncDay} from '../calendar';
 import {FREE,formRows,freeCoords} from '../freeboard';
 import {riskTag} from '../medical';
@@ -82,7 +83,11 @@ export function nav(){
  return side+bnav;
 }
 /** Submenú de la sección: las pantallas del mismo grupo (Equipo, Competición, Club…). */
-function subnav(){const cur=S.view||'inicio',g=NAVG.find(g=>g.it.some(([v])=>v===cur));if(!g||!g.g)return '';const items=g.it.filter(([v])=>!quick()||!DEEP_ONLY.includes(v)||v===cur);if(items.length<2)return '';
+/** Pestañas de una pantalla (el submenú de cada botón del menú lateral). Devuelve la barra y la pestaña elegida. */
+export function vtab(key,tabs,def){S.vt=S.vt||{};let cur=S.vt[key];if(!tabs.some(([k])=>k===cur))cur=def;
+ return {cur,bar:`<div class="seg pltabs" role="tablist">${tabs.map(([k,l])=>`<button data-a="vtab" data-k="${key}" data-v="${k}" aria-pressed="${cur===k}">${esc(l)}</button>`).join('')}</div>`};}
+function subnav(){return '';}
+function subnavOld(){const cur=S.view||'inicio',g=NAVG.find(g=>g.it.some(([v])=>v===cur));if(!g||!g.g)return '';const items=g.it.filter(([v])=>!quick()||!DEEP_ONLY.includes(v)||v===cur);if(items.length<2)return '';
  return `<nav class="subnav" aria-label="${esc(g.g)}">${items.map(([v,l])=>`<button data-a="view" data-v="${v}" aria-current="${v===cur}">${esc(l)}</button>`).join('')}</nav>`;}
 export function shell(){
  const ended=S.week>=nRounds();let body='';
@@ -130,6 +135,7 @@ export function render(){
  else if(S.jobless)html=`<div class="startscr">${jobsView()}</div>`+modalView();
  else{if(S.view==='partido'&&!S.match)S.view='inicio';html=shell()+modalView();}
  patchApp(html);
+ applySorts();
 }
 function patchApp(html){
  const next=document.createElement('div');next.id='app';next.innerHTML=html;

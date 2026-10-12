@@ -70,6 +70,7 @@ document.addEventListener('click',e=>{
   case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
+  case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;document.querySelector('main')?.scrollTo?.(0,0);break;
   case'subs-auto':T(S.user).subs=[];toast('Banquillo automático: entran los mejores disponibles.');break;
   case'row':{if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'ficha':S.modal={type:'ficha',id:d.id};break;
