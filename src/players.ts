@@ -1,5 +1,6 @@
 /* El Banquillo · players.js — Generación de jugadores, atributos, valor y desarrollo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {setValueNow} from './economy';
 import {injDaysMult} from './staff';
 import {clamp,gauss,pick,r2,r3,ri,rnd,shuffle} from './core';
 import {AT_PHYS,ATTRS,COUNTRIES,GRP,NAMES,PERS_W,SP_ALT,W,W_OLD,WIDE,newSt,spRandom} from './data';
@@ -17,8 +18,8 @@ export function genAttrs(pos,tg){
  for(let i=0;i<60;i++){const r=rateA(a,pos);if(Math.abs(r-tg)<.25)break;const k=wpick(W[pos]);if(r<tg){if(a[k]<10)a[k]++;}else if(a[k]>1)a[k]--;}
  return a;
 }
-export function setValue(p){let v=.25*Math.pow(1.115,p.ovr-50);if(p.age<=21)v*=1.5;else if(p.age<=24)v*=1.25;else if(p.age>=33)v*=.45;else if(p.age>=30)v*=.7;
- p.value=v>=1?Math.round(v*20)/20:Math.max(.005,Math.round(v*200)/200);}
+/** Valor de mercado: media, edad, potencial, forma, liga, contrato… (ver economy.ts). */
+export function setValue(p){setValueNow(p);}
 export const baseWage=p=>Math.max(.0005,Math.round(p.value*7)/2000);
 export const signWage=p=>r3(Math.max(p.wage,baseWage(p))*1.1);
 export const endYear=p=>2025+S.seasonN+p.contract;

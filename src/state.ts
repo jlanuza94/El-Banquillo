@@ -11,7 +11,8 @@ export const PL=id=>S.players[id];
 export const LG=id=>S.leagues[id];
 export const dirty=()=>{RT.SQ=null;RT.keyCache=null;};
 export function squad(tid){if(!RT.SQ){RT.SQ={};for(const p of Object.values(S.players)){const k=p.team===null?'fa':p.team;(RT.SQ[k]||(RT.SQ[k]=[])).push(p);}}return (RT.SQ[tid]||[]).slice();}
-export const setTeam=(p,t)=>{p.team=t;dirty();};
+/** Cambia de club a un jugador. Actualiza la caché de plantillas sin reconstruirla entera (es lo que más se repite en verano). */
+export const setTeam=(p,t)=>{const old=p.team;p.team=t;RT.keyCache=null;if(!RT.SQ)return;const ko=old===null?'fa':old,kn=t===null?'fa':t;if(ko===kn)return;const a=RT.SQ[ko];if(a){const i=a.indexOf(p);if(i>=0)a.splice(i,1);}(RT.SQ[kn]||(RT.SQ[kn]=[])).push(p);};
 export const available=p=>p&&!p.inj&&!p.susp;
 export const shortNm=id=>{const p=PL(id);if(!p)return '—';const [f,...l]=p.name.split(' ');return f[0]+'. '+l.join(' ');};
 export const lastNm=id=>{const p=PL(id);return p?p.name.split(' ').slice(1).join(' '):'';};

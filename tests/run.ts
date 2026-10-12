@@ -46,6 +46,8 @@ import { startReto, retosMatch, retosWeekly, medals } from '../src/retos';
 import { goalPlay, playAt, matchFx } from '../src/replay';
 import { tutStart, tutGo, TUT } from '../src/tutorial';
 import { saveName } from '../src/saveio';
+import { targetValue, valueWeekly, clubSeasonFinance, aiSummerPlan, needOf, initCash, trend, TARGET } from '../src/economy';
+import { table as lgTable } from '../src/tactics';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -242,6 +244,19 @@ const app = document.getElementById('app')!;
     for (let i = 0; i < TUT.length; i++) tutGo(1); render(); ok(S.tut == null && !app.querySelector('.tutcard'), 'el tutorial se completa');
     ok(/^El-Banquillo-.+\.ebsave$/.test(saveName()), 'nombre del archivo de partida: ' + saveName());
     S.view = 'club'; render(); ok(app.querySelector('[data-a=save-file]') && app.querySelector('#saveFile'), 'botones para pasar la partida'); }
+  { // Economía viva: valores, caja de los clubes y plantillas de la IA
+    const p = squad(S.user).find(x => x.pos !== 'POR'), st0 = p.st; p.st = { ...st0, pj: 10, rs: 80, g: 2 }; const hi = targetValue(p); p.st = { ...st0, pj: 10, rs: 55, g: 0 }; const lo = targetValue(p); p.st = st0;
+    ok(hi > lo * 1.3, `el valor depende del rendimiento (${hi.toFixed(2)} con notas de 8 frente a ${lo.toFixed(2)} con notas de 5.5)`);
+    const v0 = p.value; p.vt = v0; p.st = { ...st0, pj: 10, rs: 85, g: 6 }; for (let i = 0; i < 6; i++) valueWeekly(); ok(p.value > v0 && trend(p) > 0, 'el valor sube poco a poco tras buenos partidos'); p.st = st0;
+    initCash(); const lg = S.leagues.find(L => L.lv === 0), tb = lgTable(lg.id), tabs = S.leagues.map(L => L.id === lg.id ? tb : lgTable(L.id));
+    const first = T(tb[0].id), last = T(tb[19].id), c1 = first.cash, c2 = last.cash; clubSeasonFinance(tabs);
+    ok(first.cash - c1 > last.cash - c2, `el primero gana más dinero que el último (${(first.cash - c1).toFixed(2)} frente a ${(last.cash - c2).toFixed(2)})`);
+    const ai = S.teams.find(t => t.id !== S.user && !t.parent && S.leagues[t.lg].lv === 2); aiSummerPlan(ai, Object.values(S.players)); const sq = squad(ai.id);
+    ok(sq.length <= 26 && sq.filter(x => x.pos === 'POR').length >= 2, `plan de verano de la IA: ${sq.length} jugadores, ${sq.filter(x => x.pos === 'POR').length} porteros`);
+    ok(TARGET.POR === 3 && !!needOf(ai.id).g, 'la IA sabe qué línea necesita');
+    S.view = 'plantilla'; S.plTab = 'prof'; render(); ok(app.querySelector('.dgrid') && app.textContent.includes('Valor de la plantilla'), 'pestaña de profundidad');
+    S.view = 'liga'; S.ldTab = 'eco'; render(); ok(app.textContent.includes('Valor plantilla'), 'tabla del dinero de los clubes');
+    S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

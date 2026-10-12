@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {aiBuy,needOf,payFee} from './economy';
 import {isAffiliate,wageCheck} from './clubplus';
 import {bigTransfer} from './living';
 import {agentName,agentOf,inContacts} from './connected';
@@ -25,16 +26,10 @@ export function tlog(x){S.tlog=S.tlog||[];S.tlog.unshift(Object.assign({season:s
 export function aiTransfers(n){
  const all=Object.values(S.players),teams=S.teams.filter(t=>t.id!==S.user),myLg=uLg();let done=0;
  for(let k=0;k<n;k++){
-  const b=pick(teams);const sq=squad(b.id);if(sq.length>=27)continue;
-  const g=pick(['DEF','MED','DEL','DEF','MED','DEL','POR']),mine=sq.filter(p=>p.pos===g).map(p=>p.ovr).sort((x,y)=>y-x);
-  const need=mine.length?mine[Math.min(mine.length-1,g==='POR'?0:2)]:0,bRep=LG(b.lg).rep,maxVal=unit(bRep)*25;
-  let best=null,bs=-1;
-  for(let i=0;i<150;i++){const p=all[Math.floor(rnd()*all.length)];if(!p||p.pos!==g||p.team===b.id||p.team===S.user||p.loan||!S.players[p.id])continue;
-   if(p.ovr<=need+2||p.ovr>b.rep+5||p.age>31||p.value>maxVal)continue;if(p.team!==null&&LG(T(p.team).lg).rep>bRep+3)continue;
-   const sc=p.ovr-p.age*.2+rnd()*3;if(sc>bs){bs=sc;best=p;}}
-  if(!best)continue;
-  const from=best.team,fee=from===null?0:r2(best.value*(1+rnd()*.3));
-  setTeam(best,b.id);assignNum(best);best.contract=ri(2,4);best.cl=r2(best.value*(2+rnd()*3));best.wage=Math.max(best.wage,baseWage(best));
+  const b=pick(teams);if(b.parent)continue;const sq=squad(b.id);if(sq.length>=27)continue;
+  // cada club ficha según lo que le falta y el dinero que tiene en caja
+  const nd=needOf(b.id);if(nd.miss<=0&&nd.weak<1.5&&rnd()<.75)continue;
+  const r=aiBuy(b,nd.g,all);if(!r)continue;const best=r.p,from=r.from,fee=r.fee;
   if(from!==null)ensureSquad(from);
   const sq2=squad(b.id);if(sq2.length>25){const w=sq2.filter(p=>p!==best).sort((x,y)=>x.ovr-y.ovr)[0];if(w)setTeam(w,null);}
   if(fee)sellOnIn(best,fee);
@@ -71,7 +66,7 @@ export function makeBid(id,amt,opt={}){
 export function completeBuy(p,price,t){
  if(price>0)S.buysSeason=(S.buysSeason||0)+1;
  const best=Math.max(0,...squad(S.user).map(x=>x.ovr));if(p.ovr>best)fansReact(6,`ilusión por el fichaje de ${p.name}, el mejor jugador de la plantilla.`);
- S.chem=clamp(S.chem-3,20,100);p.sg=0;p.tf='auto';p.paid=price;
+ S.chem=clamp(S.chem-3,20,100);p.sg=0;p.tf='auto';p.paid=price;payFee(p.team,null,price);
  const from=p.team,now=applyDeal(p,price,from,(S.neg[p.id]||{}).deal);S.budget=r3(S.budget-now-(t.bonus||0)-agentFee(p,price));setTeam(p,S.user);p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;p.hap=clamp(72+(ROLES[t.role].l>=ROLES[expRole(p)].l?6:-6),0,100);p.req=0;p.prom=null;p.energy=Math.max(p.energy,80);assignNum(p);
  if(from!==null)ensureSquad(from);setAdapt(p);if(!p.ph||!p.ph.length)p.ph=[[seasonLabel(),p.ovr]];
  S.short=S.short.filter(x=>x!==p.id);delete S.neg[p.id];
@@ -136,7 +131,7 @@ export function sell(id,son){
  const idol=squad(S.user).sort((x,y)=>y.ovr-x.ovr).slice(0,2).includes(p)||p.goals>=10;
  if(!S.rec)S.rec={};if(!S.rec.sell||o.amount>S.rec.sell.fee)S.rec.sell={name:p.name,fee:o.amount,season:seasonLabel()};tlog({name:p.name,pid:p.id,from:S.user,to:o.team,fee:o.amount});
  if(p.paid&&o.amount>=p.paid*5&&p.paid>=.01)unlock('gang');if(p.home&&o.amount>=2)unlock('neg');
- S.budget=r3(S.budget+o.amount);sellOnOut(p,o.amount);if(son)p.son={team:S.user,pct:SON_PCT};setTeam(p,o.team);assignNum(p);p.req=0;p.prom=null;p.cl=r2(p.value*(2+rnd()*2));
+ S.budget=r3(S.budget+o.amount);payFee(null,o.team,o.amount);sellOnOut(p,o.amount);if(son)p.son={team:S.user,pct:SON_PCT};setTeam(p,o.team);assignNum(p);p.req=0;p.prom=null;p.cl=r2(p.value*(2+rnd()*2));
  const t=T(S.user),i=t.lineup.indexOf(id);if(i>=0)t.lineup[i]=null;fixLineup();
  news(`Venta: ${p.name} se marcha a ${T(o.team).name} por ${money(o.amount)}.`);
  if(idol)fansReact(-8,`la venta de ${p.name}, uno de los favoritos de la grada, no sienta bien.`);

@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {payFee,valueWeekly} from './economy';
 import {retosWeekly} from './retos';
 import {fifaWeek} from './nations';
 import {checkProm,meetWeekly} from './talks';
@@ -69,7 +70,7 @@ export function clauseWeekly(){
  const c=squad(S.user).filter(p=>!p.loan&&p.cl&&p.cl<p.value*1.7&&p.ovr>=my);if(!c.length)return;const p=pick(c);
  const buyers=S.teams.filter(t=>t.id!==S.user&&LG(t.lg).rep>=my&&t.rep>=p.ovr-4);if(!buyers.length||rnd()>.35)return;const t=pick(buyers);
  if(squad(S.user).length<=16)return;
- const paid=p.cl;S.budget=r3(S.budget+paid);sellOnOut(p,paid);setTeam(p,t.id);assignNum(p);p.cl=r2(p.value*(2+rnd()*2));p.req=0;p.prom=null;const tm=T(S.user),i=tm.lineup.indexOf(p.id);if(i>=0)tm.lineup[i]=null;fixLineup();
+ const paid=p.cl;S.budget=r3(S.budget+paid);payFee(null,t.id,paid);sellOnOut(p,paid);setTeam(p,t.id);assignNum(p);p.cl=r2(p.value*(2+rnd()*2));p.req=0;p.prom=null;const tm=T(S.user),i=tm.lineup.indexOf(p.id);if(i>=0)tm.lineup[i]=null;fixLineup();
  news(`${t.name} paga la cláusula de ${p.name} (${money(paid)}) y se lo lleva.`,'bad');
 }
 export const FOCUS={eq:{n:'Equilibrado',d:'Mejora lo propio de cada posición.',at:null,g:1},ata:{n:'Ataque',d:'Remate, regate y cabezazo.',at:['tir','reg','cab'],g:1.05},def:{n:'Defensa',d:'Entradas, colocación y cabezazo.',at:['def','col','cab'],g:1.05},tec:{n:'Técnica',d:'Pase, regate y visión.',at:['pas','reg','vis'],g:1.05},fis:{n:'Físico',d:'Velocidad, resistencia y fuerza. Mejor recuperación.',at:['vel','res','fis'],g:1,rec:.05},tac:{n:'Táctica y química',d:'Sube la química y el dominio de la formación. Mejora poco a los jugadores.',at:null,g:.4},des:{n:'Descanso',d:'Recuperan mucha energía. No mejoran.',at:null,g:0,rec:.2}};
@@ -112,7 +113,7 @@ export function processWeek(){
  S.fin.push({wk:wk+1,tv,tix,spo,shop,wages});
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- scoutsWeekly();scoutingWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();retosWeekly(home);agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ scoutsWeekly();scoutingWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(S.week===4||S.week===22?70:28);
  if(S.week===4||S.week===22)news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');

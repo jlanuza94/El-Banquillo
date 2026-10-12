@@ -93,6 +93,25 @@ for (let c = 0; c < NC; c++) {
   careers.push(log);
   console.log(`  ${log.club.padEnd(26)} ${log.lg}ª · ` + log.seasons.map(s => s.fired ? `DESPEDIDO en la jornada ${s.wk}` : `${s.pos}º [fuerza ${s.expRank}º] (${s.obj}${s.ok ? ', cumplido' : ''}) conf ${s.conf} €${s.budget}M`).join(' → '));
 }
+// 4. Economía del mundo a largo plazo: caja de los clubes, plantillas y valores durante varias temporadas
+{
+  const NS = +(process.argv[5] || 4);
+  for (const x of [...slots]) await deleteSlot(x.id);
+  buildWorld(777); pickTeam(S.teams.find(t => S.leagues[t.lg].lv === 2).id); S.pre.left = 0;
+  console.log(`\nEconomía del mundo (${NS} temporadas)`);
+  const med = a => { const v = a.slice().sort((x, y) => x - y); return v.length ? v[Math.floor(v.length / 2)] : 0; };
+  for (let s = 0; s <= NS; s++) {
+    const ai = S.teams.filter(t => t.id !== S.user && !t.parent), byLv = [0, 1, 2, 3, 4].map(lv => ai.filter(t => S.leagues[t.lg].lv === lv));
+    const cash = byLv.map(ts => ts.length ? `${med(ts.map(t => t.cash ?? 0)).toFixed(2)}` : '-').join(' / ');
+    const neg = ai.filter(t => (t.cash ?? 0) < 0).length, sizes = ai.map(t => squad(t.id).length), gk = ai.filter(t => squad(t.id).filter(p => p.pos === 'POR').length >= 2).length;
+    const vals = Object.values(S.players).filter(p => p.team !== null).map(p => p.value).sort((a, b) => b - a);
+    const top1 = S.leagues.filter(L => L.lv === 0).map(L => { const ts = S.teams.filter(t => t.lg === L.id).map(t => strength(t.id)).sort((a, b) => b - a); return ts[0] - ts[ts.length - 1]; });
+    row(`Temporada ${s}`, `caja mediana por división (1ª/2ª/3ª/4ª/5ª) ${cash} M · en rojo ${neg} · plantilla ${Math.min(...sizes)}-${Math.max(...sizes)} (med ${med(sizes)}) · con 2+ porteros ${gk}/${ai.length} · valor máx ${vals[0].toFixed(1)} M, mediano ${med(vals).toFixed(3)} · diferencia de fuerza en 1ª ${(med(top1) / 10).toFixed(2)} · fuerza mediana 1ª/5ª ${(med(ai.filter(t => S.leagues[t.lg].lv === 0).map(t => strength(t.id))) / 10).toFixed(2)}/${(med(ai.filter(t => S.leagues[t.lg].lv === 4).map(t => strength(t.id))) / 10).toFixed(2)}`);
+    if (s === NS) break;
+    await simLoop('season', false, { stopped: () => false, progress: () => {}, yield: async () => {} });
+    if (S.jobless) takeJob(S.jobless.offers[0]); else newSeason();
+  }
+}
 const sacked = careers.reduce((a, c) => a + c.seasons.filter(s => s.fired).length, 0);
 { const d = careers.flatMap(c => c.seasons.filter(s => !s.fired).map(s => s.pos - s.expRank)); console.log(`\n  Puesto real menos puesto por fuerza (media): ${(d.reduce((a, b) => a + b, 0) / d.length).toFixed(1)}`); }
 console.log(`\n  Despidos: ${sacked} de ${NC * 2} temporadas`);

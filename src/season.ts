@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {aiSummerPlan,clubSeasonFinance,crisisSales} from './economy';
 import {matchFx} from './replay';
 import {retosNewSeason,retosSeason} from './retos';
 import {ntOffers,summerTournaments} from './nations';
@@ -125,7 +126,7 @@ export function seasonSummary(){
 export function newSeason(){
  const sm=seasonSummary(),tabs=S.leagues.map(L=>table(L.id));
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
- const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);
+ const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);
  seasonAwards();
  // hall of fame
  {const h={season:seasonLabel(),lg:COUNTRIES.map((C,c)=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}
@@ -157,7 +158,7 @@ export function newSeason(){
   p.loanOk=0;p.lpj=0;p.lmt=0;
   if(ev&&(mine||p.home))devNews.push([p,ev]);
   if(p.st&&p.st.pj&&p.team!==null&&(p.team===S.user||T(p.team).lg===uLg()||(p.hist&&p.hist.length))){p.hist=(p.hist||[]).concat([[seasonLabel(),T(p.team).short,p.st.pj,p.st.g,p.st.a,Math.round(p.st.rs/p.st.pj*10)/10]]).slice(-8);}
-  p.st=newSt();
+  p.lf=p.st&&p.st.pj>=10?Math.round(p.st.rs/p.st.pj*100)/100:0;p.st=newSt();
   if(p.team!==null)p.contract--;
   setValue(p);
   if(p.team===S.user||p.home){p.ph=(p.ph||[]).concat([[seasonLabel(S.seasonN+1),p.ovr]]).slice(-12);}
@@ -173,16 +174,15 @@ export function newSeason(){
   else{p.team=null;p.contract=0;}});
  dirty();
  // AI clubs renew a few players to stay competitive in their league
+ const allP=Object.values(S.players);
  S.teams.forEach(t=>{
-  if(t.id!==S.user){t.rep=t.rep*.6+LG(t.lg).rep*.4+gauss();
-   const sq=squad(t.id).sort((a,b)=>a.ovr-b.ovr);sq.slice(0,Math.max(0,sq.length-18)).forEach(p=>delete S.players[p.id]);if(RT.SQ&&RT.SQ[t.id])RT.SQ[t.id]=RT.SQ[t.id].filter(p=>S.players[p.id]);RT.keyCache=null;
-   for(let k=0;k<3;k++){const p=genPlayer(pick(['DEF','MED','DEL','MED']),t.rep,t.id);assignNum(p);}
-   t.lineup=[];}
+  if(t.id!==S.user&&!t.parent){t.rep=t.rep*.75+LG(t.lg).rep*.25+gauss()*.6;aiSummerPlan(t,allP);RT.keyCache=null;t.lineup=[];}
+  else if(t.id!==S.user){t.lineup=[];}
   ensureSquad(t.id);
  });
  const leftAc=S.academy.filter(p=>p.age+1>=19).map(p=>p.name);S.academy=S.academy.filter(p=>p.age+1<19);S.academy.forEach(p=>p.age++);
  crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();const youth=academyIntake(3);setupYouth();genScoutPool();aiTransfers(160);
- genFreeAgents();
+ genFreeAgents();crisisSales(poorClubs);
  S.short=S.short.filter(id=>PL(id));
  S.seasonN++;setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
  devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${(p.ovr/10).toFixed(1)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});

@@ -1,5 +1,6 @@
 /* El Banquillo · views/market.js — Pantallas del mercado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {trendTag} from '../economy';
 import {esc,money,plain} from '../core';
 import {ATTRS,COUNTRIES,LV_NAMES,AT_NAME,AT_SH,POS_ORD,SPN,posChip} from '../data';
 import {RT,LG,PL,S,T,crest,lgName,pBadge,rt,seasonLabel,squad} from '../state';
@@ -10,7 +11,7 @@ import {attrCells,attrHead,clubCell,nameBtn,pBadgeS,potTxt} from './common';
 import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
 export function marketRow(p){
  const pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id);
- return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="n">${p.age}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${attrCells(p)}<td>${contractTxt(p)}</td><td class="n">${money(pr)}</td>
+ return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="n">${p.age}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${attrCells(p)}<td>${contractTxt(p)}</td><td class="n">${money(pr)}${trendTag(p)}</td>
  <td class="r">${no?'<span class="tag" title="No quiere jugar en tu liga">No vendría</span>':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">Ofertar</button>${p.team!==null?`<button class="btn sm" data-a="loan" data-id="${p.id}">Cesión</button>`:''}${knowledge(p)<EXACT?`<button class="btn sm" data-a="scout" data-id="${p.id}" title="Pedir un informe">Ojear</button>`:''}</span>`}</td></tr>`;
 }
 export function mkList(){
@@ -19,7 +20,7 @@ export function mkList(){
  if(mk.tab==='sell'){
   const sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr);
   return `<div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Valor</th><th class="r">Sueldo/sem</th><th>Contrato</th><th></th></tr></thead><tbody>
-  ${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${money(p.value)}</td><td class="n">${money(p.wage)}</td><td>${contractTxt(p)}</td><td class="r">${p.loan?'':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="sell" data-id="${p.id}">Buscar oferta</button><button class="btn sm" data-a="loanout" data-id="${p.id}">Ceder</button><button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button></span>`}</td></tr>`).join('')}</tbody></table></div>`;
+  ${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td class="n">${money(p.wage)}</td><td>${contractTxt(p)}</td><td class="r">${p.loan?'':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="sell" data-id="${p.id}">Buscar oferta</button><button class="btn sm" data-a="loanout" data-id="${p.id}">Ceder</button><button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button></span>`}</td></tr>`).join('')}</tbody></table></div>`;
  }
  const head=`<thead><tr><th></th><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Pot.</th>${attrHead()}<th>Contrato</th><th class="r">Precio</th><th></th></tr></thead>`;
  if(mk.tab==='short'){
