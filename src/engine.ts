@@ -129,7 +129,7 @@ export function card(m,s,straight){
 }
 /** Córners (con su lanzador y los rematadores), faltas y pases de cada minuto. */
 /** Ajustes del motor (las pruebas los cambian para medir su efecto). */
-export const TUNE={corner:.0045,open:.93};
+export const TUNE={corner:.0045,open:.96};
 export function extraStats(m,xs,live){
  const poss=clamp(m.possSum/Math.max(1,m.min),.2,.8);
  ['h','a'].forEach(s=>{const o=s==='h'?'a':'h',st=m.st[s];['co','fo','pa','pc'].forEach(k=>{if(st[k]==null)st[k]=0;});
