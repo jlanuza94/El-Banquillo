@@ -22,7 +22,7 @@ const args = new Set(process.argv.slice(2));
 const read = f => readFileSync(join(ROOT, f), 'utf8');
 
 const FONTS = 'https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap';
-const CSS_FILES = ['base.css', 'game.css', 'layout.css'];
+const CSS_FILES = ['base.css', 'game.css', 'layout.css', 'polish.css'];
 
 const common = { bundle: true, charset: 'utf8', target: 'es2020', logLevel: 'warning', legalComments: 'none' };
 

@@ -1,0 +1,72 @@
+/* El Banquillo · polish.css — Acabado visual: pestañas, menú, paneles, tablas y barra superior.
+ * Va la última: afina lo de base.css, game.css y layout.css sin cambiar la estructura. */
+
+/* ---------- Pestañas de cada sección (píldoras) ---------- */
+:is(.seg.pltabs,.seg:has(>button[data-a$="-tab"]),.seg:has(>button[data-a="liga-lv"])){display:flex;gap:4px;padding:4px;border:0;border-radius:999px;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line);overflow-x:auto;scrollbar-width:none;max-width:100%;
+ -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);padding-right:28px}
+:is(.seg.pltabs,.seg:has(>button[data-a$="-tab"]),.seg:has(>button[data-a="liga-lv"]))::-webkit-scrollbar{display:none}
+:is(.seg.pltabs,.seg:has(>button[data-a$="-tab"]),.seg:has(>button[data-a="liga-lv"])) button{flex:none;border:0!important;border-radius:999px;padding:7px 14px;font-family:var(--f-num);font-weight:600;font-size:14px;letter-spacing:.04em;text-transform:none;color:var(--muted);background:transparent;white-space:nowrap;transition:background .15s,color .15s}
+:is(.seg.pltabs,.seg:has(>button[data-a$="-tab"]),.seg:has(>button[data-a="liga-lv"])) button:hover{color:var(--ink);background:rgba(127,127,127,.08)}
+:is(.seg.pltabs,.seg:has(>button[data-a$="-tab"]),.seg:has(>button[data-a="liga-lv"])) button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+
+/* ---------- Controles segmentados (mentalidad, cometido, intensidad…) ---------- */
+.seg:not(.pltabs):not(:has(>button[data-a$="-tab"])):not(:has(>button[data-a="liga-lv"])){border-radius:8px;border-color:var(--line);background:var(--surface2)}
+.seg:not(.pltabs):not(:has(>button[data-a$="-tab"])):not(:has(>button[data-a="liga-lv"])) button{font-size:13px;letter-spacing:.04em}
+.seg:not(.pltabs):not(:has(>button[data-a$="-tab"])):not(:has(>button[data-a="liga-lv"])) button[aria-pressed="true"]{background:var(--menu);color:#fff}
+:root[data-theme="dark"] .seg:not(.pltabs):not(:has(>button[data-a$="-tab"])):not(:has(>button[data-a="liga-lv"])) button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg:not(.pltabs):not(:has(>button[data-a$="-tab"])):not(:has(>button[data-a="liga-lv"])) button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}}
+
+/* ---------- Botones ---------- */
+.btn{border-radius:8px;transition:transform .08s,box-shadow .15s,background .15s}
+.btn:active{transform:translateY(1px)}
+.btn.sm{border-radius:7px}
+.btn.primary{box-shadow:0 1px 0 rgba(0,0,0,.15)}
+
+/* ---------- Paneles ---------- */
+.panel{border-radius:12px;border-color:var(--line);box-shadow:0 1px 2px rgba(20,35,25,.05),0 6px 18px rgba(20,35,25,.05)}
+.panel-h{align-items:center;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.panel-h h2{display:flex;align-items:center;gap:8px}
+.panel-h h2::before{content:"";width:4px;height:.9em;border-radius:2px;background:var(--accent);flex:none}
+.offer{border-radius:8px}
+.offer+.offer{border-top-color:var(--line)}
+
+/* ---------- Tablas: filas alternas y cabecera fija ---------- */
+.tbl table tbody tr:nth-child(even) td{background:rgba(127,127,127,.045)}
+.tbl table tbody tr:hover td{background:rgba(226,167,11,.08)}
+.tbl thead th{position:sticky;top:0;background:var(--surface);z-index:1;font-size:12px;letter-spacing:.06em}
+.tbl tr.me td{background:var(--hl)!important}
+
+/* ---------- Barra superior ---------- */
+.topbar .kpis{gap:6px}
+.topbar .kpi{border:0;background:var(--surface);border-radius:10px;padding:4px 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.topbar .kpi:first-child{padding-left:12px}
+.topbar .gsbtn,.topbar .thbtn{box-shadow:none;border-color:var(--line)}
+.contbtn{border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.18),0 4px 14px rgba(226,167,11,.25)}
+
+/* ---------- Menú lateral ---------- */
+aside.side .nitem{border-radius:10px;transition:background .15s}
+aside.side .nitem .sl{display:none}
+aside.side .ngroup .gt{letter-spacing:.14em}
+
+/* ---------- Móvil en horizontal: menú con iconos y nombre, pestañas grandes y legibles ---------- */
+@media (orientation:landscape) and (max-height:500px){
+ .app{grid-template-columns:calc(64px + env(safe-area-inset-left,0px)) minmax(0,1fr)}
+ aside.side{padding:6px 5px 8px calc(5px + env(safe-area-inset-left,0px));gap:6px}
+ aside.side .ngroup{gap:3px;padding-bottom:6px}
+ aside.side .nitem{flex-direction:column;gap:2px;padding:6px 0 5px;border-radius:12px;color:var(--menu-dim)}
+ aside.side .nitem svg{width:20px;height:20px}
+ aside.side .nitem .sl{display:block;font-family:var(--f-num);font-weight:600;font-size:10px;line-height:1;letter-spacing:.02em;max-width:56px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+ aside.side .nitem[aria-current="true"]{color:var(--accent-ink)}
+ aside.side .nitem .badge{top:1px;right:6px}
+ :is(.seg.pltabs,.seg:has(>button[data-a$="-tab"]),.seg:has(>button[data-a="liga-lv"])){margin-bottom:6px;padding:3px;padding-right:24px}
+ :is(.seg.pltabs,.seg:has(>button[data-a$="-tab"]),.seg:has(>button[data-a="liga-lv"])) button{padding:5px 12px;font-size:13px}
+ .seg:not(.pltabs):not(:has(>button[data-a$="-tab"])):not(:has(>button[data-a="liga-lv"])) button{padding:4px 9px;font-size:12px}
+ .panel{border-radius:10px;padding:9px 11px}
+ .panel-h{padding-bottom:6px;margin-bottom:8px}
+ .panel-h h2{font-size:17px}
+ .topbar .kpi{padding:2px 9px;border-radius:8px}
+ .topbar .kpi b{font-size:14px}
+ .contbtn{border-radius:10px;padding:4px 12px}
+ main .small.muted{line-height:1.35}
+ .tbl th,.tbl td{padding:4px 6px}
+}
