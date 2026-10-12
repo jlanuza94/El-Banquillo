@@ -1,9 +1,9 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {esc,fill} from '../core';
-import {MENT,TACS} from '../data';
+import {MENT,OIS,TACS} from '../data';
 import {PL,S,T,crest,lastNm,rt} from '../state';
-import {TALKS,bench} from '../engine';
+import {TALKS,bench,liveRatings} from '../engine';
 import {pitchHTML} from './common';
 export const ICON={goal:'<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#fff" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.6l2.6 1.9-1 3.1H6.4l-1-3.1z" fill="currentColor"/></svg>',
  yc:'<span class="ic yc" aria-label="Amarilla"></span>',red:'<span class="ic rc" aria-label="Roja"></span>',
@@ -30,6 +30,7 @@ export function matchView(){
   <div class="seg" aria-label="Velocidad">${[1,2,4].map(v=>`<button data-a="m-speed" data-v="${v}" aria-pressed="${m.speed===v}">x${v}</button>`).join('')}</div>
   <div class="seg" aria-label="Mentalidad">${Object.entries(MENT).map(([k,v])=>`<button data-a="m-ment" data-v="${k}" aria-pressed="${m.ment[us]===k}">${v.label}</button>`).join('')}</div>
   <label class="f"><span class="eyebrow">Estilo</span><select id="m-est">${Object.entries(TACS.est.o).map(([k,v])=>`<option value="${k}" ${m.tac[us].est===k?'selected':''}>${v}</option>`).join('')}</select></label><label class="f"><span class="eyebrow">Presión</span><select id="m-pre">${Object.entries(TACS.pre.o).map(([k,v])=>`<option value="${k}" ${m.tac[us].pre===k?'selected':''}>${v}</option>`).join('')}</select></label>
+  <div class="chips" aria-label="Instrucciones al rival">${Object.entries(OIS).map(([k,v])=>`<button class="btn sm ${m.oi&&m.oi[us]&&m.oi[us][k]?'dark':''}" data-a="m-oi" data-v="${k}" title="${esc(v.d)}" aria-pressed="${!!(m.oi&&m.oi[us]&&m.oi[us][k])}">${v.n}</button>`).join('')}</div>
   <button class="btn" data-a="m-subs" ${m.subs[us]>=5||m.min===0?'disabled':''}>Cambios ${m.subs[us]}/5</button><span class="spacer"></span><button class="btn" data-a="m-sim">Simular hasta el final</button>`;
  const feed=m.ev.slice().reverse().map(e=>`<div class="ev ${e.t==='goal'?'goal':e.t==='sys'?'sys':''}"><span class="m">${e.min}'</span><span>${ICON[e.t]||''}</span><span class="tx">${e.s?`<b>${T(m[e.s]).short}</b> · `:''}${esc(e.tx)}</span></div>`).join('')||`<div class="empty">${esc(H.name)} recibe a ${esc(A.name)}. Pulsa “Comenzar partido” cuando quieras.</div>`;
  const scorers=s=>m.ev.filter(e=>e.t==='goal'&&e.s===s).map(e=>`${lastNm(e.pid)} ${e.min}'`).join(', ');
@@ -41,9 +42,9 @@ export function matchView(){
  <div class="mn">${label}${m.agg?` · global ${m.score.h+m.agg[0]}-${m.score.a+m.agg[1]}`:''}${m.pen?` · pen. ${m.pen[0]}-${m.pen[1]}`:''}</div><div class="prog"><i style="width:${Math.min(100,m.min/m.end*100)}%"></i></div></div>
  ${S.v2d!==false?'<div class="p2d"><canvas id="pitch2d" width="800" height="512" aria-label="Vista del partido en 2D"></canvas></div>':''}
  <div class="mctl">${ctl}</div>
- <div class="grid"><section class="panel">${m.alert&&!m.done?`<div class="alert">${esc(m.alert)}</div>`:''}${talkP}${talkDone}${subsP}<div class="panel-h"><h2>Minuto a minuto</h2></div><div class="feed">${feed}</div></section>
+ <div class="grid"><section class="panel">${m.alert&&!m.done?`<div class="alert">${esc(m.alert)}</div>`:''}${m.adv&&!m.done?`<div class="negmsg" style="margin:0 0 10px"><b>${m.adv.min}'</b> · ${esc(m.adv.tx)}</div>`:''}${talkP}${talkDone}${subsP}<div class="panel-h"><h2>Minuto a minuto</h2></div><div class="feed">${feed}</div></section>
  <div class="stack"><section class="panel"><div class="panel-h"><h2>Estadísticas</h2></div>
   <div class="stat"><span>${poss}%</span><span class="c">Posesión</span><span class="r">${100-poss}%</span></div><div class="pbar"><i style="width:${poss}%;background:${H.c1}"></i><i style="width:${100-poss}%;background:${A.c1}"></i></div>
-  ${stat('Tiros',m.st.h.sh,m.st.a.sh)}${stat('A puerta',m.st.h.ot,m.st.a.ot)}${stat('Amarillas',m.st.h.yc,m.st.a.yc)}${stat('Rojas',m.st.h.rc,m.st.a.rc)}${stat('Cambios',m.subs.h,m.subs.a)}</section>
- <section class="panel"><div class="panel-h"><h2>Tu once</h2><span class="eyebrow">${m.f[us]} · ${MENT[m.ment[us]].label}</span></div>${pitchHTML(ut,m.lu[us],m.f[us],{roles:m.ro&&m.ro[us],en:m.en,rat:m.done?m.rat:null,mvp:m.mvp})}${m.done&&m.mvp?`<p class="small muted" style="margin:8px 0 0">Jugador del partido: <b>${esc(PL(m.mvp).name)}</b> (${esc(T(PL(m.mvp).team).name)}) · ${m.rat[m.mvp].toFixed(1)}</p>`:''}</section></div></div></div>`;
+  ${stat('Goles esperados (xG)',(m.st.h.xg||0).toFixed(2),(m.st.a.xg||0).toFixed(2))}${stat('Tiros',m.st.h.sh,m.st.a.sh)}${stat('A puerta',m.st.h.ot,m.st.a.ot)}${stat('Córners',m.st.h.co||0,m.st.a.co||0)}${stat('Faltas',m.st.h.fo||0,m.st.a.fo||0)}${stat('Pases buenos',(m.st.h.pa?Math.round(m.st.h.pc/m.st.h.pa*100):0)+'%',(m.st.a.pa?Math.round(m.st.a.pc/m.st.a.pa*100):0)+'%')}${stat('Amarillas',m.st.h.yc,m.st.a.yc)}${stat('Rojas',m.st.h.rc,m.st.a.rc)}${stat('Cambios',m.subs.h,m.subs.a)}</section>
+ <section class="panel"><div class="panel-h"><h2>Tu once</h2><span class="eyebrow">${m.f[us]} · ${MENT[m.ment[us]].label}</span></div>${pitchHTML(ut,m.lu[us],m.f[us],{roles:m.ro&&m.ro[us],en:m.en,rat:m.done?m.rat:m.min>0?liveRatings(m):null,mvp:m.mvp})}${m.done&&m.mvp?`<p class="small muted" style="margin:8px 0 0">Jugador del partido: <b>${esc(PL(m.mvp).name)}</b> (${esc(T(PL(m.mvp).team).name)}) · ${m.rat[m.mvp].toFixed(1)}</p>`:''}</section></div></div></div>`;
 }

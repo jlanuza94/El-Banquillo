@@ -2,7 +2,7 @@
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {seen} from '../scouting';
 import {esc,fill,money} from '../core';
-import {ATTRS,AT_NAME,AT_SH,COUNTRIES,FOOT,FORMS,GRP,MENT,ORDERS,PERS,POS_ORD,ROLES,SPN,SPXY,TAC0,TACS,TRAITS,W,newSt,posChip} from '../data';
+import {ATTRS,AT_NAME,AT_SH,COUNTRIES,FOOT,FORMS,GRP,MENT,OIS,ORDERS,PERS,POS_ORD,ROLES,SPN,SPXY,TAC0,TACS,TRAITS,W,newSt,posChip} from '../data';
 import {PL,S,T,atCell,available,lgName,pBadge,qBadge,qc,seasonLabel,squad} from '../state';
 import {news} from '../world';
 import {eff,famOf,langOf,leaders,prof,slotsOf,table,teamPower,userRoles} from '../tactics';
@@ -69,8 +69,10 @@ export function tacticasView(){
  const sp=`<section class="panel"><div class="panel-h"><h2>Capitán y balón parado</h2></div><div class="filters">
  <label class="f"><span class="eyebrow">Capitán</span>${sel('t-cap',t.cap||'',[['','Automático'],...pl])}</label>
  <label class="f"><span class="eyebrow">Penaltis</span>${sel('t-pk',t.pk||'',[['','El de mejor tiro'],...pl])}</label>
- <label class="f"><span class="eyebrow">Faltas directas</span>${sel('t-fk',t.fk||'',[['','El de mejor pase'],...pl])}</label></div>
- <p class="small muted" style="margin:0">Un capitán Líder mejora un poco al equipo. Los penaltis y las faltas se deciden por el tiro (y el pase en las faltas) del lanzador; el rasgo «Especialista a balón parado» ayuda.</p></section>`;
+ <label class="f"><span class="eyebrow">Faltas directas</span>${sel('t-fk',t.fk||'',[['','El de mejor pase'],...pl])}</label>
+ <label class="f"><span class="eyebrow">Córners</span>${sel('t-ck',t.ck||'',[['','El de mejor pase'],...pl])}</label></div>
+ <p class="small muted" style="margin:0">Un capitán Líder mejora un poco al equipo. Los penaltis y las faltas se deciden por el tiro (y el pase en las faltas) del lanzador; los córners, por el pase del lanzador y los rematadores altos o cabeceadores. El rasgo «Especialista a balón parado» ayuda.</p></section>`;
+ const oiP=`<section class="panel"><div class="panel-h"><h2>Instrucciones al rival</h2><span class="eyebrow">También durante el partido</span></div>${Object.entries(OIS).map(([k,v])=>`<div class="offer"><span class="t"><b>${v.n}</b><br><span class="small muted">${esc(v.d)}</span></span><button class="btn sm ${(t.oi||{})[k]?'dark':''}" data-a="oi" data-v="${k}" aria-pressed="${!!(t.oi||{})[k]}">${(t.oi||{})[k]?'Activada':'Activar'}</button></div>`).join('')}</section>`;
  const ords=`<section class="panel"><div class="panel-h"><h2>Órdenes individuales</h2><span class="eyebrow">Once titular</span></div>
  ${xi.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th>Orden</th></tr></thead><tbody>${xi.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td><select data-ord="${p.id}" aria-label="Orden para ${esc(p.name)}">${Object.entries(ORDERS).map(([k,v])=>`<option value="${k}" ${(t.orders||{})[p.id]===k?'selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Primero elige tu once en Plantilla.</div>'}
  <p class="small muted" style="margin:8px 0 0">Subir al ataque: más ocasiones a cambio de dejar huecos. Libertad creativa: más goles y asistencias para ese jugador. Marcar a su estrella: su mejor jugador marca y asiste menos. Quédate atrás: más seguridad, menos ataque.</p></section>`;
@@ -79,7 +81,7 @@ export function tacticasView(){
  ${sl.map((s,i)=>{const p=PL(t.lineup[i]);return `<div class="offer" style="align-items:flex-start"><span class="pos ${GRP[s]}">${s}</span><span class="t">${p?nameBtn(p):'<span class="muted">Vacío</span>'}${p?' '+qBadge(eff(p,s,null,ro[i])/10):''}
   <select data-role="${i}" aria-label="Rol del puesto ${s}" style="display:block;margin-top:4px;max-width:100%">${roleList(s).map(r=>`<option value="${r[0]}" ${ro[i]===r[0]?'selected':''}>${esc(r[1])}${p?' · '+(eff(p,s,null,r[0])/10).toFixed(1):''}</option>`).join('')}</select><span class="small muted">${esc(roleDef(s,ro[i])[4])}</span></span></div>`;}).join('')}
  <p class="small muted" style="margin:8px 0 0">Cada rol pide unos atributos: un falso nueve necesita pase y regate; un delantero de área, tiro y físico. Los roles ofensivos dan más ocasiones a cambio de dejar huecos atrás. Al cambiar de formación se mantienen los roles que encajan.</p></section>`;
- return `<div class="grid"><div class="stack">${inst}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${sp}${ords}</div></div>`;
+ return `<div class="grid"><div class="stack">${inst}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${oiP}${sp}${ords}</div></div>`;
 }
 export function plantillaView(){
  const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=S.plTab||'xi';

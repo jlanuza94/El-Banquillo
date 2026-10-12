@@ -20,7 +20,9 @@ import { seasonLabel, uLg } from '../src/state';
 import '../src/events';
 import { hireStaff, migrateCrew } from '../src/staff';
 import { queueScout, scoutingWeekly, seen } from '../src/scouting';
-import { squad } from '../src/state';
+import { squad, T } from '../src/state';
+import { TUNE, createMatch, liveRatings, step } from '../src/engine';
+import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
 
 const seasons = +(process.argv[2] || 1);
@@ -84,6 +86,23 @@ const app = document.getElementById('app')!;
     const keep = t.formation; setFormation('3-5-2'); ok(t.roles.length === 11, 'roles al cambiar de formación'); setFormation(keep);
     S.view = 'tacticas'; render(); ok(app.querySelector('[data-role]'), 'panel de roles en tácticas');
   }
+  {
+    // Mismos partidos (IA contra IA, sin tu equipo) con y sin las novedades del motor, para que no cambie el número de goles.
+    const N = +(process.env.NLIVE || 300), pairs = [];
+    const ts = S.teams.filter(t => t.id !== S.user);
+    for (let i = 0; i < N; i++) { const a = ts[(i * 7919) % ts.length], b = S.teams.filter(t => t.lg === a.lg && t.id !== a.id && t.id !== S.user)[i % 18]; pairs.push([a.id, b.id]); }
+    const run = (tune) => { Object.assign(TUNE, tune); let g = 0, co = 0, xgs = 0, fo = 0, cg = 0;
+      for (const [h, a] of pairs) { S.fr.push(mkTie(h, a)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; while (!m.done) step(m);
+        g += m.score.h + m.score.a; co += m.st.h.co + m.st.a.co; xgs += m.st.h.xg + m.st.a.xg; fo += m.st.h.fo + m.st.a.fo; }
+      S.fr = []; return { g: g / N, co: co / N, xg: xgs / N, fo: fo / N }; };
+    const def = { ...TUNE }, old = run({ corner: 0, open: 1 }), now = run(def); Object.assign(TUNE, def);
+    console.log(`     motor: antes ${old.g.toFixed(2)} goles/partido, ahora ${now.g.toFixed(2)} (xG ${now.xg.toFixed(2)}, ${now.co.toFixed(1)} córners, ${now.fo.toFixed(1)} faltas)`);
+    ok(Math.abs(now.g - old.g) < .3 && now.co > 6 && now.co < 14 && Math.abs(now.xg - now.g) / now.g < .3, 'el partido en directo mantiene los goles y da estadísticas razonables');
+    // y un partido tuyo en directo con consejos del segundo
+    T(S.user).oi = { ban: true, dur: true }; S.fr.push(mkTie(S.user, pairs[0][0])); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; let tips = 0;
+    while (!m.done) { step(m); if (m.adv && m.adv.min === m.min) tips++; } S.fr = []; T(S.user).oi = {};
+    ok(tips >= 3 && Object.keys(liveRatings(m)).length >= 22, `consejos del segundo (${tips}) y notas en directo`);
+  }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
@@ -104,7 +123,7 @@ const app = document.getElementById('app')!;
 
   // Guardado en IndexedDB y varias partidas
   saveNow(); await flush();
-  const week = S.week, club = S.teams[S.user].name;
+  const week = S.week, club = S.teams[S.user].name, me = S.user;
   const loaded = await loadAsync();
   ok(loaded && loaded.slot === 1 && loaded.week === week && loaded.teams[loaded.user].name === club, 'la partida se guarda y se carga');
   ok(slots.length === 1, 'aparece en «Tus partidas»');
@@ -112,7 +131,7 @@ const app = document.getElementById('app')!;
   ok(app.textContent!.includes(club), 'la pantalla de inicio muestra la partida guardada');
   pickTeam(S.teams.find(t => t.id !== team)!.id); saveNow(); await flush();
   ok(S.slot === 2 && slots.length === 2, 'segunda partida en otra ranura');
-  ok((await loadSlot(1))?.teams[team] && (await loadSlot(1)).user === team, 'la primera partida sigue intacta');
+  ok((await loadSlot(1))?.user === me, 'la primera partida sigue intacta');
   await deleteSlot(2);
   ok(slots.length === 1 && !(await loadSlot(2)), 'se puede borrar una partida');
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');

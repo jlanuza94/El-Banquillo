@@ -74,6 +74,10 @@ export const TACS={pre:{n:'Presión',o:{baj:'Baja',med:'Media',alt:'Alta'},d:'Al
  est:{n:'Estilo',o:{equ:'Equilibrado',pos:'Posesión',dir:'Directo',con:'Contragolpe'},d:'Posesión: castiga la presión baja. Directo: bueno con delanteros fuertes. Contragolpe: mortal contra líneas altas y rivales ofensivos.'}};
 export const TAC0={pre:'med',lin:'med',rit:'nor',anc:'nor',est:'equ'};
 export const ORDERS={'':'Sin orden',sube:'Sube al ataque',libre:'Libertad creativa',marca:'Marcar a su estrella',fija:'Quédate atrás'};
+/** Instrucciones al rival (se aplican a todo su equipo). */
+export const OIS={ban:{n:'Cerrar las bandas',d:'Frena a los rivales que atacan por fuera, a cambio de un poco menos de ataque propio.'},
+ sal:{n:'Presionar su salida',d:'Les quita el balón y les hace fallar si sus defensas no saben sacarlo jugado. Tus jugadores se cansan más.'},
+ dur:{n:'Entradas duras',d:'Les cuesta más crear, pero verás más faltas y tarjetas.'}};
 export const MENT={def:{own:.78,opp:.84,label:'Defensiva'},bal:{own:1,opp:1,label:'Equilibrada'},att:{own:1.22,opp:1.15,label:'Ofensiva'}};
 export const POS_ORD={POR:0,DEF:1,MED:2,DEL:3};
 export const POS_NAME={POR:'Portero',DEF:'Defensa',MED:'Centrocampista',DEL:'Delantero'};
