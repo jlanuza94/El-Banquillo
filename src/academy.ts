@@ -32,7 +32,7 @@ export function academyWeekly(){S.academy.forEach(p=>{const pl=p.ypw;p.ypw=0;if(
 export function promoteYouth(id){
  const i=S.academy.findIndex(p=>p.id===id);if(i<0)return;if(squad(S.user).length>=30)return toast('Tu plantilla ya tiene 30 jugadores.');
  {const wc=wageCheck(baseWage(S.academy[i]));if(wc)return toast(wc);}
- const p=S.academy.splice(i,1)[0];p.id='p'+(S.nextId++);p.team=S.user;p.contract=3;p.wage=baseWage(p);p.energy=100;p.role='jo';p.hap=80;p.home=1;p.ph=[[seasonLabel(),p.ovr]];S.players[p.id]=p;dirty();assignNum(p);
+ const p=S.academy.splice(i,1)[0];p.id='p'+(S.nextId++);p.team=S.user;p.contract=3;p.wage=baseWage(p);p.energy=100;p.role='jo';p.hap=80;p.home=1;p.ph=[[seasonLabel(),p.ovr]];p.h0=[p.ovr,seasonLabel(),0];S.players[p.id]=p;dirty();assignNum(p);
  news(`${p.name} sube de la cantera al primer equipo.`,'good');toast(`${p.name} ya está en el primer equipo.`);
 }
 export function signProspect(id){

@@ -1,5 +1,7 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {recallLoan,setDev} from './devplus';
+import {delSearch,loadSearch,saveSearch,searchName,startMission,stopMission} from './scoutplus';
 import {PRESETS,applyPreset} from './tactics2';
 import {userPos} from './positions';
 import {removeFromTeam,setSub,subsOf} from './tactics';
@@ -73,6 +75,8 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;document.querySelector('main')?.scrollTo?.(0,0);break;
+  case'loan-recall':{const err=recallLoan(d.id);if(err)toast(err);break;}
+  case'dev-set':break;
   case'preset':applyPreset(d.v);toast('Sistema cargado: '+PRESETS[d.v].n+'.');break;
   case'pos-sel':S.posSel=+d.i;break;
   case'duty':{const t=T(S.user);userPos(slotsOf(t.formation));t.duty[+d.i]=d.v;break;}
@@ -201,6 +205,11 @@ document.addEventListener('click',e=>{
   case'cup-open':S.modal=null;S.view='copas';S.cupTab='cup';S.cupC=null;break;
   case'cwc-open':S.modal=null;S.view='copas';S.cupTab='cwc';break;
   case'mk-tab':S.mk.tab=d.v;S.mk.limit=40;break;
+  case'mk-save':saveSearch(searchName());toast('Búsqueda guardada.');break;
+  case'mk-load':loadSearch(+d.i);break;
+  case'mk-del':delSearch(+d.i);break;
+  case'mis-go':{const F=S.misF||{},err=startMission(d.id,F.misC??(S.mk.c!=='ALL'&&S.mk.c!=='FA'?S.mk.c:wcs()[0]),F.misG||'ALL',F.misA||'21',F.misW||'4');if(err)toast(err);else toast('Ojeador en camino.');break;}
+  case'mis-stop':stopMission(d.id);break;
   case'mk-pos':S.mk.pos=d.v;S.mk.limit=40;break;
   case'mk-more':S.mk.limit+=40;break;
   case'fav':{const i=S.short.indexOf(d.id);if(i>=0)S.short.splice(i,1);else{S.short.push(d.id);toast('Añadido a Seguimiento.');}break;}
@@ -267,7 +276,7 @@ document.addEventListener('change',e=>{
    if(e.target.id==='modFile'){RT.mod=String(rd.result);try{const o=JSON.parse(RT.mod);if(o&&o.seed!=null)RT.seed=o.seed;}catch(err){}setS(null);render();toast(`Mod «${f.name}» cargado: se aplicará al mundo nuevo.`);return;}
    S.ioMsg=importData(String(rd.result));save();render();};rd.readAsText(f);return;}
  if(!S||S.user==null)return;const id=e.target.id,v=e.target.value;
- const map={mksp:'sp',mkc:'c',mklv:'lv',mkmin:'min',mkage:'age',mkmax:'max',mksort:'sort'};
+ const map={mksp:'sp',mkc:'c',mklv:'lv',mkmin:'min',mkage:'age',mkmax:'max',mksort:'sort',mknat:'nat',mkwage:'wage',mkpot:'pot',mkatk:'atk',mkatv:'atv'};
  if(id==='formSel'){setFormation(v);S.sel=null;}
  else if(id==='cupC'){S.cupC=+v;}
  else if(id==='hiC'){S.hiC=+v;}
@@ -278,12 +287,16 @@ document.addEventListener('change',e=>{
  else if(e.target.dataset&&e.target.dataset.job){const sc=S.scouts.find(x=>x.id===e.target.dataset.job);if(sc)sc.job=v;}
  else if(e.target.dataset&&e.target.dataset.reg){const sc=S.scouts.find(x=>x.id===e.target.dataset.reg);if(sc)sc.reg=+v;}
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}
+ else if(e.target.dataset&&e.target.dataset.dev){const [pid,k]=e.target.dataset.dev.split('|');setDev(pid,k,v);}
  else if(id==='rotTh'){S.rot={th:+v};}
  else if(id==='awC'){const c=+v,cur=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}
  else if(map[id]){S.mk[map[id]]=v;S.mk.limit=40;}
  else if(id==='mkok'){S.mk.ok=e.target.checked;S.mk.limit=40;}
  else if(id==='mklast'){S.mk.last=e.target.checked;S.mk.limit=40;}
+ else if(id==='mkrep'){S.mk.rep=e.target.checked;S.mk.limit=40;}
+ else if(id==='mkgem'){S.mk.gem=e.target.checked;S.mk.limit=40;}
+ else if(id==='misC'||id==='misG'||id==='misA'||id==='misW'){S.misF=S.misF||{};S.misF[id]=v;}
  else return;
  save();render();
 });

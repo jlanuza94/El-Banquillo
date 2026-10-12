@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {markArrival} from './devplus';
 import {transferRecord} from './worldhist';
 import {applyTerms,bonusFields,bonusWeekly,counters,readBonus} from './negotiate';
 import {aiBuy,needOf,payFee} from './economy';
@@ -70,7 +71,7 @@ export function completeBuy(p,price,t){
  const best=Math.max(0,...squad(S.user).map(x=>x.ovr));if(p.ovr>best)fansReact(6,`ilusión por el fichaje de ${p.name}, el mejor jugador de la plantilla.`);
  S.chem=clamp(S.chem-3,20,100);p.sg=0;p.tf='auto';p.paid=price;payFee(p.team,null,price);
  const from=p.team,now=applyDeal(p,price,from,(S.neg[p.id]||{}).deal);S.budget=r3(S.budget-now-(t.bonus||0)-agentFee(p,price));setTeam(p,S.user);p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;p.hap=clamp(72+(ROLES[t.role].l>=ROLES[expRole(p)].l?6:-6),0,100);p.req=0;p.prom=null;p.energy=Math.max(p.energy,80);assignNum(p);
- if(from!==null)ensureSquad(from);setAdapt(p);if(!p.ph||!p.ph.length)p.ph=[[seasonLabel(),p.ovr]];
+ if(from!==null)ensureSquad(from);setAdapt(p);if(!p.ph||!p.ph.length)p.ph=[[seasonLabel(),p.ovr]];markArrival(p);
  S.short=S.short.filter(x=>x!==p.id);delete S.neg[p.id];
  if(!S.rec)S.rec={};if(price>0&&(!S.rec.buy||price>S.rec.buy.fee))S.rec.buy={name:p.name,fee:price,season:seasonLabel()};tlog({name:p.name,pid:p.id,from,to:S.user,fee:price});
  news(`Fichaje: ${p.name} (${SPN[p.sp].toLowerCase()}, ${rt(p)}) llega por ${money(price)}${from!==null?' desde '+T(from).name:' como agente libre'}. Contrato hasta junio de ${endYear(p)}, rol: ${ROLES[t.role].n.toLowerCase()}.`,'good');

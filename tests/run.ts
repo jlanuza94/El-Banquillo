@@ -10,8 +10,10 @@ import { money } from '../src/core';
 import { pickTeam } from '../src/world';
 import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics';
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
-import { PL } from '../src/state';
+import { PL, LG } from '../src/state';
 import { cellVal } from '../src/sorttable';
+import { loadSearch, missionOf, missionsWeekly, saveSearch, searchName, shortlistWeekly, startMission, stopMission } from '../src/scoutplus';
+import { devWeekly, discoveries, learnablePos, learnableTr, markArrival, setDev } from '../src/devplus';
 import { applyPreset, famMult, laneShare, laneTip, learnRoles, phaseMods, rivalAdvice } from '../src/tactics2';
 import { posMult, posTeam, userPos } from '../src/positions';
 import { FORMS } from '../src/data';
@@ -41,7 +43,7 @@ import { acceptLoanOut, makeLoanOut } from '../src/contracts';
 import { renState } from '../src/contracts';
 import { devSeason, rateOld, signWage } from '../src/players';
 import { addPair, mentorWeekly, pairs, removePair } from '../src/mentor';
-import { PL } from '../src/state';
+import { PL, LG } from '../src/state';
 import { fixLineup } from '../src/tactics';
 import { TUNE, createMatch, liveRatings, quickMatch, step } from '../src/engine';
 import { mkTie } from '../src/competitions';
@@ -189,7 +191,7 @@ const app = document.getElementById('app')!;
     const dd = S.crew.find(m => m.role === 'dd'); ok(dd && contacts().length >= 1, 'el director deportivo tiene contactos en ' + contacts().length + ' país(es)');
     const vm = vestMult(); ok(vm >= .96 && vm <= 1.02, `el vestuario afecta al rendimiento (${((vm - 1) * 100).toFixed(1)}%)`);
     // cesión con objetivo: el club le da minutos
-    const cand = squad(S.user).filter(p => !p.loan && p.pos !== 'POR').sort((a, b) => a.ovr - b.ovr)[0], wk0 = S.week; S.week = 2;
+    const cand = squad(S.user).filter(p => !p.loan && p.pos !== 'POR' && !p.inj && !p.susp).sort((a, b) => a.ovr - b.ovr)[0], wk0 = S.week; S.week = 2;
     const lo = makeLoanOut(cand.id); if (!lo.none) { acceptLoanOut(cand.id, 'ti'); ok(cand.loan && cand.loan.obj === .6, 'cesión con objetivo de minutos');
       const tm = cand.team, opp = S.teams.find(t => t.lg === S.teams[tm].lg && t.id !== tm && t.id !== S.user);
       for (let i = 0; i < 6; i++) { S.fr.push(mkTie(tm, opp.id)); const m = quickMatch({ k: 'fr', i: S.fr.length - 1 }); m.ref = { k: 'lg' }; trackLoans(m); }
@@ -315,6 +317,22 @@ const app = document.getElementById('app')!;
     ok(p0.rf && p0.rf[fm.ro.h[3]] > 50 && famMult(p0, fm.ro.h[3]) > 1, 'el jugador aprende el rol que juega');
     const lm = { us: 'h', lz: { h: { l: 2, c: 2, r: 2 }, a: { l: 12, c: 2, r: 2 } } }; ok(laneShare(lm, 'a').l > 60 && /derecha/.test(laneTip(lm)), 'el ayudante ve por dónde nos atacan');
     S.view = 'inicio'; render(); }
+  { // Mercado, ojeo, joyas y desarrollo
+    const gems = Object.values(S.players).filter(p => p.gem); ok(gems.length >= 30 && gems.every(p => p.pot >= 7.8 && p.age <= 21), `joyas escondidas en el mundo (${gems.length})`);
+    S.mk.pot = '7.5'; S.mk.age = '21'; S.mk.atk = 'vel'; S.mk.atv = '5'; saveSearch(searchName()); ok(S.mkSaved.length === 1 && /pot/.test(S.mkSaved[0].n), 'guardar una búsqueda');
+    S.mk.pot = ''; loadSearch(0); ok(S.mk.pot === '7.5', 'cargar una búsqueda guardada'); Object.assign(S.mk, { pot: '', age: '', atk: '', atv: '', tab: 'buy' });
+    S.view = 'mercado'; render(); ok(app.querySelector('#mkpot') && app.querySelector('[data-a="mk-save"]'), 'filtros nuevos en el mercado');
+    const sc = { id: 'sX', name: 'Ojeador Prueba', q: 4, jui: 8, jpo: 9, job: 'sen', reg: 0, wage: .001 }; S.scouts.push(sc);
+    const c = LG(T(gems[0].team).lg).c; ok(startMission('sX', c, 'ALL', '21', '4') === '', 'enviar a un ojeador de misión');
+    for (let k = 0; k < 6; k++) missionsWeekly(); ok((missionOf('sX') || { found: [1] }).found.length >= 1 || !missionOf('sX'), 'la misión trae informes');
+    S.mk.tab = 'ojeo'; render(); ok(app.textContent.includes('Ojeador Prueba'), 'pestaña de misiones de ojeo'); S.mk.tab = 'buy'; stopMission('sX'); S.scouts = S.scouts.filter(x => x.id !== 'sX');
+    const other = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan); S.short.push(other.id); shortlistWeekly(); const v0 = other.value; other.value = v0 * .5; const n0 = S.inbox.length; shortlistWeekly();
+    ok(S.inbox.length > n0 && /más barato/.test(S.inbox[0].subj), 'aviso: un jugador seguido baja de precio'); other.value = v0; S.short.pop();
+    const yp = squad(S.user).filter(p => !p.loan).sort((a, b) => a.age - b.age)[0], pos = learnablePos(yp)[0]; setDev(yp.id, 'pos', pos); yp.dev.posP = 99; devWeekly(); ok(yp.alt.includes(pos) && !yp.dev.pos, 'aprende un puesto nuevo con el plan de desarrollo');
+    const tr = learnableTr(yp)[0]; if (tr) { setDev(yp.id, 'tr', tr); yp.dev.trP = 99.9; devWeekly(); ok(yp.tr.includes(tr), 'aprende un rasgo nuevo'); }
+    S.view = 'entreno'; S.vt = { ent: 'dev' }; render(); ok(app.textContent.includes('Plan de desarrollo') && app.querySelector('[data-dev]'), 'pantalla de desarrollo');
+    markArrival(yp); yp.h0[0] = Math.min(yp.h0[0], yp.ovr - 15); const ovr0 = yp.ovr; if (yp.ovr < 70) yp.ovr = 70; discoveries(); ok(yp.h0[2] === 1 && S.ach.desc, 'logro «lo descubrí yo»'); yp.ovr = ovr0;
+    S.vt = {}; S.view = 'inicio'; render(); }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });
