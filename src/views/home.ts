@@ -1,5 +1,6 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {derbyName,h2hDots,h2hStreak,h2hTxt,isDerby} from '../rivals';
 import {TOPICS} from '../talks';
 import {quick,suggestions} from '../quick';
 import {STYLES} from '../living';
@@ -32,6 +33,7 @@ export function inicioView(){
  const side=tm=>`<div class="side">${crest(tm,'lg')}<div class="tn">${esc(tm.name)}</div><div class="row small muted">${rowT(tm.id)?`${S.week?posOf(tm.id)+'º · ':''}${formDots(rowT(tm.id).form)}`:`<span class="divtag">${lgName(tm.lg,true)}</span>`}</div></div>`;
  const L=home?myP:opP,R=home?opP:myP;
  const next=`<section class="panel"><div class="panel-h"><h2>Próximo partido</h2><span class="eyebrow">${esc(nm.label)} · ${nm.ref.k==='cwc'?'Campo neutral':home?'En casa':'A domicilio'}</span></div>
+  ${(()=>{const opp=fx.h===S.user?fx.a:fx.h,dv=isDerby(S.user,opp),st=h2hStreak(opp);return `${dv?`<div class="derbytag">🔥 ${derbyName(S.user,opp)} · más tensión, más público y la ciudad pendiente</div>`:''}<div class="small muted" style="text-align:center;margin:0 0 6px">Tu historial: ${h2hTxt(opp)} ${h2hDots(opp)}${st?' · '+st:''}</div>`;})()}
   <div class="versus">${side(T(fx.h))}<div class="vs">VS</div>${side(T(fx.a))}</div>
   ${cmpRow('Ataque',L.atk,R.atk)}${cmpRow('Medio',L.mid,R.mid)}${cmpRow('Defensa',L.def,R.def)}
   ${issues.length?`<div class="warnbox" style="margin-top:14px"><span>Tu once tiene ${issues.length} hueco${issues.length>1?'s':''} sin cubrir o con jugadores no disponibles.</span><button class="btn sm" data-a="fixlu">Completar con suplentes</button></div>`:''}

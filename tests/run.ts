@@ -48,6 +48,8 @@ import { tutStart, tutGo, TUT } from '../src/tutorial';
 import { saveName } from '../src/saveio';
 import { targetValue, valueWeekly, clubSeasonFinance, aiSummerPlan, needOf, initCash, trend, TARGET } from '../src/economy';
 import { table as lgTable } from '../src/tactics';
+import { initRivals, rivalsOf, isDerby, recordH2H, h2hOf } from '../src/rivals';
+import { injRisk, setPlan, onRecovered } from '../src/medical';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -257,6 +259,14 @@ const app = document.getElementById('app')!;
     S.view = 'plantilla'; S.plTab = 'prof'; render(); ok(app.querySelector('.dgrid') && app.textContent.includes('Valor de la plantilla'), 'pestaña de profundidad');
     S.view = 'liga'; S.ldTab = 'eco'; render(); ok(app.textContent.includes('Valor plantilla'), 'tabla del dinero de los clubes');
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
+  { // Derbis y lesiones
+    initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
+    const opp = riv[0][0], mood = S.club.mood; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });
+    ok(h2hOf(opp).w === 1 && S.club.mood > mood, 'ganar el derbi: historial y afición contenta');
+    S.modal = { type: 'club', id: opp }; render(); ok(app.textContent.includes('Rivales'), 'rivales en la ficha del club'); S.modal = null;
+    const p = squad(S.user)[2], e0 = p.energy, r0 = p.recov; p.energy = 50; p.recov = 2; ok(injRisk(p).lv === 'alto', 'riesgo de lesión alto si está cansado y recién recuperado'); p.energy = e0; p.recov = r0;
+    p.inj = 4; p.rplan = null; setPlan(p, 'a'); ok(p.inj === 3 && p.rplan === 'a', 'plan acelerado: vuelve antes'); p.inj = 0; onRecovered(p); ok(p.recov === 6 && !p.rplan, 'tras el plan acelerado, más días de riesgo'); p.recov = 0;
+    S.view = 'staff'; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

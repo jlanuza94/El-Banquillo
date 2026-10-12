@@ -56,3 +56,5 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 .drow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:5px;font-size:14px}
 .drow.sub{opacity:.8;font-size:13px}
 .drow .linkname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.derbytag{display:block;text-align:center;margin:0 0 8px;padding:5px 10px;border-radius:6px;background:linear-gradient(90deg,#b3261e,#e2a70b);color:#fff;font-family:var(--f-num);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+.derbytag.sm{display:inline-block;padding:1px 8px;margin:0;font-size:11px}

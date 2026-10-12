@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {PLANS,setPlan} from './medical';
 import {saveName} from './saveio';
 import {tutEnd,tutGo,tutStart} from './tutorial';
 import {matchFx,soundOn,startReplay,stopReplay,toggleSound} from './replay';
@@ -204,6 +205,7 @@ document.addEventListener('click',e=>{
   case'tut-prev':tutGo(-1);window.scrollTo(0,0);break;
   case'tut-skip':tutEnd();break;
   case'tut-again':tutStart(true);window.scrollTo(0,0);break;
+  case'rplan':{const p=PL(d.id),e=setPlan(p,d.v);toast(e||`${p.name}: plan ${PLANS[d.v].n.toLowerCase()}. Volverá en ${p.inj} partido${p.inj>1?'s':''}.`);break;}
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}

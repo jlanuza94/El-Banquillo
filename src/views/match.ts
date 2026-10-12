@@ -1,5 +1,6 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {derbyName} from '../rivals';
 import {goalsOf,soundOn} from '../replay';
 import {shotMap} from './analysis';
 import {matchRecord} from '../analysis';
@@ -39,7 +40,7 @@ export function matchView(){
  const feed=m.ev.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<div class="ev ${e.t==='goal'?'goal':e.t==='sys'?'sys':''}"><span class="m">${e.min}'</span><span>${ICON[e.t]||''}</span><span class="tx">${e.s?`<b>${T(m[e.s]).short}</b> · `:''}${esc(e.tx)}${e.t==='goal'?` <button class="btn sm rpbtn" data-a="replay" data-i="${i}">▶ Repetición</button>`:''}</span></div>`).join('')||`<div class="empty">${esc(H.name)} recibe a ${esc(A.name)}. Pulsa “Comenzar partido” cuando quieras.</div>`;
  const scorers=s=>m.ev.filter(e=>e.t==='goal'&&e.s===s).map(e=>`${lastNm(e.pid)} ${e.min}'`).join(', ');
  return `<div class="row" style="margin-bottom:10px"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button><span class="small muted mhint">El partido sigue en pausa si sales; vuelve desde el menú.</span><span class="spacer"></span><button class="btn sm" data-a="sound" aria-pressed="${soundOn()}" title="Sonido y vibración">${soundOn()?'Sonido: sí':'Sonido: no'}</button><div class="seg"><button data-a="v2d" data-v="1" aria-pressed="${S.v2d!==false}">Vista 2D</button><button data-a="v2d" data-v="0" aria-pressed="${S.v2d===false}">Solo texto</button></div></div>
- ${m.label?`<div class="eyebrow" style="margin-bottom:8px">${esc(m.label)}${m.agg?` · vuelta: ida ${m.agg[1]}-${m.agg[0]}, si el global empata hay penaltis`:m.ko?' · eliminatoria: si hay empate, penaltis':''}</div>`:''}
+ ${m.label?`<div class="eyebrow" style="margin-bottom:8px">${m.derby?`<span class="derbytag sm">${derbyName(m.h,m.a)}</span> `:''}${esc(m.label)}${m.agg?` · vuelta: ida ${m.agg[1]}-${m.agg[0]}, si el global empata hay penaltis`:m.ko?' · eliminatoria: si hay empate, penaltis':''}</div>`:''}
  <div class="board ${flash?'flash':''}"><div class="bs">${crest(H,'lg')}<div class="tn">${esc(H.name)}</div><div class="small" style="color:var(--board-dim)">${esc(scorers('h'))}</div></div>
  <div class="sc">${m.score.h}<span style="opacity:.4">:</span>${m.score.a}</div>
  <div class="bs">${crest(A,'lg')}<div class="tn">${esc(A.name)}</div><div class="small" style="color:var(--board-dim)">${esc(scorers('a'))}</div></div>

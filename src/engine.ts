@@ -1,5 +1,7 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {injWeight,onRecovered,relapseMult} from './medical';
+import {isDerby,recordH2H} from './rivals';
 import {retosMatch} from './retos';
 import {coachResult} from './living';
 import {enforceLoanMinutes,trackLoans,vestMult} from './connected';
@@ -25,6 +27,7 @@ export function createMatch(ref){
  ['h','a'].forEach(s=>{const t=T(m[s]);m.f[s]=t.formation;m.lu[s]=m.us===s?t.lineup.slice():autoLineup(t.id,t.formation);m.ment[s]=m.us===s?t.ment:'bal';
   m.lu[s].forEach(id=>{if(id){m.en[id]=PL(id).energy;m.played[id]=1;}});m.mult[s]=m.us===s?chemMult(m.f[s]):(S.rivalBoost&&S.rivalBoost.team===m[s]&&m.us?1+S.rivalBoost.v:1)*(m.us?diff().ai:1);if(m.us&&S.rivalBoost&&S.rivalBoost.team===m[s])S.rivalBoost=null;m.xi0[s]=m.lu[s].slice();
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
+ m.derby=m.ref.k!=='fr'&&isDerby(m.h,m.a);
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
  m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult();m.plan=T(m[m.us]).curPlan||null;}
@@ -213,9 +216,9 @@ export function step(m){
  extraStats(m,xs,live);
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
  {const dh=m.oi&&m.oi.h&&m.oi.h.dur?1.6:1,da=m.oi&&m.oi.a&&m.oi.a.dur?1.6:1,ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
-  if(rnd()<.034*(ph+pa))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
+  if(rnd()<.034*(ph+pa)*(m.derby?1.3:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
- if(rnd()<.0032){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const P=PL(x),w=1+(P.prone||0)*1.5+(m.en[x]<55?1:0)+(P.recov>0?1.5:0);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
+ if(rnd()<.0032){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
   if(live)addEv(m,'inj',s,`${PL(id).name} se duele de la rodilla y no puede seguir al mismo nivel.`,id);
   if(m.us===s&&!m.auto){m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}
  if(m.min>=58||Object.keys(m.hurt).length)['h','a'].forEach(s=>{if(m.us!==s||m.auto)aiManage(m,s);});
@@ -224,7 +227,7 @@ export function step(m){
   if(m.ko&&m.ref.k!=='fr'&&m.score.h+(m.agg?m.agg[0]:0)===m.score.a+(m.agg?m.agg[1]:0)){m.pen=shootout();if(live)addEv(m,'sys',null,`Penaltis: ${T(m.h).short} ${m.pen[0]}-${m.pen[1]} ${T(m.a).short} · pasa ${T(m.pen[0]>m.pen[1]?m.h:m.a).name}`);}}
 }
 export function applyResult(m){
- const fx=getFx(m.ref),uc=LG(uLg()).c;
+ const fx=getFx(m.ref),uc=LG(uLg()).c;recordH2H(m);
  fx.hg=m.score.h;fx.ag=m.score.a;fx.played=true;fx.pen=m.pen;
  {const th=m.score.h+(m.agg?m.agg[0]:0),ta=m.score.a+(m.agg?m.agg[1]:0);fx.w=m.pen?(m.pen[0]>m.pen[1]?m.h:m.a):th>ta?m.h:ta>th?m.a:null;}
  const keepEv=m.ref.k==='cwc'||(m.ref.k==='lg'?LG(m.ref.lg).c:m.ref.c)===uc;
@@ -247,8 +250,8 @@ export function applyResult(m){
 }
 export function playerTick(full){
  Object.values(S.players).forEach(p=>{
-  if(p.inj>0){p.inj--;if(!p.inj){p.recov=3;p.injT=0;}}else if(p.recov>0&&full)p.recov--;if(p.susp>0)p.susp--;
-  if(p.pInj){if(p.team===S.user&&S.club&&S.club.fac&&S.club.fac.med>1)p.pInj=Math.max(1,Math.round(p.pInj*(1-.08*(S.club.fac.med-1))));p.inj+=p.pInj;p.injT=p.pInjT||'Lesión';if(p.team===S.user)news(`${p.name}: ${String(p.injT).toLowerCase()}. Estará ${p.inj} partido${p.inj>1?'s':''} de baja.${p.recov>0?' Es una recaída.':''}`,'bad',{cat:'med',subj:`Lesión: ${p.name} (${p.inj} partido${p.inj>1?'s':''})`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});p.pInjT=0;}
+  if(p.inj>0){p.inj--;if(!p.inj){onRecovered(p);p.injT=0;}}else if(p.recov>0&&full)p.recov--;if(p.susp>0)p.susp--;
+  if(p.pInj){if(p.team===S.user&&S.club&&S.club.fac&&S.club.fac.med>1)p.pInj=Math.max(1,Math.round(p.pInj*(1-.08*(S.club.fac.med-1))));p.pInj=Math.round(p.pInj*relapseMult(p));p.rplan=null;p.inj+=p.pInj;p.injT=p.pInjT||'Lesión';if(p.team===S.user)news(`${p.name}: ${String(p.injT).toLowerCase()}. Estará ${p.inj} partido${p.inj>1?'s':''} de baja.${p.recov>0?' Es una recaída.':''}`,'bad',{cat:'med',subj:`Lesión: ${p.name} (${p.inj} partido${p.inj>1?'s':''})`,act:[{l:'Plan conservador',a:'rplan',id:p.id,v:'c'},{l:'Plan acelerado',a:'rplan',id:p.id,v:'a'},{l:'Ver ficha',a:'ficha',id:p.id}]});p.pInjT=0;}
   if(p.pSusp){p.susp+=p.pSusp;if(p.team===S.user)news(`${p.name} cumplirá ${p.susp} partido${p.susp>1?'s':''} de sanción.`,'bad');}
   p.pInj=0;p.pSusp=0;
   const mine=p.team===S.user;
@@ -281,7 +284,7 @@ export function quickMatch(ref){
  const goals=[];['h','a'].forEach(s=>{const n=poisson(s==='h'?xh:xa);m.st[s].sh=n+poisson(9.5);m.st[s].ot=n+poisson(2.6);for(let i=0;i<n;i++)goals.push([ri(1,m.end),s]);});
  goals.sort((a,b)=>a[0]-b[0]).forEach(([mn,s])=>{m.min=mn;const id=pickScorer(m,s);if(!id)return;const ast=pickAssist(m,s,id);m.score[s]++;if(m.ref.k==='lg')PL(id).goals++;addEv(m,'goal',s,'',id);m.ev[m.ev.length-1].ast=ast;});
  m.min=m.end;
- ['h','a'].forEach(s=>{const n=poisson(1.85);for(let i=0;i<n;i++)card(m,s,false);if(rnd()<.022)card(m,s,true);
+ ['h','a'].forEach(s=>{const n=poisson(1.85*(m.derby?1.25:1));for(let i=0;i<n;i++)card(m,s,false);if(rnd()<.022)card(m,s,true);
   m.lu[s].forEach(id=>{if(id)m.en[id]=Math.max(20,m.en[id]-19*(m.drain?m.drain[s]:1));});
   if(rnd()<.14){const ids=m.lu[s].filter(Boolean);if(ids.length){const id=pick(ids),J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}}});
  // tiros con su xG: los goles suelen ser ocasiones claras; el resto reparte lo que falta hasta el xG del equipo
