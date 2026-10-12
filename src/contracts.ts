@@ -1,5 +1,7 @@
 /* El Banquillo · contracts.js — Contratos, renovaciones, cesiones y opciones de compra. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {LOAN_OBJ} from './connected';
+import {agentOf} from './connected';
 import {clamp,money,pick,r2,r3,rnd} from './core';
 import {posChip} from './data';
 import {LG,PL,S,T,lgName,pBadge,rt,seasonLabel,setTeam,squad,uLg} from './state';
@@ -9,7 +11,7 @@ import {fixLineup,setAdapt} from './tactics';
 import {agentFee,expRole,inWindow,refuses,tlog} from './market';
 import {nameBtn,toast} from './views/common';
 export const maxExtra=p=>p.age>=31?2:p.age>=29?3:4;
-export function renState(id){const p=PL(id);return S.ren[id]||(S.ren[id]={demand:r3(Math.max(p.wage*1.08,baseWage(p)*(1.1+rnd()*.3))*(p.hap<50?1.1:1)),tries:0,msg:'',kind:'',closed:false});}
+export function renState(id){const p=PL(id);return S.ren[id]||(S.ren[id]={demand:r3(Math.max(p.wage*1.08,baseWage(p)*(1.1+rnd()*.3))*(p.hap<50?1.1:1)*agentOf(p).wage),tries:0,msg:'',kind:'',closed:false});}
 export function makeRenew(id,w,n){
  const p=PL(id),st=renState(id);if(st.closed)return;
  if(!(w>0)){st.msg='Escribe un sueldo válido.';st.kind='no';return;}
@@ -52,14 +54,14 @@ export function makeLoanOut(id){
  const c=S.teams.filter(t=>t.id!==S.user&&t.rep<=p.ovr+4&&t.rep>=p.ovr-10&&Math.abs(LG(t.lg).rep-my)<=18);
  return S.lo[id]=c.length?{team:pick(c).id}:{none:true};
 }
-export function acceptLoanOut(id){
+export function acceptLoanOut(id,obj){
  const p=PL(id),o=S.lo[id],sq=squad(S.user);
  if(!inWindow())return toast('El mercado está cerrado.');
  if(sq.length<=16)return toast('Necesitas al menos 16 jugadores en plantilla.');
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');
- p.loan={from:S.user};setTeam(p,o.team);assignNum(p);
+ p.loan={from:S.user};if(obj&&LOAN_OBJ[obj])p.loan.obj=LOAN_OBJ[obj][1];p.lpj=0;p.lmt=0;setTeam(p,o.team);assignNum(p);
  const t=T(S.user),i=t.lineup.indexOf(id);if(i>=0)t.lineup[i]=null;fixLineup();
- news(`${p.name} se marcha cedido a ${T(o.team).name} hasta final de temporada. Ellos pagan su sueldo.`);
+ news(`${p.name} se marcha cedido a ${T(o.team).name} hasta final de temporada. Ellos pagan su sueldo.${p.loan.obj?` Se comprometen a que juegue al menos el ${Math.round(p.loan.obj*100)}% de los partidos.`:''}`);
  delete S.lo[id];S.modal=null;toast(`${p.name} cedido a ${T(o.team).name}.`);
 }
 export function contractTxt(p){

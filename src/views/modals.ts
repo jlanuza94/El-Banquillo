@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {LOAN_OBJ} from '../connected';
 import {reportBody} from './analysis';
 import {compareHTML} from './awards';
 import {SON_PCT,dealPrice,swapValue} from '../market2';
@@ -57,7 +58,8 @@ export function modalView(){
   body=o.none?`<div class="eyebrow">Ceder jugador</div><h2 style="margin-top:4px">${esc(p.name)}</h2><p>Ningún club está interesado en llevárselo cedido esta jornada. Prueba la próxima.</p><div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>`
   :`<div class="eyebrow">Interés por una cesión</div><h2 style="margin-top:4px">${esc(T(o.team).name)} quiere a ${esc(p.name)} cedido</h2>
   <div class="kv"><span>Club</span><b>${esc(T(o.team).name)}</b><span>Liga</span><b>${esc(lgName(T(o.team).lg))}</b><span>Duración</span><b>Hasta final de temporada</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>
-  <p class="small muted" style="margin:10px 0 0">Allí jugará más minutos, y los jóvenes que juegan progresan. Vuelve a tu plantilla en junio.</p>
+  <label class="f" style="margin-top:12px"><span class="eyebrow">Objetivo de minutos</span><select id="loanObj">${Object.entries(LOAN_OBJ).map(([k,[l]])=>`<option value="${k}">${l}</option>`).join('')}</select></label>
+  <p class="small muted" style="margin:10px 0 0">Allí jugará más minutos, y los jóvenes que juegan progresan. Con un objetivo, el club se compromete a darle esos minutos: si lo cumple vuelve más hecho; si no, te paga una compensación. Vuelve a tu plantilla en junio.</p>
   <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn primary" data-a="loanout-ok" data-id="${p.id}">Aceptar cesión</button></div>`;}
  else if(md.type==='sell'){const p=PL(md.id),o=S.offers[md.id];body=`<div class="eyebrow">Oferta recibida</div><h2 style="margin-top:4px">${esc(T(o.team).name)} quiere a ${esc(p.name)}</h2>
   <div class="kv"><span>Liga del club</span><b>${esc(lgName(T(o.team).lg))}</b><span>Oferta</span><b>${money(o.amount)}</b><span>Valor de mercado</span><b>${money(p.value)}</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>

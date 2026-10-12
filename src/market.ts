@@ -1,5 +1,7 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {agentName,agentOf,inContacts} from './connected';
+import {esc} from './core';
 import {diff} from './difficulty';
 import {applyDeal,bidWorth,dealPrice,firstPay,hotMult,sellOnIn,sellOnOut,SON_PCT} from './market2';
 import {buyMult,sellMult} from './staff';
@@ -40,7 +42,7 @@ export function aiTransfers(n){
  return done;
 }
 export function isKey(p){if(p.team===null)return false;if(!RT.keyCache){RT.keyCache=new Set();S.teams.forEach(t=>squad(t.id).sort((a,b)=>b.ovr-a.ovr).slice(0,3).forEach(x=>RT.keyCache.add(x.id)));}return RT.keyCache.has(p.id);}
-export const askPrice=p=>{const d=dealPrice(p.id);if(d!=null)return d;return p.team===null?r2(Math.max(.005,p.value*.25*buyMult())):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1)*buyMult()*hotMult(p)*diff().price);};
+export const askPrice=p=>{const d=dealPrice(p.id);if(d!=null)return d;return p.team===null?r2(Math.max(.005,p.value*.25*buyMult())):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1)*buyMult()*hotMult(p)*diff().price*(inContacts(p)?.94:1));};
 export function refuses(p){const e=econ(uLg()),my=LG(uLg()).rep;return p.ovr>e.cap&&(p.team===null||LG(T(p.team).lg).rep>my||p.ovr>e.cap+4);}
 export function negState(id){return S.neg[id]||(S.neg[id]={tries:0,counter:null,msg:'',kind:'',closed:false});}
 /** opt: {inst: nº de plazos, son: ofrecer % de futura venta, swap: id de un jugador tuyo que entra en la operación} */
@@ -78,12 +80,13 @@ export function expRole(p){
  const base=r<=2?'cl':r<=10?'ti':r<=16?'ro':'su';return base==='su'&&p.age<=21?'jo':base;
 }
 export function assignRoles(force){squad(S.user).forEach(p=>{if(force||!p.role)p.role=p.loan?'ro':expRole(p);});}
-export function termsDemand(p,mode){return mode==='buy'?signWage(p):renState(p.id).demand;}
+export function termsDemand(p,mode){return mode==='buy'?r3(signWage(p)*agentOf(p).wage):renState(p.id).demand;}
 export function evalTerms(p,mode,t){
  const D=termsDemand(p,mode),e=ROLES[expRole(p)].l,o=ROLES[t.role].l;
  let f=1+.15*Math.max(0,e-o)-.05*Math.max(0,o-e);if(t.role==='jo'&&p.age>21)f+=.3;
  const wantsFree=p.per==='amb'||p.age<=22;let cf=1;if(wantsFree){if(t.cl<p.value*2)cf=.95;else if(t.cl>p.value*4)cf=1.08;}else if(t.cl>p.value*5)cf=1.04;
- return (t.w+(t.bonus||0)/40)/(D*f*cf);
+ const A=agentOf(p),bonusF=A.bonus&&mode==='buy'&&(t.bonus||0)<D*8?.95:1;
+ return (t.w+(t.bonus||0)/40)/(D*f*cf)*(1+A.acc)*bonusF;
 }
 export function readTerms(){const g=id=>document.getElementById(id);const num=id=>parseFloat(String(g(id)?.value||'').replace(',','.'));
  return{w:r3(num('tWage')/1000),yrs:+(g('tYears')?.value||3),role:g('tRole')?.value||'ro',cl:r2(num('tClause')),bonus:r3((num('tBonus')||0)/1000)};}
@@ -100,12 +103,12 @@ export function makeTerms(id,mode,t){
  if(st.ttries>=3){st.closed=true;st.msg=`${p.name} rompe las negociaciones hasta la próxima jornada.`;st.kind='no';return;}
  const D=termsDemand(p,mode);st.msg=`Rechaza tu propuesta${ratio<.85?' (está lejos de lo que pide)':''}. Pide unos ${money(D)}/sem siendo ${ROLES[expRole(p)].n.toLowerCase()}. Una prima de fichaje o un rol mejor ayudan. Te quedan ${3-st.ttries} intento${3-st.ttries>1?'s':''}.`;st.kind='no';
 }
-export const agentFee=(p,fee)=>r3(Math.max(.002,(fee>0?fee:p.value*.5)*(p.agc||.07)));
+export const agentFee=(p,fee)=>r3(Math.max(.002,(fee>0?fee:p.value*.5)*(p.agc||.07)*agentOf(p).fee));
 export function termsForm(p,mode){
  const D=termsDemand(p,mode),er=expRole(p),yOpts=[];
  if(mode==='renew')for(let n=p.contract+1;n<=Math.min(5,maxExtra(p)+1);n++)yOpts.push(n);else for(let n=1;n<=Math.min(5,maxExtra(p)+1);n++)yOpts.push(n);
  const wantsFree=p.per==='amb'||p.age<=22;
- return `<div class="kv"><span>Sueldo que pide</span><b>${money(D)}/sem</b>${mode==='buy'?`<span>Comisión de su agente</span><b>${money(agentFee(p,negState(p.id).agreed||0))} (${Math.round((p.agc||.07)*100)}%)</b>`:''}<span>Rol que espera</span><b>${ROLES[er].n}</b><span>Cláusula</span><b>${wantsFree?'La quiere baja (menos de '+money(p.value*2)+')':'Le da igual'}</b><span>Carácter</span><b>${PERS[p.per].n}</b></div>
+ return `<div class="kv"><span>Su agente</span><b>${esc(agentName(p))} · ${agentOf(p).n}</b><span>Sueldo que pide</span><b>${money(D)}/sem</b>${mode==='buy'?`<span>Comisión de su agente</span><b>${money(agentFee(p,negState(p.id).agreed||0))} (${Math.round((p.agc||.07)*100)}%)</b>`:''}<span>Rol que espera</span><b>${ROLES[er].n}</b><span>Cláusula</span><b>${wantsFree?'La quiere baja (menos de '+money(p.value*2)+')':'Le da igual'}</b><span>Carácter</span><b>${PERS[p.per].n}</b></div>
  ${yOpts.length?`<div class="filters" style="margin-top:14px"><label class="f"><span class="eyebrow">Sueldo (miles €/sem)</span><input type="number" id="tWage" min="0.5" step="0.5" value="${Math.round(D*2000)/2}"></label>
  <label class="f"><span class="eyebrow">Hasta</span><select id="tYears">${yOpts.map(n=>`<option value="${n}" ${n===yOpts[Math.min(yOpts.length-1,mode==='renew'?1:2)]?'selected':''}>Jun ${2025+S.seasonN+n}</option>`).join('')}</select></label>
  <label class="f"><span class="eyebrow">Rol</span><select id="tRole">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${k===er?'selected':''}>${v.n}</option>`).join('')}</select></label>

@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {loanReview} from './connected';
 import {recordRound} from './analysis';
 import {markKey} from './inbox';
 import {seasonAwards} from './awards';
@@ -134,7 +135,7 @@ export function newSeason(){
    S.ctQual=ctQualify(c=>tabs[findLg(c,0).id].map(r=>r.id)); }
  // loans end
  const back=[],gone=[],ret=[];
- Object.values(S.players).forEach(p=>{if(!p.loan)return;const from=p.loan.from;if(from===S.user)back.push(p.name);else if(p.team===S.user)gone.push(p.name);p.loan=null;p.team=from;ret.push(p);});
+ Object.values(S.players).forEach(p=>{if(!p.loan)return;loanReview(p);const from=p.loan.from;if(from===S.user)back.push(p.name);else if(p.team===S.user)gone.push(p.name);p.loan=null;p.team=from;ret.push(p);});
  dirty();ret.forEach(assignNum);
  // promotions and relegations inside each country
  const moves=[];
@@ -147,7 +148,8 @@ export function newSeason(){
  Object.values(S.players).forEach(p=>{
   p.age++;
   const ovr0=p.ovr;
-  const mine=p.team===S.user,ev=devSeason(p,{train:mine?trainMult()*(S.club?1+.06*(S.club.fac.ent-1):1):1,mentor:mine&&(S.mentors||[]).some(x=>x.y===p.id)});
+  const mine=p.team===S.user,ev=devSeason(p,{train:(mine?trainMult()*(S.club?1+.06*(S.club.fac.ent-1):1):1)*(p.loanOk?1.15:1),mentor:mine&&(S.mentors||[]).some(x=>x.y===p.id)});
+  p.loanOk=0;p.lpj=0;p.lmt=0;
   if(ev&&(mine||p.home))devNews.push([p,ev]);
   if(p.st&&p.st.pj&&p.team!==null&&(p.team===S.user||T(p.team).lg===uLg()||(p.hist&&p.hist.length))){p.hist=(p.hist||[]).concat([[seasonLabel(),T(p.team).short,p.st.pj,p.st.g,p.st.a,Math.round(p.st.rs/p.st.pj*10)/10]]).slice(-8);}
   p.st=newSt();

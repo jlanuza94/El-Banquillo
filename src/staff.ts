@@ -1,5 +1,6 @@
 /* El Banquillo · staff.ts — Cuerpo técnico: segundo entrenador, entrenadores, fisioterapeutas y director deportivo. */
 // @ts-nocheck — usa el estado heredado S.
+import {genContacts} from './connected';
 import {clamp,gauss,money,pick,r3,ri,rnd} from './core';
 import {COUNTRIES,NAMES} from './data';
 import {LG,S,T,uLg,unit} from './state';
@@ -44,7 +45,7 @@ export function staffWage(m){const a=avg(ST_ROLES[m.role].at.map(k=>m.at[k]));re
 export function makeStaff(role,lvl){
  const c=rnd()<.75?LG(uLg()).c:ri(0,COUNTRIES.length-1),[F,L]=NAMES[COUNTRIES[c].lang];
  const at={};Object.keys(ST_AT).forEach(k=>{const main=ST_ROLES[role].at.indexOf(k);const b=main===0?lvl+.6:main>0?lvl-.4:lvl-2.5;at[k]=clamp(Math.round(b+gauss()*1.3),1,10);});
- const m={id:'c'+(S.nextId++),name:pick(F)+' '+pick(L),nat:c,role,age:ri(31,62),at,yrs:ri(1,3)};m.wage=staffWage(m);return m;
+ const m={id:'c'+(S.nextId++),name:pick(F)+' '+pick(L),nat:c,role,age:ri(31,62),at,yrs:ri(1,3)};m.wage=staffWage(m);if(role==='dd')m.contacts=genContacts(m);return m;
 }
 export const crewWages=()=>(S.crew||[]).reduce((a,x)=>a+x.wage,0);
 /** Equipo inicial de un club: un segundo, un entrenador y un fisio de nivel algo bajo. */
@@ -64,6 +65,8 @@ export function genStaffPool(){
  ['seg','ent','ent','ent','fis','fis','dd','dd'].forEach(r=>S.staffPool.push(makeStaff(r,l+gauss()*1.1)));
  S.staffPoolWk=S.week;
 }
+/** Países con contactos de un director deportivo (para la pantalla). */
+export const contactNames=m=>(m.contacts||[]).map(c=>COUNTRIES[c].n).join(', ');
 export function hireStaff(id){
  const i=(S.staffPool||[]).findIndex(x=>x.id===id);if(i<0)return 'Ese candidato ya no está disponible.';
  const m=S.staffPool[i],R=ST_ROLES[m.role];

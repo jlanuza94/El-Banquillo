@@ -148,7 +148,7 @@ document.addEventListener('click',e=>{
   case'loan-ok':requestLoan(d.id,d.o==='1');break;
   case'buy-opt':buyOption(d.id);break;
   case'loanout':if(PL(d.id).loan)break;makeLoanOut(d.id);S.modal={type:'loanout',id:d.id};break;
-  case'loanout-ok':acceptLoanOut(d.id);break;
+  case'loanout-ok':acceptLoanOut(d.id,document.getElementById('loanObj')?.value||'');break;
   case'sell':if(!inWindow()){toast('El mercado está cerrado.');break;}makeOffer(d.id);S.modal={type:'sell',id:d.id};break;
   case'sell-ok':sell(d.id);return;
   case'offer-no':{const o=S.offers[d.id];if(!o)break;delete S.offers[d.id];const p=PL(d.id);news(`Rechazas la oferta de ${T(o.team).name} por ${p.name}.`);if(LG(T(o.team).lg).rep>LG(uLg()).rep+3&&(p.per==='amb'||p.hap<60)){p.hap=clamp(p.hap-12,0,100);news(`${p.name} quería ese traspaso a un club más grande y está molesto.`,'bad');if(p.hap<25&&!p.req){p.req=1;news(`${p.name} pide salir del club.`,'bad');}}break;}
