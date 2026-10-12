@@ -9,7 +9,7 @@ import {LG,S,dirty,seasonLabel,squad,uLg,unit} from './state';
 import {assignNum,baseWage,decorate,genAttrs,rateA,setValue,strength,wpick} from './players';
 import {news} from './world';
 import {toast} from './views/common';
-export const REGIONS=[{n:'Península Ibérica',c:[0,5]},{n:'Islas Británicas y Francia',c:[1,4]},{n:'Europa Central',c:[2,3,8]},{n:'Sudamérica',c:[6,7],b:.25},{n:'Norte y Centroamérica',c:[9]}];
+export const REGIONS=[{n:'Península Ibérica',c:[0,5]},{n:'Islas Británicas y Francia',c:[1,4,12]},{n:'Europa Central',c:[2,3,8,10]},{n:'Sudamérica',c:[6,7,15],b:.25},{n:'Norte y Centroamérica',c:[9,13]},{n:'Turquía y Asia',c:[11,14]}];
 export const regionOf=c=>REGIONS.findIndex(R=>R.c.includes(c));
 export function makeYouth(nat,potT){
  const pos=pick(['POR','DEF','DEF','MED','MED','MED','DEL','DEL']),age=ri(15,17),pot=r2(clamp(potT,2.5,9.8)),cur=clamp(pot-(3.4-(age-15)*.5)-rnd()*.8,1.5,pot);

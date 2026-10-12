@@ -1,5 +1,6 @@
 /* El Banquillo · awards.ts — Premios de temporada, once ideal y Balón de Oro. */
 // @ts-nocheck — usa el estado heredado S.
+import {wcs} from './state';
 import {COUNTRIES,GRP} from './data';
 import {LG,PL,S,T,findLg,lgName,seasonLabel,squad} from './state';
 import {news} from './world';
@@ -36,7 +37,7 @@ export function seasonAwards(){
  const boot=all.filter(p=>p.st&&p.st.g).sort((a,b)=>b.st.g-a.st.g||a.st.pj-b.st.pj)[0];
  const young=ranking(all.filter(p=>p.age<=21),true,1)[0];
  const gk=all.filter(p=>p.sp==='POR'&&p.st&&p.st.pj>=m).sort((a,b)=>seasonScore(b,true)-seasonScore(a,true))[0];
- const leagues={};COUNTRIES.forEach((C,c)=>{const L=findLg(c,0),b=ranking(playersOf(L.id),false,1)[0];if(b)leagues[L.id]=card(b[0]);});
+ const leagues={};wcs().forEach(c=>{const L=findLg(c,0),b=ranking(playersOf(L.id),false,1)[0];if(b)leagues[L.id]=card(b[0]);});
  const my=T(S.user).lg;if(!leagues[my]){const b=ranking(playersOf(my),false,1)[0];if(b)leagues[my]=card(b[0]);}
  const xi=bestXI(my).map(([s,p])=>[s,card(p)]);
  const A={season:seasonLabel(),ballon:world.map(([p])=>card(p)),boot:card(boot),young:young?card(young[0]):null,gk:card(gk),leagues,xi,xiLg:my};

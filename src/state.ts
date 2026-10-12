@@ -2,6 +2,9 @@
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {esc,r3,setRngState} from './core';
 import {COUNTRIES,LV_NAMES,LV_SH} from './data';
+/** Países que existen en este mundo (las partidas antiguas tienen 10; las nuevas, todos). Siempre 0..n-1. */
+export const nC=()=>S&&S.leagues&&S.leagues.length?Math.max(...S.leagues.map(L=>L.c))+1:COUNTRIES.length;
+export const wcs=()=>Array.from({length:nC()},(_,i)=>i);
 export let S=null;
 export function setS(v){S=v;if(v&&v.rng)setRngState(v.rng);}
 /** Variables de ejecución compartidas entre módulos (temporizadores y cachés). */

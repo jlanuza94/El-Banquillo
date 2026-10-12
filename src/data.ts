@@ -17,6 +17,10 @@ export const NAMES={
   ['Silva','Santos','Oliveira','Souza','Pereira','Costa','Ferreira','Rodrigues','Almeida','Carvalho','Lima','Gomes','Ribeiro','Martins','Araújo','Barbosa','Moreira','Teixeira','Fonseca','Cardoso','Nascimento','Rocha','Mendes','Pinto']],
  nl:[['Daan','Sem','Lars','Bram','Jesse','Thijs','Ruben','Stijn','Joost','Niels','Teun','Wout','Jasper','Koen','Milan','Luuk','Sven','Tijn'],
   ['de Jong','Jansen','de Vries','van Dijk','Bakker','Visser','Smit','Meijer','de Boer','Mulder','de Groot','Bos','Vos','Peters','Hendriks','van Leeuwen','Dekker','Brouwer','Kuiper','Willems']],
+ tr:[['Emre','Burak','Mert','Arda','Kerem','Can','Ozan','Yusuf','Hakan','Serkan','Oğuz','Cengiz','Barış','Efe','Kaan','Umut','Tolga','Selim'],
+  ['Yılmaz','Kaya','Demir','Şahin','Çelik','Yıldız','Aydın','Öztürk','Arslan','Doğan','Kılıç','Aslan','Çetin','Kara','Koç','Kurt','Özdemir','Polat','Erdem','Aksoy']],
+ ja:[['Haruto','Sota','Yuto','Riku','Kaito','Ren','Daiki','Takumi','Kenta','Shota','Yuki','Hiroki','Kazuki','Ryo','Taiga','Sho','Kaoru','Makoto'],
+  ['Sato','Suzuki','Takahashi','Tanaka','Watanabe','Ito','Yamamoto','Nakamura','Kobayashi','Kato','Yoshida','Yamada','Sasaki','Inoue','Kimura','Hayashi','Shimizu','Mori','Endo','Ikeda']],
 };
 export const PT_A=['Vila','São','Porto','Monte','Torre','Vale','Ponte','Santa','Castelo','Rio','Serra','Campo'],PT_B=['Verde','Nova','Alta','do Mar','do Sol','Real','Branca','Longa','Clara','Formosa','Velha','Grande','Bonita','Serena'];
 export const TOWNS={
@@ -29,6 +33,12 @@ export const TOWNS={
  BR:{A:PT_A,B:PT_B,J:' ',P:['{t} EC','{t} FC','EC {t}','Atlético {t}','SE {t}','América {t}','Grêmio {t}','Esporte Clube {t}','Ferroviário {t}']},
  AR:{A:['Villa','San','Puerto','Santa','Valle','Monte','General','Río','Paso','Cañada','Colonia','Isla'],B:['Esperanza','del Sur','Alegre','Grande','Hermosa','Victoria','Unión','Rosales','del Monte','Vieja','Nueva','Clara'],J:' ',P:['Club Atlético {t}','{t} Juniors','Deportivo {t}','Sportivo {t}','Unión de {t}','Atlético {t}','Defensores de {t}','Estudiantes de {t}','Ferro de {t}']},
  NL:{A:['Groen','Hoog','Noord','Zuid','Oost','West','Berg','Vliet','Water','Linde','Brug','Dijk','Ven'],B:['dam','dijk','veen','hoven','wijk','berg','meer','zand','burg','hout','horst','loo'],J:'',P:['FC {t}','SC {t}','VV {t}','{t} United','SV {t}','Go Ahead {t}','{t} Boys','RKC {t}']},
+ BE:{A:['Sint-','Oost','West','Lier','Zele','Wavre','Heren','Mol','Genk','Roe','Meche','Brug'],B:['kerke','gem','laar','hout','beek','dorp','veld','rode','hove','zele'],J:'',P:['KV {t}','KAA {t}','Sporting {t}','RSC {t}','Royal {t}','KSV {t}','Cercle {t}','Union {t}']},
+ TR:{A:['Kara','Ak','Yeni','Eski','Gök','Kızıl','Bey','Sarı','Demir','Taş','Deniz','Yeşil'],B:['köy','dere','tepe','pınar','kale','ova','yurt','han','kent','bağ','ören'],J:'',P:['{t}spor','{t} Belediyespor','{t} FK','{t} Gençlik','{t} İdmanyurdu','{t} Gücü']},
+ SC:{A:['Glen','Kil','Dun','Inver','Strath','Bal','Aber','Kirk','Loch','Craig','Fal','Ard'],B:['more','burn','ton','field','ness','mouth','side','haven','brae','muir'],J:'',P:['{t} FC','{t} Athletic','{t} Thistle','{t} United','Queen of {t}','{t} Rovers','{t} Albion']},
+ US:{A:['Spring','Lake','River','Oak','Cedar','Pine','Red','Silver','Clear','Rock','Fair','Green'],B:['field','ville','wood','port','dale','ridge','view','haven','town','creek'],J:'',P:['{t} FC','{t} United','Real {t}','{t} SC','{t} Rangers','{t} Galaxy','{t} Union','{t} City']},
+ JP:{A:['Kita','Minami','Higashi','Nishi','Shin','Taka','Naka','Kawa','Yama','Matsu','Haru','Aki'],B:['saki','hama','yama','gawa','shima','zawa','oka','mura','hara','numa'],J:'',P:['{t} FC','FC {t}','{t} United','Vortis {t}','{t} Reds','{t} Antlers','{t} Frontale']},
+ CO:{A:['San','Santa','Villa','Puerto','Valle','Monte','Río','Nueva','Ciudad','Alto'],B:['Bolívar','del Cauca','Verde','Hermosa','Dorada','Blanca','del Sol','Grande','Real','Linda'],J:' ',P:['Deportivo {t}','Atlético {t}','Independiente {t}','Once {t}','Real {t}','Cortuluá {t}','Patriotas de {t}']},
  MX:{A:['San','Santa','Puerto','Villa','Valle','Real del','Ciudad','Nuevo','Tierra'],B:['Morelos','Alegre','Grande','Hermosa','Victoria','del Mar','Dorada','Blanca','Verde','Bonita','Vieja'],J:' ',P:['Club {t}','Deportivo {t}','Atlético {t}','{t} FC','Halcones de {t}','Leones de {t}','Toros de {t}','Venados de {t}','Tiburones de {t}']},
 };
 export const COUNTRIES=[
@@ -36,6 +46,8 @@ export const COUNTRIES=[
  {n:'Alemania',code:'ALE',lang:'de',tw:'DE',lv:5,top:73},{n:'Francia',code:'FRA',lang:'fr',tw:'FR',lv:5,top:71.5},
  {n:'Portugal',code:'PRT',lang:'pt',tw:'PT',lv:4,top:68},{n:'Brasil',code:'BRA',lang:'pt',tw:'BR',lv:4,top:69},{n:'Argentina',code:'ARG',lang:'es',tw:'AR',lv:4,top:67},
  {n:'Países Bajos',code:'NED',lang:'nl',tw:'NL',lv:3,top:67.5},{n:'México',code:'MEX',lang:'es',tw:'MX',lv:3,top:64},
+ {n:'Bélgica',code:'BEL',lang:'nl',tw:'BE',lv:2,top:67},{n:'Turquía',code:'TUR',lang:'tr',tw:'TR',lv:2,top:67},{n:'Escocia',code:'SCO',lang:'en',tw:'SC',lv:2,top:63.5},
+ {n:'Estados Unidos',code:'USA',lang:'en',tw:'US',lv:2,top:65},{n:'Japón',code:'JPN',lang:'ja',tw:'JP',lv:2,top:64},{n:'Colombia',code:'COL',lang:'es',tw:'CO',lv:2,top:64},
 ];
 export const LV_NAMES=['Primera División','Segunda División','Tercera División','Cuarta División','Quinta División'];
 export const LV_SH=['1ª','2ª','3ª','4ª','5ª'];

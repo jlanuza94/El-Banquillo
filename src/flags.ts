@@ -12,6 +12,12 @@ const F:Record<string,string>={
  ARG:H('#74acdf','#fff','#74acdf')+`<circle cx="15" cy="10" r="2" fill="#f6b40e"/>`,
  NED:H('#ae1c28','#fff','#21468b'),
  MEX:V('#006847','#fff','#ce1126')+`<circle cx="15" cy="10" r="2.4" fill="#8c5a2b"/>`,
+ BEL:V('#000','#fdda24','#ef3340'),
+ TUR:`<rect width="30" height="20" fill="#e30a17"/><circle cx="11.5" cy="10" r="5" fill="#fff"/><circle cx="12.8" cy="10" r="4" fill="#e30a17"/><path d="M17.2 10l3.6-1.2-2.2 3.1V8.1l2.2 3.1z" fill="#fff"/>`,
+ SCO:`<rect width="30" height="20" fill="#005eb8"/><path d="M0 0L30 20M30 0L0 20" stroke="#fff" stroke-width="3.4"/>`,
+ USA:H('#b22234','#fff','#b22234','#fff','#b22234','#fff','#b22234')+`<rect width="13" height="10.8" fill="#3c3b6e"/>`,
+ JPN:`<rect width="30" height="20" fill="#fff"/><circle cx="15" cy="10" r="6" fill="#bc002d"/>`,
+ COL:`<rect width="30" height="20" fill="#ce1126"/><rect width="30" height="15" fill="#003893"/><rect width="30" height="10" fill="#fcd116"/>`,
 };
 /** Bandera del país por su código (ESP, ING…). */
 export const flag=(code:string,cls='')=>`<svg class="flag ${cls}" viewBox="0 0 30 20" aria-hidden="true">${F[code]||H('#999')}</svg>`;

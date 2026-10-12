@@ -1,6 +1,7 @@
 /* El Banquillo · nations.ts — Selecciones nacionales: convocatorias, parones FIFA, Mundial, Eurocopa y Copa América,
  * y la posibilidad de ser seleccionador a la vez que entrenas a un club. */
 // @ts-nocheck — usa el estado heredado S.
+import {nC,wcs} from './state';
 import {retosNT} from './retos';
 import {unlock} from './club';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
@@ -10,7 +11,7 @@ import {news} from './world';
 import {poisson} from './engine';
 
 /* ---------- Torneos ---------- */
-export const EUROPE=[0,1,2,3,4,5,8],AMERICA=[6,7,9];
+export const EUROPE=[0,1,2,3,4,5,8,10,11,12],AMERICA=[6,7,9,13,15];
 export const TOURN={wc:{n:'Mundial',sh:'MUN'},eu:{n:'Eurocopa',sh:'EUR'},ca:{n:'Copa América',sh:'CAM'}};
 /** Año del verano en que acaba la temporada actual (la 2026/27 acaba en el verano de 2027). */
 export const summerYear=(n=S.seasonN)=>2026+n;
@@ -18,7 +19,7 @@ export const summerYear=(n=S.seasonN)=>2026+n;
 export function tournamentsIn(n=S.seasonN){const y=summerYear(n);return y%4===2?['wc']:y%4===0?['eu','ca']:[];}
 /** Próximo verano con torneos: [n, lista]. */
 export function nextTournaments(){for(let n=S.seasonN;n<S.seasonN+4;n++){const t=tournamentsIn(n);if(t.length)return[n,t];}return[S.seasonN,[]];}
-const members=k=>k==='wc'?COUNTRIES.map((_,i)=>i):k==='eu'?EUROPE:AMERICA;
+const members=k=>(k==='wc'?wcs():k==='eu'?EUROPE:AMERICA).filter(c=>c<nC());
 
 /* ---------- Jugadores y convocatorias ---------- */
 const NEED={POR:3,DEF:8,MED:7,DEL:5};
@@ -37,7 +38,7 @@ export const strengthOf=ids=>{const xi=xiOf(ids);return xi.length?xi.reduce((a,p
 
 /* ---------- Ranking (tipo Elo) ---------- */
 export function initIntl(){if(S.intl)return;S.intl={elo:COUNTRIES.map((_,c)=>Math.round(1300+strengthOf(autoCall(c))*6)),hist:[],last:null,titles:COUNTRIES.map(()=>({wc:0,eu:0,ca:0}))};}
-export const ranking=()=>COUNTRIES.map((_,c)=>c).sort((a,b)=>S.intl.elo[b]-S.intl.elo[a]);
+export const ranking=()=>wcs().sort((a,b)=>(S.intl.elo[b]??1500)-(S.intl.elo[a]??1500));
 const eloUpd=(a,b,ga,gb,k=30)=>{const E=1/(1+10**((S.intl.elo[b]-S.intl.elo[a])/400)),Sa=ga>gb?1:ga<gb?0:.5,d=Math.round(k*(Sa-E));S.intl.elo[a]+=d;S.intl.elo[b]-=d;};
 
 /* ---------- Partido entre selecciones ---------- */
@@ -108,7 +109,7 @@ export const FIFA_WEEKS=[9,27];
 /** Semana de selecciones: tus internacionales se van con su país, vuelven cansados y alguno tocado. */
 export function fifaWeek(){
  if(!FIFA_WEEKS.includes(S.week))return;initIntl();
- const order=shuffle(COUNTRIES.map((_,c)=>c)),res=[];
+ const order=shuffle(wcs()),res=[];
  for(let i=0;i+1<order.length;i+=2)res.push(ntMatch(order[i],order[i+1],false,15));
  const called=squad(S.user).filter(p=>!p.loan&&callOf(p.nat).includes(p.id)),hurt=[];
  called.forEach(p=>{p.energy=Math.max(40,(p.energy??100)-12);p.hap=clamp((p.hap??70)+2,0,100);if(rnd()<.04&&!p.inj){p.inj=1+(rnd()<.4?1:0);p.injT='Lesión con su selección';hurt.push(p);}});
@@ -119,8 +120,8 @@ export function fifaWeek(){
 
 /* ---------- Ser seleccionador ---------- */
 /** Reputación que pide cada federación: más cuanto mejor está en el ranking. */
-export const ntReq=c=>{const r=ranking().indexOf(c);return 48+(9-r)*4;};
-export const NT_SAL=c=>Math.round((.002+(9-ranking().indexOf(c))*.0012)*2000)/2000;
+export const ntReq=c=>{const n=nC(),r=ranking().indexOf(c);return Math.round(48+(n-1-r)*40/(n-1));};
+export const NT_SAL=c=>Math.round((.002+(nC()-1-ranking().indexOf(c))*.0012*9/(nC()-1))*2000)/2000;
 export function applyNT(c){
  initIntl();if(S.nt)return 'Ya eres seleccionador.';S.ntApplied=S.ntApplied||{};if(S.ntApplied[c]===S.seasonN)return 'Ya te rechazaron esta temporada.';
  const req=ntReq(c),ch=clamp(.3+(S.mgr.rep-req)/25,0,.9);S.ntApplied[c]=S.seasonN;
@@ -131,7 +132,7 @@ export function takeNT(c){S.nt={c,since:seasonLabel(),call:[],res:[]};unlock('se
 export function leaveNT(){if(!S.nt)return;news(`Dejas el cargo de seleccionador de ${COUNTRIES[S.nt.c].n}.`,'',{cat:'dir'});S.nt=null;}
 /** Al final de temporada alguna federación puede llamarte si tu reputación es alta. */
 export function ntOffers(){
- initIntl();if(S.nt||rnd()>.35)return;const c=COUNTRIES.map((_,i)=>i).filter(c=>S.mgr.rep>=ntReq(c)-4).sort((a,b)=>ntReq(b)-ntReq(a))[0];if(c==null)return;
+ initIntl();if(S.nt||rnd()>.35)return;const c=wcs().filter(c=>S.mgr.rep>=ntReq(c)-4).sort((a,b)=>ntReq(b)-ntReq(a))[0];if(c==null)return;
  S.ntOffer=c;news(`La federación de ${COUNTRIES[c].n} te ofrece ser su seleccionador, compaginándolo con tu club.`,'good',{cat:'dir',subj:`Oferta: seleccionador de ${COUNTRIES[c].n}`,act:[{l:'Aceptar',a:'nt-accept'},{l:'Ver selecciones',a:'view',v:'selecciones'}]});
 }
 /** Marca o desmarca un jugador en tu convocatoria (máximo 23). */

@@ -1,5 +1,6 @@
 /* El Banquillo · views/club.js — Club y finanzas, historia, récords y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wcs} from '../state';
 import {enciclopediaHTML,fameHTML} from './worldhist';
 import {retosPanel} from './retos';
 import {MODES} from '../quick';
@@ -26,7 +27,7 @@ export function historiaView(){
  if(tab==='fame')return seg+fameHTML();
  if(tab==='ach'){const A=S.ach||{};return seg+retosPanel()+`<section class="panel"><div class="panel-h"><h2>Logros</h2><span class="eyebrow">${Object.keys(A).length} de ${Object.keys(ACH).length}</span></div><div class="teams" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${Object.entries(ACH).map(([k,[n,d]])=>`<div class="tcard" style="display:block;${A[k]?'border-color:var(--accent)':'opacity:.6'}"><div class="tn" style="font-size:18px">${A[k]?'★ ':''}${esc(n)}</div><div class="small muted" style="margin-top:4px">${esc(d)}</div>${A[k]?`<div class="eyebrow" style="margin-top:6px;color:var(--win)">Conseguido en ${A[k]}</div>`:''}</div>`).join('')}</div></section>`;}
  if(tab==='champ'){const c=S.hiC!=null?S.hiC:LG(uLg()).c,H=(S.halls||[]).slice().reverse();
-  return seg+`<section class="panel"><div class="panel-h"><h2>Campeones</h2><label class="f"><span class="eyebrow">País</span><select id="hiC">${COUNTRIES.map((C,i)=>`<option value="${i}" ${i===c?'selected':''}>${C.n}</option>`).join('')}</select></label></div>
+  return seg+`<section class="panel"><div class="panel-h"><h2>Campeones</h2><label class="f"><span class="eyebrow">País</span><select id="hiC">${wcs().map(i=>COUNTRIES[i]).map((C,i)=>`<option value="${i}" ${i===c?'selected':''}>${C.n}</option>`).join('')}</select></label></div>
   ${H.length?`<div class="tbl"><table><thead><tr><th>Temporada</th><th>Liga (${COUNTRIES[c].n})</th><th>Copa</th><th>${CONTS[0].n}</th><th>${CONTS[1].n}</th><th>Mundial de Clubes</th></tr></thead><tbody>${H.map(h=>{const nm=id=>id!=null&&T(id)?`<span class="${id===S.user?'tag xi':''}">${esc(T(id).name)}</span>`:'—';return `<tr><td class="num">${h.season}</td><td>${nm(h.lg[c])}</td><td>${nm(h.cup[c])}</td><td>${nm(h.ct[0])}</td><td>${nm(h.ct[1])}</td><td>${nm(h.cwc)}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">Al acabar tu primera temporada aparecerán aquí los campeones de cada competición.</div>'}</section>`;}
  if(tab==='scor'){const act=Object.values(S.players).filter(p=>p.car&&p.car[1]>0).map(p=>({name:p.name,nat:p.nat,pos:p.sp,pj:p.car[0],g:p.car[1],a:p.car[2],club:p.team!==null?T(p.team).short:'Libre',act:1}));
   const list=act.concat(S.legends||[]).sort((a,b)=>b.g-a.g).slice(0,25);

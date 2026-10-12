@@ -1,5 +1,6 @@
 /* El Banquillo · views/awards.ts — Estadísticas, once ideal, premios y comparador de jugadores. */
 // @ts-nocheck — usa el estado heredado S.
+import {wcs} from '../state';
 import {flag} from '../flags';
 import {esc,money} from '../core';
 import {ATTRS,AT_NAME,COUNTRIES,GRP,LV_NAMES,newSt,posChip} from '../data';
@@ -10,7 +11,7 @@ import {atCellS,nameBtn,pBadgeS} from './common';
 
 const avgR=p=>p.st&&p.st.pj?p.st.rs/p.st.pj:0;
 const who=c=>c?`${PL(c.pid)?nameBtn(PL(c.pid)):esc(c.name)} <span class="small muted">· ${esc(c.club)}</span>`:'—';
-function lgPicker(lg){const L=LG(lg);return `<div class="row" style="margin-bottom:12px;align-items:flex-end"><label class="f"><span class="eyebrow">País</span><select id="awC">${COUNTRIES.map((c,i)=>`<option value="${i}" ${i===L.c?'selected':''}>${c.n}</option>`).join('')}</select></label>${flag(COUNTRIES[L.c].code)}
+function lgPicker(lg){const L=LG(lg);return `<div class="row" style="margin-bottom:12px;align-items:flex-end"><label class="f"><span class="eyebrow">País</span><select id="awC">${wcs().map(i=>COUNTRIES[i]).map((c,i)=>`<option value="${i}" ${i===L.c?'selected':''}>${c.n}</option>`).join('')}</select></label>${flag(COUNTRIES[L.c].code)}
  <div class="seg" style="max-width:100%;overflow-x:auto">${Array.from({length:COUNTRIES[L.c].lv},(_,i)=>`<button data-a="aw-lv" data-v="${i}" aria-pressed="${L.lv===i}">${LV_NAMES[i]}</button>`).join('')}</div></div>`;}
 
 export function premiosView(){

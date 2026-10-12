@@ -1,5 +1,6 @@
 /* El Banquillo · views/market.js — Pantallas del mercado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wcs} from '../state';
 import {canBuyback} from '../negotiate';
 import {trendTag} from '../economy';
 import {esc,money,plain} from '../core';
@@ -60,7 +61,7 @@ export function mercadoView(){
   <div class="chips">${['ALL','POR','DEF','MED','DEL'].map(p=>`<button class="btn sm ${mk.pos===p?'dark':''}" data-a="mk-pos" data-v="${p}">${p==='ALL'?'Todos':p}</button>`).join('')}</div>
   <label class="f"><span class="eyebrow">Buscar</span><input type="search" id="mkq" placeholder="Nombre o club" value="${esc(mk.q)}"></label>
   <label class="f"><span class="eyebrow">Posición exacta</span>${sel('mksp',mk.sp||'',[['','Cualquiera'],...Object.entries(SPN).map(([k,v])=>[k,v])])}</label>
-  <label class="f"><span class="eyebrow">País</span>${sel('mkc',mk.c,[['ALL','Todos'],...COUNTRIES.map((c,i)=>[String(i),c.n]),['FA','Agentes libres']])}</label>
+  <label class="f"><span class="eyebrow">País</span>${sel('mkc',mk.c,[['ALL','Todos'],...wcs().map(i=>[String(i),COUNTRIES[i].n]),['FA','Agentes libres']])}</label>
   <label class="f"><span class="eyebrow">División</span>${sel('mklv',mk.lv,[['','Todas'],...LV_NAMES.map((n,i)=>[String(i),n])])}</label>
   <label class="f"><span class="eyebrow">Media mín.</span>${sel('mkmin',mk.min,[['','Cualquiera'],['4','4+'],['5','5+'],['6','6+'],['6.5','6.5+'],['7','7+'],['8','8+']])}</label>
   <label class="f"><span class="eyebrow">Edad máx.</span>${sel('mkage',mk.age,[['','Cualquiera'],['21','21'],['23','23'],['26','26'],['30','30']])}</label>

@@ -67,9 +67,9 @@ const app = document.getElementById('app')!;
 (async () => {
   const t0 = Date.now();
   setS(null); dirty(); render();
-  ok(S.teams.length === 860, 'se crean 860 clubes');
+  ok(S.teams.length === 1100 && S.leagues.length === 55, 'se crean 1100 clubes en 55 ligas de 16 países');
   ok(app.textContent!.includes('Empieza tu carrera'), 'pantalla de inicio');
-  ok(app.querySelectorAll('.ccard svg.flag').length === 10, 'países con bandera');
+  ok(app.querySelectorAll('.ccard svg.flag').length === 16, 'países con bandera');
   for (const st of ['d', 'club', 'c']) { RT.startStep = st; render(); }
   ok(app.querySelector('.ccard'), 'pasos de inicio: país, división y club');
   const team = S.teams.filter(t => S.leagues[t.lg].c === 0 && S.leagues[t.lg].lv === 4).sort((a, b) => b.rep - a.rep)[0].id;
@@ -223,12 +223,12 @@ const app = document.getElementById('app')!;
     ok(shopWeekly() > 0, 'la tienda da dinero cada jornada');
     S.view = 'club'; render(); ok(app.textContent.includes('Centro médico') && app.textContent.includes('Abono de temporada'), 'estadio con abonos y centro médico'); S.budget = b0; }
   { // Selecciones nacionales
-    initIntl(); ok(S.intl.elo.length === 10 && ranking().length === 10, 'ranking de selecciones');
+    initIntl(); ok(ranking().length === 16, 'ranking de selecciones (16)');
     ok(callOf(0).length === 23, 'convocatoria automática de 23');
     const yrs = [1, 2, 3, 4].map(n => [summerYear(n), tournamentsIn(n).join('+')]); ok(yrs.some(x => x[1] === 'wc') && yrs.some(x => x[1] === 'eu+ca'), 'calendario de torneos: ' + yrs.map(x => x.join(':')).join(' '));
     const wc = playTournament('wc'); ok(wc.champ != null && wc.runner != null && wc.champ !== wc.runner && wc.groups.length === 2, `Mundial: campeona ${wc.champ}`);
-    const ca = playTournament('ca'); ok(ca.groups[0].tb.length === 3 && ca.ko.length === 1, 'Copa América con liguilla y final');
-    const eu = playTournament('eu'); ok(eu.groups[0].tb.length === 7 && eu.ko.length === 2, 'Eurocopa con semifinales y final');
+    const ca = playTournament('ca'); ok(ca.groups[0].tb.length === 5 && ca.ko.length === 2, 'Copa América con liguilla, semifinales y final');
+    const eu = playTournament('eu'); ok(eu.groups.length === 2 && eu.groups[0].tb.length === 5 && eu.ko.length === 2, 'Eurocopa con dos grupos, semifinales y final');
     const wk = S.week, caps0 = squad(S.user).reduce((a, p) => a + (p.caps || 0), 0); S.week = 9; fifaWeek(); S.week = wk; ok(true, 'parón de selecciones');
     const c = squad(S.user)[0].nat; takeNT(c); ok(S.nt && S.nt.c === c, 'eres seleccionador');
     const first = callOf(c)[0]; toggleCall(first); ok(!S.nt.call.includes(first) && S.nt.call.length === 22, 'quitar un convocado');
@@ -377,7 +377,7 @@ const app = document.getElementById('app')!;
   const code = exportCode();
   ok(importCode(code) === true, 'copia de seguridad: exportar e importar');
   const kb = Math.round(pack().length / 1024);
-  ok(kb < 6000, `tamaño del guardado: ${kb} KB`);
+  ok(kb < 8500, `tamaño del guardado: ${kb} KB`);
   console.log(`Terminado en ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

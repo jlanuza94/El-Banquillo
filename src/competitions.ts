@@ -2,7 +2,7 @@
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {money,r2,r3,rnd,shuffle} from './core';
 import {COUNTRIES,LV_NAMES} from './data';
-import {cName,LG,S,T,findLg,lgTeams,seasonLabel,uLg,unit} from './state';
+import {nC,wcs,cName,LG,S,T,findLg,lgTeams,seasonLabel,uLg,unit} from './state';
 import {strength} from './players';
 import {news} from './world';
 import {applyResult,createMatch,playerTick,quickMatch,step} from './engine';
@@ -15,11 +15,12 @@ export const cupRoundName=rd=>{const n=rd.n;return n<=2?'Final':n<=4?'Semifinale
 export function cupRounds(n){let r=0;while(n>1){const P=1<<Math.floor(Math.log2(n));n=r===0?Math.ceil(n/2):n===P?n/2:P;r++;}return r;}
 export const mkTie=(h,a,g)=>({h,a,g,hg:null,ag:null,pen:null,w:null,played:false,ev:[]});
 export function buildCal(){const cal=[];for(let w=0;w<38;w++){cal.push({t:'lg',r:w});const c=CUP_AFTER.indexOf(w);if(c>=0)cal.push({t:'cup',s:c});const d=CWC_AFTER.indexOf(w);if(d>=0)cal.push({t:'cwc',s:d});const e=CT_AFTER.indexOf(w);if(e>=0)cal.push({t:'ct',s:e});}return cal;}
+/** Mundial de Clubes: 16 equipos. Campeones de los países más fuertes y, si faltan, subcampeones. */
+export function cwcFrom(tops){const ord=wcs().sort((a,b)=>COUNTRIES[b].top-COUNTRIES[a].top),q=ord.slice(0,16).map(c=>tops[c][0].id);for(const c of ord){if(q.length>=16)break;q.push(tops[c][1].id);}return q;}
 export function setupCups(){
- S.cups=COUNTRIES.map((C,c)=>{const ids=S.teams.filter(t=>LG(t.lg).c===c).map(t=>t.id);return{c,R:cupRounds(ids.length),alive:ids,rounds:[],winner:null};});
+ S.cups=wcs().map(c=>{const ids=S.teams.filter(t=>LG(t.lg).c===c).map(t=>t.id);return{c,R:cupRounds(ids.length),alive:ids,rounds:[],winner:null};});
  let q=S.cwcQual;
- if(!q||q.length!==16){const tops=COUNTRIES.map((C,c)=>lgTeams(findLg(c,0).id).sort((a,b)=>strength(b.id)-strength(a.id)));
-  q=tops.map(ts=>ts[0].id);COUNTRIES.map((C,c)=>c).sort((a,b)=>COUNTRIES[b].top-COUNTRIES[a].top).slice(0,6).forEach(c=>q.push(tops[c][1].id));}
+ if(!q||q.length!==16){const tops=wcs().map(c=>lgTeams(findLg(c,0).id).sort((a,b)=>strength(b.id)-strength(a.id)));q=cwcFrom(tops);}
  const pots=q.slice().sort((a,b)=>strength(b)-strength(a)),groups=[[],[],[],[]];
  for(let p=0;p<4;p++)shuffle(pots.slice(p*4,p*4+4)).forEach((id,g)=>groups[g].push(id));
  const PAIRS=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
@@ -109,9 +110,11 @@ export function resolveCwc(s){
 }
 export const CT_AFTER=[1,4,7,9,12,16,19,21,24,26,29,31,34];
 export const CT_STAGES=['Grupos · J1','Grupos · J2','Grupos · J3','Grupos · J4','Grupos · J5','Grupos · J6','Octavos · ida','Octavos · vuelta','Cuartos · ida','Cuartos · vuelta','Semifinal · ida','Semifinal · vuelta','Final'];
-export const CONTS=[{n:'Liga de Campeones',reg:'Europa',q:{1:5,0:5,2:5,3:5,4:5,5:4,8:3},G:8,top:76},{n:'Copa Libertad',reg:'América',q:{6:6,7:6,9:4},G:4,top:69}];
+export const CONTS=[{n:'Liga de Campeones',reg:'Europa',q:{1:5,0:5,2:5,3:5,4:5,5:4,8:3},q16:{1:5,0:5,2:4,3:4,4:4,5:3,8:3,10:2,11:1,12:1},G:8,top:76},{n:'Copa Libertad',reg:'América',q:{6:6,7:6,9:4},q16:{6:5,7:5,9:2,15:2,13:2},G:4,top:69}];
+/** Plazas por país (con los países nuevos se reparten de otra forma; siempre 32 y 16 equipos). */
+export const quotas=C=>nC()>10&&C.q16?C.q16:C.q;
 export const GL='ABCDEFGH';
-export function ctQualify(tabFor){return CONTS.map(C=>Object.entries(C.q).flatMap(([c,n])=>tabFor(+c).slice(0,n)));}
+export function ctQualify(tabFor){return CONTS.map(C=>Object.entries(quotas(C)).flatMap(([c,n])=>tabFor(+c).slice(0,n)));}
 export function setupConts(){
  const q=S.ctQual&&S.ctQual.length===2?S.ctQual:ctQualify(c=>lgTeams(findLg(c,0).id).sort((a,b)=>strength(b.id)-strength(a.id)).map(t=>t.id));
  const P=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];

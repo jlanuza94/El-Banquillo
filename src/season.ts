@@ -1,5 +1,7 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wcs} from './state';
+import {cwcFrom} from './competitions';
 import {recordSeason} from './worldhist';
 import {maybeGolden} from './youthplus';
 import {makeYouth} from './academy';
@@ -133,7 +135,7 @@ export function newSeason(){
  const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);seasonContracts(sm);
  seasonAwards();
  // hall of fame
- {const h={season:seasonLabel(),lg:COUNTRIES.map((C,c)=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}
+ {const h={season:seasonLabel(),lg:wcs().map(c=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}
  recordSeason(sm,tabs);
  {const best=squad(S.user).filter(p=>p.st&&p.st.g).sort((a,b)=>b.st.g-a.st.g)[0];if(best){if(!S.rec)S.rec={};if(!S.rec.goals||best.st.g>S.rec.goals.g)S.rec.goals={name:best.name,g:best.st.g,season:seasonLabel()};}}
  if(S.sponsor&&S.sponsor.type==='obj'&&sm.ok){S.budget=r3(S.budget+S.sponsor.obj);news(`${S.sponsor.name} paga ${money(S.sponsor.obj)} por cumplir el objetivo.`,'good');}
@@ -141,8 +143,8 @@ export function newSeason(){
  S.history.unshift({club:T(S.user).name,season:seasonLabel(),lg:lgName(sm.lg),pos:sm.pos,pts:sm.tb[sm.pos-1].pts,champ:T(sm.tb[0].id).name,top:top?`${top.name} (${top.goals})`:'—',obj:sm.ok,res:sm.L.lv===0&&sm.champ?'Campeón':sm.champ?'Campeón y ascenso':sm.up?'Ascenso':sm.down?'Descenso':''});
  S.budget=r3(S.budget+sm.prize);payDebts();
  if(sm.champ)S.titles.push({season:seasonLabel(),name:`Liga · ${lgName(sm.lg)}`});
- { const champ=COUNTRIES.map((C,c)=>tabs[findLg(c,0).id]);
-   S.cwcQual=[...champ.map(tb=>tb[0].id),...COUNTRIES.map((C,c)=>c).sort((a,b)=>COUNTRIES[b].top-COUNTRIES[a].top).slice(0,6).map(c=>champ[c][1].id)];
+ { const champ=wcs().map(c=>tabs[findLg(c,0).id]);
+   S.cwcQual=cwcFrom(champ);
    S.ctQual=ctQualify(c=>tabs[findLg(c,0).id].map(r=>r.id)); }
  // loans end
  const back=[],gone=[],ret=[];
