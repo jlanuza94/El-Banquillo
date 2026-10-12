@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {cornerMult,famMult,learnTactic,spOf} from './plans';
 import {matchDetail,recordMatch} from './analysis';
 import {diff} from './difficulty';
 import {roleEffects,roleMult} from './roles';
@@ -23,6 +24,7 @@ export function createMatch(ref){
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
+ m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us]);m.plan=T(m[m.us]).curPlan||null;}
  prepTactics(m);
  // regularidad (días buenos y malos) y partidos grandes
  ['h','a'].forEach(s=>{const xi=m.lu[s].filter(Boolean).map(PL),av=k=>xi.reduce((a,p)=>a+(p.at[k]??5),0)/Math.max(1,xi.length);
@@ -121,8 +123,9 @@ export function setPiece(m,live){
    shotLog(m,s,k,.76,ok?'g':'s');
    if(ok){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Penalti y gol! ${P.name} engaña al portero. (${scoreStr(m)})`:'',k);}
    else if(live)addEv(m,'shot',s,`¡Penalti fallado! ${P.name} no puede con ${g?g.name:'el portero'}.`,k);}
-  else if(rnd()<.0038){const k=m.lu[s].includes(m.fk[s])?m.fk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.pas-PL(a).at.pas)[0];if(!k)return;const P=PL(k);m.st[s].sh++;const fkg=rnd()<.05+.012*((P.at.tir+P.at.pas)/2-5)+(hasTr(P,'bal')?.05:0);shotLog(m,s,k,.06,fkg?'g':'s');
-   if(fkg){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Golazo de falta directa de ${P.name}! (${scoreStr(m)})`:'',k);}
+  else if(rnd()<.0038){const k=m.lu[s].includes(m.fk[s])?m.fk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.pas-PL(a).at.pas)[0];if(!k)return;const P=PL(k);m.st[s].sh++;const cen=m.sp&&m.sp[s].fk==='cen',hd=cen?m.lu[s].filter(Boolean).map(PL).sort((a,b)=>(b.at.cab??5)-(a.at.cab??5))[0]:null;const fkg=cen?rnd()<.045*(1+.12*((hd.at.cab??5)-6)):rnd()<.05+.012*((P.at.tir+P.at.pas)/2-5)+(hasTr(P,'bal')?.05:0);shotLog(m,s,cen?hd.id:k,cen?.12:.06,fkg?'g':'s');
+   if(fkg&&cen){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')hd.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Gol de falta ensayada! ${P.name} la cuelga y ${hd.name} cabecea a la red. (${scoreStr(m)})`:'',hd.id);m.ev[m.ev.length-1].ast=P.id!==hd.id?P.id:null;}
+   else if(fkg){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Golazo de falta directa de ${P.name}! (${scoreStr(m)})`:'',k);}
    else if(live)addEv(m,'shot',s,`Falta directa de ${P.name}: ${rnd()<.5?'se marcha por encima':'la saca el portero'}.`,k);}
  });
 }
@@ -148,7 +151,8 @@ export function extraStats(m,xs,live){
   if(rnd()<.025+xs[s]*2){st.co++;
    const ck=PL(m.ck&&m.lu[s].includes(m.ck[s])?m.ck[s]:m.lu[s].find(Boolean));const heads=m.lu[s].filter(Boolean).map(PL).filter(p=>(p.at.cab??0)>=7||p.h>=187||hasTr(p,'cab'));
    const sid=heads.length?pick(heads).id:pickScorer(m,s);
-   if(ck&&sid&&rnd()<TUNE.corner*(1+.08*(ck.at.pas-5))*(1+.25*heads.length/3)*(hasTr(ck,'bal')?1.2:1)){const id=sid;
+   const cm=m.sp?cornerMult(m.lu[s].filter(Boolean),ck,m.lu[o].filter(Boolean),m.sp[s],m.sp[o],s===m.us?S.spFam:50):1;
+   if(ck&&sid&&rnd()<TUNE.corner*cm*(1+.08*(ck.at.pas-5))*(1+.25*heads.length/3)*(hasTr(ck,'bal')?1.2:1)){const id=sid;
     m.score[s]++;st.sh++;st.ot++;shotLog(m,s,id,.3,'g');if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Gol de córner! ${ck.name} la pone y ${PL(id).name} remata de cabeza. (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ck.id!==id?ck.id:null;}}
   if(rnd()<.13*(m.oi&&m.oi[s]&&m.oi[s].dur?1.4:1))st.fo++;
   const n=Math.round(share*11+rnd()*2),acc=clamp(.62+.035*(avgAt(m,s,'MED','pas')-5)+.02*(avgAt(m,s,'DEF','pas')-5)+(m.tac[s].est==='pos'?.05:m.tac[s].est==='dir'?-.05:0)-(m.oi&&m.oi[o]&&m.oi[o].sal?.03:0),.45,.93);
@@ -227,6 +231,7 @@ export function applyResult(m){
   p.apps++;p.playedWk=true;p.energy=Math.round(clamp(m.en[id]??p.energy,20,100));
   p.form=clamp(Math.round(p.form*.6+res[s]*1.2+(gl[id]||0)*.9+gauss()*.6),-3,3);});
  recordMatch(m);
+ if(m.us&&m.ref.k!=='fr')learnTactic(m.tac[m.us]);
  if(m.us&&m.ref.k!=='fr')S.tg=(S.tg||0)+1;
  if(m.us&&m.ref.k!=='fr'){const my0=m.score[m.us],op0=m.score[m.us==='h'?'a':'h'];if(my0-op0>=5)unlock('manita');const xi=m.xi0[m.us].filter(Boolean).map(PL).filter(Boolean);if(xi.filter(p=>p.home).length>=5)unlock('casa');if(xi.some(p=>p.age<=17&&p.st&&p.st.pj<=1))unlock('joven');makePress(m);}
  if(m.us&&m.ref.k!=='fr'){const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'],R0=S.rec||(S.rec={});if(my-op>0&&(!R0.bigWin||my-op>R0.bigWin.d||(my-op===R0.bigWin.d&&my>R0.bigWin.g)))R0.bigWin={d:my-op,g:my,txt:`${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}`,season:seasonLabel(),comp:m.label||''};}

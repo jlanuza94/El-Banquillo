@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {SLOTS,SP,planFam,spOf,tfam} from '../plans';
 import {MAX_PAIRS,canLearn,canMentor,pairs} from '../mentor';
 import {hotMult,interested} from '../market2';
 import {YOUTH_USER,userYouthStr,ylName,ylTable} from '../youth';
@@ -94,7 +95,17 @@ export function tacticasView(){
  ${sl.map((s,i)=>{const p=PL(t.lineup[i]);return `<div class="offer" style="align-items:flex-start"><span class="pos ${GRP[s]}">${s}</span><span class="t">${p?nameBtn(p):'<span class="muted">Vacío</span>'}${p?' '+qBadge(eff(p,s,null,ro[i])/10):''}
   <select data-role="${i}" aria-label="Rol del puesto ${s}" style="display:block;margin-top:4px;max-width:100%">${roleList(s).map(r=>`<option value="${r[0]}" ${ro[i]===r[0]?'selected':''}>${esc(r[1])}${p?' · '+(eff(p,s,null,r[0])/10).toFixed(1):''}</option>`).join('')}</select><span class="small muted">${esc(roleDef(s,ro[i])[4])}</span></span></div>`;}).join('')}
  <p class="small muted" style="margin:8px 0 0">Cada rol pide unos atributos: un falso nueve necesita pase y regate; un delantero de área, tiro y físico. Los roles ofensivos dan más ocasiones a cambio de dejar huecos atrás. Al cambiar de formación se mantienen los roles que encajan.</p></section>`;
- return `<div class="grid"><div class="stack">${inst}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${oiP}${sp}${ords}</div></div>`;
+ const plans=t.plans||{},F=tfam();
+ const planP=`<section class="panel"><div class="panel-h"><h2>Tácticas guardadas</h2><span class="eyebrow">${t.curPlan?'En uso: '+t.curPlan:'Ninguna en uso'}</span></div>
+ <p class="small muted" style="margin:0 0 8px">Guarda hasta tres planes (formación, mentalidad, instrucciones, roles e instrucciones al rival) y cámbialos con un toque, también durante el partido.</p>
+ ${SLOTS.map(k=>{const P=plans[k];return `<div class="offer"><b class="num" style="width:22px;font-size:18px">${k}</b><span class="t">${P?`<b>${esc(P.name)}</b><br><span class="small muted">${P.formation} · ${MENT[P.ment].label} · ${TACS.est.o[P.tac.est]} · presión ${TACS.pre.o[P.tac.pre].toLowerCase()}</span>`:'<span class="muted">Vacía</span>'}</span>${P?`<button class="btn sm ${t.curPlan===k?'dark':''}" data-a="plan-load" data-v="${k}">${t.curPlan===k?'En uso':'Usar'}</button>`:''}<button class="btn sm" data-a="plan-save" data-v="${k}">Guardar la actual</button></div>`;}).join('')}</section>`;
+ const famP=`<section class="panel"><div class="panel-h"><h2>Dominio de la táctica</h2><span class="eyebrow">${Math.round(planFam(tac))}%</span></div>
+ ${Object.entries(TACS).map(([k,v])=>{const x=Math.round(F[k][tac[k]]);return `<div class="arow" style="grid-template-columns:120px minmax(0,1fr) 34px"><span>${v.n}: ${v.o[tac[k]].toLowerCase()}</span><span class="abar" style="display:block"><i class="${qc(x/10)}" style="width:${x}%"></i></span><b class="num">${x}</b></div>`;}).join('')}
+ <p class="small muted" style="margin:8px 0 0">Cada partido con unas instrucciones las afianza, y el entrenamiento «Táctica y química» acelera el aprendizaje. Si cambias a algo que el equipo no ha trabajado, rinde algo menos al principio.</p></section>`;
+ const spT=spOf(t),spP=`<section class="panel"><div class="panel-h"><h2>Jugadas ensayadas</h2><span class="eyebrow">Ensayo ${Math.round(S.spFam??40)}%</span></div>
+ ${Object.entries(SP).map(([k,v])=>`<div style="margin-bottom:10px"><div class="eyebrow" style="margin-bottom:4px">${v.n}</div><div class="seg">${Object.entries(v.o).map(([o,[l]])=>`<button data-a="sp" data-k="${k}" data-v="${o}" aria-pressed="${spT[k]===o}">${l}</button>`).join('')}</div><p class="small muted" style="margin:4px 0 0">${esc(v.o[spT[k]][1])}</p></div>`).join('')}
+ <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
+ return `<div class="grid"><div class="stack">${planP}${inst}${famP}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${oiP}${sp}${spP}${ords}</div></div>`;
 }
 export function plantillaView(){
  const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=S.plTab||'xi';

@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {learnTactic} from './plans';
 import {mentorOf,mentorWeekly} from './mentor';
 import {deadlineDeals,interested,rumoursWeekly,sellOnOut} from './market2';
 import {youthRound} from './youth';
@@ -87,7 +88,7 @@ export function trainPlayer(p){
  S.trainLog=S.trainLog.slice(0,30);
 }
 export function weeklyTeamTraining(){
- if(S.train.focus==='tac'){const g=S.train.int==='i'?4.5:S.train.int==='s'?2:3;S.chem=clamp(S.chem+g,20,100);const f=T(S.user).formation;S.famil[f]=clamp(famOf(f)+g+1,0,100);}
+ if(S.train.focus==='tac'){learnTactic(T(S.user).tac,S.train.int==='i'?4:S.train.int==='s'?1.5:2.5);const g=S.train.int==='i'?4.5:S.train.int==='s'?2:3;S.chem=clamp(S.chem+g,20,100);const f=T(S.user).formation;S.famil[f]=clamp(famOf(f)+g+1,0,100);}
  Object.keys(FORMS).forEach(f=>{if(f!==T(S.user).formation&&famOf(f)>30)S.famil[f]=famOf(f)-1;});
  const n=squad(S.user).length;if(n>26)S.chem=clamp(S.chem-.5,20,100);
  if(S.lastXI.some(id=>PL(id)&&(PL(id).per==='lid'||(PL(id).at.lid??0)>=8)&&PL(id).team===S.user))S.chem=clamp(S.chem+.6,20,100);

@@ -34,6 +34,7 @@ import { fixLineup } from '../src/tactics';
 import { TUNE, createMatch, liveRatings, quickMatch, step } from '../src/engine';
 import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
+import { learnTactic, loadPlan, planFam, planInMatch, savePlan } from '../src/plans';
 
 const seasons = +(process.argv[2] || 1);
 let fails = 0;
@@ -142,6 +143,11 @@ const app = document.getElementById('app')!;
   }
   { const y = squad(S.user).find(p => p.age <= 21) || squad(S.user)[0]; const mt = squad(S.user).find(p => p.age >= 27); if (y.age <= 21 && mt) { mt.per = 'pro'; mt.at.lid = 8; const e = addPair(y.id, mt.id); ok(e === '' && pairs().length === 1, 'tutelaje: se asigna un tutor'); for (let i = 0; i < 60; i++) mentorWeekly(); ok(y.per === 'pro', 'tutelaje: el joven adopta el carácter del tutor'); removePair(y.id); } }
   { let boom = 0, stag = 0; const ps = Object.values(S.players).filter(p => p.age <= 21).slice(0, 2000); ps.forEach(p => { const c = JSON.parse(JSON.stringify(p)); c.st = { mi: 2000 }; const e = devSeason(c, {}); if (e === 'boom') boom++; if (e === 'stag') stag++; }); ok(boom > 0 && stag > 0, `desarrollo: hay jóvenes que explotan (${boom}) y que se estancan (${stag}) de ${ps.length}`); }
+  { const t = T(S.user), f0 = t.formation; savePlan('A'); setFormation('3-5-2'); T(S.user).tac = { ...T(S.user).tac, est: 'pos' }; savePlan('B'); loadPlan('A');
+    ok(t.formation === f0 && t.plans.B.formation === '3-5-2', 'tácticas guardadas A y B');
+    S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; for (let i = 0; i < 30; i++) step(m);
+    ok(planInMatch(m, 'B') && m.f[m.us] === '3-5-2' && m.lu[m.us].filter(Boolean).length >= 10 && m.tac[m.us].est === 'pos', 'cambio de táctica en pleno partido'); while (!m.done) step(m); S.fr = [];
+    const before = planFam(t.tac); learnTactic(t.tac); ok(planFam(t.tac) > before, 'el equipo aprende la táctica que usa'); render(); S.view = 'tacticas'; render(); ok(app.textContent.includes('Jugadas ensayadas'), 'pantalla de tácticas con planes y jugadas'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
