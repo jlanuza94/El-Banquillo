@@ -67,7 +67,7 @@ export function nav(){
  const t=T(S.user);
  const side=`<aside class="side"><div class="brand">El Banquillo<small>${esc(S.mgr?'Reputación '+Math.round(S.mgr.rep)+'/100':'')}</small></div>
  <div class="sclub">${crest(t)}<div style="min-width:0"><div class="n">${esc(t.name)}</div><div class="small muted">${esc(lgName(t.lg,true))} · ${money(S.budget)}</div></div></div>
- ${S.match?`<button class="nitem" data-a="view" data-v="partido" aria-current="${S.view==='partido'}" style="color:var(--loss)">${icon('ball')}<span>En juego ${S.match.min}'</span></button>`:''}
+ ${S.match?`<button class="nitem" data-a="view" data-v="partido" aria-current="${S.view==='partido'}" ${S.view==='partido'?'':'style="color:var(--loss)"'}>${icon('ball')}<span>En juego ${S.match.min}'</span></button>`:''}
  ${NAVG.map(g=>{const items=g.it.filter(([v])=>!quick()||!DEEP_ONLY.includes(v));return items.length?`<div class="ngroup">${g.g?`<div class="gt">${g.g}</div>`:''}${items.map(it).join('')}</div>`:'';}).join('')}
  <button class="nitem" data-a="set-mode" data-v="${quick()?'profundo':'rapido'}" style="margin-top:auto;opacity:.8"><span class="small">Modo ${quick()?'rápido':'profundo'} · cambiar</span></button></aside>`;
  const mob=['inicio','buzon','plantilla','mercado'];

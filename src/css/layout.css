@@ -140,3 +140,4 @@ aside.side .nitem[aria-current="true"] .badge{background:var(--menu);color:var(-
 .thbtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .hero{position:relative}
 .thbtn.onhero{right:0;top:18px;background:var(--menu2);border-color:var(--menu-line);color:var(--menu-ink)}
+aside.side .nitem[style*="--loss"]{color:#ff8a7a!important}
