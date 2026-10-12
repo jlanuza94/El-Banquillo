@@ -16,6 +16,9 @@ import { render } from './views/common';
 import { startAnim2d } from './match2d';
 import './events';
 import { setupPWA, promptInstall } from './pwa';
+import { applyTheme } from './theme';
+
+applyTheme();
 
 declare const __BUILD__: string;
 declare global {

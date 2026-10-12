@@ -136,3 +136,7 @@ aside.side .nitem[aria-current="true"] .badge{background:var(--menu);color:var(-
 .sheet .nitem[aria-current="true"]{background:var(--accent);color:var(--accent-ink)}
 .sheet .nitem:hover{background:rgba(255,255,255,.08)}
 .sheet .nitem[aria-current="true"]:hover{background:var(--accent)}
+.thbtn{position:absolute;top:44px;right:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink);z-index:2}
+.thbtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hero{position:relative}
+.thbtn.onhero{right:0;top:18px;background:var(--menu2);border-color:var(--menu-line);color:var(--menu-ink)}

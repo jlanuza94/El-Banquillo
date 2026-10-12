@@ -10,6 +10,7 @@ import {strength} from '../players';
 import {startBudget} from '../world';
 import {start} from '../boot';
 import {flag} from '../flags';
+import {themeBtn} from '../theme';
 export function startView(){
  const C=COUNTRIES[RT.startC];RT.startLv=Math.min(RT.startLv,C.lv-1);
  const L=findLg(RT.startC,RT.startLv),teams=lgTeams(L.id).sort((a,b)=>b.rep-a.rep);
@@ -28,7 +29,7 @@ export function startView(){
  <div class="dlist">${Array.from({length:C.lv},(_,i)=>{const Li=findLg(RT.startC,i),ts=lgTeams(Li.id).map(t=>strength(t.id)/10),lo=Math.min(...ts),hi=Math.max(...ts);
   return `<button class="dcard" data-a="start-lv" data-v="${i}"><span class="dn">${LV_SH[i]}</span><span class="dt"><b>${esc((S.lgNames||{})[Li.id]||LV_NAMES[i])}</b><span class="small muted">${i===0?'La élite: pelea por el título. Bajan los tres últimos.':i===C.lv-1?'Última categoría: sin descenso, suben los tres primeros.':'Suben los tres primeros y bajan los tres últimos.'}</span></span><span class="dl"><span class="eyebrow">Nivel</span><b>${lo.toFixed(1)}–${hi.toFixed(1)}</b></span>${i===C.lv-1?'<span class="dtag">Para empezar desde abajo</span>':i===0?'<span class="dtag top">Máximo reto</span>':''}</button>`;}).join('')}</div>`;
  const chosen=`<div class="row cchosen" style="margin-bottom:14px">${flag(C.code)}<div style="min-width:0;flex:1"><b>${esc(C.n)}</b><div class="small muted">${esc((S.lgNames||{})[L.id]||LV_NAMES[L.lv])}</div></div><button class="btn sm" data-a="start-step" data-v="d">Cambiar división</button><button class="btn sm" data-a="start-step" data-v="c">Cambiar país</button></div>`;
- return `<div class="wrap"><section class="hero"><div class="eyebrow">10 países · 43 ligas de 20 equipos · 860 clubes · 3 ascensos y 3 descensos</div><h1>El Banquillo</h1>
+ return `<div class="wrap"><section class="hero">${themeBtn('onhero')}<div class="eyebrow">10 países · 43 ligas de 20 equipos · 860 clubes · 3 ascensos y 3 descensos</div><h1>El Banquillo</h1>
  <p>Elige país y división. Coge un club modesto de la última categoría y súbelo hasta Primera, o ve directo a pelear el título. Monta tu formación, rebusca gangas en el mercado de todo el mundo y negocia cada fichaje.</p></section>
  ${saved}<h2 id="nuevo" style="margin:0 0 12px;scroll-margin-top:12px">${slots.length?'Nueva partida':'Empieza tu carrera'}</h2>
 ${step==='c'?pickC:step==='d'?pickD:chosen+`

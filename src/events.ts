@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {cycleTheme,THEMES} from './theme';
 import {searchResults} from './views/search';
 import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData} from './mods';
 import {addAffiliate,createFilial,fromFilial,moveBudget,removeAffiliate,takeBankLoan,toFilial} from './clubplus';
@@ -38,6 +39,7 @@ export function placeInSlot(pid,i){
 document.addEventListener('click',e=>{
  const el=e.target.closest('[data-a]');if(!el)return;
  const a=el.dataset.a,d=el.dataset;
+ if(a==='theme'){const t=cycleTheme();toast('Tema: '+THEMES[t]+(t==='auto'?' (como el móvil)':''));render();return;}
  if(!S||S.user==null){if(a==='slot-load'){loadSlot(+d.id).then(o=>{if(o)boot(o);else{toast('No se pudo cargar esa partida.');}});return;}
   if(a==='slot-del'){RT.delConfirm=+d.id;render();return;}if(a==='slot-del-no'){RT.delConfirm=null;render();return;}
   if(a==='slot-del-ok'){RT.delConfirm=null;deleteSlot(+d.id).then(render);return;}

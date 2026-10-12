@@ -1,5 +1,6 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {themeBtn} from '../theme';
 import {DEEP_ONLY,quick} from '../quick';
 import {importData} from '../mods';
 import {editorView} from './editor';
@@ -54,7 +55,7 @@ export function header(){
  if(S.match)cta=`<div class="cta"><div class="l"><span class="eyebrow">En juego · ${S.match.min}'</span><b>${esc(T(S.match.h).short)} ${S.match.score.h}-${S.match.score.a} ${esc(T(S.match.a).short)}</b></div><button class="btn primary" data-a="view" data-v="partido">Volver al partido</button></div>`;
  else if(ended)cta=`<div class="cta"><div class="l"><span class="eyebrow">Temporada terminada</span><b>Mira el resumen</b></div><button class="btn primary" data-a="view" data-v="inicio">Ver resumen</button></div>`;
  else if(nm){const opp=T(nm.fx.h===S.user?nm.fx.a:nm.fx.h);cta=`<div class="cta"><div class="l"><span class="eyebrow">${esc(nm.label)}</span><b>${nm.fx.h===S.user?'vs':'en'} ${esc(opp.name)}</b></div><button class="btn primary" data-a="play">Jugar</button><button class="btn" data-a="sim-menu">Simular</button></div>`;}
- return `<header class="top2"><button class="gsbtn" data-a="gsearch" aria-label="Buscar" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button><div class="club">${crest(t,'lg')}<div style="min-width:0"><div class="eyebrow">${lgName(t.lg)} · ${seasonLabel()} · ${ended?'Fin de temporada':'Jornada '+(S.week+1)+'/'+nRounds()}${inWindow()&&!ended?' · <span style="color:var(--win)">Mercado abierto</span>':''}</div><h1>${esc(t.name)}</h1>
+ return `<header class="top2">${themeBtn()}<button class="gsbtn" data-a="gsearch" aria-label="Buscar" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button><div class="club">${crest(t,'lg')}<div style="min-width:0"><div class="eyebrow">${lgName(t.lg)} · ${seasonLabel()} · ${ended?'Fin de temporada':'Jornada '+(S.week+1)+'/'+nRounds()}${inWindow()&&!ended?' · <span style="color:var(--win)">Mercado abierto</span>':''}</div><h1>${esc(t.name)}</h1>
  <div class="kpis" style="margin-top:6px"><div class="kpi"><span class="eyebrow">Presupuesto</span><b>${money(S.budget)}</b></div><div class="kpi"><span class="eyebrow">Posición</span><b class="${played?(pos<=o.max?'ok':'bad'):''}">${played?pos+'º':'—'}</b></div><div class="kpi"><span class="eyebrow">Objetivo</span><b style="font-size:16px">${o.txt}</b></div><div class="kpi"><span class="eyebrow">Confianza</span><b class="${S.mgr.conf>=50?'ok':S.mgr.conf<25?'bad':''}">${Math.round(S.mgr.conf)}</b></div></div></div></div>${cta}</header>`;
 }
 export function nav(){
