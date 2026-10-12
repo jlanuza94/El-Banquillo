@@ -1,12 +1,13 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {DIFF} from './difficulty';
 import {queueScout,scoutWeeks} from './scouting';
 import {fireStaff,hireStaff,renewStaff} from './staff';
 import {KEY,clamp,pick,r2,rnd} from './core';
 import {COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
 import {news,pickTeam} from './world';
-import {autoLineup,fixLineup,nRounds,setFormation,userRoles} from './tactics';
+import {autoLineup,fixLineup,nRounds,rotateLineup,setFormation,userRoles} from './tactics';
 import {addEv,doSub,talkEffect} from './engine';
 import {finishRound,newSeason,playFriendly,playMatch,runTimer,simRun,simState,simToEnd,stopSim} from './season';
 import {inWindow,makeBid,makeOffer,makeTerms,negState,readTerms,refuses,sell} from './market';
@@ -30,6 +31,9 @@ document.addEventListener('click',e=>{
  if(!S||S.user==null){if(a==='slot-load'){loadSlot(+d.id).then(o=>{if(o)boot(o);else{toast('No se pudo cargar esa partida.');}});return;}
   if(a==='slot-del'){RT.delConfirm=+d.id;render();return;}if(a==='slot-del-no'){RT.delConfirm=null;render();return;}
   if(a==='slot-del-ok'){RT.delConfirm=null;deleteSlot(+d.id).then(render);return;}
+  if(a==='start-diff'){RT.diff=d.v;render();return;}
+  if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
+  if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
   if(a==='pick-team')pickTeam(+d.i);else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;render();}else if(a==='start-lv'){RT.startLv=+d.v;render();}return;}
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
@@ -43,6 +47,9 @@ document.addEventListener('click',e=>{
   case'aw-stat':S.awStat=d.v;break;
   case'aw-lv':{const L=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(L.c,+d.v).id;break;}
   case'cmp':{if(S.cmpA&&S.cmpA!==d.id&&PL(S.cmpA)){S.modal={type:'cmp',a:S.cmpA,b:d.id};S.cmpA=null;}else{S.cmpA=d.id;S.modal=null;toast(`Ahora abre la ficha de otro jugador y pulsa «Comparar».`);}break;}
+  case'rot-tog':S.autoRot=S.autoRot===false;break;
+  case'rot-now':{const n=rotateLineup();toast(n?`Tu segundo hace ${n} cambio${n>1?'s':''} en el once.`:'No hace falta rotar: todos están frescos.');break;}
+  case'set-diff':S.diff=d.v;toast(`Dificultad: ${DIFF[d.v].n}.`);break;
   case'mail-open':S.mailSel=d.id;markRead(d.id);break;
   case'mail-back':S.mailSel=null;break;
   case'mail-cat':S.mailCat=d.v;S.mailSel=null;break;
@@ -159,6 +166,7 @@ document.addEventListener('change',e=>{
  else if(e.target.dataset&&e.target.dataset.job){const sc=S.scouts.find(x=>x.id===e.target.dataset.job);if(sc)sc.job=v;}
  else if(e.target.dataset&&e.target.dataset.reg){const sc=S.scouts.find(x=>x.id===e.target.dataset.reg);if(sc)sc.reg=+v;}
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}
+ else if(id==='rotTh'){S.rot={th:+v};}
  else if(id==='awC'){const c=+v,cur=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}
  else if(map[id]){S.mk[map[id]]=v;S.mk.limit=40;}

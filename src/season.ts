@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {markKey} from './inbox';
 import {seasonAwards} from './awards';
 import {payDebts} from './market2';
 import {setupYouth} from './youth';
@@ -10,7 +11,7 @@ import {COUNTRIES,SPEEDS,newSt} from './data';
 import {RT,LG,PL,S,T,dirty,econ,findLg,lgName,lowest,rt,seasonLabel,setS,squad,uLg,unit} from './state';
 import {assignNum,baseWage,decline,ensureSquad,genFreeAgents,genPlayer,improve,setValue,strength} from './players';
 import {news,setupSeason} from './world';
-import {fixLineup,lineupIssues,nRounds,table} from './tactics';
+import {fixLineup,lineupIssues,nRounds,rotateLineup,table} from './tactics';
 import {applyResult,createMatch,playerTick,quickMatch,step} from './engine';
 import {advance,completeEvent,ctQualify,ctWelcome,curEvent,cwcWelcome,mkTie,nextMatch} from './competitions';
 import {aiTransfers,inWindow} from './market';
@@ -21,7 +22,7 @@ import {pack,save,saveNow,unpack} from './persist';
 import {render,toast} from './views/common';
 export function playMatch(){
  const nm=nextMatch();if(!nm)return;
- if(S.press){S.press=null;S.mgr.conf=clamp(S.mgr.conf-1,0,100);}
+ if(S.press){S.press=null;markKey('press');S.mgr.conf=clamp(S.mgr.conf-1,0,100);}
  if(lineupIssues().length){const k=fixLineup();if(k)toast(`Cubrimos ${k} hueco${k>1?'s':''} de la alineación con suplentes.`);}
  S.match=createMatch(nm.ref);S.match.label=nm.label;S.view='partido';save();render();
 }
@@ -67,7 +68,7 @@ export async function simLoop(mode,stopOnNews,hooks){
   if(mode==='win'&&!inWindow())break;
   const nm=nextMatch();if(!nm)break;
   const beforeOffers=Object.values(S.offers).filter(o=>o.incoming).length,beforeJobs=(S.jobOffers||[]).length;
-  if(lineupIssues().length)fixLineup();
+  if(S.autoRot!==false)rotateLineup();else if(lineupIssues().length)fixLineup();
   const m=quickMatch(nm.ref);m.label=nm.label;S.match=m;
   const us=m.us,my=m.score[us],op=m.score[us==='h'?'a':'h'];
   finishCore();n++;

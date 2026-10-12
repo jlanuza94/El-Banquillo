@@ -1,6 +1,6 @@
 /* El Banquillo · club.js — Negocio del club, directiva, prensa y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {mail} from './inbox';
+import {mail,markKey} from './inbox';
 import {clamp,money,r2,r3,rnd,shuffle} from './core';
 import {LG,PL,S,T,seasonLabel,squad,uLg,unit} from './state';
 import {news} from './world';
@@ -49,7 +49,7 @@ export function makePress(m){
  else if(my>op)q={q:`Victoria ante ${opp.name}. ¿El equipo está para pelear por todo?`,o:[['Vamos partido a partido',{team:2,board:1}],['¡Claro que sí, a por todo!',{fans:6,team:3,board:-1}],['El rival nos lo puso fácil',{fans:-2,team:1,rival:[opp.id,.03]}]]};
  else if(my<op)q={q:`Derrota ante ${opp.name}. ¿Qué ha fallado?`,o:[['La culpa es mía',{team:3,board:-2}],[worst?`${PL(worst).name} no ha estado a la altura`:'Algunos no han estado a la altura',{team:-3,board:1,fans:2,pl:worst?[worst,-10]:null}],['El árbitro nos ha perjudicado',{fans:4,board:-1,team:1}]]};
  else q={q:`Empate ante ${opp.name}. ¿Está satisfecho?`,o:[['Es un punto valioso',{team:1}],['Merecimos ganar',{fans:2,team:2}],['Hay que mejorar mucho',{team:-2,board:2}]]};
- S.press=q;mail(`Los periodistas te esperan antes del próximo partido: «${q.q}»`,{cat:'pre',subj:'Rueda de prensa',act:[{l:'Responder',a:'view',v:'inicio'}]});
+ S.press=q;mail(`Los periodistas te esperan antes del próximo partido: «${q.q}»`,{cat:'pre',subj:'Rueda de prensa',key:'press',act:[{l:'Responder',a:'view',v:'inicio'}]});
 }
 export function answerPress(i){
  const q=S.press;if(!q)return;const e=q.o[i][1],sq=squad(S.user),out=[];
@@ -58,7 +58,7 @@ export function answerPress(i){
  if(e.board){S.mgr.conf=clamp(S.mgr.conf+e.board,0,100);out.push(e.board>0?'la directiva lo valora':'la directiva prefiere más prudencia');}
  if(e.pl&&PL(e.pl[0])){const p=PL(e.pl[0]);p.hap=clamp(p.hap+e.pl[1],0,100);out.push(`${p.name} ${e.pl[1]>0?'se siente respaldado':'se siente señalado'}`);}
  if(e.rival){S.rivalBoost={team:e.rival[0],v:e.rival[1],until:S.seasonN};out.push(`${T(e.rival[0]).name} se lo apunta para el próximo partido`);}
- news(`Prensa: «${q.o[i][0]}». ${out.length?out.join(', ')+'.':'Sin consecuencias.'}`);S.press=null;
+ news(`Prensa: «${q.o[i][0]}». ${out.length?out.join(', ')+'.':'Sin consecuencias.'}`);S.press=null;markKey('press');
 }
 export const ACH={asc:['Primer ascenso','Consigue tu primer ascenso.'],cima:['De abajo a la cima','Llega a Primera empezando en la última división.'],liga:['Campeón de liga','Gana cualquier liga.'],liga1:['Campeón de Primera','Gana una liga de Primera División.'],copa:['Rey de copas','Gana una copa nacional.'],cont:['Campeón continental','Gana la Liga de Campeones o la Copa Libertad.'],cwc:['Campeón del mundo','Gana el Mundial de Clubes.'],tri:['Triplete','Liga de Primera, copa y continental en la misma temporada.'],inv:['Invicto','Termina una liga sin perder.'],manita:['Manita','Gana un partido por 5 goles o más.'],casa:['Hecho en casa','Alinea a 5 canteranos en el mismo once.'],joven:['Debut precoz','Haz debutar a un jugador de 17 años o menos.'],gang:['Ojo de halcón','Vende a un jugador por 5 veces lo que pagaste.'],neg:['Fábrica de talento','Vende a un canterano por 2M o más.'],fiel:['Fiel al escudo','Cumple 10 temporadas en el mismo club.'],millo:['Club millonario','Llega a 50M de presupuesto.'],lleno:['Fortaleza','Llena tu estadio en 10 partidos de una temporada.'],nomad:['Trotamundos','Entrena en 3 países distintos.']};
 export function unlock(k){S.ach=S.ach||{};if(S.ach[k]||!ACH[k])return;S.ach[k]=seasonLabel();news(`Logro desbloqueado: ${ACH[k][0]}.`,'good');toast(`Logro: ${ACH[k][0]}`);}

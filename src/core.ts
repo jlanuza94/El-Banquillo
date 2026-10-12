@@ -2,7 +2,19 @@
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 export const KEY='el-banquillo-v4';
 export const $app=typeof document!=='undefined'?document.getElementById('app'):null;
-export const rnd=Math.random;
+/*
+ * Generador de números aleatorios con semilla (sfc32). Toda la partida usa este generador y su estado se
+ * guarda con la partida: con la misma partida y las mismas decisiones, los resultados son siempre los mismos.
+ */
+let RS=[0x9e3779b9,0x243f6a88,0xb7e15162,Date.now()>>>0];
+function sfc32(){let [a,b,c,d]=RS;a>>>=0;b>>>=0;c>>>=0;d>>>=0;let t=(a+b|0)+d|0;d=d+1|0;a=b^b>>>9;b=c+(c<<3)|0;c=c<<21|c>>>11;c=c+t|0;RS=[a,b,c,d];return (t>>>0)/4294967296;}
+/** Fija la semilla (un número entero). */
+export function seedRng(seed){seed=seed>>>0;RS=[0x9e3779b9,0x243f6a88,0xb7e15162,seed];for(let i=0;i<15;i++)sfc32();}
+export const rngState=()=>RS.slice();
+export function setRngState(s){if(Array.isArray(s)&&s.length===4)RS=s.map(x=>x>>>0);}
+/** Semilla nueva a partir del reloj, para partidas nuevas. */
+export const newSeed=()=>(Date.now()^Math.floor(performance.now()*1000))>>>0;
+export const rnd=()=>sfc32();
 export const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
 export const pick=a=>a[Math.floor(rnd()*a.length)];
 export const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));

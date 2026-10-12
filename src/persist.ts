@@ -1,6 +1,6 @@
 /* El Banquillo · persist.js — Guardado (IndexedDB), carga, copia de seguridad y migraciones de formato. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {KEY} from './core';
+import {KEY,rngState} from './core';
 import {ATTRS,COUNTRIES,NAMES,ST_K,newSt} from './data';
 import {RT,S,rt,T,seasonLabel,lgName,uLg} from './state';
 import LZString from 'lz-string';
@@ -11,7 +11,7 @@ export const PF_V4=['id','name','nat','pos','age','pot','team','num','energy','f
 export const PF=PF_V4.concat(['sp','alt','foot','wf','h','per','tr','hap','role','cl','st','car','hist','req','prom','tw','injT','pInjT','prone','recov','agc','ph','adapt','home','paid','boomS','son']);
 export const packName=p=>{const L=NAMES[COUNTRIES[p.nat].lang],i=p.name.indexOf(' '),a=L[0].indexOf(p.name.slice(0,i)),b=L[1].indexOf(p.name.slice(i+1));return a>=0&&b>=0?a+'.'+b:p.name;};
 export function pack(){
- const o=Object.assign({},S);o.players=undefined;
+ const o=Object.assign({},S);o.players=undefined;o.rng=rngState();
  o.pf=PF;o.pk=Object.values(S.players).map(p=>[...PF.map(k=>k==='name'?packName(p):k==='id'?+p.id.slice(1):k==='st'?(p.st&&p.st.pj?ST_K.map(x=>x==='rs'?Math.round(p.st.rs*10):p.st[x]):0):k==='alt'||k==='tr'?(p[k]||[]).join(','):p[k]===undefined?0:p[k]),ATTRS.map(k=>String.fromCharCode(96+p.at[k])).join(''),p.loan?(p.loan.opt?[p.loan.from,p.loan.opt]:p.loan.from):-1,p.playedWk?1:0]);
  o.fixtures=undefined;o.fk=S.fixtures.map(lg=>lg.map(rd=>rd.map(f=>f.played?(f.ev&&f.ev.length?[f.h,f.a,f.hg,f.ag,f.ev]:[f.h,f.a,f.hg,f.ag]):[f.h,f.a])));
  return JSON.stringify(o);

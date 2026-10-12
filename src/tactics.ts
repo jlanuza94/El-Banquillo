@@ -36,7 +36,7 @@ export function teamPower(lu,f,en,hurt,mult=1,roles=null){
 }
 export const famOf=f=>S.famil&&S.famil[f]!=null?S.famil[f]:40;
 export const chemMult=f=>.92+.06*S.chem/100+.04*famOf(f)/100;
-export function xg(A,D,home,mA,mD){return clamp(1.18*Math.pow(A.atk/D.def,3)*(home===true?1.12:home===false?.92:1)*MENT[mA].own*MENT[mD].opp,.15,4.5);}
+export function xg(A,D,home,mA,mD){return clamp(1.2*Math.pow(A.atk/D.def,2.6)*(home===true?1.12:home===false?.92:1)*MENT[mA].own*MENT[mD].opp,.15,4);}
 export function lineupIssues(){const t=T(S.user);return t.lineup.map((id,i)=>({i,id})).filter(x=>!x.id||!available(PL(x.id))||PL(x.id).team!==S.user);}
 export function fixLineup(){
  const t=T(S.user),slots=slotsOf(t.formation);let fixed=0;
@@ -61,3 +61,23 @@ export const posOf=tid=>table(T(tid).lg).findIndex(r=>r.id===tid)+1;
 export const nRounds=()=>S.fixtures[0].length;
 export const nextFixture=()=>S.week<nRounds()?S.fixtures[uLg()][S.week].find(f=>f.h===S.user||f.a===S.user):null;
 export function zoneOf(lg,i){const L=LG(lg);if(L.lv===0&&i===0)return 'z1';if(L.lv>0&&i<3)return 'z4';if(!lowest(L)&&i>=17)return 'z3';return '';}
+
+/**
+ * Rotación del segundo entrenador: parte de tu once de referencia y cambia a los cansados, lesionados o
+ * sancionados por el mejor suplente descansado para ese puesto. Si cambias el once a mano, ese pasa a ser
+ * el nuevo once de referencia.
+ */
+export function rotateLineup(th){
+ th=th??((S.rot&&S.rot.th)||72);
+ const t=T(S.user),sl=slotsOf(t.formation),ro=userRoles();
+ if(!t.base||t.base.length!==sl.length||!t.lastRot||t.lineup.join()!==t.lastRot.join())t.base=t.lineup.slice();
+ const ok=id=>{const p=PL(id);return p&&p.team===S.user&&available(p);};
+ const lu=t.base.map(id=>ok(id)&&PL(id).energy>=th?id:null);
+ let changes=0;
+ sl.forEach((s,i)=>{if(lu[i])return;const cur=t.base[i]&&ok(t.base[i])?PL(t.base[i]):null;
+  const c=squad(S.user).filter(q=>available(q)&&!lu.includes(q.id)&&q.energy>=th-15&&(!cur||q.id!==cur.id)).map(q=>[q,eff(q,s,null,ro[i])]).sort((a,b)=>b[1]-a[1])[0];
+  // si el suplente rinde mucho peor que el titular cansado, mejor que juegue el titular
+  if(c&&(!cur||c[1]>=eff(cur,s,null,ro[i])*.93)){lu[i]=c[0].id;changes++;}else if(cur&&!lu.includes(cur.id))lu[i]=cur.id;});
+ t.lineup=lu;fixLineup();t.lastRot=t.lineup.slice();
+ return changes;
+}

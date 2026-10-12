@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {diff} from './difficulty';
 import {roleEffects,roleMult} from './roles';
 import {learnFromMatch} from './scouting';
 import {segAt} from './staff';
@@ -17,7 +18,7 @@ export function createMatch(ref){
  const m={tac:{},mods:{},ord:{},marked:{},pens:{h:0,a:0},mult:{},xi0:{},talks:{},agg:ref.k==='ct'&&fx.leg===2?(()=>{const l1=S.conts[ref.ct].dates[ref.s-1][ref.i];return[l1.ag,l1.hg];})():null,ref,ko:ref.k==='cup'||(ref.k==='cwc'&&ref.s>=3)||(ref.k==='ct'&&(fx.leg===2||ref.s===12)),neutral:ref.k==='cwc'||(ref.k==='ct'&&ref.s===12),pen:null,label:'',h:fx.h,a:fx.a,us:fx.h===S.user?'h':fx.a===S.user?'a':null,min:0,end:90+ri(1,5),score:{h:0,a:0},f:{},lu:{},ment:{},en:{},hurt:{},played:{},out:[],off:[],ycm:{},inM:{},outM:{},rat:null,mvp:null,subs:{h:0,a:0},
   st:{h:{sh:0,ot:0,yc:0,rc:0,xg:0,co:0,fo:0,pa:0,pc:0},a:{sh:0,ot:0,yc:0,rc:0,xg:0,co:0,fo:0,pa:0,pc:0}},oi:{},adv:null,possSum:0,ev:[],paused:true,half:false,done:false,auto:false,speed:1,flash:-1,subOpen:false,alert:''};
  ['h','a'].forEach(s=>{const t=T(m[s]);m.f[s]=t.formation;m.lu[s]=m.us===s?t.lineup.slice():autoLineup(t.id,t.formation);m.ment[s]=m.us===s?t.ment:'bal';
-  m.lu[s].forEach(id=>{if(id){m.en[id]=PL(id).energy;m.played[id]=1;}});m.mult[s]=m.us===s?chemMult(m.f[s]):(S.rivalBoost&&S.rivalBoost.team===m[s]&&m.us?1+S.rivalBoost.v:1);if(m.us&&S.rivalBoost&&S.rivalBoost.team===m[s])S.rivalBoost=null;m.xi0[s]=m.lu[s].slice();
+  m.lu[s].forEach(id=>{if(id){m.en[id]=PL(id).energy;m.played[id]=1;}});m.mult[s]=m.us===s?chemMult(m.f[s]):(S.rivalBoost&&S.rivalBoost.team===m[s]&&m.us?1+S.rivalBoost.v:1)*(m.us?diff().ai:1);if(m.us&&S.rivalBoost&&S.rivalBoost.team===m[s])S.rivalBoost=null;m.xi0[s]=m.lu[s].slice();
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
@@ -117,7 +118,8 @@ export function setPiece(m,live){
  });
 }
 export function card(m,s,straight){
- const ids=m.lu[s].filter((id,i)=>id&&i>0);if(!ids.length)return;const pool=ids.flatMap(x=>PL(x).per==='tem'?[x,x,x]:[x]),id=pick(pool),p=PL(id);p.st=p.st||newSt();
+ const ids=m.lu[s].filter((id,i)=>id&&i>0);if(!ids.length)return;// los ya amonestados se cortan: es menos probable que vean la segunda
+ const pool=ids.flatMap(x=>{const n=(PL(x).per==='tem'?3:1)*(m.ycm[x]?1:3);return Array(n).fill(x);}),id=pick(pool),p=PL(id);p.st=p.st||newSt();
  if(straight||m.ycm[id]){
   m.lu[s][m.lu[s].indexOf(id)]=null;m.off.push(id);m.outM[id]=m.min;m.st[s].rc++;delete m.hurt[id];if(m.ref.k!=='fr'){p.st.rc++;p.pSusp+=straight?2:1;}
   addEv(m,'red',s,straight?`¡Roja directa para ${p.name}! ${T(m[s]).name} se queda con uno menos.`:`Segunda amarilla para ${p.name}. Expulsado.`,id);
@@ -186,7 +188,7 @@ export function step(m){
   const S_=m.st[s];S_.xg=S_.xg||0;
   if(r<x){const id=pickScorer(m,s);if(!id)return;const ast=pickAssist(m,s,id);m.score[s]++;m.st[s].sh++;m.st[s].ot++;S_.xg+=.18+rnd()*.5;if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;
    addEv(m,'goal',s,live?fill(pick(TX.goal),{p:PL(id).name})+(ast?` Asistencia de ${PL(ast).name}.`:'')+` (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ast;}
-  else if(r<x*6){m.st[s].sh++;S_.xg+=.03+rnd()*.13;if(!live){if(rnd()<.38)m.st[s].ot++;return;}const id=pickScorer(m,s);if(!id)return;const g=m.lu[o][0];
+  else if(r<x*8.5){m.st[s].sh++;S_.xg+=.02+rnd()*.09;if(!live){if(rnd()<.38)m.st[s].ot++;return;}const id=pickScorer(m,s);if(!id)return;const g=m.lu[o][0];
    if(rnd()<.38&&g){m.st[s].ot++;addEv(m,'shot',s,fill(pick(TX.save),{p:PL(id).name,g:PL(g).name}),id);}
    else addEv(m,'shot',s,fill(pick(rnd()<.12?TX.post:TX.miss),{p:PL(id).name}),id);}
  });
@@ -195,7 +197,7 @@ export function step(m){
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
  {const dh=m.oi&&m.oi.h&&m.oi.h.dur?1.6:1,da=m.oi&&m.oi.a&&m.oi.a.dur?1.6:1,ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
   if(rnd()<.034*(ph+pa))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
- if(rnd()<.0011)card(m,rnd()<.5?'h':'a',true);
+ if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
  if(rnd()<.0032){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const P=PL(x),w=1+(P.prone||0)*1.5+(m.en[x]<55?1:0)+(P.recov>0?1.5:0);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
   if(live)addEv(m,'inj',s,`${PL(id).name} se duele de la rodilla y no puede seguir al mismo nivel.`,id);
   if(m.us===s&&!m.auto){m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}
@@ -256,10 +258,10 @@ export function quickMatch(ref){
  const Ph=teamPower(m.lu.h,m.f.h,null,null,m.mult.h,m.ro&&m.ro.h),Pa=teamPower(m.lu.a,m.f.a,null,null,m.mult.a,m.ro&&m.ro.a),Th=tacMods(m,'h'),Ta=tacMods(m,'a');
  const xh=xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)*Th.own*Ta.opp*1.1,xa=xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)*Ta.own*Th.opp*1.1;
  m.min=m.end;const poss=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.possSum=poss*m.min;
- const goals=[];['h','a'].forEach(s=>{const n=poisson(s==='h'?xh:xa);m.st[s].sh=n+poisson(5.5);m.st[s].ot=n+poisson(1.6);for(let i=0;i<n;i++)goals.push([ri(1,m.end),s]);});
+ const goals=[];['h','a'].forEach(s=>{const n=poisson(s==='h'?xh:xa);m.st[s].sh=n+poisson(9.5);m.st[s].ot=n+poisson(2.6);for(let i=0;i<n;i++)goals.push([ri(1,m.end),s]);});
  goals.sort((a,b)=>a[0]-b[0]).forEach(([mn,s])=>{m.min=mn;const id=pickScorer(m,s);if(!id)return;const ast=pickAssist(m,s,id);m.score[s]++;if(m.ref.k==='lg')PL(id).goals++;addEv(m,'goal',s,'',id);m.ev[m.ev.length-1].ast=ast;});
  m.min=m.end;
- ['h','a'].forEach(s=>{const n=poisson(1.7);for(let i=0;i<n;i++)card(m,s,false);if(rnd()<.05)card(m,s,true);
+ ['h','a'].forEach(s=>{const n=poisson(1.85);for(let i=0;i<n;i++)card(m,s,false);if(rnd()<.022)card(m,s,true);
   m.lu[s].forEach(id=>{if(id)m.en[id]=Math.max(20,m.en[id]-19*(m.drain?m.drain[s]:1));});
   if(rnd()<.14){const ids=m.lu[s].filter(Boolean);if(ids.length){const id=pick(ids),J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}}});
  ['h','a'].forEach(s=>{const st=m.st[s],sh=s==='h'?poss:1-poss;st.xg=r3((s==='h'?xh:xa)*(.8+rnd()*.4));st.co=poisson(4.6*(s==='h'?xh:xa)/1.3+1);st.fo=poisson(12);st.pa=Math.round(sh*1000+rnd()*60);st.pc=Math.round(st.pa*clamp(.62+.035*(avgAt(m,s,'MED','pas')-5),.45,.93));});

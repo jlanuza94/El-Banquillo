@@ -30,7 +30,7 @@ import { renState } from '../src/contracts';
 import { signWage } from '../src/players';
 import { PL } from '../src/state';
 import { fixLineup } from '../src/tactics';
-import { TUNE, createMatch, liveRatings, step } from '../src/engine';
+import { TUNE, createMatch, liveRatings, quickMatch, step } from '../src/engine';
 import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
 
@@ -135,6 +135,10 @@ const app = document.getElementById('app')!;
   }
   { const a = squad(S.user)[0], b = Object.values(S.players).find(p => p.team !== S.user && p.team !== null);
     S.modal = { type: 'cmp', a: a.id, b: b.id }; render(); ok(app.querySelector('.cmpgrid'), 'comparador de jugadores'); S.modal = null; }
+  { // misma partida guardada → mismos resultados
+    const saved = pack(), run = () => { setS(unpack(saved)); dirty(); const o = []; for (let i = 0; i < 10; i++) { S.fr.push(mkTie(S.teams[i].id, S.teams[i + 1].id)); const m = quickMatch({ k: 'fr', i: S.fr.length - 1 }); o.push(m.score.h + '-' + m.score.a); } return o.join(','); };
+    const a = run(), b = run(); ok(a === b, 'motor con semilla: la misma partida da los mismos resultados'); setS(unpack(saved)); dirty(); S.fr = [];
+  }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
@@ -143,6 +147,7 @@ const app = document.getElementById('app')!;
   for (let s = 0; s < seasons; s++) {
     simRun('season', false);
     await until(() => !simState);
+    { const c = {}; S.inbox.filter(m => !m.read).forEach(m => { const k = m.cat + ':' + m.subj.replace(/[0-9€.,]+/g, '#').slice(0, 28); c[k] = (c[k] || 0) + 1; }); console.log('     no leídos: ' + Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 14).map(([k, v]) => k + '×' + v).join(' | ')); }
     const fired = !!S.jobless;
     if (S.jobless) { console.log('     (despedido: se acepta la primera oferta)'); takeJob(S.jobless.offers[0]); }
     const pos = table(uLg()).findIndex(r => r.id === S.user) + 1;

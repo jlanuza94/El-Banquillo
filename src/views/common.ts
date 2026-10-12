@@ -104,7 +104,7 @@ export function render(){
  RT.keyCache=null;
  if(!$app)return;
  let html;
- if(!S||S.user==null){if(!S)buildWorld();html=startView();}
+ if(!S||S.user==null){if(!S)buildWorld(RT.seed);html=startView();}
  else if(S.jobless)html=jobsView()+modalView();
  else{if(S.view==='partido'&&!S.match)S.view='inicio';html=shell()+modalView();}
  patchApp(html);

@@ -1,10 +1,11 @@
 /* El Banquillo · world.js — Creación del mundo, objetivos, calendario de liga y elección de club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {diff} from './difficulty';
 import {setupYouth} from './youth';
 import {defaultCrew} from './staff';
-import {clamp,gauss,money,pick,plain,r2,rnd,shuffle} from './core';
+import {clamp,gauss,money,newSeed,pick,plain,r2,rnd,seedRng,shuffle} from './core';
 import {COUNTRIES,FORMS,KITS,LV_STEP,SP_SEQ,TOWNS} from './data';
-import {LG,S,T,dirty,lgName,lgTeams,lowest,seasonLabel,squad,uLg,unit,setS} from './state';
+import {RT,LG,S,T,dirty,lgName,lgTeams,lowest,seasonLabel,squad,uLg,unit,setS} from './state';
 import {assignNum,genFreeAgents,genPlayer,strength} from './players';
 import {autoLineup} from './tactics';
 import {advance,buildCal,ctWelcome,cwcWelcome,setupConts,setupCups} from './competitions';
@@ -16,8 +17,9 @@ import {MAX_SLOTS,freeSlot,saveNow} from './persist';
 import {mail} from './inbox';
 import {render,toast} from './views/common';
 export function townName(tw){const d=TOWNS[tw];const a=pick(d.A),b=pick(d.B);if(a.endsWith('-'))return a+b[0].toUpperCase()+b.slice(1);return (a+d.J+b).replace(/(.)\1\1/g,'$1$1');}
-export function buildWorld(){
- setS({v:4,train:{focus:'eq',int:'n'},chem:60,famil:{},lastXI:[],trainLog:[],conts:null,scouts:[],scoutPool:[],academy:[],prospects:[],mgr:null,jobOffers:[],jobless:null,applied:{},nextId:1,seasonN:1,user:null,view:'inicio',leagues:[],teams:[],players:{},fixtures:[],news:[],fin:[],history:[],match:null,modal:null,sel:null,ligaRound:0,ligaLg:0,
+export function buildWorld(seed){
+ seed=seed==null?newSeed():seed>>>0;seedRng(seed);
+ setS({v:4,seed,diff:'normal',train:{focus:'eq',int:'n'},chem:60,famil:{},lastXI:[],trainLog:[],conts:null,scouts:[],scoutPool:[],academy:[],prospects:[],mgr:null,jobOffers:[],jobless:null,applied:{},nextId:1,seasonN:1,user:null,view:'inicio',leagues:[],teams:[],players:{},fixtures:[],news:[],fin:[],history:[],match:null,modal:null,sel:null,ligaRound:0,ligaLg:0,
   mk:{tab:'buy',pos:'ALL',sort:'ovr',max:'',q:'',c:'ALL',lv:'',age:'',min:'',ok:true,last:false,limit:40},offers:{},neg:{},ren:{},lo:{},loanTry:{},short:[]});
  dirty();
  const used=new Set();
@@ -34,7 +36,7 @@ export function buildWorld(){
  });
  genFreeAgents();
 }
-export function startBudget(t){const L=LG(t.lg);return r2(Math.max(unit(L.rep)*4,unit(L.rep)*(12+(t.rep-L.rep)*2)));}
+export function startBudget(t){const L=LG(t.lg);return r2(Math.max(unit(L.rep)*4,unit(L.rep)*(12+(t.rep-L.rep)*2))*diff().budget);}
 export function objectiveFor(tid){
  const t=T(tid),L=LG(t.lg),r=lgTeams(L.id).sort((a,b)=>strength(b.id)-strength(a.id)).findIndex(x=>x.id===tid)+1;
  if(L.lv===0){if(r<=3)return{txt:'Pelear el título',max:3};if(r<=7)return{txt:'Parte alta',max:7};if(r<=13)return{txt:'Mitad de tabla',max:13};return{txt:'Evitar el descenso',max:17};}
@@ -55,9 +57,9 @@ export function setupSeason(){
 }
 export function pickTeam(ti){
  const slot=freeSlot();if(slot==null){toast('Ya tienes '+MAX_SLOTS+' partidas guardadas. Borra una para empezar otra.');return;}
- S.slot=slot;S.user=ti;const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
+ S.slot=slot;S.diff=RT.diff||'normal';S.user=ti;const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
  setupSeason();t.lineup=autoLineup(ti,t.formation);
- S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,clubs:[{season:seasonLabel(),club:t.name}]};
+ S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,grace:diff().grace,clubs:[{season:seasonLabel(),club:t.name}]};
  initClub(t);defaultCrew();genScoutPool();academyIntake(3);setupYouth();assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));
  news(`Bienvenido a ${t.name}, de ${lgName(t.lg)}. Firmas hasta junio de ${2025+S.seasonN+S.mgr.yrs} por ${money(S.mgr.sal)} a la semana. La directiva te pide: ${S.obj.txt.toLowerCase()}.`,'good');
  cwcWelcome();ctWelcome();advance();

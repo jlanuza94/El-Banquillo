@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {diff} from './difficulty';
 import {applyDeal,bidWorth,dealPrice,firstPay,hotMult,sellOnIn,sellOnOut,SON_PCT} from './market2';
 import {buyMult,sellMult} from './staff';
 import {clamp,money,pick,r2,r3,ri,rnd} from './core';
@@ -39,7 +40,7 @@ export function aiTransfers(n){
  return done;
 }
 export function isKey(p){if(p.team===null)return false;if(!RT.keyCache){RT.keyCache=new Set();S.teams.forEach(t=>squad(t.id).sort((a,b)=>b.ovr-a.ovr).slice(0,3).forEach(x=>RT.keyCache.add(x.id)));}return RT.keyCache.has(p.id);}
-export const askPrice=p=>{const d=dealPrice(p.id);if(d!=null)return d;return p.team===null?r2(Math.max(.005,p.value*.25*buyMult())):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1)*buyMult()*hotMult(p));};
+export const askPrice=p=>{const d=dealPrice(p.id);if(d!=null)return d;return p.team===null?r2(Math.max(.005,p.value*.25*buyMult())):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1)*buyMult()*hotMult(p)*diff().price);};
 export function refuses(p){const e=econ(uLg()),my=LG(uLg()).rep;return p.ovr>e.cap&&(p.team===null||LG(T(p.team).lg).rep>my||p.ovr>e.cap+4);}
 export function negState(id){return S.neg[id]||(S.neg[id]={tries:0,counter:null,msg:'',kind:'',closed:false});}
 /** opt: {inst: nº de plazos, son: ofrecer % de futura venta, swap: id de un jugador tuyo que entra en la operación} */

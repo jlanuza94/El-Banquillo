@@ -1,9 +1,9 @@
 /* El Banquillo · state.js — Estado global de la partida (S) y accesos rápidos a equipos, jugadores y ligas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {esc,r3} from './core';
+import {esc,r3,setRngState} from './core';
 import {COUNTRIES,LV_NAMES,LV_SH} from './data';
 export let S=null;
-export function setS(v){S=v;}
+export function setS(v){S=v;if(v&&v.rng)setRngState(v.rng);}
 /** Variables de ejecución compartidas entre módulos (temporizadores y cachés). */
 export const RT={timer:null,toastT:null,saveT:null,SQ:null,keyCache:null,startC:0,startLv:4};
 export const T=id=>S.teams[id];

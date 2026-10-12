@@ -1,5 +1,6 @@
 /* El Banquillo · views/start.js — Pantallas de inicio de partida y de entrenador sin club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {DIFF} from '../difficulty';
 import {slots,MAX_SLOTS} from '../persist';
 import {esc,money,pick} from '../core';
 import {COUNTRIES,LV_NAMES,LV_SH} from '../data';
@@ -25,8 +26,14 @@ export function startView(){
  <div class="eyebrow" style="margin-bottom:8px">2 · División</div>
  <div class="startdiv seg" style="max-width:100%;overflow-x:auto">${Array.from({length:C.lv},(_,i)=>`<button data-a="start-lv" data-v="${i}" aria-pressed="${RT.startLv===i}">${LV_NAMES[i]}</button>`).join('')}</div>
  <p class="small muted" style="margin:0 0 12px">${lowest(L)?'Última categoría de '+C.n+': aquí no hay descenso y los tres primeros suben. Ideal para empezar desde abajo.':L.lv===0?'Máxima categoría de '+C.n+'. Los tres últimos bajan.':'Los tres primeros suben y los tres últimos bajan.'}</p>
- <div class="eyebrow" style="margin-bottom:8px">3 · Club</div>
- <div class="teams">${cards}</div></div>`;
+ <div class="eyebrow" style="margin-bottom:8px">3 · Dificultad</div>
+ <div class="seg" style="margin-bottom:6px">${Object.entries(DIFF).map(([k,v])=>`<button data-a="start-diff" data-v="${k}" aria-pressed="${(RT.diff||'normal')===k}">${v.n}</button>`).join('')}</div>
+ <p class="small muted" style="margin:0 0 16px">${DIFF[RT.diff||'normal'].d}</p>
+ <div class="eyebrow" style="margin-bottom:8px">4 · Club</div>
+ <div class="teams">${cards}</div>
+ <details style="margin-top:22px"><summary class="small">Semilla del mundo: <b>${S?S.seed:''}</b></summary>
+ <p class="small muted" style="margin:8px 0">Cada mundo sale de una semilla. Con la misma semilla se generan los mismos clubes y jugadores, y si tomas las mismas decisiones, pasan las mismas cosas. Puedes compartirla o repetir un mundo que te gustó.</p>
+ <div class="row"><label class="f"><span class="eyebrow">Semilla</span><input type="number" id="seedIn" min="0" value="${S?S.seed:''}"></label><button class="btn" data-a="seed-go" style="align-self:flex-end">Crear este mundo</button><button class="btn" data-a="seed-new" style="align-self:flex-end">Otro mundo al azar</button></div></details></div>`;
 }
 export function jobsView(){
  const J=S.jobless;
