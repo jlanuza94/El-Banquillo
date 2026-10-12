@@ -1,5 +1,6 @@
 /* El Banquillo · club.js — Negocio del club, directiva, prensa y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {mail} from './inbox';
 import {clamp,money,r2,r3,rnd,shuffle} from './core';
 import {LG,PL,S,T,seasonLabel,squad,uLg,unit} from './state';
 import {news} from './world';
@@ -48,7 +49,7 @@ export function makePress(m){
  else if(my>op)q={q:`Victoria ante ${opp.name}. ¿El equipo está para pelear por todo?`,o:[['Vamos partido a partido',{team:2,board:1}],['¡Claro que sí, a por todo!',{fans:6,team:3,board:-1}],['El rival nos lo puso fácil',{fans:-2,team:1,rival:[opp.id,.03]}]]};
  else if(my<op)q={q:`Derrota ante ${opp.name}. ¿Qué ha fallado?`,o:[['La culpa es mía',{team:3,board:-2}],[worst?`${PL(worst).name} no ha estado a la altura`:'Algunos no han estado a la altura',{team:-3,board:1,fans:2,pl:worst?[worst,-10]:null}],['El árbitro nos ha perjudicado',{fans:4,board:-1,team:1}]]};
  else q={q:`Empate ante ${opp.name}. ¿Está satisfecho?`,o:[['Es un punto valioso',{team:1}],['Merecimos ganar',{fans:2,team:2}],['Hay que mejorar mucho',{team:-2,board:2}]]};
- S.press=q;
+ S.press=q;mail(`Los periodistas te esperan antes del próximo partido: «${q.q}»`,{cat:'pre',subj:'Rueda de prensa',act:[{l:'Responder',a:'view',v:'inicio'}]});
 }
 export function answerPress(i){
  const q=S.press;if(!q)return;const e=q.o[i][1],sq=squad(S.user),out=[];

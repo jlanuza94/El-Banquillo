@@ -38,7 +38,7 @@ export function hapWeekly(res){
   if(p.adapt>0){p.adapt--;if(!p.adapt)news(`${p.name} ya se ha adaptado al club y al país.`,'good');}
   if(d<0&&p.per==='lea')d*=.5;p.hap=clamp(p.hap+d,0,100);
   if(p.prom&&S.week>=p.prom.until){const ok=p.prom.type==='ren'?p.contract>1:sh>=ROLES[p.role].min-.05;p.hap=clamp(p.hap+(ok?8:-15),0,100);news(ok?`${p.name} está satisfecho: cumpliste tu promesa.`:`${p.name} se siente engañado: no cumpliste tu promesa.`,ok?'good':'bad');p.prom=null;}
-  if(p.hap<25&&!p.req&&!p.loan){p.req=1;news(`${p.name} está descontento y pide salir del club.`,'bad');}
+  if(p.hap<25&&!p.req&&!p.loan){p.req=1;news(`${p.name} está descontento y pide salir del club.`,'bad',{cat:'pla',from:p.name,subj:'Quiero salir del club',act:[{l:'Hablar con él',a:'chat',id:p.id}]});}
   if(p.req&&p.hap>45){p.req=0;news(`${p.name} retira su petición de salir.`,'good');}
  });
 }
@@ -103,7 +103,7 @@ export function processWeek(){
  if(S.week===4||S.week===22)news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
  S.week++;S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};
- if(S.week===Math.floor(nRounds()/2)){const ex=squad(S.user).filter(p=>!p.loan&&p.contract<=1);if(ex.length)news(`Mitad de temporada: ${ex.length} jugador${ex.length>1?'es acaban':' acaba'} contrato en junio. Renuévalos desde Inicio o su ficha, o se irán libres.`,'bad');}
+ if(S.week===Math.floor(nRounds()/2)){const ex=squad(S.user).filter(p=>!p.loan&&p.contract<=1);if(ex.length)news(`Mitad de temporada: ${ex.length} jugador${ex.length>1?'es acaban':' acaba'} contrato en junio. Renuévalos desde Inicio o su ficha, o se irán libres.`,'bad',{cat:'dir',subj:'Contratos que acaban en junio',act:[{l:'Ver contratos',a:'pl-open',v:'cont'}]});}
  incomingOffer();
  if(S.week>=nRounds())news('Termina la temporada. Mira cómo ha quedado todo en Inicio.','good');
 }
@@ -116,7 +116,7 @@ export function incomingOffer(){
   const p=pick(mine),cur=S.offers[p.id];
   const cands=S.teams.filter(t=>t.id!==S.user&&(!cur||t.id!==cur.team)&&LG(t.lg).rep>=myRep-4&&LG(t.lg).rep<=myRep+20&&t.rep>=p.ovr-6&&t.rep<=p.ovr+12);if(!cands.length)continue;
   const t=pick(cands);
-  if(cur&&cur.incoming){const amount=r2(cur.amount*(1.1+rnd()*.15));news(`¡Puja! ${t.name} supera la oferta de ${T(cur.team).name} por ${p.name}: ${money(amount)}.`,'good');S.offers[p.id]={team:t.id,amount,incoming:true,rival:cur.team};}
-  else{const amount=r2(p.value*(.9+rnd()*.45)*(LG(t.lg).rep>myRep?1.15:1));S.offers[p.id]={team:t.id,amount,incoming:true};news(`${t.name} (${lgName(t.lg)}) ofrece ${money(amount)} por ${p.name}. Responde en Inicio antes de la próxima jornada.`);}
+  if(cur&&cur.incoming){const amount=r2(cur.amount*(1.1+rnd()*.15));news(`¡Puja! ${t.name} supera la oferta de ${T(cur.team).name} por ${p.name}: ${money(amount)}.`,'good',{cat:'mer',subj:`Puja por ${p.name}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});S.offers[p.id]={team:t.id,amount,incoming:true,rival:cur.team};}
+  else{const amount=r2(p.value*(.9+rnd()*.45)*(LG(t.lg).rep>myRep?1.15:1));S.offers[p.id]={team:t.id,amount,incoming:true};news(`${t.name} (${lgName(t.lg)}) ofrece ${money(amount)} por ${p.name}. Responde antes de la próxima jornada.`,'',{cat:'mer',from:T(t.id).name,subj:`Oferta por ${p.name}: ${money(amount)}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});}
  }
 }

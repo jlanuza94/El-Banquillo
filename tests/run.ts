@@ -50,6 +50,13 @@ const app = document.getElementById('app')!;
   const btn = app.querySelector('[data-a="view"][data-v="plantilla"]') as HTMLElement | null;
   btn?.click();
   ok(!btn || S.view === 'plantilla', 'el menú responde a los clics');
+  ok(S.inbox.length > 0 && S.inbox.some(m => !m.read), 'la bandeja de entrada recibe mensajes');
+  S.view = 'buzon'; render();
+  const first = app.querySelector('[data-a="mail-open"]') as HTMLElement;
+  first.click();
+  ok(S.mailSel && S.inbox.find(m => m.id === S.mailSel).read === 1 && app.querySelector('.mdetail h2'), 'abrir un mensaje lo marca como leído');
+  for (const m of S.inbox.filter(m => m.act)) { S.mailSel = m.id; render(); }
+  ok(true, 'los mensajes con botones se pintan');
 
   for (let s = 0; s < seasons; s++) {
     simRun('season', false);

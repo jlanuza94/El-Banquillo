@@ -31,7 +31,7 @@ export function mgrWeekly(my,op){
  if(S.club&&S.club.mood<30)M.conf=clamp(M.conf-.5,0,100);
  if(S.week>=8&&M.conf<8){news(`Despedido: la directiva de ${T(S.user).name} prescinde de ti.`,'bad');M.rep=clamp(M.rep-6,0,100);loseJob('despido');return;}
  S.jobOffers=(S.jobOffers||[]).filter(o=>o.until>S.week);
- if(rnd()<.07){const cur=clubReq(T(S.user)),c=jobCandidates(M.rep+6,cur+4,1)[0];if(c&&!S.jobOffers.some(o=>o.team===c.id)){const o=makeJobOffer(c);o.until=S.week+3;S.jobOffers.push(o);news(`${c.name} (${lgName(c.lg)}) quiere ficharte como entrenador. Tienes la oferta en Inicio.`,'good');}}
+ if(rnd()<.07){const cur=clubReq(T(S.user)),c=jobCandidates(M.rep+6,cur+4,1)[0];if(c&&!S.jobOffers.some(o=>o.team===c.id)){const o=makeJobOffer(c);o.until=S.week+3;S.jobOffers.push(o);news(`${c.name} (${lgName(c.lg)}) quiere ficharte como entrenador. Tienes la oferta en Inicio.`,'good',{cat:'dir',from:c.name,subj:'Oferta de trabajo',act:[{l:'Ver oferta',a:'view',v:'inicio'}]});}}
 }
 export function mgrSeasonEnd(sm){
  const M=S.mgr,lbl=seasonLabel();let d=sm.ok?4:-4;if(sm.up)d+=8;if(sm.champ)d+=sm.L.lv===0?12:6;if(sm.down)d-=8;d+=S.titles.filter(x=>x.season===lbl&&!x.name.startsWith('Liga')).length*6;

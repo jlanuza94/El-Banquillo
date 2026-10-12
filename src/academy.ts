@@ -22,7 +22,7 @@ export function scoutsWeekly(){
   const pot=clamp(5.6+.35*sc.q+(COUNTRIES[nat].top-68)*.04+(R.b||0)+gauss()*.9,3,9.8),y=makeYouth(nat,pot),err=(6-sc.q)*.35,u=rnd();
   const fee=r3(Math.max(.002,.006*Math.pow(1.7,y.pot-5)*(1+(COUNTRIES[nat].top-60)/40)));
   S.prospects.unshift({p:y,fee,est:[r2(clamp(y.pot-err*u,1,10)),r2(clamp(y.pot+err*(1-u),1,10))],scout:sc.name,reg:sc.reg,until:S.week+8});
-  news(`Tu ojeador ${sc.name} recomienda a ${y.name} (${COUNTRIES[nat].n}, ${y.age} años, ${POS_NAME[y.pos].toLowerCase()}).`,'good');});
+  news(`Tu ojeador ${sc.name} recomienda a ${y.name} (${COUNTRIES[nat].n}, ${y.age} años, ${POS_NAME[y.pos].toLowerCase()}).`,'good',{cat:'oje',from:sc.name,subj:`Talento juvenil: ${y.name}`,act:[{l:'Ver informes',a:'view',v:'cantera'}]});});
 }
 export function academyWeekly(){S.academy.forEach(p=>{if(rnd()<.2*(1+.1*(S.staff.pre-1))&&rateA(p.at,p.pos)<p.pot){const k=wpick(W[p.pos]);if(p.at[k]<10){p.at[k]++;p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}}});
  if(S.week===30){const old=S.academy.filter(p=>p.age>=18);if(old.length)news(`Cantera: ${old.map(p=>p.name).join(', ')} cumple${old.length>1?'n':''} 19 la próxima temporada. Súbelos al primer equipo o se marcharán.`,'bad');}}

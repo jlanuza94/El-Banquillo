@@ -15,6 +15,7 @@ import {clubReq,jobCandidates,loseJob,makeJobOffer,takeJob} from './career';
 import {promoteYouth,regionOf,signProspect} from './academy';
 import {deleteSlot,exportCode,importCode,loadSlot,save,saveNow} from './persist';
 import {render,toast} from './views/common';
+import {markAll,markRead} from './inbox';
 import {mkList} from './views/market';
 import {boot,start} from './boot';
 export function placeInSlot(pid,i){
@@ -35,6 +36,12 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'row':{if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'ficha':S.modal={type:'ficha',id:d.id};break;
+  case'mail-open':S.mailSel=d.id;markRead(d.id);break;
+  case'mail-back':S.mailSel=null;break;
+  case'mail-cat':S.mailCat=d.v;S.mailSel=null;break;
+  case'mail-all':markAll(S.mailCat);break;
+  case'offer-view':{const o=S.offers[d.id];if(o&&o.incoming&&PL(d.id)&&PL(d.id).team===S.user)S.modal={type:'sell',id:d.id};else toast('Esa oferta ya ha caducado.');break;}
+  case'pl-open':S.view='plantilla';S.plTab=d.v;window.scrollTo(0,0);break;
   case'ment':T(S.user).ment=d.v;break;
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}

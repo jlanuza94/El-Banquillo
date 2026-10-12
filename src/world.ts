@@ -11,6 +11,7 @@ import {initClub} from './club';
 import {clubReq,mgrSalary} from './career';
 import {academyIntake,genScoutPool} from './academy';
 import {MAX_SLOTS,freeSlot,saveNow} from './persist';
+import {mail} from './inbox';
 import {render,toast} from './views/common';
 export function townName(tw){const d=TOWNS[tw];const a=pick(d.A),b=pick(d.B);if(a.endsWith('-'))return a+b[0].toUpperCase()+b.slice(1);return (a+d.J+b).replace(/(.)\1\1/g,'$1$1');}
 export function buildWorld(){
@@ -60,4 +61,5 @@ export function pickTeam(ti){
  cwcWelcome();ctWelcome();advance();
  saveNow();render();window.scrollTo(0,0);
 }
-export function news(txt,kind=''){S.news.unshift({wk:S.week+1,txt,kind});S.news=S.news.slice(0,40);}
+/** Noticia en el inicio y mensaje en la bandeja de entrada. o: opciones de mail() (categoría, asunto, botones…). */
+export function news(txt,kind='',o){S.news.unshift({wk:S.week+1,txt,kind});S.news=S.news.slice(0,40);mail(txt,Object.assign({kind},o||{}));}

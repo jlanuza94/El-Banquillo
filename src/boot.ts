@@ -1,5 +1,6 @@
 /* El Banquillo · boot.js — Arranque: carga la partida guardada y pinta la pantalla. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {migrateInbox} from './inbox';
 import {$app,clamp,r2,rnd} from './core';
 import {TAC0} from './data';
 import {LG,S,T,dirty,seasonLabel,squad,uLg,setS} from './state';
@@ -21,6 +22,7 @@ export function start(data){
 export function boot(st){
  setS(st||null);dirty();
  if(S&&S.user!=null&&!S.cal){S.cal=Array.from({length:18},(_,r)=>({t:'lg',r}));S.ci=S.week;S.cups=null;S.cwc=null;S.titles=[];news('Novedad: copa nacional y Mundial de Clubes. Empiezan la próxima temporada.','good');}
+ if(S&&S.user!=null)migrateInbox();
  if(S&&S.user!=null){if(!S.mgr){const t=T(S.user);S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,clubs:[{season:seasonLabel(),club:t.name}]};}
   S.scouts=S.scouts||[];S.academy=S.academy||[];S.prospects=S.prospects||[];S.jobOffers=S.jobOffers||[];S.applied=S.applied||{};if(!S.scoutPool||!S.scoutPool.length)genScoutPool();
   if(!S.club){initClub(T(S.user));}S.ach=S.ach||{};if(S.mgr.joinN==null)S.mgr.joinN=S.seasonN;if(!S.mgr.countries)S.mgr.countries=[LG(uLg()).c];squad(S.user).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});Object.values(S.players).forEach(p=>{if(p.prone==null)p.prone=rnd()<.12?r2(.6+rnd()*.6):r2(rnd()*.3);if(!p.agc)p.agc=r2(.04+rnd()*.08);});if(!S.spOffers)genSponsors();S.tlog=S.tlog||[];S.halls=S.halls||[];S.legends=S.legends||[];S.rec=S.rec||{};S.fr=S.fr||[];
