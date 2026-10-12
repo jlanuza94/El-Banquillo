@@ -58,3 +58,16 @@ input[type=number]{background:var(--surface);border:1px solid var(--line);border
 .drow .linkname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .derbytag{display:block;text-align:center;margin:0 0 8px;padding:5px 10px;border-radius:6px;background:linear-gradient(90deg,#b3261e,#e2a70b);color:#fff;font-family:var(--f-num);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px}
 .derbytag.sm{display:inline-block;padding:1px 8px;margin:0;font-size:11px}
+/* Pizarra libre */
+.fbpitch{position:relative;width:100%;max-width:420px;margin:0 auto;aspect-ratio:68/100;background:repeating-linear-gradient(180deg,var(--pitch) 0 10%,var(--pitch2) 10% 20%);border-radius:8px;box-shadow:inset 0 0 0 3px var(--chalk);touch-action:none;cursor:crosshair;overflow:hidden}
+.fbz{position:absolute;left:3%;right:3%;border-top:1px dashed rgba(255,255,255,.25)}
+.fbz.z1{top:25%}.fbz.z2{top:38%}.fbz.z3{top:54%}.fbz.z4{top:64%}
+.fbmid{position:absolute;left:3%;right:3%;top:50%;border-top:2px solid var(--chalk)}
+.fbdot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;padding:0;cursor:grab;touch-action:none;z-index:2}
+.fbdot .sh{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--c1);color:var(--ct);box-shadow:0 0 0 3px var(--c2),0 2px 6px rgba(0,0,0,.35);font-family:var(--f-num);font-weight:700;font-size:14px}
+.fbdot.gk .sh{background:#f2c230;color:#111;box-shadow:0 0 0 3px #111}
+.fbdot .fbsp{font-family:var(--f-num);font-weight:700;font-size:11px;background:rgba(0,0,0,.65);color:#fff;border-radius:3px;padding:0 4px}
+.fbdot .nm{font-size:11px;color:#fff;text-shadow:0 1px 2px #000;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fbdot .fbord{position:absolute;top:-6px;right:-8px;background:var(--accent);color:var(--accent-ink);border-radius:50%;width:16px;height:16px;font-size:11px;display:grid;place-items:center}
+.fbdot.sel .sh{box-shadow:0 0 0 3px var(--accent),0 0 0 6px rgba(226,167,11,.4)}
+.fbdot.drag{cursor:grabbing;z-index:3}

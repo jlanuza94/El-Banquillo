@@ -55,6 +55,8 @@ import { youthTournament, goldenChance, YT_WEEK } from '../src/youthplus';
 import { ST_ROLES } from '../src/staff';
 import { recordSeason, transferRecord } from '../src/worldhist';
 import { seasonSummary as sSum } from '../src/season';
+import { FREE, spAt, coordsOf, moveDot } from '../src/freeboard';
+import { setFormation as setF, slotsOf as slotsF, counts as countsF } from '../src/tactics';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -290,6 +292,11 @@ const app = document.getElementById('app')!;
     S.hiTab = 'fame'; render(); ok(app.textContent.includes('Récords del mundo') && S.wrec.fee.fee === 99, 'salón de la fama y récords del mundo');
     S.modal = { type: 'club', id: S.teams[4].id }; render(); ok(app.textContent.includes('Récords del club'), 'récords en la ficha del club'); S.modal = null; S.hiTab = 'club';
     S.ency = []; S.wrec = {}; S.clubRec = {}; S.coachHall = {}; }
+  { // Pizarra táctica libre
+    ok(spAt(50, 70) === 'DFC' && spAt(10, 20) === 'EI' && spAt(50, 30) === 'MCO', 'el puesto sale de la zona del campo');
+    const t = T(S.user), f0 = t.formation; t.free = coordsOf('4-4-2'); setF(FREE); moveDot(9, 10, 18);
+    ok(slotsF(FREE).length === 11 && slotsF(FREE)[10] === 'EI' && countsF(FREE).DEL === 2, 'formación libre: 11 huecos y el jugador movido pasa a extremo');
+    S.view = 'tacticas'; render(); ok(app.querySelector('.fbpitch .fbdot'), 'pizarra en tácticas'); setF(f0); }
   S.view = 'staff'; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');

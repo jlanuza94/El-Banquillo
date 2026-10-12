@@ -1,5 +1,7 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {FREE,afterMove,coordsOf,moveDot,spAt} from './freeboard';
+import {roleList} from './roles';
 import {doBuyback,setBuyback} from './negotiate';
 import {PLANS,setPlan} from './medical';
 import {saveName} from './saveio';
@@ -21,7 +23,7 @@ import {KEY,clamp,pick,r2,rnd} from './core';
 import {ATTRS,COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
 import {news,pickTeam} from './world';
-import {autoLineup,fixLineup,nRounds,rotateLineup,setFormation,userRoles} from './tactics';
+import {autoLineup,fixLineup,nRounds,rotateLineup,setFormation,slotsOf,userRoles} from './tactics';
 import {addEv,doSub,talkEffect} from './engine';
 import {finishRound,newSeason,playFriendly,playMatch,runTimer,simRun,simState,simToEnd,stopSim} from './season';
 import {inWindow,makeBid,makeOffer,makeTerms,negState,readTerms,refuses,sell} from './market';
@@ -211,6 +213,9 @@ document.addEventListener('click',e=>{
   case'tut-again':tutStart(true);window.scrollTo(0,0);break;
   case'rplan':{const p=PL(d.id),e=setPlan(p,d.v);toast(e||`${p.name}: plan ${PLANS[d.v].n.toLowerCase()}. Volverá en ${p.inj} partido${p.inj>1?'s':''}.`);break;}
   case'enc-s':S.encS=d.v;break;
+  case'fb-start':{const t=T(S.user);t.free=coordsOf(t.formation);setFormation(FREE);break;}
+  case'fb-from':{const t=T(S.user);t.free=coordsOf(d.v);setFormation(FREE);afterMove(slotsOf(FREE),roleList);break;}
+  case'fb-place':{if(S.fbSel==null)return;const r=el.getBoundingClientRect();moveDot(S.fbSel,(e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100);S.fbSel=null;afterMove(slotsOf(FREE),roleList);break;}
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
@@ -269,3 +274,14 @@ document.addEventListener('input',e=>{
  if(!S||e.target.id!=='mkq')return;S.mk.q=e.target.value;S.mk.limit=40;
  const box=document.getElementById('mklist');if(box)box.innerHTML=mkList();
 });
+/* Pizarra libre: arrastrar a un jugador (ratón o dedo). Un toque sin mover lo selecciona. */
+let FB=null;
+document.addEventListener('pointerdown',e=>{const d=e.target.closest&&e.target.closest('.fbdot[data-fb]');if(!d||!S||S.user==null)return;const pitch=d.closest('.fbpitch');if(!pitch)return;
+ e.preventDefault();FB={d,i:+d.dataset.fb,r:pitch.getBoundingClientRect(),x0:e.clientX,y0:e.clientY,moved:false};try{d.setPointerCapture(e.pointerId);}catch(err){}});
+document.addEventListener('pointermove',e=>{if(!FB)return;const dx=e.clientX-FB.x0,dy=e.clientY-FB.y0;if(!FB.moved&&Math.hypot(dx,dy)<6)return;FB.moved=true;
+ const x=Math.max(6,Math.min(94,(e.clientX-FB.r.left)/FB.r.width*100)),y=Math.max(12,Math.min(82,(e.clientY-FB.r.top)/FB.r.height*100));
+ FB.d.style.left=x+'%';FB.d.style.top=y+'%';FB.d.classList.add('drag');const l=FB.d.querySelector('.fbsp');if(l)l.textContent=spAt(x,y);FB.x=x;FB.y=y;});
+document.addEventListener('pointerup',e=>{if(!FB)return;const f=FB;FB=null;
+ if(f.moved&&f.x!=null){moveDot(f.i,f.x,f.y);S.fbSel=null;afterMove(slotsOf(FREE),roleList);}else S.fbSel=S.fbSel===f.i?null:f.i;
+ e.stopPropagation();save();render();});
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.fbdot[data-fb]'))e.stopPropagation();},true);

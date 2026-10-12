@@ -1,5 +1,6 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {FREE,formRows,freeCoords} from '../freeboard';
 import {riskTag} from '../medical';
 import {tutCard,tutView} from '../tutorial';
 import {seleccionesView} from './nations';
@@ -98,12 +99,13 @@ export function tableHTML(tb,lg,compact){
  </tbody></table></div><div class="row small muted" style="margin-top:10px;gap:14px">${legend}</div>`;
 }
 export function pitchHTML(t,lu,f,opts={}){
- const slots=slotsOf(f),rows=[[['POR'],89]].concat(FORMS[f]);let si=0,h='';
+ const slots=slotsOf(f),rows=[[['POR'],89]].concat(formRows(f)),fc=f===FREE?freeCoords():null;let si=0,h='';
  rows.forEach(([list,y0])=>list.forEach((s,k)=>{
-  const sx=si++,n=list.length,x=(k+1)/(n+1)*100;let y=y0;
+  const sx=si++,n=list.length;let x=(k+1)/(n+1)*100,y=y0;
   if(n===5&&GRP[s]==='DEF'&&(k===0||k===4))y-=8;
   if(n===5&&GRP[s]==='MED'&&(k===0||k===4))y-=5;
   if(s==='MCD'&&list.some(x=>x!=='MCD'))y+=7;
+  if(fc){x=fc[sx].x;y=fc[sx].y;}
   const p=PL(lu[sx]);let cls='',sh='+',nm=s,rtv='';
   if(!p)cls='empty';else{sh=p.num;nm=p.name.split(' ').slice(1).join(' ');rtv=(eff(p,s,opts.en?opts.en[p.id]:null,opts.roles?opts.roles[sx]:null)/10).toFixed(1);if(!available(p)||p.team!==S.user)cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';}
   if(opts.sel===sx)cls+=' sel';

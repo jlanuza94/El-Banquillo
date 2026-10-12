@@ -1,12 +1,13 @@
 /* El Banquillo · tactics.js — Valoración de jugadores por puesto, alineaciones, fuerza del equipo y clasificación. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {formRows} from './freeboard';
 import {defaultRoles,remapRoles,roleRate} from './roles';
 import {clamp} from './core';
 import {COUNTRIES,FORMS,GRP,MENT,POS_ORD,WIDE} from './data';
 import {LG,PL,S,T,available,lgTeams,lowest,squad,uLg} from './state';
 import {rateA} from './players';
-export function slotsOf(f){return ['POR',...FORMS[f].flatMap(r=>r[0])];}
-export function counts(f){const c={DEF:0,MED:0,DEL:0};FORMS[f].forEach(r=>r[0].forEach(x=>c[GRP[x]]++));return c;}
+export function slotsOf(f){return ['POR',...formRows(f).flatMap(r=>r[0])];}
+export function counts(f){const c={DEF:0,MED:0,DEL:0};formRows(f).forEach(r=>r[0].forEach(x=>c[GRP[x]]++));return c;}
 export function prof(p,s){if(p.sp===s)return 1;if(s==='POR'||p.sp==='POR')return .45;if(p.alt&&p.alt.includes(s))return .95;const a=GRP[p.sp],b=GRP[s];if(a===b)return .86;return Math.abs(POS_ORD[a]-POS_ORD[b])===1?.8:.68;}
 export function footF(p,s){if((s==='LI'||s==='MI')&&p.foot==='D')return p.wf>=4?1:p.wf===3?.98:.95;if((s==='LD'||s==='MD')&&p.foot==='I')return p.wf>=4?1:p.wf===3?.98:.95;return 1;}
 export const hasTr=(p,t)=>p.tr&&p.tr.includes(t);

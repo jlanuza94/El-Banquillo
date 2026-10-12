@@ -1,12 +1,13 @@
 /* El Banquillo · match2d.js — Animación del partido en 2D (canvas). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {FREE,formRows,freeCoords} from './freeboard';
 import {pick,rnd} from './core';
 import {FORMS,SPEEDS,W} from './data';
 import {PL,RT,S,T,lum} from './state';
 import {playAt} from './replay';
 export let A2=null;
 export const a2Key=m=>JSON.stringify(m.ref)+'|'+m.h+'|'+m.a;
-export function basePos(m,s){const rows=[[['POR'],89]].concat(FORMS[m.f[s]]),out=[];rows.forEach(([list,y])=>list.forEach((sp,k)=>{let yy=y;if(sp==='MCD'&&list.some(x=>x!=='MCD'))yy+=7;const X=4+(95-yy)*.92,Y=(k+1)/(list.length+1)*100;out.push(s==='h'?[X,Y]:[100-X,100-Y]);}));return out;}
+export function basePos(m,s){if(m.f[s]===FREE&&m[s]===S.user)return freeCoords().map(c=>{const X=4+(95-c.y)*.92,Y=c.x;return s==='h'?[X,Y]:[100-X,100-Y];});const rows=[[['POR'],89]].concat(formRows(m.f[s])),out=[];rows.forEach(([list,y])=>list.forEach((sp,k)=>{let yy=y;if(sp==='MCD'&&list.some(x=>x!=='MCD'))yy+=7;const X=4+(95-yy)*.92,Y=(k+1)/(list.length+1)*100;out.push(s==='h'?[X,Y]:[100-X,100-Y]);}));return out;}
 export function a2Reset(m){A2={key:a2Key(m),P:{},ball:{x:50,y:50},side:'h',holder:null,last:0,evN:m.ev.length,shot:null,base:{h:basePos(m,'h'),a:basePos(m,'a')}};}
 export function a2Frame(ts){
  requestAnimationFrame(a2Frame);

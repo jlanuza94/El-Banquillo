@@ -1,5 +1,7 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {boardHTML} from './freeboard';
+import {FREE} from '../freeboard';
 import {YT_WEEK,goldenChance} from '../youthplus';
 import {crew} from '../staff';
 import {trendTag,valueWhy} from '../economy';
@@ -115,7 +117,7 @@ export function tacticasView(){
  const spT=spOf(t),spP=`<section class="panel"><div class="panel-h"><h2>Jugadas ensayadas</h2><span class="eyebrow">Ensayo ${Math.round(S.spFam??40)}%</span></div>
  ${Object.entries(SP).map(([k,v])=>`<div style="margin-bottom:10px"><div class="eyebrow" style="margin-bottom:4px">${v.n}</div><div class="seg">${Object.entries(v.o).map(([o,[l]])=>`<button data-a="sp" data-k="${k}" data-v="${o}" aria-pressed="${spT[k]===o}">${l}</button>`).join('')}</div><p class="small muted" style="margin:4px 0 0">${esc(v.o[spT[k]][1])}</p></div>`).join('')}
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
- return `<div class="grid"><div class="stack">${planP}${inst}${famP}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${oiP}${sp}${spP}${ords}</div></div>`;
+ return `<div class="grid"><div class="stack">${boardHTML()}${planP}${inst}${famP}${roles}</div><div class="stack">${opp!=null?reportHTML(opp,false):''}${oiP}${sp}${spP}${ords}</div></div>`;
 }
 export function plantillaView(){
  const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=S.plTab||'xi';
@@ -138,7 +140,7 @@ export function plantillaView(){
  else {const pr=activeProms();table=`<div class="offer" style="margin-bottom:10px"><span class="t"><b>Credibilidad en el vestuario: ${Math.round(cred())}/100</b><br><span class="small muted">Sube al cumplir promesas y baja al romperlas.</span></span></div>${pr.length?`<h3 style="margin:0 0 6px">Promesas activas</h3>${pr.map(x=>`<div class="offer">${posChip(x.p)}<span class="t">${nameBtn(x.p)}<br><span class="small muted">${PROM_N[x.type]} · ${x.type==='sell'?'hasta final de temporada':x.left?`quedan ${x.left} jornada${x.left>1?'s':''}`:'vence esta jornada'}</span></span></div>`).join('')}`:''}<p class="small muted" style="margin:0 0 10px">Rol prometido, sueldo, cláusula y felicidad de cada jugador. Si un jugador juega menos de lo que corresponde a su rol, se irá enfadando.</p><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Rol</th><th class="r">Jugado</th><th class="r">Valor</th><th class="r">Sueldo</th><th class="r">Cláusula</th><th>Contrato</th><th>Ánimo</th><th></th></tr></thead><tbody>${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}${p.req?' <span class="tag bad">Pide salir</span>':''}</td><td class="small">${ROLES[p.role||'ro'].n}</td><td class="n">${(S.tg||0)?Math.round(minShare(p)*100)+'%':'—'}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td class="n">${money(p.wage)}</td><td class="n">${p.loan?'—':money(p.cl||0)}</td><td>${contractTxt(p)}</td><td>${hapTag(p)}</td><td class="r"><span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="chat" data-id="${p.id}">Hablar</button>${p.loan?'':`<button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button>`}</span></td></tr>`).join('')}</tbody></table></div>`;}
  const out=Object.values(S.players).filter(p=>p.loan&&p.loan.from===S.user);
  return `<div class="grid"><section class="panel"><div class="panel-h"><h2>Formación</h2><span class="eyebrow">Media del once ${(pw.ovr/10).toFixed(1)} · Química ${Math.round(S.chem)} · Dominio ${Math.round(famOf(t.formation))}%</span></div>
-  <div class="row" style="margin-bottom:12px"><label class="f"><span class="eyebrow">Sistema</span><select id="formSel">${Object.keys(FORMS).map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f} · dominio ${Math.round(famOf(f))}%</option>`).join('')}</select></label>
+  <div class="row" style="margin-bottom:12px"><label class="f"><span class="eyebrow">Sistema</span><select id="formSel">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?'Libre (pizarra)':f} · dominio ${Math.round(famOf(f))}%</option>`).join('')}</select></label>
   <div style="display:flex;flex-direction:column;gap:3px"><span class="eyebrow">Mentalidad</span><div class="seg">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>
   <span class="spacer"></span><button class="btn" data-a="auto" style="align-self:flex-end">Alinear mejores</button></div>
   ${pitchHTML(t,t.lineup,t.formation,{click:true,sel:selSlot,roles:userRoles()})}
