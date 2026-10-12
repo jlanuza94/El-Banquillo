@@ -19,6 +19,8 @@ import { modalView } from '../src/views/modals';
 import { seasonLabel, uLg } from '../src/state';
 import '../src/events';
 import { hireStaff, migrateCrew } from '../src/staff';
+import { queueScout, scoutingWeekly, seen } from '../src/scouting';
+import { squad } from '../src/state';
 
 const seasons = +(process.argv[2] || 1);
 let fails = 0;
@@ -62,6 +64,19 @@ const app = document.getElementById('app')!;
   const cand = S.staffPool.find(m => m.role === 'dd');
   hireStaff(cand.id);
   ok(S.crew.some(m => m.id === cand.id), 'se contrata un director deportivo');
+  {
+    const far = Object.values(S.players).find(p => p.team !== null && S.leagues[S.teams[p.team].lg].c !== S.leagues[S.teams[S.user].lg].c && p.age > 24);
+    const sn = seen(far);
+    ok(!sn.exact && sn.ovr[0] <= far.ovr && far.ovr <= sn.ovr[1] && Object.keys(far.at).every(k => sn.at[k][0] <= far.at[k] && far.at[k] <= sn.at[k][1]), 'un jugador lejano se ve con rangos que contienen su valor real');
+    ok(JSON.stringify(seen(far)) === JSON.stringify(sn), 'los rangos no cambian al repintar');
+    ok(seen(squad(S.user)[0]).exact, 'tus jugadores se ven exactos');
+    ok(queueScout(far.id) === '', 'se pide un informe');
+    const before = S.inbox.length; for (let i = 0; i < 4; i++) { S.week++; scoutingWeekly(); } S.week -= 4;
+    ok(seen(far).exact && S.inbox.slice(0, S.inbox.length - before).some(m => m.subj.startsWith('Informe: ' + far.name)), 'llega el informe y el jugador pasa a conocerse');
+    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render();
+    ok(app.querySelector('.at.rng'), 'el mercado muestra rangos');
+    S.modal = { type: 'ficha', id: far.id }; render(); S.modal = null;
+  }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

@@ -19,7 +19,7 @@ export function academyIntake(n){const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=
 export function genScoutPool(){const [F,L]=NAMES[COUNTRIES[LG(uLg()).c].lang];S.scoutPool=[0,1,2,3].map(()=>{const q=clamp(Math.round(1+rnd()*4.4),1,5);return scoutAttrs({id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:r3(Math.max(.0005,unit(LG(uLg()).rep)*.012*q))});});}
 export function scoutsWeekly(){
  S.prospects=S.prospects.filter(x=>x.until>S.week);
- S.scouts.forEach(sc=>{if(S.prospects.length>=12||rnd()>.16+.05*sc.q)return;const R=REGIONS[sc.reg],nat=pick(R.c);
+ S.scouts.filter(sc=>sc.job!=='sen').forEach(sc=>{if(S.prospects.length>=12||rnd()>.16+.05*sc.q)return;const R=REGIONS[sc.reg],nat=pick(R.c);
   const pot=clamp(5.6+.35*sc.q+(COUNTRIES[nat].top-68)*.04+(R.b||0)+gauss()*.9,3,9.8),y=makeYouth(nat,pot),err=(6-sc.q)*.35,u=rnd();
   const fee=r3(Math.max(.002,.006*Math.pow(1.7,y.pot-5)*(1+(COUNTRIES[nat].top-60)/40)));
   S.prospects.unshift({p:y,fee,est:[r2(clamp(y.pot-err*u,1,10)),r2(clamp(y.pot+err*(1-u),1,10))],scout:sc.name,reg:sc.reg,until:S.week+8});

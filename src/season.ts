@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {scoutingSeasonEnd} from './scouting';
 import {crewSeasonEnd} from './staff';
 import {clamp,gauss,money,pick,r2,r3,ri,rnd} from './core';
 import {COUNTRIES,SPEEDS,newSt} from './data';
@@ -164,7 +165,7 @@ export function newSeason(){
   ensureSquad(t.id);
  });
  const leftAc=S.academy.filter(p=>p.age+1>=19).map(p=>p.name);S.academy=S.academy.filter(p=>p.age+1<19);S.academy.forEach(p=>p.age++);
- crewSeasonEnd();const youth=academyIntake(3);genScoutPool();aiTransfers(160);
+ crewSeasonEnd();scoutingSeasonEnd();const youth=academyIntake(3);genScoutPool();aiTransfers(160);
  genFreeAgents();
  S.short=S.short.filter(id=>PL(id));
  S.seasonN++;setupSeason();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(mgrOut)loseJob('fin de contrato');else advance();

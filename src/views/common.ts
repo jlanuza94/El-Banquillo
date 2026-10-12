@@ -1,10 +1,11 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {EXACT,knowledge,seen} from '../scouting';
 import {staffView} from './staff';
 import morphdom from 'morphdom';
 import {$app,esc,money,r2} from '../core';
 import {ATTRS,FORMS,GRP,SPN} from '../data';
-import {RT,LG,PL,S,T,atCell,available,crest,crestStyle,lgName,lowest,rt,seasonLabel} from '../state';
+import {RT,LG,PL,S,T,atCell,available,crest,crestStyle,lgName,lowest,pBadge,qc,rt,seasonLabel} from '../state';
 import {buildWorld} from '../world';
 import {eff,footF,nRounds,posOf,prof,slotsOf,table,zoneOf} from '../tactics';
 import {nextMatch} from '../competitions';
@@ -28,8 +29,13 @@ export function formCell(f){return f>0?`<span class="fm up">▲${f}</span>`:f<0?
 export function status(p,xi){if(p.inj)return `<span class="tag bad" title="${esc(p.injT||'Lesión')}">${esc(String(p.injT||'Lesión').split(' ')[0])} ${p.inj}p</span>`;if(p.susp)return `<span class="tag bad">Sanción ${p.susp}</span>`;if(p.recov>0)return `<span class="tag" title="Recién recuperado: más riesgo de recaída">Recién recuperado</span>`;return xi?`<span class="tag xi">Titular</span>`:`<span class="tag">Suplente</span>`;}
 export const nameBtn=p=>`<button class="linkname" data-a="ficha" data-id="${p.id}">${esc(p.name)}</button>`;
 export const keyAttrs=p=>p.pos==='POR'?['por','pas','fis']:['tir','pas','reg','def','fis'];
-export const attrCells=p=>ATTRS.map(k=>`<td class="r">${p.pos!=='POR'&&k==='por'?'<span class="muted">–</span>':atCell(p.at[k])}</td>`).join('');
-export const potTxt=p=>p.age<=23?`~${(Math.round(p.pot*2)/2).toFixed(1)}`:'—';
+/** Celda de atributo tal como la conoces: exacta o como rango «6-8». */
+export function atCellS(p,k,sn){sn=sn||seen(p);if(sn.exact)return atCell(p.at[k]);const [a,b]=sn.at[k];return `<span class="at rng ${qc((a+b)/2)}" title="Aún no lo conoces bien">${a}-${b}</span>`;}
+export const attrCells=p=>{const sn=seen(p);return ATTRS.map(k=>`<td class="r">${p.pos!=='POR'&&k==='por'?'<span class="muted">–</span>':atCellS(p,k,sn)}</td>`).join('');};
+/** Media tal como la conoces. */
+export function pBadgeS(p,cls=''){const sn=seen(p);if(sn.exact)return pBadge(p).replace('class="q ','class="q '+cls+' ');const [a,b]=sn.ovr;return `<span class="q rng ${cls} ${qc((a+b)/20)}" title="Media estimada: aún no lo conoces bien">${(a/10).toFixed(1)}–${(b/10).toFixed(1)}</span>`;}
+export const potTxt=p=>{if(p.age>23)return '—';const r=seen(p).pot;return r[0]===r[1]?`~${r[0].toFixed(1)}`:`${r[0].toFixed(1)}–${r[1].toFixed(1)}`;};
+export const knowTag=p=>{const k=knowledge(p);return `<span class="know" title="Conocimiento del jugador"><span class="kb"><i style="width:${k}%"></i></span>${k>=EXACT?'Conocido':'Conocimiento '+k+'%'}</span>`;};
 export const clubCell=p=>p.team===null?'<span class="tag">Libre</span>':`<span class="teamcell">${crest(T(p.team),'sm')}${T(p.team).short} <span class="divtag">${lgName(T(p.team).lg,true)}</span></span>`;
 export const NAVI={home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',shirt:'<path d="M8 3L3 6l2 4 3-1v12h8V9l3 1 2-4-5-3c-1 2-2.5 2.5-4 2.5S9 5 8 3z"/>',board:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M7 9l2 2M9 9l-2 2M15 14a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/>',cone:'<path d="M12 3l6 16H6zM8.5 12h7M4 19h16"/>',sprout:'<path d="M12 21v-8M12 13c0-4 3-6.5 7-6.5 0 4-3 6.5-7 6.5zM12 13c0-3-2-5.5-6-5.5 0 3 2 5.5 6 5.5"/>',cal:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>',table:'<path d="M4 6h16M4 11h16M4 16h16M4 21h10"/>',cup:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM12 14v4M8 21h8M17 6h3a3 3 0 0 1-3.5 4M7 6H4a3 3 0 0 0 3.5 4"/>',swap:'<path d="M4 8h14l-4-4M20 16H6l4 4"/>',bank:'<path d="M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 21h18"/>',book:'<path d="M5 4h11a3 3 0 0 1 3 3v14H8a3 3 0 0 1-3-3zM5 18a3 3 0 0 1 3-3h11"/>',more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',whistle:'<circle cx="9" cy="14" r="5"/><path d="M12 10.5L21 6v4l-8 3M9 9V4h4"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',ball:'<circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 5h-5L8 10z"/>'};
 export const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${NAVI[k]}</svg>`;

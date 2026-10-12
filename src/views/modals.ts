@@ -10,14 +10,14 @@ import {CONTS,CT_STAGES,CWC_NAMES,cupName,cupRoundName} from '../competitions';
 import {askPrice,inWindow,negState,sell,termsForm} from '../market';
 import {contractLabel,loanFee,loansIn,optPrice,renState} from '../contracts';
 import {hapReasons,hapTag} from '../squad';
-import {keyAttrs,resRow} from './common';
+import {atCellS,keyAttrs,pBadgeS,resRow} from './common';
 import {fichaHTML} from './squad';
 export function modalView(){
  const md=S.modal;if(!md)return '';let body='';
  if(md.type==='ficha'){const p=PL(md.id);if(!p){S.modal=null;return '';}body=fichaHTML(p);}
  else if(md.type==='neg'){const p=PL(md.id),n=negState(md.id),ask=askPrice(p),suggest=n.counter||ask;
   const head=`<div class="eyebrow">${n.viaClause?'Pagas su cláusula de rescisión':p.team===null?'Agente libre · prima de fichaje':'Negociación con '+esc(T(p.team).name)}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
-  <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadge(p)}<span>${p.age} años</span>${keyAttrs(p).map(k=>`<span>${AT_SH[k]} ${atCell(p.at[k])}</span>`).join('')}</div>`;
+  <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadgeS(p)}<span>${p.age} años</span>${keyAttrs(p).map(k=>`<span>${AT_SH[k]} ${atCellS(p,k)}</span>`).join('')}</div>`;
   if(n.agreed!=null){body=head+`<div class="negmsg ok">Traspaso acordado: ${money(n.agreed)}. Falta el contrato del jugador.</div>${n.closed?'':termsForm(p,'buy')}${n.msg&&n.kind==='no'?`<div class="negmsg no">${esc(n.msg)}</div>`:''}
    <div class="acts"><button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button>${n.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="buy">Proponer contrato</button>`}</div>`;}
   else body=head+`<div class="kv"><span>Valor de mercado</span><b>${money(p.value)}</b>${p.team!==null?`<span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Cláusula de rescisión</span><b>${money(p.cl)}</b>`:''}<span>${p.team===null?'Prima que pide':'Precio que piden'}</span><b>${money(ask)}</b>${n.counter?`<span>Su última contraoferta</span><b>${money(n.counter)}</b>`:''}<span>Tu presupuesto</span><b>${money(S.budget)}</b></div>
@@ -41,7 +41,7 @@ export function modalView(){
   <div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='loan'){const p=PL(md.id),st=S.loanTry[md.id]||{};
   body=`<div class="eyebrow">Cesión desde ${esc(T(p.team).name)}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
-  <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadge(p)}<span>${p.age} años</span>${keyAttrs(p).map(k=>`<span>${AT_SH[k]} ${atCell(p.at[k])}</span>`).join('')}</div>
+  <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadgeS(p)}<span>${p.age} años</span>${keyAttrs(p).map(k=>`<span>${AT_SH[k]} ${atCellS(p,k)}</span>`).join('')}</div>
   <div class="kv"><span>Cuota de cesión</span><b>${money(loanFee(p))}</b><span>Sueldo que pagas</span><b>${money(p.wage)}/sem</b><span>Duración</span><b>Hasta final de temporada</b><span>Cedidos en tu plantilla</span><b>${loansIn()} de 4</b></div>
   <p class="small muted" style="margin:10px 0 0">Vuelve a su club en junio. Mientras esté contigo no puedes venderlo ni renovarlo. Los clubes no suelen ceder a sus titulares, salvo jóvenes de 21 años o menos.</p>
   ${st.msg?`<div class="negmsg ${st.kind}">${esc(st.msg)}</div>`:''}

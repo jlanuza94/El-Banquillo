@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {queueScout,scoutWeeks} from './scouting';
 import {fireStaff,hireStaff,renewStaff} from './staff';
 import {KEY,clamp,pick,rnd} from './core';
 import {COUNTRIES,MENT,TAC0,TACS} from './data';
@@ -37,6 +38,7 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'row':{if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'ficha':S.modal={type:'ficha',id:d.id};break;
+  case'scout':{const err=queueScout(d.id);toast(err||`${PL(d.id).name} queda en la lista de ojeo. Tendrás el informe en ${scoutWeeks()} jornada${scoutWeeks()>1?'s':''}.`);break;}
   case'mail-open':S.mailSel=d.id;markRead(d.id);break;
   case'mail-back':S.mailSel=null;break;
   case'mail-cat':S.mailCat=d.v;S.mailSel=null;break;
@@ -146,6 +148,7 @@ document.addEventListener('change',e=>{
  else if(id==='t-cap'||id==='t-pk'||id==='t-fk'){T(S.user)[id.slice(2)]=v||null;}
  else if(e.target.dataset&&e.target.dataset.ord){const t=T(S.user);t.orders=t.orders||{};t.orders[e.target.dataset.ord]=v;}
  else if((id==='m-est'||id==='m-pre')&&S.match){S.match.tac[S.match.us][id.slice(2)]=v;addEv(S.match,'sys',null,`Cambio táctico: ${id==='m-est'?'estilo':'presión'} ${(id==='m-est'?TACS.est.o:TACS.pre.o)[v].toLowerCase()}`);}
+ else if(e.target.dataset&&e.target.dataset.job){const sc=S.scouts.find(x=>x.id===e.target.dataset.job);if(sc)sc.job=v;}
  else if(e.target.dataset&&e.target.dataset.reg){const sc=S.scouts.find(x=>x.id===e.target.dataset.reg);if(sc)sc.reg=+v;}
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}

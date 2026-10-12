@@ -6,11 +6,12 @@ import {RT,LG,PL,S,T,crest,lgName,pBadge,rt,seasonLabel,squad} from '../state';
 import {table} from '../tactics';
 import {askPrice,inWindow,refuses,sell,windowTxt} from '../market';
 import {contractTxt} from '../contracts';
-import {attrCells,clubCell,nameBtn,potTxt} from './common';
+import {attrCells,clubCell,nameBtn,pBadgeS,potTxt} from './common';
+import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
 export function marketRow(p){
  const pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id);
- return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${potTxt(p)}</td>${attrCells(p)}<td>${contractTxt(p)}</td><td class="n">${money(pr)}</td>
- <td class="r">${no?'<span class="tag" title="No quiere jugar en tu liga">No vendría</span>':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">Ofertar</button>${p.team!==null?`<button class="btn sm" data-a="loan" data-id="${p.id}">Cesión</button>`:''}</span>`}</td></tr>`;
+ return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="n">${p.age}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${attrCells(p)}<td>${contractTxt(p)}</td><td class="n">${money(pr)}</td>
+ <td class="r">${no?'<span class="tag" title="No quiere jugar en tu liga">No vendría</span>':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">Ofertar</button>${p.team!==null?`<button class="btn sm" data-a="loan" data-id="${p.id}">Cesión</button>`:''}${knowledge(p)<EXACT?`<button class="btn sm" data-a="scout" data-id="${p.id}" title="Pedir un informe">Ojear</button>`:''}</span>`}</td></tr>`;
 }
 export function mkList(){
  RT.keyCache=null;const mk=S.mk;
@@ -33,12 +34,15 @@ export function mkList(){
   if(mk.c==='FA'){if(p.team!==null)return false;}
   else{if(mk.c!=='ALL'&&(p.team===null||LG(T(p.team).lg).c!==+mk.c))return false;if(lv!==null&&(p.team===null||LG(T(p.team).lg).lv!==lv))return false;}
   if(mk.last&&(p.team===null||p.contract>1))return false;
-  if(age&&p.age>age)return false;if(min&&p.ovr<min*10)return false;
+  if(age&&p.age>age)return false;if(min&&estOvr0(p)<min*10)return false;
   if(max&&askPrice(p)>max)return false;
   if(mk.ok&&refuses(p))return false;
   if(q&&!plain(p.name.toLowerCase()).includes(q)&&!(p.team!==null&&plain(T(p.team).name.toLowerCase()).includes(q)))return false;
   return true;});
- const so={ovr:(a,b)=>b.ovr-a.ovr,price:(a,b)=>askPrice(a)-askPrice(b),age:(a,b)=>a.age-b.age,pot:(a,b)=>b.pot-a.pot,ganga:(a,b)=>b.ovr/Math.sqrt(askPrice(b)+.05)-a.ovr/Math.sqrt(askPrice(a)+.05)}[mk.sort]||((a,b)=>b.at[mk.sort]-a.at[mk.sort]||b.ovr-a.ovr);
+ // se ordena por lo que sabes de cada jugador (el centro de su rango), no por sus valores reales
+ const memo=(fn)=>{const c=new Map();return p=>{let v=c.get(p.id);if(v===undefined){v=fn(p);c.set(p.id,v);}return v;};};
+ const estOvr=memo(estOvr0),estPot=memo(estPot0),estAt=(p,k)=>memoAt(p.id+k,p,k),atC=new Map(),memoAt=(key,p,k)=>{let v=atC.get(key);if(v===undefined){v=estAt0(p,k);atC.set(key,v);}return v;};
+ const so={ovr:(a,b)=>estOvr(b)-estOvr(a),price:(a,b)=>askPrice(a)-askPrice(b),age:(a,b)=>a.age-b.age,pot:(a,b)=>estPot(b)-estPot(a),ganga:(a,b)=>estOvr(b)/Math.sqrt(askPrice(b)+.05)-estOvr(a)/Math.sqrt(askPrice(a)+.05)}[mk.sort]||((a,b)=>estAt(b,mk.sort)-estAt(a,mk.sort)||estOvr(b)-estOvr(a));
  list.sort(so);
  const total=list.length;list=list.slice(0,mk.limit);
  if(!total)return `<div class="empty">Ningún jugador cumple estos filtros. Prueba a subir el precio máximo o quitar algún filtro.</div>`;
