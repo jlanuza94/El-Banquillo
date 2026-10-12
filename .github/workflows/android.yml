@@ -45,6 +45,12 @@ jobs:
             echo "::error title=Gradle::$(grep -E 'error:|What went wrong|FAILURE|Could not' -A4 build.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')"
             echo "::error title=Final del registro::$(tail -30 build.log | sed ':a;N;$!ba;s/\n/%0A/g')"
             exit 1; }
+      - name: Comprobar APK
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --verbose android/app/build/outputs/apk/release/app-release.apk | head -5 > check.txt
+          "$BT/aapt2" dump badging android/app/build/outputs/apk/release/app-release.apk | grep -E "^package|^sdkVersion|^targetSdk|^application-label:|launchable" >> check.txt
+          echo "::notice title=APK comprobado::$(sed ':a;N;$!ba;s/\n/%0A/g' check.txt)"
       - name: Publicar
         env: { GH_TOKEN: '${{ github.token }}' }
         run: |
