@@ -18,6 +18,7 @@ import { matchView } from '../src/views/match';
 import { modalView } from '../src/views/modals';
 import { seasonLabel, uLg } from '../src/state';
 import '../src/events';
+import { hireStaff, migrateCrew } from '../src/staff';
 
 const seasons = +(process.argv[2] || 1);
 let fails = 0;
@@ -57,6 +58,14 @@ const app = document.getElementById('app')!;
   ok(S.mailSel && S.inbox.find(m => m.id === S.mailSel).read === 1 && app.querySelector('.mdetail h2'), 'abrir un mensaje lo marca como leído');
   for (const m of S.inbox.filter(m => m.act)) { S.mailSel = m.id; render(); }
   ok(true, 'los mensajes con botones se pintan');
+  ok(S.crew.length === 3 && S.staffPool.length === 8, 'cuerpo técnico inicial y candidatos');
+  const cand = S.staffPool.find(m => m.role === 'dd');
+  hireStaff(cand.id);
+  ok(S.crew.some(m => m.id === cand.id), 'se contrata un director deportivo');
+  S.view = 'staff'; render();
+  ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
+  { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
+    ok(S.crew.filter(m => m.role === 'ent').length === 3 && S.crew.filter(m => m.role === 'fis').length === 1, 'migración del cuerpo técnico antiguo'); S.crew = keep; }
 
   for (let s = 0; s < seasons; s++) {
     simRun('season', false);

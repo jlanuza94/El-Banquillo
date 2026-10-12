@@ -8,7 +8,8 @@ import {famOf,langOf,leaders,prof,slotsOf,table,teamPower} from '../tactics';
 import {nextMatch} from '../competitions';
 import {askPrice,refuses,sell} from '../market';
 import {contractLabel,contractTxt} from '../contracts';
-import {FOCUS,INTS,STAFF,growChance,hapTag,minShare,staffCost,staffTotal} from '../squad';
+import {crew,medLevel,trainMult} from '../staff';
+import {FOCUS,INTS,growChance,hapTag,minShare,staffCost,staffTotal} from '../squad';
 import {REGIONS,scoutWages} from '../academy';
 import {attrCells,clubCell,energyBar,formCell,nameBtn,pitchHTML,potTxt,status} from './common';
 import {reportHTML} from './home';
@@ -27,9 +28,8 @@ export function entrenoView(){
  <p class="small muted" style="margin:6px 0 12px">${chemTxt} Sube si repites el once, si ganas y con el enfoque Táctica y química. Baja con muchos cambios en la alineación y con fichajes nuevos.</p>
  <div class="eyebrow" style="margin-bottom:6px">Dominio de cada formación</div><div class="attrs" style="margin-top:0">${Object.keys(FORMS).map(f=>`<div class="arow" style="grid-template-columns:110px minmax(0,1fr) 34px"><span>${f}${f===t.formation?' ·  actual':''}</span>${chemBar(famOf(f))}<b class="num">${Math.round(famOf(f))}</b></div>`).join('')}</div>
  <p class="small muted" style="margin:10px 0 0">Cada partido con una formación la domina más; las que no usas se olvidan poco a poco. Con química y dominio altos tu equipo rinde hasta un 2% por encima de su nivel; con ellos bajos, hasta un 8% por debajo.</p></section>`;
- const staff=`<section class="panel"><div class="panel-h"><h2>Cuerpo técnico</h2><span class="eyebrow">Coste ${money(staffTotal())}/sem</span></div>
- ${Object.entries(STAFF).map(([k,v])=>`<div class="offer"><span class="t"><b>${v.n}</b> · nivel ${S.staff[k]} de 5<br><span class="small muted">${v.d} ${S.staff[k]>1?'Cuesta '+money(staffCost(k,S.staff[k]))+'/sem.':'Nivel básico, sin coste.'}</span></span><button class="btn sm" data-a="staff" data-k="${k}" data-d="-1" ${S.staff[k]<=1?'disabled':''} aria-label="Bajar nivel">−</button><button class="btn sm" data-a="staff" data-k="${k}" data-d="1" ${S.staff[k]>=5?'disabled':''} aria-label="Subir nivel">+</button></div>`).join('')}
- <p class="small muted" style="margin:8px 0 0">El coste se cobra cada semana junto a los sueldos y depende de la categoría de tu liga.</p></section>`;
+ const staff=`<section class="panel"><div class="panel-h"><h2>Cuerpo técnico</h2><button class="btn sm" data-a="view" data-v="staff">Gestionar</button></div>
+ <div class="kv" style="margin-top:0"><span>Entrenadores</span><b>${crew('ent').length} · mejora ${trainMult()>=1?'+':''}${Math.round((trainMult()-1)*100)}%</b><span>Fisioterapeutas</span><b>${crew('fis').length} · nivel médico ${medLevel().toFixed(1)}</b></div></section>`;
  const rows=sq.map(p=>{const pc=growChance(p);return `<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${potTxt(p)}</td>
   <td><select id="tf-${p.id}" data-tf="${p.id}" aria-label="Enfoque individual de ${esc(p.name)}"><option value="auto" ${!p.tf||p.tf==='auto'?'selected':''}>Según el plan</option>${ATTRS.filter(k=>p.pos==='POR'||k!=='por').map(k=>`<option value="${k}" ${p.tf===k?'selected':''}>${AT_NAME[k]} (${p.at[k]})</option>`).join('')}</select></td>
   <td>${pc>=.12?'<span class="tag xi">Alto</span>':pc>=.05?'<span class="tag">Medio</span>':pc>0.004?'<span class="tag">Bajo</span>':'<span class="tag">Tope</span>'}</td><td class="n">${p.sg?'+'+p.sg:'—'}</td></tr>`;}).join('');

@@ -1,5 +1,6 @@
 /* El Banquillo · world.js — Creación del mundo, objetivos, calendario de liga y elección de club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {defaultCrew} from './staff';
 import {clamp,gauss,money,pick,plain,r2,rnd,shuffle} from './core';
 import {COUNTRIES,FORMS,KITS,LV_STEP,SP_SEQ,TOWNS} from './data';
 import {LG,S,T,dirty,lgName,lgTeams,lowest,seasonLabel,squad,uLg,unit,setS} from './state';
@@ -15,7 +16,7 @@ import {mail} from './inbox';
 import {render,toast} from './views/common';
 export function townName(tw){const d=TOWNS[tw];const a=pick(d.A),b=pick(d.B);if(a.endsWith('-'))return a+b[0].toUpperCase()+b.slice(1);return (a+d.J+b).replace(/(.)\1\1/g,'$1$1');}
 export function buildWorld(){
- setS({v:4,train:{focus:'eq',int:'n'},chem:60,famil:{},staff:{pre:1,fis:1},lastXI:[],trainLog:[],conts:null,scouts:[],scoutPool:[],academy:[],prospects:[],mgr:null,jobOffers:[],jobless:null,applied:{},nextId:1,seasonN:1,user:null,view:'inicio',leagues:[],teams:[],players:{},fixtures:[],news:[],fin:[],history:[],match:null,modal:null,sel:null,ligaRound:0,ligaLg:0,
+ setS({v:4,train:{focus:'eq',int:'n'},chem:60,famil:{},lastXI:[],trainLog:[],conts:null,scouts:[],scoutPool:[],academy:[],prospects:[],mgr:null,jobOffers:[],jobless:null,applied:{},nextId:1,seasonN:1,user:null,view:'inicio',leagues:[],teams:[],players:{},fixtures:[],news:[],fin:[],history:[],match:null,modal:null,sel:null,ligaRound:0,ligaLg:0,
   mk:{tab:'buy',pos:'ALL',sort:'ovr',max:'',q:'',c:'ALL',lv:'',age:'',min:'',ok:true,last:false,limit:40},offers:{},neg:{},ren:{},lo:{},loanTry:{},short:[]});
  dirty();
  const used=new Set();
@@ -56,7 +57,7 @@ export function pickTeam(ti){
  S.slot=slot;S.user=ti;const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
  setupSeason();t.lineup=autoLineup(ti,t.formation);
  S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,clubs:[{season:seasonLabel(),club:t.name}]};
- initClub(t);genScoutPool();academyIntake(3);assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));
+ initClub(t);defaultCrew();genScoutPool();academyIntake(3);assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));
  news(`Bienvenido a ${t.name}, de ${lgName(t.lg)}. Firmas hasta junio de ${2025+S.seasonN+S.mgr.yrs} por ${money(S.mgr.sal)} a la semana. La directiva te pide: ${S.obj.txt.toLowerCase()}.`,'good');
  cwcWelcome();ctWelcome();advance();
  saveNow();render();window.scrollTo(0,0);

@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {fireStaff,hireStaff,renewStaff} from './staff';
 import {KEY,clamp,pick,rnd} from './core';
 import {COUNTRIES,MENT,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
@@ -97,7 +98,10 @@ document.addEventListener('click',e=>{
   case'jobless-more':{const r=S.mgr.rep,c=jobCandidates(r,Math.max(0,r-35),5);S.jobless.offers=c.map(makeJobOffer);break;}
   case'tr-focus':S.train.focus=d.v;break;
   case'tr-int':S.train.int=d.v;break;
-  case'staff':S.staff[d.k]=clamp(S.staff[d.k]+(+d.d),1,5);break;
+  case'st-hire':{const err=hireStaff(d.id);if(err)toast(err);break;}
+  case'st-fire':S.modal={type:'stfire',id:d.id};break;
+  case'st-fire-ok':fireStaff(d.id);S.modal=null;break;
+  case'st-renew':renewStaff(d.id);break;
   case'cup-open':S.modal=null;S.view='copas';S.cupTab='cup';S.cupC=null;break;
   case'cwc-open':S.modal=null;S.view='copas';S.cupTab='cwc';break;
   case'mk-tab':S.mk.tab=d.v;S.mk.limit=40;break;

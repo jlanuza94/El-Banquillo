@@ -1,5 +1,6 @@
 /* El Banquillo · players.js — Generación de jugadores, atributos, valor y desarrollo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {injDaysMult} from './staff';
 import {clamp,gauss,pick,r2,r3,ri,rnd,shuffle} from './core';
 import {ATTRS,COUNTRIES,GRP,NAMES,PERS_W,SP_ALT,W,WIDE,newSt,spRandom} from './data';
 import {RT,LG,S,T,rt,squad} from './state';
@@ -32,7 +33,7 @@ export function genPlayer(pos,rep,team,ages,bonus=0,nat,sp){
 }
 export function wkey(o){let t=0;for(const k in o)t+=o[k];let r=rnd()*t;for(const k in o){r-=o[k];if(r<=0)return k;}return Object.keys(o)[0];}
 export const INJ=[['Sobrecarga muscular',1,2,.42],['Esguince de tobillo',2,4,.28],['Rotura fibrilar',3,6,.2],['Lesión de rodilla',5,9,.07],['Rotura de ligamentos',12,22,.03]];
-export function rollInjury(p){let r=rnd(),t=INJ[0];for(const x of INJ){r-=x[3];if(r<=0){t=x;break;}}let w=ri(t[1],t[2]);if(p.team===S.user&&S.staff)w=Math.max(1,Math.round(w*(1-.08*(S.staff.fis-1))));return[t[0],w];}
+export function rollInjury(p){let r=rnd(),t=INJ[0];for(const x of INJ){r-=x[3];if(r<=0){t=x;break;}}let w=ri(t[1],t[2]);if(p.team===S.user&&S.crew)w=Math.max(1,Math.round(w*injDaysMult()));return[t[0],w];}
 export function decorate(p,sp,tilt){
  p.sp=sp||p.sp||spRandom(p.pos);
  if(!p.alt){const n=p.sp==='POR'?0:rnd()<.35?0:rnd()<.7?1:2;p.alt=shuffle(SP_ALT[p.sp].slice()).slice(0,n);}

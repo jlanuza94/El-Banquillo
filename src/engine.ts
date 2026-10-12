@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {segAt} from './staff';
 import {clamp,fill,gauss,pick,r3,ri,rnd} from './core';
 import {AT_NAME,GRP,TAC0,TX,W,WIDE,newSt} from './data';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
@@ -181,7 +182,7 @@ export function talkEffect(m,ph,opt){
  let d=0;
  if(ph==='pre'){if(opt==='mot')d=diff<-3?.04:diff<3?.02:(rnd()<.35?-.015:.01);else if(opt==='cal')d=big?.03:diff>3?.025:.01;else if(opt==='exi')d=form>=.5?.04:rnd()<.5?.03:-.03;else d=.045*S.chem/100-.01;}
  else{if(opt==='ani')d=sd<0?.03:.01;else if(opt==='bro')d=sd<0?(rnd()<.55?.055:-.025):sd===0?(rnd()<.5?.03:-.02):-.03;else if(opt==='cal')d=sd>0?.03:sd===0?.015:-.01;else d=sd>0?(rnd()<.3?-.02:.02):-.015;}
- d=r3(d+gauss()*.006);
+ d=r3(d*(.85+.03*segAt('mot'))+gauss()*.006);
  const txt=d>=.03?'los jugadores salen enchufados.':d>0?'el mensaje llega al vestuario.':d>-.01?'la charla no cambia mucho.':'la charla sienta mal y se nota tensión en el vestuario.';
  return{d,txt};
 }

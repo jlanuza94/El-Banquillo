@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {buyMult,sellMult} from './staff';
 import {clamp,money,pick,r2,r3,ri,rnd} from './core';
 import {PERS,ROLES,SPN} from './data';
 import {RT,LG,PL,S,T,econ,lgName,rt,seasonLabel,setTeam,squad,uLg,unit} from './state';
@@ -36,7 +37,7 @@ export function aiTransfers(n){
  return done;
 }
 export function isKey(p){if(p.team===null)return false;if(!RT.keyCache){RT.keyCache=new Set();S.teams.forEach(t=>squad(t.id).sort((a,b)=>b.ovr-a.ovr).slice(0,3).forEach(x=>RT.keyCache.add(x.id)));}return RT.keyCache.has(p.id);}
-export const askPrice=p=>p.team===null?r2(Math.max(.005,p.value*.25)):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1));
+export const askPrice=p=>p.team===null?r2(Math.max(.005,p.value*.25*buyMult())):r2(p.value*1.2*(isKey(p)?1.3:1)*(p.contract<=1?.6:1)*buyMult());
 export function refuses(p){const e=econ(uLg()),my=LG(uLg()).rep;return p.ovr>e.cap&&(p.team===null||LG(T(p.team).lg).rep>my||p.ovr>e.cap+4);}
 export function negState(id){return S.neg[id]||(S.neg[id]={tries:0,counter:null,msg:'',kind:'',closed:false});}
 export function makeBid(id,amt){
@@ -108,7 +109,7 @@ export function termsForm(p,mode){
 export function makeOffer(id){
  if(S.offers[id])return S.offers[id];const p=PL(id),my=LG(uLg()).rep;
  let teams=S.teams.filter(t=>t.id!==S.user&&Math.abs(t.rep-p.ovr)<8&&Math.abs(LG(t.lg).rep-my)<20);if(!teams.length)teams=S.teams.filter(t=>t.id!==S.user&&Math.abs(t.rep-p.ovr)<14);if(!teams.length)teams=S.teams.filter(t=>t.id!==S.user);
- const t=pick(teams);return S.offers[id]={team:t.id,amount:r2(p.value*(.72+rnd()*.36)*(LG(t.lg).rep>my?1.1:1))};
+ const t=pick(teams);return S.offers[id]={team:t.id,amount:r2(p.value*(.72+rnd()*.36)*(LG(t.lg).rep>my?1.1:1)*sellMult())};
 }
 export function sell(id){
  const p=PL(id),o=S.offers[id],sq=squad(S.user);

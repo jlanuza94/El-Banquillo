@@ -1,5 +1,7 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {sellMult} from './staff';
+import {crewWages,crewWeekly,recBonusStaff,trainInjMult,trainMult} from './staff';
 import {clamp,money,pick,r2,r3,ri,rnd} from './core';
 import {AT_NAME,FORMS,ROLES,W} from './data';
 import {LG,PL,S,T,econ,lgName,rt,seasonLabel,setTeam,squad,uLg,unit} from './state';
@@ -60,18 +62,18 @@ export function clauseWeekly(){
 }
 export const FOCUS={eq:{n:'Equilibrado',d:'Mejora lo propio de cada posición.',at:null,g:1},ata:{n:'Ataque',d:'Tiro y regate.',at:['tir','reg'],g:1.05},def:{n:'Defensa',d:'Defensa y físico.',at:['def','fis'],g:1.05},tec:{n:'Técnica',d:'Pase y regate.',at:['pas','reg'],g:1.05},fis:{n:'Físico',d:'Físico y mejor recuperación.',at:['fis'],g:1,rec:.05},tac:{n:'Táctica y química',d:'Sube la química y el dominio de la formación. Mejora poco a los jugadores.',at:null,g:.4},des:{n:'Descanso',d:'Recuperan mucha energía. No mejoran.',at:null,g:0,rec:.2}};
 export const INTS={s:{n:'Suave',g:.6,rec:.08,inj:.001},n:{n:'Normal',g:1,rec:0,inj:.003},i:{n:'Intensa',g:1.45,rec:-.1,inj:.009}};
-export const STAFF={pre:{n:'Preparadores',d:'Cada nivel acelera la mejora de los jugadores en el entrenamiento.'},fis:{n:'Fisioterapeutas',d:'Cada nivel mejora la recuperación de energía y reduce las lesiones en el entrenamiento.'}};
+export const STAFF_OLD={pre:{n:'Preparadores',d:'Cada nivel acelera la mejora de los jugadores en el entrenamiento.'},fis:{n:'Fisioterapeutas',d:'Cada nivel mejora la recuperación de energía y reduce las lesiones en el entrenamiento.'}};
 export const staffCost=(k,l)=>r3((l-1)*unit(LG(uLg()).rep)*.035);
-export const staffTotal=()=>staffCost('pre',S.staff.pre)+staffCost('fis',S.staff.fis);
-export function recBonus(){const F=FOCUS[S.train.focus],I=INTS[S.train.int];return (F.rec||0)+I.rec+(S.staff.fis-1)*.03;}
+export const staffTotal=()=>crewWages();
+export function recBonus(){const F=FOCUS[S.train.focus],I=INTS[S.train.int];return (F.rec||0)+I.rec+recBonusStaff();}
 export function growChance(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];
  const age=p.age<=21?.075:p.age<=24?.05:p.age<=28?.025:p.age<=31?.01:0;
- return age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*(1+.15*(S.staff.pre-1))*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1);
+ return age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*trainMult()*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1);
 }
 export function trainPlayer(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];
- if(F.g>0&&rnd()<I.inj*(1+(p.prone||0))*(1-.12*(S.staff.fis-1))&&!p.inj){p.inj=ri(1,2);p.injT='Sobrecarga muscular';S.trainLog.unshift({wk:S.week+1,txt:`${p.name} se lesiona entrenando (${p.inj} partido${p.inj>1?'s':''}).`,bad:1});news(`${p.name} se lesiona en el entrenamiento: ${p.inj} partido${p.inj>1?'s':''} de baja.`,'bad');}
+ if(F.g>0&&rnd()<I.inj*(1+(p.prone||0))*trainInjMult()&&!p.inj){p.inj=ri(1,2);p.injT='Sobrecarga muscular';S.trainLog.unshift({wk:S.week+1,txt:`${p.name} se lesiona entrenando (${p.inj} partido${p.inj>1?'s':''}).`,bad:1});news(`${p.name} se lesiona en el entrenamiento: ${p.inj} partido${p.inj>1?'s':''} de baja.`,'bad');}
  const base=p.ph&&p.ph.length?p.ph[p.ph.length-1][1]:null;
  if((base==null||p.ovr-base<7)&&rnd()<growChance(p)){
   const k=p.tf&&p.tf!=='auto'?p.tf:F.at?pick(F.at):wpick(W[p.pos]);
@@ -98,7 +100,7 @@ export function processWeek(){
  S.fin.push({wk:wk+1,tv,tix,spo,wages});
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- scoutsWeekly();academyWeekly();hapWeekly(Math.sign(my-op));agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ scoutsWeekly();academyWeekly();crewWeekly();hapWeekly(Math.sign(my-op));agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(S.week===4||S.week===22?70:28);
  if(S.week===4||S.week===22)news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
@@ -117,6 +119,6 @@ export function incomingOffer(){
   const cands=S.teams.filter(t=>t.id!==S.user&&(!cur||t.id!==cur.team)&&LG(t.lg).rep>=myRep-4&&LG(t.lg).rep<=myRep+20&&t.rep>=p.ovr-6&&t.rep<=p.ovr+12);if(!cands.length)continue;
   const t=pick(cands);
   if(cur&&cur.incoming){const amount=r2(cur.amount*(1.1+rnd()*.15));news(`¡Puja! ${t.name} supera la oferta de ${T(cur.team).name} por ${p.name}: ${money(amount)}.`,'good',{cat:'mer',subj:`Puja por ${p.name}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});S.offers[p.id]={team:t.id,amount,incoming:true,rival:cur.team};}
-  else{const amount=r2(p.value*(.9+rnd()*.45)*(LG(t.lg).rep>myRep?1.15:1));S.offers[p.id]={team:t.id,amount,incoming:true};news(`${t.name} (${lgName(t.lg)}) ofrece ${money(amount)} por ${p.name}. Responde antes de la próxima jornada.`,'',{cat:'mer',from:T(t.id).name,subj:`Oferta por ${p.name}: ${money(amount)}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});}
+  else{const amount=r2(p.value*(.9+rnd()*.45)*(LG(t.lg).rep>myRep?1.15:1)*sellMult());S.offers[p.id]={team:t.id,amount,incoming:true};news(`${t.name} (${lgName(t.lg)}) ofrece ${money(amount)} por ${p.name}. Responde antes de la próxima jornada.`,'',{cat:'mer',from:T(t.id).name,subj:`Oferta por ${p.name}: ${money(amount)}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});}
  }
 }

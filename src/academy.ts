@@ -1,5 +1,6 @@
 /* El Banquillo · academy.js — Cantera y ojeadores. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {scoutAttrs,youthMult} from './staff';
 import {clamp,gauss,money,pick,r2,r3,ri,rnd} from './core';
 import {COUNTRIES,NAMES,POS_NAME,W} from './data';
 import {LG,S,dirty,seasonLabel,squad,uLg,unit} from './state';
@@ -15,7 +16,7 @@ export function makeYouth(nat,potT){
  decorate(p,null,true);p.wage=baseWage(p);p.role='jo';return p;
 }
 export function academyIntake(n){const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=S.club?S.club.fac.can:1;n+=Math.floor((fl-1)/2);const got=[];for(let i=0;i<n&&S.academy.length<14;i++){const y=makeYouth(c,lvl+.3+.15*(fl-1)+gauss()*.9);S.academy.push(y);got.push(y.name);}return got;}
-export function genScoutPool(){const [F,L]=NAMES[COUNTRIES[LG(uLg()).c].lang];S.scoutPool=[0,1,2,3].map(()=>{const q=clamp(Math.round(1+rnd()*4.4),1,5);return{id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:r3(Math.max(.0005,unit(LG(uLg()).rep)*.012*q))};});}
+export function genScoutPool(){const [F,L]=NAMES[COUNTRIES[LG(uLg()).c].lang];S.scoutPool=[0,1,2,3].map(()=>{const q=clamp(Math.round(1+rnd()*4.4),1,5);return scoutAttrs({id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:r3(Math.max(.0005,unit(LG(uLg()).rep)*.012*q))});});}
 export function scoutsWeekly(){
  S.prospects=S.prospects.filter(x=>x.until>S.week);
  S.scouts.forEach(sc=>{if(S.prospects.length>=12||rnd()>.16+.05*sc.q)return;const R=REGIONS[sc.reg],nat=pick(R.c);
@@ -24,7 +25,7 @@ export function scoutsWeekly(){
   S.prospects.unshift({p:y,fee,est:[r2(clamp(y.pot-err*u,1,10)),r2(clamp(y.pot+err*(1-u),1,10))],scout:sc.name,reg:sc.reg,until:S.week+8});
   news(`Tu ojeador ${sc.name} recomienda a ${y.name} (${COUNTRIES[nat].n}, ${y.age} años, ${POS_NAME[y.pos].toLowerCase()}).`,'good',{cat:'oje',from:sc.name,subj:`Talento juvenil: ${y.name}`,act:[{l:'Ver informes',a:'view',v:'cantera'}]});});
 }
-export function academyWeekly(){S.academy.forEach(p=>{if(rnd()<.2*(1+.1*(S.staff.pre-1))&&rateA(p.at,p.pos)<p.pot){const k=wpick(W[p.pos]);if(p.at[k]<10){p.at[k]++;p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}}});
+export function academyWeekly(){S.academy.forEach(p=>{if(rnd()<.2*youthMult()&&rateA(p.at,p.pos)<p.pot){const k=wpick(W[p.pos]);if(p.at[k]<10){p.at[k]++;p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}}});
  if(S.week===30){const old=S.academy.filter(p=>p.age>=18);if(old.length)news(`Cantera: ${old.map(p=>p.name).join(', ')} cumple${old.length>1?'n':''} 19 la próxima temporada. Súbelos al primer equipo o se marcharán.`,'bad');}}
 export function promoteYouth(id){
  const i=S.academy.findIndex(p=>p.id===id);if(i<0)return;if(squad(S.user).length>=30)return toast('Tu plantilla ya tiene 30 jugadores.');
