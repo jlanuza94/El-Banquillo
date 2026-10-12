@@ -1,6 +1,8 @@
 /* El Banquillo · nations.ts — Selecciones nacionales: convocatorias, parones FIFA, Mundial, Eurocopa y Copa América,
  * y la posibilidad de ser seleccionador a la vez que entrenas a un club. */
 // @ts-nocheck — usa el estado heredado S.
+import {retosNT} from './retos';
+import {unlock} from './club';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
 import {COUNTRIES,GRP} from './data';
 import {PL,S,T,seasonLabel,squad} from './state';
@@ -95,7 +97,7 @@ function ntJudge(T0){
  const exp=rk<=1?1.6:rk<=2?2.2:rk<=4?3:4,diff=exp-place;
  S.nt.res=S.nt.res||[];S.nt.res.unshift({season:String(T0.year),n:T0.n,place});
  S.mgr.rep=clamp(S.mgr.rep+diff*3+(place===1?6:0),0,100);
- if(place===1){S.mgr.titles=(S.mgr.titles||0)+1;S.ntTitles=(S.ntTitles||[]);S.ntTitles.push({n:T0.n,c,season:T0.season});}
+ if(place===1){retosNT();unlock('ntcamp');S.mgr.titles=(S.mgr.titles||0)+1;S.ntTitles=(S.ntTitles||[]);S.ntTitles.push({n:T0.n,c,season:T0.season});}
  const txt=place===1?`¡Campeón con ${COUNTRIES[c].n}! Tu reputación se dispara.`:place===2?`Finalista con ${COUNTRIES[c].n}.`:place===3?`Semifinalista con ${COUNTRIES[c].n}.`:`${COUNTRIES[c].n} cae en la fase de grupos.`;
  if(diff<=-1.5){news(`${txt} La federación esperaba mucho más y te destituye como seleccionador.`,'bad',{cat:'dir',subj:'Destituido como seleccionador'});S.nt=null;return;}
  news(`${txt} ${diff>=0?'La federación está satisfecha.':'La federación esperaba algo más, pero sigues en el cargo.'}`,diff>=0?'good':'',{cat:'dir',subj:`${T0.n} con ${COUNTRIES[c].n}`});
@@ -125,7 +127,7 @@ export function applyNT(c){
  if(rnd()<ch){takeNT(c);return '';}
  news(`La federación de ${COUNTRIES[c].n} prefiere a otro candidato.`,'bad',{cat:'dir'});return `${COUNTRIES[c].n} ha elegido a otro seleccionador.`;
 }
-export function takeNT(c){S.nt={c,since:seasonLabel(),call:[],res:[]};news(`Eres el nuevo seleccionador de ${COUNTRIES[c].n}. Compaginarás el cargo con tu club. Cobrarás ${money(NT_SAL(c))}/sem extra y tú eliges la convocatoria.`,'good',{cat:'dir',subj:`Seleccionador de ${COUNTRIES[c].n}`,act:[{l:'Convocatoria',a:'view',v:'selecciones'}]});}
+export function takeNT(c){S.nt={c,since:seasonLabel(),call:[],res:[]};unlock('selec');news(`Eres el nuevo seleccionador de ${COUNTRIES[c].n}. Compaginarás el cargo con tu club. Cobrarás ${money(NT_SAL(c))}/sem extra y tú eliges la convocatoria.`,'good',{cat:'dir',subj:`Seleccionador de ${COUNTRIES[c].n}`,act:[{l:'Convocatoria',a:'view',v:'selecciones'}]});}
 export function leaveNT(){if(!S.nt)return;news(`Dejas el cargo de seleccionador de ${COUNTRIES[S.nt.c].n}.`,'',{cat:'dir'});S.nt=null;}
 /** Al final de temporada alguna federación puede llamarte si tu reputación es alta. */
 export function ntOffers(){

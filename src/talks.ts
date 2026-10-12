@@ -1,6 +1,7 @@
 /* El Banquillo · talks.ts — Los jugadores piden reunirse contigo: minutos, sueldo, salir a un club grande o renovar.
  * Lo que les prometas se vigila: cumplir sube tu credibilidad; fallar enfada al jugador y a sus amigos del vestuario. */
 // @ts-nocheck — usa el estado heredado S.
+import {unlock} from './club';
 import {clamp,money,pick,r3,rnd} from './core';
 import {ROLES} from './data';
 import {LG,PL,S,squad,uLg} from './state';
@@ -78,7 +79,7 @@ function jealousy(p){squad(S.user).filter(x=>x!==p&&!x.loan&&x.ovr>=p.ovr&&x.wag
 /** Resultado de una promesa: cumplida o rota. Afecta al jugador, al vestuario y a tu credibilidad. */
 export function promResult(p,ok,why){
  const T0=PROM_N[p.prom.type]||'promesa';p.prom=null;
- if(ok){hapAdd(p,8);S.cred=clamp(cred()+4,0,100);news(`${p.name} está satisfecho: cumpliste tu promesa (${T0.toLowerCase()}).`,'good',{cat:'pla',quiet:true});return;}
+ if(ok){S.promKept=(S.promKept||0)+1;if(S.promKept>=10)unlock('palabra');hapAdd(p,8);S.cred=clamp(cred()+4,0,100);news(`${p.name} está satisfecho: cumpliste tu promesa (${T0.toLowerCase()}).`,'good',{cat:'pla',quiet:true});return;}
  hapAdd(p,-15);S.cred=clamp(cred()-12,0,100);S.chem=clamp((S.chem??60)-3,20,100);
  const mates=squad(S.user).filter(x=>x!==p&&langOf(x)===langOf(p));mates.forEach(x=>hapAdd(x,-4));
  news(`${p.name} se siente engañado: no cumpliste tu promesa (${T0.toLowerCase()})${why?' — '+why:''}. ${mates.length?'Sus compañeros más cercanos también se molestan. ':''}Tu credibilidad en el vestuario baja.`,'bad',{cat:'pla',from:p.name,subj:'Promesa rota'});

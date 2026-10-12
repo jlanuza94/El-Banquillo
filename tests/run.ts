@@ -42,6 +42,7 @@ import { setFormation, teamPower, userRoles } from '../src/tactics';
 import { learnTactic, loadPlan, planFam, planInMatch, savePlan } from '../src/plans';
 import { sellAbonos, shopWeekly, sociosFor, aboBase } from '../src/club';
 import { initIntl, playTournament, tournamentsIn, fifaWeek, takeNT, toggleCall, callOf, ranking, summerYear } from '../src/nations';
+import { startReto, retosMatch, retosWeekly, medals } from '../src/retos';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -221,6 +222,14 @@ const app = document.getElementById('app')!;
     const first = callOf(c)[0]; toggleCall(first); ok(!S.nt.call.includes(first) && S.nt.call.length === 22, 'quitar un convocado');
     for (const tb of ['rk', 'tor', 'int', 'mi']) { S.ntTab = tb; S.view = 'selecciones'; render(); } ok(app.textContent.includes('Convocar a los mejores'), 'pantalla de selecciones');
     S.nt = null; }
+  { // Retos y medallas
+    S.retos = null; ok(startReto('racha') === '' && startReto('muro') === '' && startReto('hucha') === '', 'aceptar 3 retos');
+    ok(startReto('gol') !== '', 'no más de 3 retos a la vez');
+    const xi = squad(S.user).slice(0, 11).map(p => p.id), fake = (my, op) => ({ us: 'h', ref: { k: 'lg' }, score: { h: my, a: op }, xi0: { h: xi }, lu: { h: xi } });
+    for (let i = 0; i < 9; i++) retosMatch(fake(1, 0)); retosMatch(fake(0, 2)); ok(S.retos.st.racha.p === 0, 'una derrota corta la racha');
+    for (let i = 0; i < 10; i++) retosMatch(fake(2, 0)); ok(S.retos.done.racha && medals().b === 1, 'reto conseguido: medalla de bronce');
+    const b0 = S.budget; S.budget = 12; retosWeekly(false); S.budget = b0; ok(S.retos.done.hucha, 'reto de presupuesto');
+    S.view = 'historia'; S.hiTab = 'ach'; render(); ok(app.textContent.includes('Racha de hierro') && app.querySelector('.medal'), 'pantalla de retos con medallas'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

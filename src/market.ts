@@ -69,6 +69,7 @@ export function makeBid(id,amt,opt={}){
  else{n.counter=r2(Math.max(amt*1.05,(n.counter||ask)*(.92+rnd()*.1)));n.msg=`Oferta rechazada. Piden ${money(n.counter)}. Te quedan ${3-n.tries} intento${3-n.tries>1?'s':''}.`;n.kind='no';}
 }
 export function completeBuy(p,price,t){
+ if(price>0)S.buysSeason=(S.buysSeason||0)+1;
  const best=Math.max(0,...squad(S.user).map(x=>x.ovr));if(p.ovr>best)fansReact(6,`ilusión por el fichaje de ${p.name}, el mejor jugador de la plantilla.`);
  S.chem=clamp(S.chem-3,20,100);p.sg=0;p.tf='auto';p.paid=price;
  const from=p.team,now=applyDeal(p,price,from,(S.neg[p.id]||{}).deal);S.budget=r3(S.budget-now-(t.bonus||0)-agentFee(p,price));setTeam(p,S.user);p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;p.hap=clamp(72+(ROLES[t.role].l>=ROLES[expRole(p)].l?6:-6),0,100);p.req=0;p.prom=null;p.energy=Math.max(p.energy,80);assignNum(p);

@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {retosMatch} from './retos';
 import {coachResult} from './living';
 import {enforceLoanMinutes,trackLoans,vestMult} from './connected';
 import {cornerMult,famMult,learnTactic,spOf} from './plans';
@@ -236,6 +237,7 @@ export function applyResult(m){
  recordMatch(m);trackLoans(m);coachResult(m);
  if(m.us&&m.ref.k!=='fr')learnTactic(m.tac[m.us]);
  if(m.us&&m.ref.k!=='fr')S.tg=(S.tg||0)+1;
+ retosMatch(m);
  if(m.us&&m.ref.k!=='fr'){const my0=m.score[m.us],op0=m.score[m.us==='h'?'a':'h'];if(my0-op0>=5)unlock('manita');const xi=m.xi0[m.us].filter(Boolean).map(PL).filter(Boolean);if(xi.filter(p=>p.home).length>=5)unlock('casa');if(xi.some(p=>p.age<=17&&p.st&&p.st.pj<=1))unlock('joven');makePress(m);}
  if(m.us&&m.ref.k!=='fr'){const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'],R0=S.rec||(S.rec={});if(my-op>0&&(!R0.bigWin||my-op>R0.bigWin.d||(my-op===R0.bigWin.d&&my>R0.bigWin.g)))R0.bigWin={d:my-op,g:my,txt:`${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}`,season:seasonLabel(),comp:m.label||''};}
  if(m.us)learnFromMatch(Object.keys(m.played).filter(id=>PL(id)&&PL(id).team!==S.user));

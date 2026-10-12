@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {dropReto,startReto} from './retos';
 import {applyNT,autoCall,leaveNT,takeNT,toggleCall} from './nations';
 import {meetAnswer,onOfferRejected} from './talks';
 import {cycleTheme,THEMES} from './theme';
@@ -188,6 +189,8 @@ document.addEventListener('click',e=>{
   case'nt-leave':leaveNT();S.ntTab='rk';break;
   case'nt-call':{const e=toggleCall(d.id);if(e)toast(e);break;}
   case'nt-auto':if(S.nt)S.nt.call=autoCall(S.nt.c);break;
+  case'reto-start':{const e=startReto(d.v);if(e)toast(e);break;}
+  case'reto-drop':dropReto(d.v);break;
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
