@@ -53,6 +53,8 @@ import { injRisk, setPlan, onRecovered } from '../src/medical';
 import { bonusWeekly, counters, applyTerms, weeklyBonuses, setBuyback, canBuyback, doBuyback } from '../src/negotiate';
 import { youthTournament, goldenChance, YT_WEEK } from '../src/youthplus';
 import { ST_ROLES } from '../src/staff';
+import { recordSeason, transferRecord } from '../src/worldhist';
+import { seasonSummary as sSum } from '../src/season';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -282,6 +284,12 @@ const app = document.getElementById('app')!;
     const wk = S.week, t0 = S.titles.length, ac = S.academy.length; while (S.academy.length < 8) S.academy.push({ ...S.academy[0], id: 'yx' + S.academy.length, at: { ...S.academy[0].at } });
     S.week = YT_WEEK; youthTournament(); S.week = wk; ok((S.ytHist || []).length >= 1, 'se juega el Torneo Internacional Sub-19: campeón ' + S.ytHist[S.ytHist.length - 1].champ);
     S.academy = S.academy.slice(0, Math.max(ac, 0)); S.view = 'cantera'; render(); ok(app.textContent.includes('Vida de la cantera'), 'panel de vida de la cantera'); }
+  { // Historia del mundo
+    const tabs = S.leagues.map(L => lgTable(L.id)); recordSeason(sSum(), tabs); transferRecord({ name: 'Prueba', fee: 99, from: S.teams[3].id, to: S.teams[4].id });
+    S.view = 'historia'; S.hiTab = 'enc'; render(); ok(app.textContent.includes('Campeones de liga') && (S.ency || []).length >= 1, 'enciclopedia de la temporada');
+    S.hiTab = 'fame'; render(); ok(app.textContent.includes('Récords del mundo') && S.wrec.fee.fee === 99, 'salón de la fama y récords del mundo');
+    S.modal = { type: 'club', id: S.teams[4].id }; render(); ok(app.textContent.includes('Récords del club'), 'récords en la ficha del club'); S.modal = null; S.hiTab = 'club';
+    S.ency = []; S.wrec = {}; S.clubRec = {}; S.coachHall = {}; }
   S.view = 'staff'; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
@@ -305,6 +313,7 @@ const app = document.getElementById('app')!;
     if (!fired) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
       S.view = 'cantera'; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
     for (const tb of ['temp', 'part', 'jug', 'riv']) { S.anTab = tb; S.view = 'analisis'; render(); }
+    if (!fired && s > 0) { S.view = 'historia'; for (const tb of ['enc', 'fame']) { S.hiTab = tb; render(); } ok((S.ency || []).length >= 1 && app.textContent.includes('Récords del mundo'), `enciclopedia (${(S.ency || []).length} temporadas) y salón de la fama`); S.hiTab = 'club'; }
     ok(S.tl.length >= (fired ? 3 : 30) && S.mlog.length > 0 && S.mlog[0].sh.length > 5 && Object.values(S.players).some(p => p.st && p.st.kp > 0 && p.st.tk > 0 && p.st.xg > 0), 'análisis: evolución de la temporada, informes con tiros y estadísticas avanzadas' + ` (tl ${S.tl.length}, partidos ${S.mlog.length}, tiros ${S.mlog[0] && S.mlog[0].sh.length})`);
     S.modal = { type: 'mrep', i: 0 }; render(); ok(app.querySelector('.shotmap svg circle'), 'informe de partido con mapa de tiros'); S.modal = null;
     for (const tb of ['race', 'stats', 'xi', 'hist']) { S.awTab = tb; S.view = 'premios'; render(); }

@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {transferRecord} from './worldhist';
 import {applyTerms,bonusFields,bonusWeekly,counters,readBonus} from './negotiate';
 import {aiBuy,needOf,payFee} from './economy';
 import {isAffiliate,wageCheck} from './clubplus';
@@ -23,7 +24,7 @@ import {render,toast} from './views/common';
 export const inWindow=()=>S.week<=4||(S.week>=19&&S.week<=22);
 export const isDeadline=()=>S.week===4||S.week===22;
 export const windowTxt=()=>inWindow()?`Mercado abierto: cierra tras la jornada ${S.week<=4?5:23}${isDeadline()?' (¡último día!)':''}.`:`Mercado cerrado: abre tras la jornada ${S.week<19?19:'38 (verano)'}. Puedes fichar agentes libres y renovar.`;
-export function tlog(x){S.tlog=S.tlog||[];S.tlog.unshift(Object.assign({season:seasonLabel(),wk:S.week+1},x));S.tlog=S.tlog.slice(0,80);}
+export function tlog(x){transferRecord(x);S.tlog=S.tlog||[];S.tlog.unshift(Object.assign({season:seasonLabel(),wk:S.week+1},x));S.tlog=S.tlog.slice(0,80);}
 export function aiTransfers(n){
  const all=Object.values(S.players),teams=S.teams.filter(t=>t.id!==S.user),myLg=uLg();let done=0;
  for(let k=0;k<n;k++){

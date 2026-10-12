@@ -1,5 +1,6 @@
 /* El Banquillo · views/club.js — Club y finanzas, historia, récords y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {enciclopediaHTML,fameHTML} from './worldhist';
 import {retosPanel} from './retos';
 import {MODES} from '../quick';
 import {nameBtn} from './common';
@@ -20,7 +21,9 @@ import {scoutWages} from '../academy';
 import {save} from '../persist';
 export function historiaView(){
  const R0=S.rec||{},tab=S.hiTab||'club';
- const seg=`<div class="seg" style="margin-bottom:14px"><button data-a="hi-tab" data-v="club" aria-pressed="${tab==='club'}">Tu club y carrera</button><button data-a="hi-tab" data-v="champ" aria-pressed="${tab==='champ'}">Campeones</button><button data-a="hi-tab" data-v="scor" aria-pressed="${tab==='scor'}">Goleadores históricos</button><button data-a="hi-tab" data-v="ach" aria-pressed="${tab==='ach'}">Retos y logros</button></div>`;
+ const seg=`<div class="seg" style="margin-bottom:14px;max-width:100%;overflow-x:auto"><button data-a="hi-tab" data-v="club" aria-pressed="${tab==='club'}">Tu club y carrera</button><button data-a="hi-tab" data-v="champ" aria-pressed="${tab==='champ'}">Campeones</button><button data-a="hi-tab" data-v="scor" aria-pressed="${tab==='scor'}">Goleadores históricos</button><button data-a="hi-tab" data-v="ach" aria-pressed="${tab==='ach'}">Retos y logros</button><button data-a="hi-tab" data-v="enc" aria-pressed="${tab==='enc'}">Enciclopedia</button><button data-a="hi-tab" data-v="fame" aria-pressed="${tab==='fame'}">Salón de la fama</button></div>`;
+ if(tab==='enc')return seg+enciclopediaHTML();
+ if(tab==='fame')return seg+fameHTML();
  if(tab==='ach'){const A=S.ach||{};return seg+retosPanel()+`<section class="panel"><div class="panel-h"><h2>Logros</h2><span class="eyebrow">${Object.keys(A).length} de ${Object.keys(ACH).length}</span></div><div class="teams" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${Object.entries(ACH).map(([k,[n,d]])=>`<div class="tcard" style="display:block;${A[k]?'border-color:var(--accent)':'opacity:.6'}"><div class="tn" style="font-size:18px">${A[k]?'★ ':''}${esc(n)}</div><div class="small muted" style="margin-top:4px">${esc(d)}</div>${A[k]?`<div class="eyebrow" style="margin-top:6px;color:var(--win)">Conseguido en ${A[k]}</div>`:''}</div>`).join('')}</div></section>`;}
  if(tab==='champ'){const c=S.hiC!=null?S.hiC:LG(uLg()).c,H=(S.halls||[]).slice().reverse();
   return seg+`<section class="panel"><div class="panel-h"><h2>Campeones</h2><label class="f"><span class="eyebrow">País</span><select id="hiC">${COUNTRIES.map((C,i)=>`<option value="${i}" ${i===c?'selected':''}>${C.n}</option>`).join('')}</select></label></div>
