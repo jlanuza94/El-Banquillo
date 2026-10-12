@@ -35,6 +35,7 @@ import {mkList} from './views/market';
 import {boot,start} from './boot';
 /** Descarga un archivo (y, si el navegador no deja, lo copia al portapapeles). */
 export function download(name,text,mime){
+ if(typeof window!=='undefined'&&window.ElBanquillo&&window.ElBanquillo.saveFile){try{window.ElBanquillo.saveFile(name,String(text));return;}catch(e){}}
  try{const url=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:mime+';charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast(`Descargando ${name}…`);}
  catch(e){try{navigator.clipboard.writeText(text);toast('No se pudo descargar: copiado al portapapeles.');}catch(err){toast('No se pudo descargar el archivo.');}}
 }
