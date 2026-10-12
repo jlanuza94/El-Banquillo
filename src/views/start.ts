@@ -1,5 +1,6 @@
 /* El Banquillo · views/start.js — Pantallas de inicio de partida y de entrenador sin club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {MODES} from '../quick';
 import {DIFF} from '../difficulty';
 import {slots,MAX_SLOTS} from '../persist';
 import {esc,money,pick} from '../core';
@@ -29,7 +30,10 @@ export function startView(){
  <div class="eyebrow" style="margin-bottom:8px">3 · Dificultad</div>
  <div class="seg" style="margin-bottom:6px">${Object.entries(DIFF).map(([k,v])=>`<button data-a="start-diff" data-v="${k}" aria-pressed="${(RT.diff||'normal')===k}">${v.n}</button>`).join('')}</div>
  <p class="small muted" style="margin:0 0 16px">${DIFF[RT.diff||'normal'].d}</p>
- <div class="eyebrow" style="margin-bottom:8px">4 · Club</div>
+ <div class="eyebrow" style="margin-bottom:8px">4 · Modo de juego</div>
+ <div class="seg" style="margin-bottom:6px">${Object.entries(MODES).map(([k,v])=>`<button data-a="start-mode" data-v="${k}" aria-pressed="${(RT.mode||'profundo')===k}">${v.n}</button>`).join('')}</div>
+ <p class="small muted" style="margin:0 0 16px">${MODES[RT.mode||'profundo'].d} Se puede cambiar cuando quieras.</p>
+ <div class="eyebrow" style="margin-bottom:8px">5 · Club</div>
  <div class="teams">${cards}</div>
  <details style="margin-top:22px"><summary class="small">Semilla del mundo: <b>${S?S.seed:''}</b></summary>
  <p class="small muted" style="margin:8px 0">Cada mundo sale de una semilla. Con la misma semilla se generan los mismos clubes y jugadores, y si tomas las mismas decisiones, pasan las mismas cosas. Puedes compartirla o repetir un mundo que te gustó.</p>

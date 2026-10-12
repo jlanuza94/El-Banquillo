@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {searchResults} from './views/search';
 import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData} from './mods';
 import {addAffiliate,createFilial,fromFilial,moveBudget,removeAffiliate,takeBankLoan,toFilial} from './clubplus';
 import {loadPlan,planInMatch,savePlan} from './plans';
@@ -41,6 +42,7 @@ document.addEventListener('click',e=>{
   if(a==='slot-del'){RT.delConfirm=+d.id;render();return;}if(a==='slot-del-no'){RT.delConfirm=null;render();return;}
   if(a==='slot-del-ok'){RT.delConfirm=null;deleteSlot(+d.id).then(render);return;}
   if(a==='start-diff'){RT.diff=d.v;render();return;}
+  if(a==='start-mode'){RT.mode=d.v;render();return;}
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
@@ -85,6 +87,9 @@ document.addEventListener('click',e=>{
   case'io-squad':download('mi-plantilla.csv',exportPlayersCSV(S.user),'text/csv');break;
   case'io-players':download('jugadores.csv',exportPlayersCSV(null),'text/csv');break;
   case'io-paste':{S.ioMsg=importData(document.getElementById('ioTxt')?.value||'');break;}
+  case'gsearch':S.modal={type:'search'};render();setTimeout(()=>document.getElementById('gsq')?.focus(),30);return;
+  case'gs-lg':S.modal=null;S.view='liga';S.ligaLg=+d.id;break;
+  case'set-mode':S.mode=d.v;toast(d.v==='rapido'?'Modo rápido: tu segundo se encarga de lo rutinario.':'Modo profundo: controlas todo.');break;
   case'an-tab':S.anTab=d.v;break;
   case'an-p90':S.anP90=d.v==='1';break;
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
@@ -193,6 +198,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&S&&(S.modal||S.moreOpen)){S.modal=null;S.moreOpen=false;render();return;}
+ if(e.key==='/'&&S&&S.user!=null&&!S.modal&&!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){e.preventDefault();document.querySelector('[data-a="gsearch"]')?.click();return;}
  if(e.key==='Enter'&&e.target.id==='bidAmt'){e.preventDefault();document.querySelector('[data-a="bid"]')?.click();return;}
  if((e.key==='Enter'||e.key===' ')&&e.target.matches('tr[data-a]')){e.preventDefault();e.target.click();}
 });
@@ -222,6 +228,7 @@ document.addEventListener('change',e=>{
  save();render();
 });
 document.addEventListener('input',e=>{
+ if(S&&e.target.id==='gsq'){const box=document.getElementById('gsres');if(box)box.innerHTML=searchResults(e.target.value);return;}
  if(!S||e.target.id!=='mkq')return;S.mk.q=e.target.value;S.mk.limit=40;
  const box=document.getElementById('mklist');if(box)box.innerHTML=mkList();
 });

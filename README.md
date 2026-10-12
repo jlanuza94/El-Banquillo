@@ -32,7 +32,10 @@ npm run build     # compila en dist/
 npm run dev       # recompila al guardar
 npm test          # juega una temporada entera sin navegador y comprueba guardado y partidas
 npm run check     # comprueba los tipos (TypeScript)
+npm run bench     # 10.000 partidos y varias carreras: goles, tarjetas, lesiones, despidos…
 ```
+
+Todo el azar usa un generador con semilla (`seedRng` en `src/core.ts`) que se guarda con la partida: con la misma partida y las mismas decisiones, los resultados son los mismos. No uses `Math.random` en el código del juego.
 
 `node dist-test/test.cjs 3` (después de `npm test`) juega tres temporadas.
 
@@ -67,6 +70,15 @@ src/
   youth.ts            liga sub-19
   market2.ts          plazos, % de futura venta, intercambios, rumores, gangas de cierre
   awards.ts           premios de temporada, once ideal, Balón de Oro
+  difficulty.ts       niveles de dificultad y paciencia de la directiva
+  analysis.ts         estadísticas por jugador, informes de partido, forma de los equipos
+  plans.ts            tácticas guardadas A/B/C, aprendizaje táctico, jugadas ensayadas
+  mentor.ts           tutelaje entre veteranos y jóvenes
+  connected.ts        agentes, contactos del director deportivo, cesiones con objetivo, vestuario
+  living.ts           entrenadores rivales, despidos, fichajes bomba, historia de clubes
+  clubplus.ts         filial, afiliados, límite salarial, préstamos bancarios
+  mods.ts             editor e importación/exportación JSON y CSV
+  quick.ts            modo rápido y búsqueda global
   events.ts           clics, formularios y teclado
   match2d.ts          animación del partido en 2D
   boot.ts             carga de una partida (y migración de partidas antiguas)

@@ -1,5 +1,6 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {quick,suggestions} from '../quick';
 import {STYLES} from '../living';
 import {segAt} from '../staff';
 import {unread} from '../inbox';
@@ -11,11 +12,11 @@ import {news} from '../world';
 import {autoLineup,chemMult,lineupIssues,posOf,table,teamPower,userRoles} from '../tactics';
 import {CONTS,CT_STAGES,compLabel,ctOf,ctStatus,cupName,cupSlotRound,cupStatus,cwcStatus,getFx,nextMatch,userCup,userRefFor} from '../competitions';
 import {friendlyOpts,seasonSummary} from '../season';
-import {sell,windowTxt} from '../market';
+import {askPrice,inWindow,sell,windowTxt} from '../market';
 import {contractsPanel} from '../contracts';
 import {spDesc} from '../club';
 import {FOCUS} from '../squad';
-import {cmpRow,formDots,nameBtn,resRow,tableHTML} from './common';
+import {cmpRow,formDots,nameBtn,pBadgeS,resRow,tableHTML} from './common';
 export function offersPanel(){
  const inc=Object.entries(S.offers).filter(([id,o])=>o.incoming&&PL(id)&&PL(id).team===S.user);
  if(!inc.length)return '';
@@ -41,7 +42,8 @@ export function inicioView(){
  const preP=S.pre&&S.pre.left>0&&S.week===0&&S.ci===0?`<section class="panel"><div class="panel-h"><h2>Pretemporada</h2><span class="eyebrow">${S.pre.left} amistoso${S.pre.left>1?'s':''} disponible${S.pre.left>1?'s':''}</span></div><p class="small muted" style="margin:0 0 10px">Los amistosos suben la química y el dominio de la formación, dan algo de taquilla y no cuentan para las estadísticas.</p>${friendlyOpts().map(id=>{const o=T(id);return `<div class="offer">${crest(o,'sm')}<span class="t"><b>${esc(o.name)}</b> <span class="divtag">${lgName(o.lg,true)}</span> <span class="small muted">· nivel ${(strength(id)/10).toFixed(1)}</span></span><button class="btn sm" data-a="friendly" data-id="${id}">Jugar amistoso</button></div>`;}).join('')}<div class="row" style="margin-top:8px"><button class="btn sm" data-a="pre-skip">Saltar pretemporada</button></div></section>`:'';
  const spP=!S.sponsor&&S.spOffers&&S.spOffers.length?`<section class="panel"><div class="panel-h"><h2>Elige patrocinador</h2><span class="eyebrow">Antes de la jornada 4</span></div>${S.spOffers.map((o,i)=>`<div class="offer"><span class="t"><b>${esc(o.name)}</b><br><span class="small muted">${spDesc(o)}</span></span><button class="btn sm primary" data-a="sponsor" data-i="${i}">Firmar</button></div>`).join('')}</section>`:'';
  const pressP=S.press?`<section class="panel"><div class="panel-h"><h2>Rueda de prensa</h2><span class="eyebrow">Antes del próximo partido</span></div><p style="margin:0 0 10px"><b>«${esc(S.press.q)}»</b></p><div class="stack" style="gap:6px">${S.press.o.map((x,i)=>`<button class="btn" style="text-align:left;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:600" data-a="press" data-i="${i}">${esc(x[0])}</button>`).join('')}</div><p class="small muted" style="margin:8px 0 0">Lo que digas afecta al vestuario, a la afición y a la directiva. Si no vas a la rueda de prensa, a la directiva no le gusta.</p></section>`:'';
- return `<div class="grid"><div class="stack">${jobsP}${pressP}${preP}${spP}${offersPanel()}${next}${reportHTML(opp.id,true)}
+ let sugP='';if(inWindow()||quick()){const sg=suggestions(3);if(sg.list.length)sugP=`<section class="panel"><div class="panel-h"><h2>Tu segundo recomienda</h2><span class="eyebrow">Refuerzos para ${{POR:'la portería',DEF:'la defensa',MED:'el medio',DEL:'el ataque'}[sg.g]}</span></div>${sg.list.map(p=>`<div class="offer">${crest(T(p.team??S.user),'sm')}<span class="t">${nameBtn(p)} <span class="small muted">· ${p.age} años · ${p.team===null?'libre':esc(T(p.team).short)} · ${money(askPrice(p))}</span></span>${pBadgeS(p)}<button class="btn sm primary" data-a="neg" data-id="${p.id}">Ofertar</button></div>`).join('')}</section>`;}
+ return `<div class="grid"><div class="stack">${jobsP}${pressP}${preP}${spP}${offersPanel()}${next}${sugP}${reportHTML(opp.id,true)}
   <section class="panel"><div class="panel-h"><h2>Últimos resultados</h2></div>${lastH}</section></div>
   <div class="stack">${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Competiciones</h2><button class="btn sm" data-a="view" data-v="copas">Ver copas</button></div><div class="kv" style="margin-top:0"><span>${userCup()?cupName(userCup().c):'Copa nacional'}</span><b>${cupStatus()}</b><span>${ctOf(S.user)>=0?CONTS[ctOf(S.user)].n:'Competición continental'}</span><b>${ctStatus()}</b><span>Mundial de Clubes</span><b>${cwcStatus()}</b></div></section><section class="panel"><div class="panel-h"><h2>${LV_NAMES[LG(lg).lv]}</h2><button class="btn sm" data-a="view" data-v="liga">Ver ligas</button></div>${tableHTML(tb,lg,true)}</section>
   <section class="panel"><div class="panel-h"><h2>Noticias</h2><button class="btn sm" data-a="view" data-v="buzon">Bandeja de entrada${unread()?' ('+unread()+')':''}</button></div><ul class="news">${S.news.slice(0,8).map(n=>`<li class="${n.kind}"><span class="wk">J${n.wk}</span><span class="t">${esc(n.txt)}</span></li>`).join('')}</ul></section></div></div>`;

@@ -60,7 +60,7 @@ export function setupSeason(){
 }
 export function pickTeam(ti){
  const slot=freeSlot();if(slot==null){toast('Ya tienes '+MAX_SLOTS+' partidas guardadas. Borra una para empezar otra.');return;}
- S.slot=slot;S.diff=RT.diff||'normal';S.user=ti;initCoaches();const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
+ S.slot=slot;S.diff=RT.diff||'normal';S.mode=RT.mode||'profundo';S.user=ti;initCoaches();const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
  setupSeason();t.lineup=autoLineup(ti,t.formation);
  S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,grace:diff().grace,clubs:[{season:seasonLabel(),club:t.name}]};
  initClub(t);defaultCrew();genScoutPool();academyIntake(3);setupYouth();setWageCap();assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));

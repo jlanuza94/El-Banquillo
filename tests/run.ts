@@ -23,6 +23,7 @@ import { hireStaff, migrateCrew } from '../src/staff';
 import { queueScout, scoutingWeekly, seen } from '../src/scouting';
 import { lgName, squad, T } from '../src/state';
 import { editClub, editNames, editPlayer, exportClubsCSV, exportMod, importData } from '../src/mods';
+import { quickWeekly, search, suggestions } from '../src/quick';
 import { ylTable } from '../src/youth';
 import { agentFee, askPrice, makeBid, makeTerms, refuses, sell } from '../src/market';
 import { r3 } from '../src/core';
@@ -177,6 +178,14 @@ const app = document.getElementById('app')!;
     S.view = 'editor'; for (const tb of ['club', 'pl', 'names', 'io']) { S.edTab = tb; S.edClub = S.user; S.edPl = p.id; render(); } ok(app.textContent.includes('Importar'), 'pantalla del editor');
     t.name = oldName; S.cNames = {}; S.lgNames = {};
   }
+  { // búsqueda global y modo rápido
+    const p = Object.values(S.players).find(x => x.team !== S.user && x.team !== null), q = p.name.split(' ')[1].slice(0, 4);
+    const r = search(q); ok(r.pl.some(x => x.name.includes(q)), 'búsqueda global de jugadores');
+    S.modal = { type: 'search' }; render(); const inp = document.getElementById('gsq'); inp.value = q; inp.dispatchEvent(new window.Event('input', { bubbles: true })); ok(document.getElementById('gsres').querySelector('[data-a=ficha]'), 'la búsqueda muestra resultados al escribir'); S.modal = null;
+    S.mode = 'rapido'; S.press = { q: '¿?', o: [['Bien', {}], ['Mal', {}]] }; quickWeekly(); ok(!S.press && S.autoRot, 'modo rápido: el segundo responde a la prensa y rota'); render();
+    ok(!document.querySelector('.side [data-v=analisis]'), 'modo rápido: menú simplificado'); S.mode = 'profundo';
+    const sg = suggestions(3); ok(Array.isArray(sg.list), `sugerencias de fichajes (${sg.list.length} para ${sg.g})`);
+  }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
@@ -232,6 +241,7 @@ const app = document.getElementById('app')!;
     // el filial queda 1º pero el primer equipo sigue en 4ª: no puede subir
     const tabs = S.leagues.map(L => table(L.id)); const bi = S.leagues.indexOf(S.leagues[filial().lg]); const b = tabs[bi].findIndex(r => r.id === filial().id); const tb = tabs[bi]; [tb[0], tb[b]] = [tb[b], tb[0]];
     const moves = []; S.leagues.forEach((L, i) => { if (L.lv > 0) tabs[i].slice(0, 3).forEach(r => moves.push([r.id, S.leagues.find(x => x.c === L.c && x.lv === L.lv - 1).id])); });
+    const moves2 = moves.filter(m => m[0] !== S.user); moves.length = 0; moves.push(...moves2); // el primer equipo se queda en 4ª
     const fixed = fixFilialMoves(tabs, moves); ok(!fixed.some(m => m[0] === filial().id) && fixed.filter(m => S.leagues[m[1]].c === 0 && S.leagues[m[1]].lv === 3 && S.leagues[T(m[0]).lg].lv === 4).length === 3, 'el filial no puede subir a la división de su primer equipo (sube el siguiente)');
     const cap = S.wageCap; ok(wageCheck(cap * 2) !== '' && wageCheck(0.0001) === '', 'el límite salarial frena sueldos que no caben');
     S.budget = 50; ok(moveBudget(1) === '' && S.wageCap > cap, 'se puede pasar dinero de fichajes a sueldos');
