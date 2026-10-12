@@ -7,6 +7,7 @@
   --win:#2b8a4b; --draw:#8b9088; --loss:#c23a2e;
   --c-por:#b4761a; --c-def:#2f5fa8; --c-med:#2c8a4e; --c-del:#c0392b;
   --pitch:#2f7b46; --pitch2:#2b7140; --chalk:rgba(255,255,255,.72);
+  --menu:#0f3d2e; --menu2:#16503c; --menu-ink:#eaf3ed; --menu-dim:#a4c3b1; --menu-line:rgba(255,255,255,.12);
   --board:#0d1411; --board-ink:#f4cf5c; --board-txt:#e7eee8; --board-dim:#7d8a81;
   --shadow:0 1px 2px rgba(20,35,25,.06),0 4px 14px rgba(20,35,25,.06);
   --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
@@ -32,7 +33,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
 .wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:14px 56px}
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -251,3 +252,21 @@ tr.dim td{opacity:.55}
 .cchosen{align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
 .cchosen .flag{width:42px;height:28px}
 @media (max-width:520px){.cgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.ccard{padding:12px}.ccard .cn{font-size:18px}}
+
+/* Menús en verde oscuro: pantalla de inicio, menú lateral, barra inferior y «Más» */
+.startscr{background:linear-gradient(180deg,var(--menu) 0,#0b3024 100%);min-height:100vh;color:var(--menu-ink)}
+.startscr .hero p,.startscr>.wrap>.small,.startscr .eyebrow,.startscr .small.muted:not(.ccard *):not(.dcard *):not(.tcard *):not(.panel *):not(.cchosen *){color:var(--menu-dim)}
+.startscr .hero .eyebrow{color:var(--accent)}
+.startscr details summary,.startscr details p{color:var(--menu-dim)}
+.startscr details summary b{color:var(--menu-ink)}
+.startscr .seg{background:var(--menu2);border-color:var(--menu-line)}
+.startscr .seg button{color:var(--menu-dim)}
+.startscr .seg button+button{border-color:var(--menu-line)}
+.startscr .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.startscr .ccard,.startscr .dcard,.startscr .tcard,.startscr .panel,.startscr .cchosen{border-color:transparent;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.startscr .ccard:hover,.startscr .dcard:hover,.startscr .tcard:hover{border-color:var(--accent)}
+.startscr .cpick{color:var(--menu-ink)}
+.startscr input{color:var(--ink)}
+.startscr .ccard,.startscr .dcard,.startscr .tcard,.startscr .panel,.startscr .cchosen,.startscr .btn:not(.primary):not(.dark){color:var(--ink)}
+.startscr .tcard dt,.startscr .panel .small.muted{color:var(--muted)}
+body:has(.startscr){background:#0b3024}

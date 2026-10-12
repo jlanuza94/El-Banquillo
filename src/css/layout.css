@@ -119,3 +119,20 @@ textarea:focus-visible{outline:2px solid var(--focus)}
  .top2{flex-wrap:wrap}
  .top2 .club{flex-basis:100%}
 }
+
+/* Menú lateral y barra inferior en verde oscuro */
+aside.side{background:var(--menu);border-right-color:var(--menu-line);color:var(--menu-ink)}
+aside.side .brand small,aside.side .ngroup .gt,aside.side .small.muted{color:var(--menu-dim)}
+aside.side .sclub{background:var(--menu2);border-color:var(--menu-line)}
+aside.side .nitem{color:var(--menu-ink)}
+aside.side .nitem:hover{background:rgba(255,255,255,.08)}
+aside.side .nitem[aria-current="true"]{background:var(--accent);color:var(--accent-ink)}
+aside.side .nitem[aria-current="true"] .badge{background:var(--menu);color:var(--menu-ink)}
+.bnav{background:var(--menu)!important;border-top-color:var(--menu-line)!important}
+.bnav button{color:var(--menu-dim)!important}
+.bnav button[aria-current="true"]{color:var(--accent)!important}
+.sheet .in{background:var(--menu)}
+.sheet .nitem{color:var(--menu-ink);border-color:var(--menu-line)}
+.sheet .nitem[aria-current="true"]{background:var(--accent);color:var(--accent-ink)}
+.sheet .nitem:hover{background:rgba(255,255,255,.08)}
+.sheet .nitem[aria-current="true"]:hover{background:var(--accent)}

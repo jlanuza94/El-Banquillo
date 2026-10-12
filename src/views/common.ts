@@ -111,8 +111,8 @@ export function render(){
  RT.keyCache=null;
  if(!$app)return;
  let html;
- if(!S||S.user==null){if(!S){buildWorld(RT.seed);if(RT.mod){RT.modMsg=importData(RT.mod);}}html=startView();}
- else if(S.jobless)html=jobsView()+modalView();
+ if(!S||S.user==null){if(!S){buildWorld(RT.seed);if(RT.mod){RT.modMsg=importData(RT.mod);}}html=`<div class="startscr">${startView()}</div>`;}
+ else if(S.jobless)html=`<div class="startscr">${jobsView()}</div>`+modalView();
  else{if(S.view==='partido'&&!S.match)S.view='inicio';html=shell()+modalView();}
  patchApp(html);
 }
