@@ -17,13 +17,15 @@ export const shortNm=id=>{const p=PL(id);if(!p)return '—';const [f,...l]=p.nam
 export const lastNm=id=>{const p=PL(id);return p?p.name.split(' ').slice(1).join(' '):'';};
 export const seasonLabel=(n)=>{const y=2025+(n||S.seasonN);return y+'/'+String(y+1).slice(2);};
 export const uLg=()=>T(S.user).lg;
-export const lgName=(id,short)=>{const L=LG(id),c=COUNTRIES[L.c];return short?`${c.code} ${LV_SH[L.lv]}`:`${c.n} · ${LV_NAMES[L.lv]}`;};
+/** Nombre de un país (o el que le hayas puesto en el editor). */
+export const cName=c=>(S&&S.cNames&&S.cNames[c])||COUNTRIES[c].n;
+export const lgName=(id,short)=>{const L=LG(id),c=COUNTRIES[L.c];if(short)return `${c.code} ${LV_SH[L.lv]}`;const own=S&&S.lgNames&&S.lgNames[id];return own?`${cName(L.c)} · ${own}`:`${cName(L.c)} · ${LV_NAMES[L.lv]}`;};
 export const lgTeams=id=>S.teams.filter(t=>t.lg===id);
 export const findLg=(c,lv)=>S.leagues.find(L=>L.c===c&&L.lv===lv);
 export const lowest=L=>L.lv===COUNTRIES[L.c].lv-1;
 export function lum(hex){const n=parseInt(hex.slice(1),16);const r=(n>>16)/255,g=(n>>8&255)/255,b=(n&255)/255;return .2126*r+.7152*g+.0722*b;}
 export function crestStyle(t){return `--c1:${t.c1};--c2:${t.c2};--ct:${lum(t.c1)>.55?'#111':'#fff'}`;}
-export function crest(t,cls=''){return `<span class="crest ${cls}" style="${crestStyle(t)}" aria-hidden="true">${esc(t.short)}</span>`;}
+export function crest(t,cls=''){return `<span class="crest ${cls} ${t.cs?'cs-'+t.cs:''}" style="${crestStyle(t)}" aria-hidden="true">${esc(t.short)}</span>`;}
 export const qc=v=>v>=8?'q5':v>=7?'q4':v>=6?'q3':v>=5?'q2':'q1';
 export const rt=p=>(p.ovr/10).toFixed(1);
 export const qBadge=(v10,cls='')=>`<span class="q ${qc(v10)} ${cls}">${v10.toFixed(1)}</span>`;

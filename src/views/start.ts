@@ -33,7 +33,11 @@ export function startView(){
  <div class="teams">${cards}</div>
  <details style="margin-top:22px"><summary class="small">Semilla del mundo: <b>${S?S.seed:''}</b></summary>
  <p class="small muted" style="margin:8px 0">Cada mundo sale de una semilla. Con la misma semilla se generan los mismos clubes y jugadores, y si tomas las mismas decisiones, pasan las mismas cosas. Puedes compartirla o repetir un mundo que te gustó.</p>
- <div class="row"><label class="f"><span class="eyebrow">Semilla</span><input type="number" id="seedIn" min="0" value="${S?S.seed:''}"></label><button class="btn" data-a="seed-go" style="align-self:flex-end">Crear este mundo</button><button class="btn" data-a="seed-new" style="align-self:flex-end">Otro mundo al azar</button></div></details></div>`;
+ <div class="row"><label class="f"><span class="eyebrow">Semilla</span><input type="number" id="seedIn" min="0" value="${S?S.seed:''}"></label><button class="btn" data-a="seed-go" style="align-self:flex-end">Crear este mundo</button><button class="btn" data-a="seed-new" style="align-self:flex-end">Otro mundo al azar</button></div></details>
+ <details style="margin-top:12px" ${RT.mod?'open':''}><summary class="small">Empezar con un mod${RT.mod?' · <b>mod cargado</b>':''}</summary>
+ <p class="small muted" style="margin:8px 0">Carga un mod (JSON) o un CSV de clubes exportado desde el Editor de otra partida: el mundo nuevo saldrá con sus nombres, colores y jugadores.</p>
+ <label class="f"><span class="eyebrow">Archivo del mod</span><input type="file" id="modFile" accept=".json,.csv,.txt"></label>
+ ${RT.modMsg?`<div class="negmsg ${RT.modMsg.ok?'ok':'no'}">${esc(RT.modMsg.msg)}</div>`:''}${RT.mod?'<button class="btn sm" data-a="mod-clear" style="margin-top:8px">Quitar el mod</button>':''}</details></div>`;
 }
 export function jobsView(){
  const J=S.jobless;

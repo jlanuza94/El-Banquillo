@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData} from './mods';
 import {addAffiliate,createFilial,fromFilial,moveBudget,removeAffiliate,takeBankLoan,toFilial} from './clubplus';
 import {loadPlan,planInMatch,savePlan} from './plans';
 import {addPair,removePair} from './mentor';
@@ -7,7 +8,7 @@ import {DIFF} from './difficulty';
 import {queueScout,scoutWeeks} from './scouting';
 import {fireStaff,hireStaff,renewStaff} from './staff';
 import {KEY,clamp,pick,r2,rnd} from './core';
-import {COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
+import {ATTRS,COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
 import {news,pickTeam} from './world';
 import {autoLineup,fixLineup,nRounds,rotateLineup,setFormation,userRoles} from './tactics';
@@ -24,6 +25,11 @@ import {render,toast} from './views/common';
 import {markAll,markRead} from './inbox';
 import {mkList} from './views/market';
 import {boot,start} from './boot';
+/** Descarga un archivo (y, si el navegador no deja, lo copia al portapapeles). */
+export function download(name,text,mime){
+ try{const url=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:mime+';charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast(`Descargando ${name}…`);}
+ catch(e){try{navigator.clipboard.writeText(text);toast('No se pudo descargar: copiado al portapapeles.');}catch(err){toast('No se pudo descargar el archivo.');}}
+}
 export function placeInSlot(pid,i){
  const t=T(S.user),p=PL(pid);if(!available(p)){toast(`${p.name} no está disponible (${p.inj?'lesionado':'sancionado'}).`);return;}
  const j=t.lineup.indexOf(pid);if(j>=0)t.lineup[j]=t.lineup[i];t.lineup[i]=pid;S.sel=null;
@@ -37,6 +43,7 @@ document.addEventListener('click',e=>{
   if(a==='start-diff'){RT.diff=d.v;render();return;}
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
+  if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
   if(a==='pick-team')pickTeam(+d.i);else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;render();}else if(a==='start-lv'){RT.startLv=+d.v;render();}return;}
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
@@ -62,6 +69,22 @@ document.addEventListener('click',e=>{
   case'fil-down':{const id=document.getElementById('filDown')?.value;const e=id?toFilial(id):'Elige un jugador.';toast(e||'Baja al filial.');break;}
   case'aff-add':{const e=addAffiliate(d.id);if(e)toast(e);break;}
   case'aff-del':removeAffiliate(d.id);break;
+  case'ed-tab':S.edTab=d.v;S.ioMsg=null;break;
+  case'ed-search':S.edQ=document.getElementById('edQ')?.value||'';break;
+  case'ed-mine':S.edClub=S.user;break;
+  case'ed-club':S.edClub=+d.id;break;
+  case'ed-club-save':{const g=x=>document.getElementById(x)?.value;const e=editClub(+d.id,{name:g('edName'),short:g('edShort'),c1:g('edC1'),c2:g('edC2'),cs:g('edCs')});toast(e||'Club guardado.');break;}
+  case'ed-squad':S.edSquad=+d.id;S.edTab='pl';S.edPl=null;break;
+  case'ed-psearch':S.edPQ=document.getElementById('edPQ')?.value||'';S.edSquad=null;break;
+  case'ed-pl':S.edPl=d.id;break;
+  case'ed-pl-save':{const g=x=>document.getElementById(x)?.value,o={name:g('edPName'),nat:g('edPNat'),sp:g('edPSp'),age:g('edPAge'),foot:g('edPFoot'),pot:g('edPPot')};ATTRS.forEach(k=>o[k]=g('edA-'+k));const e=editPlayer(d.id,o);if(!e)PL(d.id).edited=1;toast(e||'Jugador guardado.');break;}
+  case'ed-names-save':{const cn={},ln={};COUNTRIES.forEach((c,i)=>cn[i]=document.getElementById('edCn-'+i)?.value||'');S.leagues.forEach(L=>ln[L.id]=document.getElementById('edLn-'+L.id)?.value||'');editNames(cn,ln);toast('Nombres guardados.');break;}
+  case'io-mod':download('el-banquillo-mod.json',exportMod(false),'application/json');break;
+  case'io-mod-all':download('el-banquillo-mod-completo.json',exportMod(true),'application/json');break;
+  case'io-clubs':download('clubes.csv',exportClubsCSV(),'text/csv');break;
+  case'io-squad':download('mi-plantilla.csv',exportPlayersCSV(S.user),'text/csv');break;
+  case'io-players':download('jugadores.csv',exportPlayersCSV(null),'text/csv');break;
+  case'io-paste':{S.ioMsg=importData(document.getElementById('ioTxt')?.value||'');break;}
   case'an-tab':S.anTab=d.v;break;
   case'an-p90':S.anP90=d.v==='1';break;
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
@@ -174,6 +197,9 @@ document.addEventListener('keydown',e=>{
  if((e.key==='Enter'||e.key===' ')&&e.target.matches('tr[data-a]')){e.preventDefault();e.target.click();}
 });
 document.addEventListener('change',e=>{
+ if(e.target.id==='ioFile'||e.target.id==='modFile'){const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{
+   if(e.target.id==='modFile'){RT.mod=String(rd.result);try{const o=JSON.parse(RT.mod);if(o&&o.seed!=null)RT.seed=o.seed;}catch(err){}setS(null);render();toast(`Mod «${f.name}» cargado: se aplicará al mundo nuevo.`);return;}
+   S.ioMsg=importData(String(rd.result));save();render();};rd.readAsText(f);return;}
  if(!S||S.user==null)return;const id=e.target.id,v=e.target.value;
  const map={mksp:'sp',mkc:'c',mklv:'lv',mkmin:'min',mkage:'age',mkmax:'max',mksort:'sort'};
  if(id==='formSel'){setFormation(v);S.sel=null;}

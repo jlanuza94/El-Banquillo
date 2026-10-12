@@ -225,3 +225,7 @@ tr.dim td{opacity:.55}
 .empty{padding:22px;text-align:center;color:var(--muted)}
 .big-num{font-family:var(--f-display);font-weight:900;font-size:64px;line-height:.9}
 @media (prefers-reduced-motion: reduce){.board.flash .sc{animation:none}.slot .sh{transition:none}}
+/* Formas de escudo (editor) */
+.crest.cs-s{border-radius:10% 10% 50% 50%/10% 10% 62% 62%}
+.crest.cs-c{border-radius:50%}
+.crest.cs-q{border-radius:16%}

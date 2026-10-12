@@ -21,7 +21,8 @@ import { seasonLabel, uLg } from '../src/state';
 import '../src/events';
 import { hireStaff, migrateCrew } from '../src/staff';
 import { queueScout, scoutingWeekly, seen } from '../src/scouting';
-import { squad, T } from '../src/state';
+import { lgName, squad, T } from '../src/state';
+import { editClub, editNames, editPlayer, exportClubsCSV, exportMod, importData } from '../src/mods';
 import { ylTable } from '../src/youth';
 import { agentFee, askPrice, makeBid, makeTerms, refuses, sell } from '../src/market';
 import { r3 } from '../src/core';
@@ -164,6 +165,17 @@ const app = document.getElementById('app')!;
       S.fr = []; ok(cand.lmt === 6 && cand.lpj >= 3, `el club cumple: juega ${cand.lpj} de ${cand.lmt}`);
       cand.team = S.user; cand.loan = null; cand.lpj = cand.lmt = 0; }
     S.week = wk0; fixLineup();
+  }
+  { // editor y mods
+    const t = T(S.user), oldName = t.name;
+    ok(editClub(t.id, { name: 'Real Prueba', short: 'rpr', c1: '#112233', c2: '#ffffff', cs: 's' }) === '' && t.name === 'Real Prueba' && t.short === 'RPR' && t.cs === 's', 'editor: club');
+    const p = squad(S.user)[0]; ok(editPlayer(p.id, { name: 'Lionel Prueba', tir: 10, age: 30 }) === '' && p.name === 'Lionel Prueba' && p.at.tir === 10, 'editor: jugador');
+    editNames({ 0: 'Hispania' }, { [t.lg]: 'Liga Prueba' }); ok(lgName(t.lg) === 'Hispania · Liga Prueba', 'editor: nombres de liga y país');
+    const mod = JSON.parse(exportMod(false)); mod.clubs[0].name = 'Club del Mod'; ok(importData(JSON.stringify(mod)).ok && S.teams[0].name === 'Club del Mod', 'mod JSON: exportar e importar');
+    const csv = exportClubsCSV().replace(/^(\d+;[^;]*;[^;]*;)[^;]*/m, '$1Club CSV'); ok(importData(csv).ok && S.teams.some(x => x.name === 'Club CSV'), 'CSV de clubes: exportar, editar e importar');
+    const pc = 'club;nombre;posicion;edad\n' + t.name + ';Nuevo Nombre;DC;24'; const r = importData(pc); ok(r.ok && squad(S.user).some(x => x.name === 'Nuevo Nombre'), 'CSV de jugadores sin id (por club y posición): ' + r.msg);
+    S.view = 'editor'; for (const tb of ['club', 'pl', 'names', 'io']) { S.edTab = tb; S.edClub = S.user; S.edPl = p.id; render(); } ok(app.textContent.includes('Importar'), 'pantalla del editor');
+    t.name = oldName; S.cNames = {}; S.lgNames = {};
   }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');

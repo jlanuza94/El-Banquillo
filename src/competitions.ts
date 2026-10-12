@@ -2,7 +2,7 @@
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {money,r2,r3,rnd,shuffle} from './core';
 import {COUNTRIES,LV_NAMES} from './data';
-import {LG,S,T,findLg,lgTeams,seasonLabel,uLg,unit} from './state';
+import {cName,LG,S,T,findLg,lgTeams,seasonLabel,uLg,unit} from './state';
 import {strength} from './players';
 import {news} from './world';
 import {applyResult,createMatch,playerTick,quickMatch,step} from './engine';
@@ -10,7 +10,7 @@ import {unlock} from './club';
 import {processWeek} from './squad';
 export const CUP_AFTER=[3,8,13,18,23,28,33],CWC_AFTER=[5,10,15,20,25,30];export const NCUP=CUP_AFTER.length;
 export const CWC_NAMES=['Fase de grupos · Jornada 1','Fase de grupos · Jornada 2','Fase de grupos · Jornada 3','Cuartos de final','Semifinales','Final'];
-export const cupName=c=>`Copa de ${COUNTRIES[c].n}`;
+export const cupName=c=>`Copa de ${cName(c)}`;
 export const cupRoundName=rd=>{const n=rd.n;return n<=2?'Final':n<=4?'Semifinales':n<=8?'Cuartos de final':n<=16?'Octavos de final':n<=32?'Dieciseisavos':(['Primera','Segunda','Tercera'][rd.k]||'Otra')+' ronda';};
 export function cupRounds(n){let r=0;while(n>1){const P=1<<Math.floor(Math.log2(n));n=r===0?Math.ceil(n/2):n===P?n/2:P;r++;}return r;}
 export const mkTie=(h,a,g)=>({h,a,g,hg:null,ag:null,pen:null,w:null,played:false,ev:[]});
