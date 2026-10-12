@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {duosOf,MGR_AT,PROJ,REFS,mgrAt,nsCost,projState,refFor} from '../extras2';
 import {PITCH,WX,coachH2H,nextWeather,rivalSetPieces,spPrepFor,wxTxt,OBJ_N,objProg,galaAwards} from '../extras';
 import {coachOf} from '../living';
 import {knowledge} from '../scouting';
@@ -159,6 +160,7 @@ function previaHTML(oid){
  return `<section class="panel"><div class="panel-h"><h2>Previa</h2><span class="eyebrow">Tiempo, banquillo rival y balón parado</span></div>
  ${w?`<div class="offer"><span class="t"><b>${esc(wxTxt(w))}</b><br><span class="small muted">${esc(WX[w.k].d)}${w.p!=='bue'?' '+esc(PITCH[w.p].d):''}</span></span></div>`:''}
  ${c?`<div class="offer"><span class="t"><b>Enfrente: ${esc(c.name)}</b>${r?` · tú ${r.w}G ${r.d}E ${r.l}P contra él`:' · primer duelo'}<br><span class="small muted">${pq?pq.resp==='r'?'Le respondiste en la prensa: si ganas, tu reputación sube; si pierdes, la directiva lo apunta.':pq.resp==='i'?'Ignoraste sus palabras.':'Te ha lanzado un pique: mira la bandeja.':'Sin cruce de declaraciones.'}</span></span></div>`:''}
+ ${(()=>{const nm=nextMatch();if(!nm)return '';const R=refFor(nm.ref,nm.fx.h);return `<div class="offer"><span class="t"><b>Árbitro: ${esc(R.name)} · ${REFS[R.k].n.toLowerCase()}</b><br><span class="small muted">${esc(REFS[R.k].d)}</span></span></div>`;})()}
  <h3 style="margin:10px 0 4px">Vídeo del rival: balón parado</h3>
  <p class="small muted" style="margin:0 0 6px">Córners: <b>${esc(V.ck)}</b> · Faltas: <b>${esc(V.fk)}</b>${V.tk?` · Lanzador: <b>${esc(V.tk.name)}</b>`:''}${V.hd?` · Rematador: <b>${esc(V.hd.name)}</b> (cabeza ${V.hd.at.cab??5})`:''}</p>
  ${prep?'<span class="tag onxi">Defensa a balón parado preparada</span>':`<button class="btn sm" data-a="sp-prep" data-id="${oid}">Preparar la defensa a balón parado</button>`}
@@ -229,6 +231,11 @@ export function plantillaView(){
   const avg=sq.length?Math.round(sq.reduce((a,p)=>a+(p.hap||70),0)/sq.length):70,vm=vestMult();
   table=`<div class="arow" style="grid-template-columns:150px minmax(0,1fr) 34px;margin-bottom:6px"><span>Ambiente del vestuario</span><span class="abar" style="display:block"><i class="${qc(avg/10)}" style="width:${avg}%"></i></span><b class="num">${avg}</b></div>
   <p class="small ${vm<1?'':'muted'}" style="margin:0 0 12px">Efecto en el campo: <b style="color:${vm>=1?'var(--win)':'var(--loss)'}">${vm>=1?'+':''}${((vm-1)*100).toFixed(1)}%</b>. Un vestuario contento rinde más; los líderes enfadados y los que piden salir restan.</p>
+  ${(()=>{const t=T(S.user),opt=(id,cur)=>`<select id="${id}"><option value="">—</option>${sq.filter(p=>!p.loan).map(p=>`<option value="${p.id}" ${cur===p.id?'selected':''}>${esc(p.name)} · liderazgo ${p.at.lid??5}</option>`).join('')}</select>`;const vc=t.vc||[];
+   return `<h3 style="margin:0 0 6px">Capitanía</h3><p class="small muted" style="margin:0 0 6px">Un capitán con liderazgo calma a los descontentos; si él está enfadado, contagia a los suyos. Los vicecapitanes le ayudan.</p>
+   <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:12px"><label class="f"><span class="eyebrow">Capitán</span>${opt('t-cap',t.cap)}</label><label class="f"><span class="eyebrow">Vicecapitán</span>${opt('t-vc0',vc[0])}</label><label class="f"><span class="eyebrow">Segundo vicecapitán</span>${opt('t-vc1',vc[1])}</label></div>`;})()}
+  ${(()=>{const D=duosOf(sq.filter(p=>!p.loan).map(p=>p.id)),g=D.filter(x=>x[2]>0),b=D.filter(x=>x[2]<0),xi=T(S.user).lineup;const row=([a,c,v])=>`<div class="offer"><span class="t">${nameBtn(a)} <span class="muted">y</span> ${nameBtn(c)}${xi.includes(a.id)&&xi.includes(c.id)?' <span class="tag onxi">en el once</span>':''}</span><span class="tag ${v>0?'xi':'bad'}">${v>0?'Se entienden':'No se soportan'}</span></div>`;
+   return `<h3 style="margin:0 0 6px">Parejas</h3><p class="small muted" style="margin:0 0 6px">Algunos se entienden de memoria (rinden más si juegan juntos); otros no se soportan (rinden menos). Mismo país o idioma ayuda.</p>${g.concat(b).slice(0,12).map(row).join('')||'<div class="empty">Ninguna pareja especial en tu plantilla.</div>'}<div style="height:12px"></div>`;})()}
   <h3 style="margin:0 0 6px">Líderes del vestuario</h3><p class="small muted" style="margin:0 0 6px">Los jugadores con más influencia. Si uno está descontento contagia a los de su idioma; venderlo enfada al vestuario.</p>
   ${L.map(([p,v])=>`<div class="offer">${posChip(p)}<span class="t">${nameBtn(p)} ${p.per==='lid'?'<span class="tag xi">Líder</span>':''} ${T(S.user).cap===p.id?'<span class="tag">Capitán</span>':''}<br><span class="small muted">Influencia ${v} · ${p.age} años</span></span>${hapTag(p)}</div>`).join('')}
   <h3 style="margin:16px 0 6px">Grupos por idioma</h3><p class="small muted" style="margin:0 0 6px">Los fichajes se adaptan antes si ya hay compañeros que hablan su idioma. Mientras se adaptan rinden un poco menos.</p>

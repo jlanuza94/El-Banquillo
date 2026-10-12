@@ -1,5 +1,6 @@
 /* El Banquillo · connected.ts — Sistemas conectados: agentes, contactos del director deportivo, cesiones con objetivos y vestuario. */
 // @ts-nocheck — usa el estado heredado S.
+import {mgrAt} from './extras2';
 import {clamp,money,pick,r2,r3,rnd} from './core';
 import {COUNTRIES} from './data';
 import {LG,PL,S,T,squad,uLg} from './state';
@@ -69,7 +70,7 @@ export function loanReview(p){
 export function vestMult(){
  const sq=squad(S.user).filter(p=>!p.loan);if(!sq.length)return 1;
  const avg=sq.reduce((a,p)=>a+(p.hap??70),0)/sq.length,L=leaders(3),badLead=L.filter(([p])=>(p.hap??70)<40).length,req=sq.filter(p=>p.req).length;
- return clamp(1+(avg-62)/900-badLead*.008-req*.003,.96,1.02);
+ return clamp(1+(avg-62)/900-badLead*.008-req*.003+.002*(mgrAt('mot')-5),.96,1.03);
 }
 export function vestWeekly(){
  const groups={};squad(S.user).forEach(p=>{const l=langOf(p);(groups[l]=groups[l]||[]).push(p);});

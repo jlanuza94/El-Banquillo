@@ -1,5 +1,7 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {maybeRival,rivalWins} from './extras2';
+import {interested} from './market2';
 import {markArrival} from './devplus';
 import {transferRecord} from './worldhist';
 import {applyTerms,bonusFields,bonusWeekly,counters,readBonus} from './negotiate';
@@ -61,7 +63,7 @@ export function makeBid(id,amt,opt={}){
  let accept=ratio>=1;
  if(!accept&&ratio>=.65)accept=rnd()<(ratio-.65)/.35*.75;
  if(accept){n.agreed=amt;n.deal=opt;n.tries=0;const extra=[(opt.inst||1)>1?`en ${opt.inst} plazos (${money(firstPay(amt,opt))} ahora)`:'',opt.son?`con un ${Math.round(SON_PCT*100)}% de futura venta para ellos`:'',opt.swap?`con ${PL(opt.swap).name} incluido`:''].filter(Boolean).join(', ');
-  n.msg=`${p.team===null?'Trato hecho con su agente':T(p.team).name+' acepta '+money(amt)+(extra?' '+extra:'')}. Ahora negocia el contrato con el jugador.`;n.kind='ok';return;}
+  n.msg=`${p.team===null?'Trato hecho con su agente':T(p.team).name+' acepta '+money(amt)+(extra?' '+extra:'')}. Ahora negocia el contrato con el jugador.`;n.kind='ok';maybeRival(p,n,interested);return;}
  if(n.tries>=3){n.closed=true;n.msg=`${p.team===null?'El agente de '+p.name:T(p.team).name} da por cerradas las negociaciones esta jornada.`;n.kind='no';return;}
  if(ratio<.65){n.msg=`Oferta rechazada: ${p.team===null?'el jugador':'el club'} ni la considera. Necesitarás acercarte bastante más.`;n.kind='no';}
  else{n.counter=r2(Math.max(amt*1.05,(n.counter||ask)*(.92+rnd()*.1)));n.msg=`Oferta rechazada. Piden ${money(n.counter)}. Te quedan ${3-n.tries} intento${3-n.tries>1?'s':''}.`;n.kind='no';}
@@ -102,7 +104,7 @@ export function makeTerms(id,mode,t,force){
  const cost=(mode==='buy'?firstPay(st.agreed,st.deal)+agentFee(p,st.agreed):0)+(t.bonus||0);if(cost>S.budget){st.msg=`No te llega el presupuesto (${money(S.budget)}) para pagar ${money(cost)}.`;st.kind='no';return;}
  {const w=wageCheck(t.w,mode==='renew'?p.wage:0);if(w){st.msg=w;st.kind='no';return;}}
  st.ttries=(st.ttries||0)+1;const ratio=evalTerms(p,mode,t);let ok=force||ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;st.counters=null;
- if(ok){applyTerms(p,t);if(mode==='buy'){completeBuy(p,st.agreed,t);}else{p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;S.budget=r3(S.budget-(t.bonus||0));p.hap=clamp(p.hap+6,0,100);if(p.prom&&p.prom.type==='ren'){p.prom=null;p.hap=clamp(p.hap+4,0,100);}delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)}: ${money(p.wage)}/sem, ${ROLES[p.role].n.toLowerCase()}, cláusula ${money(p.cl)}.`,'good');toast(`${p.name} ha renovado.`);}return;}
+ if(ok){if(mode==='buy'&&rivalWins(p,st,t,ROLES))return;applyTerms(p,t);if(mode==='buy'){completeBuy(p,st.agreed,t);}else{p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;S.budget=r3(S.budget-(t.bonus||0));p.hap=clamp(p.hap+6,0,100);if(p.prom&&p.prom.type==='ren'){p.prom=null;p.hap=clamp(p.hap+4,0,100);}delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)}: ${money(p.wage)}/sem, ${ROLES[p.role].n.toLowerCase()}, cláusula ${money(p.cl)}.`,'good');toast(`${p.name} ha renovado.`);}return;}
  if(st.ttries>=3){st.closed=true;st.msg=`${p.name} rompe las negociaciones hasta la próxima jornada.`;st.kind='no';return;}
  const D=termsDemand(p,mode);st.msg=`Rechaza tu propuesta${ratio<.85?' (está lejos de lo que pide)':''}. Pide unos ${money(D)}/sem siendo ${ROLES[expRole(p)].n.toLowerCase()}. Una prima de fichaje o un rol mejor ayudan. Te quedan ${3-st.ttries} intento${3-st.ttries>1?'s':''}.`;st.kind='no';st.counters=counters(p,t,ratio);if(st.counters)st.msg=`${p.name} no acepta, pero su agente propone otra cosa. ${st.msg}`;
 }

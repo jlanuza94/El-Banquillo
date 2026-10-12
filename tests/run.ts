@@ -12,6 +12,11 @@ import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics'
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
 import { PL, LG } from '../src/state';
 import { cellVal } from '../src/sorttable';
+import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
+import { seatCost } from '../src/club';
+import { ROLES } from '../src/data';
+import { autoLineup as autoLineupF } from '../src/tactics';
+const autoLineupT = id => autoLineupF(id, T(id).formation);
 import { OBJ_N, PITCH, WX, assignObjectives, galaAwards, hireFromClub, momentInj, momentPen, momentRed, objectivesWeekly, resolveMoment, rivalSetPieces, spPrepMult, staffMarket, weatherFor, weatherMods, wxTxt } from '../src/extras';
 import { ST_ROLES, crewLevel, makeStaff } from '../src/staff';
 import { famOf } from '../src/tactics';
@@ -355,6 +360,24 @@ const app = document.getElementById('app')!;
     S.crew = S.crew.filter(x => x.id !== sg.id).concat(segs); S.budget = b0;
     S.view = 'staff'; S.vt = { st: 'club' }; render(); ok(app.textContent.includes('Técnicos de otros clubes'), 'pantalla de técnicos de otros clubes');
     const A = galaAwards(); ok(Array.isArray(A), 'gala del club'); S.vt = {}; S.view = 'inicio'; render(); }
+  { // Rival que cambia, charlas, árbitros, penaltis, parejas, capitanes, prensa, proyecto, estadio, pujas, entrenador y grandes
+    const ev = []; const add = (m, t, s, tx) => ev.push(tx);
+    const mm = { us: 'h', h: S.user, a: S.teams.find(x => x.id !== S.user).id, min: 70, score: { h: 1, a: 0 }, ment: { h: 'bal', a: 'bal' }, tac: { h: {}, a: {} } };
+    aiInMatch(mm, 'a', add, true); ok(mm.ment.a === 'att' && mm.tac.a.lin === 'alt' && ev.length === 1, 'el rival se vuelca cuando pierde y tu ayudante avisa');
+    const xi = T(S.user).lineup.filter(Boolean), tk = { lu: { h: xi } }; const r1 = indivTalk(tk, xi[3], 'ani', 5.5); ok(r1 && r1.d === 1, 'charla individual: animar al que va mal');
+    indivTalk(tk, xi[4], 'elo', 7); ok(typeof indivTalk(tk, xi[5], 'exi', 6) === 'string', 'máximo dos charlas en el descanso');
+    const rf = refFor({ k: 'lg', r: 5 }, S.user); ok(REFS[rf.k] && rf.name && refFor({ k: 'lg', r: 5 }, S.user).name === rf.name, 'árbitro del partido: ' + rf.name + ' (' + REFS[rf.k].n + ')');
+    const so = { us: 'h', h: S.user, a: mm.a, lu: { h: xi, a: autoLineupT(mm.a) } }; playShootout(so, 'best', (m, t, s, tx) => {}); ok(so.pen && so.pen[0] !== so.pen[1], `tanda de penaltis jugada: ${so.pen.join('-')}`);
+    const D = duosOf(squad(S.user).map(p => p.id)); ok(Array.isArray(D) && duoMult(xi) >= .96 && duoMult(xi) <= 1.04, `parejas en la plantilla (${D.length})`);
+    S.view = 'plantilla'; S.plTab = 'vest'; render(); ok(app.querySelector('#t-vc0') && app.textContent.includes('Parejas'), 'capitanía y parejas en el vestuario'); S.plTab = 'jug';
+    const pp = squad(S.user).find(p => !p.loan); const h0 = pp.hap, r0 = pp.role, pub0 = pp.pub; pp.hap = 10; pp.role = 'cl'; pp.pub = 0; for (let i = 0; i < 40 && pp.pub !== S.seasonN; i++) publicWeekly(); ok(pp.pub === S.seasonN, 'un jugador muy descontento pide salir en público'); pp.hap = h0; pp.role = r0;
+    S.proj = null; startProject('eco'); ok(S.proj && S.proj.k === 'eco' && projState().done === false, 'proyecto a 3 años pactado'); const b0 = S.budget; S.budget = S.proj.budget * 2; ok(projState().done, 'proyecto: sanear cuentas cumplido'); S.budget = b0; S.proj = null;
+    const C = S.club, cf = S.mgr.conf; S.mgr.conf = 80; S.budget = 999; ok(startStadium(seatCost) === '' && C.ns, 'empiezan las obras del estadio nuevo'); const cap0 = C.cap; C.ns.left = 1; stadiumWeekly(); ok(C.cap > cap0 && !C.ns, 'inauguración del estadio nuevo'); S.mgr.conf = cf; S.budget = b0;
+    S.view = 'club'; render(); ok(app.textContent.includes('Proyecto a 3 años') && app.textContent.includes('Tus atributos de entrenador'), 'pantalla del club con proyecto, estadio y atributos');
+    mgrInit(); const a0 = mgrAt('tac'); mgrGrow({ ok: true }); ok(mgrAt('tac') > a0, 'el entrenador mejora en táctica al cumplir');
+    const target = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan && p.ovr >= 50); const n = { msg: '' }; for (let i = 0; i < 30 && !n.rival; i++) maybeRival(target, n, () => [S.teams.find(t => t.id !== S.user && t.id !== target.team).id]);
+    ok(n.rival && n.rival.w > 0, 'otro club puja por el mismo jugador'); const lost = rivalWins(target, n, { w: n.rival.w * 3, role: 'cl' }, ROLES); ok(lost === false, 'con mejor propuesta, el jugador te elige');
+    S.view = 'inicio'; render(); }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });

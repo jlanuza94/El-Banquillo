@@ -1,5 +1,8 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {fineHim,indivTalk,jobDecision,startProject,startStadium} from './extras2';
+import {liveRatings} from './engine';
+import {seatCost} from './club';
 import {hireFromClub,resolveMoment} from './extras';
 import {pickScorer,scoreStr,shotLog} from './engine';
 import {ST_ROLES} from './staff';
@@ -80,6 +83,10 @@ document.addEventListener('click',e=>{
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;document.querySelector('main')?.scrollTo?.(0,0);break;
   case'loan-recall':{const err=recallLoan(d.id);if(err)toast(err);break;}
   case'dev-set':break;
+  case'pub-fine':fineHim(d.id);break;
+  case'pub-sell':S.view='mercado';S.mk.tab='sell';break;
+  case'proj':startProject(d.v);break;
+  case'ns-build':{const err=startStadium(seatCost);if(err)toast(err);break;}
   case'pique':if(S.pique){S.pique.resp=d.v;toast(d.v==='r'?'Le respondes en la prensa. Ahora toca ganar.':'Prefieres no entrar al trapo.');}break;
   case'sp-prep':S.spPrep={opp:+d.id};toast('El equipo prepara la defensa a balón parado contra este rival.');break;
   case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
@@ -156,7 +163,8 @@ document.addEventListener('click',e=>{
   case'm-subclose':m.subOpen=false;break;
   case'm-dosub':{const o=document.getElementById('subOut').value,n=document.getElementById('subIn').value;if(o&&n&&doSub(m,m.us,o,n)){m.alert='';m.subOpen=false;toast('Cambio hecho.');}break;}
   case'm-sim':simToEnd();return;
-  case'm-finish':finishRound();return;
+  case'm-finish':if(m&&m.mom){toast('Primero decide qué hacer.');return;}finishRound();return;
+  case'itk':{const pid=document.getElementById('itkP')?.value;const r=indivTalk(m,pid,d.v,liveRatings(m)[pid]);if(typeof r==='string')toast(r);else if(r){addEv(m,'sys',null,`Charla en el descanso: ${r.txt}`);toast(r.txt);}break;}
   case'liga-r':S.ligaRound=clamp(S.ligaRound+(+d.d),0,nRounds()-1);break;
   case'liga-lv':S.ligaLg=findLg(LG(S.ligaLg).c,+d.v).id;break;
   case'liga-mine':S.ligaLg=uLg();break;
@@ -194,8 +202,8 @@ document.addEventListener('click',e=>{
   case'pros-sign':signProspect(d.id);break;
   case'ac-up':promoteYouth(d.id);break;
   case'ac-free':{const p=S.academy.find(x=>x.id===d.id);S.academy=S.academy.filter(x=>x.id!==d.id);if(p)toast(`${p.name} deja la cantera.`);break;}
-  case'job-yes':{const o=S.jobOffers[+d.i];if(o)takeJob(o);break;}
-  case'job-no':S.jobOffers.splice(+d.i,1);break;
+  case'job-yes':{const o=S.jobOffers[+d.i];if(o){jobDecision(o,true);takeJob(o);}break;}
+  case'job-no':jobDecision(S.jobOffers[+d.i],false);S.jobOffers.splice(+d.i,1);break;
   case'job-search':S.showJobs=!S.showJobs;break;
   case'job-apply':{const t=T(+d.id),ch=clamp(.3+(S.mgr.rep-clubReq(t))/30,.05,.9);if(rnd()<ch){S.modal={type:'joboffer',o:makeJobOffer(t)};}else{S.applied[t.id]=S.seasonN;toast(`${t.name} prefiere a otro candidato.`);}break;}
   case'joboffer-ok':{const o=S.modal&&S.modal.o;if(o)takeJob(o);break;}
@@ -295,6 +303,7 @@ document.addEventListener('change',e=>{
  else if(e.target.dataset&&e.target.dataset.reg){const sc=S.scouts.find(x=>x.id===e.target.dataset.reg);if(sc)sc.reg=+v;}
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}
  else if(e.target.dataset&&e.target.dataset.dev){const [pid,k]=e.target.dataset.dev.split('|');setDev(pid,k,v);}
+ else if(id==='t-vc0'||id==='t-vc1'){const t=T(S.user);t.vc=t.vc||[];t.vc[+id.slice(4)]=v||null;}
  else if(id==='rotTh'){S.rot={th:+v};}
  else if(id==='awC'){const c=+v,cur=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}

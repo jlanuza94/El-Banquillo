@@ -1,5 +1,6 @@
 /* El Banquillo · views/club.js — Club y finanzas, historia, récords y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {MGR_AT,PROJ,mgrAt,nsCost,projState} from '../extras2';
 import {wcs} from '../state';
 import {enciclopediaHTML,fameHTML} from './worldhist';
 import {retosPanel} from './retos';
@@ -93,5 +94,15 @@ export function clubView(){
  ${A.map(id=>`<div class="offer">${crest(T(id),'sm')}<span class="t"><button class="linkname" data-a="club-open" data-id="${id}">${esc(T(id).name)}</button> <span class="divtag">${lgName(T(id).lg,true)}</span></span><button class="btn sm" data-a="aff-del" data-id="${id}">Romper</button></div>`).join('')}
  ${A.length<MAX_AFF?affC.map(t=>`<div class="offer">${crest(t,'sm')}<span class="t">${esc(t.name)} <span class="divtag">${lgName(t.lg,true)}</span></span><button class="btn sm" data-a="aff-add" data-id="${t.id}">Afiliar</button></div>`).join(''):''}
  <p class="small muted" style="margin:8px 0 0">Un afiliado acepta siempre a tus cedidos (y les da minutos), conoces a todos sus jugadores y te los deja más baratos.</p></section>`;
- return `<div class="grid"><div class="stack">${board}${budP}${filP}${stadium}${spo}${fac}</div><div class="stack">${finP}${bankP}${affP}${mgrP}${save}</div></div>`;
+ const PS=projState(),P=S.proj;
+ const projP=`<section class="panel"><div class="panel-h"><h2>Proyecto a 3 años</h2><span class="eyebrow">Pactado con la directiva</span></div>
+ ${P?`<p style="margin:0"><b>${esc(PROJ[P.k].n)}</b>: ${esc(PROJ[P.k].d)}</p><p class="small" style="margin:6px 0 0">${PS.done?'<span class="tag onxi">Ahora mismo se cumple</span>':'<span class="tag">Aún no se cumple</span>'} · termina en ${PS.left<=0?'esta temporada':PS.left+' temporada'+(PS.left>1?'s':'')+' más'}</p>`
+ :`<p class="small muted" style="margin:0 0 8px">Elige un proyecto: si lo cumples, la directiva te premia con dinero, reputación y confianza; si no, te lo reprochará.</p>${Object.entries(PROJ).map(([k,v])=>`<div class="offer"><span class="t"><b>${esc(v.n)}</b><br><span class="small muted">${esc(v.d)}</span></span><button class="btn sm" data-a="proj" data-v="${k}">Pactar</button></div>`).join('')}`}</section>`;
+ const X=nsCost(seatCost),nsP=`<section class="panel"><div class="panel-h"><h2>Estadio nuevo</h2><span class="eyebrow">Obra de varias temporadas</span></div>
+ ${C.ns?`<p style="margin:0">Obras en marcha: <b>${C.ns.add.toLocaleString('es')}</b> asientos más. Quedan <b>${C.ns.left}</b> jornadas (pagas ${money(C.ns.weekly)} por jornada).</p><span class="abar" style="display:block;margin-top:8px"><i class="q4" style="width:${Math.round((1-C.ns.left/C.ns.total)*100)}%"></i></span>`
+ :`<p class="small muted" style="margin:0 0 8px">Un estadio con ${X.add.toLocaleString('es')} asientos más. Cuesta ${money(X.cost)}: el 10% ahora y el resto en ${X.weeks} jornadas. Mientras dura la obra se juega en un campo provisional (algo menos de público). Al terminar: más aficionados y más ingresos. La directiva lo aprueba con confianza de 55 o más.</p><button class="btn sm primary" data-a="ns-build">Construir estadio nuevo</button>`}</section>`;
+ const atP=`<section class="panel"><div class="panel-h"><h2>Tus atributos de entrenador</h2><span class="eyebrow">Mejoran con la experiencia</span></div>
+ ${Object.entries(MGR_AT).map(([k,n])=>`<div class="arow" style="grid-template-columns:110px minmax(0,1fr) 34px"><span>${n}</span>${bar(mgrAt(k)*10)}<b class="num">${mgrAt(k).toFixed(1)}</b></div>`).join('')}
+ <p class="small muted" style="margin:8px 0 0">Táctica: tu equipo rinde algo más. Motivación: mejor vestuario. Cantera: los jóvenes crecen antes. Negociación: fichajes más baratos. Al final de cada temporada mejoras en lo que más has trabajado (resultados, canteranos que juegan, fichajes y ventas, vestuario contento).</p></section>`;
+ return `<div class="grid"><div class="stack">${board}${projP}${budP}${filP}${stadium}${nsP}${spo}${fac}</div><div class="stack">${finP}${bankP}${affP}${mgrP}${atP}${save}</div></div>`;
 }

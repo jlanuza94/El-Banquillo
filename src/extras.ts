@@ -2,6 +2,7 @@
  * objetivos de temporada por jugador, momentos de partido, lesiones con decisión, rivalidad con entrenadores,
  * gala de fin de temporada, clima y estado del campo, vídeo del rival a balón parado y fichar técnicos de otros clubes. */
 // @ts-nocheck — usa el estado heredado S.
+import {playShootout} from './extras2';
 import {nextMatch} from './competitions';
 import {dateOf,dayOfEvent} from './calendar';
 import {clamp,money,pick,r2,r3,ri} from './core';
@@ -53,6 +54,7 @@ export function resolveMoment(m,v,h){
  else if(M.k==='red'){m.mm=m.mm||{};if(v==='ata'){m.ment[us]='att';m.mm[us]={own:1.06,opp:1.04};}else if(v==='man')m.mm[us]={own:1.03,opp:1};else{m.ment[us]='def';m.mm[us]={own:.97,opp:.95};}
   h.addEv(m,'sys',null,v==='ata'?'Vas a por ellos con uno más.':v==='man'?'Mantienes el plan: a mover el balón.':'Cierras el partido.');}
  else if(M.k==='inj'){if(v==='sub'){m.subOpen=true;m.subFor=M.pid;}else{m.forced=m.forced||{};m.forced[M.pid]=1;if(Math.random()<.5){delete m.hurt[M.pid];h.addEv(m,'sys',null,`${PL(M.pid).name} aprieta los dientes y sigue como si nada.`);}else h.addEv(m,'sys',null,`${PL(M.pid).name} sigue, pero cojea.`);}}
+ else if(M.k==='so'){playShootout(m,v,h.addEv);}
  else if(M.k==='gk'){const gk=m.lu[us][0];if(v==='gk'){const r=Math.random();
    if(r<.09&&gk){m.score[us]++;m.st[us].sh++;m.st[us].ot++;m.flash=m.min;h.shotLog(m,us,gk,.3,'g');h.addEv(m,'goal',us,`¡¡GOL DEL PORTERO!! ${PL(gk).name} sube al córner y la mete de cabeza. (${h.scoreStr(m)})`,gk);}
    else if(r<.16){const id=h.pickScorer(m,o);if(id){m.score[o]++;m.st[o].sh++;m.st[o].ot++;h.shotLog(m,o,id,.6,'g');h.addEv(m,'goal',o,`Contra con la portería vacía: ${PL(id).name} marca desde lejos. (${h.scoreStr(m)})`,id);}}

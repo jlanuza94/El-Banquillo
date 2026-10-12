@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {REFS,aiInMatch,duoMult,mgrAt,momentShootout,refFor} from './extras2';
 import {forcedAfter,momentInj,momentPen,momentRed,momentsTick,recordCoach,spPrepFor,spPrepMult,weatherFor,weatherMods} from './extras';
 import {dateOf,dayOfEvent} from './calendar';
 import {laneTip,learnRoles,phaseMods} from './tactics2';
@@ -33,6 +34,7 @@ export function createMatch(ref){
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
  m.derby=m.ref.k!=='fr'&&isDerby(m.h,m.a);
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
+ if(m.us){m.refr=refFor(ref,m.h);m.mult[m.us]*=duoMult(m.lu[m.us].filter(Boolean))*(1+.004*(mgrAt('tac')-5));}
  if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;if(spPrepFor(op))m.spd=spPrepMult();}
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
@@ -79,7 +81,7 @@ export function tacMods(m,s){
  const OI=(m.oi&&m.oi[o])||{},MY=(m.oi&&m.oi[s])||{};
  if(OI.ban)own*=1-Math.max(0,w)/220;if(MY.ban)own*=.992;
  if(OI.sal){poss-=.03;const dq=avgAt(m,s,'DEF','pas');own*=dq<5?.97:.99;}if(MY.sal)drain*=1.06;
- if(OI.dur)own*=.975;
+ if(OI.dur)own*=m.refr?REFS[m.refr.k].dur:.975;
  {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);own*=ph.own;opp*=ph.opp;drain*=ph.drain;poss+=ph.poss;}
  {const w=weatherMods(m.wx,A);own*=w.own;opp*=w.opp;drain*=w.drain;poss+=w.poss;const mm=m.mm&&m.mm[s];if(mm){own*=mm.own;opp*=mm.opp;}}
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)own*=1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4);
@@ -245,15 +247,16 @@ export function step(m){
  if(live)phaseLog(m,clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8));
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
  {const dh=m.oi&&m.oi.h&&m.oi.h.dur?1.6:1,da=m.oi&&m.oi.a&&m.oi.a.dur?1.6:1,ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
-  if(rnd()<.034*(ph+pa)*(m.derby?1.3:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
+  if(rnd()<.034*(ph+pa)*(m.derby?1.3:1)*(m.refr?REFS[m.refr.k].c:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
  if(rnd()<.0032){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
   if(live)addEv(m,'inj',s,`${PL(id).name} se duele de la rodilla y no puede seguir al mismo nivel.`,id);
   if(m.us===s&&!m.auto){if(!m.mom)momentInj(m,id);else{m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}}
  if(m.min>=58||Object.keys(m.hurt).length)['h','a'].forEach(s=>{if(m.us!==s||m.auto)aiManage(m,s);});
+ if(m.us)['h','a'].forEach(s=>aiInMatch(m,s,addEv,live));
  if(m.min===45&&live){addEv(m,'sys',null,`Descanso · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);m.half=true;if(!m.auto)m.paused=true;}
  if(m.min>=m.end){m.done=true;m.paused=true;calcRatings(m);if(live)addEv(m,'sys',null,`Final · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);
-  if(m.ko&&m.ref.k!=='fr'&&m.score.h+(m.agg?m.agg[0]:0)===m.score.a+(m.agg?m.agg[1]:0)){m.pen=shootout();if(live)addEv(m,'sys',null,`Penaltis: ${T(m.h).short} ${m.pen[0]}-${m.pen[1]} ${T(m.a).short} · pasa ${T(m.pen[0]>m.pen[1]?m.h:m.a).name}`);}}
+  if(m.ko&&m.ref.k!=='fr'&&m.score.h+(m.agg?m.agg[0]:0)===m.score.a+(m.agg?m.agg[1]:0)){if(live&&m.us&&!m.auto){momentShootout(m);}else{m.pen=shootout();if(live)addEv(m,'sys',null,`Penaltis: ${T(m.h).short} ${m.pen[0]}-${m.pen[1]} ${T(m.a).short} · pasa ${T(m.pen[0]>m.pen[1]?m.h:m.a).name}`);}}}
 }
 export function applyResult(m){
  const fx=getFx(m.ref),uc=LG(uLg()).c;recordH2H(m);

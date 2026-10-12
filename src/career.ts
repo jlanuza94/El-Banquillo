@@ -1,5 +1,6 @@
 /* El Banquillo · career.js — Carrera del entrenador: contrato, confianza, despidos y ofertas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {bigOfferWeekly} from './extras2';
 import {ntSalary} from './nations';
 import {setWageCap} from './clubplus';
 import {coachHandover} from './living';
@@ -39,6 +40,7 @@ export function mgrWeekly(my,op){
  if(S.week>=8&&!inGrace()&&M.conf<D.fire&&pos>S.obj.max+2){ // solo despiden si además vas claramente por debajo del objetivo
  news(`Despedido: la directiva de ${T(S.user).name} prescinde de ti.`,'bad');M.rep=clamp(M.rep-6,0,100);loseJob('despido');return;}
  S.jobOffers=(S.jobOffers||[]).filter(o=>o.until>S.week);
+ bigOfferWeekly(pos,clubReq,jobCandidates,makeJobOffer);
  if(rnd()<.07){const cur=clubReq(T(S.user)),c=jobCandidates(M.rep+6,cur+4,1)[0];if(c&&!S.jobOffers.some(o=>o.team===c.id)){const o=makeJobOffer(c);o.until=S.week+3;S.jobOffers.push(o);news(`${c.name} (${lgName(c.lg)}) quiere ficharte como entrenador. Tienes la oferta en Inicio.`,'good',{cat:'dir',from:c.name,subj:'Oferta de trabajo',act:[{l:'Ver oferta',a:'view',v:'inicio'}]});}}
 }
 export function mgrSeasonEnd(sm){

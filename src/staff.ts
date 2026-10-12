@@ -1,5 +1,6 @@
 /* El Banquillo · staff.ts — Cuerpo técnico: segundo entrenador, entrenadores, fisioterapeutas y director deportivo. */
 // @ts-nocheck — usa el estado heredado S.
+import {mgrAt} from './extras2';
 import {takeExPlayers} from './living';
 import {genContacts} from './connected';
 import {clamp,gauss,money,pick,r3,ri,rnd} from './core';
@@ -26,7 +27,7 @@ function slotAvg(role,k,empty){const c=crew(role),n=ST_ROLES[role].max;let s=c.r
 /** Multiplicador de la mejora en el entrenamiento (≈1 con entrenadores normales; hasta ×1.5). */
 export const trainMult=()=>.85+.065*slotAvg('ent','ent',1.5);
 /** Multiplicador de la mejora de la cantera. */
-export const youthMult=()=>.85+.065*slotAvg('ent','jov',1.5)+(crew('dca')[0]?(crew('dca')[0].at.jov-5)*.025:0);
+export const youthMult=()=>.02*(mgrAt('can')-5)+.85+.065*slotAvg('ent','jov',1.5)+(crew('dca')[0]?(crew('dca')[0].at.jov-5)*.025:0);
 /** Nivel médico de 0 (sin fisios) a 10. */
 export const medLevel=()=>slotAvg('fis','fis',0);
 // Con un solo fisio normal (nivel médico ≈2) no hay ni bonus ni penalización.
@@ -36,7 +37,7 @@ export const trainInjMult=()=>clamp(1-.06*(medLevel()-2),.5,1.15);
 /** Valores del segundo entrenador (5 si no hay). */
 export const segAt=k=>{const s=crew('seg')[0];return s?s.at[k]:3;};
 /** Efecto de la negociación del director deportivo: <1 al comprar, >1 al vender. */
-export const buyMult=()=>{const d=crew('dd')[0];return d?1-.012*(d.at.neg-4):1;};
+export const buyMult=()=>{const d=crew('dd')[0];return (d?1-.012*(d.at.neg-4):1)*(1-.008*(mgrAt('neg')-5));};
 export const sellMult=()=>{const d=crew('dd')[0];return d?1+.01*(d.at.neg-4):1;};
 /** Calidad para juzgar jugadores: el mejor entre el director deportivo y los ojeadores (1-10). */
 export const judge=()=>Math.max(crew('dd')[0]?crew('dd')[0].at.jui:2,...(S.scouts||[]).map(sc=>sc.jui||sc.q*2));
