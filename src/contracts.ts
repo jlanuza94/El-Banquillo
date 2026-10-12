@@ -1,5 +1,6 @@
 /* El Banquillo · contracts.js — Contratos, renovaciones, cesiones y opciones de compra. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {onLoanedOut} from './talks';
 import {isAffiliate,wageCheck} from './clubplus';
 import {LOAN_OBJ} from './connected';
 import {agentOf} from './connected';
@@ -62,7 +63,7 @@ export function acceptLoanOut(id,obj,to){
  if(!inWindow())return toast('El mercado está cerrado.');
  if(sq.length<=16)return toast('Necesitas al menos 16 jugadores en plantilla.');
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');
- p.loan={from:S.user};if(obj&&LOAN_OBJ[obj])p.loan.obj=LOAN_OBJ[obj][1];p.lpj=0;p.lmt=0;setTeam(p,o.team);assignNum(p);
+ onLoanedOut(p);p.loan={from:S.user};if(obj&&LOAN_OBJ[obj])p.loan.obj=LOAN_OBJ[obj][1];p.lpj=0;p.lmt=0;setTeam(p,o.team);assignNum(p);
  const t=T(S.user),i=t.lineup.indexOf(id);if(i>=0)t.lineup[i]=null;fixLineup();
  news(`${p.name} se marcha cedido a ${T(o.team).name} hasta final de temporada. Ellos pagan su sueldo.${p.loan.obj?` Se comprometen a que juegue al menos el ${Math.round(p.loan.obj*100)}% de los partidos.`:''}`);
  delete S.lo[id];S.modal=null;toast(`${p.name} cedido a ${T(o.team).name}.`);

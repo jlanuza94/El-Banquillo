@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {meetAnswer,onOfferRejected} from './talks';
 import {cycleTheme,THEMES} from './theme';
 import {searchResults} from './views/search';
 import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData} from './mods';
@@ -52,7 +53,7 @@ document.addEventListener('click',e=>{
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
  switch(a){
-  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});break;
+  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'row':{if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'ficha':S.modal={type:'ficha',id:d.id};break;
@@ -105,7 +106,7 @@ document.addEventListener('click',e=>{
   case'mail-cat':S.mailCat=d.v;S.mailSel=null;break;
   case'mail-all':markAll(S.mailCat);break;
   case'offer-view':{const o=S.offers[d.id];if(o&&o.incoming&&PL(d.id)&&PL(d.id).team===S.user)S.modal={type:'sell',id:d.id};else toast('Esa oferta ya ha caducado.');break;}
-  case'pl-open':S.view='plantilla';S.plTab=d.v;window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});break;
+  case'pl-open':S.view='plantilla';S.plTab=d.v;window.scrollTo(0,0);break;
   case'ment':T(S.user).ment=d.v;break;
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}
@@ -179,6 +180,8 @@ document.addEventListener('click',e=>{
   case'pay-clause':{const p=PL(d.id),n=negState(d.id);if(!inWindow()){n.msg='El mercado está cerrado.';n.kind='no';break;}if(refuses(p)){n.msg=`${p.name} no quiere jugar en ${lgName(uLg())}.`;n.kind='no';n.closed=true;break;}if(p.cl>S.budget){n.msg='No te llega para pagar la cláusula.';n.kind='no';break;}n.agreed=p.cl;n.viaClause=1;n.tries=0;n.msg='';break;}
   case'terms-ok':makeTerms(d.id,d.m,readTerms());break;
   case'chat':S.modal={type:'chat',id:d.id};break;
+  case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
+  case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
   case'pl-tab':S.plTab=d.v;break;
   case'ld-tab':S.ldTab=d.v;break;
@@ -190,11 +193,11 @@ document.addEventListener('click',e=>{
   case'loanout-ok':acceptLoanOut(d.id,document.getElementById('loanObj')?.value||'',document.getElementById('loanTo')?.value||'');break;
   case'sell':if(!inWindow()){toast('El mercado está cerrado.');break;}makeOffer(d.id);S.modal={type:'sell',id:d.id};break;
   case'sell-ok':sell(d.id);return;
-  case'offer-no':{const o=S.offers[d.id];if(!o)break;delete S.offers[d.id];const p=PL(d.id);news(`Rechazas la oferta de ${T(o.team).name} por ${p.name}.`);if(LG(T(o.team).lg).rep>LG(uLg()).rep+3&&(p.per==='amb'||p.hap<60)){p.hap=clamp(p.hap-12,0,100);news(`${p.name} quería ese traspaso a un club más grande y está molesto.`,'bad');if(p.hap<25&&!p.req){p.req=1;news(`${p.name} pide salir del club.`,'bad');}}break;}
+  case'offer-no':{const o=S.offers[d.id];if(!o)break;delete S.offers[d.id];const p=PL(d.id);news(`Rechazas la oferta de ${T(o.team).name} por ${p.name}.`);onOfferRejected(p,o.amount);if(LG(T(o.team).lg).rep>LG(uLg()).rep+3&&(p.per==='amb'||p.hap<60)){p.hap=clamp(p.hap-12,0,100);news(`${p.name} quería ese traspaso a un club más grande y está molesto.`,'bad');if(p.hap<25&&!p.req){p.req=1;news(`${p.name} pide salir del club.`,'bad');}}break;}
   case'ov':case'modal-close':S.modal=null;break;
   case'new-season':newSeason();return;
-  case'new-game':case'to-saves':saveNow();clearInterval(RT.timer);RT.timer=null;setS(null);dirty();render();window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});return;
-  case'new-game-ok':clearInterval(RT.timer);RT.timer=null;clearTimeout(RT.saveT);RT.saveT=null;setS(null);dirty();try{localStorage.removeItem(KEY);}catch(err){}render();window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});return;
+  case'new-game':case'to-saves':saveNow();clearInterval(RT.timer);RT.timer=null;setS(null);dirty();render();window.scrollTo(0,0);return;
+  case'new-game-ok':clearInterval(RT.timer);RT.timer=null;clearTimeout(RT.saveT);RT.saveT=null;setS(null);dirty();try{localStorage.removeItem(KEY);}catch(err){}render();window.scrollTo(0,0);return;
  }
  save();render();
 });

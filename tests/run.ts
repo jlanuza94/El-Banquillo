@@ -40,6 +40,7 @@ import { TUNE, createMatch, liveRatings, quickMatch, step } from '../src/engine'
 import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
 import { learnTactic, loadPlan, planFam, planInMatch, savePlan } from '../src/plans';
+import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
 let fails = 0;
@@ -191,6 +192,15 @@ const app = document.getElementById('app')!;
     ok(!document.querySelector('.side [data-v=analisis]'), 'modo rápido: menú simplificado'); S.mode = 'profundo';
     const sg = suggestions(3); ok(Array.isArray(sg.list), `sugerencias de fichajes (${sg.list.length} para ${sg.g})`);
   }
+  { // Reuniones con jugadores y promesas
+    const sq = squad(S.user).filter(p => !p.loan), p = sq[3], q = sq[4], c0 = cred();
+    p.prom = null; S.meet = { id: p.id, topic: 'min', wk: S.week }; S.view = 'inicio'; render(); ok(app.textContent.includes('Reunión pendiente'), 'aviso de reunión en inicio');
+    S.modal = { type: 'meet' }; render(); ok(app.querySelectorAll('[data-a=meet-ans]').length >= 2, 'ventana de reunión con respuestas'); S.modal = null;
+    p.role = 'ro'; const r = meetAnswer('prom'); ok(r[1] === 'ok' && p.prom && p.prom.type === 'min' && !S.meet, 'prometer minutos crea una promesa');
+    p.prom.until = S.week; p.st.pj = 0; S.tg = 20; const h0 = p.hap; checkProm(p); ok(!p.prom && p.hap < h0 && cred() < c0, 'promesa rota: baja el ánimo y la credibilidad');
+    q.prom = { type: 'sell', until: S.week + 30 }; onOfferRejected(q, q.value * 2); ok(!q.prom, 'rechazar una buena oferta rompe la promesa de dejarle salir');
+    S.meet = { id: q.id, topic: 'raise', wk: S.week }; S.wageCap = 999; const w0 = q.wage; meetAnswer('yes'); ok(q.wage > w0, 'subida de sueldo desde la reunión');
+    S.view = 'plantilla'; S.plTab = 'cont'; render(); ok(app.textContent.includes('Credibilidad'), 'credibilidad en la plantilla'); S.cred = 70; }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

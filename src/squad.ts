@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {checkProm,meetWeekly} from './talks';
 import {quickWeekly} from './quick';
 import {bankWeekly,wageBill} from './clubplus';
 import {coachesWeekly} from './living';
@@ -48,7 +49,7 @@ export function hapWeekly(res){
   if(lead.some(([L])=>L!==p&&L.hap<35&&langOf(L)===langOf(p)))d-=.6;
   if(p.adapt>0){p.adapt--;if(!p.adapt)news(`${p.name} ya se ha adaptado al club y al país.`,'good');}
   if(d<0&&p.per==='lea')d*=.5;p.hap=clamp(p.hap+d,0,100);
-  if(p.prom&&S.week>=p.prom.until){const ok=p.prom.type==='ren'?p.contract>1:sh>=ROLES[p.role].min-.05;p.hap=clamp(p.hap+(ok?8:-15),0,100);news(ok?`${p.name} está satisfecho: cumpliste tu promesa.`:`${p.name} se siente engañado: no cumpliste tu promesa.`,ok?'good':'bad');p.prom=null;}
+  checkProm(p);
   if(p.hap<25&&!p.req&&!p.loan){p.req=1;news(`${p.name} está descontento y pide salir del club.`,'bad',{cat:'pla',from:p.name,subj:'Quiero salir del club',act:[{l:'Hablar con él',a:'chat',id:p.id}]});}
   if(p.req&&p.hap>45){p.req=0;news(`${p.name} retira su petición de salir.`,'good');}
  });
@@ -109,7 +110,7 @@ export function processWeek(){
  S.fin.push({wk:wk+1,tv,tix,spo,wages});
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- scoutsWeekly();scoutingWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ scoutsWeekly();scoutingWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(S.week===4||S.week===22?70:28);
  if(S.week===4||S.week===22)news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');

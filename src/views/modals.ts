@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {ANSWERS,TOPICS,cred} from '../talks';
 import {searchModal} from './search';
 import {affiliates} from '../clubplus';
 import {clubModal} from './clubinfo';
@@ -43,6 +44,15 @@ export function modalView(){
   ${st.closed?'':termsForm(p,'renew')}
   ${st.msg?`<div class="negmsg ${st.kind}">${esc(st.msg)}</div>`:''}
   <div class="acts"><button class="btn" data-a="modal-close">${st.closed?'Cerrar':'Cancelar'}</button>${st.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="renew">Proponer renovación</button>`}</div>`;}
+ else if(md.type==='meet'){const m=S.meet,p=PL(m?m.id:md.id);
+  if(!p){body='<p>Esa reunión ya no está pendiente.</p><div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>';}
+  else{body=`<div class="eyebrow">Reunión en tu despacho${m?' · '+esc(TOPICS[m.topic].n):''}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
+  <div class="row small muted" style="margin-top:6px">${posChip(p)}<span>${hapTag(p)} · ${ROLES[p.role||'ro'].n} · ${PERS[p.per].n} · ${money(p.wage)}/sem</span></div>
+  ${m?`<blockquote class="quote">«${esc(TOPICS[m.topic].q(p))}»</blockquote>
+  <div class="stack" style="gap:8px">${ANSWERS[m.topic].filter(([k])=>!(m.topic==='min'&&k==='prom'&&p.role==='cl')).map(([k,l])=>`<button class="btn" data-a="meet-ans" data-v="${k}" style="text-align:left">${esc(l)}</button>`).join('')}</div>
+  <p class="small muted" style="margin:10px 0 0">Tu credibilidad en el vestuario: <b>${Math.round(cred())}</b>/100. Si prometes algo y no lo cumples, baja y las promesas valen menos.</p>`
+  :md.done?`<div class="negmsg ${md.done[1]||''}">${esc(md.done[0])}</div>`:''}
+  <div class="acts">${m?'<button class="btn" data-a="modal-close">Luego</button>':'<button class="btn primary" data-a="modal-close">Cerrar</button>'}</div>`;}}
  else if(md.type==='chat'){const p=PL(md.id),done=p.tw===S.week;
   body=`<div class="eyebrow">Hablar con el jugador</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
   <div class="row small muted" style="margin-top:6px">${posChip(p)}<span>${hapTag(p)} · ${ROLES[p.role||'ro'].n} · ${PERS[p.per].n}</span></div>
