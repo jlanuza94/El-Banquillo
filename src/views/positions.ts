@@ -1,0 +1,37 @@
+/* El Banquillo · views/positions.ts — Tácticas › Posiciones: toca un puesto y decide rol, cometido e instrucciones (como en FM). */
+// @ts-nocheck — usa el estado heredado S.
+import {esc} from '../core';
+import {GRP,ORDERS,SPN,posChip} from '../data';
+import {PL,S,T,available,qBadge,squad} from '../state';
+import {eff,slotsOf,userRoles} from '../tactics';
+import {formRows} from '../freeboard';
+import {roleDef,roleList} from '../roles';
+import {DUTIES,piList,posSummary,userPos} from '../positions';
+import {nameBtn} from './common';
+
+export function posicionesHTML(){
+ const t=T(S.user),sl=slotsOf(t.formation),ro=userRoles(),{du,pi}=userPos(sl);
+ let sel=S.posSel;if(sel==null||sel>=sl.length)sel=S.posSel=Math.max(0,sl.indexOf('DC'));
+ // campo: filas de la formación, el ataque arriba
+ const rows=[[['POR'],89]].concat(formRows(t.formation));let k=0;const R=rows.map(([list,y])=>({y,it:list.map(s=>({s,i:k++}))})).sort((a,b)=>a.y-b.y);
+ const card=({s,i})=>{const p=PL(t.lineup[i]),d=DUTIES[du[i]]||DUTIES.apo,n=(pi[i]||[]).length;
+  return `<button class="pcard${i===sel?' on':''}" data-a="pos-sel" data-i="${i}"><span class="pos ${GRP[s]}">${s}</span><b>${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'—'}</b><span class="rl">${esc(roleDef(s,ro[i])[1])}</span><span class="du du-${du[i]}">${d.n}${n?` · ${n} instr.`:''}</span></button>`;};
+ const field=`<div class="pfield">${R.map(r=>`<div class="prow">${r.it.map(card).join('')}</div>`).join('')}</div>`;
+ // detalle del puesto elegido
+ const s=sl[sel],p=PL(t.lineup[sel]),rk=ro[sel],myPi=pi[sel]||[];
+ const best=squad(S.user).filter(x=>!x.loan&&available(x)).map(x=>[x,eff(x,s,null,rk)]).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ const det=`<section class="panel pdet"><div class="panel-h"><h2>${esc(SPN[s]||s)}</h2><span class="eyebrow">${p?esc(p.name)+' · '+(eff(p,s,null,rk)/10).toFixed(1):'Sin jugador'}</span></div>
+ <div class="eyebrow" style="margin:2px 0 4px">Rol</div>
+ <select data-role="${sel}" aria-label="Rol del puesto ${s}" style="max-width:100%">${roleList(s).map(r=>`<option value="${r[0]}" ${rk===r[0]?'selected':''}>${esc(r[1])}${p?' · '+(eff(p,s,null,r[0])/10).toFixed(1):''}</option>`).join('')}</select>
+ <p class="small muted" style="margin:4px 0 10px">${esc(roleDef(s,rk)[4])}</p>
+ ${s!=='POR'?`<div class="eyebrow" style="margin:0 0 4px">Cometido</div><div class="seg">${Object.entries(DUTIES).map(([k,v])=>`<button data-a="duty" data-i="${sel}" data-v="${k}" aria-pressed="${du[sel]===k}">${v.n}</button>`).join('')}</div>
+ <p class="small muted" style="margin:4px 0 10px">${esc((DUTIES[du[sel]]||DUTIES.apo).d)}</p>`:''}
+ <div class="eyebrow" style="margin:0 0 4px">Instrucciones del puesto</div>
+ <div class="pis">${piList(s).map(([k,n,,d])=>`<button class="pi${myPi.includes(k)?' on':''}" data-a="pi-tog" data-i="${sel}" data-v="${k}" aria-pressed="${myPi.includes(k)}" title="${esc(d)}"><b>${myPi.includes(k)?'✓ ':''}${esc(n)}</b><span>${esc(d)}</span></button>`).join('')}</div>
+ ${p?`<div class="eyebrow" style="margin:10px 0 4px">Orden especial para ${esc(p.name.split(' ').slice(1).join(' ')||p.name)}</div><select data-ord="${p.id}" aria-label="Orden para ${esc(p.name)}">${Object.entries(ORDERS).map(([k,v])=>`<option value="${k}" ${((t.orders||{})[p.id]||'')===k?'selected':''}>${v}</option>`).join('')}</select>`:''}
+ <div class="offer" style="margin-top:10px"><span class="t"><b>Efecto de este puesto</b><br><span class="small muted">${esc(posSummary(s,du[sel],myPi))}</span></span></div>
+ <div class="eyebrow" style="margin:10px 0 4px">Mejores de tu plantilla para ${s} (${esc(roleDef(s,rk)[1])})</div>
+ ${best.map(([x,v])=>`<div class="offer">${posChip(x)}<span class="t">${nameBtn(x)}</span>${qBadge(v/10)}${t.lineup[sel]===x.id?'<span class="tag onxi">Juega aquí</span>':`<button class="btn sm" data-a="pos-put" data-id="${x.id}" data-i="${sel}">Poner</button>`}</div>`).join('')}</section>`;
+ const help=`<p class="small muted" style="margin:8px 0 0">Toca un puesto. El cometido decide cuánto ataca o defiende; las instrucciones afinan cómo juega. Todo se guarda en el puesto: el que entre desde el banquillo lo cumplirá.</p>`;
+ return `<div class="grid posgrid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Posiciones</h2><span class="eyebrow">${esc(t.formation)}</span></div>${field}${help}</section></div><div class="stack">${det}</div></div>`;
+}

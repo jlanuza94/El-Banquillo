@@ -1,5 +1,6 @@
 /* El Banquillo · tactics.js — Valoración de jugadores por puesto, alineaciones, fuerza del equipo y clasificación. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {remapPos} from './positions';
 import {formRows} from './freeboard';
 import {defaultRoles,remapRoles,roleRate} from './roles';
 import {clamp} from './core';
@@ -61,6 +62,7 @@ export function setFormation(f){
  const pass=ok=>slots.forEach((s,i)=>{if(lu[i])return;const k=left.findIndex(id=>ok(PL(id),s));if(k>=0){lu[i]=left[k];left.splice(k,1);}});
  pass((p,s)=>p.sp===s);pass((p,s)=>p.alt&&p.alt.includes(s));pass((p,s)=>GRP[p.sp]===GRP[s]);
  slots.forEach((s,i)=>{if(lu[i]||!left.length)return;left.sort((x,y)=>eff(PL(y),s)-eff(PL(x),s));lu[i]=left.shift();});
+ {const R=remapPos(t.formation?slotsOf(t.formation):[],t.duty,t.pi,slots);t.duty=R.du;t.pi=R.pi;}
  t.roles=remapRoles(t.formation?slotsOf(t.formation):[],t.roles,slots);t.formation=f;t.lineup=lu;fixLineup();
 }
 export function table(lg){

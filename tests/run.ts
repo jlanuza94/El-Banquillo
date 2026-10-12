@@ -12,6 +12,9 @@ import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics'
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
 import { PL } from '../src/state';
 import { cellVal } from '../src/sorttable';
+import { posMult, posTeam, userPos } from '../src/positions';
+import { FORMS } from '../src/data';
+import { slotsOf } from '../src/tactics';
 import { finishRound, friendlyOpts, newSeason, playFriendly, playMatch, simLoop, simRun, simState, simToEnd } from '../src/season';
 import { takeJob } from '../src/career';
 import { answerPress } from '../src/club';
@@ -287,6 +290,16 @@ const app = document.getElementById('app')!;
     S.modal = { type: 'matchday' }; render(); ok(app.textContent.includes('Jugar el partido'), 'aviso de día de partido'); S.modal = null;
     S.view = 'calendario'; render(); ok(app.querySelectorAll('.cday').length >= 28 && app.querySelector('.cday.today'), 'calendario mensual con el día de hoy');
     ok(app.querySelector('[data-a="continue"]'), 'botón Continuar en la barra superior'); S.view = 'inicio'; }
+  { // Tácticas por posiciones: cometido e instrucciones
+    const t = T(S.user), sl = slotsOf(t.formation), ps = userPos(sl);
+    ok(ps.du.length === sl.length && ps.du[0] === 'def' && posTeam(sl, ps.du, ps.pi).own === 1, 'cometidos por defecto: sin efecto');
+    const i = sl.indexOf('DC'), d0 = ps.du[i]; t.duty[i] = 'def'; t.pi[i] = ['esp'];
+    const e = posTeam(sl, t.duty, t.pi); ok(e.own < 1 && e.opp < 1, 'delantero con cometido defender: menos ataque y más seguridad');
+    ok(posMult('DC', 'def', ['esp'], 'sc') < 1 && posMult('DC', 'ata', ['esp'], 'sc') > 1.1, 'goles del jugador según cometido e instrucciones');
+    S.view = 'tacticas'; S.vt = { tac: 'ord' }; S.posSel = i; render(); ok(app.querySelectorAll('.pcard').length === sl.length && app.querySelector('[data-a="pi-tog"]') && app.textContent.includes('Mejores de tu plantilla'), 'pantalla de posiciones');
+    const f0 = t.formation, other = Object.keys(FORMS).find(f => f !== f0 && slotsOf(f).includes('DC')); setFormation(other);
+    const j = slotsOf(other).indexOf('DC'); ok(t.duty.length === slotsOf(other).length && t.duty[j] === 'def' && t.pi[j].includes('esp'), 'al cambiar de formación se conserva lo del puesto');
+    setFormation(f0); t.duty[i] = d0; t.pi[i] = []; S.vt = {}; S.view = 'inicio'; }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });

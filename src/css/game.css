@@ -146,3 +146,19 @@ main thead th{cursor:pointer;user-select:none;-webkit-user-select:none}
 main thead th.sorted{color:var(--accent)}
 main thead th[data-dir="desc"]::after{content:" ▼";font-size:.8em}
 main thead th[data-dir="asc"]::after{content:" ▲";font-size:.8em}
+/* Tácticas › Posiciones */
+.posgrid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start}
+@media (max-width:699px){.posgrid{grid-template-columns:1fr}}
+.pfield{display:flex;flex-direction:column;gap:6px;padding:10px 6px;border-radius:8px;background:repeating-linear-gradient(180deg,var(--pitch) 0 10%,var(--pitch2) 10% 20%)}
+.prow{display:flex;justify-content:space-evenly;gap:4px}
+.pcard{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;flex:0 1 96px;padding:4px 4px;border-radius:8px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.28);color:#fff;cursor:pointer;font-size:11px;line-height:1.2}
+.pcard b{font-size:12px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pcard .rl{opacity:.85;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pcard .du{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:0 5px;border-radius:4px}
+.pcard .du-def{background:#2b5f9e}.pcard .du-apo{background:#5d6b3a}.pcard .du-ata{background:#b2452f}
+.pcard.on{border-color:#f4cf5c;box-shadow:0 0 0 2px #f4cf5c;background:rgba(0,0,0,.45)}
+.pis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+.pi{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.pi span{font-size:11px;color:var(--muted)}
+.pi.on{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+@media (orientation:landscape) and (max-height:500px){.pcard{flex-basis:84px;padding:2px 3px}.pfield{gap:4px;padding:6px 4px}.pi{padding:4px 6px}.pi span{display:none}}

@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {posicionesHTML} from './positions';
 import {medHTML} from './staff';
 import {MAX_SUBS,subsOf} from '../tactics';
 import {footF,removeFromTeam,setSub} from '../tactics';
@@ -107,7 +108,7 @@ export function tacticasView(){
  <p class="small muted" style="margin:0">Un capitán Líder mejora un poco al equipo. Los penaltis y las faltas se deciden por el tiro (y el pase en las faltas) del lanzador; los córners, por el pase del lanzador y los rematadores altos o cabeceadores. El rasgo «Especialista a balón parado» ayuda.</p></section>`;
  const oiP=`<section class="panel"><div class="panel-h"><h2>Instrucciones al rival</h2><span class="eyebrow">También durante el partido</span></div>${Object.entries(OIS).map(([k,v])=>`<div class="offer"><span class="t"><b>${v.n}</b><br><span class="small muted">${esc(v.d)}</span></span><button class="btn sm ${(t.oi||{})[k]?'dark':''}" data-a="oi" data-v="${k}" aria-pressed="${!!(t.oi||{})[k]}">${(t.oi||{})[k]?'Activada':'Activar'}</button></div>`).join('')}</section>`;
  const ords=`<section class="panel"><div class="panel-h"><h2>Órdenes individuales</h2><span class="eyebrow">Once titular</span></div>
- ${xi.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th>Orden</th></tr></thead><tbody>${xi.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td><select data-ord="${p.id}" aria-label="Orden para ${esc(p.name)}">${Object.entries(ORDERS).map(([k,v])=>`<option value="${k}" ${(t.orders||{})[p.id]===k?'selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Primero elige tu once en Plantilla.</div>'}
+ ${xi.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th>Orden</th></tr></thead><tbody>${xi.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td><select data-ord="${p.id}" aria-label="Orden para ${esc(p.name)}">${Object.entries(ORDERS).map(([k,v])=>`<option value="${k}" ${((t.orders||{})[p.id]||'')===k?'selected':''}>${v}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Primero elige tu once en Plantilla.</div>'}
  <p class="small muted" style="margin:8px 0 0">Subir al ataque: más ocasiones a cambio de dejar huecos. Libertad creativa: más goles y asistencias para ese jugador. Marcar a su estrella: su mejor jugador marca y asiste menos. Quédate atrás: más seguridad, menos ataque.</p></section>`;
  const ro=userRoles(),sl=slotsOf(t.formation);
  const roles=`<section class="panel"><div class="panel-h"><h2>Roles del once</h2><span class="eyebrow">Cómo juega cada puesto</span></div>
@@ -124,9 +125,9 @@ export function tacticasView(){
  const spT=spOf(t),spP=`<section class="panel"><div class="panel-h"><h2>Jugadas ensayadas</h2><span class="eyebrow">Ensayo ${Math.round(S.spFam??40)}%</span></div>
  ${Object.entries(SP).map(([k,v])=>`<div style="margin-bottom:10px"><div class="eyebrow" style="margin-bottom:4px">${v.n}</div><div class="seg">${Object.entries(v.o).map(([o,[l]])=>`<button data-a="sp" data-k="${k}" data-v="${o}" aria-pressed="${spT[k]===o}">${l}</button>`).join('')}</div><p class="small muted" style="margin:4px 0 0">${esc(v.o[spT[k]][1])}</p></div>`).join('')}
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
- const tb=vtab('tac',[['ali','Alineación'],['tac','Táctica'],['ord','Roles y órdenes'],['bp','Balón parado'],['rival','Rival'],['piz','Pizarra libre'],['plan','Tácticas guardadas']],'ali');
+ const tb=vtab('tac',[['ali','Alineación'],['tac','Táctica'],['ord','Posiciones'],['bp','Balón parado'],['rival','Rival'],['piz','Pizarra libre'],['plan','Tácticas guardadas']],'ali');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?two(roles,ords):tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two(opp!=null?reportHTML(opp,false):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>',oiP):tb.cur==='piz'?boardHTML():two(planP,famP);
+ const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two(opp!=null?reportHTML(opp,false):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>',oiP):tb.cur==='piz'?boardHTML():two(planP,famP);
  return tb.bar+body;
 }
 /* ---------- Alineación estilo FM ---------- */

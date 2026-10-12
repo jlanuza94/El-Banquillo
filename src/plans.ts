@@ -10,13 +10,13 @@ export const SLOTS=['A','B','C'];
 /** Guarda la táctica actual (formación, mentalidad, instrucciones, roles e instrucciones al rival) en A, B o C. */
 export function savePlan(k,name){
  const t=T(S.user);t.plans=t.plans||{};
- t.plans[k]={name:name||(t.plans[k]&&t.plans[k].name)||`Táctica ${k}`,formation:t.formation,ment:t.ment,tac:Object.assign({},TAC0,t.tac||{}),roles:userRoles().slice(),oi:Object.assign({},t.oi||{})};
+ t.plans[k]={name:name||(t.plans[k]&&t.plans[k].name)||`Táctica ${k}`,formation:t.formation,ment:t.ment,tac:Object.assign({},TAC0,t.tac||{}),roles:userRoles().slice(),duty:(t.duty||[]).slice(),pi:(t.pi||[]).map(x=>x.slice()),oi:Object.assign({},t.oi||{})};
  t.curPlan=k;
 }
 export function loadPlan(k){
  const t=T(S.user),P=t.plans&&t.plans[k];if(!P)return false;
  if(P.formation!==t.formation)setFormation(P.formation);
- t.ment=P.ment;t.tac=Object.assign({},P.tac);t.roles=P.roles.length===slotsOf(t.formation).length?P.roles.slice():t.roles;t.oi=Object.assign({},P.oi);t.curPlan=k;
+ t.ment=P.ment;t.tac=Object.assign({},P.tac);t.roles=P.roles.length===slotsOf(t.formation).length?P.roles.slice():t.roles;t.oi=Object.assign({},P.oi);if(P.duty&&P.duty.length===slotsOf(t.formation).length){t.duty=P.duty.slice();t.pi=(P.pi||[]).map(x=>x.slice());}t.curPlan=k;
  return true;
 }
 /** Reparte a los jugadores en los huecos de otra formación (los mismos 11, cada uno donde mejor encaja). */
@@ -32,6 +32,7 @@ export function planInMatch(m,k){
  const t=T(m[m.us]),P=t.plans&&t.plans[k];if(!P)return false;const us=m.us;
  if(P.formation!==m.f[us]){const oldSl=slotsOf(m.f[us]);m.lu[us]=remapXI(m.lu[us],P.formation);m.ro[us]=remapRoles(oldSl,m.ro[us],slotsOf(P.formation));m.f[us]=P.formation;}
  if(P.roles.length===slotsOf(m.f[us]).length)m.ro[us]=P.roles.slice();
+ {const n=slotsOf(m.f[us]).length;if(m.du){if(P.duty&&P.duty.length===n){m.du[us]=P.duty.slice();m.pi[us]=(P.pi||[]).map(x=>x.slice());}else if(m.du[us]&&m.du[us].length!==n){m.du[us]=null;m.pi[us]=null;}}}
  m.ment[us]=P.ment;m.tac[us]=Object.assign({},P.tac);m.oi=m.oi||{};m.oi[us]=Object.assign({},P.oi);m.plan=k;
  return true;
 }

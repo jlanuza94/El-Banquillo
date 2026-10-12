@@ -6,6 +6,7 @@ import {FORMS,SPEEDS,W} from './data';
 import {PL,RT,S,T,lum} from './state';
 import {GRP} from './data';
 import {slotsOf} from './tactics';
+import {DEF_DUTY} from './positions';
 import {playAt} from './replay';
 export let A2=null;
 export const a2Key=m=>JSON.stringify(m.ref)+'|'+m.h+'|'+m.a;
@@ -104,7 +105,7 @@ export function a2Frame(ts){
  A2.trail=A2.trail.filter(x=>ts-x.t<1800).slice(-4);
  const run=!!rp||!m.paused||(Q&&Q.el<Q.end);
  // dónde quiere estar cada jugador: bloque que sigue al balón, línea y anchura según la táctica, presión al que lleva el balón
- const bx=A2.ball.x,by=A2.ball.y,pos={};
+ const bx=A2.ball.x,by=A2.ball.y,pos={},sl2={h:slotsOf(m.f.h),a:slotsOf(m.f.a)};
  const up=Q&&!rp?Q.K.filter(k=>k.who&&k.t>Q.el&&k.t-Q.el<1100):[];
  ['h','a'].forEach(s=>{const dir=s==='h'?1:-1,tac=(m.tac&&m.tac[s])||{},has=A2.side===s;
   const lin=tac.lin==='alt'?1.3:tac.lin==='baj'?.7:1,wid=has?(tac.anc==='anc'?1.14:tac.anc==='est'?.88:1):.86;
@@ -112,7 +113,8 @@ export function a2Frame(ts){
   m.lu[s].forEach((id,i)=>{if(!id)return;const b=A2.base[s][i]||[50,50],pl=PL(id);
    let x,y;
    if(i===0){x=GKX(s)+dir*Math.max(0,((s==='h'?bx:100-bx)-50)*.07);y=50+(by-50)*.25;}
-   else{x=b[0]+(bx-50)*.45+(has?8*lin:-5*(2-lin))*dir;y=50+(b[1]-50)*wid+(by-b[1])*(has?.12:.28);
+   else{const du=m.du&&m.du[s]&&m.du[s][i],dd=du?(du==='ata'?1:du==='def'?-1:0)-(DEF_DUTY[sl2[s][i]]==='ata'?1:DEF_DUTY[sl2[s][i]]==='def'?-1:0):0;
+    x=b[0]+(bx-50)*.45+(has?8*lin:-5*(2-lin))*dir+dd*(has?5:3)*dir;y=50+(b[1]-50)*wid+(by-b[1])*(has?.12:.28);
     x+=Math.sin(ts/1300+i*1.9+(s==='h'?0:2.5))*.8;y+=Math.cos(ts/1100+i*2.3)*.9;}
    if(press.includes(id)){x=bx-2.6*dir;y=by+(A2.P[id].y>by?2:-2);}
    const u=up.find(k=>k.who===id);if(u){x=u.x;y=u.y;}
