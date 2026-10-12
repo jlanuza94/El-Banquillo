@@ -203,3 +203,74 @@ aside.side .nitem[style*="--loss"]{color:#ff8a7a!important}
  .panel{padding:12px}
 }
 @media (max-width:699px){.topbar{flex-wrap:wrap}.topbar .kpis{order:3;width:100%}}
+/* ---------- Móvil en horizontal, estilo FM Mobile: menú de iconos, barra fina y todo a la vista ---------- */
+@media (orientation:landscape) and (max-height:500px){
+ .app{grid-template-columns:calc(54px + env(safe-area-inset-left,0px)) minmax(0,1fr)}
+ aside.side{padding:6px 4px 8px calc(4px + env(safe-area-inset-left,0px));gap:4px;scrollbar-width:none}
+ aside.side::-webkit-scrollbar{display:none}
+ aside.side .brand,aside.side .sclub,aside.side .ngroup .gt,aside.side>.nitem[data-a="set-mode"]{display:none}
+ aside.side .ngroup{gap:2px;padding-bottom:4px;border-bottom:1px solid var(--menu-line)}
+ aside.side .nitem{position:relative;justify-content:center;padding:8px 0;border-radius:8px}
+ aside.side .nitem>span:not(.badge){display:none}
+ aside.side .nitem svg{width:21px;height:21px}
+ aside.side .nitem .badge{position:absolute;top:2px;right:2px;margin:0;font-size:9px;min-width:14px;padding:0 3px;line-height:14px}
+ .mainc{padding-block:4px 6px;padding-inline:10px calc(10px + env(safe-area-inset-right,0px))}
+ .topbar{gap:8px;padding:2px 0 4px;margin-bottom:4px}
+ .topbar h1{font-size:17px;line-height:1.05}
+ .topbar .club .eyebrow{font-size:9.5px}
+ .topbar .kpi{padding:0 7px}
+ .topbar .kpi .eyebrow{font-size:9px}
+ .topbar .kpi b{font-size:13.5px}
+ .topbar .gsbtn,.topbar .thbtn{width:30px;height:30px}
+ .topbar .gsbtn svg,.topbar .thbtn svg{width:15px;height:15px}
+ .topbar .tbtns{gap:5px}
+ .contbtn{min-width:0;padding:4px 10px;border-radius:8px}
+ .contbtn span{font-size:13px}
+ .contbtn small{font-size:10px}
+ .simbtn{width:32px;min-width:0;padding:0}
+ .subnav{margin-bottom:4px;gap:3px}
+ .subnav button{padding:2px 9px;font-size:11px}
+ main{font-size:13px}
+ .panel{padding:8px 10px;border-radius:6px}
+ .panel-h{margin-bottom:6px;gap:6px}
+ .panel-h h2{font-size:16px}
+ .panel-h .eyebrow{font-size:9.5px}
+ .grid{gap:8px}.stack{gap:8px}
+ .pltabs{margin-bottom:4px}
+ .pltabs button,.seg button{padding:3px 8px;font-size:11px}
+ .tbl th,.tbl td{padding:3px 6px}
+ .btn{padding:5px 10px;font-size:12px}
+ .tag{font-size:10px;padding:0 6px}
+ .q{font-size:12px}
+ .fmh,.fmrow{padding:2px 4px;gap:4px;font-size:11.5px}
+ .fmrow .grip{padding:3px 0;font-size:14px}
+ .fmlist+p{display:none}
+ .fmgrid .fmctl select{padding:3px 6px;font-size:12px}
+ .fmgrid .pitch{max-width:min(100%,calc((100dvh - 150px)*68/82))}
+ .bslots{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:4px}
+ .bslot{min-height:26px;padding:2px 5px;font-size:11px}
+ .bench .eyebrow{font-size:9.5px}
+}
+/* En el móvil acostado, el campo de la alineación también se acuesta: tu portería a la izquierda */
+@media (orientation:landscape) and (max-height:500px){
+ .fmgrid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+ .fmgrid .pitch{aspect-ratio:82/68;width:100%;max-width:min(100%,calc((100dvh - 150px)*82/68));background:repeating-linear-gradient(90deg,var(--pitch) 0 8.33%,var(--pitch2) 8.33% 16.66%)}
+ .fmgrid .pitch .slot{left:calc((100 - var(--py))*1%)!important;top:calc(var(--px)*1%)!important;width:58px;gap:1px}
+ .fmgrid .pitch .slot .sh{width:24px;height:24px;font-size:12px}
+ .fmgrid .pitch .slot .nm{font-size:9.5px;max-width:58px;padding:0 3px}
+ .fmgrid .pitch .slot .rt{display:none}
+ .fmgrid .pitch .half{left:50%;right:auto;top:3.5%;bottom:3.5%;width:0;height:auto;border-width:0 0 0 2px}
+ .fmgrid .pitch .box1{left:auto;right:3.5%;top:22%;bottom:22%;width:15%;height:auto;border:2px solid var(--chalk);border-right:0}
+ .fmgrid .pitch .box2{left:3.5%;right:auto;top:22%;bottom:22%;width:15%;height:auto;border:2px solid var(--chalk);border-left:0}
+ .fmgrid .pitch .circ{width:auto;height:26%}
+}
+@media (orientation:landscape) and (max-height:500px){
+ .fmgrid .panel-h h2{display:none}
+ .fmgrid .panel-h{justify-content:flex-start;margin-bottom:4px}
+ .topbar .club .eyebrow .mk{display:none}
+}
+@media (orientation:landscape) and (max-height:500px){
+ main{zoom:.88}
+ .cday{min-height:0;height:calc((100dvh - 190px)/5);padding:2px 3px}
+ .cgridm{gap:3px}
+}

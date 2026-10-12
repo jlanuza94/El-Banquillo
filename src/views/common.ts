@@ -70,7 +70,7 @@ export function header(){
 }
 export function nav(){
  const cur=S.view==='partido'?'':S.view,badge={inicio:Object.values(S.offers).filter(o=>o.incoming).length+(S.jobOffers||[]).length,buzon:unread(),mercado:inWindow()?'●':''};
- const tv=tutView(),it=([v,l,i])=>`<button class="nitem${tv===v&&cur!==v?' tuthl':''}" data-a="view" data-v="${v}" aria-current="${cur===v}">${icon(i)}<span>${l}</span>${badge[v]?`<span class="badge">${badge[v]}</span>`:''}</button>`;
+ const tv=tutView(),it=([v,l,i])=>`<button class="nitem${tv===v&&cur!==v?' tuthl':''}" data-a="view" data-v="${v}" title="${l}" aria-current="${cur===v}">${icon(i)}<span>${l}</span>${badge[v]?`<span class="badge">${badge[v]}</span>`:''}</button>`;
  const t=T(S.user);
  const side=`<aside class="side"><div class="brand">El Banquillo<small>${esc(S.mgr?'Reputación '+Math.round(S.mgr.rep)+'/100':'')}</small></div>
  <div class="sclub">${crest(t)}<div style="min-width:0"><div class="n">${esc(t.name)}</div><div class="small muted">${esc(lgName(t.lg,true))} · ${money(S.budget)}</div></div></div>
@@ -117,7 +117,7 @@ export function pitchHTML(t,lu,f,opts={}){
   if(!p)cls='empty';else{sh=p.num;nm=p.name.split(' ').slice(1).join(' ');rtv=(eff(p,s,opts.en?opts.en[p.id]:null,opts.roles?opts.roles[sx]:null)/10).toFixed(1);if(!available(p)||p.team!==S.user)cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';}
   if(opts.sel===sx)cls+=' sel';
   const rate=opts.rat&&p&&opts.rat[p.id]!=null?`<span class="rt" style="background:${opts.mvp===p.id?'#c99a06':'rgba(0,0,0,.6)'}">${opts.rat[p.id].toFixed(1)}${opts.mvp===p.id?' · MVP':''}</span>`:'';
-  h+=`<button class="slot ${cls}" style="left:${x}%;top:${y}%;${crestStyle(t)}" ${opts.click?`data-a="slot" data-i="${sx}"${p?` data-pid="${p.id}" data-drag="slot"`:''}`:'tabindex="-1"'} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}"><span class="sh">${sh}</span><span class="nm">${esc(nm)}</span>${rate||(rtv!==''?`<span class="rt">${s} ${rtv}${p&&p.sp!==s?' · '+p.sp:''}</span>`:`<span class="rt">${s}</span>`)}</button>`;
+  h+=`<button class="slot ${cls}" style="left:${x}%;top:${y}%;--px:${x};--py:${y};${crestStyle(t)}" ${opts.click?`data-a="slot" data-i="${sx}"${p?` data-pid="${p.id}" data-drag="slot"`:''}`:'tabindex="-1"'} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}"><span class="sh">${sh}</span><span class="nm">${esc(nm)}</span>${rate||(rtv!==''?`<span class="rt">${s} ${rtv}${p&&p.sp!==s?' · '+p.sp:''}</span>`:`<span class="rt">${s}</span>`)}</button>`;
  }));
  return `<div class="pitch"><span class="ln out"></span><span class="ln half"></span><span class="ln circ"></span><span class="ln box1"></span><span class="ln box2"></span>${h}</div>`;
 }

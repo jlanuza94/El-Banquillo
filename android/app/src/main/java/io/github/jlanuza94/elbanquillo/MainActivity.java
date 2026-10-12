@@ -34,6 +34,7 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         setContentView(web);
         WebSettings s = web.getSettings();
+        s.setTextZoom(100); // el juego ya ajusta sus tamaños: no agrandar con la letra del sistema
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
