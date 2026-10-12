@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {recordRound} from './analysis';
 import {markKey} from './inbox';
 import {seasonAwards} from './awards';
 import {payDebts} from './market2';
@@ -36,6 +37,7 @@ export function runTimer(){
 export function simToEnd(){const m=S.match;m.auto=true;m.subOpen=false;m.alert='';while(!m.done)step(m);m.paused=true;clearInterval(RT.timer);RT.timer=null;save();render();}
 export function finishCore(){
  const m=S.match,ev=curEvent();applyResult(m);completeEvent(ev);S.match=null;S.ci++;
+ if(ev.t==='lg')recordRound(m,ev.r);
  if(ev.t==='lg'){S.ligaRound=ev.r;S.ligaLg=uLg();}
  advance();return{m,ev};
 }

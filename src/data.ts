@@ -65,8 +65,9 @@ export const PERS={nor:{n:'Equilibrado',d:'Sin rasgos de carácter destacados.'}
 export const PERS_W={nor:40,pro:12,lid:8,tem:10,amb:12,lea:10,tra:8};
 export const TRAITS={gol:'Instinto goleador',lej:'Dispara de lejos',cab:'Cabeceador',reg:'Regateador',pas:'Pase al hueco',bal:'Especialista a balón parado',mur:'Muro defensivo',vel:'Velocista',par:'Paradas imposibles'};
 export const ROLES={cl:{n:'Jugador clave',min:.8,l:4},ti:{n:'Titular',min:.6,l:3},ro:{n:'Rotación',min:.35,l:2},jo:{n:'Joven promesa',min:.2,l:1},su:{n:'Suplente',min:.12,l:1}};
-export const ST_K=['pj','mi','g','a','rs','mv','yc','rc','cs'];
-export const newSt=()=>({pj:0,mi:0,g:0,a:0,rs:0,mv:0,yc:0,rc:0,cs:0});
+/** Estadísticas de temporada. xg se guarda en centésimas; kp pases clave, tk entradas, dr regates, du duelos ganados. */
+export const ST_K=['pj','mi','g','a','rs','mv','yc','rc','cs','xg','kp','tk','dr','du'];
+export const newSt=()=>({pj:0,mi:0,g:0,a:0,rs:0,mv:0,yc:0,rc:0,cs:0,xg:0,kp:0,tk:0,dr:0,du:0});
 export const TACS={pre:{n:'Presión',o:{baj:'Baja',med:'Media',alt:'Alta'},d:'Alta: robas más arriba y el rival crea menos, pero tus jugadores se cansan más y sufres ante el contragolpe.'},
  lin:{n:'Línea defensiva',o:{baj:'Baja',med:'Media',alt:'Alta'},d:'Alta: ayuda a atacar pero deja espacio a la espalda. Baja: sólida atrás, pero creas menos.'},
  rit:{n:'Ritmo',o:{len:'Lento',nor:'Normal',rap:'Rápido'},d:'Rápido: más ocasiones para los dos y más cansancio. Lento: partido controlado y cerrado.'},

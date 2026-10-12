@@ -52,6 +52,9 @@ document.addEventListener('click',e=>{
   case'rot-now':{const n=rotateLineup();toast(n?`Tu segundo hace ${n} cambio${n>1?'s':''} en el once.`:'No hace falta rotar: todos están frescos.');break;}
   case'mentor-add':{const err=addPair(document.getElementById('mtY')?.value,document.getElementById('mtM')?.value);toast(err||'Tutelaje en marcha.');break;}
   case'mentor-del':removePair(d.id);break;
+  case'an-tab':S.anTab=d.v;break;
+  case'an-p90':S.anP90=d.v==='1';break;
+  case'an-match':S.modal={type:'mrep',i:+d.i};break;
   case'set-diff':S.diff=d.v;toast(`Dificultad: ${DIFF[d.v].n}.`);break;
   case'mail-open':S.mailSel=d.id;markRead(d.id);break;
   case'mail-back':S.mailSel=null;break;

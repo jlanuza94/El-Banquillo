@@ -1,5 +1,7 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {shotMap} from './analysis';
+import {matchRecord} from '../analysis';
 import {esc,fill} from '../core';
 import {MENT,OIS,TACS} from '../data';
 import {PL,S,T,crest,lastNm,rt} from '../state';
@@ -46,5 +48,5 @@ export function matchView(){
  <div class="stack"><section class="panel"><div class="panel-h"><h2>Estadísticas</h2></div>
   <div class="stat"><span>${poss}%</span><span class="c">Posesión</span><span class="r">${100-poss}%</span></div><div class="pbar"><i style="width:${poss}%;background:${H.c1}"></i><i style="width:${100-poss}%;background:${A.c1}"></i></div>
   ${stat('Goles esperados (xG)',(m.st.h.xg||0).toFixed(2),(m.st.a.xg||0).toFixed(2))}${stat('Tiros',m.st.h.sh,m.st.a.sh)}${stat('A puerta',m.st.h.ot,m.st.a.ot)}${stat('Córners',m.st.h.co||0,m.st.a.co||0)}${stat('Faltas',m.st.h.fo||0,m.st.a.fo||0)}${stat('Pases buenos',(m.st.h.pa?Math.round(m.st.h.pc/m.st.h.pa*100):0)+'%',(m.st.a.pa?Math.round(m.st.a.pc/m.st.a.pa*100):0)+'%')}${stat('Amarillas',m.st.h.yc,m.st.a.yc)}${stat('Rojas',m.st.h.rc,m.st.a.rc)}${stat('Cambios',m.subs.h,m.subs.a)}</section>
- <section class="panel"><div class="panel-h"><h2>Tu once</h2><span class="eyebrow">${m.f[us]} · ${MENT[m.ment[us]].label}</span></div>${pitchHTML(ut,m.lu[us],m.f[us],{roles:m.ro&&m.ro[us],en:m.en,rat:m.done?m.rat:m.min>0?liveRatings(m):null,mvp:m.mvp})}${m.done&&m.mvp?`<p class="small muted" style="margin:8px 0 0">Jugador del partido: <b>${esc(PL(m.mvp).name)}</b> (${esc(T(PL(m.mvp).team).name)}) · ${m.rat[m.mvp].toFixed(1)}</p>`:''}</section></div></div></div>`;
+ <section class="panel"><div class="panel-h"><h2>Tu once</h2><span class="eyebrow">${m.f[us]} · ${MENT[m.ment[us]].label}</span></div>${pitchHTML(ut,m.lu[us],m.f[us],{roles:m.ro&&m.ro[us],en:m.en,rat:m.done?m.rat:m.min>0?liveRatings(m):null,mvp:m.mvp})}${m.done&&m.mvp?`<p class="small muted" style="margin:8px 0 0">Jugador del partido: <b>${esc(PL(m.mvp).name)}</b> (${esc(T(PL(m.mvp).team).name)}) · ${m.rat[m.mvp].toFixed(1)}</p>`:''}</section>${m.done&&m.sh?`<section class="panel"><div class="panel-h"><h2>Mapa de tiros</h2></div><div class="shotmaps">${shotMap(matchRecord(m),0,T(m.h).name)}${shotMap(matchRecord(m),1,T(m.a).name)}</div></section>`:''}</div></div></div>`;
 }

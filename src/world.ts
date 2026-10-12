@@ -53,7 +53,7 @@ export function setupSeason(){
  S.week=0;S.fin=[];S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.ligaRound=0;S.ligaLg=uLg();
  S.obj=objectiveFor(S.user);
  S.teams.forEach(t=>{if(t.id!==S.user&&rnd()<.4)t.formation=pick(Object.keys(FORMS));});
- S.cal=buildCal();S.ci=0;S.tg=0;S.pre={left:3,opts:null};S.fr=[];setupCups();setupConts();S.titles=S.titles||[];S.lastXI=[];if(!S.famil[T(S.user).formation])S.famil[T(S.user).formation]=70;
+ S.cal=buildCal();S.ci=0;S.tl=[];S.tg=0;S.pre={left:3,opts:null};S.fr=[];setupCups();setupConts();S.titles=S.titles||[];S.lastXI=[];if(!S.famil[T(S.user).formation])S.famil[T(S.user).formation]=70;
 }
 export function pickTeam(ti){
  const slot=freeSlot();if(slot==null){toast('Ya tienes '+MAX_SLOTS+' partidas guardadas. Borra una para empezar otra.');return;}

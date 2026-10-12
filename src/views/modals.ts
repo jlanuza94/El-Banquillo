@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {reportBody} from './analysis';
 import {compareHTML} from './awards';
 import {SON_PCT,dealPrice,swapValue} from '../market2';
 import {fireModal} from './staff';
@@ -80,8 +81,9 @@ export function modalView(){
   <div class="acts"><button class="btn primary" data-a="modal-close">Continuar</button></div>`;}
  else if(md.type==='backup'){body=`<h2>Copia de seguridad</h2><p class="small muted">Copia este código y guárdalo (por ejemplo, en tus notas). Para recuperar la partida, usa «Restaurar una copia» y pégalo.</p><textarea id="bkTxt" readonly style="width:100%;height:160px;font:12px var(--f-num);border:1px solid var(--line);border-radius:4px;background:var(--surface2);color:var(--ink)">${esc(md.code)}</textarea><p class="small muted">${Math.round(md.code.length/1024)} KB</p><div class="acts"><button class="btn" data-a="bk-select">Seleccionar todo</button><button class="btn primary" data-a="modal-close">Hecho</button></div>`;}
  else if(md.type==='restore'){body=`<h2>Restaurar partida</h2><p class="small muted">Pega aquí el código de tu copia de seguridad. La partida actual se sustituirá.</p><textarea id="rsTxt" style="width:100%;height:160px;font:12px var(--f-num);border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink)" placeholder="EB1:..."></textarea>${md.err?`<div class="negmsg no">${esc(md.err)}</div>`:''}<div class="acts"><button class="btn" data-a="modal-close">Cancelar</button><button class="btn primary" data-a="rs-go">Restaurar</button></div>`;}
+ else if(md.type==='mrep'){const r=(S.mlog||[])[md.i];if(!r){S.modal=null;return '';}body=reportBody(r)+`<div class="acts"><button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='cmp'){const a=PL(md.a),b=PL(md.b);if(!a||!b){S.modal=null;return '';}body=compareHTML(a,b);}
  else if(md.type==='stfire'){const m=(S.crew||[]).find(x=>x.id===md.id);if(!m){S.modal=null;return '';}body=fireModal(m);}
  else if(md.type==='newgame'){body=`<h2>¿Empezar de cero?</h2><p>Perderás esta partida con ${esc(T(S.user).name)}, incluido el historial de temporadas.</p><div class="acts"><button class="btn" data-a="modal-close">Seguir con esta partida</button><button class="btn danger" data-a="new-game-ok">Borrar y empezar</button></div>`;}
- return `<div class="ov" data-a="ov"><div class="modal" role="dialog" aria-modal="true">${body}</div></div>`;
+ return `<div class="ov" data-a="ov"><div class="modal ${md.type==='mrep'?'wide':''}" role="dialog" aria-modal="true">${body}</div></div>`;
 }
