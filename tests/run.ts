@@ -40,6 +40,7 @@ import { TUNE, createMatch, liveRatings, quickMatch, step } from '../src/engine'
 import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
 import { learnTactic, loadPlan, planFam, planInMatch, savePlan } from '../src/plans';
+import { sellAbonos, shopWeekly, sociosFor, aboBase } from '../src/club';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -201,6 +202,12 @@ const app = document.getElementById('app')!;
     q.prom = { type: 'sell', until: S.week + 30 }; onOfferRejected(q, q.value * 2); ok(!q.prom, 'rechazar una buena oferta rompe la promesa de dejarle salir');
     S.meet = { id: q.id, topic: 'raise', wk: S.week }; S.wageCap = 999; const w0 = q.wage; meetAnswer('yes'); ok(q.wage > w0, 'subida de sueldo desde la reunión');
     S.view = 'plantilla'; S.plTab = 'cont'; render(); ok(app.textContent.includes('Credibilidad'), 'credibilidad en la plantilla'); S.cred = 70; }
+  { // Abonos, tienda y centro médico
+    const C = S.club, b0 = S.budget; C.abo = aboBase(uLg()); const inc = sellAbonos();
+    ok(C.socios > 0 && inc > 0 && Math.abs(S.budget - b0 - inc) < 1e-6, `campaña de abonos (${C.socios} socios, ${inc} M)`);
+    ok(sociosFor(C.abo * 2) < sociosFor(C.abo), 'abono más caro, menos socios');
+    ok(shopWeekly() > 0, 'la tienda da dinero cada jornada');
+    S.view = 'club'; render(); ok(app.textContent.includes('Centro médico') && app.textContent.includes('Abono de temporada'), 'estadio con abonos y centro médico'); S.budget = b0; }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

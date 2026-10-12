@@ -15,7 +15,7 @@ import {news} from './world';
 import {fixLineup,leaders,setAdapt} from './tactics';
 import {step} from './engine';
 import {maxExtra,renState} from './contracts';
-import {unlock} from './club';
+import {fansReact,unlock} from './club';
 import {save} from './persist';
 import {render,toast} from './views/common';
 export const inWindow=()=>S.week<=4||(S.week>=19&&S.week<=22);
@@ -69,6 +69,7 @@ export function makeBid(id,amt,opt={}){
  else{n.counter=r2(Math.max(amt*1.05,(n.counter||ask)*(.92+rnd()*.1)));n.msg=`Oferta rechazada. Piden ${money(n.counter)}. Te quedan ${3-n.tries} intento${3-n.tries>1?'s':''}.`;n.kind='no';}
 }
 export function completeBuy(p,price,t){
+ const best=Math.max(0,...squad(S.user).map(x=>x.ovr));if(p.ovr>best)fansReact(6,`ilusión por el fichaje de ${p.name}, el mejor jugador de la plantilla.`);
  S.chem=clamp(S.chem-3,20,100);p.sg=0;p.tf='auto';p.paid=price;
  const from=p.team,now=applyDeal(p,price,from,(S.neg[p.id]||{}).deal);S.budget=r3(S.budget-now-(t.bonus||0)-agentFee(p,price));setTeam(p,S.user);p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;p.hap=clamp(72+(ROLES[t.role].l>=ROLES[expRole(p)].l?6:-6),0,100);p.req=0;p.prom=null;p.energy=Math.max(p.energy,80);assignNum(p);
  if(from!==null)ensureSquad(from);setAdapt(p);if(!p.ph||!p.ph.length)p.ph=[[seasonLabel(),p.ovr]];
@@ -131,11 +132,13 @@ export function sell(id,son){
  if(sq.length<=16)return toast('Necesitas al menos 16 jugadores en plantilla.');
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');
  const wasLeader=leaders(3).some(([L])=>L===p);
+ const idol=squad(S.user).sort((x,y)=>y.ovr-x.ovr).slice(0,2).includes(p)||p.goals>=10;
  if(!S.rec)S.rec={};if(!S.rec.sell||o.amount>S.rec.sell.fee)S.rec.sell={name:p.name,fee:o.amount,season:seasonLabel()};tlog({name:p.name,pid:p.id,from:S.user,to:o.team,fee:o.amount});
  if(p.paid&&o.amount>=p.paid*5&&p.paid>=.01)unlock('gang');if(p.home&&o.amount>=2)unlock('neg');
  S.budget=r3(S.budget+o.amount);sellOnOut(p,o.amount);if(son)p.son={team:S.user,pct:SON_PCT};setTeam(p,o.team);assignNum(p);p.req=0;p.prom=null;p.cl=r2(p.value*(2+rnd()*2));
  const t=T(S.user),i=t.lineup.indexOf(id);if(i>=0)t.lineup[i]=null;fixLineup();
  news(`Venta: ${p.name} se marcha a ${T(o.team).name} por ${money(o.amount)}.`);
+ if(idol)fansReact(-8,`la venta de ${p.name}, uno de los favoritos de la grada, no sienta bien.`);
  if(wasLeader){squad(S.user).forEach(x=>x.hap=clamp(x.hap-6,0,100));S.chem=clamp(S.chem-4,20,100);news(`El vestuario no entiende la venta de ${p.name}, uno de sus líderes.`,'bad');}
  delete S.offers[id];S.modal=null;save();render();toast(`Vendido por ${money(o.amount)}.`);
 }

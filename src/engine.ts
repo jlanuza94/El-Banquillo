@@ -246,7 +246,7 @@ export function applyResult(m){
 export function playerTick(full){
  Object.values(S.players).forEach(p=>{
   if(p.inj>0){p.inj--;if(!p.inj){p.recov=3;p.injT=0;}}else if(p.recov>0&&full)p.recov--;if(p.susp>0)p.susp--;
-  if(p.pInj){p.inj+=p.pInj;p.injT=p.pInjT||'Lesión';if(p.team===S.user)news(`${p.name}: ${String(p.injT).toLowerCase()}. Estará ${p.inj} partido${p.inj>1?'s':''} de baja.${p.recov>0?' Es una recaída.':''}`,'bad',{cat:'med',subj:`Lesión: ${p.name} (${p.inj} partido${p.inj>1?'s':''})`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});p.pInjT=0;}
+  if(p.pInj){if(p.team===S.user&&S.club&&S.club.fac&&S.club.fac.med>1)p.pInj=Math.max(1,Math.round(p.pInj*(1-.08*(S.club.fac.med-1))));p.inj+=p.pInj;p.injT=p.pInjT||'Lesión';if(p.team===S.user)news(`${p.name}: ${String(p.injT).toLowerCase()}. Estará ${p.inj} partido${p.inj>1?'s':''} de baja.${p.recov>0?' Es una recaída.':''}`,'bad',{cat:'med',subj:`Lesión: ${p.name} (${p.inj} partido${p.inj>1?'s':''})`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});p.pInjT=0;}
   if(p.pSusp){p.susp+=p.pSusp;if(p.team===S.user)news(`${p.name} cumplirá ${p.susp} partido${p.susp>1?'s':''} de sanción.`,'bad');}
   p.pInj=0;p.pSusp=0;
   const mine=p.team===S.user;

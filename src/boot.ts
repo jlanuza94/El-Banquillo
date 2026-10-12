@@ -14,7 +14,7 @@ import {news} from './world';
 import {autoLineup,slotsOf} from './tactics';
 import {prepTactics} from './engine';
 import {assignRoles} from './market';
-import {genSponsors,initClub} from './club';
+import {aboBase,genSponsors,initClub} from './club';
 import {clubReq,mgrSalary} from './career';
 import {genScoutPool} from './academy';
 import {loadAsync} from './persist';
@@ -30,7 +30,7 @@ export function boot(st){
  if(S&&S.user!=null){migrateInbox();migrateCrew();if(!S.yl)setupYouth();if(!S.coaches){initCoaches();setExpectations();}if(S.wageCap==null)setWageCap();(S.academy||[]).concat((S.prospects||[]).map(x=>x.p)).forEach(p=>{if(p.at.cab==null){if(!p.h)p.h=180;deriveAttrs(p);}});}
  if(S&&S.user!=null){if(!S.mgr){const t=T(S.user);S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,clubs:[{season:seasonLabel(),club:t.name}]};}
   S.scouts=S.scouts||[];S.academy=S.academy||[];S.prospects=S.prospects||[];S.jobOffers=S.jobOffers||[];S.applied=S.applied||{};if(!S.scoutPool||!S.scoutPool.length)genScoutPool();
-  if(!S.club){initClub(T(S.user));}S.ach=S.ach||{};if(S.mgr.joinN==null)S.mgr.joinN=S.seasonN;if(!S.mgr.countries)S.mgr.countries=[LG(uLg()).c];squad(S.user).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});Object.values(S.players).forEach(p=>{if(p.prone==null)p.prone=rnd()<.12?r2(.6+rnd()*.6):r2(rnd()*.3);if(!p.agc)p.agc=r2(.04+rnd()*.08);});if(!S.spOffers)genSponsors();S.tlog=S.tlog||[];S.halls=S.halls||[];S.legends=S.legends||[];S.rec=S.rec||{};S.fr=S.fr||[];
+  if(!S.club){initClub(T(S.user));}if(!S.club.fac.med)S.club.fac.med=1;if(!S.club.abo)S.club.abo=aboBase(uLg());S.ach=S.ach||{};if(S.mgr.joinN==null)S.mgr.joinN=S.seasonN;if(!S.mgr.countries)S.mgr.countries=[LG(uLg()).c];squad(S.user).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});Object.values(S.players).forEach(p=>{if(p.prone==null)p.prone=rnd()<.12?r2(.6+rnd()*.6):r2(rnd()*.3);if(!p.agc)p.agc=r2(.04+rnd()*.08);});if(!S.spOffers)genSponsors();S.tlog=S.tlog||[];S.halls=S.halls||[];S.legends=S.legends||[];S.rec=S.rec||{};S.fr=S.fr||[];
   let mig=0;Object.values(S.players).forEach(p=>{if(!p.sp){decorate(p,null,false);mig++;}});S.academy.forEach(p=>{if(!p.sp)decorate(p,null,false);});S.prospects.forEach(x=>{if(!x.p.sp)decorate(x.p,null,false);});
   if(mig){assignRoles(false);S.tg=S.tg||0;dirty();news('Novedad: posiciones exactas, pie bueno, carácter, felicidad, roles y cláusulas en los contratos, y estadísticas con notas.','good');
    S.teams.forEach(t=>{if(t.id!==S.user)t.lineup=[];});const ut=T(S.user);if(ut.lineup.length!==slotsOf(ut.formation).length)ut.lineup=autoLineup(ut.id,ut.formation);}}

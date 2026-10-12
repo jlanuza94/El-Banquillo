@@ -136,6 +136,7 @@ document.addEventListener('click',e=>{
   case'friendly':playFriendly(+d.id);return;
   case'pre-skip':if(S.pre)S.pre.left=0;break;
   case'sponsor':{const o=S.spOffers[+d.i];if(o){S.sponsor=o;news(`Firmas con ${o.name}: ${spDesc(o)}`,'good');}break;}
+  case'abo':S.club.abo=clamp(S.club.abo+(+d.d)*(S.club.abo>=300?20:S.club.abo>=100?10:5),20,6000);break;
   case'price':S.club.price=clamp(S.club.price+(+d.d)*(S.club.price>=30?2:1),2,250);break;
   case'build':startBuild(d.t,+d.n||0);break;
   case'tac':{const t=T(S.user);t.tac=Object.assign({},TAC0,t.tac||{});t.tac[d.k]=d.v;break;}

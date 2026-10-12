@@ -20,7 +20,7 @@ import {news} from './world';
 import {famOf,fixLineup,langOf,leaders,nRounds,nextFixture} from './tactics';
 import {playerTick} from './engine';
 import {aiTransfers,expRole,inWindow,isDeadline} from './market';
-import {attendance,clubWeekly,facMaint,unlock} from './club';
+import {attendance,clubWeekly,facMaint,shopWeekly,unlock} from './club';
 import {mgrWeekly} from './career';
 import {academyWeekly,scoutWages,scoutsWeekly} from './academy';
 export function hapTag(p){const h=p.hap==null?70:p.hap;return h>=75?'<span class="tag xi">Muy contento</span>':h>=55?'<span class="tag">Contento</span>':h>=40?'<span class="tag">Normal</span>':h>=25?'<span class="tag bad">Descontento</span>':'<span class="tag bad">Enfadado</span>';}
@@ -101,13 +101,13 @@ export function weeklyTeamTraining(){
 export function processWeek(){
  const wk=S.week,fx=nextFixture();
  playerTick(true);weeklyTeamTraining();
- const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,tix=home?ticket():0;
+ const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,tix=home?ticket():0,shop=shopWeekly();
  const my=home?fx.hg:fx.ag,op=home?fx.ag:fx.hg;
  if(home){S.club.lastAtt=attendance();if(S.club.lastAtt>=S.club.cap)S.fullHomes=(S.fullHomes||0)+1;if(!S.rec)S.rec={};if(!S.rec.att||S.club.lastAtt>S.rec.att.v)S.rec.att={v:S.club.lastAtt,season:seasonLabel()};}
  if(!S.sponsor&&S.week>=3&&S.spOffers&&S.spOffers.length){S.sponsor=S.spOffers[0];news(`La directiva firma con ${S.sponsor.name} como patrocinador al no elegir tú.`);}
  const spo=S.sponsor?r3(S.sponsor.weekly+(my>op?S.sponsor.win:0)):0;
- S.budget=r3(S.budget+tv+tix+spo-wages);if(S.budget>=50)unlock('millo');
- S.fin.push({wk:wk+1,tv,tix,spo,wages});
+ S.budget=r3(S.budget+tv+tix+spo+shop-wages);if(S.budget>=50)unlock('millo');
+ S.fin.push({wk:wk+1,tv,tix,spo,shop,wages});
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
  scoutsWeekly();scoutingWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
@@ -120,7 +120,7 @@ export function processWeek(){
  incomingOffer();
  if(S.week>=nRounds())news('Termina la temporada. Mira cómo ha quedado todo en Inicio.','good');
 }
-export function ticket(){if(!S.club)return 0;return r3(attendance()*S.club.price/1e6);}
+export function ticket(){if(!S.club)return 0;return r3(Math.max(0,attendance()-(S.club.socios||0))*S.club.price/1e6);}
 export function incomingOffer(){
  if(S.week>=nRounds()||!inWindow())return;
  const tries=isDeadline()?3:1,myRep=LG(uLg()).rep;
