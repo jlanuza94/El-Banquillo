@@ -1,5 +1,6 @@
 /* El Banquillo · world.js — Creación del mundo, objetivos, calendario de liga y elección de club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {setupYouth} from './youth';
 import {defaultCrew} from './staff';
 import {clamp,gauss,money,pick,plain,r2,rnd,shuffle} from './core';
 import {COUNTRIES,FORMS,KITS,LV_STEP,SP_SEQ,TOWNS} from './data';
@@ -57,7 +58,7 @@ export function pickTeam(ti){
  S.slot=slot;S.user=ti;const t=T(ti);t.formation='4-4-2';S.budget=startBudget(t);
  setupSeason();t.lineup=autoLineup(ti,t.formation);
  S.mgr={rep:clamp(clubReq(t)+8,5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,clubs:[{season:seasonLabel(),club:t.name}]};
- initClub(t);defaultCrew();genScoutPool();academyIntake(3);assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));
+ initClub(t);defaultCrew();genScoutPool();academyIntake(3);setupYouth();assignRoles(true);squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));
  news(`Bienvenido a ${t.name}, de ${lgName(t.lg)}. Firmas hasta junio de ${2025+S.seasonN+S.mgr.yrs} por ${money(S.mgr.sal)} a la semana. La directiva te pide: ${S.obj.txt.toLowerCase()}.`,'good');
  cwcWelcome();ctWelcome();advance();
  saveNow();render();window.scrollTo(0,0);

@@ -21,6 +21,7 @@ import '../src/events';
 import { hireStaff, migrateCrew } from '../src/staff';
 import { queueScout, scoutingWeekly, seen } from '../src/scouting';
 import { squad, T } from '../src/state';
+import { ylTable } from '../src/youth';
 import { TUNE, createMatch, liveRatings, step } from '../src/engine';
 import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
@@ -117,6 +118,8 @@ const app = document.getElementById('app')!;
     const gpm = fx.reduce((a, f) => a + f.hg + f.ag, 0) / fx.length;
     console.log(`     temporada ${seasonLabel()}: puesto ${pos}, presupuesto ${money(S.budget)}, ${gpm.toFixed(2)} goles por partido`);
     ok(gpm > 2 && gpm < 4, 'goles por partido razonables');
+    if (!S.jobless) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
+      S.view = 'cantera'; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
     S.modal = null; S.view = 'inicio'; render(); newSeason();
     ok(S.week === 0, 'empieza la temporada siguiente');
   }
