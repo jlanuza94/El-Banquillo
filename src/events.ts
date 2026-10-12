@@ -46,11 +46,11 @@ document.addEventListener('click',e=>{
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
-  if(a==='pick-team')pickTeam(+d.i);else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;render();}else if(a==='start-lv'){RT.startLv=+d.v;render();}return;}
+  if(a==='pick-team')pickTeam(+d.i);else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;RT.startStep='d';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-lv'){RT.startLv=+d.v;RT.startStep='club';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-step'){RT.startStep=d.v;render();}return;}
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
  switch(a){
-  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
+  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});break;
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'row':{if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'ficha':S.modal={type:'ficha',id:d.id};break;
@@ -103,7 +103,7 @@ document.addEventListener('click',e=>{
   case'mail-cat':S.mailCat=d.v;S.mailSel=null;break;
   case'mail-all':markAll(S.mailCat);break;
   case'offer-view':{const o=S.offers[d.id];if(o&&o.incoming&&PL(d.id)&&PL(d.id).team===S.user)S.modal={type:'sell',id:d.id};else toast('Esa oferta ya ha caducado.');break;}
-  case'pl-open':S.view='plantilla';S.plTab=d.v;window.scrollTo(0,0);break;
+  case'pl-open':S.view='plantilla';S.plTab=d.v;window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});break;
   case'ment':T(S.user).ment=d.v;break;
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}
@@ -191,8 +191,8 @@ document.addEventListener('click',e=>{
   case'offer-no':{const o=S.offers[d.id];if(!o)break;delete S.offers[d.id];const p=PL(d.id);news(`Rechazas la oferta de ${T(o.team).name} por ${p.name}.`);if(LG(T(o.team).lg).rep>LG(uLg()).rep+3&&(p.per==='amb'||p.hap<60)){p.hap=clamp(p.hap-12,0,100);news(`${p.name} quería ese traspaso a un club más grande y está molesto.`,'bad');if(p.hap<25&&!p.req){p.req=1;news(`${p.name} pide salir del club.`,'bad');}}break;}
   case'ov':case'modal-close':S.modal=null;break;
   case'new-season':newSeason();return;
-  case'new-game':case'to-saves':saveNow();clearInterval(RT.timer);RT.timer=null;setS(null);dirty();render();window.scrollTo(0,0);return;
-  case'new-game-ok':clearInterval(RT.timer);RT.timer=null;clearTimeout(RT.saveT);RT.saveT=null;setS(null);dirty();try{localStorage.removeItem(KEY);}catch(err){}render();window.scrollTo(0,0);return;
+  case'new-game':case'to-saves':saveNow();clearInterval(RT.timer);RT.timer=null;setS(null);dirty();render();window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});return;
+  case'new-game-ok':clearInterval(RT.timer);RT.timer=null;clearTimeout(RT.saveT);RT.saveT=null;setS(null);dirty();try{localStorage.removeItem(KEY);}catch(err){}render();window.document.getElementById('nuevo')?.scrollIntoView({block:'start'});return;
  }
  save();render();
 });
