@@ -1,5 +1,6 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {galaAwards} from '../extras';
 import {MONTHS_L,agenda,dateOf,dateTxt,eventDays,seasonStart,syncDay} from '../calendar';
 import {nC} from '../state';
 import {derbyName,h2hDots,h2hStreak,h2hTxt,isDerby} from '../rivals';
@@ -10,7 +11,7 @@ import {segAt} from '../staff';
 import {unread} from '../inbox';
 import {esc,money} from '../core';
 import {posChip,COUNTRIES,LV_NAMES,MENT,SPN,TAC0,TACS} from '../data';
-import {LG,PL,S,T,crest,lgName,rt,seasonLabel,squad,uLg} from '../state';
+import {LG,PL,S,T,crest,lgName,pBadge,rt,seasonLabel,squad,uLg} from '../state';
 import {strength} from '../players';
 import {news} from '../world';
 import {autoLineup,chemMult,lineupIssues,posOf,table,teamPower,userRoles} from '../tactics';
@@ -51,7 +52,7 @@ export function inicioView(){
  let sugP='';if(inWindow()||quick()){const sg=suggestions(3);if(sg.list.length)sugP=`<section class="panel"><div class="panel-h"><h2>Tu segundo recomienda</h2><span class="eyebrow">Refuerzos para ${{POR:'la portería',DEF:'la defensa',MED:'el medio',DEL:'el ataque'}[sg.g]}</span></div>${sg.list.map(p=>`<div class="offer">${crest(T(p.team??S.user),'sm')}<span class="t">${nameBtn(p)} <span class="small muted">· ${p.age} años · ${p.team===null?'libre':esc(T(p.team).short)} · ${money(askPrice(p))}</span></span>${pBadgeS(p)}<button class="btn sm primary" data-a="neg" data-id="${p.id}">Ofertar</button></div>`).join('')}</section>`;}
  return `<div class="grid"><div class="stack">${jobsP}${meetP}${pressP}${preP}${spP}${offersPanel()}${next}${sugP}${reportHTML(opp.id,true)}
   <section class="panel"><div class="panel-h"><h2>Últimos resultados</h2></div>${lastH}</section></div>
-  <div class="stack">${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Competiciones</h2><button class="btn sm" data-a="view" data-v="copas">Ver copas</button></div><div class="kv" style="margin-top:0"><span>${userCup()?cupName(userCup().c):'Copa nacional'}</span><b>${cupStatus()}</b><span>${ctOf(S.user)>=0?CONTS[ctOf(S.user)].n:'Competición continental'}</span><b>${ctStatus()}</b><span>Mundial de Clubes</span><b>${cwcStatus()}</b></div></section><section class="panel"><div class="panel-h"><h2>${LV_NAMES[LG(lg).lv]}</h2><button class="btn sm" data-a="view" data-v="liga">Ver ligas</button></div>${tableHTML(tb,lg,true)}</section>
+  <div class="stack">${galaHTML()}${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Competiciones</h2><button class="btn sm" data-a="view" data-v="copas">Ver copas</button></div><div class="kv" style="margin-top:0"><span>${userCup()?cupName(userCup().c):'Copa nacional'}</span><b>${cupStatus()}</b><span>${ctOf(S.user)>=0?CONTS[ctOf(S.user)].n:'Competición continental'}</span><b>${ctStatus()}</b><span>Mundial de Clubes</span><b>${cwcStatus()}</b></div></section><section class="panel"><div class="panel-h"><h2>${LV_NAMES[LG(lg).lv]}</h2><button class="btn sm" data-a="view" data-v="liga">Ver ligas</button></div>${tableHTML(tb,lg,true)}</section>
   <section class="panel"><div class="panel-h"><h2>Noticias</h2><button class="btn sm" data-a="view" data-v="buzon">Bandeja de entrada${unread()?' ('+unread()+')':''}</button></div><ul class="news">${S.news.slice(0,8).map(n=>`<li class="${n.kind}"><span class="wk">J${n.wk}</span><span class="t">${esc(n.txt)}</span></li>`).join('')}</ul></section></div></div>`;
 }
 export function reportHTML(oid,compact){
@@ -96,6 +97,10 @@ export function calendarioView(){
  ${items.length?items.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="eyebrow">${esc(x.lbl)}</div>${x.fx?resRow(x.fx,null):`<div class="small muted">${esc(x.txt||'')}</div>`}</div>`).join(''):'<div class="empty">No quedan partidos esta temporada.</div>'}</section>
  <section class="panel"><div class="panel-h"><h2>Resultados de liga</h2><span class="eyebrow">${past.length} jugados</span></div>${past.length?past.slice().reverse().map(([r,f])=>resRow(f,r)).join(''):'<div class="empty">Aún no has jugado ninguna jornada.</div>'}</section></div></div>`;
 }
+/** Gala del club: los premios de tu equipo esta temporada. */
+function galaHTML(){const A=galaAwards();if(!A.length)return '';
+ return `<section class="panel gala"><div class="panel-h"><h2>🏆 Gala del club</h2><span class="eyebrow">Temporada ${seasonLabel()}</span></div>
+ ${A.map(x=>{const p=PL(x.id);return `<div class="offer"><span class="t"><span class="eyebrow">${esc(x.n)}</span><br>${nameBtn(p)} <span class="small muted">· ${esc(x.t)}</span></span>${pBadge(p)}</div>`;}).join('')}</section>`;}
 export function seasonEndView(){
  const sm=seasonSummary(),champ=T(sm.tb[0].id),C=COUNTRIES[sm.L.c];
  const title=sm.L.lv===0&&sm.champ?'¡Campeones de liga!':sm.up?`¡Ascenso a ${LV_NAMES[sm.L.lv-1]}!`:sm.down?`Descenso a ${LV_NAMES[sm.L.lv+1]}`:sm.ok?'Objetivo cumplido':'Objetivo fallado';

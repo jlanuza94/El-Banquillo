@@ -1,5 +1,7 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {forcedAfter,momentInj,momentPen,momentRed,momentsTick,recordCoach,spPrepFor,spPrepMult,weatherFor,weatherMods} from './extras';
+import {dateOf,dayOfEvent} from './calendar';
 import {laneTip,learnRoles,phaseMods} from './tactics2';
 import {posMult,posTeam,userPos} from './positions';
 import {injWeight,onRecovered,relapseMult} from './medical';
@@ -31,6 +33,7 @@ export function createMatch(ref){
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
  m.derby=m.ref.k!=='fr'&&isDerby(m.h,m.a);
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
+ if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;if(spPrepFor(op))m.spd=spPrepMult();}
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
  m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult();m.plan=T(m[m.us]).curPlan||null;}
@@ -78,6 +81,7 @@ export function tacMods(m,s){
  if(OI.sal){poss-=.03;const dq=avgAt(m,s,'DEF','pas');own*=dq<5?.97:.99;}if(MY.sal)drain*=1.06;
  if(OI.dur)own*=.975;
  {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);own*=ph.own;opp*=ph.opp;drain*=ph.drain;poss+=ph.poss;}
+ {const w=weatherMods(m.wx,A);own*=w.own;opp*=w.opp;drain*=w.drain;poss+=w.poss;const mm=m.mm&&m.mm[s];if(mm){own*=mm.own;opp*=mm.opp;}}
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)own*=1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4);
  return{own,opp,drain,poss};
 }
@@ -130,12 +134,13 @@ export function aiManage(m,s){
 }
 export function setPiece(m,live){
  ['h','a'].forEach(s=>{const o=s==='h'?'a':'h',g=m.lu[o][0]?PL(m.lu[o][0]):null;
-  if(rnd()<.0021){const k=m.lu[s].includes(m.pk[s])?m.pk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.tir-PL(a).at.tir)[0];if(!k)return;const P=PL(k);
+  if(rnd()<.0021){if(live&&s===m.us&&!m.auto&&!m.mom){momentPen(m,s);return;}const k=m.lu[s].includes(m.pk[s])?m.pk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.tir-PL(a).at.tir)[0];if(!k)return;const P=PL(k);
    const ok=rnd()<clamp(.66+.025*(P.at.tir-5)-(g?.02*(g.at.por-5):0)+(hasTr(P,'bal')?.04:0),.45,.92);m.st[s].sh++;
    shotLog(m,s,k,.76,ok?'g':'s');
    if(ok){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Penalti y gol! ${P.name} engaña al portero. (${scoreStr(m)})`:'',k);}
    else if(live)addEv(m,'shot',s,`¡Penalti fallado! ${P.name} no puede con ${g?g.name:'el portero'}.`,k);}
-  else if(rnd()<.0038){const k=m.lu[s].includes(m.fk[s])?m.fk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.pas-PL(a).at.pas)[0];if(!k)return;const P=PL(k);m.st[s].sh++;const cen=m.sp&&m.sp[s].fk==='cen',hd=cen?m.lu[s].filter(Boolean).map(PL).sort((a,b)=>(b.at.cab??5)-(a.at.cab??5))[0]:null;const fkg=cen?rnd()<.045*(1+.12*((hd.at.cab??5)-6)):rnd()<.05+.012*((P.at.tir+P.at.pas)/2-5)+(hasTr(P,'bal')?.05:0);shotLog(m,s,cen?hd.id:k,cen?.12:.06,fkg?'g':'s');
+  else if(rnd()<.0038){const k=m.lu[s].includes(m.fk[s])?m.fk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.pas-PL(a).at.pas)[0];if(!k)return;const P=PL(k);m.st[s].sh++;const cen=m.sp&&m.sp[s].fk==='cen',hd=cen?m.lu[s].filter(Boolean).map(PL).sort((a,b)=>(b.at.cab??5)-(a.at.cab??5))[0]:null;let fkg=cen?rnd()<.045*(1+.12*((hd.at.cab??5)-6)):rnd()<.05+.012*((P.at.tir+P.at.pas)/2-5)+(hasTr(P,'bal')?.05:0);shotLog(m,s,cen?hd.id:k,cen?.12:.06,fkg?'g':'s');
+   if(fkg&&m.spd&&s!==m.us&&Math.random()>m.spd)fkg=false;
    if(fkg&&cen){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')hd.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Gol de falta ensayada! ${P.name} la cuelga y ${hd.name} cabecea a la red. (${scoreStr(m)})`:'',hd.id);m.ev[m.ev.length-1].ast=P.id!==hd.id?P.id:null;}
    else if(fkg){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Golazo de falta directa de ${P.name}! (${scoreStr(m)})`:'',k);}
    else if(live)addEv(m,'shot',s,`Falta directa de ${P.name}: ${rnd()<.5?'se marcha por encima':'la saca el portero'}.`,k);}
@@ -148,6 +153,7 @@ export function card(m,s,straight){
   m.lu[s][m.lu[s].indexOf(id)]=null;m.off.push(id);m.outM[id]=m.min;m.st[s].rc++;delete m.hurt[id];if(m.ref.k!=='fr'){p.st.rc++;p.pSusp+=straight?2:1;}
   addEv(m,'red',s,straight?`¡Roja directa para ${p.name}! ${T(m[s]).name} se queda con uno menos.`:`Segunda amarilla para ${p.name}. Expulsado.`,id);
   if(m.us===s&&!m.auto){m.paused=true;m.alert=`${p.name} ha sido expulsado. Revisa tu táctica.`;}
+  else if(m.us&&m.us!==s&&!m.auto&&!m.mom&&m.min<85)momentRed(m);
  }else{
   m.ycm[id]=1;m.st[s].yc++;if(m.ref.k!=='fr'){p.yc++;p.st.yc++;}let tx='';if(m.us)tx=fill(pick(TX.yellow),{p:p.name});if(m.ref.k!=='fr'&&p.yc%5===0){p.pSusp+=1;tx+=' Cumple ciclo y se perderá el próximo partido.';}
   if(m.us)addEv(m,'yc',s,tx,id);
@@ -164,7 +170,7 @@ export function extraStats(m,xs,live){
    const ck=PL(m.ck&&m.lu[s].includes(m.ck[s])?m.ck[s]:m.lu[s].find(Boolean));const heads=m.lu[s].filter(Boolean).map(PL).filter(p=>(p.at.cab??0)>=7||p.h>=187||hasTr(p,'cab'));
    const sid=heads.length?pick(heads).id:pickScorer(m,s);
    const cm=m.sp?cornerMult(m.lu[s].filter(Boolean),ck,m.lu[o].filter(Boolean),m.sp[s],m.sp[o],s===m.us?S.spFam:50):1;
-   if(ck&&sid&&rnd()<TUNE.corner*cm*(1+.08*(ck.at.pas-5))*(1+.25*heads.length/3)*(hasTr(ck,'bal')?1.2:1)){const id=sid;
+   if(ck&&sid&&rnd()<TUNE.corner*cm*(m.spd&&s!==m.us?m.spd:1)*(1+.08*(ck.at.pas-5))*(1+.25*heads.length/3)*(hasTr(ck,'bal')?1.2:1)){const id=sid;
     m.score[s]++;st.sh++;st.ot++;shotLog(m,s,id,.3,'g');if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Gol de córner! ${ck.name} la pone y ${PL(id).name} remata de cabeza. (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ck.id!==id?ck.id:null;}}
   if(rnd()<.13*(m.oi&&m.oi[s]&&m.oi[s].dur?1.4:1))st.fo++;
   const n=Math.round(share*11+rnd()*2),acc=clamp(.62+.035*(avgAt(m,s,'MED','pas')-5)+.02*(avgAt(m,s,'DEF','pas')-5)+(m.tac[s].est==='pos'?.05:m.tac[s].est==='dir'?-.05:0)-(m.oi&&m.oi[o]&&m.oi[o].sal?.03:0),.45,.93);
@@ -235,6 +241,7 @@ export function step(m){
  });
  setPiece(m,live);
  extraStats(m,xs,live);
+ if(live)momentsTick(m);
  if(live)phaseLog(m,clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8));
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
  {const dh=m.oi&&m.oi.h&&m.oi.h.dur?1.6:1,da=m.oi&&m.oi.a&&m.oi.a.dur?1.6:1,ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
@@ -242,7 +249,7 @@ export function step(m){
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
  if(rnd()<.0032){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
   if(live)addEv(m,'inj',s,`${PL(id).name} se duele de la rodilla y no puede seguir al mismo nivel.`,id);
-  if(m.us===s&&!m.auto){m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}
+  if(m.us===s&&!m.auto){if(!m.mom)momentInj(m,id);else{m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}}
  if(m.min>=58||Object.keys(m.hurt).length)['h','a'].forEach(s=>{if(m.us!==s||m.auto)aiManage(m,s);});
  if(m.min===45&&live){addEv(m,'sys',null,`Descanso · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);m.half=true;if(!m.auto)m.paused=true;}
  if(m.min>=m.end){m.done=true;m.paused=true;calcRatings(m);if(live)addEv(m,'sys',null,`Final · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);
@@ -260,6 +267,7 @@ export function applyResult(m){
   p.apps++;p.playedWk=true;p.energy=Math.round(clamp(m.en[id]??p.energy,20,100));
   p.form=clamp(Math.round(p.form*.6+res[s]*1.2+(gl[id]||0)*.9+gauss()*.6),-3,3);});
  recordMatch(m);trackLoans(m);coachResult(m);
+ if(m.us){recordCoach(m);forcedAfter(m);const op=m[m.us==='h'?'a':'h'];if(S.spPrep&&S.spPrep.opp===op)S.spPrep=null;}
  if(m.us&&m.ref.k!=='fr')learnTactic(m.tac[m.us]);
  if(m.us&&m.ref.k!=='fr')learnRoles(m);
  if(m.us&&m.ref.k!=='fr')S.tg=(S.tg||0)+1;

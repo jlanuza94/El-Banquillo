@@ -170,3 +170,7 @@ main thead th[data-dir="asc"]::after{content:" ▲";font-size:.8em}
 .ln-c small{color:var(--muted)}
 .tag.gem{background:rgba(80,170,255,.18);padding:0 4px}
 .savedq{display:inline-flex;gap:2px}
+/* Momentos de partido */
+.momb{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 24px);overflow:auto;border:2px solid var(--accent);background:var(--surface);color:var(--ink);border-radius:12px;padding:14px 16px;box-shadow:0 0 0 100vmax rgba(0,0,0,.5),0 12px 30px rgba(0,0,0,.4)}
+.momb b{font-size:16px;display:block}
+.gala .eyebrow{color:var(--accent)}

@@ -1,5 +1,8 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {hireFromClub,resolveMoment} from './extras';
+import {pickScorer,scoreStr,shotLog} from './engine';
+import {ST_ROLES} from './staff';
 import {recallLoan,setDev} from './devplus';
 import {delSearch,loadSearch,saveSearch,searchName,startMission,stopMission} from './scoutplus';
 import {PRESETS,applyPreset} from './tactics2';
@@ -77,6 +80,9 @@ document.addEventListener('click',e=>{
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;document.querySelector('main')?.scrollTo?.(0,0);break;
   case'loan-recall':{const err=recallLoan(d.id);if(err)toast(err);break;}
   case'dev-set':break;
+  case'pique':if(S.pique){S.pique.resp=d.v;toast(d.v==='r'?'Le respondes en la prensa. Ahora toca ganar.':'Prefieres no entrar al trapo.');}break;
+  case'sp-prep':S.spPrep={opp:+d.id};toast('El equipo prepara la defensa a balón parado contra este rival.');break;
+  case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
   case'preset':applyPreset(d.v);toast('Sistema cargado: '+PRESETS[d.v].n+'.');break;
   case'pos-sel':S.posSel=+d.i;break;
   case'duty':{const t=T(S.user);userPos(slotsOf(t.formation));t.duty[+d.i]=d.v;break;}
@@ -139,7 +145,8 @@ document.addEventListener('click',e=>{
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}
   case'play':S.modal=null;playMatch();return;
-  case'm-play':stopReplay();matchFx(m);m.paused=false;m.alert='';m.subOpen=false;render();runTimer();return;
+  case'mom':resolveMoment(m,d.v,{shotLog,addEv,scoreStr,pickScorer});if(m.subOpen){m.paused=true;}break;
+  case'm-play':if(m&&m.mom){toast('Primero decide qué hacer.');return;}stopReplay();matchFx(m);m.paused=false;m.alert='';m.subOpen=false;render();runTimer();return;
   case'm-pause':m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-speed':m.speed=+d.v;render();runTimer();return;
   case'm-ment':if(m.ment[m.us]!==d.v){m.ment[m.us]=d.v;addEv(m,'sys',null,`${T(m[m.us]).short} cambia a mentalidad ${MENT[d.v].label.toLowerCase()}`);}break;

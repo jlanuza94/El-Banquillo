@@ -12,6 +12,9 @@ import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics'
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
 import { PL, LG } from '../src/state';
 import { cellVal } from '../src/sorttable';
+import { OBJ_N, PITCH, WX, assignObjectives, galaAwards, hireFromClub, momentInj, momentPen, momentRed, objectivesWeekly, resolveMoment, rivalSetPieces, spPrepMult, staffMarket, weatherFor, weatherMods, wxTxt } from '../src/extras';
+import { ST_ROLES, crewLevel, makeStaff } from '../src/staff';
+import { famOf } from '../src/tactics';
 import { loadSearch, missionOf, missionsWeekly, saveSearch, searchName, shortlistWeekly, startMission, stopMission } from '../src/scoutplus';
 import { devWeekly, discoveries, learnablePos, learnableTr, markArrival, setDev } from '../src/devplus';
 import { applyPreset, famMult, laneShare, laneTip, learnRoles, phaseMods, rivalAdvice } from '../src/tactics2';
@@ -278,7 +281,7 @@ const app = document.getElementById('app')!;
   { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
     const t = T(S.user); t.subs = []; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
     ok(app.querySelector('.fmlist') && app.querySelectorAll('.bslot').length === MAX_SUBS && app.querySelectorAll('.fmrow[data-fit]').length > 0, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
-    ok(app.querySelectorAll('[data-a="vtab"]').length === 7, 'siete pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 7, 'siete pestañas en la plantilla');
+    ok(app.querySelectorAll('[data-a="vtab"]').length === 7, 'siete pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
     setSub(out.id, 0); ok(subsOf(t)[0] === out.id && subsOf(t).length <= MAX_SUBS, 'poner a un suplente en el banquillo');
@@ -333,6 +336,25 @@ const app = document.getElementById('app')!;
     S.view = 'entreno'; S.vt = { ent: 'dev' }; render(); ok(app.textContent.includes('Plan de desarrollo') && app.querySelector('[data-dev]'), 'pantalla de desarrollo');
     markArrival(yp); yp.h0[0] = Math.min(yp.h0[0], yp.ovr - 15); const ovr0 = yp.ovr; if (yp.ovr < 70) yp.ovr = 70; discoveries(); ok(yp.h0[2] === 1 && S.ach.desc, 'logro «lo descubrí yo»'); yp.ovr = ovr0;
     S.vt = {}; S.view = 'inicio'; render(); }
+  { // Objetivos, momentos, entrenadores, gala, clima, vídeo del rival y técnicos de otros clubes
+    assignObjectives(); const wo = squad(S.user).filter(p => p.obj); ok(wo.length >= 5 && wo.every(p => p.obj.n > 0 && OBJ_N[p.obj.k]), `objetivos de temporada pactados (${wo.length})`);
+    const op = wo[0]; op.st[op.obj.k] = op.obj.n; const n0 = S.inbox.length; objectivesWeekly(); ok(op.obj.done === 1 && S.inbox.length > n0, 'un jugador cumple su objetivo');
+    S.view = 'plantilla'; S.plTab = 'obj'; render(); ok(app.textContent.includes('Objetivo') && app.querySelector('table'), 'pestaña de objetivos'); S.plTab = 'jug';
+    const fake = { us: 'h', h: S.user, a: S.teams.find(x => x.id !== S.user).id, lu: { h: T(S.user).lineup.slice(), a: [] }, pk: { h: null }, en: {}, score: { h: 0, a: 0 }, st: { h: { sh: 0, ot: 0 }, a: { sh: 0, ot: 0 } }, ref: { k: 'fr' }, ev: [], min: 50, hurt: {}, ment: { h: 'bal', a: 'bal' } };
+    momentPen(fake, 'h'); ok(fake.mom && fake.mom.opts.length >= 1 && fake.paused, 'momento: penalti a favor, eliges lanzador');
+    resolveMoment(fake, fake.mom.opts[0][0], { shotLog: () => {}, addEv: (m, t) => m.ev.push({ t }), scoreStr: () => '', pickScorer: () => null }); ok(!fake.mom && fake.ev.length === 1, 'resolver el penalti');
+    momentRed(fake); resolveMoment(fake, 'ata', { addEv: (m, t) => m.ev.push({ t }) }); ok(fake.ment.h === 'att' && fake.mm.h.own > 1, 'momento: el rival con diez, arriesgas');
+    const ip = fake.lu.h[4]; fake.hurt[ip] = 1; momentInj(fake, ip); resolveMoment(fake, 'agu', { addEv: (m, t) => m.ev.push({ t }) }); ok(fake.forced[ip] === 1, 'lesión: decides que aguante');
+    const w = weatherFor({ k: 'lg', r: 3 }, S.user, 0), w2 = weatherFor({ k: 'lg', r: 3 }, S.user, 0); ok(WX[w.k] && PITCH[w.p] && w.k === w2.k, 'el tiempo del partido es estable: ' + wxTxt(w));
+    ok(weatherMods({ k: 'cal', p: 'bue' }, {}).drain > 1.1 && weatherMods({ k: 'llu', p: 'emb' }, { est: 'pos' }).own < .95, 'calor cansa; lluvia y barro castigan la posesión');
+    const opp = fake.a; ok(rivalSetPieces(opp).ck && spPrepMult() < 1, 'vídeo del rival a balón parado');
+    S.view = 'tacticas'; S.vt = { tac: 'rival' }; render();
+    const mk = staffMarket(makeStaff, crewLevel); ok(mk.length === 5 && mk.every(x => x.fee > 0 && x.club != null), 'técnicos de otros clubes');
+    const b0 = S.budget; S.budget = 999; const segs = S.crew.filter(x => x.role === 'seg'); S.crew = S.crew.filter(x => x.role !== 'seg'); const sg = mk.find(x => x.role === 'seg');
+    ok(hireFromClub(sg.id, ST_ROLES) === '' && S.crew.some(x => x.id === sg.id) && famOf(sg.form) >= 60, 'fichar un segundo de otro club: trae su sistema');
+    S.crew = S.crew.filter(x => x.id !== sg.id).concat(segs); S.budget = b0;
+    S.view = 'staff'; S.vt = { st: 'club' }; render(); ok(app.textContent.includes('Técnicos de otros clubes'), 'pantalla de técnicos de otros clubes');
+    const A = galaAwards(); ok(Array.isArray(A), 'gala del club'); S.vt = {}; S.view = 'inicio'; render(); }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });

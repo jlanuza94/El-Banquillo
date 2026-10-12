@@ -136,6 +136,12 @@ export function a2Frame(ts){
   c.beginPath();c.arc(X(gx+10.5*d),Y(50),W*.08,d>0?-0.93:Math.PI-0.93+0,d>0?0.93:Math.PI+0.93);c.save();c.beginPath();c.rect(d>0?X(gx+15):0,0,d>0?W:X(gx-15),H);c.clip();c.beginPath();c.arc(X(gx+10.5*d),Y(50),W*.08,0,Math.PI*2);c.stroke();c.restore();
   c.fillStyle='rgba(255,255,255,.92)';c.fillRect(Math.min(X(gx),X(gx-1.3*d)),Y(44),Math.abs(X(1.3)),Y(12));c.fillStyle='rgba(255,255,255,.85)';});
  [[2,3],[98,3],[2,97],[98,97]].forEach(([x,y])=>{c.beginPath();c.arc(X(x),Y(y),W*.012,x<50?(y<50?0:-Math.PI/2):(y<50?Math.PI/2:Math.PI),x<50?(y<50?Math.PI/2:0):(y<50?Math.PI:Math.PI*1.5));c.stroke();});
+ // tiempo: campo embarrado más oscuro, lluvia y nieve
+ if(m.wx&&m.wx.p==='emb'){c.fillStyle='rgba(70,45,20,.22)';c.fillRect(0,0,W,H);}
+ if(m.wx&&(m.wx.k==='llu'||m.wx.k==='nie')){const n=m.wx.k==='llu'?70:55,t=ts/1000;c.save();
+  for(let i=0;i<n;i++){const fx=((i*97.13)%100)/100,fy=((i*57.71+t*(m.wx.k==='llu'?90:18))%100)/100,x0=fx*W+(m.wx.k==='nie'?Math.sin(t+i)*6:0),y0=fy*H;
+   if(m.wx.k==='llu'){c.strokeStyle='rgba(220,235,255,.35)';c.lineWidth=1;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0-3,y0+11);c.stroke();}else{c.fillStyle='rgba(255,255,255,.8)';c.beginPath();c.arc(x0,y0,1.8,0,Math.PI*2);c.fill();}}
+  c.restore();}
  // rastro de los últimos pases: por dónde llega el ataque
  A2.trail.forEach(tr=>{const a=1-(ts-tr.t)/1800;c.strokeStyle=`rgba(255,255,255,${(.45*a).toFixed(2)})`;c.setLineDash([5,5]);c.lineWidth=1.6;c.beginPath();c.moveTo(X(tr.x1),Y(tr.y1));c.lineTo(X(tr.x2),Y(tr.y2));c.stroke();c.setLineDash([]);});
  // jugadores

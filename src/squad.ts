@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {objectivesWeekly,piqueWeekly} from './extras';
 import {devWeekly} from './devplus';
 import {gemsWeekly,missionsWeekly,shortlistWeekly} from './scoutplus';
 import {youthTournament} from './youthplus';
@@ -118,12 +119,12 @@ export function processWeek(){
  {const bon=weeklyBonuses();S.fin.push({wk:wk+1,tv,tix,spo,shop,wages:r3(wages+bon)});}
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- scoutsWeekly();scoutingWeekly();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ scoutsWeekly();scoutingWeekly();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(S.week===4||S.week===22?70:28);
  if(S.week===4||S.week===22)news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
  S.week++;S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};
- {const nx=S.week<nRounds()?nextFixture():null;if(nx){const opp=nx.h===S.user?nx.a:nx.h;if(isDerby(S.user,opp))derbyWeekNews(opp);}}
+ {const nx=S.week<nRounds()?nextFixture():null;if(nx){const opp=nx.h===S.user?nx.a:nx.h;if(isDerby(S.user,opp))derbyWeekNews(opp);piqueWeekly(opp,isDerby(S.user,opp));}}
  rumoursWeekly();deadlineDeals();
  if(S.week===Math.floor(nRounds()/2)){const ex=squad(S.user).filter(p=>!p.loan&&p.contract<=1);if(ex.length)news(`Mitad de temporada: ${ex.length} jugador${ex.length>1?'es acaban':' acaba'} contrato en junio. Renuévalos desde Inicio o su ficha, o se irán libres.`,'bad',{cat:'dir',subj:'Contratos que acaban en junio',act:[{l:'Ver contratos',a:'pl-open',v:'cont'}]});}
  incomingOffer();

@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {assignObjectives,galaSeasonEnd,objectivesSeasonEnd} from './extras';
 import {discoveries} from './devplus';
 import {seedGems} from './scoutplus';
 import {wcs} from './state';
@@ -135,7 +136,7 @@ export function newSeason(){
  const sm=seasonSummary(),tabs=S.leagues.map(L=>table(L.id));
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
  const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);seasonContracts(sm);
- seasonAwards();
+ seasonAwards();objectivesSeasonEnd();galaSeasonEnd();
  // hall of fame
  {const h={season:seasonLabel(),lg:wcs().map(c=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}
  recordSeason(sm,tabs);
@@ -205,5 +206,6 @@ export function newSeason(){
  else if(sm.down)news(`Descenso a ${lgName(uLg())}. Toca reconstruir.`,'bad');
  else news(`Premio por terminar ${sm.pos}º: ${money(sm.prize)}.`,'good');
  news(`Arranca la temporada ${seasonLabel()} en ${lgName(uLg())}. Objetivo: ${S.obj.txt.toLowerCase()}.`,'good');
+ assignObjectives();
  S.view='inicio';saveNow();render();
 }
