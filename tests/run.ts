@@ -50,6 +50,7 @@ import { targetValue, valueWeekly, clubSeasonFinance, aiSummerPlan, needOf, init
 import { table as lgTable } from '../src/tactics';
 import { initRivals, rivalsOf, isDerby, recordH2H, h2hOf } from '../src/rivals';
 import { injRisk, setPlan, onRecovered } from '../src/medical';
+import { bonusWeekly, counters, applyTerms, weeklyBonuses, setBuyback, canBuyback, doBuyback } from '../src/negotiate';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -266,7 +267,15 @@ const app = document.getElementById('app')!;
     S.modal = { type: 'club', id: opp }; render(); ok(app.textContent.includes('Rivales'), 'rivales en la ficha del club'); S.modal = null;
     const p = squad(S.user)[2], e0 = p.energy, r0 = p.recov; p.energy = 50; p.recov = 2; ok(injRisk(p).lv === 'alto', 'riesgo de lesión alto si está cansado y recién recuperado'); p.energy = e0; p.recov = r0;
     p.inj = 4; p.rplan = null; setPlan(p, 'a'); ok(p.inj === 3 && p.rplan === 'a', 'plan acelerado: vuelve antes'); p.inj = 0; onRecovered(p); ok(p.recov === 6 && !p.rplan, 'tras el plan acelerado, más días de riesgo'); p.recov = 0;
-    S.view = 'staff'; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
+    { // Negociaciones: primas, cláusulas, recompra y contraofertas
+    const p = squad(S.user).find(x => x.pos === 'DEL') || squad(S.user)[10];
+    ok(bonusWeekly(p, { gb: .002, ab: 0, pb: 0 }) > 0, 'la prima por gol vale para un delantero');
+    const c = counters(p, { w: .002, gb: 0, ab: 0, pb: 0, bonus: 0 }, .85); ok(c && c[0].w > .002 && (c[1].gb > 0 || c[1].ab > 0), 'el agente contraoferta: más sueldo o primas');
+    const b0 = S.budget; applyTerms(p, { gb: .001, ab: .0005, pb: 0, rel: true }); p.st.pj = (p.st.pj || 0) + 2; p.st.g = (p.st.g || 0) + 1; const paid = weeklyBonuses();
+    ok(Math.abs(paid - .002) < 1e-9 && Math.abs(b0 - S.budget - paid) < 1e-9 && p.rel === 1, `primas pagadas por partidos y goles (${paid})`);
+    const q = Object.values(S.players).find(x => x.team !== null && x.team !== S.user && !x.loan); setBuyback(q, 1); ok(canBuyback(q), 'cláusula de recompra vigente');
+    S.budget = 10; doBuyback(q); ok(q.team === S.user && !q.bb, 'recompra ejecutada'); S.budget = b0; p.bon = null; p.rel = 0; }
+  S.view = 'staff'; render(); ok(app.textContent.includes('Parte médico'), 'parte médico'); }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();

@@ -1,5 +1,7 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {BB_MULT,BB_YEARS,counterTxt} from '../negotiate';
+const counterBox=(st,p,m)=>st&&st.counters&&!st.closed?`<div class="negmsg"><b>Contraoferta de su agente</b><div class="row" style="margin-top:6px">${st.counters.map((c,i)=>`<button class="btn sm primary" data-a="terms-counter" data-id="${p.id}" data-m="${m}" data-i="${i}">Aceptar: ${esc(counterTxt(c,p))}</button>`).join('')}</div></div>`:'';
 import {ANSWERS,TOPICS,cred} from '../talks';
 import {searchModal} from './search';
 import {affiliates} from '../clubplus';
@@ -26,7 +28,7 @@ export function modalView(){
  else if(md.type==='neg'){const p=PL(md.id),n=negState(md.id),ask=askPrice(p),suggest=n.counter||ask;
   const head=`<div class="eyebrow">${n.viaClause?'Pagas su cláusula de rescisión':p.team===null?'Agente libre · prima de fichaje':'Negociación con '+esc(T(p.team).name)}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
   <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadgeS(p)}<span>${p.age} años</span>${keyAttrs(p).map(k=>`<span>${AT_SH[k]} ${atCellS(p,k)}</span>`).join('')}</div>`;
-  if(n.agreed!=null){body=head+`<div class="negmsg ok">Traspaso acordado: ${money(n.agreed)}. Falta el contrato del jugador.</div>${n.closed?'':termsForm(p,'buy')}${n.msg&&n.kind==='no'?`<div class="negmsg no">${esc(n.msg)}</div>`:''}
+  if(n.agreed!=null){body=head+`<div class="negmsg ok">Traspaso acordado: ${money(n.agreed)}. Falta el contrato del jugador.</div>${n.closed?'':termsForm(p,'buy')}${n.msg&&n.kind==='no'?`<div class="negmsg no">${esc(n.msg)}</div>`:''}${counterBox(n,p,'buy')}
    <div class="acts"><button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button>${n.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="buy">Proponer contrato</button>`}</div>`;}
   else body=head+`<div class="kv"><span>Valor de mercado</span><b>${money(p.value)}</b>${p.team!==null?`<span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Cláusula de rescisión</span><b>${money(p.cl)}</b>`:''}<span>${p.team===null?'Prima que pide':'Precio que piden'}</span><b>${money(ask)}</b>${n.counter?`<span>Su última contraoferta</span><b>${money(n.counter)}</b>`:''}<span>Tu presupuesto</span><b>${money(S.budget)}</b></div>
   ${n.closed?'':`<div class="row" style="margin-top:14px;align-items:flex-end"><label class="f"><span class="eyebrow">Tu oferta (en millones de €)</span><input type="number" id="bidAmt" min="0" step="0.01" value="${suggest.toFixed(3)}"></label></div>
@@ -42,7 +44,7 @@ export function modalView(){
   <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadge(p)}<span>${p.age} años · ${hapTag(p)}</span></div>
   <div class="kv"><span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Sueldo actual</span><b>${money(p.wage)}/sem</b><span>Rol actual</span><b>${ROLES[p.role||'ro'].n}</b><span>Cláusula actual</span><b>${money(p.cl)}</b></div>
   ${st.closed?'':termsForm(p,'renew')}
-  ${st.msg?`<div class="negmsg ${st.kind}">${esc(st.msg)}</div>`:''}
+  ${st.msg?`<div class="negmsg ${st.kind}">${esc(st.msg)}</div>`:''}${counterBox(st,p,'renew')}
   <div class="acts"><button class="btn" data-a="modal-close">${st.closed?'Cerrar':'Cancelar'}</button>${st.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="renew">Proponer renovación</button>`}</div>`;}
  else if(md.type==='meet'){const m=S.meet,p=PL(m?m.id:md.id);
   if(!p){body='<p>Esa reunión ya no está pendiente.</p><div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>';}
@@ -78,7 +80,7 @@ export function modalView(){
  else if(md.type==='sell'){const p=PL(md.id),o=S.offers[md.id];body=`<div class="eyebrow">Oferta recibida</div><h2 style="margin-top:4px">${esc(T(o.team).name)} quiere a ${esc(p.name)}</h2>
   <div class="kv"><span>Liga del club</span><b>${esc(lgName(T(o.team).lg))}</b><span>Oferta</span><b>${money(o.amount)}</b><span>Valor de mercado</span><b>${money(p.value)}</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>
   <p class="small muted" style="margin:10px 0 0">Si pides un ${Math.round(SON_PCT*100)}% de futura venta, cobras un 10% menos ahora, pero si algún día lo traspasan, te llevas el ${Math.round(SON_PCT*100)}% de lo que paguen.</p>
-  <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn" data-a="sell-son" data-id="${p.id}">${money(o.amount*.9)} + ${Math.round(SON_PCT*100)}% de futura venta</button><button class="btn primary" data-a="sell-ok" data-id="${p.id}">Aceptar ${money(o.amount)}</button></div>`;}
+  <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn" data-a="sell-bb" data-id="${p.id}" title="Durante ${BB_YEARS} temporadas podrás recomprarlo por el ${Math.round(BB_MULT*100)}% de lo que pagan">${money(o.amount*.9)} + cláusula de recompra</button><button class="btn" data-a="sell-son" data-id="${p.id}">${money(o.amount*.9)} + ${Math.round(SON_PCT*100)}% de futura venta</button><button class="btn primary" data-a="sell-ok" data-id="${p.id}">Aceptar ${money(o.amount)}</button></div>`;}
  else if(md.type==='round'){const fx=S.fixtures[uLg()][md.round];body=`<div class="eyebrow">${esc(lgName(uLg()))} · Resultados</div><h2 style="margin:4px 0 8px">Jornada ${md.round+1}</h2>${fx.map(f=>resRow(f,null)).join('')}
   <div class="acts"><button class="btn primary" data-a="modal-close">Continuar</button></div>`;}
  else if(md.type==='cupres'){const rd=S.cups[md.c].rounds[md.r];body=`<div class="eyebrow">${esc(cupName(md.c))}</div><h2 style="margin:4px 0 8px">${cupRoundName(rd)}</h2>${rd.matches.slice().sort((a,b)=>((b.h===S.user||b.a===S.user)?1:0)-((a.h===S.user||a.a===S.user)?1:0)).map(f=>resRow(f,null,true)).join('')}

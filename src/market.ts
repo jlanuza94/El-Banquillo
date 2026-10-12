@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {applyTerms,bonusFields,bonusWeekly,counters,readBonus} from './negotiate';
 import {aiBuy,needOf,payFee} from './economy';
 import {isAffiliate,wageCheck} from './clubplus';
 import {bigTransfer} from './living';
@@ -85,11 +86,11 @@ export function evalTerms(p,mode,t){
  let f=1+.15*Math.max(0,e-o)-.05*Math.max(0,o-e);if(t.role==='jo'&&p.age>21)f+=.3;
  const wantsFree=p.per==='amb'||p.age<=22;let cf=1;if(wantsFree){if(t.cl<p.value*2)cf=.95;else if(t.cl>p.value*4)cf=1.08;}else if(t.cl>p.value*5)cf=1.04;
  const A=agentOf(p),bonusF=A.bonus&&mode==='buy'&&(t.bonus||0)<D*8?.95:1;
- return (t.w+(t.bonus||0)/40)/(D*f*cf)*(1+A.acc)*bonusF;
+ return (t.w+(t.bonus||0)/40+bonusWeekly(p,t))/(D*f*cf)*(1+A.acc)*bonusF*(t.rel?(LG(uLg()).lv>0?1.05:1.03):1);
 }
 export function readTerms(){const g=id=>document.getElementById(id);const num=id=>parseFloat(String(g(id)?.value||'').replace(',','.'));
- return{w:r3(num('tWage')/1000),yrs:+(g('tYears')?.value||3),role:g('tRole')?.value||'ro',cl:r2(num('tClause')),bonus:r3((num('tBonus')||0)/1000)};}
-export function makeTerms(id,mode,t){
+ return{w:r3(num('tWage')/1000),yrs:+(g('tYears')?.value||3),role:g('tRole')?.value||'ro',cl:r2(num('tClause')),bonus:r3((num('tBonus')||0)/1000),...readBonus()};}
+export function makeTerms(id,mode,t,force){
  const p=PL(id),st=mode==='buy'?negState(id):renState(id);if(st.closed)return;
  if(!(t.w>0)||!(t.cl>0)){st.msg='Revisa el sueldo y la cláusula.';st.kind='no';return;}
  if(mode==='renew'){if(p.req||p.hap<35){st.msg=`${p.name} está descontento y no quiere renovar. Habla con él o mejora su situación.`;st.kind='no';return;}
@@ -98,10 +99,10 @@ export function makeTerms(id,mode,t){
  else if(t.yrs>maxExtra(p)+1){st.msg=`A sus ${p.age} años, ${p.name} solo firma ${maxExtra(p)+1} temporadas.`;st.kind='no';return;}
  const cost=(mode==='buy'?firstPay(st.agreed,st.deal)+agentFee(p,st.agreed):0)+(t.bonus||0);if(cost>S.budget){st.msg=`No te llega el presupuesto (${money(S.budget)}) para pagar ${money(cost)}.`;st.kind='no';return;}
  {const w=wageCheck(t.w,mode==='renew'?p.wage:0);if(w){st.msg=w;st.kind='no';return;}}
- st.ttries=(st.ttries||0)+1;const ratio=evalTerms(p,mode,t);let ok=ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;
- if(ok){if(mode==='buy'){completeBuy(p,st.agreed,t);}else{p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;S.budget=r3(S.budget-(t.bonus||0));p.hap=clamp(p.hap+6,0,100);if(p.prom&&p.prom.type==='ren'){p.prom=null;p.hap=clamp(p.hap+4,0,100);}delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)}: ${money(p.wage)}/sem, ${ROLES[p.role].n.toLowerCase()}, cláusula ${money(p.cl)}.`,'good');toast(`${p.name} ha renovado.`);}return;}
+ st.ttries=(st.ttries||0)+1;const ratio=evalTerms(p,mode,t);let ok=force||ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;st.counters=null;
+ if(ok){applyTerms(p,t);if(mode==='buy'){completeBuy(p,st.agreed,t);}else{p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;S.budget=r3(S.budget-(t.bonus||0));p.hap=clamp(p.hap+6,0,100);if(p.prom&&p.prom.type==='ren'){p.prom=null;p.hap=clamp(p.hap+4,0,100);}delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)}: ${money(p.wage)}/sem, ${ROLES[p.role].n.toLowerCase()}, cláusula ${money(p.cl)}.`,'good');toast(`${p.name} ha renovado.`);}return;}
  if(st.ttries>=3){st.closed=true;st.msg=`${p.name} rompe las negociaciones hasta la próxima jornada.`;st.kind='no';return;}
- const D=termsDemand(p,mode);st.msg=`Rechaza tu propuesta${ratio<.85?' (está lejos de lo que pide)':''}. Pide unos ${money(D)}/sem siendo ${ROLES[expRole(p)].n.toLowerCase()}. Una prima de fichaje o un rol mejor ayudan. Te quedan ${3-st.ttries} intento${3-st.ttries>1?'s':''}.`;st.kind='no';
+ const D=termsDemand(p,mode);st.msg=`Rechaza tu propuesta${ratio<.85?' (está lejos de lo que pide)':''}. Pide unos ${money(D)}/sem siendo ${ROLES[expRole(p)].n.toLowerCase()}. Una prima de fichaje o un rol mejor ayudan. Te quedan ${3-st.ttries} intento${3-st.ttries>1?'s':''}.`;st.kind='no';st.counters=counters(p,t,ratio);if(st.counters)st.msg=`${p.name} no acepta, pero su agente propone otra cosa. ${st.msg}`;
 }
 export const agentFee=(p,fee)=>r3(Math.max(.002,(fee>0?fee:p.value*.5)*(p.agc||.07)*agentOf(p).fee));
 export function termsForm(p,mode){
@@ -113,7 +114,7 @@ export function termsForm(p,mode){
  <label class="f"><span class="eyebrow">Hasta</span><select id="tYears">${yOpts.map(n=>`<option value="${n}" ${n===yOpts[Math.min(yOpts.length-1,mode==='renew'?1:2)]?'selected':''}>Jun ${2025+S.seasonN+n}</option>`).join('')}</select></label>
  <label class="f"><span class="eyebrow">Rol</span><select id="tRole">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${k===er?'selected':''}>${v.n}</option>`).join('')}</select></label>
  <label class="f"><span class="eyebrow">Cláusula (M€)</span><input type="number" id="tClause" min="0.01" step="0.05" value="${r2(Math.max(.05,p.value*3)).toFixed(2)}"></label>
- <label class="f"><span class="eyebrow">Prima de fichaje (miles €)</span><input type="number" id="tBonus" min="0" step="1" value="0"></label></div>
+ <label class="f"><span class="eyebrow">Prima de fichaje (miles €)</span><input type="number" id="tBonus" min="0" step="1" value="0"></label></div>${bonusFields(p)}
  <p class="small muted" style="margin:6px 0 0">Prometer un rol mejor abarata el sueldo, pero si luego no juega lo que esperaba se enfadará. La prima se paga una vez y equivale a unas 40 semanas de sueldo extra. Una cláusula baja facilita que otro club se lo lleve pagándola.</p>`:'<div class="negmsg">Ya tiene el contrato más largo que está dispuesto a firmar.</div>'}`;
 }
 export function makeOffer(id){

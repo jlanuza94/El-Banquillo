@@ -1,5 +1,6 @@
 /* El Banquillo · views/market.js — Pantallas del mercado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {canBuyback} from '../negotiate';
 import {trendTag} from '../economy';
 import {esc,money,plain} from '../core';
 import {ATTRS,COUNTRIES,LV_NAMES,AT_NAME,AT_SH,POS_ORD,SPN,posChip} from '../data';
@@ -12,7 +13,7 @@ import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} fro
 export function marketRow(p){
  const pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id);
  return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${clubCell(p)}</td><td class="n">${p.age}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${attrCells(p)}<td>${contractTxt(p)}</td><td class="n">${money(pr)}${trendTag(p)}</td>
- <td class="r">${no?'<span class="tag" title="No quiere jugar en tu liga">No vendría</span>':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">Ofertar</button>${p.team!==null?`<button class="btn sm" data-a="loan" data-id="${p.id}">Cesión</button>`:''}${knowledge(p)<EXACT?`<button class="btn sm" data-a="scout" data-id="${p.id}" title="Pedir un informe">Ojear</button>`:''}</span>`}</td></tr>`;
+ <td class="r">${no?'<span class="tag" title="No quiere jugar en tu liga">No vendría</span>':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">Ofertar</button>${canBuyback(p)?`<button class="btn sm primary" data-a="buyback" data-id="${p.id}" title="Cláusula de recompra">Recomprar · ${money(p.bb.price)}</button>`:''}${p.team!==null?`<button class="btn sm" data-a="loan" data-id="${p.id}">Cesión</button>`:''}${knowledge(p)<EXACT?`<button class="btn sm" data-a="scout" data-id="${p.id}" title="Pedir un informe">Ojear</button>`:''}</span>`}</td></tr>`;
 }
 export function mkList(){
  RT.keyCache=null;const mk=S.mk;

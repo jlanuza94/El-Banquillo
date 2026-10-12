@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {doBuyback,setBuyback} from './negotiate';
 import {PLANS,setPlan} from './medical';
 import {saveName} from './saveio';
 import {tutEnd,tutGo,tutStart} from './tutorial';
@@ -192,6 +193,9 @@ document.addEventListener('click',e=>{
   case'sell-son':{const o=S.offers[d.id];if(o&&!o.son){o.amount=r2(o.amount*.9);o.son=1;}sell(d.id,true);return;}
   case'pay-clause':{const p=PL(d.id),n=negState(d.id);if(!inWindow()){n.msg='El mercado está cerrado.';n.kind='no';break;}if(refuses(p)){n.msg=`${p.name} no quiere jugar en ${lgName(uLg())}.`;n.kind='no';n.closed=true;break;}if(p.cl>S.budget){n.msg='No te llega para pagar la cláusula.';n.kind='no';break;}n.agreed=p.cl;n.viaClause=1;n.tries=0;n.msg='';break;}
   case'terms-ok':makeTerms(d.id,d.m,readTerms());break;
+  case'terms-counter':{const st=d.m==='buy'?S.neg[d.id]:S.ren[d.id],c=st&&st.counters&&st.counters[+d.i];if(c)makeTerms(d.id,d.m,c,true);break;}
+  case'sell-bb':{const o=S.offers[d.id];if(o&&!o.bbk){o.amount=r2(o.amount*.9);o.bbk=1;}const p=PL(d.id),amt=o?o.amount:0;sell(d.id);if(p.team!==S.user)setBuyback(p,amt);render();return;}
+  case'buyback':{const e=doBuyback(PL(d.id));if(e)toast(e);else S.modal=null;break;}
   case'chat':S.modal={type:'chat',id:d.id};break;
   case'nt-tab':S.ntTab=d.v;break;
   case'nt-apply':{const e=applyNT(+d.v);if(e)toast(e);else S.ntTab='mi';break;}

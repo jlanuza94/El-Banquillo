@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {weeklyBonuses} from './negotiate';
 import {derbyWeekNews,isDerby} from './rivals';
 import {payFee,valueWeekly} from './economy';
 import {retosWeekly} from './retos';
@@ -111,7 +112,7 @@ export function processWeek(){
  if(!S.sponsor&&S.week>=3&&S.spOffers&&S.spOffers.length){S.sponsor=S.spOffers[0];news(`La directiva firma con ${S.sponsor.name} como patrocinador al no elegir tú.`);}
  const spo=S.sponsor?r3(S.sponsor.weekly+(my>op?S.sponsor.win:0)):0;
  S.budget=r3(S.budget+tv+tix+spo+shop-wages);if(S.budget>=50)unlock('millo');
- S.fin.push({wk:wk+1,tv,tix,spo,shop,wages});
+ {const bon=weeklyBonuses();S.fin.push({wk:wk+1,tv,tix,spo,shop,wages:r3(wages+bon)});}
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
  scoutsWeekly();scoutingWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);

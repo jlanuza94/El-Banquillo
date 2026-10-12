@@ -23,6 +23,6 @@ export const r3=x=>Math.round(x*1000)/1000;
 export const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
 export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
-export const money=v=>{const s=v<0?'−':'';v=Math.abs(v);return s+(v>=1?'€'+v.toFixed(2)+'M':'€'+Math.round(v*1000)+'k');};
+export const money=v=>{const s=v<0?'−':'';v=Math.abs(v);if(v>=1)return s+'€'+v.toFixed(2)+'M';const k=v*1000;return s+'€'+(k<10&&Math.round(k*10)%10?(Math.round(k*10)/10).toFixed(1):Math.round(k))+'k';};
 export const fill=(t,o)=>t.replace(/\{(\w+)\}/g,(_,k)=>o[k]);
 export const plain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'');
