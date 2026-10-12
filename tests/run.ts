@@ -88,7 +88,7 @@ const app = document.getElementById('app')!;
   }
   {
     // Mismos partidos (IA contra IA, sin tu equipo) con y sin las novedades del motor, para que no cambie el número de goles.
-    const N = +(process.env.NLIVE || 300), pairs = [];
+    const N = +(process.env.NLIVE || 700), pairs = [];
     const ts = S.teams.filter(t => t.id !== S.user);
     for (let i = 0; i < N; i++) { const a = ts[(i * 7919) % ts.length], b = S.teams.filter(t => t.lg === a.lg && t.id !== a.id && t.id !== S.user)[i % 18]; pairs.push([a.id, b.id]); }
     const run = (tune) => { Object.assign(TUNE, tune); let g = 0, co = 0, xgs = 0, fo = 0, cg = 0;
