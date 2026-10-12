@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {applyNT,autoCall,leaveNT,takeNT,toggleCall} from './nations';
 import {meetAnswer,onOfferRejected} from './talks';
 import {cycleTheme,THEMES} from './theme';
 import {searchResults} from './views/search';
@@ -181,6 +182,12 @@ document.addEventListener('click',e=>{
   case'pay-clause':{const p=PL(d.id),n=negState(d.id);if(!inWindow()){n.msg='El mercado está cerrado.';n.kind='no';break;}if(refuses(p)){n.msg=`${p.name} no quiere jugar en ${lgName(uLg())}.`;n.kind='no';n.closed=true;break;}if(p.cl>S.budget){n.msg='No te llega para pagar la cláusula.';n.kind='no';break;}n.agreed=p.cl;n.viaClause=1;n.tries=0;n.msg='';break;}
   case'terms-ok':makeTerms(d.id,d.m,readTerms());break;
   case'chat':S.modal={type:'chat',id:d.id};break;
+  case'nt-tab':S.ntTab=d.v;break;
+  case'nt-apply':{const e=applyNT(+d.v);if(e)toast(e);else S.ntTab='mi';break;}
+  case'nt-accept':if(S.ntOffer!=null){takeNT(S.ntOffer);S.ntOffer=null;S.view='selecciones';S.ntTab='mi';}else toast('Esa oferta ya no está disponible.');break;
+  case'nt-leave':leaveNT();S.ntTab='rk';break;
+  case'nt-call':{const e=toggleCall(d.id);if(e)toast(e);break;}
+  case'nt-auto':if(S.nt)S.nt.call=autoCall(S.nt.c);break;
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}

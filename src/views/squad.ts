@@ -151,7 +151,7 @@ export function fichaHTML(p){
  const wf='●'.repeat(p.wf||3)+'○'.repeat(5-(p.wf||3));
  const hist=(p.hist||[]).slice().reverse();
  return `<div class="row" style="gap:14px;align-items:flex-start"><div style="flex:1;min-width:0"><div class="eyebrow">${p.team===null?'Agente libre':esc(T(p.team).name)+' · '+esc(lgName(T(p.team).lg))}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
- <div class="row small muted" style="margin-top:6px">${posChip(p)}<span>${SPN[p.sp]} · ${p.age} años · ${nf(p.nat)} ${esc(COUNTRIES[p.nat].n)}${p.age<=23?' · potencial '+potTxt(p):''}</span></div>${mine?'':`<div style="margin-top:6px">${knowTag(p)}</div>`}</div>${pBadgeS(p,'lg')}</div>
+ <div class="row small muted" style="margin-top:6px">${posChip(p)}<span>${SPN[p.sp]} · ${p.age} años · ${nf(p.nat)} ${esc(COUNTRIES[p.nat].n)}${p.age<=23?' · potencial '+potTxt(p):''}${p.caps?` · internacional: ${p.caps} partido${p.caps>1?'s':''}${p.ig?`, ${p.ig} gol${p.ig>1?'es':''}`:''}`:''}</span></div>${mine?'':`<div style="margin-top:6px">${knowTag(p)}</div>`}</div>${pBadgeS(p,'lg')}</div>
  <div class="row" style="gap:16px;margin-top:14px;align-items:flex-start">${posMap}
  <div class="kv" style="margin-top:0;flex:1;min-width:180px"><span>Altura</span><b>${p.h} cm</b><span>Pie bueno</span><b>${FOOT[p.foot||'D']}</b><span>Pie malo</span><b title="${p.wf||3} de 5" style="letter-spacing:2px">${wf}</b><span>Carácter</span><b>${known?PERS[p.per||'nor'].n:'<span class="muted">Desconocido</span>'}</b><span>Dorsal</span><b>${p.num||'—'}</b></div></div>
  <p class="small muted" style="margin:8px 0 0">${known?esc(PERS[p.per||'nor'].d)+' ':''}${p.alt&&p.alt.length?'También juega de '+p.alt.map(x=>SPN[x].toLowerCase()).join(' y ')+'.':'Solo rinde al máximo en su posición.'}</p>

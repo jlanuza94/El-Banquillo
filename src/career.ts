@@ -1,5 +1,6 @@
 /* El Banquillo · career.js — Carrera del entrenador: contrato, confianza, despidos y ofertas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {ntSalary} from './nations';
 import {setWageCap} from './clubplus';
 import {coachHandover} from './living';
 import {diff,inGrace} from './difficulty';
@@ -31,7 +32,7 @@ export function takeJob(o){
 }
 export function mgrWeekly(my,op){
  const M=S.mgr,D=diff(),pos=posOf(S.user);let d=my>op?D.win:my<op?D.loss:D.draw;d+=pos<=S.obj.max?.5:-Math.min(D.pos,(pos-S.obj.max)*.15);if(S.budget<0)d-=1.5;
- M.conf=clamp(M.conf+d,inGrace()?30:0,100);M.savings=r3(M.savings+M.sal);
+ M.conf=clamp(M.conf+d,inGrace()?30:0,100);M.savings=r3(M.savings+M.sal+ntSalary());
  if(M.conf<25&&!M.warned){M.warned=1;news('La directiva está descontenta. Si los resultados no mejoran, peligra tu puesto.','bad');}
  if(M.conf>=35)M.warned=0;
  if(S.club&&S.club.mood<30)M.conf=clamp(M.conf-.5,0,100);

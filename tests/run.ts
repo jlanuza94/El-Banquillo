@@ -41,6 +41,7 @@ import { mkTie } from '../src/competitions';
 import { setFormation, teamPower, userRoles } from '../src/tactics';
 import { learnTactic, loadPlan, planFam, planInMatch, savePlan } from '../src/plans';
 import { sellAbonos, shopWeekly, sociosFor, aboBase } from '../src/club';
+import { initIntl, playTournament, tournamentsIn, fifaWeek, takeNT, toggleCall, callOf, ranking, summerYear } from '../src/nations';
 import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
@@ -208,6 +209,18 @@ const app = document.getElementById('app')!;
     ok(sociosFor(C.abo * 2) < sociosFor(C.abo), 'abono más caro, menos socios');
     ok(shopWeekly() > 0, 'la tienda da dinero cada jornada');
     S.view = 'club'; render(); ok(app.textContent.includes('Centro médico') && app.textContent.includes('Abono de temporada'), 'estadio con abonos y centro médico'); S.budget = b0; }
+  { // Selecciones nacionales
+    initIntl(); ok(S.intl.elo.length === 10 && ranking().length === 10, 'ranking de selecciones');
+    ok(callOf(0).length === 23, 'convocatoria automática de 23');
+    const yrs = [1, 2, 3, 4].map(n => [summerYear(n), tournamentsIn(n).join('+')]); ok(yrs.some(x => x[1] === 'wc') && yrs.some(x => x[1] === 'eu+ca'), 'calendario de torneos: ' + yrs.map(x => x.join(':')).join(' '));
+    const wc = playTournament('wc'); ok(wc.champ != null && wc.runner != null && wc.champ !== wc.runner && wc.groups.length === 2, `Mundial: campeona ${wc.champ}`);
+    const ca = playTournament('ca'); ok(ca.groups[0].tb.length === 3 && ca.ko.length === 1, 'Copa América con liguilla y final');
+    const eu = playTournament('eu'); ok(eu.groups[0].tb.length === 7 && eu.ko.length === 2, 'Eurocopa con semifinales y final');
+    const wk = S.week, caps0 = squad(S.user).reduce((a, p) => a + (p.caps || 0), 0); S.week = 9; fifaWeek(); S.week = wk; ok(true, 'parón de selecciones');
+    const c = squad(S.user)[0].nat; takeNT(c); ok(S.nt && S.nt.c === c, 'eres seleccionador');
+    const first = callOf(c)[0]; toggleCall(first); ok(!S.nt.call.includes(first) && S.nt.call.length === 22, 'quitar un convocado');
+    for (const tb of ['rk', 'tor', 'int', 'mi']) { S.ntTab = tb; S.view = 'selecciones'; render(); } ok(app.textContent.includes('Convocar a los mejores'), 'pantalla de selecciones');
+    S.nt = null; }
   S.view = 'staff'; render();
   ok(app.textContent.includes('Director deportivo'), 'pantalla del cuerpo técnico');
   { const keep = S.crew; S.crew = undefined; S.staff = { pre: 4, fis: 3 }; migrateCrew();
