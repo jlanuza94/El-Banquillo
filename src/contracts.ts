@@ -11,9 +11,21 @@ import {assignNum,baseWage,endYear,ensureSquad} from './players';
 import {news} from './world';
 import {fixLineup,setAdapt} from './tactics';
 import {agentFee,expRole,inWindow,refuses,tlog} from './market';
+import {interested} from './market2';
 import {nameBtn,toast} from './views/common';
 export const maxExtra=p=>p.age>=31?2:p.age>=29?3:4;
-export function renState(id){const p=PL(id);return S.ren[id]||(S.ren[id]={demand:r3(Math.max(p.wage*1.08,baseWage(p)*(1.1+rnd()*.3))*(p.hap<50?1.1:1)*agentOf(p).wage),tries:0,msg:'',kind:'',closed:false});}
+export function renState(id){const p=PL(id);if(S.ren[id])return S.ren[id];
+ // lo que pide depende de quién le quiere, de si se ve por encima del club y de su apego
+ const why=[];let f=1;const big=interested(p.id).filter(t=>T(t)&&t!==S.user&&LG(T(t).lg).rep>LG(uLg()).rep),over=p.ovr*10-(T(S.user).rep||50)>6;
+ if(big.length){f*=Math.min(1.45,1.18+.08*big.length);why.push(`sabe que ${T(big[0]).name}${big.length>1?' y otros clubes':''} le quiere${big.length>1?'n':''}`);}
+ if(over&&p.age<=29){f*=1.12;why.push('se ve por encima del nivel del club');if(p.per==='amb')f*=1.08;}
+ if(p.home||p.per==='lea'){f*=.93;why.push(p.home?'es de la casa y quiere seguir':'es leal al club');}
+ if(p.hap>=80)f*=.96;
+ const st=S.ren[id]={demand:r3(Math.max(p.wage*1.08,baseWage(p)*(1.1+rnd()*.3))*(p.hap<50?1.1:1)*agentOf(p).wage*f),tries:0,msg:why.length?`${p.name} ${f>1?'pide más':'te lo pone fácil'}: ${why.join(', ')}.`:'',kind:'',closed:false,why};
+ // en su último año, si le quiere un grande (o es ambicioso y el club se le queda pequeño), puede negarse a renovar
+ if(p.noRen!==S.seasonN&&p.contract<=1&&!p.home&&p.per!=='lea'&&(big.length||(p.per==='amb'&&over))&&rnd()<(big.length?.45:.3))p.noRen=S.seasonN;
+ if(p.noRen===S.seasonN){st.closed=true;st.msg=`${p.name} no quiere renovar: ${why[0]||'quiere probar suerte en otro club'}. Si no lo vendes antes, se irá libre al final de la temporada.`;st.kind='no';}
+ return st;}
 export function makeRenew(id,w,n){
  const p=PL(id),st=renState(id);if(st.closed)return;
  if(!(w>0)){st.msg='Escribe un sueldo válido.';st.kind='no';return;}

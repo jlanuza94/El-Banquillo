@@ -48,6 +48,7 @@ import { GOALT, SOFT_CAP, goalType } from '../src/engine';
 import { reportHTML, reportTips, tacReport } from '../src/tacreport';
 import { delegWeekly, setDeleg } from '../src/delegate';
 import { a2Reset, buildSeq } from '../src/match2d';
+import { renState as renStateT } from '../src/contracts';
 import { PRESETS_T as PRESETS_TR } from '../src/training2';
 import { nextMatch as nextMatchTR } from '../src/competitions';
 import { boot } from '../src/boot';
@@ -132,6 +133,11 @@ const app = document.getElementById('app')!;
   { const m = createMatch({ k: 'fr', i: (S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === T(S.user).lg).id)), S.fr.length - 1) }); S.fr.pop(); a2Reset(m); const us = m.us, pid = m.lu[us].filter(Boolean).pop();
     const bad = ['con', 'cab', 'lej', 'ind', 'pas', 'reb'].filter(gt => { const Q = buildSeq(m, { s: us, out: 'goal', kind: 'open', gt, lane: 'c', pid, min: 10 }); return !(Q.K.length >= 5 && Q.K[Q.K.length - 1].k === 'g' && Q.K.every((k, i) => !i || k.t >= Q.K[i - 1].t)); });
     ok(!bad.length, 'vista 2D: cada tipo de gol tiene su jugada' + (bad.length ? ' (fallan ' + bad.join(',') + ')' : '')); }
+  { const p = squad(S.user).find(x => !x.home && x.per !== 'lea') || squad(S.user)[0], big = S.teams.find(t => LG(t.lg).rep > LG(T(S.user).lg).rep + 10); const c0 = p.contract, i0 = S.interest && S.interest[p.id];
+    S.interest = S.interest || {}; S.interest[p.id] = [big.id]; delete S.ren[p.id]; p.contract = 3; const st = renStateT(p.id);
+    ok(st.why.some(w => /quiere/.test(w)) && /pide más/.test(st.msg), 'renovar: si un club más grande le quiere, pide más (' + st.msg + ')');
+    delete S.ren[p.id]; p.noRen = S.seasonN; ok(renStateT(p.id).closed, 'renovar: un jugador puede negarse a renovar para irse libre');
+    delete S.ren[p.id]; p.noRen = 0; p.contract = c0; S.interest[p.id] = i0 || []; }
   { const t = T(S.user), c0 = t.cond; t.cond = [{ w: 'draw', min: 1, plan: null, ment: 'att' }]; S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === t.lg).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; S.fr.pop();
     step(m); step(m); ok(m.ment[m.us] === 'att' && m.ev.some(e => /Plan previsto/.test(e.tx)), 'plan previsto: empatando desde el 1\' pasa a ofensiva'); t.cond = c0; }
   { setDeleg('tr', true); setDeleg('oj', true); S.missions = []; delegWeekly(); const k = Object.keys(PRESETS_TR).find(k => PRESETS_TR[k].s.join() === S.sched.join());
