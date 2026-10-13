@@ -108,7 +108,8 @@ document.addEventListener('click',e=>{
   case'pi-tog':{const t=T(S.user),sl=slotsOf(t.formation);userPos(sl);const L=t.pi[+d.i]=t.pi[+d.i]||[],k=L.indexOf(d.v);if(k>=0)L.splice(k,1);else{if(L.length>=3){toast('Máximo 3 instrucciones por puesto.');break;}L.push(d.v);}break;}
   case'pos-put':placeInSlot(d.id,+d.i);break;
   case'subs-auto':T(S.user).subs=[];toast('Banquillo automático: entran los mejores disponibles.');break;
-  case'row':{if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
+  case'row':{if(S.view==='plantilla'){S.sel=null;S.modal={type:'ficha',id:d.id};break;}if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
+  case'mk-adv':S.mk.adv=!S.mk.adv;break;
   case'ficha':S.modal={type:'ficha',id:d.id};break;
   case'scout':{const err=queueScout(d.id);toast(err||`${PL(d.id).name} queda en la lista de ojeo. Tendrás el informe en ${scoutWeeks()} jornada${scoutWeeks()>1?'s':''}.`);break;}
   case'aw-tab':S.awTab=d.v;break;

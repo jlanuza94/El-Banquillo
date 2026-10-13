@@ -175,3 +175,5 @@ main thead th[data-dir="asc"]::after{content:" ▲";font-size:.8em}
 .momb b{font-size:16px;display:block}
 .gala .eyebrow{color:var(--accent)}
 .itkb{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:55;width:min(560px,calc(100vw - 32px));background:var(--surface);color:var(--ink);border:2px solid var(--accent);border-radius:10px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.advfil{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;flex-basis:100%}
+.advbtn{align-self:flex-end}

@@ -188,6 +188,7 @@ aside.side .nitem[style*="--loss"]{color:#ff8a7a!important}
  aside.side{height:100vh;height:100dvh}
  .mainc{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;padding-block:8px}
  .mainc>main{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
+ .mainc>main>:not(.grid){flex-shrink:0}
  .mainc>main>.grid{flex:1;min-height:0;align-items:stretch}
  .mainc>main>.grid>*{min-height:0;overflow:auto;overscroll-behavior:contain}
  .mainc>main>.grid>.stack{padding-right:2px}
@@ -273,4 +274,30 @@ aside.side .nitem[style*="--loss"]{color:#ff8a7a!important}
  main{zoom:.88}
  .cday{min-height:0;height:calc((100dvh - 190px)/5);padding:2px 3px}
  .cgridm{gap:3px}
+}
+
+/* Partido en directo en el móvil en horizontal: marcador y campo a la izquierda, mandos y datos a la derecha */
+@media (orientation:landscape) and (max-height:540px){
+ .mlay{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:10px;align-items:start}
+ .mlL{position:sticky;top:0}
+ .mlL .p2d{max-width:min(100%,calc((100dvh - 150px)*100/62));margin:6px auto 0}
+ .mlR .mctl{margin-block:0 10px;gap:6px}
+ .mlR .mctl .f{flex:1 1 30%;min-width:0}
+ .mlR .mctl select{width:100%}
+ .mlR .grid{grid-template-columns:minmax(0,1fr)}
+ .mlR .panel{padding:10px}
+ .mlay+*{margin-top:0}
+ .itkb{left:auto;right:10px;transform:none;width:min(420px,calc(48vw - 20px));bottom:8px}
+ .itkb .row{flex-wrap:wrap;gap:6px}
+}
+
+/* Tablas de plantilla compactas en el móvil */
+@media (orientation:landscape) and (max-height:540px){
+ .phint{display:none}
+ .sqt .c-pie{display:none}
+ .sqt td,.sqt th{padding-inline:3px}
+ .sqt .bar{min-width:40px;width:40px}
+}
+@media (orientation:landscape) and (max-height:540px){
+ .wbanner{padding:5px 10px;font-size:13px;margin-bottom:8px!important}
 }

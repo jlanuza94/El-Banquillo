@@ -11,7 +11,7 @@ const fl=c=>flag(COUNTRIES[c].code,'sm');
 export function seleccionesView(){
  initIntl();const tab=S.ntTab||(S.nt?'mi':'rk'),I=S.intl;
  const [nn,nk]=nextTournaments();
- const seg=`<div class="seg" style="margin-bottom:14px;max-width:100%;overflow-x:auto">${[['rk','Ranking'],['tor','Torneos'],['int','Tus internacionales'],['mi',S.nt?'Mi selección':'Ser seleccionador']].map(([k,l])=>`<button data-a="nt-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
+ const seg=`<div class="seg">${[['rk','Ranking'],['tor','Torneos'],['int','Tus internacionales'],['mi',S.nt?'Mi selección':'Ser seleccionador']].map(([k,l])=>`<button data-a="nt-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
  const next=`<div class="negmsg" style="margin:0 0 14px">Próximo torneo: <b>${nk.map(k=>TOURN[k].n).join(' y ')}</b>, en el verano de ${summerYear(nn)}${nn===S.seasonN?' (al acabar esta temporada)':''}. Durante la temporada hay dos parones de selecciones (jornadas 10 y 28).</div>`;
  let body='';
  if(tab==='rk'){

@@ -108,7 +108,9 @@ const app = document.getElementById('app')!;
   ok(S.user === team && S.slot === 1, 'se elige club (partida 1)');
   ok(app.querySelector('nav, .side, .bnav') !== null, 'se pinta el menú');
 
-  playFriendly(friendlyOpts()[0]); simToEnd(); matchView(); finishRound();
+  playFriendly(friendlyOpts()[0]);
+  { const v0 = S.view; S.view = 'partido'; const h = shell(); S.view = v0; const mm = h.match(/<main>([\s\S]*?)<\/main>/); ok(mm && mm[1].length > 500 && h.includes('Tu once'), 'la pantalla del partido en directo se pinta'); }
+  simToEnd(); matchView(); finishRound();
   ok(S.pre.left === 2, 'amistoso de pretemporada');
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
@@ -342,7 +344,7 @@ const app = document.getElementById('app')!;
     const gems = Object.values(S.players).filter(p => p.gem); ok(gems.length >= 30 && gems.every(p => p.pot >= 7.8 && p.age <= 21), `joyas escondidas en el mundo (${gems.length})`);
     S.mk.pot = '7.5'; S.mk.age = '21'; S.mk.atk = 'vel'; S.mk.atv = '5'; saveSearch(searchName()); ok(S.mkSaved.length === 1 && /pot/.test(S.mkSaved[0].n), 'guardar una búsqueda');
     S.mk.pot = ''; loadSearch(0); ok(S.mk.pot === '7.5', 'cargar una búsqueda guardada'); Object.assign(S.mk, { pot: '', age: '', atk: '', atv: '', tab: 'buy' });
-    S.view = 'mercado'; render(); ok(app.querySelector('#mkpot') && app.querySelector('[data-a="mk-save"]'), 'filtros nuevos en el mercado');
+    S.view = 'mercado'; render(); ok(!app.querySelector('#mkpot') && app.querySelector('[data-a="mk-adv"]'), 'los filtros avanzados del mercado van plegados'); S.mk.adv = true; render(); ok(app.querySelector('#mkpot') && app.querySelector('[data-a="mk-save"]'), 'filtros nuevos en el mercado');
     const sc = { id: 'sX', name: 'Ojeador Prueba', q: 4, jui: 8, jpo: 9, job: 'sen', reg: 0, wage: .001 }; S.scouts.push(sc);
     const c = LG(T(gems[0].team).lg).c; ok(startMission('sX', c, 'ALL', '21', '4') === '', 'enviar a un ojeador de misión');
     for (let k = 0; k < 6; k++) missionsWeekly(); ok((missionOf('sX') || { found: [1] }).found.length >= 1 || !missionOf('sX'), 'la misión trae informes');

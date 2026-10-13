@@ -122,3 +122,4 @@ aside.side .ngroup .gt{letter-spacing:.14em}
 .wkd.s-fis{box-shadow:inset 0 3px 0 #c0392b}.wkd.s-tec{box-shadow:inset 0 3px 0 #2f5fa8}.wkd.s-tac{box-shadow:inset 0 3px 0 #8e44ad}.wkd.s-ata{box-shadow:inset 0 3px 0 #e07a2a}.wkd.s-def{box-shadow:inset 0 3px 0 #2c8a4e}.wkd.s-bp{box-shadow:inset 0 3px 0 #b4761a}.wkd.s-prep{box-shadow:inset 0 3px 0 var(--accent)}.wkd.s-rec,.wkd.s-des{box-shadow:inset 0 3px 0 #7fb3d5}
 .wksum{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px}
 @media (orientation:landscape) and (max-height:500px){.wkd{padding:4px 2px}.wkd .wki{font-size:16px}.wkd select{font-size:10px}}
+td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
