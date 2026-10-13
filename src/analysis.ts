@@ -6,6 +6,7 @@ import {PL,S,T,uLg} from './state';
 import {posOf,slotsOf} from './tactics';
 import {poisson} from './engine';
 import {reportHeadline,tacReport} from './tacreport';
+import {pressStory} from './narrative';
 import {news} from './world';
 
 /** Reparte `n` acciones entre los jugadores según su peso (sorteo uno a uno). */
@@ -50,6 +51,7 @@ export function recordMatch(m){
  if(m.ref.k==='fr')return;
  teamForm(m);
  if(m.us){S.mlog=S.mlog||[];const rec=matchRecord(m);S.mlogN=(S.mlogN||0)+1;rec.n=S.mlogN;S.mlog.unshift(rec);if(S.mlog.length>40)S.mlog.length=40;
+  pressStory(m);
   if(rec.tr)news(`Informe táctico: ${reportHeadline(rec.tr)}`,'',{cat:'sta',subj:`Informe táctico: ${T(m.h).short} ${m.score.h}-${m.score.a} ${T(m.a).short}`,quiet:true,act:[{l:'Ver informe',a:'trep',v:rec.n}]});}
 }
 /** Evolución de tu temporada en liga: puntos, puesto y xG jornada a jornada. */

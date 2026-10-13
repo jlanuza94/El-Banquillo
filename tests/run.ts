@@ -49,6 +49,7 @@ import { reportHTML, reportTips, tacReport } from '../src/tacreport';
 import { delegWeekly, setDeleg } from '../src/delegate';
 import { a2Reset, buildSeq } from '../src/match2d';
 import { renState as renStateT } from '../src/contracts';
+import { stories as storiesT } from '../src/narrative';
 import { PRESETS_T as PRESETS_TR } from '../src/training2';
 import { nextMatch as nextMatchTR } from '../src/competitions';
 import { boot } from '../src/boot';
@@ -138,6 +139,9 @@ const app = document.getElementById('app')!;
     ok(st.why.some(w => /quiere/.test(w)) && /pide más/.test(st.msg), 'renovar: si un club más grande le quiere, pide más (' + st.msg + ')');
     delete S.ren[p.id]; p.noRen = S.seasonN; ok(renStateT(p.id).closed, 'renovar: un jugador puede negarse a renovar para irse libre');
     delete S.ren[p.id]; p.noRen = 0; p.contract = c0; S.interest[p.id] = i0 || []; }
+  { const opp = S.teams.find(x => x.id !== S.user && x.lg === T(S.user).lg).id, pid = T(S.user).lineup.filter(Boolean).pop(), g = (s2, min) => ({ t: 'goal', s: s2, pid: s2 === 'h' ? pid : null, min });
+    const m1 = { us: 'h', h: S.user, a: opp, score: { h: 3, a: 2 }, ev: [g('a', 5), g('a', 10), g('h', 50), g('h', 60), g('h', 80)], ref: { k: 'lg' } };
+    const st = storiesT(m1).map(x => x[2]); ok(st.some(x => /Remontada/.test(x)) && st.some(x => /Hat-trick/.test(x)), 'prensa con memoria: remontada y hat-trick (' + st.length + ' historias)'); }
   { const t = T(S.user), c0 = t.cond; t.cond = [{ w: 'draw', min: 1, plan: null, ment: 'att' }]; S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === t.lg).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; S.fr.pop();
     step(m); step(m); ok(m.ment[m.us] === 'att' && m.ev.some(e => /Plan previsto/.test(e.tx)), 'plan previsto: empatando desde el 1\' pasa a ofensiva'); t.cond = c0; }
   { setDeleg('tr', true); setDeleg('oj', true); S.missions = []; delegWeekly(); const k = Object.keys(PRESETS_TR).find(k => PRESETS_TR[k].s.join() === S.sched.join());
