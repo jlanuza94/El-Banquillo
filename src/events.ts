@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {DELEG,deleg,delegWeekly,setDeleg} from './delegate';
 import {PRESETS_T,setPreset,setSession} from './training2';
 import {dlActive,dlStep} from './marketfm';
 import {aiTransfers,isDeadline} from './market';
@@ -150,6 +151,7 @@ document.addEventListener('click',e=>{
   case'set-mode':S.mode=d.v;toast(d.v==='rapido'?'Modo rápido: tu segundo se encarga de lo rutinario.':'Modo profundo: controlas todo.');break;
   case'an-tab':S.anTab=d.v;break;
   case'an-p90':S.anP90=d.v==='1';break;
+  case'deleg':{setDeleg(d.v,!deleg(d.v));if(d.v==='tr'&&deleg('tr')){S.delegWhy=null;delegWeekly();}if(d.v==='oj'&&deleg('oj'))delegWeekly();toast(deleg(d.v)?`${DELEG[d.v].n}: lo lleva tu cuerpo técnico.`:`${DELEG[d.v].n}: lo llevas tú.`);break;}
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
   case'trep':S.modal=d.v==='live'?{type:'trep',live:1}:{type:'trep',n:+d.v};break;
   case'plan-save':savePlan(d.v);toast(`Táctica ${d.v} guardada.`);break;

@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {delegWeekly} from './delegate';
 import {schedWeekly,trMult} from './training2';
 import {loanRequests,processBids,tsWeight} from './marketfm';
 import {captainWeekly,publicWeekly,stadiumWeekly} from './extras2';
@@ -113,7 +114,7 @@ export function weeklyTeamTraining(){
 }
 export function processWeek(){
  const wk=S.week,fx=nextFixture();
- playerTick(true);weeklyTeamTraining();
+ delegWeekly();playerTick(true);weeklyTeamTraining();
  const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,derbyH=home&&isDerby(fx.h,fx.a),tix=home?r3(ticket()*(derbyH?1.25:1)):0,shop=shopWeekly();
  const my=home?fx.hg:fx.ag,op=home?fx.ag:fx.hg;
  if(home){S.club.lastAtt=Math.min(S.club.cap,Math.round(attendance()*(derbyH?1.25:1)));if(S.club.lastAtt>=S.club.cap)S.fullHomes=(S.fullHomes||0)+1;if(!S.rec)S.rec={};if(!S.rec.att||S.club.lastAtt>S.rec.att.v)S.rec.att={v:S.club.lastAtt,season:seasonLabel()};}

@@ -1,5 +1,6 @@
 /* El Banquillo · views/staff.ts — Pantalla del cuerpo técnico. */
 // @ts-nocheck — usa el estado heredado S.
+import {DELEG,deleg} from '../delegate';
 import {staffMarket} from '../extras';
 import {vtab} from './common';
 import {PLANS,injRisk} from '../medical';
@@ -43,6 +44,12 @@ export function staffView(){
  <p class="small muted" style="margin:8px 0 0">Firman por 2 temporadas. Despedir a alguien cuesta unas 12 semanas de sueldo por cada temporada de contrato que le quede.</p></section>`;
  const med=`<section class="panel">${medHTML()}</section>`;
  const tb=vtab('st',[['eq','Tu cuerpo técnico'],['fich','Contratar'],['club','De otros clubes'],['ef','Efectos'],['med','Parte médico']],'eq');
- return tb.bar+(tb.cur==='eq'?`<div class="grid">${roles}</div>`:tb.cur==='fich'?cands:tb.cur==='club'?clubStaffHTML():tb.cur==='ef'?eff:med);
+ return tb.bar+(tb.cur==='eq'?delegHTML()+`<div class="grid">${roles}</div>`:tb.cur==='fich'?cands:tb.cur==='club'?clubStaffHTML():tb.cur==='ef'?eff:med);
 }
 export function fireModal(m){return `<h2>¿Despedir a ${esc(m.name)}?</h2><p>Tendrás que pagarle una indemnización de <b>${money(fireCost(m))}</b>.</p><div class="acts"><button class="btn" data-a="modal-close">Cancelar</button><button class="btn danger" data-a="st-fire-ok" data-id="${m.id}">Despedir</button></div>`;}
+
+/** Delegar en tu cuerpo técnico: profundidad opcional. */
+export function delegHTML(){
+ return `<section class="panel"><div class="panel-h"><h2>Delegar en tu cuerpo técnico</h2><span class="eyebrow">Tú decides cuánto controlas</span></div>
+ <div class="deleg">${Object.entries(DELEG).map(([k,x])=>`<button class="dlg ${deleg(k)?'on':''}" data-a="deleg" data-v="${k}" aria-pressed="${deleg(k)}"><b>${x.n}</b><span class="small">${x.d}</span><span class="dst">${deleg(k)?'Lo lleva tu cuerpo técnico':'Lo llevas tú'}</span></button>`).join('')}</div></section>`;
+}

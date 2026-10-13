@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {deleg} from '../delegate';
 import {DAYS,MATCH_DAY,PRESETS_T,SES,sched,schedSummary} from '../training2';
 import {duosOf,MGR_AT,PROJ,REFS,mgrAt,nsCost,projState,refFor} from '../extras2';
 import {PITCH,WX,coachH2H,nextWeather,rivalSetPieces,spPrepFor,wxTxt,OBJ_N,objProg,galaAwards} from '../extras';
@@ -73,7 +74,8 @@ export function entrenoView(){
  ${young.length&&vets.length&&P.length<MAX_PAIRS?`<div class="row" style="margin-top:8px;align-items:flex-end"><label class="f"><span class="eyebrow">Joven</span><select id="mtY">${young.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.age} · ${PERS[p.per].n}</option>`).join('')}</select></label><label class="f"><span class="eyebrow">Tutor</span><select id="mtM">${vets.map(p=>`<option value="${p.id}">${esc(p.name)} · ${PERS[p.per].n} · LID ${p.at.lid??'?'}</option>`).join('')}</select></label><button class="btn sm primary" data-a="mentor-add">Asignar</button></div>`:P.length?'':`<div class="empty">${!young.length?'No tienes jugadores de 21 años o menos.':'Ningún veterano puede ser tutor (27+ años, líder o profesional).'}</div>`}</section>`;
  const tb=vtab('ent',[['plan','Plan semanal'],['ind','Individual'],['dev','Desarrollo'],['tut','Tutelaje'],['quim','Química'],['staff','Cuerpo técnico']],'plan');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- return tb.bar+(tb.cur==='plan'?two(plan,trP+log):tb.cur==='ind'?indiv:tb.cur==='dev'?devHTML():tb.cur==='tut'?mentor:tb.cur==='quim'?chem:staff);
+ const dl=deleg('tr')?`<div class="negmsg ok" style="margin:0 0 10px">🤝 La semana la planifica tu segundo${S.delegWhy?`: ${esc(S.delegWhy)}`:''}. Si cambias algún día, sigue decidiendo él la semana que viene. <button class="btn sm" data-a="deleg" data-v="tr">Lo llevo yo</button></div>`:`<div class="row" style="margin:0 0 8px;justify-content:flex-end"><button class="btn sm" data-a="deleg" data-v="tr">🤝 Que lo decida mi segundo</button></div>`;
+ return tb.bar+(tb.cur==='plan'?dl+two(plan,trP+log):tb.cur==='ind'?indiv:tb.cur==='dev'?devHTML():tb.cur==='tut'?mentor:tb.cur==='quim'?chem:staff);
 }
 export function canteraView(){
  const regSel=(sc)=>`<select data-reg="${sc.id}" aria-label="Región de ${esc(sc.name)}">${REGIONS.map((R,i)=>`<option value="${i}" ${sc.reg===i?'selected':''}>${R.n}</option>`).join('')}</select>`;

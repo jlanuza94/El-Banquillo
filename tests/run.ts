@@ -46,6 +46,8 @@ import { render, shell } from '../src/views/common';
 import { fmtMin } from '../src/core';
 import { GOALT, SOFT_CAP, goalType } from '../src/engine';
 import { reportHTML, reportTips, tacReport } from '../src/tacreport';
+import { delegWeekly, setDeleg } from '../src/delegate';
+import { PRESETS_T as PRESETS_TR } from '../src/training2';
 import { nextMatch as nextMatchTR } from '../src/competitions';
 import { boot } from '../src/boot';
 import { matchView } from '../src/views/match';
@@ -126,6 +128,9 @@ const app = document.getElementById('app')!;
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
   for (let i = 0; i < 3; i++) { playMatch(); matchView(); simToEnd(); finishRound(); modalView(); if (S.press) answerPress(0); }
+  { setDeleg('tr', true); setDeleg('oj', true); S.missions = []; delegWeekly(); const k = Object.keys(PRESETS_TR).find(k => PRESETS_TR[k].s.join() === S.sched.join());
+    ok(k && S.delegWhy && (S.missions || []).length >= 1, `delegar: tu segundo planifica la semana (${k}: ${S.delegWhy}) y los ojeadores salen solos (${(S.missions || []).length} misiones)`);
+    setDeleg('tr', false); setDeleg('oj', false); S.missions = []; render(); }
   { const r = (S.mlog || [])[0]; ok(r && r.tr && r.tr.f && reportHTML(r.tr).includes('Qué aportó'), 'informe táctico tras el partido'); ok(S.inbox.some(x => /Informe táctico/.test(x.subj)), 'el informe llega a la bandeja');
     const t0 = T(S.user).tac; T(S.user).tac = Object.assign({}, t0 || {}, { pre: 'alt', lin: 'alt', est: 'con' }); const nm = nextMatchTR(); const qm = quickMatch(nm.ref); const R = tacReport(qm);
     ok(R && ['pre', 'lin', 'est'].every(k => R.f.some(x => x[0] === k)), 'el informe mide presión, línea y estilo: ' + R.f.map(x => x[0] + ' ' + x[2] + '/' + x[3]).join(', '));

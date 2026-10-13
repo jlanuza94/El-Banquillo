@@ -39,10 +39,12 @@ import {achSeason,finishBuild,genSponsors,sellAbonos} from './club';
 import {loseJob,mgrSeasonEnd} from './career';
 import {academyIntake,genScoutPool} from './academy';
 import {pack,save,saveNow,unpack} from './persist';
+import {deleg} from './delegate';
 import {render,toast} from './views/common';
 export function playMatch(){
  const nm=nextMatch();if(!nm)return;
  if(S.press){S.press=null;markKey('press');S.mgr.conf=clamp(S.mgr.conf-1,0,100);}
+ if(deleg('xi'))rotateLineup();
  if(lineupIssues().length){const k=fixLineup();if(k)toast(`Cubrimos ${k} hueco${k>1?'s':''} de la alineación con suplentes.`);}
  S.match=createMatch(nm.ref);S.match.label=nm.label;S.view='partido';save();render();
 }

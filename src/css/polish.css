@@ -136,3 +136,11 @@ td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
 .trow.tpos .tb i{background:var(--win)}.trow.tneg .tb i{background:var(--loss)}
 .ttips{margin:0;padding-left:18px}.ttips li{margin:4px 0}
 .trl{margin-bottom:4px}
+
+/* Delegar */
+.deleg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.dlg{display:flex;flex-direction:column;gap:4px;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface2);color:inherit;font:inherit}
+.dlg b{font-family:var(--f-display);text-transform:uppercase;font-size:15px}
+.dlg .dst{font-family:var(--f-num);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:auto}
+.dlg.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.dlg.on .dst{color:var(--win)}
