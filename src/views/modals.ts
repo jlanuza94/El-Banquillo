@@ -32,6 +32,7 @@ import {hapReasons,hapTag} from '../squad';
 import {atCellS,keyAttrs,pBadgeS,resRow} from './common';
 import {fichaHTML} from './squad';
 import {reportHTML,tacReport} from '../tacreport';
+import {helpHTML} from '../help';
 export function modalView(){
  const md=S.modal;if(!md)return '';let body='';
  if(md.type==='ficha'){const p=PL(md.id);if(!p){S.modal=null;return '';}body=fichaHTML(p);}
@@ -118,6 +119,7 @@ export function modalView(){
  else if(md.type==='search'){body=searchModal();}
  else if(md.type==='club'){if(!T(md.id)){S.modal=null;return '';}body=clubModal(md.id);}
  else if(md.type==='mrep'){const r=(S.mlog||[])[md.i];if(!r){S.modal=null;return '';}body=reportBody(r)+`<div class="acts">${r.tr?`<button class="btn" data-a="trep" data-v="${r.n}">Informe táctico</button>`:''}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
+ else if(md.type==='help'){body=helpHTML(md.v)+`<div class="acts"><button class="btn primary" data-a="modal-close">Entendido</button></div>`;}
  else if(md.type==='trep'){const r=md.live?null:(S.mlog||[]).find(x=>x.n===md.n),R=md.live?(S.match&&tacReport(S.match)):r&&r.tr;if(!R){S.modal=null;return '';}const h=md.live?S.match:r;
   body=`<div class="eyebrow">Informe táctico de tu segundo entrenador</div><h2 style="margin:4px 0 10px">${esc(T(h.h).name)} ${md.live?h.score.h:h.hg}-${md.live?h.score.a:h.ag} ${esc(T(h.a).name)}</h2>${reportHTML(R)}<div class="acts">${md.live?'':`<button class="btn" data-a="an-match" data-i="${(S.mlog||[]).indexOf(r)}">Estadísticas del partido</button>`}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='cmp'){const a=PL(md.a),b=PL(md.b);if(!a||!b){S.modal=null;return '';}body=compareHTML(a,b);}

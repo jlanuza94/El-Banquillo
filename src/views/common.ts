@@ -1,5 +1,6 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {HELP} from '../help';
 import {DL_H,dlActive} from '../marketfm';
 import {isDeadline} from '../market';
 import {lgDay} from '../calendar';
@@ -95,7 +96,7 @@ function subnav(){return '';}
 /** Cabecera de cada sección: su icono y su nombre, en la misma fila que sus pestañas (si las tiene). */
 function viewHead(body){
  const v=S.view||'inicio',L=NAVL[v];if(!L)return body;
- const head=`<div class="vhead">${icon(L[1])}<h2>${esc(L[0])}</h2>${v==='calendario'&&torneo(S.week)?`<span class="vsub">Torneo ${torneo(S.week)}</span>`:''}</div>`;
+ const head=`<div class="vhead">${icon(L[1])}<h2>${esc(L[0])}</h2>${v==='calendario'&&torneo(S.week)?`<span class="vsub">Torneo ${torneo(S.week)}</span>`:''}${HELP[v]?`<button class="hbtn" data-a="help" data-v="${v}" aria-label="Ayuda de esta pantalla" title="Ayuda">?</button>`:''}</div>`;
  const m=/^\s*<div class="seg pltabs"[^>]*>/.exec(body);
  if(m){const end=body.indexOf('</div>',m[0].length)+6;return `<div class="vrow">${head}${body.slice(0,end)}</div>${body.slice(end)}`;}
  return `<div class="vrow">${head}</div>${body}`;

@@ -146,3 +146,5 @@ td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
 .dlg.on .dst{color:var(--win)}
 .cond{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px;padding:6px 8px;background:var(--surface2);border-radius:6px}
 .cond select{min-width:0;flex:0 1 auto}
+.hbtn{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-family:var(--f-num);font-weight:700;font-size:13px;line-height:1;padding:0;display:inline-grid;place-items:center;margin-left:4px;cursor:pointer}
+.hbtn:hover{color:var(--ink);border-color:var(--accent)}

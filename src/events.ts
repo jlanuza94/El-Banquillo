@@ -155,6 +155,7 @@ document.addEventListener('click',e=>{
   case'deleg':{setDeleg(d.v,!deleg(d.v));if(d.v==='tr'&&deleg('tr')){S.delegWhy=null;delegWeekly();}if(d.v==='oj'&&deleg('oj'))delegWeekly();toast(deleg(d.v)?`${DELEG[d.v].n}: lo lleva tu cuerpo técnico.`:`${DELEG[d.v].n}: lo llevas tú.`);break;}
   case'cond-add':{const t=T(S.user);t.cond=t.cond||[];if(t.cond.length<COND_MAX)t.cond.push({w:t.cond.length===0?'win':t.cond.length===1?'lose':'draw',min:t.cond.length===0?75:65,plan:null,ment:t.cond.length===0?'def':t.cond.length===1?'att':null});break;}
   case'cond-del':{const t=T(S.user);(t.cond||[]).splice(+d.i,1);break;}
+  case'help':S.modal={type:'help',v:d.v};break;
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
   case'trep':S.modal=d.v==='live'?{type:'trep',live:1}:{type:'trep',n:+d.v};break;
   case'plan-save':savePlan(d.v);toast(`Táctica ${d.v} guardada.`);break;
