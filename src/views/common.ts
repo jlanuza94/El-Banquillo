@@ -21,7 +21,7 @@ import {premiosView} from './awards';
 import {EXACT,knowledge,seen} from '../scouting';
 import {staffView} from './staff';
 import morphdom from 'morphdom';
-import {$app,esc,money,r2} from '../core';
+import {$app,esc,fmtMin,money,r2} from '../core';
 import {COUNTRIES,AT_COLS,AT_NAME,AT_SH,ATTRS,FORMS,GRP,SPN} from '../data';
 /** Cabecera de las columnas de atributos de las tablas. */
 export const attrHead=()=>AT_COLS.map(k=>`<th class="r" title="${AT_NAME[k]}">${AT_SH[k]}</th>`).join('');
@@ -111,7 +111,7 @@ export function shell(){
 }
 export function cmpRow(lbl,a,b){const mx=Math.max(a,b,1);return `<div class="cmp"><span class="a">${(a/10).toFixed(1)}</span><span class="l"><i style="width:${a/mx*100}%"></i></span><span class="lbl">${lbl}</span><span class="r2"><i style="width:${b/mx*100}%"></i></span><span class="b">${(b/10).toFixed(1)}</span></div>`;}
 export function resRow(f,r,tags){
- const me=f.h===S.user||f.a===S.user;const sc=(f.ev||[]).filter(e=>e.t==='goal').map(e=>`${e.n} ${e.min}'`).join(', ');
+ const me=f.h===S.user||f.a===S.user;const sc=(f.ev||[]).filter(e=>e.t==='goal').map(e=>`${e.n} ${fmtMin(e.min)}'`).join(', ');
  const nm=id=>`<span style="${f.w===id&&f.pen?'font-weight:700':''}">${esc(T(id).name)}</span>${tags?` <span class="divtag">${lgName(T(id).lg,true)}</span>`:''}`;
  const pen=f.pen?` · penaltis ${f.pen[0]}-${f.pen[1]}`:'';
  return `<div class="res ${me?'me':''}"><div class="h">${nm(f.h)}${crest(T(f.h),'sm')}</div><div class="s">${f.played?f.hg+' - '+f.ag:'vs'}</div><div class="a">${crest(T(f.a),'sm')}${nm(f.a)}</div>${r!=null||sc||pen?`<div class="sc">${r!=null?'J'+(r+1)+(sc?' · ':''):''}${esc(sc)}${pen}</div>`:''}</div>`;

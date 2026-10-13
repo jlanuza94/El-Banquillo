@@ -43,6 +43,8 @@ import { takeJob } from '../src/career';
 import { answerPress } from '../src/club';
 import { exportCode, importCode, loadAsync, loadSlot, deleteSlot, pack, unpack, saveNow, slots, MAX_SLOTS } from '../src/persist';
 import { render, shell } from '../src/views/common';
+import { fmtMin } from '../src/core';
+import { GOALT, goalType } from '../src/engine';
 import { boot } from '../src/boot';
 import { matchView } from '../src/views/match';
 import { modalView } from '../src/views/modals';
@@ -110,6 +112,7 @@ const app = document.getElementById('app')!;
 
   playFriendly(friendlyOpts()[0]);
   { const v0 = S.view; S.view = 'partido'; const h = shell(); S.view = v0; const mm = h.match(/<main>([\s\S]*?)<\/main>/); ok(mm && mm[1].length > 500 && h.includes('Tu once'), 'la pantalla del partido en directo se pinta'); }
+  { const m = S.match; ok(fmtMin(93) === '90+3' && fmtMin(40) === '40', 'el descuento se ve como 90+3'); const gt = goalType(m, m.us, m.lu[m.us].filter(Boolean).pop()); ok(!!GOALT[gt], 'tipo de gol: ' + GOALT[gt].n); }
   simToEnd(); matchView(); finishRound();
   ok(S.pre.left === 2, 'amistoso de pretemporada');
   S.pre.left = 0; S.sponsor = S.spOffers[0];

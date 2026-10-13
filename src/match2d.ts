@@ -1,7 +1,7 @@
 /* El Banquillo · match2d.js — Animación del partido en 2D (canvas). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {FREE,formRows,freeCoords} from './freeboard';
-import {pick,rnd} from './core';
+import {fmtMin,pick,rnd} from './core';
 import {FORMS,SPEEDS,W} from './data';
 import {PL,RT,S,T,lum} from './state';
 import {GRP} from './data';
@@ -159,7 +159,7 @@ export function a2Frame(ts){
  c.beginPath();c.arc(X(A2.ball.x),Y(A2.ball.y)-z*H*.05,br*(1+z*.6),0,Math.PI*2);c.fillStyle='#fff';c.fill();c.lineWidth=1.2;c.strokeStyle='#111';c.stroke();
  // marcador
  c.fillStyle='rgba(0,0,0,.55)';c.fillRect(8,8,Math.max(120,W*.22),26);c.fillStyle='#fff';c.textAlign='left';c.font=`700 15px "Barlow Condensed",Arial,sans-serif`;
- c.fillText(`${T(m.h).short} ${m.score.h}-${m.score.a} ${T(m.a).short} · ${m.done?'Final':m.min+"'"}`,14,21);
+ c.fillText(`${T(m.h).short} ${m.score.h}-${m.score.a} ${T(m.a).short} · ${m.done?'Final':fmtMin(m.min)+"'"}`,14,21);
  if(Q&&!rp){const k=Q.ph.out,lab=k==='goal'&&Q.el>=Q.K[Q.K.length-1].t?null:Q.el>(Q.K.find(x=>x.k==='sh')||{t:1e9}).t?(k==='save'?'¡PARADA!':k==='post'?'¡AL PALO!':k==='miss'?'FUERA':''):'';
   if(lab){c.fillStyle='rgba(0,0,0,.6)';c.textAlign='center';c.font=`800 ${Math.max(14,Math.round(W*.03))}px "Barlow Condensed",Arial,sans-serif`;const tw=c.measureText(lab).width+20;c.fillRect(W/2-tw/2,H-38,tw,28);c.fillStyle='#fff';c.fillText(lab,W/2,H-23);}}
  if(rp){const e=R.e,pl=PL(e.pid);c.fillStyle='rgba(180,20,20,.85)';c.textAlign='right';c.font=`700 ${Math.max(13,Math.round(W*.022))}px "Barlow Condensed",Arial,sans-serif`;const lb=`REPETICIÓN · ${e.min}' ${pl?pl.name:''}`;const tw=c.measureText(lb).width+16;c.fillRect(W-tw-8,8,tw,26);c.fillStyle='#fff';c.fillText(lb,W-16,21);

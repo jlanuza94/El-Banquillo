@@ -6,6 +6,7 @@ import {PL,S,T,crest,qBadge,qc,squad,uLg} from '../state';
 import {nextMatch} from '../competitions';
 import {nRounds} from '../tactics';
 import {nameBtn} from './common';
+import {GOALT} from '../engine';
 
 const h01=(s)=>{let x=2166136261;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619);}return ((x>>>0)%1000)/1000;};
 const RES={g:'Gol',s:'Parada',p:'Al palo',m:'Fuera'};
@@ -63,6 +64,9 @@ export function analisisView(){
   <h3 style="margin:12px 0 4px">Puntos</h3>${lineChart(tl.map(x=>x.pts),{min:0,max:Math.max(6,tl[tl.length-1].pts),label:'Puntos acumulados',color:'var(--win)'})}</section>
   <div class="stack"><section class="panel"><div class="panel-h"><h2>Goles esperados</h2><span class="eyebrow">Por jornada</span></div>${xgBars(tl)}
   <div class="kv"><span>Goles a favor / xG</span><b>${gf} / ${f.toFixed(1)}</b><span>Goles en contra / xG</span><b>${ga} / ${a.toFixed(1)}</b><span>Forma (últimos 5)</span><b>${form.join(' ')}</b></div>
+${(()=>{const fx=(S.fixtures[uLg()]||[]).flat().filter(f=>f.played&&(f.h===S.user||f.a===S.user)),c={};let n=0;
+   fx.forEach(f=>{const me=f.h===S.user?'h':'a';(f.ev||[]).filter(e=>e.t==='goal'&&e.gt).forEach(e=>{const k=e.gt;c[k]=c[k]||[0,0];c[k][e.s===me?0:1]++;n++;});});
+   if(!n)return '';return `<h3 style="margin:12px 0 4px">Cómo marcas y cómo encajas</h3><div class="kv">${Object.keys(c).sort((x,y)=>c[y][0]+c[y][1]-c[x][0]-c[x][1]).map(k=>`<span>${GOALT[k]?GOALT[k].n:k}</span><b>${c[k][0]} a favor · ${c[k][1]} en contra</b>`).join('')}</div>`;})()}
   <p class="small muted" style="margin:8px 0 0">${luck>3?'Marcas más de lo que generas: tu delantera está acertada, pero puede que no dure.':luck<-3?'Generas más de lo que marcas: con algo de puntería llegarán los goles.':'Marcas más o menos lo que generas.'} ${luckA<-3?'Encajas menos de lo esperado: tu portero está salvando puntos.':luckA>3?'Encajas más de lo esperado: algo de mala suerte o un portero flojo.':''}</p></section></div></div>`;
  }
  if(tab==='part'){

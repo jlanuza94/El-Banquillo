@@ -301,3 +301,8 @@ aside.side .nitem[style*="--loss"]{color:#ff8a7a!important}
 @media (orientation:landscape) and (max-height:540px){
  .wbanner{padding:5px 10px;font-size:13px;margin-bottom:8px!important}
 }
+@media (orientation:landscape) and (max-height:540px){
+ .tutcard{bottom:8px;top:auto;max-height:calc(100dvh - 64px);overflow:auto;padding:10px 14px}
+ .tutcard h3{margin:4px 0}
+ .tutcard p{margin:4px 0 6px}
+}

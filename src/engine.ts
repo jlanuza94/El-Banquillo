@@ -89,7 +89,27 @@ export function tacMods(m,s){
 }
 /** Apunta un tiro para el mapa de tiros: [lado 0/1, jugador, xG en centésimas, resultado g/s/p/m, minuto]. */
 export function shotLog(m,s,pid,x,res){m.sh=m.sh||[];m.sh.push([s==='h'?0:1,pid||null,Math.round(x*100),res,m.min]);m.st[s].xg=(m.st[s].xg||0)+x;}
-export function addEv(m,t,s,tx,pid){m.ev.push({min:m.min,t,s,tx,pid:pid||null});}
+export function addEv(m,t,s,tx,pid){const e={min:m.min,t,s,tx,pid:pid||null};
+ if(t==='goal'){e.gt=m._gt||(/[Pp]enalti/.test(tx)?'pen':/falta|córner|corner|balón parado/i.test(tx)?'bp':'otro');m._gt=null;if(s)m.mo={s:s==='h'?'a':'h',u:m.min+8};}
+ m.ev.push(e);}
+/** Tipos de gol en jugada: dependen de la táctica de los dos equipos y de las cualidades del goleador. */
+export const GOALT={pas:{n:'Combinación',tx:['¡Gol de {p}! Paredes al primer toque y la pone junto al palo.','¡{p} culmina una jugada colectiva preciosa!','¡Gol! Triangulación en la frontal y {p} define con calma.']},
+ con:{n:'Contraataque',tx:['¡Gol a la contra! Robo, carrera y {p} define ante el portero.','¡Contragolpe letal! {p} cierra la jugada en tres pases.','¡{p} no perdona en el mano a mano tras una contra!']},
+ cab:{n:'De cabeza',tx:['¡Gol de cabeza de {p}! Centro desde la banda y testarazo.','¡{p} se eleva más que nadie y la mete de cabeza!','¡Cabezazo de {p} al segundo palo, gol!']},
+ lej:{n:'Desde lejos',tx:['¡Golazo de {p} desde fuera del área, a la escuadra!','¡Zapatazo de {p} desde 25 metros!','¡{p} se la saca de lejos y entra pegada al palo!']},
+ ind:{n:'Jugada individual',tx:['¡Golazo de {p}! Se va de dos rivales y la cruza.','¡{p} se inventa el gol él solo, regate y remate!','¡Slalom de {p} y gol!']},
+ reb:{n:'Rechace',tx:['¡Gol! El portero rechaza y {p} la empuja a la red.','¡{p} caza el rechace en el área pequeña!','¡Gol de pillo de {p} tras un balón suelto!']},
+ bp:{n:'Balón parado',tx:[]},pen:{n:'Penalti',tx:[]},otro:{n:'Otros',tx:[]}};
+export function goalType(m,s,id){
+ const o=s==='h'?'a':'h',A=m.tac[s]||{},B=m.tac[o]||{},p=PL(id),at=p.at,g=GRP[p.sp]||p.pos;
+ const w={pas:3,con:1,cab:1.4,lej:.8,ind:1.1,reb:1};
+ if(A.est==='con')w.con+=3;if(A.est==='pos')w.pas+=2;if(A.est==='dir'){w.cab+=1;w.lej+=.4;}if(A.anc==='anc')w.cab+=1.2;if(A.rit==='rap')w.con+=.8;
+ if(B.lin==='alt')w.con+=1.5;if(B.lin==='baj')w.lej+=.6,w.reb+=.4;if(m.ment[o]==='att')w.con+=1;
+ w.cab*=Math.max(.3,1+(at.cab-5)*.18);w.ind*=Math.max(.3,1+(at.reg-5)*.2);w.lej*=Math.max(.2,1+(at.tir-5)*.15)*(g==='MED'?1.6:g==='DEF'?1.2:1);w.con*=Math.max(.4,1+(at.vel-5)*.12);
+ if(hasTr(p,'cab'))w.cab*=2;if(hasTr(p,'lej'))w.lej*=2.2;if(hasTr(p,'reg'))w.ind*=1.8;if(hasTr(p,'vel'))w.con*=1.5;if(hasTr(p,'gol'))w.reb*=1.6;
+ let t=Object.values(w).reduce((a,b)=>a+b,0),r=rnd()*t;for(const k in w){r-=w[k];if(r<=0)return k;}return 'pas';
+}
+
 export const scoreStr=m=>`${m.score.h}-${m.score.a}`;
 export function pickScorer(m,s){
  const sl=slotsOf(m.f[s]),w={POR:.02,DEF:.85,MED:2.3,DEL:4.6};const c=[];
@@ -139,12 +159,12 @@ export function setPiece(m,live){
   if(rnd()<.0021){if(live&&s===m.us&&!m.auto&&!m.mom){momentPen(m,s);return;}const k=m.lu[s].includes(m.pk[s])?m.pk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.tir-PL(a).at.tir)[0];if(!k)return;const P=PL(k);
    const ok=rnd()<clamp(.66+.025*(P.at.tir-5)-(g?.02*(g.at.por-5):0)+(hasTr(P,'bal')?.04:0),.45,.92);m.st[s].sh++;
    shotLog(m,s,k,.76,ok?'g':'s');
-   if(ok){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Penalti y gol! ${P.name} engaña al portero. (${scoreStr(m)})`:'',k);}
+   if(ok){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;m._gt='pen';addEv(m,'goal',s,live?`¡Penalti y gol! ${P.name} engaña al portero. (${scoreStr(m)})`:'',k);}
    else if(live)addEv(m,'shot',s,`¡Penalti fallado! ${P.name} no puede con ${g?g.name:'el portero'}.`,k);}
   else if(rnd()<.0038){const k=m.lu[s].includes(m.fk[s])?m.fk[s]:m.lu[s].filter(Boolean).sort((a,b)=>PL(b).at.pas-PL(a).at.pas)[0];if(!k)return;const P=PL(k);m.st[s].sh++;const cen=m.sp&&m.sp[s].fk==='cen',hd=cen?m.lu[s].filter(Boolean).map(PL).sort((a,b)=>(b.at.cab??5)-(a.at.cab??5))[0]:null;let fkg=cen?rnd()<.045*(1+.12*((hd.at.cab??5)-6)):rnd()<.05+.012*((P.at.tir+P.at.pas)/2-5)+(hasTr(P,'bal')?.05:0);shotLog(m,s,cen?hd.id:k,cen?.12:.06,fkg?'g':'s');
    if(fkg&&m.spd&&s!==m.us&&Math.random()>m.spd)fkg=false;
-   if(fkg&&cen){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')hd.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Gol de falta ensayada! ${P.name} la cuelga y ${hd.name} cabecea a la red. (${scoreStr(m)})`:'',hd.id);m.ev[m.ev.length-1].ast=P.id!==hd.id?P.id:null;}
-   else if(fkg){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Golazo de falta directa de ${P.name}! (${scoreStr(m)})`:'',k);}
+   if(fkg&&cen){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')hd.goals++;m.flash=m.min;m._gt='bp';addEv(m,'goal',s,live?`¡Gol de falta ensayada! ${P.name} la cuelga y ${hd.name} cabecea a la red. (${scoreStr(m)})`:'',hd.id);m.ev[m.ev.length-1].ast=P.id!==hd.id?P.id:null;}
+   else if(fkg){m.score[s]++;m.st[s].ot++;if(m.ref.k==='lg')P.goals++;m.flash=m.min;m._gt='bp';addEv(m,'goal',s,live?`¡Golazo de falta directa de ${P.name}! (${scoreStr(m)})`:'',k);}
    else if(live)addEv(m,'shot',s,`Falta directa de ${P.name}: ${rnd()<.5?'se marcha por encima':'la saca el portero'}.`,k);}
  });
 }
@@ -173,7 +193,7 @@ export function extraStats(m,xs,live){
    const sid=heads.length?pick(heads).id:pickScorer(m,s);
    const cm=m.sp?cornerMult(m.lu[s].filter(Boolean),ck,m.lu[o].filter(Boolean),m.sp[s],m.sp[o],s===m.us?S.spFam:50):1;
    if(ck&&sid&&rnd()<TUNE.corner*cm*(m.spd&&s!==m.us?m.spd:1)*(1+.08*(ck.at.pas-5))*(1+.25*heads.length/3)*(hasTr(ck,'bal')?1.2:1)){const id=sid;
-    m.score[s]++;st.sh++;st.ot++;shotLog(m,s,id,.3,'g');if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;addEv(m,'goal',s,live?`¡Gol de córner! ${ck.name} la pone y ${PL(id).name} remata de cabeza. (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ck.id!==id?ck.id:null;}}
+    m.score[s]++;st.sh++;st.ot++;shotLog(m,s,id,.3,'g');if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;m._gt='bp';addEv(m,'goal',s,live?`¡Gol de córner! ${ck.name} la pone y ${PL(id).name} remata de cabeza. (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ck.id!==id?ck.id:null;}}
   if(rnd()<.13*(m.oi&&m.oi[s]&&m.oi[s].dur?1.4:1))st.fo++;
   const n=Math.round(share*11+rnd()*2),acc=clamp(.62+.035*(avgAt(m,s,'MED','pas')-5)+.02*(avgAt(m,s,'DEF','pas')-5)+(m.tac[s].est==='pos'?.05:m.tac[s].est==='dir'?-.05:0)-(m.oi&&m.oi[o]&&m.oi[o].sal?.03:0),.45,.93);
   st.pa+=n;st.pc+=Math.round(n*acc);});
@@ -230,13 +250,20 @@ export function step(m){
  const Th=tacMods(m,'h'),Ta=tacMods(m,'a');
  const xs={h:xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)/90*Th.own*Ta.opp*TUNE.open,a:xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)/90*Ta.own*Th.opp*TUNE.open}; // el resto llega por los córners
  m.possSum+=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.drain={h:Th.drain,a:Ta.drain};
+ {// ritmo: el partido se abre al final por el cansancio
+  const tp=.76+.3*Math.min(m.min,90)/90;xs.h*=tp*(m.neutral?1:1.05);xs.a*=tp*(m.neutral?1:.95);
+  // el marcador manda: quien pierde se vuelca y deja huecos; quien gana se encierra (tu equipo reacciona menos: lo decides tú)
+  ['h','a'].forEach(s=>{const o=s==='h'?'a':'h',d=m.score[s]-m.score[o];if(d>=0||m.min<55)return;const k=Math.min(1,(m.min-55)/35)*(m.us===s&&!m.auto?.5:1)*(d<=-2?1.2:1);xs[s]*=1+.2*k;xs[o]*=1+.22*k-.1*k*(m.us===o&&!m.auto?.5:1);});
+  // reacción tras encajar: unos minutos de empuje
+  if(m.mo&&m.min<=m.mo.u)xs[m.mo.s]*=1.15;
+  if(m.min===89&&m.us)addEv(m,'sys',null,`El cuarto árbitro levanta el cartel: ${m.end-90} minuto${m.end-91?'s':''} de descuento.`);}
  ['h','a'].forEach(s=>m.lu[s].forEach(id=>{if(id){const P=PL(id),fis=P.at.fis;m.en[id]=Math.max(10,m.en[id]-(m.ment[s]==='att'?.26:.21)*(1.25-(P.at.res??fis)*.05)*(P.per==='tra'?.8:1)*(m.drain?m.drain[s]:1));}}));
  const live=!!m.us;
  ['h','a'].forEach(s=>{
   const o=s==='h'?'a':'h',x=xs[s],r=rnd();
   const S_=m.st[s];S_.xg=S_.xg||0;
   if(r<x){const id=pickScorer(m,s);if(!id)return;const ast=pickAssist(m,s,id);m.score[s]++;m.st[s].sh++;m.st[s].ot++;shotLog(m,s,id,.18+rnd()*.5,'g');if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;
-   addEv(m,'goal',s,live?fill(pick(TX.goal),{p:PL(id).name})+(ast?` Asistencia de ${PL(ast).name}.`:'')+` (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ast;}
+   const gt=goalType(m,s,id);m._gt=gt;addEv(m,'goal',s,live?fill(pick(GOALT[gt].tx),{p:PL(id).name})+(ast&&gt!=='ind'&&gt!=='lej'?` Asistencia de ${PL(ast).name}.`:'')+` (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ast;}
   else if(r<x*8.5){m.st[s].sh++;const xv=.02+rnd()*.09;if(!live){const id=pickScorer(m,s),on=rnd()<.38;if(on)m.st[s].ot++;shotLog(m,s,id,xv,on?'s':'m');return;}const id=pickScorer(m,s);if(!id){S_.xg+=xv;return;}const g=m.lu[o][0];
    if(rnd()<.38&&g){m.st[s].ot++;shotLog(m,s,id,xv,'s');addEv(m,'shot',s,fill(pick(TX.save),{p:PL(id).name,g:PL(g).name}),id);}
    else{const post=rnd()<.12;shotLog(m,s,id,xv,post?'p':'m');addEv(m,'shot',s,fill(pick(post?TX.post:TX.miss),{p:PL(id).name}),id);}}
@@ -263,7 +290,7 @@ export function applyResult(m){
  fx.hg=m.score.h;fx.ag=m.score.a;fx.played=true;fx.pen=m.pen;
  {const th=m.score.h+(m.agg?m.agg[0]:0),ta=m.score.a+(m.agg?m.agg[1]:0);fx.w=m.pen?(m.pen[0]>m.pen[1]?m.h:m.a):th>ta?m.h:ta>th?m.a:null;}
  const keepEv=m.ref.k==='cwc'||(m.ref.k==='lg'?LG(m.ref.lg).c:m.ref.c)===uc;
- fx.ev=keepEv?m.ev.filter(e=>e.t==='goal'||e.t==='red').map(e=>({min:e.min,s:e.s,t:e.t,n:shortNm(e.pid)})):[];
+ fx.ev=keepEv?m.ev.filter(e=>e.t==='goal'||e.t==='red').map(e=>({min:e.min,s:e.s,t:e.t,n:shortNm(e.pid),...(e.gt?{gt:e.gt}:{})})):[];
  const res={h:Math.sign(m.score.h-m.score.a),a:Math.sign(m.score.a-m.score.h)};
  const gl={};m.ev.forEach(e=>{if(e.t==='goal')gl[e.pid]=(gl[e.pid]||0)+1;});
  Object.keys(m.played).forEach(id=>{const p=PL(id);if(!p)return;const s=p.team===m.h?'h':'a';
@@ -316,7 +343,7 @@ export function quickMatch(ref){
  const xh=xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)*Th.own*Ta.opp*1.1,xa=xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)*Ta.own*Th.opp*1.1;
  m.min=m.end;const poss=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.possSum=poss*m.min;
  const goals=[];['h','a'].forEach(s=>{const n=poisson(s==='h'?xh:xa);m.st[s].sh=n+poisson(9.5);m.st[s].ot=n+poisson(2.6);for(let i=0;i<n;i++)goals.push([ri(1,m.end),s]);});
- goals.sort((a,b)=>a[0]-b[0]).forEach(([mn,s])=>{m.min=mn;const id=pickScorer(m,s);if(!id)return;const ast=pickAssist(m,s,id);m.score[s]++;if(m.ref.k==='lg')PL(id).goals++;addEv(m,'goal',s,'',id);m.ev[m.ev.length-1].ast=ast;});
+ goals.sort((a,b)=>a[0]-b[0]).forEach(([mn,s])=>{m.min=mn;const id=pickScorer(m,s);if(!id)return;const ast=pickAssist(m,s,id);m.score[s]++;if(m.ref.k==='lg')PL(id).goals++;m._gt=rnd()<.14?(rnd()<.6?'pen':'bp'):goalType(m,s,id);addEv(m,'goal',s,'',id);m.ev[m.ev.length-1].ast=ast;});
  m.min=m.end;
  ['h','a'].forEach(s=>{const n=poisson(1.85*(m.derby?1.25:1));for(let i=0;i<n;i++)card(m,s,false);if(rnd()<.022)card(m,s,true);
   m.lu[s].forEach(id=>{if(id)m.en[id]=Math.max(20,m.en[id]-19*(m.drain?m.drain[s]:1));});

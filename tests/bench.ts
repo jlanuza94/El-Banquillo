@@ -25,13 +25,16 @@ pickTeam(S.teams.find(t => S.leagues[t.lg].lv === 2)!.id);
 S.fr = [];
 
 function matches(n: number, live: boolean) {
-  const r = { g: 0, h: 0, d: 0, a: 0, sh: 0, yc: 0, rc: 0, inj: 0, xg: 0, co: 0, dist: [0, 0, 0, 0, 0, 0, 0] };
+  const r = { g: 0, h: 0, d: 0, a: 0, sh: 0, yc: 0, rc: 0, inj: 0, xg: 0, co: 0, dist: [0, 0, 0, 0, 0, 0, 0], blk: [0, 0, 0, 0, 0, 0, 0], gt: {}, l60: 0, l60w: 0 };
   const ts = S.teams.filter(t => t.id !== S.user);
   for (let i = 0; i < n; i++) {
     const h = ts[(i * 7919) % ts.length], pool = S.teams.filter(t => t.lg === h.lg && t.id !== h.id && t.id !== S.user), a = pool[i % pool.length];
     S.fr.push(mkTie(h.id, a.id)); const ref = { k: 'fr', i: S.fr.length - 1 };
     let m; if (live) { m = createMatch(ref); m.auto = true; while (!m.done) step(m); } else m = quickMatch(ref);
     const g = m.score.h + m.score.a; r.g += g; r.dist[Math.min(6, g)]++;
+    if (live) { const G = m.ev.filter(e => e.t === 'goal'); G.forEach(e => { r.blk[Math.min(6, Math.floor((e.min - 1) / 15))]++; r.gt[e.gt || '?'] = (r.gt[e.gt || '?'] || 0) + 1; });
+      const at = (mn, s) => G.filter(e => e.min <= mn && e.s === s).length, d60 = at(60, 'h') - at(60, 'a');
+      if (d60 !== 0) { r.l60++; const lead = d60 > 0 ? 'h' : 'a', o = lead === 'h' ? 'a' : 'h'; if (m.score[lead] > m.score[o]) r.l60w++; } }
     if (m.score.h > m.score.a) r.h++; else if (m.score.h < m.score.a) r.a++; else r.d++;
     r.sh += m.st.h.sh + m.st.a.sh; r.yc += m.st.h.yc + m.st.a.yc; r.rc += m.st.h.rc + m.st.a.rc; r.xg += (m.st.h.xg || 0) + (m.st.a.xg || 0); r.co += (m.st.h.co || 0) + (m.st.a.co || 0);
     Object.keys(m.played).forEach(id => { const p = S.players[id]; if (p && p.pInj) { r.inj++; p.pInj = 0; p.pInjT = 0; } if (p) p.pSusp = 0; });
@@ -42,6 +45,9 @@ function matches(n: number, live: boolean) {
 }
 function report(name: string, n: number, r) {
   console.log(`\n${name} (${n} partidos)`);
+  if (r.l60) { const tg = r.blk.reduce((a, b) => a + b, 0) || 1; row('Goles por tramo 1-15…76-90, desc.', r.blk.map(x => Math.round(x / tg * 100) + '%').join(' '));
+    row('Tipos de gol', Object.entries(r.gt).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${Math.round(v / tg * 100)}%`).join(' · '));
+    row('Gana quien manda en el 60\'', Math.round(r.l60w / r.l60 * 100) + '%'); }
   row('Goles por partido', (r.g / n).toFixed(2));
   row('Victoria local / empate / visitante', `${pct(r.h, n)} / ${pct(r.d, n)} / ${pct(r.a, n)}`);
   row('Partidos con 0,1,2,3,4,5,6+ goles', r.dist.map(x => pct(x, n)).join(' '));

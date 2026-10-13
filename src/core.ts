@@ -26,3 +26,6 @@ export const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*
 export const money=v=>{const s=v<0?'−':'';v=Math.abs(v);if(v>=1)return s+'€'+v.toFixed(2)+'M';const k=v*1000;return s+'€'+(k<10&&Math.round(k*10)%10?(Math.round(k*10)/10).toFixed(1):Math.round(k))+'k';};
 export const fill=(t,o)=>t.replace(/\{(\w+)\}/g,(_,k)=>o[k]);
 export const plain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+
+/** Minuto como se ve en el marcador: 90+3' en el descuento. */
+export const fmtMin=n=>n>90?`90+${n-90}`:String(n);
