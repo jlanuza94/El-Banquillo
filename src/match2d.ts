@@ -33,6 +33,18 @@ function pickIn(m,s,g,ay,not){
  return m.lu[s][idx[Math.random()<.7?0:Math.min(1,idx.length-1)]];
 }
 /** Convierte la jugada que calculó el motor en fotogramas clave: quién tiene el balón y dónde. */
+/** Coreografía de cada tipo de gol en jugada: devuelve el instante del remate. */
+const GOAL_SEQ={
+ con:(m,s,o,L,sh,ph,add,K)=>{const th=pickIn(m,s,'DEF',R_(35,65));add(0,R_(22,30),R_(35,65),th,'tk');const md=pickIn(m,s,'MED',50,th);add(450,R_(34,40),K[0].ay+R_(-8,8),md);
+  add(900,R_(58,64),R_(40,60),sh);add(1500,R_(72,78),R_(42,58),sh,'d');add(2050,R_(83,87),R_(44,56),sh,'d');return 2050;},
+ cab:(m,s,o,L,sh,ph,add,K)=>{const wl=Math.random()<.5,wy=wl?R_(6,12):R_(88,94),w=ph.ast&&teamOf(m,ph.ast)===s&&ph.ast!==sh?ph.ast:pickIn(m,s,'MED',wy,sh);
+  add(0,R_(45,55),R_(40,60),pickIn(m,s,'MED',50,w));add(600,R_(62,70),wy,w);add(1200,R_(84,88),wy,w,'d');add(1800,R_(89,92),R_(43,57),sh,'cross');return 1800;},
+ lej:(m,s,o,L,sh,ph,add,K)=>{const d=pickIn(m,s,'DEF',50);add(0,R_(30,38),R_(35,65),d);const md=pickIn(m,s,'MED',50,sh);add(550,R_(50,56),R_(40,60),md);add(1100,R_(66,70),R_(38,62),sh);add(1600,R_(72,76),K[2].ay+R_(-4,4),sh,'d');return 1600;},
+ ind:(m,s,o,L,sh,ph,add,K)=>{const md=pickIn(m,s,'MED',L,sh);add(0,R_(45,52),L,md);add(600,R_(62,66),L,sh);const z=L<50?1:-1;add(1050,R_(72,75),L+z*R_(6,10),sh,'d');add(1450,R_(79,82),L+z*R_(-2,4),sh,'d');add(1850,R_(86,89),R_(44,56),sh,'d');return 1850;},
+ pas:(m,s,o,L,sh,ph,add,K)=>{const a=pickIn(m,s,'MED',50,sh),b=ph.ast&&teamOf(m,ph.ast)===s&&ph.ast!==sh?ph.ast:pickIn(m,s,'MED',R_(35,65),sh);
+  add(0,R_(48,54),R_(40,60),a);add(450,R_(60,64),R_(35,65),b);add(850,R_(68,72),R_(42,58),sh);add(1200,R_(73,77),R_(38,62),b);add(1600,R_(83,87),R_(44,56),sh,'thr');return 1600;},
+ reb:(m,s,o,L,sh,ph,add,K)=>{const md=pickIn(m,s,'MED',L,sh),f=pickIn(m,s,'DEL',50,sh)||md;add(0,R_(50,56),L,md);add(650,R_(70,76),R_(40,60),f);add(1150,R_(80,84),R_(42,58),f,'d');return 1150;},
+};
 export function buildSeq(m,ph){
  const s=ph.s,o=s==='h'?'a':'h',L=ph.lane==='l'?R_(10,22):ph.lane==='r'?R_(78,90):R_(38,62),K=[];
  const add=(t,ax,ay,who,k)=>K.push({t,ax,ay,who,k:k||'p'});
@@ -41,6 +53,7 @@ export function buildSeq(m,ph){
  if(ph.kind==='corner'){const cy=L<50?1.5:98.5,cr=ph.ast&&teamOf(m,ph.ast)===s?ph.ast:pickIn(m,s,'MED',cy,shooter);add(0,99,cy,cr,'set');add(700,99,cy,cr,'p');t=1400;add(t,R_(88,92),R_(42,58),shooter,'cross');}
  else if(ph.kind==='pen'){add(0,88.5,50,shooter,'set');t=1100;add(t,88.5,50,shooter,'p');}
  else if(ph.kind==='fk'){const fy=R_(35,65);add(0,R_(72,78),fy,shooter,'set');t=1000;add(t,K[0].ax,fy,shooter,'p');}
+ else if(ph.out==='goal'&&ph.gt&&GOAL_SEQ[ph.gt]){t=GOAL_SEQ[ph.gt](m,s,o,L,shooter,ph,add,K);}
  else{
   const d=Math.random()<.18?m.lu[s][0]:pickIn(m,s,'DEF',R_(30,70));add(0,d===m.lu[s][0]?8:R_(20,30),d===m.lu[s][0]?50:R_(30,70),d);
   const md=pickIn(m,s,'MED',R_(35,65),d);add(650,R_(40,50),R_(35,65),md);add(1100,R_(52,58),K[1].ay+R_(-6,6),md,'d');
@@ -50,6 +63,9 @@ export function buildSeq(m,ph){
   else if(ph.out==='build'){const back=pickIn(m,s,'MED',50,wide);add(2200,R_(54,60),R_(40,60),back);add(2800,R_(58,66),100-L,pickIn(m,s,'MED',100-L,back));}
   else if(L<30||L>70){add(2050,R_(80,86),L<50?R_(6,14):R_(86,94),wide,'d');t=2600;add(t,R_(86,91),R_(42,58),shooter,'cross');}
   else{t=2300;add(t,R_(80,86),R_(42,58),shooter,'thr');}
+ }
+ if(ph.out==='goal'&&ph.gt==='reb'&&ph.kind==='open'){// primer remate, parada y rechace
+  const st=t+300;add(st,K[K.length-1].ax,K[K.length-1].ay,K[K.length-1].who,'sh');add(st+500,97.2,R_(44,56),gk,'sv');add(st+900,R_(91,94),R_(42,58),null,'rb');t=st+1100;add(t,K[K.length-1].ax,K[K.length-1].ay,shooter,'p');
  }
  if(['goal','save','miss','post'].includes(ph.out)){
   const st=t+(ph.kind==='pen'?0:350),sp=ph.out==='goal'?520:600;

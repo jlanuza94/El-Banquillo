@@ -245,13 +245,13 @@ export function phaseLog(m,pm){
  const sh=(m.sh||[]).filter(x=>x[4]===m.min),gl=m.ev.filter(e=>e.min===m.min&&e.t==='goal');
  let s,out='build',pid=null,ast=null,kind='open';
  const last=sh[sh.length-1];
- if(gl.length){const e=gl[gl.length-1];s=e.s;out='goal';pid=e.pid;ast=e.ast||null;const tx=String(e.tx||'').toLowerCase();kind=/penalti/.test(tx)?'pen':/córner|corner/.test(tx)?'corner':/falta/.test(tx)?'fk':'open';}
+ if(gl.length){const e=gl[gl.length-1];s=e.s;out='goal';pid=e.pid;ast=e.ast||null;const tx=String(e.tx||'').toLowerCase();kind=/penalti/.test(tx)?'pen':/córner|corner/.test(tx)?'corner':/falta/.test(tx)?'fk':'open';var gt=e.gt;}
  else if(last){s=last[0]?'a':'h';pid=last[1];out=last[3]==='s'?'save':last[3]==='p'?'post':'miss';}
  else{s=Math.random()<pm?'h':'a';out=Math.random()<.45?'lost':'build';}
  let lane='c';const sl=slotsOf(m.f[s]),i=pid?m.lu[s].indexOf(pid):-1,sp=i>=0?sl[i]:null;
  if(sp&&/^(EI|MI|LI)$/.test(sp))lane='l';else if(sp&&/^(ED|MD|LD)$/.test(sp))lane='r';
  else{const w=(m.tac[s]&&m.tac[s].anc)==='anc'?.7:(m.tac[s]&&m.tac[s].anc)==='est'?.35:.55;const r=Math.random();lane=r<w/2?'l':r<w?'r':'c';}
- m.pl=(m.pl||[]).slice(-5).concat([{min:m.min,s,out,pid,ast,kind,lane}]);
+ m.pl=(m.pl||[]).slice(-5).concat([{min:m.min,s,out,pid,ast,kind,lane,gt}]);
  if(out!=='build'){m.lz=m.lz||{h:{l:0,c:0,r:0},a:{l:0,c:0,r:0}};m.lz[s][lane]+=out==='lost'?1:2;}
 }
 export function step(m){

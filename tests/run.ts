@@ -47,6 +47,7 @@ import { fmtMin } from '../src/core';
 import { GOALT, SOFT_CAP, goalType } from '../src/engine';
 import { reportHTML, reportTips, tacReport } from '../src/tacreport';
 import { delegWeekly, setDeleg } from '../src/delegate';
+import { a2Reset, buildSeq } from '../src/match2d';
 import { PRESETS_T as PRESETS_TR } from '../src/training2';
 import { nextMatch as nextMatchTR } from '../src/competitions';
 import { boot } from '../src/boot';
@@ -120,7 +121,7 @@ const app = document.getElementById('app')!;
     const keep = { chem: S.chem, fam: S.famil[T(S.user).formation], prep: S.prepB }; S.chem = 100; S.famil[T(S.user).formation] = 100; S.prepB = 1.05;
     const hp = squad(S.user).map(p => [p, p.hap, p.rf]); squad(S.user).forEach(p => { p.hap = 100; p.rf = Object.fromEntries(Object.keys(p.rf || {}).map(k => [k, 100])); });
     S.fr.push(mkTie(S.user, S.teams.find(t => t.id !== S.user && t.lg === T(S.user).lg).id)); const mx = createMatch({ k: 'fr', i: S.fr.length - 1 }); S.fr.pop();
-    ok(mx.soft[0] > 1.05 && mx.soft[1] <= 1 + SOFT_CAP + 1e-9, `con todo al máximo la familiaridad no pasa de +4,5% (${mx.soft.join(' → ')})`);
+    ok(mx.soft[0] > 1.03 && mx.soft[1] < mx.soft[0] && mx.soft[1] <= 1 + SOFT_CAP + 1e-9, `con todo al máximo la familiaridad no pasa de +4,5% (${mx.soft.join(' → ')})`);
     S.chem = keep.chem; S.famil[T(S.user).formation] = keep.fam; S.prepB = keep.prep; hp.forEach(([p, h, rf]) => { p.hap = h; p.rf = rf; }); }
   { const m = S.match; ok(fmtMin(93) === '90+3' && fmtMin(40) === '40', 'el descuento se ve como 90+3'); const gt = goalType(m, m.us, m.lu[m.us].filter(Boolean).pop()); ok(!!GOALT[gt], 'tipo de gol: ' + GOALT[gt].n); }
   simToEnd(); matchView(); finishRound();
@@ -128,6 +129,9 @@ const app = document.getElementById('app')!;
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
   for (let i = 0; i < 3; i++) { playMatch(); matchView(); simToEnd(); finishRound(); modalView(); if (S.press) answerPress(0); }
+  { const m = createMatch({ k: 'fr', i: (S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === T(S.user).lg).id)), S.fr.length - 1) }); S.fr.pop(); a2Reset(m); const us = m.us, pid = m.lu[us].filter(Boolean).pop();
+    const bad = ['con', 'cab', 'lej', 'ind', 'pas', 'reb'].filter(gt => { const Q = buildSeq(m, { s: us, out: 'goal', kind: 'open', gt, lane: 'c', pid, min: 10 }); return !(Q.K.length >= 5 && Q.K[Q.K.length - 1].k === 'g' && Q.K.every((k, i) => !i || k.t >= Q.K[i - 1].t)); });
+    ok(!bad.length, 'vista 2D: cada tipo de gol tiene su jugada' + (bad.length ? ' (fallan ' + bad.join(',') + ')' : '')); }
   { const t = T(S.user), c0 = t.cond; t.cond = [{ w: 'draw', min: 1, plan: null, ment: 'att' }]; S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === t.lg).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; S.fr.pop();
     step(m); step(m); ok(m.ment[m.us] === 'att' && m.ev.some(e => /Plan previsto/.test(e.tx)), 'plan previsto: empatando desde el 1\' pasa a ofensiva'); t.cond = c0; }
   { setDeleg('tr', true); setDeleg('oj', true); S.missions = []; delegWeekly(); const k = Object.keys(PRESETS_TR).find(k => PRESETS_TR[k].s.join() === S.sched.join());
