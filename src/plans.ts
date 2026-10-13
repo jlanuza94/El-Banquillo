@@ -70,3 +70,16 @@ export function cornerMult(attIds,ck,defIds,attSp,defSp,fam){
  f*=defSp.cd==='zon'?1-.05*(av(defIds,'cab')-5):1-.05*((av(defIds,'col')+av(defIds,'def'))/2-5);
  return clamp(f,.4,1.8)*(.85+.3*(fam??40)/100);
 }
+
+/* ---------- Planes condicionales: tu segundo cambia la táctica según el marcador ---------- */
+export const COND_W={win:'Vamos ganando',draw:'Vamos empatando',lose:'Vamos perdiendo'};
+export const COND_MAX=3;
+export const condsOf=t=>(t&&t.cond)||[];
+/** Cada minuto de un partido tuyo: aplica la primera regla que se cumpla (cada regla, una vez). */
+export function condTick(m,addEv,MENT){
+ const us=m.us;if(!us||m.done)return;const t=T(m[us]),R=condsOf(t);if(!R.length)return;
+ const o=us==='h'?'a':'h',d=m.score[us]-m.score[o],st=d>0?'win':d<0?'lose':'draw';m.condDone=m.condDone||{};
+ R.forEach((r,i)=>{if(m.condDone[i]||m.min<r.min||r.w!==st)return;if(!r.plan&&!r.ment)return;m.condDone[i]=1;
+  const P=[];if(r.plan&&planInMatch(m,r.plan))P.push(`táctica ${r.plan}`);if(r.ment){m.ment[us]=r.ment;P.push(`mentalidad ${MENT[r.ment].label.toLowerCase()}`);}
+  if(P.length)addEv(m,'sys',null,`Plan previsto (${COND_W[st].toLowerCase()} en el ${r.min}'): ${T(m[us]).short} pasa a ${P.join(' y ')}.`);});
+}

@@ -93,7 +93,8 @@ export async function simLoop(mode,stopOnNews,hooks){
   const nm=nextMatch();if(!nm)break;
   const beforeOffers=Object.values(S.offers).filter(o=>o.incoming).length,beforeJobs=(S.jobOffers||[]).length;
   if(S.autoRot!==false)rotateLineup();else if(lineupIssues().length)fixLineup();
-  const m=quickMatch(nm.ref);m.label=nm.label;S.match=m;
+  // tu partido se juega minuto a minuto (como en directo, pero sin pararse): así cuentan tus planes previstos y el informe completo
+  const m=createMatch(nm.ref);m.auto=true;while(!m.done)step(m);m.label=nm.label;S.match=m;
   const us=m.us,my=m.score[us],op=m.score[us==='h'?'a':'h'];
   finishCore();n++;
   res.push({label:nm.label,h:m.h,a:m.a,hg:m.score.h,ag:m.score.a,pen:m.pen,r:my>op?'G':my<op?'P':'E'});

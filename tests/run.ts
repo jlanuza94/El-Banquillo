@@ -128,6 +128,8 @@ const app = document.getElementById('app')!;
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
   for (let i = 0; i < 3; i++) { playMatch(); matchView(); simToEnd(); finishRound(); modalView(); if (S.press) answerPress(0); }
+  { const t = T(S.user), c0 = t.cond; t.cond = [{ w: 'draw', min: 1, plan: null, ment: 'att' }]; S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === t.lg).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; S.fr.pop();
+    step(m); step(m); ok(m.ment[m.us] === 'att' && m.ev.some(e => /Plan previsto/.test(e.tx)), 'plan previsto: empatando desde el 1\' pasa a ofensiva'); t.cond = c0; }
   { setDeleg('tr', true); setDeleg('oj', true); S.missions = []; delegWeekly(); const k = Object.keys(PRESETS_TR).find(k => PRESETS_TR[k].s.join() === S.sched.join());
     ok(k && S.delegWhy && (S.missions || []).length >= 1, `delegar: tu segundo planifica la semana (${k}: ${S.delegWhy}) y los ojeadores salen solos (${(S.missions || []).length} misiones)`);
     setDeleg('tr', false); setDeleg('oj', false); S.missions = []; render(); }

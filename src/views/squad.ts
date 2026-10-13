@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {COND_MAX,COND_W,condsOf} from '../plans';
 import {deleg} from '../delegate';
 import {DAYS,MATCH_DAY,PRESETS_T,SES,sched,schedSummary} from '../training2';
 import {duosOf,MGR_AT,PROJ,REFS,mgrAt,nsCost,projState,refFor} from '../extras2';
@@ -139,7 +140,7 @@ export function tacticasView(){
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
  const tb=vtab('tac',[['ali','Alineación'],['tac','Táctica'],['ord','Posiciones'],['bp','Balón parado'],['rival','Rival'],['piz','Pizarra libre'],['plan','Tácticas guardadas']],'ali');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP,presetsHTML());
+ const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
  return tb.bar+body;
 }
 /* ---------- Desarrollo: aprender puestos y rasgos, y cedidos ---------- */
@@ -297,4 +298,15 @@ export function fichaHTML(p){
  <div class="kv">${p.gem&&knowledge(p)>=60?'<span>Ojeo</span><b>💎 Posible joya: potencial muy alto</b>':''}${p.h0&&p.team===S.user?`<span>Llegó</span><b>${esc(p.h0[1])} con ${(p.h0[0]/10).toFixed(1)}${p.h0[2]?' · ★ lo descubriste tú':''}</b>`:''}<span>Valor de mercado</span><b>${money(p.value)} ${trendTag(p)}</b><span>Sueldo semanal</span><b>${money(p.wage)}</b>${mine?'':`<span>Precio que piden</span><b>${money(askPrice(p))}</b>`}<span>Contrato</span><b>${esc(contractLabel(p))}</b>${p.team!==null&&!p.loan?`<span>Cláusula de rescisión</span><b>${money(p.cl||0)}</b>`:''}${mine?`<span>Rol</span><b>${ROLES[p.role||'ro'].n}</b><span>Ánimo</span><b>${hapTag(p)}</b>`:''}${p.inj?`<span>Lesión</span><b>${esc(p.injT||'Lesión')} · ${p.inj} partido(s)</b>`:''}${p.prone>=.6?'<span>Físico</span><b>Propenso a lesionarse</b>':''}${mine&&interested(p.id).length?`<span>Le siguen</span><b>${interested(p.id).map(id=>esc(T(id).name)).join(', ')}</b>`:''}${p.son?`<span>Futura venta</span><b>${Math.round(p.son.pct*100)}% para ${p.son.team===S.user?'ti':esc(T(p.son.team).name)}</b>`:''}${!mine&&hotMult(p)>1?'<span>Mercado</span><b>Otro club también lo quiere</b>':''}<span>Agente</span><b>${esc(agentName(p))} · ${agentOf(p).n}</b>${p.team!==null&&!mine?`<span>Comisión de su agente</span><b>${Math.round((p.agc||.07)*agentOf(p).fee*100)}%</b>`:''}${p.loan&&p.loan.from===S.user?`<span>Cesión</span><b>${p.loan.obj?`Objetivo ${Math.round(p.loan.obj*100)}% · lleva ${Math.round(loanShare(p)*100)}% (${p.lpj||0} de ${p.lmt||0})`:'Sin objetivo de minutos'}</b>`:''}${mine&&p.adapt>0?`<span>Adaptación</span><b>${p.adapt} semanas</b>`:''}</div>
  ${valueBox(p)}
  <div class="acts"><button class="btn" data-a="modal-close">Cerrar</button><button class="btn" data-a="cmp" data-id="${p.id}">${S.cmpA&&S.cmpA!==p.id&&PL(S.cmpA)?'Comparar con '+esc(PL(S.cmpA).name.split(' ').slice(1).join(' ')):'Comparar'}</button>${mine?(p.loan?(p.loan.opt?`<button class="btn primary" data-a="buy-opt" data-id="${p.id}">Ejecutar opción de compra · ${money(p.loan.opt)}</button>`:''):`<button class="btn" data-a="chat" data-id="${p.id}">Hablar</button><button class="btn" data-a="loanout" data-id="${p.id}">Ceder</button><button class="btn" data-a="sell" data-id="${p.id}">Buscar oferta</button><button class="btn primary" data-a="renew" data-id="${p.id}">Renovar</button>`):p.loan?'':`${p.team!==null&&!refuses(p)?`<button class="btn" data-a="loan" data-id="${p.id}">Pedir cesión</button>`:''}${sn.exact?'':`<button class="btn" data-a="scout" data-id="${p.id}">${(S.scoutQ||[]).some(x=>x.pid===p.id)?'Ojeando…':'Ojear'}</button>`}<button class="btn" data-a="fav" data-id="${p.id}">${fav?'Dejar de seguir':'Seguir'}</button>${refuses(p)?`<span class="tag" style="align-self:center">No quiere jugar en tu liga</span>`:`<button class="btn primary" data-a="neg" data-id="${p.id}">Hacer oferta</button>`}`}</div>`;
+}
+
+/** Planes previstos: si vamos ganando/empatando/perdiendo desde el minuto X, cambia a la táctica o mentalidad Y. */
+export function condHTML(t){
+ const R=condsOf(t),P=Object.keys(t.plans||{}).filter(k=>t.plans[k]);
+ const sel=(i,k,cur,opts)=>`<select data-cond="${i}" data-k="${k}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur??'')===String(v)?'selected':''}>${l}</option>`).join('')}</select>`;
+ return `<section class="panel"><div class="panel-h"><h2>Planes previstos</h2><span class="eyebrow">Tu segundo los aplica solo</span></div>
+ <p class="small muted" style="margin:0 0 8px">Decide antes del partido qué hacer según el marcador. Se aplican en directo y también cuando simulas. Cada plan se usa una vez por partido.</p>
+ ${R.map((r,i)=>`<div class="cond"><span>Si</span>${sel(i,'w',r.w,Object.entries(COND_W).map(([k,v])=>[k,v.toLowerCase()]))}<span>desde el</span>${sel(i,'min',r.min,[45,55,60,65,70,75,80,85].map(v=>[v,v+"'"]))}<span>→</span>${sel(i,'plan',r.plan||'',[['','sin cambiar táctica'],...['A','B','C'].map(k=>[k,'táctica '+k+(P.includes(k)?'':' (vacía)')])])}${sel(i,'ment',r.ment||'',[['','misma mentalidad'],...Object.entries(MENT).map(([k,v])=>[k,v.label.toLowerCase()])])}<button class="btn sm" data-a="cond-del" data-i="${i}" aria-label="Quitar">✕</button></div>`).join('')}
+ ${R.length<COND_MAX?`<button class="btn sm" data-a="cond-add">+ Añadir plan</button>`:''}
+ ${!P.length?'<p class="small muted" style="margin:8px 0 0">Guarda primero una táctica B o C (arriba) para poder cambiar a ella; la mentalidad se puede cambiar sin táctica guardada.</p>':''}</section>`;
 }

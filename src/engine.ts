@@ -18,6 +18,7 @@ import {learnFromMatch} from './scouting';
 import {segAt} from './staff';
 import {clamp,fill,gauss,pick,r3,ri,rnd} from './core';
 import {AT_NAME,GRP,MENT,TAC0,TX,W,WIDE,newSt} from './data';
+import {condTick} from './plans';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
 import {rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
@@ -297,6 +298,7 @@ export function step(m){
   if(m.us===s&&!m.auto){if(!m.mom)momentInj(m,id);else{m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}}
  if(m.min>=58||Object.keys(m.hurt).length)['h','a'].forEach(s=>{if(m.us!==s||m.auto)aiManage(m,s);});
  if(m.us)['h','a'].forEach(s=>aiInMatch(m,s,addEv,live));
+ if(m.us)condTick(m,addEv,MENT);
  if(m.min===45&&live){addEv(m,'sys',null,`Descanso · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);m.half=true;if(!m.auto)m.paused=true;}
  if(m.min>=m.end){m.done=true;m.paused=true;calcRatings(m);if(live)addEv(m,'sys',null,`Final · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);
   if(m.ko&&m.ref.k!=='fr'&&m.score.h+(m.agg?m.agg[0]:0)===m.score.a+(m.agg?m.agg[1]:0)){if(live&&m.us&&!m.auto){momentShootout(m);}else{m.pen=shootout();if(live)addEv(m,'sys',null,`Penaltis: ${T(m.h).short} ${m.pen[0]}-${m.pen[1]} ${T(m.a).short} · pasa ${T(m.pen[0]>m.pen[1]?m.h:m.a).name}`);}}}

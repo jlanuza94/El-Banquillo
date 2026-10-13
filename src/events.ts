@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {COND_MAX} from './plans';
 import {DELEG,deleg,delegWeekly,setDeleg} from './delegate';
 import {PRESETS_T,setPreset,setSession} from './training2';
 import {dlActive,dlStep} from './marketfm';
@@ -152,6 +153,8 @@ document.addEventListener('click',e=>{
   case'an-tab':S.anTab=d.v;break;
   case'an-p90':S.anP90=d.v==='1';break;
   case'deleg':{setDeleg(d.v,!deleg(d.v));if(d.v==='tr'&&deleg('tr')){S.delegWhy=null;delegWeekly();}if(d.v==='oj'&&deleg('oj'))delegWeekly();toast(deleg(d.v)?`${DELEG[d.v].n}: lo lleva tu cuerpo técnico.`:`${DELEG[d.v].n}: lo llevas tú.`);break;}
+  case'cond-add':{const t=T(S.user);t.cond=t.cond||[];if(t.cond.length<COND_MAX)t.cond.push({w:t.cond.length===0?'win':t.cond.length===1?'lose':'draw',min:t.cond.length===0?75:65,plan:null,ment:t.cond.length===0?'def':t.cond.length===1?'att':null});break;}
+  case'cond-del':{const t=T(S.user);(t.cond||[]).splice(+d.i,1);break;}
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
   case'trep':S.modal=d.v==='live'?{type:'trep',live:1}:{type:'trep',n:+d.v};break;
   case'plan-save':savePlan(d.v);toast(`Táctica ${d.v} guardada.`);break;
@@ -310,6 +313,7 @@ document.addEventListener('change',e=>{
    S.ioMsg=importData(String(rd.result));save();render();};rd.readAsText(f);return;}
  if(!S||S.user==null)return;const id=e.target.id,v=e.target.value;
  const map={mksp:'sp',mkc:'c',mklv:'lv',mkmin:'min',mkage:'age',mkmax:'max',mksort:'sort',mknat:'nat',mkwage:'wage',mkpot:'pot',mkatk:'atk',mkatv:'atv'};
+ if(e.target.dataset&&e.target.dataset.cond!=null){const t=T(S.user),r=(t.cond||[])[+e.target.dataset.cond],k=e.target.dataset.k;if(r){r[k]=k==='min'?+v:(v||null);}save();render();return;}
  if(id==='formSel'){setFormation(v);S.sel=null;}
  else if(id==='cupC'){S.cupC=+v;}
  else if(id==='hiC'){S.hiC=+v;}
