@@ -126,7 +126,7 @@ export function processWeek(){
  scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(isDeadline()?70:28);
  if(isDeadline())news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
- if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
+ if(S.budget<0&&S.week%6===0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
  S.week++;S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};
  {const nx=S.week<nRounds()?nextFixture():null;if(nx){const opp=nx.h===S.user?nx.a:nx.h;if(isDerby(S.user,opp))derbyWeekNews(opp);piqueWeekly(opp,isDerby(S.user,opp));}}
  rumoursWeekly();deadlineDeals();

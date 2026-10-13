@@ -59,7 +59,7 @@ export function duo(a,b){if(!a||!b||a.id===b.id||!near(a,b))return 0;const k=[a.
  return r<good?1:r>1-bad?-1:0;}
 export function duosOf(ids){const P=ids.map(PL).filter(Boolean),out=[];for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const v=duo(P[i],P[j]);if(v)out.push([P[i],P[j],v]);}return out;}
 /** Efecto de las parejas del once en el rendimiento. */
-export function duoMult(ids){const D=duosOf(ids);return clamp(1+.006*D.filter(x=>x[2]>0).length-.008*D.filter(x=>x[2]<0).length,.96,1.04);}
+export function duoMult(ids){const D=duosOf(ids);return clamp(1+.004*D.filter(x=>x[2]>0).length-.007*D.filter(x=>x[2]<0).length,.96,1.025);}
 
 /* ---------- 6. Capitanes y jerarquía ---------- */
 export function captainWeekly(){

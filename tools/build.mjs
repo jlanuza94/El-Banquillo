@@ -74,6 +74,9 @@ async function buildTest() {
   await esbuild.build({
     ...common, entryPoints: [join(ROOT, 'tests', 'bench.ts')], platform: 'node', format: 'cjs',
     outfile: join(ROOT, 'dist-test', 'bench.cjs'), define: { __BUILD__: '"bench"' }, external: ['jsdom'],
+  });  await esbuild.build({
+    ...common, entryPoints: [join(ROOT, 'tests', 'playtest.ts')], platform: 'node', format: 'cjs',
+    outfile: join(ROOT, 'dist-test', 'playtest.cjs'), define: { __BUILD__: '"bench"' }, sourcemap: 'inline', external: ['jsdom'],
   });
 }
 

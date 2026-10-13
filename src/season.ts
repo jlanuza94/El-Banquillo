@@ -11,7 +11,7 @@ import {recordSeason} from './worldhist';
 import {maybeGolden} from './youthplus';
 import {makeYouth} from './academy';
 import {seasonContracts} from './negotiate';
-import {aiSummerPlan,clubSeasonFinance,crisisSales} from './economy';
+import {aiSummerPlan,clubSeasonFinance,crisisSales,userBankruptcy} from './economy';
 import {matchFx} from './replay';
 import {retosNewSeason,retosSeason} from './retos';
 import {ntOffers,summerTournaments} from './nations';
@@ -138,7 +138,7 @@ export function seasonSummary(){
 export function newSeason(){
  const sm=seasonSummary(),tabs=S.leagues.map(L=>table(L.id));
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
- const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);seasonContracts(sm);
+ const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);userBankruptcy();seasonContracts(sm);
  seasonAwards();objectivesSeasonEnd();galaSeasonEnd();projSeasonEnd(sm);mgrGrow(sm);
  // hall of fame
  {const h={season:seasonLabel(),lg:wcs().map(c=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}

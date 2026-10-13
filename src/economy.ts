@@ -67,7 +67,12 @@ function marketReport(){
 /* ======================= Caja de los clubes ======================= */
 /** Dinero inicial de un club de la IA (igual que el tuyo, sin la dificultad). */
 const startCash=t=>{const L=LG(t.lg);return r2(Math.max(unit(L.rep)*4,unit(L.rep)*(12+(t.rep-L.rep)*2)));};
-export function initCash(){S.teams.forEach(t=>{if(t.cash==null){t.cash=startCash(t);t.cash0=t.cash;}});}
+/** Gestión de cada club: 'der' derrochador (gasta lo que no tiene), 'aus' austero, 'nor' normal. */
+const gesOf=t=>t.ges||(t.ges=rnd()<.15?'der':rnd()<.25?'aus':'nor');
+export const GES={der:'Derrochador',aus:'Austero',nor:'Prudente'};
+export function initCash(){S.teams.forEach(t=>{if(t.cash==null){t.cash=startCash(t);t.cash0=t.cash;}gesOf(t);});}
+/** Puntos de sanción de un club esta temporada (concurso de acreedores). */
+export const dedOf=t=>t&&t.ded&&t.ded.s===S.seasonN?t.ded.n:0;
 export const squadValue=tid=>squad(tid).reduce((a,p)=>a+p.value,0);
 export const wageBillOf=tid=>squad(tid).reduce((a,p)=>a+(p.wage||0),0);
 /** Dinero que se mueve en un traspaso entre dos clubes de la IA, o contigo. */
@@ -79,11 +84,11 @@ export function clubSeasonFinance(tabs){
  S.leagues.forEach((L,li)=>{const tb=tabs[li],u=unit(L.rep),lowestL=!S.leagues.some(x=>x.c===L.c&&x.lv>L.lv);
   tb.forEach((row,i)=>{const t=T(row.id);if(!t||t.id===S.user)return;const pos=i+1;
    const prize=u*(21-pos)*.5+(L.lv>0&&pos<=3?u*12.5:0)+(L.lv===0&&pos===1?u*5:0);
-   const op=u*(3+clamp((t.rep-L.rep)*.4,-2,6))-(!lowestL&&pos>=18?u*3:0);
-   const wages=wageBillOf(t.id)*38*.08; // parte de los sueldos que no cubren la tele y la taquilla
+   const op=u*(3+clamp((t.rep-L.rep)*.4,-2,6)+(rnd()*4-2))-(!lowestL&&pos>=18?u*4:0);
+   const g=gesOf(t),wages=wageBillOf(t.id)*38*.095*(g==='der'?1.5:g==='aus'?.85:1); // parte de los sueldos que no cubren la tele y la taquilla
    const net=r2(prize+op-wages);t.last={season:seasonLabel(),pos,lg:L.id,prize:r2(prize),op:r2(op-wages),fees:r2(t.fees||0),start:t.cash0??t.cash};
    t.cash0=t.cash=r2(t.cash+net);t.fees=0;
-   if(pos===1)rich.push(t);if(t.cash<-u*3)poor.push(t);
+   if(pos===1)rich.push(t);if(t.cash<-u*3)poor.push(t);if(t.cash<-u*6)t.broke=1;
    // la reputación sigue a los resultados
    const exp=tb.length/2+.5;t.rep=clamp(t.rep+(exp-pos)*.22,LG(t.lg).rep-25,LG(t.lg).rep+25);
   });});
@@ -93,10 +98,31 @@ export function clubSeasonFinance(tabs){
 }
 /** Club en números rojos: vende a su mejor jugador al club que pueda pagarlo. */
 export function crisisSales(poor){
+ poor.forEach(t=>{if(t.broke)bankrupt(t);});
  poor.forEach(t=>{const sq=squad(t.id).sort((a,b)=>b.value-a.value),p=sq[0];if(!p||sq.length<=18)return;
   const buyers=S.teams.filter(b=>b.id!==t.id&&b.id!==S.user&&(b.cash||0)>p.value*1.2&&LG(b.lg).rep>=LG(t.lg).rep-5);if(!buyers.length)return;
   const b=buyers.sort((x,y)=>y.cash-x.cash)[0],fee=r2(p.value*(.85+rnd()*.2));setTeam(p,b.id);assignNum(p);p.contract=ri(2,4);p.wage=Math.max(p.wage,baseWage(p));payFee(t.id,b.id,fee);
   if(LG(t.lg).c===LG(uLg()).c||LG(b.lg).c===LG(uLg()).c)news(`Crisis en ${t.name}: con las cuentas en rojo, vende a ${p.name} a ${b.name} por ${money(fee)}.`,'bad',{cat:'mer',subj:`Venta forzosa: ${p.name}`});});
+}
+
+/** Quiebra: concurso de acreedores. Vende a sus mejores jugadores, pierde reputación, empieza la temporada con 10 puntos menos y pasa a gestión austera. */
+export function bankrupt(t){
+ const u=unit(LG(t.lg).rep),mine=LG(t.lg).c===LG(uLg()).c,sold=[];t.broke=0;
+ squad(t.id).sort((a,b)=>b.value-a.value).slice(0,4).forEach(p=>{if(squad(t.id).length<=18)return;
+  const buyers=S.teams.filter(b=>b.id!==t.id&&b.id!==S.user&&(b.cash||0)>p.value*.8);if(!buyers.length)return;
+  const b=buyers.sort((x,y)=>y.cash-x.cash)[0],fee=r2(p.value*(.55+rnd()*.15));setTeam(p,b.id);assignNum(p);p.contract=ri(2,4);p.wage=Math.max(p.wage,baseWage(p));payFee(t.id,b.id,fee);sold.push(`${p.name} (${money(fee)})`);});
+ squad(t.id).forEach(p=>{p.wage=r3(p.wage*.8);p.hap=clamp((p.hap??70)-15,0,100);});
+ t.cash=Math.max(t.cash,r2(-u*2));t.cash0=t.cash;t.rep=clamp(t.rep-8,LG(t.lg).rep-25,LG(t.lg).rep+25);t.ges='aus';t.ded={n:10,s:S.seasonN+1};t.quiebras=(t.quiebras||0)+1;
+ if(mine||t.id===S.user)news(`¡Quiebra! ${t.name} entra en concurso de acreedores: empezará la temporada con 10 puntos menos, rebaja sueldos un 20% y malvende a sus estrellas${sold.length?': '+sold.join(', '):''}.`,'bad',{cat:'com',subj:`Concurso de acreedores: ${t.name}`});
+}
+/** Tu club también puede quebrar: deuda muy grande al acabar la temporada. */
+export function userBankruptcy(){
+ if(S.user==null||S.jobless)return false;const u=unit(LG(uLg()).rep);if(S.budget>-u*6)return false;
+ const t=T(S.user);t.ded={n:10,s:S.seasonN+1};t.quiebras=(t.quiebras||0)+1;t.rep=clamp(t.rep-6,LG(t.lg).rep-25,LG(t.lg).rep+25);
+ squad(S.user).forEach(p=>{p.wage=r3(p.wage*.85);p.hap=clamp((p.hap??70)-12,0,100);});
+ S.budget=r3(-u*2);
+ news(`¡Concurso de acreedores! La deuda de ${t.name} es insostenible: el club empezará la próxima temporada con 10 puntos menos, se rebajan los sueldos un 15% y la directiva te vigilará de cerca.`,'bad',{cat:'dir',subj:'El club entra en concurso de acreedores'});
+ if(S.mgr)S.mgr.conf=clamp(S.mgr.conf-25,0,100);return true;
 }
 
 /* ======================= Plantillas de la IA ======================= */
@@ -111,7 +137,7 @@ export function needOf(tid){
 /** Un club de la IA busca un jugador para la línea g con el dinero que tiene. Devuelve el fichado o null. */
 export function aiBuy(t,g,all){
  initCash();const L=LG(t.lg),sq=squad(t.id),cur=sq.filter(p=>grp(p)===g).map(p=>p.ovr).sort((a,b)=>b-a),need=cur.length?cur[Math.min(cur.length-1,g==='POR'?0:2)]:0;
- const budget=Math.max(0,t.cash*.6),maxOvr=t.rep+6;let best=null,bs=-1;all=all||Object.values(S.players);
+ const ge=gesOf(t),budget=Math.max(0,t.cash*(ge==='aus'?.4:.6)+(ge==='der'?unit(L.rep)*6:0)),maxOvr=t.rep+6;let best=null,bs=-1;all=all||Object.values(S.players);
  for(let i=0;i<180;i++){const p=all[Math.floor(rnd()*all.length)];if(!p||grp(p)!==g||p.team===t.id||p.team===S.user||p.loan||!S.players[p.id])continue;
   if(p.ovr<=need+1||p.ovr>maxOvr||p.age>32)continue;const fee=p.team===null?0:p.value*(p.contract<=1?.7:1.1);if(fee>budget)continue;
   if(p.team!==null&&LG(T(p.team).lg).rep>L.rep+4)continue;
@@ -131,7 +157,7 @@ export function aiSummerPlan(t,all){
  // cubre huecos: fichando si hay dinero; si no, con jugadores modestos
  for(let k=0;k<6;k++){const n=needOf(t.id);if(n.miss<=0)break;if(!aiBuy(t,n.g,all)){const p=genPlayer(n.g,t.rep-4,t.id);assignNum(p);}}
  // con caja de sobra, refuerza sus líneas más flojas (los ricos gastan más)
- const u=unit(LG(t.lg).rep),tries=t.cash>u*10?3:t.cash>u*6?2:t.cash>u*3?1:0;
+ const u=unit(LG(t.lg).rep),tries=(t.cash>u*10?3:t.cash>u*6?2:t.cash>u*3?1:0)+(gesOf(t)==='der'?2:0);
  for(let k=0;k<tries;k++){const n=needOf(t.id);if(n.weak<=1)break;const r=aiBuy(t,n.g,all);if(!r)break;
   const s2=squad(t.id);if(s2.length>25){const w=s2.filter(p=>p!==r.p).sort((a,b)=>(a.ovr-a.age*.3)-(b.ovr-b.age*.3))[0];if(w){setTeam(w,null);w.contract=0;}}}
 }

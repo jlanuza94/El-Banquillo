@@ -150,7 +150,7 @@ export function setPiece(m,live){
 }
 export function card(m,s,straight){
  const ids=m.lu[s].filter((id,i)=>id&&i>0);if(!ids.length)return;// los ya amonestados se cortan: es menos probable que vean la segunda
- const pool=ids.flatMap(x=>{const n=(PL(x).per==='tem'?3:1)*(m.ycm[x]?1:3);return Array(n).fill(x);}),id=pick(pool),p=PL(id);p.st=p.st||newSt();
+ const pool=ids.flatMap(x=>{const n=(PL(x).per==='tem'?3:1)*(m.ycm[x]?1:6);return Array(n).fill(x);}),id=pick(pool),p=PL(id);p.st=p.st||newSt();
  if(straight||m.ycm[id]){
   m.lu[s][m.lu[s].indexOf(id)]=null;m.off.push(id);m.outM[id]=m.min;m.st[s].rc++;delete m.hurt[id];if(m.ref.k!=='fr'){p.st.rc++;p.pSusp+=straight?2:1;}
   addEv(m,'red',s,straight?`¡Roja directa para ${p.name}! ${T(m[s]).name} se queda con uno menos.`:`Segunda amarilla para ${p.name}. Expulsado.`,id);
@@ -292,7 +292,7 @@ export function playerTick(full){
   p.energy=Math.round(Math.min(100,p.energy+(100-p.energy)*((full?.45:.25)+(mine?recBonus():0))+(full?4:2)));
   if(!full)return;
   if(mine){trainPlayer(p);if(!p.playedWk)p.form=Math.trunc(p.form*.7);p.playedWk=false;return;}
-  if(p.playedWk&&p.age<=23&&p.team!==null&&rnd()<.07&&rateA(p.at,p.pos)<p.pot){const k=wpick(W[p.pos]);if(p.at[k]<10){p.at[k]++;refresh(p);if(p.team===S.user)news(`${p.name} progresa: su ${AT_NAME[k].toLowerCase()} sube a ${p.at[k]}.`,'good');}}
+  if(p.team!==null&&rateA(p.at,p.pos)<p.pot&&rnd()<(p.age<=21?.075:p.age<=24?.05:p.age<=28?.025:p.age<=31?.01:0)*(p.playedWk?1.15:.85)*(p.ph&&p.ph.length&&p.ovr-p.ph[p.ph.length-1][1]>=7?0:1)){const k=wpick(W[p.pos]);if(p.at[k]<10){p.at[k]++;refresh(p);if(p.team===S.user)news(`${p.name} progresa: su ${AT_NAME[k].toLowerCase()} sube a ${p.at[k]}.`,'good');}}
   if(!p.playedWk)p.form=Math.trunc(p.form*.7);
   p.playedWk=false;
  });

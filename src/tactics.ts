@@ -37,7 +37,7 @@ export function teamPower(lu,f,en,hurt,mult=1,roles=null){
  return{atk:(.6*A+.4*M)*mult,def:(.55*D+.2*M+.25*G)*mult,mid:M*mult,ovr:avg(all)};
 }
 export const famOf=f=>S.famil&&S.famil[f]!=null?S.famil[f]:40;
-export const chemMult=f=>.92+.06*S.chem/100+.04*famOf(f)/100;
+export const chemMult=f=>.935+.05*S.chem/100+.025*famOf(f)/100;
 export function xg(A,D,home,mA,mD){return clamp(1.2*Math.pow(A.atk/D.def,2.6)*(home===true?1.12:home===false?.92:1)*MENT[mA].own*MENT[mD].opp,.15,4);}
 export function lineupIssues(){const t=T(S.user);return t.lineup.map((id,i)=>({i,id})).filter(x=>!x.id||!available(PL(x.id))||PL(x.id).team!==S.user);}
 /** Banquillo: los suplentes que eliges (hasta 9) o, si no eliges, los mejores disponibles. */
@@ -66,7 +66,7 @@ export function setFormation(f){
  t.roles=remapRoles(t.formation?slotsOf(t.formation):[],t.roles,slots);t.formation=f;t.lineup=lu;fixLineup();
 }
 export function table(lg){
- const t={};lgTeams(lg).forEach(tm=>t[tm.id]={id:tm.id,pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0,form:[]});
+ const t={};lgTeams(lg).forEach(tm=>t[tm.id]={id:tm.id,pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:tm.ded&&tm.ded.s===S.seasonN?-tm.ded.n:0,ded:tm.ded&&tm.ded.s===S.seasonN?tm.ded.n:0,form:[]});
  S.fixtures[lg].forEach(rd=>rd.forEach(f=>{if(!f.played)return;const H=t[f.h],A=t[f.a];H.pj++;A.pj++;H.gf+=f.hg;H.gc+=f.ag;A.gf+=f.ag;A.gc+=f.hg;
   if(f.hg>f.ag){H.g++;A.p++;H.pts+=3;H.form.push('G');A.form.push('P');}else if(f.hg<f.ag){A.g++;H.p++;A.pts+=3;A.form.push('G');H.form.push('P');}else{H.e++;A.e++;H.pts++;A.pts++;H.form.push('E');A.form.push('E');}}));
  return Object.values(t).sort((a,b)=>b.pts-a.pts||(b.gf-b.gc)-(a.gf-a.gc)||b.gf-a.gf||T(a.id).name.localeCompare(T(b.id).name));
