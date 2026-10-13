@@ -123,3 +123,16 @@ aside.side .ngroup .gt{letter-spacing:.14em}
 .wksum{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px}
 @media (orientation:landscape) and (max-height:500px){.wkd{padding:4px 2px}.wkd .wki{font-size:16px}.wkd select{font-size:10px}}
 td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
+
+/* Informe táctico */
+.trep h3{font-family:var(--f-display);text-transform:uppercase;font-size:15px;letter-spacing:.03em;margin:14px 0 6px}
+.trep .tverd{margin:0 0 4px;font-size:15px}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:7px 10px;border-left:3px solid var(--line);background:var(--surface2);border-radius:4px;margin-bottom:6px}
+.trow.tpos{border-left-color:var(--win)}.trow.tneg{border-left-color:var(--loss)}
+.trow .tn{display:flex;flex-direction:column;gap:2px;min-width:0}
+.trow .tv{display:flex;flex-direction:column;align-items:flex-end;font-family:var(--f-num);font-weight:600;font-size:13px;white-space:nowrap}
+.trow .tb{grid-column:1/-1;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.trow .tb i{display:block;height:100%;background:var(--muted)}
+.trow.tpos .tb i{background:var(--win)}.trow.tneg .tb i{background:var(--loss)}
+.ttips{margin:0;padding-left:18px}.ttips li{margin:4px 0}
+.trl{margin-bottom:4px}

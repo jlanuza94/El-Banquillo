@@ -5,6 +5,8 @@ import {GRP,WIDE} from './data';
 import {PL,S,T,uLg} from './state';
 import {posOf,slotsOf} from './tactics';
 import {poisson} from './engine';
+import {reportHeadline,tacReport} from './tacreport';
+import {news} from './world';
 
 /** Reparte `n` acciones entre los jugadores según su peso (sorteo uno a uno). */
 function share(n,ws,add){const tot=ws.reduce((a,x)=>a+x[1],0);if(!tot)return;for(let i=0;i<n;i++){let r=rnd()*tot;for(const [id,w] of ws){r-=w;if(r<=0){add(id);break;}}}}
@@ -35,7 +37,7 @@ export function matchRecord(m){
  const st=k=>({sh:m.st[k].sh,ot:m.st[k].ot,xg:Math.round((m.st[k].xg||0)*100)/100,co:m.st[k].co||0,fo:m.st[k].fo||0,yc:m.st[k].yc,rc:m.st[k].rc,pa:m.st[k].pa||0,pc:m.st[k].pc||0});
  const D=m.det||{},pl=Object.keys(m.played).filter(id=>PL(id)).map(id=>{const d=D[id]||{};return[id,PL(id).team===m.h?0:1,m.rat&&m.rat[id]||0,d.xg||0,d.kp||0,d.tk||0,d.dr||0,d.du||0];});
  const g={},a={};m.ev.forEach(e=>{if(e.t==='goal'){g[e.pid]=(g[e.pid]||0)+1;if(e.ast)a[e.ast]=(a[e.ast]||0)+1;}});
- return{sn:S.seasonN,wk:S.week,label:m.label||'',h:m.h,a:m.a,hg:m.score.h,ag:m.score.a,pen:m.pen||null,poss:Math.round(m.possSum/Math.max(1,m.min)*100),st:{h:st('h'),a:st('a')},sh:(m.sh||[]).slice(),pl:pl.map(r=>r.concat([g[r[0]]||0,a[r[0]]||0])),mvp:m.mvp||null};
+ return{sn:S.seasonN,wk:S.week,label:m.label||'',h:m.h,a:m.a,hg:m.score.h,ag:m.score.a,pen:m.pen||null,poss:Math.round(m.possSum/Math.max(1,m.min)*100),st:{h:st('h'),a:st('a')},sh:(m.sh||[]).slice(),pl:pl.map(r=>r.concat([g[r[0]]||0,a[r[0]]||0])),mvp:m.mvp||null,tr:m.us?tacReport(m):null};
 }
 /** Últimos partidos de cada equipo (para el análisis del rival). */
 function teamForm(m){
@@ -47,7 +49,8 @@ function teamForm(m){
 export function recordMatch(m){
  if(m.ref.k==='fr')return;
  teamForm(m);
- if(m.us){S.mlog=S.mlog||[];S.mlog.unshift(matchRecord(m));if(S.mlog.length>40)S.mlog.length=40;}
+ if(m.us){S.mlog=S.mlog||[];const rec=matchRecord(m);S.mlogN=(S.mlogN||0)+1;rec.n=S.mlogN;S.mlog.unshift(rec);if(S.mlog.length>40)S.mlog.length=40;
+  if(rec.tr)news(`Informe táctico: ${reportHeadline(rec.tr)}`,'',{cat:'sta',subj:`Informe táctico: ${T(m.h).short} ${m.score.h}-${m.score.a} ${T(m.a).short}`,quiet:true,act:[{l:'Ver informe',a:'trep',v:rec.n}]});}
 }
 /** Evolución de tu temporada en liga: puntos, puesto y xG jornada a jornada. */
 export function recordRound(m,r){

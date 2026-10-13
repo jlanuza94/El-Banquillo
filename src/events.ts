@@ -150,6 +150,7 @@ document.addEventListener('click',e=>{
   case'an-tab':S.anTab=d.v;break;
   case'an-p90':S.anP90=d.v==='1';break;
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
+  case'trep':S.modal=d.v==='live'?{type:'trep',live:1}:{type:'trep',n:+d.v};break;
   case'plan-save':savePlan(d.v);toast(`Táctica ${d.v} guardada.`);break;
   case'plan-load':loadPlan(d.v);S.sel=null;toast(`Usas la táctica ${d.v}.`);break;
   case'm-plan':if(m&&planInMatch(m,d.v))addEv(m,'sys',null,`${T(m[m.us]).short} cambia a la táctica ${d.v}: ${m.f[m.us]}, ${MENT[m.ment[m.us]].label.toLowerCase()}.`);break;

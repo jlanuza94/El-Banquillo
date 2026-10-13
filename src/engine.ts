@@ -17,7 +17,7 @@ import {roleEffects,roleMult} from './roles';
 import {learnFromMatch} from './scouting';
 import {segAt} from './staff';
 import {clamp,fill,gauss,pick,r3,ri,rnd} from './core';
-import {AT_NAME,GRP,TAC0,TX,W,WIDE,newSt} from './data';
+import {AT_NAME,GRP,MENT,TAC0,TX,W,WIDE,newSt} from './data';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
 import {rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
@@ -65,26 +65,28 @@ export function prepTactics(m){
 }
 /** Media de un atributo de los jugadores de una línea (DEF, MED…) del once. */
 export function avgAt(m,s,g,k){const sl=slotsOf(m.f[s]),v=[];m.lu[s].forEach((id,i)=>{if(id&&GRP[sl[i]]===g)v.push(PL(id).at[k]);});return v.length?v.reduce((a,b)=>a+b,0)/v.length:5;}
-export function tacMods(m,s){
+export function tacMods(m,s,log){
  const o=s==='h'?'a':'h',A=m.tac[s],B=m.tac[o];let own=1,opp=1,drain=1,poss=0;
- if(A.pre==='alt'){opp*=.94;drain*=1.08;poss+=.03;if(B.est==='con')opp*=1.08;}else if(A.pre==='baj'){opp*=1.04;drain*=.9;poss-=.03;}
- if(A.lin==='alt'){own*=1.04;opp*=1.04;if(B.est==='con')opp*=1.06;}else if(A.lin==='baj'){own*=.96;opp*=.93;}
- if(A.rit==='rap'){own*=1.06;opp*=1.03;drain*=1.06;}else if(A.rit==='len'){own*=.93;opp*=.95;drain*=.92;poss+=.02;}
- const w=(m.wide&&m.wide[s])||0;if(A.anc==='anc')own*=1+w/150;else if(A.anc==='est')own*=1-w/150;
+ // cada factor multiplica las ocasiones propias (ow) y las del rival (op); con log se anota para el informe táctico
+ const f=(k,ow,op,dr=1,ps=0)=>{own*=ow;opp*=op;drain*=dr;poss+=ps;if(log&&(ow!==1||op!==1||dr!==1)){const e=log[k]||(log[k]=[0,0,0]);e[0]+=Math.log(ow);e[1]+=Math.log(op);e[2]+=Math.log(dr);}};
+ if(A.pre==='alt')f('pre',1,.94*(B.est==='con'?1.08:1),1.08,.03);else if(A.pre==='baj')f('pre',1,1.04,.9,-.03);
+ if(A.lin==='alt')f('lin',1.04,1.04*(B.est==='con'?1.06:1));else if(A.lin==='baj')f('lin',.96,.93);
+ if(A.rit==='rap')f('rit',1.06,1.03,1.06);else if(A.rit==='len')f('rit',.93,.95,.92,.02);
+ const w=(m.wide&&m.wide[s])||0;if(A.anc==='anc')f('anc',1+w/150,1);else if(A.anc==='est')f('anc',1-w/150,1);
  const mq=(m.mq&&m.mq[s])||[50,50];
- if(A.est==='pos'){poss+=.05;own*=B.pre==='baj'?1.06:B.pre==='alt'?.93:1;}else if(A.est==='dir'){own*=mq[1]>mq[0]?1.05:.98;poss-=.02;}else if(A.est==='con'){own*=((B.lin==='alt'||m.ment[o]==='att')?1.09:.95)*(1+.012*(avgAt(m,s,'DEL','vel')-5));poss-=.05;}
+ if(A.est==='pos')f('est',B.pre==='baj'?1.06:B.pre==='alt'?.93:1,1,1,.05);else if(A.est==='dir')f('est',mq[1]>mq[0]?1.05:.98,1,1,-.02);else if(A.est==='con')f('est',((B.lin==='alt'||m.ment[o]==='att')?1.09:.95)*(1+.012*(avgAt(m,s,'DEL','vel')-5)),1,1,-.05);
  const ords=m.lu[s].map(id=>id&&m.ord[s][id]).filter(Boolean);const up=ords.filter(x=>x==='sube').length,back=ords.filter(x=>x==='fija').length;
- own*=1+.015*up-.01*back;opp*=1+.012*up-.012*back;
- {const re=roleEffects(slotsOf(m.f[s]),m.ro&&m.ro[s]);own*=re.own;opp*=re.opp;poss+=re.poss;}
- {const sl=slotsOf(m.f[s]),du=m.du&&m.du[s],pi=m.pi&&m.pi[s];if(du&&du.length===sl.length){const pe=posTeam(sl,du,pi);own*=pe.own;opp*=pe.opp;poss+=pe.poss;drain*=pe.drain;}}
+ f('ord',1+.015*up-.01*back,1+.012*up-.012*back);
+ {const re=roleEffects(slotsOf(m.f[s]),m.ro&&m.ro[s]);f('rol',re.own,re.opp,1,re.poss);}
+ {const sl=slotsOf(m.f[s]),du=m.du&&m.du[s],pi=m.pi&&m.pi[s];if(du&&du.length===sl.length){const pe=posTeam(sl,du,pi);f('pos',pe.own,pe.opp,pe.drain,pe.poss);}}
  // instrucciones al rival: las que da el otro equipo (o) frenan a este (s); las propias tienen un coste
  const OI=(m.oi&&m.oi[o])||{},MY=(m.oi&&m.oi[s])||{};
- if(OI.ban)own*=1-Math.max(0,w)/220;if(MY.ban)own*=.992;
- if(OI.sal){poss-=.03;const dq=avgAt(m,s,'DEF','pas');own*=dq<5?.97:.99;}if(MY.sal)drain*=1.06;
- if(OI.dur)own*=m.refr?REFS[m.refr.k].dur:.975;
- {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);own*=ph.own;opp*=ph.opp;drain*=ph.drain;poss+=ph.poss;}
- {const w=weatherMods(m.wx,A);own*=w.own;opp*=w.opp;drain*=w.drain;poss+=w.poss;const mm=m.mm&&m.mm[s];if(mm){own*=mm.own;opp*=mm.opp;}}
- const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)own*=1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4);
+ if(OI.ban)f('oiR',1-Math.max(0,w)/220,1);if(MY.ban)f('oi',.992,1);
+ if(OI.sal){const dq=avgAt(m,s,'DEF','pas');f('oiR',dq<5?.97:.99,1,1,-.03);}if(MY.sal)f('oi',1,1,1.06);
+ if(OI.dur)f('oiR',m.refr?REFS[m.refr.k].dur:.975,1);
+ {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);f('fase',ph.own,ph.opp,ph.drain,ph.poss);}
+ {const w=weatherMods(m.wx,A);f('clima',w.own,w.opp,w.drain,w.poss);const mm=m.mm&&m.mm[s];if(mm)f('mom',mm.own,mm.opp);}
+ const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)f('cap',1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4),1);
  return{own,opp,drain,poss};
 }
 /** Apunta un tiro para el mapa de tiros: [lado 0/1, jugador, xG en centésimas, resultado g/s/p/m, minuto]. */
@@ -247,7 +249,12 @@ export function step(m){
  if(m.done)return;
  m.min++;
  const Ph=teamPower(m.lu.h,m.f.h,m.en,m.hurt,m.mult.h,m.ro&&m.ro.h),Pa=teamPower(m.lu.a,m.f.a,m.en,m.hurt,m.mult.a,m.ro&&m.ro.a);
- const Th=tacMods(m,'h'),Ta=tacMods(m,'a');
+ const tl=m.us?(m.tl=m.tl||{n:0,u:{},r:{},m:[0,0],x:[],ch:[]}):null,uo=m.us==='h'?'a':'h';
+ const Th=tacMods(m,'h',tl&&(m.us==='h'?tl.u:tl.r)),Ta=tacMods(m,'a',tl&&(m.us==='a'?tl.u:tl.r));
+ if(tl){tl.n++;tl.m[0]+=Math.log(MENT[m.ment[m.us]].own);tl.m[1]+=Math.log(MENT[m.ment[m.us]].opp);
+  // cambios tuyos en directo: mentalidad, táctica, plan o jugadores
+  const sn={me:m.ment[m.us],t:Object.assign({},m.tac[m.us]),lu:m.lu[m.us].slice(),pl:m.plan||null,oi:Object.assign({},(m.oi&&m.oi[m.us])||{})},k=JSON.stringify(sn);
+  if(tl.k&&tl.k!==k&&m.min>1)tl.ch.push({min:m.min,a:tl.sn,b:sn});tl.k=k;tl.sn=sn;}
  const xs={h:xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)/90*Th.own*Ta.opp*TUNE.open,a:xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)/90*Ta.own*Th.opp*TUNE.open}; // el resto llega por los córners
  m.possSum+=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.drain={h:Th.drain,a:Ta.drain};
  {// ritmo: el partido se abre al final por el cansancio
@@ -256,6 +263,7 @@ export function step(m){
   ['h','a'].forEach(s=>{const o=s==='h'?'a':'h',d=m.score[s]-m.score[o];if(d>=0||m.min<55)return;const k=Math.min(1,(m.min-55)/35)*(m.us===s&&!m.auto?.5:1)*(d<=-2?1.2:1);xs[s]*=1+.2*k;xs[o]*=1+.22*k-.1*k*(m.us===o&&!m.auto?.5:1);});
   // reacción tras encajar: unos minutos de empuje
   if(m.mo&&m.min<=m.mo.u)xs[m.mo.s]*=1.15;
+  if(tl)tl.x.push([Math.round(xs[m.us]*1e4),Math.round(xs[uo]*1e4)]);
   if(m.min===89&&m.us)addEv(m,'sys',null,`El cuarto árbitro levanta el cartel: ${m.end-90} minuto${m.end-91?'s':''} de descuento.`);}
  ['h','a'].forEach(s=>m.lu[s].forEach(id=>{if(id){const P=PL(id),fis=P.at.fis;m.en[id]=Math.max(10,m.en[id]-(m.ment[s]==='att'?.26:.21)*(1.25-(P.at.res??fis)*.05)*(P.per==='tra'?.8:1)*(m.drain?m.drain[s]:1));}}));
  const live=!!m.us;
@@ -340,6 +348,7 @@ export function poisson(l){let L=Math.exp(-l),k=0,p=1;do{k++;p*=rnd();}while(p>L
 export function quickMatch(ref){
  const m=createMatch(ref);m.auto=true;
  const Ph=teamPower(m.lu.h,m.f.h,null,null,m.mult.h,m.ro&&m.ro.h),Pa=teamPower(m.lu.a,m.f.a,null,null,m.mult.a,m.ro&&m.ro.a),Th=tacMods(m,'h'),Ta=tacMods(m,'a');
+ if(m.us){const o=m.us==='h'?'a':'h';m.tl={n:1,u:{},r:{},m:[Math.log(MENT[m.ment[m.us]].own),Math.log(MENT[m.ment[m.us]].opp)],x:null,ch:[]};tacMods(m,m.us,m.tl.u);tacMods(m,o,m.tl.r);}
  const xh=xg(Ph,Pa,m.neutral?null:true,m.ment.h,m.ment.a)*Th.own*Ta.opp*1.1,xa=xg(Pa,Ph,m.neutral?null:false,m.ment.a,m.ment.h)*Ta.own*Th.opp*1.1;
  m.min=m.end;const poss=clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8);m.possSum=poss*m.min;
  const goals=[];['h','a'].forEach(s=>{const n=poisson(s==='h'?xh:xa);m.st[s].sh=n+poisson(9.5);m.st[s].ot=n+poisson(2.6);for(let i=0;i<n;i++)goals.push([ri(1,m.end),s]);});

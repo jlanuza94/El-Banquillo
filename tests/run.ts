@@ -45,6 +45,8 @@ import { exportCode, importCode, loadAsync, loadSlot, deleteSlot, pack, unpack, 
 import { render, shell } from '../src/views/common';
 import { fmtMin } from '../src/core';
 import { GOALT, goalType } from '../src/engine';
+import { reportHTML, reportTips, tacReport } from '../src/tacreport';
+import { nextMatch as nextMatchTR } from '../src/competitions';
 import { boot } from '../src/boot';
 import { matchView } from '../src/views/match';
 import { modalView } from '../src/views/modals';
@@ -118,6 +120,10 @@ const app = document.getElementById('app')!;
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
   for (let i = 0; i < 3; i++) { playMatch(); matchView(); simToEnd(); finishRound(); modalView(); if (S.press) answerPress(0); }
+  { const r = (S.mlog || [])[0]; ok(r && r.tr && r.tr.f && reportHTML(r.tr).includes('Qué aportó'), 'informe táctico tras el partido'); ok(S.inbox.some(x => /Informe táctico/.test(x.subj)), 'el informe llega a la bandeja');
+    const t0 = T(S.user).tac; T(S.user).tac = Object.assign({}, t0 || {}, { pre: 'alt', lin: 'alt', est: 'con' }); const nm = nextMatchTR(); const qm = quickMatch(nm.ref); const R = tacReport(qm);
+    ok(R && ['pre', 'lin', 'est'].every(k => R.f.some(x => x[0] === k)), 'el informe mide presión, línea y estilo: ' + R.f.map(x => x[0] + ' ' + x[2] + '/' + x[3]).join(', '));
+    ok(Array.isArray(reportTips(R)), 'consejos: ' + reportTips(R).join(' | ')); T(S.user).tac = t0; }
   for (const v of ['inicio', 'plantilla', 'tacticas', 'entreno', 'cantera', 'calendario', 'liga', 'copas', 'mercado', 'club', 'historia']) {
     S.view = v; shell(); render();
   }
