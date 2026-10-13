@@ -52,7 +52,11 @@ export function runTimer(){
  clearInterval(RT.timer);RT.timer=null;const m=S&&S.match;
  if(!m||m.paused||m.done)return;
  RT.timer=setInterval(()=>{const m=S&&S.match;if(!m||m.paused||m.done){clearInterval(RT.timer);RT.timer=null;return;}
-  step(m);matchFx(m);if(m.min%10===0||m.paused)save();if(S.view==='partido')render();},SPEEDS[m.speed]);
+  if(m.speed===9){// jugadas clave: avanza hasta la próxima ocasión, gol, tarjeta roja, lesión o decisión
+   const KEY=['goal','shot','red','inj'];let n=0;const e0=m.ev.length;
+   do{step(m);n++;}while(!m.done&&!m.paused&&!m.mom&&n<20&&!m.ev.slice(e0).some(e=>KEY.includes(e.t)));
+  }else step(m);
+  matchFx(m);if(m.min%10===0||m.paused)save();if(S.view==='partido')render();},SPEEDS[m.speed]);
 }
 export function simToEnd(){const m=S.match;m.auto=true;m.subOpen=false;m.alert='';while(!m.done)step(m);m.paused=true;clearInterval(RT.timer);RT.timer=null;save();render();}
 export function finishCore(){

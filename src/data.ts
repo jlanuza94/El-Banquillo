@@ -117,7 +117,7 @@ export const W={POR:{por:.62,col:.12,dec:.1,pas:.08,fis:.04,vel:.04},
  DEL:{tir:.3,reg:.14,col:.12,vel:.12,cab:.1,dec:.08,fis:.08,vis:.06}};
 /** Pesos antiguos (6 atributos), para convertir partidas sin cambiar la media de nadie. */
 export const W_OLD={POR:{por:.75,fis:.15,pas:.1},DEF:{def:.55,fis:.25,pas:.15,reg:.05},MED:{pas:.4,reg:.2,def:.15,tir:.1,fis:.15},DEL:{tir:.5,reg:.25,fis:.15,pas:.1}};
-export const SPEEDS={1:650,2:300,4:110};
+export const SPEEDS={1:650,2:300,4:110,9:1600}; // 9 = solo jugadas clave
 export const TX={
  goal:['¡GOOOL de {p}! Remate cruzado, imposible para el portero.','¡Gol! {p} la empuja a la red tras un centro desde la banda.','¡Golazo de {p} desde fuera del área, a la escuadra!','¡{p} no perdona en el mano a mano!','¡Gol de cabeza de {p} a la salida de un córner!','¡Gol! {p} aprovecha un rechace dentro del área.','¡{p} define con clase por encima del portero!'],
  miss:['{p} dispara alto desde la frontal.','Ocasión clara para {p}, pero el balón se marcha rozando el palo.','{p} prueba desde lejos. Fuera.','Cabezazo de {p} que se va desviado.','{p} se queda solo y la manda a la grada.'],

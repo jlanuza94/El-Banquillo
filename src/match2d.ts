@@ -84,7 +84,7 @@ export function a2Frame(ts){
  const R=RT.replay&&RT.replay.P;let rp=null;
  if(R){if(RT.replay.t0==null){RT.replay.t0=ts;}const ms=ts-RT.replay.t0;rp=playAt(R,ms);if(ms>R.end){RT.replay.t0=null;}}
  const red=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- const mult=m.speed>=4?2.1:m.speed>=2?1.4:1;
+ const mult=m.speed===9?1:m.speed>=4?2.1:m.speed>=2?1.4:1;
  // jugadas nuevas del motor
  (m.pl||[]).forEach(ph=>{if(ph.min>A2.seen){A2.seen=ph.min;if(ph.out==='goal'){A2.q=[ph];A2.seq=null;}else{A2.q.push(ph);if(A2.q.length>3)A2.q=A2.q.filter((x,i)=>x.out!=='build'&&x.out!=='lost'||i>=A2.q.length-1);}}});
  if(m.min<A2.seen)A2.seen=m.min;
