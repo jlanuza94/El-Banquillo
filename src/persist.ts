@@ -42,12 +42,20 @@ export function idbDo(mode,fn){return idb().then(db=>new Promise((res,rej)=>{con
 const slotKey=id=>'slot:'+id;
 export function freeSlot(){for(let i=1;i<=MAX_SLOTS;i++)if(!slots.some(x=>x.id===i))return i;return null;}
 function slotMeta(st){const t=st.teams[st.user];return{id:st.slot,club:t.name,short:t.short,c1:t.c1,c2:t.c2,season:seasonLabel(),lg:lgName(uLg()),week:st.week,updated:Date.now()};}
-export function saveNow(){
+/** Compresión nativa (gzip) del guardado: ~5 veces menos espacio y se guarda y carga antes en el móvil. */
+const canZip=()=>typeof CompressionStream!=='undefined'&&typeof DecompressionStream!=='undefined'&&typeof Blob!=='undefined'&&typeof Response!=='undefined';
+async function zipStr(str){const cs=new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));return {z:1,b:await new Response(cs).blob()};}
+export async function unzipVal(r){if(r&&typeof r==='object'&&r.z&&r.b){const ds=r.b.stream().pipeThrough(new DecompressionStream('gzip'));return await new Response(ds).text();}return r;}
+let saveSeq=0;
+/** raw: guardar sin comprimir (al cerrar la app, para no depender de nada asíncrono más). */
+export function saveNow(raw){
  clearTimeout(RT.saveT);RT.saveT=null;if(!S||S.user==null)return;
  if(!S.slot)S.slot=freeSlot()||1;
  let str;try{str=pack();}catch(e){return;}
  const meta=slotMeta(S);slots=slots.filter(x=>x.id!==meta.id).concat([meta]).sort((a,b)=>a.id-b.id);
- idbDo('readwrite',st=>{st.put(str,slotKey(meta.id));st.put(slots,'slots');st.delete(KEY);return st.put(meta.id,'last');})
+ const seq=++saveSeq,write=val=>idbDo('readwrite',st=>{st.put(val,slotKey(meta.id));st.put(slots,'slots');st.delete(KEY);return st.put(meta.id,'last');});
+ (raw!==true&&canZip()?zipStr(str).catch(()=>str):Promise.resolve(str))
+  .then(val=>{if(seq!==saveSeq)return;return write(val).catch(e=>{if(val!==str)return write(str);throw e;});})
   .then(()=>{try{localStorage.removeItem(KEY);}catch(e){}})
   .catch(()=>{if(!saveWarned){saveWarned=true;toast('No se pudo guardar la partida en este navegador.');}});
 }
@@ -67,10 +75,10 @@ export async function loadAsync(){
 }
 export async function loadSlot(id){
  let r=null;try{r=await idbDo('readonly',st=>st.get(slotKey(id)));}catch(e){}
- if(!r)return null;try{const o=unpack(r);if(o){o.slot=id;}return o;}catch(e){return null;}
+ if(!r)return null;try{r=await unzipVal(r);const o=unpack(r);if(o){o.slot=id;}return o;}catch(e){return null;}
 }
 export async function deleteSlot(id){
  slots=slots.filter(x=>x.id!==id);
  try{await idbDo('readwrite',st=>{st.delete(slotKey(id));return st.put(slots,'slots');});}catch(e){}
 }
-export function installSaveGuards(){document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&RT.saveT)saveNow();});window.addEventListener('pagehide',()=>{if(RT.saveT)saveNow();});}
+export function installSaveGuards(){document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&RT.saveT)saveNow(true);});window.addEventListener('pagehide',()=>{if(RT.saveT)saveNow(true);});}
