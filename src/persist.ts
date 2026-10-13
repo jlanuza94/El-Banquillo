@@ -8,7 +8,7 @@ import {deriveAttrs,rateA,setValue} from './players';
 import {toast} from './views/common';
 import {boot} from './boot';
 export const PF_V4=['id','name','nat','pos','age','pot','team','num','energy','form','goals','apps','yc','inj','susp','pInj','pSusp','contract','wage','tf','sg'];
-export const PF=PF_V4.concat(['sp','alt','foot','wf','h','per','tr','hap','role','cl','st','car','hist','req','prom','tw','injT','pInjT','prone','recov','agc','ph','adapt','home','paid','boomS','son','ag','lpj','lmt','loanOk','stag','edited','mt','caps','ig','vt','vh','lf','rplan','bon','rel','bpj','bg','bb','gold','rf','dev','gem','h0','og','obj','ts']);
+export const PF=PF_V4.concat(['sp','alt','foot','wf','h','per','tr','hap','role','cl','st','car','hist','req','prom','tw','injT','pInjT','prone','recov','agc','ph','adapt','home','paid','boomS','son','ag','lpj','lmt','loanOk','stag','edited','mt','caps','ig','vt','vh','lf','rplan','bon','rel','bpj','bg','bb','gold','rf','dev','gem','h0','og','obj','ts','trA','trL']);
 export const packName=p=>{const L=NAMES[COUNTRIES[p.nat].lang],i=p.name.indexOf(' '),a=L[0].indexOf(p.name.slice(0,i)),b=L[1].indexOf(p.name.slice(i+1));return a>=0&&b>=0?a+'.'+b:p.name;};
 export function pack(){
  const o=Object.assign({},S);o.players=undefined;o.rng=rngState();

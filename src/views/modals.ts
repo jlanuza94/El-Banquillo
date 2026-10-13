@@ -1,5 +1,7 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {agentName} from '../connected';
+import {agentFee} from '../market';
 import {REFS,refFor} from '../extras2';
 import {WX,coachH2H,nextWeather,spPrepFor,wxTxt} from '../extras';
 import {coachOf} from '../living';
@@ -37,7 +39,7 @@ export function modalView(){
   <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadgeS(p)}<span>${p.age} años</span>${keyAttrs(p).map(k=>`<span>${AT_SH[k]} ${atCellS(p,k)}</span>`).join('')}</div>`;
   if(n.agreed!=null){body=head+`<div class="negmsg ok">Traspaso acordado: ${money(n.agreed)}. Falta el contrato del jugador.</div>${n.closed?'':termsForm(p,'buy')}${n.msg&&n.kind==='no'?`<div class="negmsg no">${esc(n.msg)}</div>`:''}${counterBox(n,p,'buy')}
    <div class="acts"><button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button>${n.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="buy">Proponer contrato</button>`}</div>`;}
-  else body=head+`<div class="kv"><span>Valor de mercado</span><b>${money(p.value)}</b>${p.team!==null?`<span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Cláusula de rescisión</span><b>${money(p.cl)}</b>`:''}<span>${p.team===null?'Prima que pide':'Precio que piden'}</span><b>${money(ask)}</b>${n.counter?`<span>Su última contraoferta</span><b>${money(n.counter)}</b>`:''}<span>Tu presupuesto</span><b>${money(S.budget)}</b></div>
+  else body=head+`<div class="kv"><span>Valor de mercado</span><b>${money(p.value)}</b>${p.team!==null?`<span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Cláusula de rescisión</span><b>${money(p.cl)}</b>`:''}<span>${p.team===null?'Prima que pide':'Precio que piden'}</span><b>${money(ask)}</b>${n.counter?`<span>Su última contraoferta</span><b>${money(n.counter)}</b>`:''}<span>Agente</span><b>${esc(agentName(p))} · comisión ${money(agentFee(p,ask))}</b><span>Tu presupuesto</span><b>${money(S.budget)}</b></div>
   ${n.closed?'':`<div class="row" style="margin-top:14px;align-items:flex-end"><label class="f"><span class="eyebrow">Tu oferta (en millones de €)</span><input type="number" id="bidAmt" min="0" step="0.01" value="${suggest.toFixed(3)}"></label></div>
   ${p.team!==null?`<div class="filters" style="margin-top:10px"><label class="f"><span class="eyebrow">Forma de pago</span><select id="bidInst">${[[1,'Todo ahora'],[2,'2 plazos (hoy y en un año)'],[3,'3 plazos (hoy y en dos años)']].map(([v,l])=>`<option value="${v}" ${(n.opt&&n.opt.inst||1)===v?'selected':''}>${l}</option>`).join('')}</select></label>
   <label class="f"><span class="eyebrow">Incluir a un jugador tuyo</span><select id="bidSwap"><option value="">Nadie</option>${squad(S.user).filter(q=>!q.loan).sort((a,b)=>b.value-a.value).map(q=>`<option value="${q.id}" ${n.opt&&n.opt.swap===q.id?'selected':''}>${esc(q.name)} · ${q.sp} · lo valoran en ${money(swapValue(q,p.team))}</option>`).join('')}</select></label>

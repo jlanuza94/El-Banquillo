@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {poAdvance} from './playoffs';
 import {mgrGrow,projOffer,projSeasonEnd} from './extras2';
 import {assignObjectives,galaSeasonEnd,objectivesSeasonEnd} from './extras';
 import {discoveries} from './devplus';
@@ -62,6 +63,7 @@ export function finishRound(){
  const m=S.match;
  if(m.ref.k==='fr'){applyResult(m);playerTick(false);S.match=null;S.pre.left--;const inc=r3(unit(LG(uLg()).rep)*.3);S.budget=r3(S.budget+inc);const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'];
   news(`Amistoso: ${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}. Taquilla ${money(inc)}. Química ${Math.round(S.chem)}.`,my>op?'good':my<op?'bad':'');S.view='inicio';saveNow();render();return;}
+ if(m.ref.k==='po'){applyResult(m);playerTick(false);S.match=null;poAdvance(quickMatch,applyResult,mkTie);S.view='inicio';saveNow();render();return;}
  const {ev}=finishCore();S.view='inicio';
  S.modal=ev.t==='lg'?{type:'round',round:ev.r}:ev.t==='cup'?{type:'cupres',c:m.ref.c,r:m.ref.r}:ev.t==='ct'?{type:'ctres',ct:m.ref.ct,s:ev.s}:{type:'cwcres',s:ev.s};
  saveNow();render();

@@ -85,3 +85,40 @@ aside.side .ngroup .gt{letter-spacing:.14em}
  .vhead h2{font-size:17px}
  .vrow:has(>.seg) .vhead h2{display:none}
 }
+.contbtn.dl{background:#c0392b;color:#fff;animation:mdp 1.6s ease-in-out infinite}
+.dlfeed{margin-bottom:10px;border-color:#c0392b}
+
+/* ---------- Inicio: panel de mando ---------- */
+.dash{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:0 0 10px}
+@media (max-width:899px){.dash{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.dcard{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,35,25,.05);min-width:0;cursor:pointer}
+.dcard:hover{border-color:var(--accent)}
+.dcard .dl{font-family:var(--f-num);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dcard b{font-family:var(--f-display);font-size:22px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dcard .ds{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dcard.hot{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.dcard.warn{box-shadow:inset 3px 0 0 var(--loss)}
+.dcard.ok{box-shadow:inset 3px 0 0 var(--win)}
+.tasks{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.task{border:1px solid var(--line);background:var(--surface2);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--ink);cursor:pointer}
+.task:hover{border-color:var(--accent)}
+@media (orientation:landscape) and (max-height:500px){
+ .dash{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-bottom:6px}
+ .dcard{padding:5px 8px;border-radius:10px}
+ .dcard .dl{font-size:9.5px}
+ .dcard b{font-size:16px}
+ .dcard .ds{font-size:10px}
+ .tasks{margin-bottom:6px}.task{font-size:11.5px;padding:2px 8px}
+}
+
+/* ---------- Semana de entrenamiento ---------- */
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.wkd{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 3px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);min-width:0;position:relative}
+.wkd .wkn{font-family:var(--f-num);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.wkd .wki{font-size:20px;line-height:1.1}
+.wkd select{width:100%;font-size:11px;padding:2px;border-radius:6px;border:1px solid var(--line);background:var(--surface);min-width:0}
+.wkd.match{background:var(--menu);color:#fff;border-color:var(--menu)}
+.wkd.match .wkn{color:#cfe3d6}
+.wkd.s-fis{box-shadow:inset 0 3px 0 #c0392b}.wkd.s-tec{box-shadow:inset 0 3px 0 #2f5fa8}.wkd.s-tac{box-shadow:inset 0 3px 0 #8e44ad}.wkd.s-ata{box-shadow:inset 0 3px 0 #e07a2a}.wkd.s-def{box-shadow:inset 0 3px 0 #2c8a4e}.wkd.s-bp{box-shadow:inset 0 3px 0 #b4761a}.wkd.s-prep{box-shadow:inset 0 3px 0 var(--accent)}.wkd.s-rec,.wkd.s-des{box-shadow:inset 0 3px 0 #7fb3d5}
+.wksum{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px}
+@media (orientation:landscape) and (max-height:500px){.wkd{padding:4px 2px}.wkd .wki{font-size:16px}.wkd select{font-size:10px}}

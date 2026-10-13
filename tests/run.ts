@@ -12,6 +12,13 @@ import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics'
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
 import { PL, LG } from '../src/state';
 import { cellVal } from '../src/sorttable';
+import { poAdvance, setupPO } from '../src/playoffs';
+import { cupName as cupNameF, mkTie as mkTieF } from '../src/competitions';
+import { applyResult as applyResultF, quickMatch as quickMatchF } from '../src/engine';
+import { dlActive, dlStep } from '../src/marketfm';
+import { aiTransfers as aiTransfersF, isDeadline as isDeadlineF } from '../src/market';
+import { incomingOffer as incomingOfferF } from '../src/squad';
+import { sched, schedWeekly, setPreset, setSession, trMult } from '../src/training2';
 import { cal, lgDay, seasonStart, torneo, winRounds } from '../src/calendar';
 import { inWindow as inWindowF, windowTxt as windowTxtF } from '../src/market';
 import { processBids, sendBid, tsWeight } from '../src/marketfm';
@@ -327,8 +334,8 @@ const app = document.getElementById('app')!;
     const opp = S.teams.find(x => x.id !== S.user).id; ok(Array.isArray(rivalAdvice(opp)), 'consejos contra el rival');
     S.vt = { tac: 'rival' }; render();
     setFormation(f0); t.tac = tac0; t.ment = m0; if (r0.length) t.roles = r0; S.vt = {};
-    const p0 = PL(t.lineup[3]); const fm = { us: 'h', h: S.user, f: { h: t.formation }, lu: { h: t.lineup.slice() }, ro: { h: userRoles().slice() } }; learnRoles(fm);
-    ok(p0.rf && p0.rf[fm.ro.h[3]] > 50 && famMult(p0, fm.ro.h[3]) > 1, 'el jugador aprende el rol que juega');
+    const p0 = PL(t.lineup[3]); const fm = { us: 'h', h: S.user, f: { h: t.formation }, lu: { h: t.lineup.slice() }, ro: { h: userRoles().slice() } }; const rf0 = (p0.rf && p0.rf[fm.ro.h[3]]) ?? 50; learnRoles(fm);
+    ok(p0.rf && p0.rf[fm.ro.h[3]] > rf0 && famMult(p0, fm.ro.h[3]) > .97, 'el jugador aprende el rol que juega');
     const lm = { us: 'h', lz: { h: { l: 2, c: 2, r: 2 }, a: { l: 12, c: 2, r: 2 } } }; ok(laneShare(lm, 'a').l > 60 && /derecha/.test(laneTip(lm)), 'el ayudante ve por dónde nos atacan');
     S.view = 'inicio'; render(); }
   { // Mercado, ojeo, joyas y desarrollo
@@ -401,6 +408,17 @@ const app = document.getElementById('app')!;
     const mp = squad(S.user)[0]; mp.ts = 'no'; ok(tsWeight(mp) === 0, 'intocable: nadie pregunta'); mp.ts = 'list'; ok(tsWeight(mp) > 1, 'transferible: más ofertas'); mp.ts = '';
     S.view = 'mercado'; S.mk.tab = 'ofe'; render(); ok(app.textContent.includes('Tus ofertas') && app.textContent.includes('Ofertas que recibes'), 'pestaña de ofertas'); S.mk.tab = 'sell'; render(); ok(app.querySelector('[data-ts]'), 'estado de cada jugador en Vender'); S.mk.tab = 'buy';
     S.view = 'plantilla'; render(); ok(app.querySelector('.vrow .vhead'), 'cabecera de sección junto a las pestañas'); S.view = 'inicio'; render(); }
+  { // Copas reales, liguilla, día de cierre, panel de inicio y semana de entrenamiento
+    const esp = COUNTRIES.findIndex(c => c.code === 'ESP'), ing = COUNTRIES.findIndex(c => c.code === 'ING'); ok(cupNameF(esp) === 'Copa del Rey' && cupNameF(ing) === 'FA Cup', 'copas con su nombre real');
+    const po0 = S.po; S.po = null; const tb = table(uLg()); setupPO(tb, mkTieF); S.po.n = 'Liguilla'; ok(S.po.ties.length === 4 && S.po.ties[0].h === tb[0].id && S.po.ties[0].a === tb[7].id, 'liguilla: 1º contra 8º');
+    for (let k = 0; k < 3; k++) poAdvance(quickMatchF, applyResultF, mkTieF); ok(S.po.done && S.po.champ != null, 'liguilla jugada hasta la final: campeón ' + T(S.po.champ).name); S.po = po0;
+    const wk = S.week; S.week = winRounds()[0]; S.day = lgDay(S.week) - 1; S.dlDone = null; ok(dlActive(isDeadlineF, lgDay), 'hoy es el día de cierre');
+    for (let k = 0; k < 6; k++) dlStep(aiTransfersF, incomingOfferF); ok(S.dlDone === S.day && S.dlFeed.length === 6 && !dlActive(isDeadlineF, lgDay), 'día de cierre por horas hasta las 23:59'); S.week = wk;
+    S.view = 'inicio'; render(); ok(app.querySelectorAll('.dcard').length === 6, 'panel de mando en inicio');
+    setPreset('intensa'); ok(S.train.int === 'i' && S.train.focus === 'fis', 'semana intensa: físico e intensidad alta'); setPreset('tactica'); ok(S.train.focus === 'tac', 'semana táctica');
+    const f = T(S.user).formation, fa = famOf(f); schedWeekly(famOf); ok(famOf(f) >= fa && squad(S.user).every(p => p.loan || p.trA != null), 'la semana táctica sube el dominio y todos tienen nota de entrenamiento');
+    const pp = squad(S.user).find(p => !p.loan); pp.trA = 8; ok(trMult(pp) > 1.1, 'buena nota de entrenamiento: mejora más rápido'); setSession(0, 'des'); ok(sched()[0] === 'des', 'cambiar una sesión'); setPreset('normal');
+    S.view = 'entreno'; S.vt = { ent: 'plan' }; render(); ok(app.querySelectorAll('.wkd').length === 7 && app.querySelector('[data-ses]'), 'calendario semanal de entrenamiento'); S.vt = {}; S.view = 'inicio'; render(); }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });

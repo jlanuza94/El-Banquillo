@@ -1,5 +1,13 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {PRESETS_T,setPreset,setSession} from './training2';
+import {dlActive,dlStep} from './marketfm';
+import {aiTransfers,isDeadline} from './market';
+import {incomingOffer} from './squad';
+import {lgDay} from './calendar';
+import {poAdvance} from './playoffs';
+import {applyResult,createMatch,quickMatch} from './engine';
+import {compLabel,mkTie} from './competitions';
 import {TS,processBids,sendBid} from './marketfm';
 import {fineHim,indivTalk,jobDecision,startProject,startStadium} from './extras2';
 import {liveRatings} from './engine';
@@ -88,6 +96,9 @@ document.addEventListener('click',e=>{
   case'pub-sell':S.view='mercado';S.mk.tab='sell';break;
   case'proj':startProject(d.v);break;
   case'ns-build':{const err=startStadium(seatCost);if(err)toast(err);break;}
+  case'po-play':{if(!S.po)break;S.match=createMatch({k:'po',i:+d.i});S.match.label=compLabel({k:'po',i:+d.i});S.view='partido';break;}
+  case'po-sim':poAdvance(quickMatch,applyResult,mkTie);break;
+  case'tr-preset':setPreset(d.v);toast('Semana: '+PRESETS_T[d.v].n.toLowerCase()+'.');break;
   case'pique':if(S.pique){S.pique.resp=d.v;toast(d.v==='r'?'Le respondes en la prensa. Ahora toca ganar.':'Prefieres no entrar al trapo.');}break;
   case'sp-prep':S.spPrep={opp:+d.id};toast('El equipo prepara la defensa a balón parado contra este rival.');break;
   case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
@@ -257,6 +268,7 @@ document.addEventListener('click',e=>{
   case'fb-place':{if(S.fbSel==null)return;const r=el.getBoundingClientRect();moveDot(S.fbSel,(e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100);S.fbSel=null;afterMove(slotsOf(FREE),roleList);break;}
   case'cal-m':S.calM=d.v==='0'?0:(S.calM||0)+(+d.v);break;
   case'continue':{if(S.match){S.view='partido';break;}if(S.week>=nRounds()){S.view='inicio';break;}
+   if(dlActive(isDeadline,lgDay)){dlStep(aiTransfers,incomingOffer);break;}
    const r=continueDay();processBids(false);if(r==='match'){S.modal={type:'matchday'};}else{S.modal=null;}break;}
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
@@ -306,6 +318,7 @@ document.addEventListener('change',e=>{
  else if(e.target.dataset&&e.target.dataset.dev){const [pid,k]=e.target.dataset.dev.split('|');setDev(pid,k,v);}
  else if(id==='t-vc0'||id==='t-vc1'){const t=T(S.user);t.vc=t.vc||[];t.vc[+id.slice(4)]=v||null;}
  else if(e.target.dataset&&e.target.dataset.ts){const p=PL(e.target.dataset.ts);if(p&&p.team===S.user){p.ts=v;toast(`${p.name}: ${TS[v].toLowerCase()}.`);}}
+ else if(e.target.dataset&&e.target.dataset.ses!=null){setSession(+e.target.dataset.ses,v);}
  else if(id==='rotTh'){S.rot={th:+v};}
  else if(id==='awC'){const c=+v,cur=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}

@@ -30,3 +30,18 @@ export const tsWeight=p=>p.ts==='no'?0:p.ts==='list'?4:1;
 /** Los cedibles atraen peticiones de cesión. */
 export function loanRequests(){if(!inWindow())return;const L=Object.values(S.players).filter(p=>p.team===S.user&&p.ts==='loan'&&!p.loan);if(!L.length||rnd()>.35)return;const p=L[Math.floor(rnd()*L.length)];
  news(`Hay clubes interesados en llevarse cedido a ${p.name}. Puedes cederle desde Mercado › Vender.`,'',{cat:'mer',subj:`Piden la cesión de ${p.name}`,act:[{l:'Ver ventas',a:'pub-sell',id:p.id}]});}
+
+/* ---------- Día de cierre en directo: el último día del mercado avanza por horas ---------- */
+export const DL_H=['10:00','13:00','16:00','19:00','22:00','23:59'];
+/** Día del cierre del mercado abierto ahora (la víspera de la jornada tras la que se cierra). */
+export function dlDay(isDeadline,lgDay){return isDeadline()?lgDay(S.week)-1:-1;}
+export const dlActive=(isDeadline,lgDay)=>{const d=dlDay(isDeadline,lgDay);return d>=0&&S.day===d&&S.dlDone!==S.day;};
+/** Una hora del día de cierre: fichajes de última hora en el mundo, pujas por los tuyos y respuestas al momento. */
+export function dlStep(aiTransfers,incomingOffer){
+ S.dlH=(S.dlH&&S.dlD===S.day?S.dlH:0)+1;S.dlD=S.day;const h=DL_H[Math.min(S.dlH,DL_H.length)-1];
+ const before=(S.tlog||[]).length;aiTransfers(14);const moves=(S.tlog||[]).slice(0,Math.max(0,(S.tlog||[]).length-before)).slice(0,4);
+ incomingOffer();processBids(true);
+ S.dlFeed=(S.dlD===S.day&&S.dlFeed?S.dlFeed:[]).concat([{h,t:moves.length?moves.map(x=>`${x.name} → ${T(x.to).name}${x.fee?' ('+money(x.fee)+')':''}`).join(' · '):'Rumores y llamadas, pero ningún cierre todavía.'}]);
+ if(S.dlH>=DL_H.length){S.dlDone=S.day;news('¡Se cierra el mercado! Ya no se pueden fichar jugadores con contrato hasta la próxima ventana.','',{cat:'mer',subj:'Cierre del mercado'});}
+ else news(`Día de cierre · ${h}: ${S.dlFeed[S.dlFeed.length-1].t}`,'',{cat:'mer',subj:`Día de cierre · ${h}`});
+}

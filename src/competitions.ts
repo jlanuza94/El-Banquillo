@@ -1,5 +1,6 @@
 /* El Banquillo · competitions.js — Calendario de la temporada, copas nacionales, Mundial de Clubes y competiciones continentales. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {realCup} from './playoffs';
 import {money,r2,r3,rnd,shuffle} from './core';
 import {COUNTRIES,LV_NAMES} from './data';
 import {nC,wcs,cName,LG,S,T,findLg,lgTeams,seasonLabel,uLg,unit} from './state';
@@ -10,7 +11,7 @@ import {unlock} from './club';
 import {processWeek} from './squad';
 export const CUP_AFTER=[3,8,13,18,23,28,33],CWC_AFTER=[5,10,15,20,25,30];export const NCUP=CUP_AFTER.length;
 export const CWC_NAMES=['Fase de grupos · Jornada 1','Fase de grupos · Jornada 2','Fase de grupos · Jornada 3','Cuartos de final','Semifinales','Final'];
-export const cupName=c=>`Copa de ${cName(c)}`;
+export const cupName=c=>realCup(c)||`Copa de ${cName(c)}`;
 export const cupRoundName=rd=>{const n=rd.n;return n<=2?'Final':n<=4?'Semifinales':n<=8?'Cuartos de final':n<=16?'Octavos de final':n<=32?'Dieciseisavos':(['Primera','Segunda','Tercera'][rd.k]||'Otra')+' ronda';};
 export function cupRounds(n){let r=0;while(n>1){const P=1<<Math.floor(Math.log2(n));n=r===0?Math.ceil(n/2):n===P?n/2:P;r++;}return r;}
 export const mkTie=(h,a,g)=>({h,a,g,hg:null,ag:null,pen:null,w:null,played:false,ev:[]});
@@ -29,7 +30,7 @@ export function setupCups(){
 export function cwcWelcome(){if(S.cwc&&S.cwc.teams.includes(S.user)){const fee=r2(unit(76)*2);S.budget=r3(S.budget+fee);news(`¡Clasificados para el Mundial de Clubes! Cobras ${money(fee)} por participar. Grupo ${'ABCD'[S.cwc.groups.findIndex(g=>g.includes(S.user))]}.`,'good');}}
 export const cupSlotRound=(cup,s)=>{const k=s-(NCUP-cup.R);return k>=0?k:null;};
 export const userCup=()=>S.cups?S.cups[LG(uLg()).c]:null;
-export function getFx(ref){return ref.k==='fr'?S.fr[ref.i]:ref.k==='lg'?S.fixtures[ref.lg][ref.r][ref.i]:ref.k==='cup'?S.cups[ref.c].rounds[ref.r].matches[ref.i]:ref.k==='ct'?S.conts[ref.ct].dates[ref.s][ref.i]:S.cwc.dates[ref.s][ref.i];}
+export function getFx(ref){return ref.k==='po'?S.po.ties[ref.i]:ref.k==='fr'?S.fr[ref.i]:ref.k==='lg'?S.fixtures[ref.lg][ref.r][ref.i]:ref.k==='cup'?S.cups[ref.c].rounds[ref.r].matches[ref.i]:ref.k==='ct'?S.conts[ref.ct].dates[ref.s][ref.i]:S.cwc.dates[ref.s][ref.i];}
 export const curEvent=()=>S.cal&&S.ci<S.cal.length?S.cal[S.ci]:null;
 export function userRefFor(ev){
  const me=f=>f.h===S.user||f.a===S.user;
@@ -39,6 +40,7 @@ export function userRefFor(ev){
  if(!S.cwc||!S.cwc.dates[ev.s])return null;const i=S.cwc.dates[ev.s].findIndex(me);return i>=0?{k:'cwc',s:ev.s,i}:null;
 }
 export function compLabel(ref){
+ if(ref.k==='po')return `${S.po.n} · ${['Cuartos de final','Semifinales','Final'][S.po.round]}`;
  if(ref.k==='lg')return `${LV_NAMES[LG(ref.lg).lv]} · Jornada ${ref.r+1}`;
  if(ref.k==='cup')return `${cupName(ref.c)} · ${cupRoundName(S.cups[ref.c].rounds[ref.r])}`;
  if(ref.k==='ct')return `${CONTS[ref.ct].n} · ${ref.s<6?'Grupo '+GL[S.conts[ref.ct].dates[ref.s][ref.i].g]+', jornada '+(ref.s+1):CT_STAGES[ref.s]}`;

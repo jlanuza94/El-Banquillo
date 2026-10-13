@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {DAYS,MATCH_DAY,PRESETS_T,SES,sched,schedSummary} from '../training2';
 import {duosOf,MGR_AT,PROJ,REFS,mgrAt,nsCost,projState,refFor} from '../extras2';
 import {PITCH,WX,coachH2H,nextWeather,rivalSetPieces,spPrepFor,wxTxt,OBJ_N,objProg,galaAwards} from '../extras';
 import {coachOf} from '../living';
@@ -43,11 +44,14 @@ export function entrenoView(){
  const sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),t=T(S.user);
  const chemTxt=S.chem>=80?'Excelente: se entienden de memoria.':S.chem>=60?'Buena.':S.chem>=40?'Regular: les falta conocerse.':'Baja: hay que darles minutos juntos.';
  const chemBar=v=>`<span class="abar" style="display:block"><i class="${qc(v/10)}" style="width:${v}%"></i></span>`;
- const plan=`<section class="panel"><div class="panel-h"><h2>Plan semanal</h2><span class="eyebrow">Se aplica tras cada jornada de liga</span></div>
- <div class="eyebrow" style="margin-bottom:6px">Enfoque</div><div class="chips">${Object.entries(FOCUS).map(([k,v])=>`<button class="btn sm ${S.train.focus===k?'dark':''}" data-a="tr-focus" data-v="${k}">${v.n}</button>`).join('')}</div>
- <p class="small muted" style="margin:6px 0 14px">${FOCUS[S.train.focus].d}</p>
- <div class="eyebrow" style="margin-bottom:6px">Intensidad</div><div class="seg">${Object.entries(INTS).map(([k,v])=>`<button data-a="tr-int" data-v="${k}" aria-pressed="${S.train.int===k}">${v.n}</button>`).join('')}</div>
- <p class="small muted" style="margin:6px 0 0">${S.train.int==='i'?'Mejoran más rápido, pero se cansan más y hay más riesgo de lesión.':S.train.int==='s'?'Mejoran más despacio, pero recuperan más energía y casi no se lesionan.':'Equilibrio entre mejora, cansancio y riesgo de lesión.'}</p></section>`;
+ const SM=schedSummary(),sc=sched();
+ const plan=`<section class="panel"><div class="panel-h"><h2>Semana de entrenamiento</h2><span class="eyebrow">Se aplica tras cada jornada</span></div>
+ <div class="wk">${DAYS.map((d,i)=>i===MATCH_DAY?`<div class="wkd match"><span class="wkn">${d.slice(0,3)}</span><span class="wki">🏟️</span><b>Partido</b></div>`:`<label class="wkd s-${sc[i]}"><span class="wkn">${d.slice(0,3)}</span><span class="wki">${SES[sc[i]].i}</span><select data-ses="${i}" aria-label="Sesión del ${d}">${Object.entries(SES).map(([k,v])=>`<option value="${k}" ${sc[i]===k?'selected':''}>${v.n}</option>`).join('')}</select></label>`).join('')}</div>
+ <div class="chips" style="margin:8px 0 6px">${Object.entries(PRESETS_T).map(([k,v])=>`<button class="btn sm" data-a="tr-preset" data-v="${k}">${esc(v.n)}</button>`).join('')}</div>
+ <div class="wksum"><span><b>Enfoque:</b> ${FOCUS[SM.focus].n}</span><span><b>Intensidad:</b> ${INTS[SM.int].n.toLowerCase()}</span><span><b>Carga:</b> ${SM.load.toFixed(1)}</span><span><b>Descanso:</b> ${SM.rest} día${SM.rest===1?'':'s'}</span>${SM.tac?`<span>🧠 +dominio de la formación</span>`:''}${SM.bp?`<span>🚩 +jugadas ensayadas</span>`:''}${SM.prep?`<span>📋 partido preparado (+1,5%)</span>`:''}</div>
+ <p class="small muted" style="margin:6px 0 0">${SM.int==='i'?'Semana dura: mejoran más rápido, pero se cansan más y hay más riesgo de lesión.':SM.int==='s'?'Semana suave: mejoran más despacio, pero recuperan energía y casi no se lesionan.':'Semana equilibrada entre mejora, cansancio y riesgo de lesión.'} Las sesiones dicen qué mejoran: físico, técnica, ataque o defensa; la táctica sube el dominio de la formación; el balón parado ensaya jugadas; preparar el partido el viernes da un pequeño extra el sábado.</p></section>`;
+ const trs=squad(S.user).filter(p=>!p.loan&&p.trA!=null).sort((x,y)=>y.trA-x.trA);
+ const trP=`<section class="panel"><div class="panel-h"><h2>Notas de entrenamiento</h2><span class="eyebrow">Media de las últimas semanas</span></div>${trs.length?`<p class="small muted" style="margin:0 0 6px">Los que entrenan bien (7+) mejoran hasta un 30% más rápido y están más contentos; los que entrenan mal se frenan.</p>${trs.slice(0,5).map(p=>`<div class="offer">${posChip(p)}<span class="t">${nameBtn(p)}</span>${qBadge(p.trA)}</div>`).join('')}${trs.length>5?`<div class="eyebrow" style="margin:8px 0 4px">Los que menos</div>${trs.slice(-3).reverse().map(p=>`<div class="offer">${posChip(p)}<span class="t">${nameBtn(p)}</span>${qBadge(p.trA)}</div>`).join('')}`:''}`:'<div class="empty">Las notas aparecen tras la primera semana de entrenamiento.</div>'}</section>`;
  const chem=`<section class="panel"><div class="panel-h"><h2>Química y conjunto</h2><span class="eyebrow">Afecta al rendimiento en el partido</span></div>
  <div class="arow" style="grid-template-columns:110px minmax(0,1fr) 34px"><span>Química</span>${chemBar(S.chem)}<b class="num">${Math.round(S.chem)}</b></div>
  <p class="small muted" style="margin:6px 0 12px">${chemTxt} Sube si repites el once, si ganas y con el enfoque Táctica y química. Baja con muchos cambios en la alineación y con fichajes nuevos.</p>
@@ -69,7 +73,7 @@ export function entrenoView(){
  ${young.length&&vets.length&&P.length<MAX_PAIRS?`<div class="row" style="margin-top:8px;align-items:flex-end"><label class="f"><span class="eyebrow">Joven</span><select id="mtY">${young.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.age} · ${PERS[p.per].n}</option>`).join('')}</select></label><label class="f"><span class="eyebrow">Tutor</span><select id="mtM">${vets.map(p=>`<option value="${p.id}">${esc(p.name)} · ${PERS[p.per].n} · LID ${p.at.lid??'?'}</option>`).join('')}</select></label><button class="btn sm primary" data-a="mentor-add">Asignar</button></div>`:P.length?'':`<div class="empty">${!young.length?'No tienes jugadores de 21 años o menos.':'Ningún veterano puede ser tutor (27+ años, líder o profesional).'}</div>`}</section>`;
  const tb=vtab('ent',[['plan','Plan semanal'],['ind','Individual'],['dev','Desarrollo'],['tut','Tutelaje'],['quim','Química'],['staff','Cuerpo técnico']],'plan');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- return tb.bar+(tb.cur==='plan'?two(plan,log):tb.cur==='ind'?indiv:tb.cur==='dev'?devHTML():tb.cur==='tut'?mentor:tb.cur==='quim'?chem:staff);
+ return tb.bar+(tb.cur==='plan'?two(plan,trP+log):tb.cur==='ind'?indiv:tb.cur==='dev'?devHTML():tb.cur==='tut'?mentor:tb.cur==='quim'?chem:staff);
 }
 export function canteraView(){
  const regSel=(sc)=>`<select data-reg="${sc.id}" aria-label="Región de ${esc(sc.name)}">${REGIONS.map((R,i)=>`<option value="${i}" ${sc.reg===i?'selected':''}>${R.n}</option>`).join('')}</select>`;

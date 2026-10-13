@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {schedWeekly,trMult} from './training2';
 import {loanRequests,processBids,tsWeight} from './marketfm';
 import {captainWeekly,publicWeekly,stadiumWeekly} from './extras2';
 import {objectivesWeekly,piqueWeekly} from './extras';
@@ -90,7 +91,7 @@ export function recBonus(){const F=FOCUS[S.train.focus],I=INTS[S.train.int];retu
 export function growChance(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];
  const age=p.age<=21?.075:p.age<=24?.05:p.age<=28?.025:p.age<=31?.01:0;
- return age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*trainMult()*(mentorOf(p.id)?1.2:1)*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1);
+ return trMult(p)*age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*trainMult()*(mentorOf(p.id)?1.2:1)*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1);
 }
 export function trainPlayer(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];
@@ -104,6 +105,7 @@ export function trainPlayer(p){
  S.trainLog=S.trainLog.slice(0,30);
 }
 export function weeklyTeamTraining(){
+ schedWeekly(famOf);
  if(S.train.focus==='tac'){learnTactic(T(S.user).tac,S.train.int==='i'?4:S.train.int==='s'?1.5:2.5);const g=S.train.int==='i'?4.5:S.train.int==='s'?2:3;S.chem=clamp(S.chem+g,20,100);const f=T(S.user).formation;S.famil[f]=clamp(famOf(f)+g+1,0,100);}
  Object.keys(FORMS).forEach(f=>{if(f!==T(S.user).formation&&famOf(f)>30)S.famil[f]=famOf(f)-1;});
  const n=squad(S.user).length;if(n>26)S.chem=clamp(S.chem-.5,20,100);

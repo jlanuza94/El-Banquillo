@@ -27,14 +27,14 @@ import {makePress,unlock} from './club';
 import {recBonus,trainPlayer} from './squad';
 export function createMatch(ref){
  const fx=getFx(ref);
- const m={tac:{},mods:{},ord:{},marked:{},pens:{h:0,a:0},mult:{},xi0:{},talks:{},agg:ref.k==='ct'&&fx.leg===2?(()=>{const l1=S.conts[ref.ct].dates[ref.s-1][ref.i];return[l1.ag,l1.hg];})():null,ref,ko:ref.k==='cup'||(ref.k==='cwc'&&ref.s>=3)||(ref.k==='ct'&&(fx.leg===2||ref.s===12)),neutral:ref.k==='cwc'||(ref.k==='ct'&&ref.s===12),pen:null,label:'',h:fx.h,a:fx.a,us:fx.h===S.user?'h':fx.a===S.user?'a':null,min:0,end:90+ri(1,5),score:{h:0,a:0},f:{},lu:{},ment:{},en:{},hurt:{},played:{},out:[],off:[],ycm:{},inM:{},outM:{},rat:null,mvp:null,subs:{h:0,a:0},
+ const m={tac:{},mods:{},ord:{},marked:{},pens:{h:0,a:0},mult:{},xi0:{},talks:{},agg:ref.k==='ct'&&fx.leg===2?(()=>{const l1=S.conts[ref.ct].dates[ref.s-1][ref.i];return[l1.ag,l1.hg];})():null,ref,ko:ref.k==='po'||ref.k==='cup'||(ref.k==='cwc'&&ref.s>=3)||(ref.k==='ct'&&(fx.leg===2||ref.s===12)),neutral:ref.k==='cwc'||(ref.k==='ct'&&ref.s===12),pen:null,label:'',h:fx.h,a:fx.a,us:fx.h===S.user?'h':fx.a===S.user?'a':null,min:0,end:90+ri(1,5),score:{h:0,a:0},f:{},lu:{},ment:{},en:{},hurt:{},played:{},out:[],off:[],ycm:{},inM:{},outM:{},rat:null,mvp:null,subs:{h:0,a:0},
   st:{h:{sh:0,ot:0,yc:0,rc:0,xg:0,co:0,fo:0,pa:0,pc:0},a:{sh:0,ot:0,yc:0,rc:0,xg:0,co:0,fo:0,pa:0,pc:0}},oi:{},adv:null,possSum:0,ev:[],paused:true,half:false,done:false,auto:false,speed:1,flash:-1,subOpen:false,alert:''};
  ['h','a'].forEach(s=>{const t=T(m[s]);m.f[s]=t.formation;m.lu[s]=m.us===s?t.lineup.slice():autoLineup(t.id,t.formation);m.ment[s]=m.us===s?t.ment:'bal';
   m.lu[s].forEach(id=>{if(id){m.en[id]=PL(id).energy;m.played[id]=1;}});m.mult[s]=m.us===s?chemMult(m.f[s]):(S.rivalBoost&&S.rivalBoost.team===m[s]&&m.us?1+S.rivalBoost.v:1)*(m.us?diff().ai:1);if(m.us&&S.rivalBoost&&S.rivalBoost.team===m[s])S.rivalBoost=null;m.xi0[s]=m.lu[s].slice();
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
  m.derby=m.ref.k!=='fr'&&isDerby(m.h,m.a);
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
- if(m.us){m.refr=refFor(ref,m.h);m.mult[m.us]*=duoMult(m.lu[m.us].filter(Boolean))*(1+.004*(mgrAt('tac')-5));}
+ if(m.us){if(S.prepB&&S.prepB>1&&ref.k!=='fr'){m.mult[m.us]*=S.prepB;S.prepB=1;}m.refr=refFor(ref,m.h);m.mult[m.us]*=duoMult(m.lu[m.us].filter(Boolean))*(1+.004*(mgrAt('tac')-5));}
  if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;if(spPrepFor(op))m.spd=spPrepMult();}
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});

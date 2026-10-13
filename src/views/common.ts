@@ -1,5 +1,8 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {DL_H,dlActive} from '../marketfm';
+import {isDeadline} from '../market';
+import {lgDay} from '../calendar';
 import {torneo} from '../calendar';
 import {applySorts} from '../sorttable';
 import {agenda,dateTxt,daysToMatch,isMatchDay,syncDay} from '../calendar';
@@ -66,7 +69,7 @@ export function header(){
  if(S.match)cont=`<button class="contbtn live" data-a="view" data-v="partido"><span>Volver al partido</span><small>${esc(T(S.match.h).short)} ${S.match.score.h}-${S.match.score.a} ${esc(T(S.match.a).short)} · ${S.match.min}'</small></button>`;
  else if(ended)cont=`<button class="contbtn" data-a="view" data-v="inicio"><span>Fin de temporada</span><small>Ver resumen</small></button>`;
  else{const opp=nm?T(nm.fx.h===S.user?nm.fx.a:nm.fx.h):null;
-  cont=`<button class="contbtn${md?' md':''}" data-a="continue" title="Continuar (Espacio)"><span>${md?'Día de partido':'Continuar'} ▶</span><small>${opp?`${nm.fx.h===S.user?'vs':'en'} ${esc(opp.short)} · ${md?'hoy':dtm===1?'mañana':'en '+dtm+' días'}`:'Sin partidos'}</small></button><button class="btn sm simbtn" data-a="sim-menu" title="Simular varias jornadas" aria-label="Simular varias jornadas">⏩</button>`;}
+  const dl=dlActive(isDeadline,lgDay);cont=`<button class="contbtn${md?' md':''}${dl?' dl':''}" data-a="continue" title="Continuar (Espacio)"><span>${dl?'Cierre · '+DL_H[S.dlD===S.day?Math.min(S.dlH||0,5):0]:md?'Día de partido':'Continuar'} ▶</span><small>${opp?`${nm.fx.h===S.user?'vs':'en'} ${esc(opp.short)} · ${md?'hoy':dtm===1?'mañana':'en '+dtm+' días'}`:'Sin partidos'}</small></button><button class="btn sm simbtn" data-a="sim-menu" title="Simular varias jornadas" aria-label="Simular varias jornadas">⏩</button>`;}
  return `<header class="top2 topbar"><div class="club">${crest(t,'')}<div style="min-width:0"><div class="eyebrow">${esc(dateTxt(S.day,true))} · ${esc(agenda())}${torneo(S.week)?` · ${torneo(S.week)}`:""}${inWindow()&&!ended?' · <span style="color:var(--win)">Mercado abierto</span>':''}</div><h1>${esc(t.name)}</h1></div></div>
  <div class="kpis"><div class="kpi"><span class="eyebrow">Presupuesto</span><b>${money(S.budget)}</b></div><div class="kpi"><span class="eyebrow">${esc(lgName(t.lg,true))}</span><b class="${played?(pos<=o.max?'ok':'bad'):''}">${played?pos+'º':'—'}</b></div><div class="kpi"><span class="eyebrow">Objetivo</span><b class="obj">${o.txt}</b></div><div class="kpi"><span class="eyebrow">Confianza</span><b class="${S.mgr.conf>=50?'ok':S.mgr.conf<25?'bad':''}">${Math.round(S.mgr.conf)}</b></div></div>
  <div class="tbtns"><button class="gsbtn" data-a="gsearch" aria-label="Buscar" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>${themeBtn()}${cont}</div></header>`;
