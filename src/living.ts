@@ -68,14 +68,14 @@ export function livingSeasonEnd(tabs){
    else hireFor(t,'sack');}}));
  S.coaches[S.user]&&delete S.coaches[S.user];
  // retirados que pasan a entrenar
- (S.exPlayers||[]).splice(0).forEach(x=>{if(rnd()<.6){const c=makeCoach(x.nat,clamp(25+x.fame,10,80),x.name);c.age=x.age+1;c.ex=1;S.coachPool.push(c);}});
+ S.exPlayers=(S.exPlayers||[]).filter(x=>{if(x.fame<30)return true;if(rnd()<.6){const c=makeCoach(x.nat,clamp(25+x.fame,10,80),x.name);c.age=x.age+1;c.ex=1;S.coachPool.push(c);return false;}return true;});
 }
 /** Un jugador importante se retira: puede volver como técnico (en tu cuerpo técnico o en otro banquillo). */
 export function onRetire(p){
  if(p.team===null)return;const fame=(p.car?p.car[0]/12+p.car[1]/4:0)+(p.at.lid??5)*2;
- if(fame<25&&(p.at.lid??5)<7)return;
- S.exPlayers=S.exPlayers||[];S.exPlayers.push({name:p.name,nat:p.nat,age:p.age,sp:p.sp,fame:Math.round(fame),at:{lid:p.at.lid??5,dec:p.at.dec??5,vis:p.at.vis??5,con:p.at.con??5,col:p.at.col??5}});
- if(S.exPlayers.length>12)S.exPlayers.shift();
+ if(fame<12&&(p.at.lid??5)<6&&(p.at.dec??5)<7&&(p.at.vis??5)<7)return;
+ S.exPlayers=S.exPlayers||[];S.exPlayers.push({name:p.name,nat:p.nat,age:p.age,sp:p.sp,fame:Math.round(fame),at:{lid:p.at.lid??5,dec:p.at.dec??5,vis:p.at.vis??5,con:p.at.con??5,col:p.at.col??5,res:p.at.res??5},club:T(p.team).short});
+ if(S.exPlayers.length>30)S.exPlayers.shift();
 }
 /** Fichajes bomba del mundo: llegan a la bandeja como noticia destacada. */
 export function bigTransfer(p,from,to,fee){

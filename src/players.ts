@@ -106,5 +106,12 @@ export function ensureSquad(tid){
  for(const pos in mins){let c=squad(tid).filter(p=>p.pos===pos).length;while(c<mins[pos]){const p=genPlayer(pos,t.rep-6,tid,[17,21]);assignNum(p);made.push(p);c++;}}
  return made;
 }
-export function genFreeAgents(){for(let k=0;k<260;k++)genPlayer(pick(['POR','DEF','DEF','MED','MED','DEL','DEL']),ri(36,66),null);}
+export function genFreeAgents(n=120){
+ // unos pocos nuevos (jóvenes sin club y veteranos de ligas menores); el resto de la bolsa son los que no renovaron
+ for(let k=0;k<n;k++)genPlayer(pick(['POR','DEF','DEF','MED','MED','DEL','DEL']),ri(36,66),null);
+ // tope para que la partida no crezca sin fin: se van los peores y más mayores
+ const FA=Object.values(S.players).filter(p=>p.team===null);const CAP=3500;
+ if(FA.length>CAP)FA.sort((a,b)=>(a.ovr-a.age*1.5+(a.pot*10-a.ovr)*.3)-(b.ovr-b.age*1.5+(b.pot*10-b.ovr)*.3)).slice(0,FA.length-CAP).forEach(p=>{delete S.players[p.id];});
+ RT.SQ=null;RT.keyCache=null;
+}
 export function strength(tid){const o=squad(tid).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,14);return o.reduce((a,b)=>a+b,0)/Math.max(1,o.length);}

@@ -34,6 +34,7 @@ export const windowTxt=()=>{const w=winRounds(),C=cal(),first=S.week<=w[0];
 export function tlog(x){transferRecord(x);S.tlog=S.tlog||[];S.tlog.unshift(Object.assign({season:seasonLabel(),wk:S.week+1},x));S.tlog=S.tlog.slice(0,80);}
 export function aiTransfers(n){
  const all=Object.values(S.players),teams=S.teams.filter(t=>t.id!==S.user),myLg=uLg();let done=0;
+ RT.faLow=all.filter(p=>p.team===null).length<700; // reserva de libres: la IA no vacía la bolsa
  for(let k=0;k<n;k++){
   const b=pick(teams);if(b.parent)continue;const sq=squad(b.id);if(sq.length>=27)continue;
   // cada club ficha según lo que le falta y el dinero que tiene en caja

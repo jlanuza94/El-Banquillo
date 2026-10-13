@@ -42,7 +42,7 @@ export function buildWorld(seed){
    }
   }
  });
- genFreeAgents();
+ genFreeAgents(1100);
 }
 export function startBudget(t){const L=LG(t.lg);return r2(Math.max(unit(L.rep)*4,unit(L.rep)*(12+(t.rep-L.rep)*2))*diff().budget);}
 export function objectiveFor(tid){

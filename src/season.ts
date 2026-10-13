@@ -183,7 +183,10 @@ export function newSeason(){
   setValue(p);
   if(p.team===S.user||p.home){p.ph=(p.ph||[]).concat([[seasonLabel(S.seasonN+1),p.ovr]]).slice(-12);}
   p.sg=0;p.goals=0;p.apps=0;p.yc=0;p.inj=0;p.susp=0;p.pInj=0;p.pSusp=0;p.energy=100;p.form=0;
-  if(p.team===null||(p.age>=34&&rnd()<(p.age-33)*.35)){if(p.team!==null&&p.car&&(p.car[1]>=40||p.car[0]>=320)){S.legends=(S.legends||[]).concat([{name:p.name,nat:p.nat,pos:p.sp,pj:p.car[0],g:p.car[1],a:p.car[2],club:T(p.team).short,end:seasonLabel()}]).sort((a,b)=>b.g-a.g).slice(0,60);}if(p.team===S.user)retired.push(p.name);onRetire(p);delete S.players[p.id];}
+  // los libres siguen en el mercado: se retiran por edad o si llevan demasiado tiempo sin equipo
+  if(p.team===null)p.fa=(p.fa||0)+1;
+  const retireFA=p.team===null&&((p.age>=32&&rnd()<.45)||p.fa>=3||(p.fa>=2&&p.ovr<45)||(p.age>=30&&p.ovr<40));
+  if(retireFA||(p.age>=34&&rnd()<(p.age-33)*.35)){if(p.team!==null&&p.car&&(p.car[1]>=40||p.car[0]>=320)){S.legends=(S.legends||[]).concat([{name:p.name,nat:p.nat,pos:p.sp,pj:p.car[0],g:p.car[1],a:p.car[2],club:T(p.team).short,end:seasonLabel()}]).sort((a,b)=>b.g-a.g).slice(0,60);}if(p.team===S.user)retired.push(p.name);onRetire(p);delete S.players[p.id];}
  });
  dirty();
  // expired contracts
@@ -208,6 +211,8 @@ export function newSeason(){
  devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${(p.ovr/10).toFixed(1)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
  if(retired.length)news(`Se retiran: ${retired.join(', ')}.`);
  if(freed.length)news(`Acaban contrato y se van libres: ${freed.join(', ')}.`,'bad');
+ {const FA=Object.values(S.players).filter(p=>p.team===null&&p.age<=33).sort((a,b)=>b.ovr-a.ovr),top=FA.slice(0,4);
+  if(top.length)news(`Mercado de agentes libres: ${FA.length} jugadores sin equipo este verano. Los mejores: ${top.map(p=>`${p.name} (${p.sp}, ${p.age} años, ${(p.ovr/10).toFixed(1)})`).join(', ')}. Se pueden fichar sin pagar traspaso, incluso con el mercado cerrado.`,'',{cat:'mer',subj:'Agentes libres del verano',act:[{l:'Ver libres',a:'mk-fa'}]});}
  if(back.length)news(`Vuelven de su cesión: ${back.join(', ')}.`);
  if(gone.length)news(`Terminan su cesión y vuelven a sus clubes: ${gone.join(', ')}.`);
  if(leftAc.length)news(`Dejan la cantera por edad: ${leftAc.join(', ')}.`);

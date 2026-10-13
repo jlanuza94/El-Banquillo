@@ -67,8 +67,8 @@ export function genStaffPool(){
  const l=crewLevel();S.staffPool=[];
  ['seg','ent','ent','ent','fis','fis','dd','dd','dca','dca'].forEach(r=>S.staffPool.push(makeStaff(r,l+gauss()*1.1)));
  // ex-jugadores retirados que quieren empezar a entrenar
- takeExPlayers(2).forEach(x=>{const role=x.at.lid>=7?'seg':x.at.dec>=7?'ent':'dd',m=makeStaff(role,l);m.name=x.name;m.nat=x.nat;m.age=x.age+1;m.ex=1;
-  const b=(v)=>clamp(Math.round(v+gauss()*.8),1,10);m.at.tac=b((x.at.dec+x.at.vis)/2);m.at.mot=b(x.at.lid);m.at.ent=b((x.at.con+x.at.dec)/2);m.at.jui=b((x.at.vis+x.at.col)/2);m.wage=staffWage(m);S.staffPool.push(m);});
+ takeExPlayers(4).forEach(x=>{const a=x.at,role=a.lid>=7?'seg':a.dec>=7||a.con>=7?'ent':(a.res??5)>=7&&rnd()<.6?'fis':a.vis>=7&&rnd()<.5?'dca':pick(['ent','dd','dca','fis']),m=makeStaff(role,l+.4);m.name=x.name;m.nat=x.nat;m.age=x.age+1;m.ex=1;m.from=x.club||null;
+  const b=(v)=>clamp(Math.round(v+gauss()*.8),1,10);m.at.tac=b((a.dec+a.vis)/2);m.at.mot=b(a.lid);m.at.ent=b((a.con+a.dec)/2);m.at.jui=b((a.vis+a.col)/2);m.at.jpo=b((a.vis+a.dec)/2);m.at.jov=b((a.lid+a.con)/2);m.at.fis=b(((a.res??5)+a.con)/2);m.wage=staffWage(m);S.staffPool.push(m);});
  S.staffPoolWk=S.week;
 }
 /** Países con contactos de un director deportivo (para la pantalla). */

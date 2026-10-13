@@ -5,7 +5,7 @@
 // @ts-nocheck — usa el estado heredado S.
 import {clamp,money,pick,r2,r3,ri,rnd} from './core';
 import {GRP} from './data';
-import {LG,PL,S,T,lgName,lgTeams,seasonLabel,setTeam,squad,uLg,unit} from './state';
+import {LG,PL,RT,S,T,lgName,lgTeams,seasonLabel,setTeam,squad,uLg,unit} from './state';
 import {news} from './world';
 import {assignNum,baseWage,genPlayer} from './players';
 
@@ -139,7 +139,7 @@ export function aiBuy(t,g,all){
  initCash();const L=LG(t.lg),sq=squad(t.id),cur=sq.filter(p=>grp(p)===g).map(p=>p.ovr).sort((a,b)=>b-a),need=cur.length?cur[Math.min(cur.length-1,g==='POR'?0:2)]:0;
  const ge=gesOf(t),budget=Math.max(0,t.cash*(ge==='aus'?.4:.6)+(ge==='der'?unit(L.rep)*6:0)),maxOvr=t.rep+6;let best=null,bs=-1;all=all||Object.values(S.players);
  for(let i=0;i<180;i++){const p=all[Math.floor(rnd()*all.length)];if(!p||grp(p)!==g||p.team===t.id||p.team===S.user||p.loan||!S.players[p.id])continue;
-  if(p.ovr<=need+1||p.ovr>maxOvr||p.age>32)continue;const fee=p.team===null?0:p.value*(p.contract<=1?.7:1.1);if(fee>budget)continue;
+  if(p.ovr<=need+1||p.ovr>maxOvr||p.age>32)continue;if(p.team===null&&(RT.faLow||rnd()<.45))continue;const fee=p.team===null?0:p.value*(p.contract<=1?.7:1.1);if(fee>budget)continue;
   if(p.team!==null&&LG(T(p.team).lg).rep>L.rep+4)continue;
   const sc=p.ovr-p.age*.25+(p.age<=23?(p.pot*10-p.ovr)*.2:0)-fee/Math.max(.05,unit(L.rep))*.6+rnd()*3;if(sc>bs){bs=sc;best=p;}}
  if(!best)return null;
@@ -160,4 +160,14 @@ export function aiSummerPlan(t,all){
  const u=unit(LG(t.lg).rep),tries=(t.cash>u*10?3:t.cash>u*6?2:t.cash>u*3?1:0)+(gesOf(t)==='der'?2:0);
  for(let k=0;k<tries;k++){const n=needOf(t.id);if(n.weak<=1)break;const r=aiBuy(t,n.g,all);if(!r)break;
   const s2=squad(t.id);if(s2.length>25){const w=s2.filter(p=>p!==r.p).sort((a,b)=>(a.ovr-a.age*.3)-(b.ovr-b.age*.3))[0];if(w){setTeam(w,null);w.contract=0;}}}
+}
+
+/** A mitad de temporada, los clubes con la plantilla larga rescinden a quien no cuenta: la bolsa de libres se renueva. */
+export function midSeasonReleases(){
+ let n=0;const mine=[];
+ S.teams.forEach(t=>{if(t.id===S.user||t.parent)return;const sq=squad(t.id).filter(p=>!p.loan);if(sq.length<=23)return;
+  const p=sq.sort((a,b)=>(a.ovr-a.age*.3+(a.age<=21?(a.pot*10-a.ovr)*.4:0))-(b.ovr-b.age*.3+(b.age<=21?(b.pot*10-b.ovr)*.4:0)))[0];if(!p)return;
+  setTeam(p,null);p.contract=0;n++;if(LG(t.lg).c===LG(uLg()).c&&p.ovr>=40)mine.push(`${p.name} (${t.short})`);});
+ if(n)news(`Rescisiones de invierno: ${n} jugadores quedan libres en todo el mundo${mine.length?`. En tu país: ${mine.slice(0,5).join(', ')}${mine.length>5?'…':''}`:''}. Se pueden fichar sin traspaso.`,'',{cat:'mer',subj:'Nuevos agentes libres',act:[{l:'Ver libres',a:'mk-fa'}]});
+ return n;
 }

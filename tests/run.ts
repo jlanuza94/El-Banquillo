@@ -405,7 +405,7 @@ const app = document.getElementById('app')!;
     ok(weatherMods({ k: 'cal', p: 'bue' }, {}).drain > 1.1 && weatherMods({ k: 'llu', p: 'emb' }, { est: 'pos' }).own < .95, 'calor cansa; lluvia y barro castigan la posesión');
     const opp = fake.a; ok(rivalSetPieces(opp).ck && spPrepMult() < 1, 'vídeo del rival a balón parado');
     S.view = 'tacticas'; S.vt = { tac: 'rival' }; render();
-    const mk = staffMarket(makeStaff, crewLevel); ok(mk.length === 5 && mk.every(x => x.fee > 0 && x.club != null), 'técnicos de otros clubes');
+    const mk = staffMarket(makeStaff, crewLevel); ok(mk.length === 10 && mk.every(x => x.fee > 0 && x.club != null), 'técnicos de otros clubes');
     const b0 = S.budget; S.budget = 999; const segs = S.crew.filter(x => x.role === 'seg'); S.crew = S.crew.filter(x => x.role !== 'seg'); const sg = mk.find(x => x.role === 'seg');
     ok(hireFromClub(sg.id, ST_ROLES) === '' && S.crew.some(x => x.id === sg.id) && famOf(sg.form) >= 60, 'fichar un segundo de otro club: trae su sistema');
     S.crew = S.crew.filter(x => x.id !== sg.id).concat(segs); S.budget = b0;
@@ -519,7 +519,13 @@ const app = document.getElementById('app')!;
     S.modal = { type: 'mrep', i: 0 }; render(); ok(app.querySelector('.shotmap svg circle'), 'informe de partido con mapa de tiros'); S.modal = null;
     for (const tb of ['race', 'stats', 'xi', 'hist']) { S.awTab = tb; S.view = 'premios'; render(); }
     ok(app.textContent.includes('Palmarés'), 'pantalla de estadísticas y premios');
-    S.modal = null; S.view = 'inicio'; render(); const na = (S.awards || []).length; newSeason();
+    S.modal = null; S.view = 'inicio'; render(); const na = (S.awards || []).length;
+    const keepFA = Object.values(S.players).filter(p => p.team === null && p.age <= 26 && p.ovr >= 50).slice(0, 5); S.exPlayers = (S.exPlayers || []).concat([{ name: 'Leo Prueba', nat: 0, age: 36, sp: 'MC', fame: 20, at: { lid: 6, dec: 8, vis: 8, con: 6, col: 7, res: 5 }, club: 'TST' }, { name: 'Ana Prueba', nat: 0, age: 35, sp: 'DFC', fame: 15, at: { lid: 5, dec: 6, vis: 7, con: 6, col: 8, res: 6 }, club: 'TST' }]);
+    newSeason();
+    ok(keepFA.length && keepFA.filter(p => S.players[p.id]).length >= Math.ceil(keepFA.length / 2), `los agentes libres jóvenes siguen en el mercado tras el verano (${keepFA.filter(p => S.players[p.id]).length} de ${keepFA.length})`);
+    ok(Object.values(S.players).filter(p => p.team === null).length > 500, 'la bolsa de agentes libres se llena con los que no renuevan');
+    ok((S.scoutPool || []).some(x => x.ex) || (S.staffPool || []).some(x => x.ex), 'los retirados pasan a ser candidatos a ojeador o técnico');
+    { const sc = (S.scoutPool || []).find(x => x.fee); if (sc && S.scouts.length < 3) { const b0 = S.budget; S.budget = 999; const cl = T(sc.club), c0 = cl.cash; S.view = 'cantera'; S.vt = S.vt || {}; S.vt.can = 'ojeo'; render(); const bt = app.querySelector('[data-a="scout-hire"][data-id="' + sc.id + '"]'); bt && bt.click(); await flush(); ok(S.scouts.some(x => x.id === sc.id) && cl.cash > c0, 'fichar un ojeador de otro club pagando su indemnización'); S.budget = b0; } }
     ok(S.awards.length === na + 1 && S.awards[na].ballon.length === 10 && S.awards[na].boot && S.awards[na].xi.filter(([, c]) => c).length >= 9, `premios de la temporada (Balón de Oro: ${S.awards[na].ballon[0].name})`);
     ok(S.week === 0, 'empieza la temporada siguiente');
     ok(Object.keys(S.coaches).length === S.teams.length - 1 && !S.coaches[S.user], 'cada club rival tiene entrenador con nombre');

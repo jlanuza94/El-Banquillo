@@ -8,6 +8,8 @@ import {COUNTRIES,NAMES,POS_NAME,W} from './data';
 import {LG,S,dirty,seasonLabel,squad,uLg,unit} from './state';
 import {assignNum,baseWage,decorate,genAttrs,rateA,setValue,strength,wpick} from './players';
 import {news} from './world';
+import {takeExPlayers} from './living';
+import {T} from './state';
 import {toast} from './views/common';
 export const REGIONS=[{n:'Península Ibérica',c:[0,5]},{n:'Islas Británicas y Francia',c:[1,4,12]},{n:'Europa Central',c:[2,3,8,10]},{n:'Sudamérica',c:[6,7,15],b:.25},{n:'Norte y Centroamérica',c:[9,13]},{n:'Turquía y Asia',c:[11,14]}];
 export const regionOf=c=>REGIONS.findIndex(R=>R.c.includes(c));
@@ -18,7 +20,14 @@ export function makeYouth(nat,potT){
  decorate(p,null,true);p.wage=baseWage(p);p.role='jo';return p;
 }
 export function academyIntake(n){const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=S.club?S.club.fac.can:1;n+=Math.floor((fl-1)/2);const got=[];for(let i=0;i<n&&S.academy.length<14;i++){const y=makeYouth(c,lvl+.3+.15*(fl-1)+dcaPotBonus()+gauss()*.9);S.academy.push(y);got.push(y.name);}return got;}
-export function genScoutPool(){const [F,L]=NAMES[COUNTRIES[LG(uLg()).c].lang];S.scoutPool=[0,1,2,3].map(()=>{const q=clamp(Math.round(1+rnd()*4.4),1,5);return scoutAttrs({id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:r3(Math.max(.0005,unit(LG(uLg()).rep)*.012*q))});});}
+export function genScoutPool(){const [F,L]=NAMES[COUNTRIES[LG(uLg()).c].lang],u=unit(LG(uLg()).rep),wg=q=>r3(Math.max(.0005,u*.012*q));
+ S.scoutPool=[0,1,2,3].map(()=>{const q=clamp(Math.round(1+rnd()*4.4),1,5);return scoutAttrs({id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:wg(q)});});
+ // exjugadores retirados que empiezan a ojear: buen ojo para la calidad
+ takeExPlayers(2).forEach(x=>{const a=x.at,b=v=>clamp(Math.round(v+gauss()*.8),1,10),jui=b((a.vis+a.col)/2+.5),jpo=b((a.dec+a.vis)/2-.3),q=clamp(Math.round((jui+jpo)/4),1,5);
+  S.scoutPool.push({id:'s'+(S.nextId++),name:x.name,q,jui,jpo,job:'sen',wage:wg(q),ex:1,from:x.club||null});});
+ // un ojeador de otro club: mejor, pero su club pide indemnización
+ {const my=LG(uLg()).rep,C=S.teams.filter(t=>!t.parent&&t.id!==S.user&&LG(t.lg).rep>=my-3);if(C.length){const t=pick(C),q=clamp(Math.round(3.5+rnd()*1.6),1,5),sc=scoutAttrs({id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:wg(q)*1.2});sc.jui=clamp(sc.jui+1,1,10);sc.jpo=clamp(sc.jpo+1,1,10);sc.club=t.id;sc.fee=r3(sc.wage*26);S.scoutPool.push(sc);}}
+}
 export function scoutsWeekly(){
  S.prospects=S.prospects.filter(x=>x.until>S.week);
  S.scouts.filter(sc=>sc.job!=='sen').forEach(sc=>{if(S.prospects.length>=12||rnd()>.16+.05*sc.q)return;const R=REGIONS[sc.reg],nat=pick(R.c);

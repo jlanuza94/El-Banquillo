@@ -126,11 +126,11 @@ export function spPrepMult(){const seg=(S.crew||[]).find(x=>x.role==='seg'),tac=
 
 /* ---------- 8. Fichar técnicos de otros clubes ---------- */
 export function staffMarket(makeStaff,crewLevel){
- if(S.staffMk&&S.staffMkN===S.seasonN)return S.staffMk;
+ const key=S.seasonN*2+(S.week>=((S.fixtures&&S.fixtures[0]&&S.fixtures[0].length)||38)/2?1:0);if(S.staffMk&&S.staffMkN===key)return S.staffMk;
  const my=LG(uLg()).rep,clubs=S.teams.filter(t=>!t.parent&&t.id!==S.user&&LG(t.lg).rep>=my-5);
- S.staffMk=['seg','ent','fis','dd','dca'].map(role=>{const t=pick(clubs),m=makeStaff(role,crewLevel()+1.6+Math.random()*1.2);m.club=t.id;m.fee=r3(m.wage*26);
+ S.staffMk=['seg','ent','ent','fis','fis','dd','dca','seg','dd','dca'].map(role=>{const t=pick(clubs),m=makeStaff(role,crewLevel()+1.6+Math.random()*1.2);m.club=t.id;m.fee=r3(m.wage*26);
   if(role==='seg')m.form=pick(Object.keys(FORMS).slice(0,8));if(role==='dd')m.contacts=Array.from(new Set([LG(t.lg).c].concat(m.contacts||[])));return m;});
- S.staffMkN=S.seasonN;return S.staffMk;
+ S.staffMkN=key;return S.staffMk;
 }
 /** Contratar a un técnico de otro club: pagas su indemnización y trae lo que sabe. */
 export function hireFromClub(id,R){

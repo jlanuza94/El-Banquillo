@@ -42,7 +42,7 @@ import {addPair,removePair} from './mentor';
 import {DIFF} from './difficulty';
 import {queueScout,scoutWeeks} from './scouting';
 import {fireStaff,hireStaff,renewStaff} from './staff';
-import {KEY,clamp,pick,r2,rnd} from './core';
+import {KEY,clamp,money,pick,r2,r3,rnd} from './core';
 import {ATTRS,COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
 import {news,pickTeam} from './world';
@@ -218,7 +218,7 @@ document.addEventListener('click',e=>{
   case'ct-sel':S.ctSel=+d.v;break;
   case'ct-open':S.modal=null;S.view='copas';S.cupTab='ct';S.ctSel=+d.v;break;
   case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
-  case'scout-hire':{const i=S.scoutPool.findIndex(x=>x.id===d.id);if(i>=0&&S.scouts.length<3){const sc=S.scoutPool.splice(i,1)[0];sc.reg=Math.max(0,regionOf(LG(uLg()).c));S.scouts.push(sc);toast(`${sc.name} se une como ojeador.`);}break;}
+  case'scout-hire':{const i=S.scoutPool.findIndex(x=>x.id===d.id);if(i>=0&&S.scoutPool[i].fee&&S.budget<S.scoutPool[i].fee){toast(`No te llega para la indemnización (${money(S.scoutPool[i].fee)}).`);break;}if(i>=0&&S.scouts.length<3){const sc=S.scoutPool.splice(i,1)[0];if(sc.fee){S.budget=r3(S.budget-sc.fee);if(T(sc.club))T(sc.club).cash=r2((T(sc.club).cash||0)+sc.fee);sc.fee=0;sc.club=null;}sc.reg=Math.max(0,regionOf(LG(uLg()).c));S.scouts.push(sc);toast(`${sc.name} se une como ojeador.`);}break;}
   case'scout-fire':S.scouts=S.scouts.filter(x=>x.id!==d.id);break;
   case'pros-sign':signProspect(d.id);break;
   case'ac-up':promoteYouth(d.id);break;
@@ -247,6 +247,7 @@ document.addEventListener('click',e=>{
   case'mis-go':{const F=S.misF||{},err=startMission(d.id,F.misC??(S.mk.c!=='ALL'&&S.mk.c!=='FA'?S.mk.c:wcs()[0]),F.misG||'ALL',F.misA||'21',F.misW||'4');if(err)toast(err);else toast('Ojeador en camino.');break;}
   case'mis-stop':stopMission(d.id);break;
   case'mk-pos':S.mk.pos=d.v;S.mk.limit=40;break;
+  case'mk-fa':S.view='mercado';S.mk.tab='buy';S.mk.c='FA';S.mk.adv=true;S.mk.sort='ovr';S.mk.limit=40;S.modal=null;break;
   case'mk-more':S.mk.limit+=40;break;
   case'fav':{const i=S.short.indexOf(d.id);if(i>=0)S.short.splice(i,1);else{S.short.push(d.id);toast('Añadido a Seguimiento.');}break;}
   case'neg':negState(d.id);S.modal={type:'neg',id:d.id};break;
