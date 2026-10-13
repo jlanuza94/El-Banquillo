@@ -44,7 +44,7 @@ import {KEY,clamp,pick,r2,rnd} from './core';
 import {ATTRS,COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
 import {news,pickTeam} from './world';
-import {autoLineup,fixLineup,nRounds,rotateLineup,setFormation,slotsOf,userRoles} from './tactics';
+import {autoLineup,fixLineup,nRounds,rotateLineup,setFormation,slotsOf,teamPower,userRoles} from './tactics';
 import {addEv,doSub,talkEffect} from './engine';
 import {finishRound,newSeason,playFriendly,playMatch,runTimer,simRun,simState,simToEnd,stopSim} from './season';
 import {inWindow,makeBid,makeOffer,makeTerms,negState,readTerms,refuses,sell} from './market';
@@ -102,7 +102,8 @@ document.addEventListener('click',e=>{
   case'pique':if(S.pique){S.pique.resp=d.v;toast(d.v==='r'?'Le respondes en la prensa. Ahora toca ganar.':'Prefieres no entrar al trapo.');}break;
   case'sp-prep':S.spPrep={opp:+d.id};toast('El equipo prepara la defensa a balón parado contra este rival.');break;
   case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
-  case'preset':applyPreset(d.v);toast('Sistema cargado: '+PRESETS[d.v].n+'.');break;
+  case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v);const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
+   toast(`Sistema cargado: ${PRESETS[d.v].n}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
   case'pos-sel':S.posSel=+d.i;break;
   case'duty':{const t=T(S.user);userPos(slotsOf(t.formation));t.duty[+d.i]=d.v;break;}
   case'pi-tog':{const t=T(S.user),sl=slotsOf(t.formation);userPos(sl);const L=t.pi[+d.i]=t.pi[+d.i]||[],k=L.indexOf(d.v);if(k>=0)L.splice(k,1);else{if(L.length>=3){toast('Máximo 3 instrucciones por puesto.');break;}L.push(d.v);}break;}

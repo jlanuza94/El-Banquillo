@@ -44,7 +44,7 @@ import { answerPress } from '../src/club';
 import { exportCode, importCode, loadAsync, loadSlot, deleteSlot, pack, unpack, saveNow, slots, MAX_SLOTS } from '../src/persist';
 import { render, shell } from '../src/views/common';
 import { fmtMin } from '../src/core';
-import { GOALT, goalType } from '../src/engine';
+import { GOALT, SOFT_CAP, goalType } from '../src/engine';
 import { reportHTML, reportTips, tacReport } from '../src/tacreport';
 import { nextMatch as nextMatchTR } from '../src/competitions';
 import { boot } from '../src/boot';
@@ -114,6 +114,12 @@ const app = document.getElementById('app')!;
 
   playFriendly(friendlyOpts()[0]);
   { const v0 = S.view; S.view = 'partido'; const h = shell(); S.view = v0; const mm = h.match(/<main>([\s\S]*?)<\/main>/); ok(mm && mm[1].length > 500 && h.includes('Tu once'), 'la pantalla del partido en directo se pinta'); }
+  { const m = S.match; ok(m.soft && m.soft[1] <= 1 + SOFT_CAP + 1e-9, 'techo de familiaridad en un partido normal: ' + m.soft.join(' → '));
+    const keep = { chem: S.chem, fam: S.famil[T(S.user).formation], prep: S.prepB }; S.chem = 100; S.famil[T(S.user).formation] = 100; S.prepB = 1.05;
+    const hp = squad(S.user).map(p => [p, p.hap, p.rf]); squad(S.user).forEach(p => { p.hap = 100; p.rf = Object.fromEntries(Object.keys(p.rf || {}).map(k => [k, 100])); });
+    S.fr.push(mkTie(S.user, S.teams.find(t => t.id !== S.user && t.lg === T(S.user).lg).id)); const mx = createMatch({ k: 'fr', i: S.fr.length - 1 }); S.fr.pop();
+    ok(mx.soft[0] > 1.05 && mx.soft[1] <= 1 + SOFT_CAP + 1e-9, `con todo al máximo la familiaridad no pasa de +4,5% (${mx.soft.join(' → ')})`);
+    S.chem = keep.chem; S.famil[T(S.user).formation] = keep.fam; S.prepB = keep.prep; hp.forEach(([p, h, rf]) => { p.hap = h; p.rf = rf; }); }
   { const m = S.match; ok(fmtMin(93) === '90+3' && fmtMin(40) === '40', 'el descuento se ve como 90+3'); const gt = goalType(m, m.us, m.lu[m.us].filter(Boolean).pop()); ok(!!GOALT[gt], 'tipo de gol: ' + GOALT[gt].n); }
   simToEnd(); matchView(); finishRound();
   ok(S.pre.left === 2, 'amistoso de pretemporada');

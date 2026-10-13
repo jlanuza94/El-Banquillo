@@ -21,7 +21,7 @@ import {AT_NAME,GRP,MENT,TAC0,TX,W,WIDE,newSt} from './data';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
 import {rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
-import {autoLineup,chemMult,eff,famOf,hasTr,slotsOf,subsOf,teamPower,userRoles,xg} from './tactics';
+import {autoLineup,chemMult,eff,famOf,hapMult,hasTr,slotsOf,subsOf,teamPower,userRoles,xg} from './tactics';
 import {getFx} from './competitions';
 import {makePress,unlock} from './club';
 import {recBonus,trainPlayer} from './squad';
@@ -39,6 +39,7 @@ export function createMatch(ref){
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
  m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult();m.plan=T(m[m.us]).curPlan||null;}
+ if(m.us)softCap(m);
  prepTactics(m);
  // regularidad (días buenos y malos) y partidos grandes
  ['h','a'].forEach(s=>{const xi=m.lu[s].filter(Boolean).map(PL),av=k=>xi.reduce((a,p)=>a+(p.at[k]??5),0)/Math.max(1,xi.length);
@@ -74,7 +75,7 @@ export function tacMods(m,s,log){
  if(A.rit==='rap')f('rit',1.06,1.03,1.06);else if(A.rit==='len')f('rit',.93,.95,.92,.02);
  const w=(m.wide&&m.wide[s])||0;if(A.anc==='anc')f('anc',1+w/150,1);else if(A.anc==='est')f('anc',1-w/150,1);
  const mq=(m.mq&&m.mq[s])||[50,50];
- if(A.est==='pos')f('est',B.pre==='baj'?1.06:B.pre==='alt'?.93:1,1,1,.05);else if(A.est==='dir')f('est',mq[1]>mq[0]?1.05:.98,1,1,-.02);else if(A.est==='con')f('est',((B.lin==='alt'||m.ment[o]==='att')?1.09:.95)*(1+.012*(avgAt(m,s,'DEL','vel')-5)),1,1,-.05);
+ if(A.est==='pos'){const pq=avgAt(m,s,'MED','pas')*.7+avgAt(m,s,'DEF','pas')*.3;f('est',(B.pre==='baj'?1.06:B.pre==='alt'?Math.min(1,.93+.015*(pq-5)):1)*(1+.015*(pq-5)),1,1,.05);}else if(A.est==='dir')f('est',mq[1]>mq[0]?1.05:.98,1,1,-.02);else if(A.est==='con')f('est',((B.lin==='alt'||m.ment[o]==='att')?1.09:.95)*(1+.012*(avgAt(m,s,'DEL','vel')-5)),1,1,-.05);
  const ords=m.lu[s].map(id=>id&&m.ord[s][id]).filter(Boolean);const up=ords.filter(x=>x==='sube').length,back=ords.filter(x=>x==='fija').length;
  f('ord',1+.015*up-.01*back,1+.012*up-.012*back);
  {const re=roleEffects(slotsOf(m.f[s]),m.ro&&m.ro[s]);f('rol',re.own,re.opp,1,re.poss);}
@@ -89,6 +90,13 @@ export function tacMods(m,s,log){
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)f('cap',1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4),1);
  return{own,opp,drain,poss};
 }
+/** Techo suave a todo lo que solo tiene tu equipo (química, dominio, roles aprendidos, ánimo, parejas, preparación…):
+ * cada mejora suma menos cuanto más cerca del techo y el total nunca pasa de +4,5%; por abajo puede costar hasta un 15%. */
+export const SOFT_CAP=.045,SOFT_MIN=-.15;
+export function softTotal(m){const us=m.us,sl=slotsOf(m.f[us]),ro=m.ro&&m.ro[us];let sum=0,n=0;
+ m.lu[us].forEach((id,i)=>{const p=PL(id);if(!p)return;const role=ro&&ro[i];sum+=hapMult(p)*(role&&p.rf?.97+.05*(p.rf[role]??50)/100:1);n++;});
+ return m.mult[us]*(n?sum/n:1);}
+export function softCap(m){const raw=softTotal(m),b=raw-1,c=b>0?SOFT_CAP*Math.tanh(b/SOFT_CAP):Math.max(b,SOFT_MIN);m.mult[m.us]*=(1+c)/raw;m.soft=[Math.round(raw*1000)/1000,Math.round((1+c)*1000)/1000];}
 /** Apunta un tiro para el mapa de tiros: [lado 0/1, jugador, xG en centésimas, resultado g/s/p/m, minuto]. */
 export function shotLog(m,s,pid,x,res){m.sh=m.sh||[];m.sh.push([s==='h'?0:1,pid||null,Math.round(x*100),res,m.min]);m.st[s].xg=(m.st[s].xg||0)+x;}
 export function addEv(m,t,s,tx,pid){const e={min:m.min,t,s,tx,pid:pid||null};

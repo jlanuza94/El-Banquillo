@@ -27,6 +27,10 @@ export function tacReport(m){
  const add=(k,lo,lp,ld,name)=>{const fo=Math.exp(lo/n),fp=Math.exp(lp/n),fd=Math.exp((ld||0)/n);const dF=bF*(1-1/fo),dA=bA*(1-1/fp);if(Math.abs(dF)<.015&&Math.abs(dA)<.015&&(Math.abs(fd-1)<.02||!['pre','rit','fase','pos'].includes(k)))return;F.push([k,name,r2(dF),r2(dA),Math.round((fd-1)*100)]);};
  Object.entries(tl.u).forEach(([k,e])=>{if(k==='oiR')add('oiR',e[0],0,0,NAMES.oiR);else if(k==='fase'){const a=tE.per||'nor',b=tE.rec||'nor';add(k,e[0],e[1],e[2],`Al perder: ${tacLbl('per',a)} · al recuperar: ${tacLbl('rec',b)}`);}else if(k!=='oi')add(k,e[0],e[1],e[2],lbl(k));});
  {const a=tl.u.oi||[0,0,0],b=tl.r.oiR||[0,0,0];const ois=Object.keys((m.oi&&m.oi[us])||{}).filter(k=>m.oi[us][k]).map(k=>OIS[k]?OIS[k].n.toLowerCase():k);if(ois.length||a[0]||b[0])add('oi',a[0],b[0],a[2],`Instrucciones al rival: ${ois.join(', ')||'—'}`);}
+ {// la táctica del rival: su ataque (en contra tuya) y su defensa (lo que te quitó)
+  let lo=0,lp=0;['est','fase','pre','lin','rit','anc'].forEach(k=>{const e=tl.r[k];if(e){lo+=e[0];lp+=e[1];}});
+  const fo=Math.exp(lp/n),fa=Math.exp(lo/n),dF=bF*(1-1/fo),dA=bA*(1-1/fa),rt=m.tac[o]||{};
+  if(Math.abs(dF)>=.03||Math.abs(dA)>=.03)F.push(['riv',`Cómo jugó el rival: ${tacLbl('est',rt.est)}, presión ${tacLbl('pre',rt.pre)}, línea ${tacLbl('lin',rt.lin)}`,r2(dF),r2(dA),0]);}
  add('ment',tl.m[0],tl.m[1],0,t0.me!==m.ment[us]?`Mentalidad: ${MENT[t0.me].label.toLowerCase()} → ${MENT[m.ment[us]].label.toLowerCase()}`:`Mentalidad ${MENT[m.ment[us]].label.toLowerCase()}`);
  F.sort((x,y)=>Math.abs(y[2]-y[3])-Math.abs(x[2]-x[3]));
  const gt={f:{},a:{}};m.ev.forEach(e=>{if(e.t!=='goal')return;const k=e.gt||'otro',G=e.s===us?gt.f:gt.a;G[k]=(G[k]||0)+1;});
@@ -67,6 +71,7 @@ function why(R,k){
  if(k==='anc')return u.anc==='anc'?'Jugar ancho rinde lo que rinden tus laterales y extremos.':'Jugar estrecho tapa el centro pero renuncia a las bandas.';
  if(k==='fase')return u.per==='cpr'&&r.rec==='cont'?'Tu contrapresión sufre contra un rival que sale rápido al contraataque.':u.rec==='cont'?'Salir rápido al recuperar castiga a rivales abiertos.':'';
  if(k==='pos')return 'Muchos cometidos de «Atacar» crean más pero dejan huecos; «Defender» lo contrario.';
+ if(k==='riv'){const t=[];if(r.est==='con'&&u.lin==='alt')t.push('se pusieron al contragolpe para aprovechar tu línea alta');if(r.pre==='alt'&&u.est==='pos')t.push('te presionaron arriba para cortar tu posesión');if(r.rec==='cont'&&u.per==='cpr')t.push('salían rápido para castigar tu contrapresión');return t.length?'El rival se adaptó: '+t.join('; ')+'.':'Lo que el rival ganó o perdió con su propia táctica (en verde si te favoreció).';}
  if(k==='ment')return '';
  return '';
 }
