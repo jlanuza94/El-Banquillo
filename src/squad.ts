@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {loanRequests,processBids,tsWeight} from './marketfm';
 import {captainWeekly,publicWeekly,stadiumWeekly} from './extras2';
 import {objectivesWeekly,piqueWeekly} from './extras';
 import {devWeekly} from './devplus';
@@ -120,9 +121,9 @@ export function processWeek(){
  {const bon=weeklyBonuses();S.fin.push({wk:wk+1,tv,tix,spo,shop,wages:r3(wages+bon)});}
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- scoutsWeekly();scoutingWeekly();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
- if(inWindow())aiTransfers(S.week===4||S.week===22?70:28);
- if(S.week===4||S.week===22)news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
+ scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ if(inWindow())aiTransfers(isDeadline()?70:28);
+ if(isDeadline())news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
  S.week++;S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};
  {const nx=S.week<nRounds()?nextFixture():null;if(nx){const opp=nx.h===S.user?nx.a:nx.h;if(isDerby(S.user,opp))derbyWeekNews(opp);piqueWeekly(opp,isDerby(S.user,opp));}}
@@ -135,9 +136,9 @@ export function ticket(){if(!S.club)return 0;return r3(Math.max(0,attendance()-(
 export function incomingOffer(){
  if(S.week>=nRounds()||!inWindow())return;
  const tries=isDeadline()?3:1,myRep=LG(uLg()).rep;
- for(let k=0;k<tries;k++){if(rnd()>.5)continue;
-  const mine=squad(S.user).filter(p=>!p.loan).sort((a,b)=>b.value-a.value).slice(0,10);if(!mine.length)return;
-  const p=pick(mine),cur=S.offers[p.id];
+ for(let k=0;k<tries;k++){if(rnd()>(squad(S.user).some(p=>p.ts==='list')?.7:.5))continue;
+  const mine=squad(S.user).filter(p=>!p.loan&&p.ts!=='no').sort((a,b)=>b.value-a.value).slice(0,10).concat(squad(S.user).filter(p=>p.ts==='list'&&!p.loan));if(!mine.length)return;
+  const pool=mine.flatMap(p=>Array(tsWeight(p)).fill(p)),p=pick(pool),cur=S.offers[p.id];
   const cands=S.teams.filter(t=>t.id!==S.user&&(!cur||t.id!==cur.team)&&LG(t.lg).rep>=myRep-4&&LG(t.lg).rep<=myRep+20&&t.rep>=p.ovr-6&&t.rep<=p.ovr+12);if(!cands.length)continue;
   const intr=interested(p.id).filter(id=>id!==(cur&&cur.team)),t=intr.length&&rnd()<.6?T(pick(intr)):pick(cands);
   if(cur&&cur.incoming){const amount=r2(cur.amount*(1.1+rnd()*.15));news(`¡Puja! ${t.name} supera la oferta de ${T(cur.team).name} por ${p.name}: ${money(amount)}.`,'good',{cat:'mer',subj:`Puja por ${p.name}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id}]});S.offers[p.id]={team:t.id,amount,incoming:true,rival:cur.team};}

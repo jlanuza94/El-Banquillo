@@ -70,3 +70,18 @@ aside.side .ngroup .gt{letter-spacing:.14em}
  main .small.muted{line-height:1.35}
  .tbl th,.tbl td{padding:4px 6px}
 }
+
+/* ---------- Cabecera de cada sección (icono + nombre) junto a sus pestañas ---------- */
+.vrow{display:flex;align-items:center;gap:10px;margin:0 0 10px;min-width:0}
+.vrow>.seg{margin:0!important;flex:1;min-width:0}
+.vhead{display:flex;align-items:center;gap:7px;flex:none;color:var(--ink)}
+.vhead svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vhead h2{font-size:22px;white-space:nowrap}
+.vhead h2::before{display:none}
+.vhead .vsub{font-family:var(--f-num);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-left:4px}
+@media (orientation:landscape) and (max-height:500px){
+ .vrow{margin:0 0 6px;gap:8px}
+ .vhead svg{width:18px;height:18px}
+ .vhead h2{font-size:17px}
+ .vrow:has(>.seg) .vhead h2{display:none}
+}

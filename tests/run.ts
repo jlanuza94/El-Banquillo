@@ -12,6 +12,10 @@ import { table, MAX_SUBS, subsOf, setSub, removeFromTeam } from '../src/tactics'
 import { continueDay, dayOfEvent, isMatchDay, syncDay } from '../src/calendar';
 import { PL, LG } from '../src/state';
 import { cellVal } from '../src/sorttable';
+import { cal, lgDay, seasonStart, torneo, winRounds } from '../src/calendar';
+import { inWindow as inWindowF, windowTxt as windowTxtF } from '../src/market';
+import { processBids, sendBid, tsWeight } from '../src/marketfm';
+import { COUNTRIES } from '../src/data';
 import { projOptions, projSeasonEnd } from '../src/extras2';
 import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
 import { seatCost } from '../src/club';
@@ -162,6 +166,7 @@ const app = document.getElementById('app')!;
   }
   {
     // Mercado: plazos, intercambio y % de futura venta
+    const wkM = S.week; S.week = Math.min(S.week, winRounds()[0]);
     const realBudget = S.budget, realCap = S.wageCap; S.budget = 500; S.wageCap = 99; const b0 = S.budget;
     const myLg = S.teams[S.user].lg, cands = Object.values(S.players).filter(p => p.team !== null && p.team !== S.user && S.teams[p.team].lg === myLg && !p.loan && p.age < 30 && !refuses(p));
     const target = cands[0], from = target.team, swapP = squad(S.user).filter(p => !p.loan).sort((a, b) => a.value - b.value)[0];
@@ -172,11 +177,11 @@ const app = document.getElementById('app')!;
     ok(target.team === S.user && swapP.team === from && S.debts.length === 1 && S.debts[0].left === 2, 'fichaje completado: plazos pendientes y el otro jugador se va');
     ok(Math.abs(b0 - S.budget - (r3(amt / 3) + agentFee(target, amt))) < .01, 'solo se paga el primer plazo (y la comisión del agente)');
     S.offers[target.id] = { team: from, amount: 2, incoming: true }; S.view = 'inicio';
-    S.week = 3; const why = `plantilla ${squad(S.user).length}, ${target.pos}, porteros ${squad(S.user).filter(x => x.pos === 'POR').length}, cedido ${!!target.loan}, mercado ${inWindow()}`; sell(target.id, true);
+    S.week = winRounds()[0]; const why = `plantilla ${squad(S.user).length}, ${target.pos}, porteros ${squad(S.user).filter(x => x.pos === 'POR').length}, cedido ${!!target.loan}, mercado ${inWindow()}`; sell(target.id, true);
     ok(target.team === from && target.son && target.son.team === S.user, 'venta con % de futura venta (' + why + ')');
     const bb = S.budget; sellOnIn(target, 10); ok(Math.abs(S.budget - bb - 1.5) < .01 && !target.son, 'cobras el % cuando lo vuelven a vender');
-    S.week = 4; deadlineDeals(); const dk = Object.keys(S.deals || {});
-    ok(dk.every(id => askPrice(PL(id)) === S.deals[id]), `gangas del día de cierre (${dk.length})`); S.week = 3; S.deals = {};
+    S.week = winRounds()[0]; deadlineDeals(); const dk = Object.keys(S.deals || {});
+    ok(dk.every(id => askPrice(PL(id)) === S.deals[id]), `gangas del día de cierre (${dk.length})`); S.week = wkM; S.deals = {};
     for (let i = 0; i < 30; i++) rumoursWeekly();
     ok(Object.keys(S.interest).length > 0, 'rumores de interés por tus jugadores');
     fixLineup(); S.budget = realBudget; S.wageCap = realCap; S.debts = [];
@@ -382,6 +387,20 @@ const app = document.getElementById('app')!;
     const target = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan && p.ovr >= 50); const n = { msg: '' }; for (let i = 0; i < 30 && !n.rival; i++) maybeRival(target, n, () => [S.teams.find(t => t.id !== S.user && t.id !== target.team).id]);
     ok(n.rival && n.rival.w > 0, 'otro club puja por el mismo jugador'); const lost = rivalWins(target, n, { w: n.rival.w * 3, role: 'cl' }, ROLES); ok(lost === false, 'con mejor propuesta, el jugador te elige');
     S.view = 'inicio'; render(); }
+  { // Calendario real por país y mercado al estilo FM Mobile
+    const c0 = S.calC; const byCode = k => COUNTRIES.findIndex(c => c.code === k);
+    S.calC = byCode('BRA'); ok(seasonStart().getUTCMonth() === 3 && cal().wn[0] === 'de pretemporada', 'Brasil empieza en abril');
+    S.calC = byCode('MEX'); ok(seasonStart().getUTCMonth() === 6 && torneo(0) === 'Apertura' && torneo(30) === 'Clausura', 'México: Apertura y Clausura');
+    S.calC = byCode('ALE'); ok(lgDay(17) - lgDay(16) === 28, 'Alemania: parón invernal de 3 semanas');
+    S.calC = byCode('ESP'); ok(seasonStart().getUTCMonth() === 7 && /septiembre/.test(windowTxtF()) || !inWindowF(), 'España: el mercado de verano cierra a principios de septiembre');
+    S.calC = c0;
+    const wk0 = S.week; S.week = winRounds()[0]; const tg = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan && !refuses(p)); const b0 = S.budget; S.budget = 999;
+    sendBid(tg.id, askPrice(tg) * 2, {}); ok(S.neg[tg.id].wait && S.bids.length === 1 && !S.neg[tg.id].agreed, 'la oferta queda esperando respuesta');
+    S.day = S.bids[0].due; const n0 = S.inbox.length; processBids(false); ok(!S.neg[tg.id].wait && S.neg[tg.id].agreed && S.inbox.length > n0, 'el club responde al día siguiente');
+    delete S.neg[tg.id]; S.budget = b0; S.week = wk0;
+    const mp = squad(S.user)[0]; mp.ts = 'no'; ok(tsWeight(mp) === 0, 'intocable: nadie pregunta'); mp.ts = 'list'; ok(tsWeight(mp) > 1, 'transferible: más ofertas'); mp.ts = '';
+    S.view = 'mercado'; S.mk.tab = 'ofe'; render(); ok(app.textContent.includes('Tus ofertas') && app.textContent.includes('Ofertas que recibes'), 'pestaña de ofertas'); S.mk.tab = 'sell'; render(); ok(app.querySelector('[data-ts]'), 'estado de cada jugador en Vender'); S.mk.tab = 'buy';
+    S.view = 'plantilla'; render(); ok(app.querySelector('.vrow .vhead'), 'cabecera de sección junto a las pestañas'); S.view = 'inicio'; render(); }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });

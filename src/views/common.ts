@@ -1,5 +1,6 @@
 /* El Banquillo · views/common.js — Piezas de interfaz compartidas, menú, cabecera y render principal. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {torneo} from '../calendar';
 import {applySorts} from '../sorttable';
 import {agenda,dateTxt,daysToMatch,isMatchDay,syncDay} from '../calendar';
 import {FREE,formRows,freeCoords} from '../freeboard';
@@ -66,7 +67,7 @@ export function header(){
  else if(ended)cont=`<button class="contbtn" data-a="view" data-v="inicio"><span>Fin de temporada</span><small>Ver resumen</small></button>`;
  else{const opp=nm?T(nm.fx.h===S.user?nm.fx.a:nm.fx.h):null;
   cont=`<button class="contbtn${md?' md':''}" data-a="continue" title="Continuar (Espacio)"><span>${md?'Día de partido':'Continuar'} ▶</span><small>${opp?`${nm.fx.h===S.user?'vs':'en'} ${esc(opp.short)} · ${md?'hoy':dtm===1?'mañana':'en '+dtm+' días'}`:'Sin partidos'}</small></button><button class="btn sm simbtn" data-a="sim-menu" title="Simular varias jornadas" aria-label="Simular varias jornadas">⏩</button>`;}
- return `<header class="top2 topbar"><div class="club">${crest(t,'')}<div style="min-width:0"><div class="eyebrow">${esc(dateTxt(S.day,true))} · ${esc(agenda())}${inWindow()&&!ended?' · <span style="color:var(--win)">Mercado abierto</span>':''}</div><h1>${esc(t.name)}</h1></div></div>
+ return `<header class="top2 topbar"><div class="club">${crest(t,'')}<div style="min-width:0"><div class="eyebrow">${esc(dateTxt(S.day,true))} · ${esc(agenda())}${torneo(S.week)?` · ${torneo(S.week)}`:""}${inWindow()&&!ended?' · <span style="color:var(--win)">Mercado abierto</span>':''}</div><h1>${esc(t.name)}</h1></div></div>
  <div class="kpis"><div class="kpi"><span class="eyebrow">Presupuesto</span><b>${money(S.budget)}</b></div><div class="kpi"><span class="eyebrow">${esc(lgName(t.lg,true))}</span><b class="${played?(pos<=o.max?'ok':'bad'):''}">${played?pos+'º':'—'}</b></div><div class="kpi"><span class="eyebrow">Objetivo</span><b class="obj">${o.txt}</b></div><div class="kpi"><span class="eyebrow">Confianza</span><b class="${S.mgr.conf>=50?'ok':S.mgr.conf<25?'bad':''}">${Math.round(S.mgr.conf)}</b></div></div>
  <div class="tbtns"><button class="gsbtn" data-a="gsearch" aria-label="Buscar" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>${themeBtn()}${cont}</div></header>`;
 }
@@ -88,6 +89,14 @@ export function nav(){
 export function vtab(key,tabs,def){S.vt=S.vt||{};let cur=S.vt[key];if(!tabs.some(([k])=>k===cur))cur=def;
  return {cur,bar:`<div class="seg pltabs" role="tablist">${tabs.map(([k,l])=>`<button data-a="vtab" data-k="${key}" data-v="${k}" aria-pressed="${cur===k}">${esc(l)}</button>`).join('')}</div>`};}
 function subnav(){return '';}
+/** Cabecera de cada sección: su icono y su nombre, en la misma fila que sus pestañas (si las tiene). */
+function viewHead(body){
+ const v=S.view||'inicio',L=NAVL[v];if(!L)return body;
+ const head=`<div class="vhead">${icon(L[1])}<h2>${esc(L[0])}</h2>${v==='calendario'&&torneo(S.week)?`<span class="vsub">Torneo ${torneo(S.week)}</span>`:''}</div>`;
+ const m=/^\s*<div class="seg pltabs"[^>]*>/.exec(body);
+ if(m){const end=body.indexOf('</div>',m[0].length)+6;return `<div class="vrow">${head}${body.slice(0,end)}</div>${body.slice(end)}`;}
+ return `<div class="vrow">${head}</div>${body}`;
+}
 function subnavOld(){const cur=S.view||'inicio',g=NAVG.find(g=>g.it.some(([v])=>v===cur));if(!g||!g.g)return '';const items=g.it.filter(([v])=>!quick()||!DEEP_ONLY.includes(v)||v===cur);if(items.length<2)return '';
  return `<nav class="subnav" aria-label="${esc(g.g)}">${items.map(([v,l])=>`<button data-a="view" data-v="${v}" aria-current="${v===cur}">${esc(l)}</button>`).join('')}</nav>`;}
 export function shell(){
@@ -95,7 +104,7 @@ export function shell(){
  switch(S.view){case'partido':body=matchView();break;case'buzon':body=buzonView();break;case'staff':body=staffView();break;case'premios':body=premiosView();break;case'selecciones':body=seleccionesView();break;case'analisis':body=analisisView();break;case'editor':body=editorView();break;case'plantilla':body=plantillaView();break;case'tacticas':body=tacticasView();break;case'calendario':body=calendarioView();break;case'historia':body=historiaView();break;case'copas':body=copasView();break;case'entreno':body=entrenoView();break;case'cantera':body=canteraView();break;case'liga':body=ligaView();break;case'mercado':body=mercadoView();break;case'club':body=clubView();break;default:body=ended?seasonEndView():inicioView();}
  const more=S.moreOpen?`<div class="sheet" data-a="more-close"><div class="in">${NAVG.flatMap(g=>g.it).map(([v,l,i])=>`<button class="nitem" data-a="view" data-v="${v}" aria-current="${S.view===v}">${icon(i)}<span>${l}</span></button>`).join('')}</div></div>`:'';
  const sim=simState?`<div class="simov"><div class="box"><div class="eyebrow">Simulando</div><h2 style="margin:6px 0">${simState.n} partido${simState.n===1?'':'s'}</h2><p class="small muted">${esc(simState.txt)}</p><button class="btn" data-a="sim-stop">Detener</button></div></div>`:'';
- return `<div class="app">${nav()}<div class="mainc">${S.view==='partido'?'':header()}<main>${S.view==='partido'?'':subnav()}${body}</main></div></div>${more}${sim}${tutCard()}`;
+ return `<div class="app">${nav()}<div class="mainc">${S.view==='partido'?'':header()}<main>${S.view==='partido'?'':viewHead(body)}</main></div></div>${more}${sim}${tutCard()}`;
 }
 export function cmpRow(lbl,a,b){const mx=Math.max(a,b,1);return `<div class="cmp"><span class="a">${(a/10).toFixed(1)}</span><span class="l"><i style="width:${a/mx*100}%"></i></span><span class="lbl">${lbl}</span><span class="r2"><i style="width:${b/mx*100}%"></i></span><span class="b">${(b/10).toFixed(1)}</span></div>`;}
 export function resRow(f,r,tags){

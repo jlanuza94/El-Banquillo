@@ -2,7 +2,8 @@
  *  · Semana 1: pretemporada (amistosos).
  *  · Liga en sábado; copa, competiciones continentales y Mundial de Clubes entre semana (miércoles y jueves). */
 // @ts-nocheck — usa el estado heredado S.
-import {S} from './state';
+import {LG,S,uLg} from './state';
+import {COUNTRIES} from './data';
 import {nextMatch} from './competitions';
 
 const DAYS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
@@ -12,16 +13,46 @@ export const MONTHS_L=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
 export const FIRST_LG=12; // la primera jornada de liga es el sábado de la segunda semana
 
 /** Día (desde el inicio de la temporada) de cada evento del calendario de competiciones. */
+/** Calendario real de cada país: inicio de temporada [mes, día], parón [tras la jornada, semanas] con su nombre,
+ *  ventanas de fichajes [cierre del primero, apertura y cierre del segundo] y torneos cortos (Apertura y Clausura). */
+export const CALS={
+ ESP:{st:[7,10],brk:[17,1,'Parón de Navidad'],w:[2,19,22],wn:['de verano','de invierno']},
+ ING:{st:[7,3],brk:null,w:[2,19,22],wn:['de verano','de invierno']},
+ ITA:{st:[7,10],brk:[18,1,'Parón de Navidad'],w:[2,19,22],wn:['de verano','de invierno']},
+ ALE:{st:[7,17],brk:[16,3,'Parón invernal'],w:[2,17,20],wn:['de verano','de invierno']},
+ FRA:{st:[7,3],brk:[17,2,'Parón de invierno'],w:[3,19,22],wn:['de verano','de invierno']},
+ PRT:{st:[7,3],brk:[16,1,'Parón de Navidad'],w:[3,19,22],wn:['de verano','de invierno']},
+ NED:{st:[7,3],brk:[17,3,'Parón invernal'],w:[3,18,21],wn:['de verano','de invierno']},
+ BEL:{st:[6,20],brk:[20,2,'Parón de invierno'],w:[4,21,24],wn:['de verano','de invierno']},
+ TUR:{st:[7,3],brk:[17,3,'Parón invernal'],w:[3,19,22],wn:['de verano','de invierno']},
+ SCO:{st:[6,27],brk:[21,3,'Parón invernal'],w:[4,21,24],wn:['de verano','de invierno']},
+ BRA:{st:[3,5],brk:[10,2,'Parón de mitad de año'],w:[2,12,15],wn:['de pretemporada','de mitad de año']},
+ ARG:{st:[0,20],brk:[16,3,'Receso de invierno'],w:[3,17,20],wn:['de verano','de invierno']},
+ MEX:{st:[6,10],brk:[17,4,'Parón entre torneos'],w:[3,18,21],wn:['de verano','de invierno'],tor:1},
+ USA:{st:[1,20],brk:[20,1,'Parón del All-Star'],w:[6,20,24],wn:['de pretemporada','de verano']},
+ JPN:{st:[1,10],brk:[18,2,'Parón de verano'],w:[4,18,21],wn:['de invierno','de verano']},
+ COL:{st:[0,20],brk:[18,3,'Parón entre torneos'],w:[3,19,22],wn:['de pretemporada','de mitad de año'],tor:1},
+};
+const DEF_CAL=CALS.ESP;
+/** País cuyo calendario sigue tu temporada (el de tu liga al empezarla). */
+export const calCode=()=>{const c=S&&S.calC!=null?S.calC:(S&&S.user!=null&&S.leagues?LG(uLg()).c:0);return (COUNTRIES[c]||COUNTRIES[0]).code;};
+export const cal=()=>CALS[calCode()]||DEF_CAL;
+/** Día de una jornada de liga, contando el parón. */
+export function lgDay(r){const C=cal();return FIRST_LG+7*r+(C.brk&&r>C.brk[0]?C.brk[1]*7:0);}
+/** Ventanas de fichajes en jornadas: [cierre de la primera, apertura y cierre de la segunda]. */
+export const winRounds=()=>cal().w;
+/** Torneo corto (Apertura o Clausura) en las ligas que lo usan. */
+export const torneo=r=>cal().tor?(r<19?'Apertura':'Clausura'):'';
 export function eventDays(){
- if(S._evd&&S._evd.n===S.cal.length&&S._evd.s===S.seasonN)return S._evd.d;
+ if(S._evd&&S._evd.n===S.cal.length&&S._evd.s===S.seasonN&&S._evd.c===calCode())return S._evd.d;
  const d=[];let lastLg=-1,extra=0;
- S.cal.forEach(ev=>{if(ev.t==='lg'){lastLg=ev.r;extra=0;d.push(FIRST_LG+7*ev.r);}else{d.push(lastLg<0?FIRST_LG-3+extra:FIRST_LG+7*lastLg+4+extra);extra++;}});
- Object.defineProperty(S,'_evd',{value:{n:S.cal.length,s:S.seasonN,d},enumerable:false,configurable:true,writable:true});
+ S.cal.forEach(ev=>{if(ev.t==='lg'){lastLg=ev.r;extra=0;d.push(lgDay(ev.r));}else{d.push(lastLg<0?FIRST_LG-3+extra:lgDay(lastLg)+4+extra);extra++;}});
+ Object.defineProperty(S,'_evd',{value:{n:S.cal.length,s:S.seasonN,c:calCode(),d},enumerable:false,configurable:true,writable:true});
  return d;
 }
 export const dayOfEvent=i=>{const d=eventDays();return i<d.length?d[i]:(d.length?d[d.length-1]+3:0);};
 /** Lunes de inicio de temporada (primera semana de agosto). */
-export function seasonStart(n=S.seasonN){const y=2025+n,dt=new Date(Date.UTC(y,7,3));while(dt.getUTCDay()!==1)dt.setUTCDate(dt.getUTCDate()+1);return dt;}
+export function seasonStart(n=S.seasonN){const C=cal(),y=(C.st[0]>=6?2025:2026)+n,dt=new Date(Date.UTC(y,C.st[0],C.st[1]));while(dt.getUTCDay()!==1)dt.setUTCDate(dt.getUTCDate()+1);return dt;}
 export function dateOf(day){const dt=seasonStart();dt.setUTCDate(dt.getUTCDate()+day);return dt;}
 export const dateTxt=(day,long)=>{const dt=dateOf(day),w=(dt.getUTCDay()+6)%7;return long?`${DAYS_L[w]} ${dt.getUTCDate()} de ${MONTHS_L[dt.getUTCMonth()].toLowerCase()} de ${dt.getUTCFullYear()}`:`${DAYS[w]} ${dt.getUTCDate()} ${MONTHS[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`;};
 export const weekday=day=>(dateOf(day).getUTCDay()+6)%7;
@@ -35,6 +66,7 @@ export function agenda(){
  if(nm&&S.day>=ev)return 'Día de partido';
  if(nm&&ev-S.day===1)return 'Víspera de partido: descanso activo';
  if(S.day<FIRST_LG&&S.pre&&S.pre.left>0)return 'Pretemporada';
+ {const C=cal();if(C.brk&&S.day>lgDay(C.brk[0])&&S.day<lgDay(C.brk[0]+1)-3)return C.brk[2];}
  if(wd===6)return 'Día libre';
  return wd===0||wd===3?'Entrenamiento y análisis':'Entrenamiento';
 }

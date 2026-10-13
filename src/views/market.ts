@@ -1,6 +1,7 @@
 /* El Banquillo · views/market.js — Pantallas del mercado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {wcs} from '../state';
+import {TS} from '../marketfm';
 import {missionCountries,missionOf,missionScouts} from '../scoutplus';
 import {canBuyback} from '../negotiate';
 import {trendTag} from '../economy';
@@ -22,11 +23,12 @@ export function mkList(){
  if(mk.tab==='moves'){const L=(S.tlog||[]).filter(x=>x.season===seasonLabel());return L.length?`<p class="small muted" style="margin:0 0 8px">Últimos traspasos entre clubes de todo el mundo esta temporada.</p><div class="tbl"><table><thead><tr><th>J</th><th>Jugador</th><th>De</th><th>A</th><th class="r">Precio</th></tr></thead><tbody>${L.slice(0,60).map(x=>{const pl=PL(x.pid);return `<tr class="${x.to===S.user||x.from===S.user?'me':''}"><td class="num">${x.wk}</td><td>${pl?nameBtn(pl):esc(x.name)}</td><td>${x.from==null?'<span class="tag">Libre</span>':`<span class="teamcell">${crest(T(x.from),'sm')}${esc(T(x.from).short)}</span>`}</td><td><span class="teamcell">${crest(T(x.to),'sm')}${esc(T(x.to).short)} <span class="divtag">${lgName(T(x.to).lg,true)}</span></span></td><td class="n">${x.fee?money(x.fee):'Libre'}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">Aún no hay traspasos esta temporada. Los clubes se mueven cuando abre el mercado.</div>';}
  if(mk.tab==='sell'){
   const sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr);
-  return `<div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Valor</th><th class="r">Sueldo/sem</th><th>Contrato</th><th></th></tr></thead><tbody>
-  ${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td class="n">${money(p.wage)}</td><td>${contractTxt(p)}</td><td class="r">${p.loan?'':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="sell" data-id="${p.id}">Buscar oferta</button><button class="btn sm" data-a="loanout" data-id="${p.id}">Ceder</button><button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button></span>`}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<p class="small muted" style="margin:0 0 8px">Marca el estado de cada jugador: <b>Transferible</b> (le llegarán más ofertas), <b>Cedible</b> (habrá clubes que pidan su cesión) o <b>Intocable</b> (nadie preguntará por él).</p><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Valor</th><th class="r">Sueldo/sem</th><th>Contrato</th><th>Estado</th><th></th></tr></thead><tbody>
+  ${sq.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td class="n">${money(p.wage)}</td><td>${contractTxt(p)}</td><td>${p.loan?'':`<select data-ts="${p.id}" class="ts-${p.ts||'n'}" aria-label="Estado de ${esc(p.name)}">${Object.entries(TS).map(([k,l])=>`<option value="${k}" ${(p.ts||'')===k?'selected':''}>${l}</option>`).join('')}</select>`}</td><td class="r">${p.loan?'':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="sell" data-id="${p.id}">Buscar oferta</button><button class="btn sm" data-a="loanout" data-id="${p.id}">Ceder</button><button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button></span>`}</td></tr>`).join('')}</tbody></table></div>`;
  }
  const head=`<thead><tr><th></th><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Pot.</th>${attrHead()}<th>Contrato</th><th class="r">Precio</th><th></th></tr></thead>`;
  if(mk.tab==='ojeo')return missionsHTML();
+ if(mk.tab==='ofe')return offersHub();
  if(mk.tab==='short'){
   const l=S.short.map(PL).filter(p=>p&&p.team!==S.user);
   return l.length?`<div class="tbl"><table>${head}<tbody>${l.map(marketRow).join('')}</tbody></table></div>`:'<div class="empty">Aún no sigues a nadie. Marca la estrella ☆ de un jugador en Buscar para tenerlo aquí.</div>';
@@ -60,6 +62,16 @@ export function mkList(){
  return `<p class="small muted" style="margin:0 0 8px">${total} jugador${total>1?'es':''} encontrado${total>1?'s':''}</p><div class="tbl"><table>${head}<tbody>${list.map(marketRow).join('')}</tbody></table></div>
  ${total>list.length?`<div class="row" style="justify-content:center;margin-top:12px"><button class="btn" data-a="mk-more">Mostrar más (${total-list.length})</button></div>`:''}`;
 }
+/** Todas las negociaciones en un sitio: tus ofertas en curso, las que recibes y tus transferibles. */
+function offersHub(){
+ const mine=Object.entries(S.neg||{}).map(([id,n])=>[PL(id),n]).filter(([p,n])=>p&&p.team!==S.user&&(n.wait||n.agreed||n.counter||n.msg));
+ const st=n=>n.wait?['Esperando respuesta','']:n.agreed?['Aceptada: negocia el contrato','xi']:n.closed?['Negociación cerrada','bad']:n.counter?[`Piden ${money(n.counter)}`,'']:['En curso',''];
+ const inc=Object.entries(S.offers||{}).filter(([id,o])=>o.incoming&&PL(id)&&PL(id).team===S.user);
+ const list=squad(S.user).filter(p=>p.ts&&!p.loan);
+ return `<h3 style="margin:0 0 6px">Tus ofertas</h3>${mine.length?mine.map(([p,n])=>{const s_=st(n);return `<div class="offer">${posChip(p)}<span class="t">${nameBtn(p)} <span class="small muted">· ${p.team!==null?esc(T(p.team).name):'agente libre'}${n.wait?' · ofreces '+money(n.wait.amt):n.agreed?' · '+money(n.agreed):''}</span><br><span class="small muted">${esc(n.msg||'')}</span></span><span class="tag ${s_[1]}">${s_[0]}</span><button class="btn sm ${n.agreed?'primary':''}" data-a="neg" data-id="${p.id}">${n.agreed?'Contrato':'Abrir'}</button></div>`;}).join(''):'<div class="empty">No tienes negociaciones en marcha. Busca jugadores y haz una oferta: el club responde en 1 o 2 días.</div>'}
+ <h3 style="margin:14px 0 6px">Ofertas que recibes</h3>${inc.length?inc.map(([id,o])=>{const p=PL(id);return `<div class="offer">${crest(T(o.team),'sm')}<span class="t"><b>${esc(T(o.team).name)}</b> ofrece <b>${money(o.amount)}</b> por ${nameBtn(p)} <span class="small muted">(valor ${money(p.value)})</span></span><button class="btn sm primary" data-a="offer-view" data-id="${id}">Ver</button></div>`;}).join(''):'<div class="empty">Nadie ha preguntado por tus jugadores. Márcalos como «Transferible» en Vender para atraer ofertas.</div>'}
+ <h3 style="margin:14px 0 6px">Tu lista</h3>${list.length?list.map(p=>`<div class="offer">${posChip(p)}<span class="t">${nameBtn(p)} <span class="small muted">· valor ${money(p.value)}</span></span><span class="tag ${p.ts==='no'?'onxi':''}">${TS[p.ts]}</span></div>`).join(''):'<div class="empty">Ningún jugador marcado.</div>'}`;
+}
 /** Misiones de ojeo: cada ojeador de primer equipo puede ir a un país a buscar un tipo de jugador. */
 function missionsHTML(){
  const sen=missionScouts(),F=S.misF||{};
@@ -73,7 +85,7 @@ function missionsHTML(){
 export function mercadoView(){
  const mk=S.mk,wages=squad(S.user).reduce((a,p)=>a+p.wage,0);
  const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur)===v?'selected':''}>${l}</option>`).join('')}</select>`;
- return `<div class="${inWindow()?'negmsg ok':'negmsg'}" style="margin:0 0 14px">${windowTxt()}</div><section class="panel"><div class="panel-h"><div class="seg"><button data-a="mk-tab" data-v="moves" aria-pressed="${mk.tab==='moves'}">Movimientos</button><button data-a="mk-tab" data-v="buy" aria-pressed="${mk.tab==='buy'}">Buscar</button><button data-a="mk-tab" data-v="short" aria-pressed="${mk.tab==='short'}">Seguimiento (${S.short.filter(id=>PL(id)&&PL(id).team!==S.user).length})</button><button data-a="mk-tab" data-v="ojeo" aria-pressed="${mk.tab==='ojeo'}">Misiones de ojeo</button><button data-a="mk-tab" data-v="sell" aria-pressed="${mk.tab==='sell'}">Vender</button></div>
+ return `<div class="${inWindow()?'negmsg ok':'negmsg'}" style="margin:0 0 14px">${windowTxt()}</div><section class="panel"><div class="panel-h"><div class="seg"><button data-a="mk-tab" data-v="moves" aria-pressed="${mk.tab==='moves'}">Movimientos</button><button data-a="mk-tab" data-v="buy" aria-pressed="${mk.tab==='buy'}">Buscar</button><button data-a="mk-tab" data-v="short" aria-pressed="${mk.tab==='short'}">Seguimiento (${S.short.filter(id=>PL(id)&&PL(id).team!==S.user).length})</button><button data-a="mk-tab" data-v="ofe" aria-pressed="${mk.tab==='ofe'}">Ofertas${(()=>{const k=Object.values(S.neg||{}).filter(n=>n.wait||n.agreed).length+Object.values(S.offers||{}).filter(o=>o.incoming).length;return k?' ('+k+')':'';})()}</button><button data-a="mk-tab" data-v="ojeo" aria-pressed="${mk.tab==='ojeo'}">Misiones de ojeo</button><button data-a="mk-tab" data-v="sell" aria-pressed="${mk.tab==='sell'}">Vender</button></div>
  <span class="small muted">Presupuesto ${money(S.budget)} · Sueldos ${money(wages)}/sem · ${squad(S.user).length} jugadores</span></div>
  ${mk.tab==='buy'?`<div class="filters">
   <div class="chips">${['ALL','POR','DEF','MED','DEL'].map(p=>`<button class="btn sm ${mk.pos===p?'dark':''}" data-a="mk-pos" data-v="${p}">${p==='ALL'?'Todos':p}</button>`).join('')}</div>

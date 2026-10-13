@@ -57,7 +57,7 @@ export function makeFixtures(ids){
 }
 export function setupSeason(){
  S.fixtures=S.leagues.map(L=>makeFixtures(lgTeams(L.id).map(t=>t.id)));
- S.week=0;S.fin=[];S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.ligaRound=0;S.ligaLg=uLg();
+ S.week=0;if(S.user!=null&&S.leagues)S.calC=LG(uLg()).c;S.fin=[];S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.ligaRound=0;S.ligaLg=uLg();
  S.obj=objectiveFor(S.user);
  if(S.coaches)S.teams.forEach(applyStyle);else S.teams.forEach(t=>{if(t.id!==S.user&&rnd()<.4)t.formation=pick(Object.keys(FORMS));});
  setExpectations();

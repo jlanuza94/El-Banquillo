@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {TS,processBids,sendBid} from './marketfm';
 import {fineHim,indivTalk,jobDecision,startProject,startStadium} from './extras2';
 import {liveRatings} from './engine';
 import {seatCost} from './club';
@@ -229,7 +230,7 @@ document.addEventListener('click',e=>{
   case'mk-more':S.mk.limit+=40;break;
   case'fav':{const i=S.short.indexOf(d.id);if(i>=0)S.short.splice(i,1);else{S.short.push(d.id);toast('Añadido a Seguimiento.');}break;}
   case'neg':negState(d.id);S.modal={type:'neg',id:d.id};break;
-  case'bid':{const g=x=>document.getElementById(x),v=parseFloat(String(g('bidAmt')?.value||'').replace(',','.'));makeBid(d.id,v,{inst:+(g('bidInst')?.value||1),son:!!g('bidSon')?.checked,swap:g('bidSwap')?.value||null});break;}
+  case'bid':{const g=x=>document.getElementById(x),v=parseFloat(String(g('bidAmt')?.value||'').replace(',','.'));sendBid(d.id,v,{inst:+(g('bidInst')?.value||1),son:!!g('bidSon')?.checked,swap:g('bidSwap')?.value||null});break;}
   case'sell-son':{const o=S.offers[d.id];if(o&&!o.son){o.amount=r2(o.amount*.9);o.son=1;}sell(d.id,true);return;}
   case'pay-clause':{const p=PL(d.id),n=negState(d.id);if(!inWindow()){n.msg='El mercado está cerrado.';n.kind='no';break;}if(refuses(p)){n.msg=`${p.name} no quiere jugar en ${lgName(uLg())}.`;n.kind='no';n.closed=true;break;}if(p.cl>S.budget){n.msg='No te llega para pagar la cláusula.';n.kind='no';break;}n.agreed=p.cl;n.viaClause=1;n.tries=0;n.msg='';break;}
   case'terms-ok':makeTerms(d.id,d.m,readTerms());break;
@@ -256,7 +257,7 @@ document.addEventListener('click',e=>{
   case'fb-place':{if(S.fbSel==null)return;const r=el.getBoundingClientRect();moveDot(S.fbSel,(e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100);S.fbSel=null;afterMove(slotsOf(FREE),roleList);break;}
   case'cal-m':S.calM=d.v==='0'?0:(S.calM||0)+(+d.v);break;
   case'continue':{if(S.match){S.view='partido';break;}if(S.week>=nRounds()){S.view='inicio';break;}
-   const r=continueDay();if(r==='match'){S.modal={type:'matchday'};}else{S.modal=null;}break;}
+   const r=continueDay();processBids(false);if(r==='match'){S.modal={type:'matchday'};}else{S.modal=null;}break;}
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
@@ -304,6 +305,7 @@ document.addEventListener('change',e=>{
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}
  else if(e.target.dataset&&e.target.dataset.dev){const [pid,k]=e.target.dataset.dev.split('|');setDev(pid,k,v);}
  else if(id==='t-vc0'||id==='t-vc1'){const t=T(S.user);t.vc=t.vc||[];t.vc[+id.slice(4)]=v||null;}
+ else if(e.target.dataset&&e.target.dataset.ts){const p=PL(e.target.dataset.ts);if(p&&p.team===S.user){p.ts=v;toast(`${p.name}: ${TS[v].toLowerCase()}.`);}}
  else if(id==='rotTh'){S.rot={th:+v};}
  else if(id==='awC'){const c=+v,cur=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}

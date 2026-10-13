@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {cal,dateTxt,lgDay,winRounds} from './calendar';
 import {maybeRival,rivalWins} from './extras2';
 import {interested} from './market2';
 import {markArrival} from './devplus';
@@ -24,9 +25,12 @@ import {maxExtra,renState} from './contracts';
 import {fansReact,unlock} from './club';
 import {save} from './persist';
 import {render,toast} from './views/common';
-export const inWindow=()=>S.week<=4||(S.week>=19&&S.week<=22);
-export const isDeadline=()=>S.week===4||S.week===22;
-export const windowTxt=()=>inWindow()?`Mercado abierto: cierra tras la jornada ${S.week<=4?5:23}${isDeadline()?' (¡último día!)':''}.`:`Mercado cerrado: abre tras la jornada ${S.week<19?19:'38 (verano)'}. Puedes fichar agentes libres y renovar.`;
+export const inWindow=()=>{const w=winRounds();return S.week<=w[0]||(S.week>=w[1]&&S.week<=w[2]);};
+export const isDeadline=()=>{const w=winRounds();return S.week===w[0]||S.week===w[2];};
+/** Texto de la ventana de fichajes con su nombre y la fecha real de cierre o apertura (según el país). */
+export const windowTxt=()=>{const w=winRounds(),C=cal(),first=S.week<=w[0];
+ if(inWindow()){const r=first?w[0]:w[2];return `Mercado ${C.wn[first?0:1]} abierto: cierra el ${dateTxt(lgDay(r)+1,true).toLowerCase()} (tras la jornada ${r+1})${isDeadline()?' · ¡último día!':''}.`;}
+ return S.week<w[1]?`Mercado cerrado: el mercado ${C.wn[1]} abre el ${dateTxt(lgDay(w[1]-1)+1,true).toLowerCase()}. Puedes fichar agentes libres y renovar.`:`Mercado cerrado hasta el mercado ${C.wn[0]} de la próxima temporada. Puedes fichar agentes libres y renovar.`;};
 export function tlog(x){transferRecord(x);S.tlog=S.tlog||[];S.tlog.unshift(Object.assign({season:seasonLabel(),wk:S.week+1},x));S.tlog=S.tlog.slice(0,80);}
 export function aiTransfers(n){
  const all=Object.values(S.players),teams=S.teams.filter(t=>t.id!==S.user),myLg=uLg();let done=0;
