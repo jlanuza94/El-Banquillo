@@ -54,7 +54,7 @@ export function saveNow(raw){
  let str;try{str=pack();}catch(e){return;}
  const meta=slotMeta(S);slots=slots.filter(x=>x.id!==meta.id).concat([meta]).sort((a,b)=>a.id-b.id);
  const seq=++saveSeq,write=val=>idbDo('readwrite',st=>{st.put(val,slotKey(meta.id));st.put(slots,'slots');st.delete(KEY);return st.put(meta.id,'last');});
- (raw!==true&&canZip()?zipStr(str).catch(()=>str):Promise.resolve(str))
+ return (raw!==true&&canZip()?zipStr(str).catch(()=>str):Promise.resolve(str))
   .then(val=>{if(seq!==saveSeq)return;return write(val).catch(e=>{if(val!==str)return write(str);throw e;});})
   .then(()=>{try{localStorage.removeItem(KEY);}catch(e){}})
   .catch(()=>{if(!saveWarned){saveWarned=true;toast('No se pudo guardar la partida en este navegador.');}});

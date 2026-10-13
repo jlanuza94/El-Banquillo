@@ -324,7 +324,7 @@ const app = document.getElementById('app')!;
   { // Economía viva: valores, caja de los clubes y plantillas de la IA
     const p = squad(S.user).find(x => x.pos !== 'POR'), st0 = p.st; p.st = { ...st0, pj: 10, rs: 80, g: 2 }; const hi = targetValue(p); p.st = { ...st0, pj: 10, rs: 55, g: 0 }; const lo = targetValue(p); p.st = st0;
     ok(hi > lo * 1.3, `el valor depende del rendimiento (${hi.toFixed(2)} con notas de 8 frente a ${lo.toFixed(2)} con notas de 5.5)`);
-    const v0 = p.value; p.vt = v0; p.st = { ...st0, pj: 10, rs: 85, g: 6 }; for (let i = 0; i < 6; i++) valueWeekly(); ok(p.value > v0 && trend(p) > 0, 'el valor sube poco a poco tras buenos partidos'); p.st = st0;
+    p.st = { ...st0, pj: 10, rs: 85, g: 6 }; const pv = p.value; p.value = Math.round(targetValue(p) * 700) / 1000; const v0 = p.value; p.vt = v0; for (let i = 0; i < 6; i++) valueWeekly(); ok(p.value > v0 && trend(p) > 0, 'el valor sube poco a poco tras buenos partidos'); p.st = st0; p.value = pv;
     initCash(); const lg = S.leagues.find(L => L.lv === 0), tb = lgTable(lg.id), tabs = S.leagues.map(L => L.id === lg.id ? tb : lgTable(L.id));
     const first = T(tb[0].id), last = T(tb[19].id), c1 = first.cash, c2 = last.cash; clubSeasonFinance(tabs);
     ok(first.cash - c1 > last.cash - c2, `el primero gana más dinero que el último (${(first.cash - c1).toFixed(2)} frente a ${(last.cash - c2).toFixed(2)})`);
@@ -529,14 +529,14 @@ const app = document.getElementById('app')!;
   }
 
   // Guardado en IndexedDB y varias partidas
-  saveNow(); await flush();
+  await saveNow(); await flush();
   const week = S.week, club = S.teams[S.user].name, me = S.user;
   const loaded = await loadAsync();
   ok(loaded && loaded.slot === 1 && loaded.week === week && loaded.teams[loaded.user].name === club, 'la partida se guarda y se carga');
   ok(slots.length === 1, 'aparece en «Tus partidas»');
   setS(null); dirty(); render();
   ok(app.textContent!.includes(club), 'la pantalla de inicio muestra la partida guardada');
-  pickTeam(S.teams.find(t => t.id !== team)!.id); saveNow(); await flush();
+  pickTeam(S.teams.find(t => t.id !== team)!.id); await saveNow(); await flush();
   ok(S.slot === 2 && slots.length === 2, 'segunda partida en otra ranura');
   ok((await loadSlot(1))?.user === me, 'la primera partida sigue intacta');
   await deleteSlot(2);
@@ -558,7 +558,7 @@ const app = document.getElementById('app')!;
     S.pre.left = 0; await simLoop('season', false, { stopped: () => false, progress: () => {}, yield: async () => {} }); if (S.jobless) takeJob(S.jobless.offers[0]); else { S.modal = null; newSeason(); }
     ok(S.leagues.every(L => S.teams.filter(t => t.lg === L.id).length === 20), 'tras una temporada con filial, todas las ligas siguen teniendo 20 equipos');
     ok(!filial() || S.leagues[filial().lg].lv > S.leagues[T(S.user).lg].lv, 'y el filial sigue por debajo de su primer equipo');
-    saveNow(); await flush(); await deleteSlot(S.slot);
+    await saveNow(); await flush(); await deleteSlot(S.slot);
   }
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 
