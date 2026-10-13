@@ -427,7 +427,10 @@ const app = document.getElementById('app')!;
     S.calC = c0;
     const wk0 = S.week; S.week = winRounds()[0]; const tg = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan && !refuses(p)); const b0 = S.budget; S.budget = 999;
     sendBid(tg.id, askPrice(tg) * 2, {}); ok(S.neg[tg.id].wait && S.bids.length === 1 && !S.neg[tg.id].agreed, 'la oferta queda esperando respuesta');
-    S.day = S.bids[0].due; const n0 = S.inbox.length; processBids(false); ok(!S.neg[tg.id].wait && S.neg[tg.id].agreed && S.inbox.length > n0, 'el club responde al día siguiente');
+    S.day = S.bids[0].due; const n0 = S.inbox.length; processBids(false); ok(!S.neg[tg.id].wait && (S.neg[tg.id].agreed || (S.auc || []).some(x => x.id === tg.id)) && S.inbox.length > n0, 'el club responde al día siguiente');
+    { S.auc = []; delete S.neg[tg.id]; const R = S.teams.find(t => t.id !== S.user && t.id !== tg.team); R.cash = 999; const A = { id: tg.id, team: R.id, amt: askPrice(tg) * 3, max: askPrice(tg) * 3, until: S.day + 2, wk: S.week }; S.auc.push(A);
+      sendBid(tg.id, askPrice(tg) * 2, {}); S.day = S.bids[0].due; processBids(false); ok(!S.neg[tg.id].agreed && /oferta mejor/.test(S.neg[tg.id].msg), 'puja: si ofreces menos que el rival, te piden superarla');
+      S.day = A.until + 1; processBids(false); ok(tg.team === R.id && !(S.auc || []).length, 'puja: si no mejoras a tiempo, el rival se lleva al jugador'); S.auc = []; }
     delete S.neg[tg.id]; S.budget = b0; S.week = wk0;
     const mp = squad(S.user)[0]; mp.ts = 'no'; ok(tsWeight(mp) === 0, 'intocable: nadie pregunta'); mp.ts = 'list'; ok(tsWeight(mp) > 1, 'transferible: más ofertas'); mp.ts = '';
     S.view = 'mercado'; S.mk.tab = 'ofe'; render(); ok(app.textContent.includes('Tus ofertas') && app.textContent.includes('Ofertas que recibes'), 'pestaña de ofertas'); S.mk.tab = 'sell'; render(); ok(app.querySelector('[data-ts]'), 'estado de cada jugador en Vender'); S.mk.tab = 'buy';
