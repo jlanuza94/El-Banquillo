@@ -153,6 +153,7 @@ export function seasonSummary(){
 }
 export function newSeason(){
  const sm=seasonSummary(),tabs=S.leagues.map(L=>table(L.id));
+ const brief0={budget:S.budget,cap:S.wageCap,rep:T(S.user).rep,lv:LG(uLg()).lv,pos:sm.pos,up:!!sm.up,down:!!sm.down,club:S.user};
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
  const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);userBankruptcy();seasonContracts(sm);
  seasonAwards();objectivesSeasonEnd();galaSeasonEnd();projSeasonEnd(sm);mgrGrow(sm);
@@ -231,5 +232,6 @@ export function newSeason(){
  else news(`Premio por terminar ${sm.pos}º: ${money(sm.prize)}.`,'good');
  news(`Arranca la temporada ${seasonLabel()} en ${lgName(uLg())}. Objetivo: ${S.obj.txt.toLowerCase()}.`,'good');
  assignObjectives();projOffer();
+ if(!S.jobless&&S.user===brief0.club){S.brief=brief0;S.modal={type:'nsbrief'};}
  S.view='inicio';saveNow();render();
 }

@@ -528,6 +528,7 @@ const app = document.getElementById('app')!;
     S.modal = null; S.view = 'inicio'; render(); const na = (S.awards || []).length;
     const keepFA = Object.values(S.players).filter(p => p.team === null && p.age <= 26 && p.ovr >= 50).slice(0, 5); S.exPlayers = (S.exPlayers || []).concat([{ name: 'Leo Prueba', nat: 0, age: 36, sp: 'MC', fame: 20, at: { lid: 6, dec: 8, vis: 8, con: 6, col: 7, res: 5 }, club: 'TST' }, { name: 'Ana Prueba', nat: 0, age: 35, sp: 'DFC', fame: 15, at: { lid: 5, dec: 6, vis: 7, con: 6, col: 8, res: 6 }, club: 'TST' }]);
     newSeason();
+    { const md = S.modal; const h = modalView(); ok(md && md.type === 'nsbrief' && /Presupuesto de fichajes/.test(h) && /Jornada 1/.test(h), 'nueva temporada: la directiva presenta presupuesto, salarios, aspiración y calendario'); S.modal = null; }
     ok(keepFA.length && keepFA.filter(p => S.players[p.id]).length >= Math.ceil(keepFA.length / 2), `los agentes libres jóvenes siguen en el mercado tras el verano (${keepFA.filter(p => S.players[p.id]).length} de ${keepFA.length})`);
     ok(Object.values(S.players).filter(p => p.team === null).length > 500, 'la bolsa de agentes libres se llena con los que no renuevan');
     ok((S.scoutPool || []).some(x => x.ex) || (S.staffPool || []).some(x => x.ex), 'los retirados pasan a ser candidatos a ojeador o técnico');

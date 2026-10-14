@@ -1,5 +1,7 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wageBill} from '../clubplus';
+import {cal,dateTxt,lgDay,winRounds} from '../calendar';
 import {preReportHTML} from '../preseason';
 import {agentName} from '../connected';
 import {agentFee} from '../market';
@@ -23,7 +25,7 @@ import {SON_PCT,dealPrice,swapValue} from '../market2';
 import {fireModal} from './staff';
 import {esc,money,r2} from '../core';
 import {AT_SH,PERS,ROLES,posChip} from '../data';
-import {PL,S,T,atCell,crest,lgName,pBadge,squad,uLg} from '../state';
+import {PL,S,T,atCell,crest,lgName,pBadge,seasonLabel,squad,uLg} from '../state';
 import {news,objectiveFor,startBudget} from '../world';
 import {step} from '../engine';
 import {CONTS,CT_STAGES,CWC_NAMES,cupName,cupRoundName} from '../competitions';
@@ -120,6 +122,15 @@ export function modalView(){
  else if(md.type==='search'){body=searchModal();}
  else if(md.type==='club'){if(!T(md.id)){S.modal=null;return '';}body=clubModal(md.id);}
  else if(md.type==='mrep'){const r=(S.mlog||[])[md.i];if(!r){S.modal=null;return '';}body=reportBody(r)+`<div class="acts">${r.tr?`<button class="btn" data-a="trep" data-v="${r.n}">Informe táctico</button>`:''}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
+ else if(md.type==='nsbrief'){const b=S.brief||{},t=T(S.user),bill=wageBill(),d=(x,y)=>x==null||y==null?'':` <span class="small">(${x>=y?'+':'−'}${money(Math.abs(x-y))})</span>`;
+  const w=winRounds(),C=cal();
+  body=`<div class="eyebrow">La directiva · temporada ${seasonLabel()}</div><h2 style="margin:4px 0 8px">${esc(t.name)}: empieza una nueva temporada</h2>
+  ${b.up?`<div class="negmsg ok" style="margin:0 0 8px">¡Ascenso! Esta temporada jugáis en ${esc(lgName(uLg()))}: más ingresos y rivales más duros.</div>`:b.down?`<div class="negmsg no" style="margin:0 0 8px">Descenso a ${esc(lgName(uLg()))}: la directiva ajusta el presupuesto.</div>`:''}
+  <div class="kv"><span>Presupuesto de fichajes</span><b>${money(S.budget)}${d(S.budget,b.budget)}</b><span>Límite salarial</span><b>${money(S.wageCap??0)}/sem${d(S.wageCap,b.cap)}</b><span>Sueldos actuales</span><b>${money(bill)}/sem · margen ${money(Math.max(0,(S.wageCap??bill)-bill))}</b>
+  <span>Aspiración de la directiva</span><b>${esc(S.obj?S.obj.txt:'')}</b><span>Confianza en ti</span><b>${Math.round(S.mgr.conf)}/100</b><span>Reputación del club</span><b>${Math.round(t.rep)}${b.rep!=null?` (${t.rep>=b.rep?'+':''}${Math.round(t.rep-b.rep)})`:''}</b></div>
+  <h3>Calendario</h3><div class="kv"><span>Pretemporada</span><b>desde el ${dateTxt(0,true).toLowerCase()}</b><span>Jornada 1</span><b>${dateTxt(lgDay(0),true).toLowerCase()}</b><span>Mercado ${C.wn[0]}</span><b>hasta el ${dateTxt(lgDay(w[0])+1,true).toLowerCase()}</b><span>Mercado ${C.wn[1]}</span><b>del ${dateTxt(lgDay(w[1]-1)+1).toLowerCase()} al ${dateTxt(lgDay(w[2])+1).toLowerCase()}</b></div>
+  <p class="small muted" style="margin:8px 0 0">Tienes la pretemporada para revisar la plantilla, montar el once, fichar y jugar amistosos${S.ptour?` y el ${esc(S.ptour.n)}`:''}.</p>
+  <div class="acts"><button class="btn primary" data-a="modal-close">Empezar la pretemporada</button></div>`;}
  else if(md.type==='ptour'){const P=S.ptour;if(!P){S.modal=null;return '';}const row=r=>`<div class="offer"><span class="t"><span class="eyebrow">${r.f==='final'?'Final':'Semifinal'}</span><br><b>${esc(T(r.h).name)} ${r.sh}-${r.sa} ${esc(T(r.a).name)}</b>${r.pen?` <span class="small muted">(pen. ${r.pen[0]}-${r.pen[1]})</span>`:''}</span></div>`;
   body=`<div class="eyebrow">Torneo de pretemporada</div><h2 style="margin:4px 0 8px">${esc(P.n)}</h2>${P.res.map(row).join('')||`<p>Semifinales: <b>${esc(T(P.sf[0][0]).name)}</b> contra <b>${esc(T(P.sf[0][1]).name)}</b>, y <b>${esc(T(P.sf[1][0]).name)}</b> contra <b>${esc(T(P.sf[1][1]).name)}</b>.</p>`}
   ${P.champ!=null?`<p style="margin:10px 0 0"><b>🏆 Campeón: ${esc(T(P.champ).name)}</b></p>`:P.st==='final'?`<p style="margin:10px 0 0">Te espera la final contra <b>${esc(T(P.final[1]).name)}</b>.</p>`:''}<p class="small muted">Premios: campeón ${money(P.prize[0])} · finalista ${money(P.prize[1])} · participar ${money(P.prize[2])}.</p><div class="acts"><button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
