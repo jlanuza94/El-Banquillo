@@ -34,7 +34,7 @@ export function preReport(){
 export function preWelcome(){
  if(S.user==null||S.jobless||!S.pre)return;const R=preReport();
  const lvl=R.rank<=3?'de los más fuertes':R.rank<=Math.ceil(R.n/2)?'de la mitad alta':R.rank<=R.n-3?'de la mitad baja':'de los más flojos';
-{ptInvite(pick,unit,rnd);if(S.ptour)news(`Invitación: el ${S.ptour.n} te invita a jugarlo con ${S.ptour.teams.slice(1).map(id=>T(id).name).join(', ')}. Semifinal y final; el campeón cobra ${money(S.ptour.prize[0])}, el finalista ${money(S.ptour.prize[1])}.`,'',{cat:'com',subj:`Invitación: ${S.ptour.n}`,act:[{l:'Participar',a:'pt-join',v:'yes'},{l:'No, gracias',a:'pt-join',v:'no'}]});}
+{ptInvite(pick,unit,rnd);if(S.ptour)news(`Invitación: el ${S.ptour.n} te invita a jugarlo con ${S.ptour.teams.slice(1).map(id=>T(id).name).join(', ')}. Semifinal y final; el campeón cobra ${money(S.ptour.prize[0])}, el finalista ${money(S.ptour.prize[1])}.`,'',{cat:'com',subj:`Invitación: ${S.ptour.n}`,act:[{l:'Participar',a:'pt-join',v:'yes'},{l:'No, gracias',a:'pt-join',v:'no'}],once:'pt'});}
  news(`Empieza la pretemporada. Tu segundo ha repasado la plantilla: el once es ${lvl} de la liga (${R.rank}º de ${R.n} por nivel).${R.sign.length?` Recomienda fichar ${R.sign.map(sp=>(SPN[sp]||sp).toLowerCase()).join(' y ')}.`:''}${R.sell.length?` Sobran ${R.sell.length}.`:''} Tienes ${daysToLeague()} días y ${PRE_FR} amistosos para preparar la temporada.`,'',
   {cat:'sta',subj:'Informe de pretemporada',act:[{l:'Ver informe',a:'pre-rep'}]});
 }
@@ -112,3 +112,9 @@ export function internalMatch(eff,slotsOf,autoLineup,rnd,poisson,news2){
  news2(`Partido interno: titulares ${ga}-${gb} suplentes. Destaca ${S.players[R.best[0]]?S.players[R.best[0]].name:''} (${R.best[2].toFixed(1)}). Sube la química del equipo.`,ga>=gb?'good':'');
  return R;
 }
+
+/** Estado de la invitación al torneo para la bandeja: null si aún hay que decidir. */
+export function ptMailState(){const P=S.ptour;if(!P||P.st==='inv')return null;
+ if(P.st==='no')return {ok:false,txt:'Rechazaste la invitación.'};
+ const next=ptNext(),R=P.res||[];
+ return {ok:true,txt:P.st==='done'?(P.champ===S.user?`🏆 ¡Campeón del ${P.n}!`:`Torneo terminado · campeón: ${T(P.champ)?T(P.champ).name:'—'}`):`✓ Te has apuntado al ${P.n}.${next?` Próximo: ${next[1].toLowerCase()} contra ${T(next[0]).name}.`:''}`};}

@@ -1,6 +1,7 @@
 /* El Banquillo · views/inbox.ts — Pantalla de la bandeja de entrada. */
 // @ts-nocheck — usa el estado heredado S.
 import {esc} from '../core';
+import {ptMailState} from '../preseason';
 import {S} from '../state';
 import {CATS} from '../inbox';
 
@@ -19,7 +20,7 @@ export function buzonView(){
  const detail=sel?`<section class="panel mdetail"><div class="row" style="margin-bottom:8px"><button class="btn sm" data-a="mail-back">← Volver</button><span class="spacer"></span><span class="eyebrow">${esc(CATS[sel.cat]?CATS[sel.cat].n:'')} · ${esc(sel.sn||'')} · jornada ${sel.wk}</span></div>
   <div class="eyebrow">De: ${esc(sel.from)}</div><h2 style="margin:4px 0 10px">${esc(sel.subj)}</h2>
   <p style="margin:0;line-height:1.55" class="${sel.kind}">${esc(sel.txt)}</p>
-  ${sel.act&&sel.act.length?`<div class="acts" style="justify-content:flex-start">${sel.act.map((x,i)=>actBtn(x,i===0)).join('')}</div>`:''}</section>`
+  ${(()=>{const st=sel.once==='pt'||(sel.act||[]).some(x=>x.a==='pt-join')?ptMailState():null;if(st)return `<div class="mdone ${st.ok?'ok':''}"><span>${esc(st.txt)}</span>${st.ok?'<button class="btn sm primary" data-a="pt-view">🏆 Ver el torneo</button>':''}</div>`;return sel.act&&sel.act.length?`<div class="acts" style="justify-content:flex-start">${sel.act.map((x,i)=>actBtn(x,i===0)).join('')}</div>`:'';})()}</section>`
  :`<section class="panel mdetail mempty"><div class="empty">Elige un mensaje para leerlo.</div></section>`;
  return `<div class="grid inbox ${sel?'has-sel':''}">${listP}${detail}</div>`;
 }

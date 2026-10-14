@@ -42,12 +42,11 @@ export function copasView(){
  <p class="small muted" style="margin:0">Lo juegan los 10 campeones de Primera de la temporada anterior y los subcampeones de los 6 países más fuertes. Campo neutral. Grupos de 4 y los dos primeros pasan a cuartos. Cada victoria da ${money(r2(unit(76)))} y el campeón cobra ${money(r2(unit(76)*8))}.</p>${ko||''}</section>
  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))">${groups}</div>`;
 }
-export function ligaView(){
- const lg=S.ligaLg,L=LG(lg),C=COUNTRIES[L.c],tb=table(lg),r=clamp(S.ligaRound,0,nRounds()-1),pl=squadsInLeague(lg);
+export function ligaView(world){
+ const lg=world?S.ligaLg:uLg(),L=LG(lg),C=COUNTRIES[L.c],tb=table(lg),r=clamp(S.ligaRound,0,nRounds()-1),pl=squadsInLeague(lg);
  const T_=vtab('liga',[['tab','Clasificación'],['jor','Jornadas'],['gol','Goleadores'],['jug','Jugadores'],['mes','Premios del mes'],['camp','Campeones'],['eco','Dinero']],'tab');
- const pickRow=`<div class="row" style="margin-bottom:10px;align-items:flex-end"><label class="f"><span class="eyebrow">País</span><select id="lgC">${wcs().map(i=>COUNTRIES[i]).map((c,i)=>`<option value="${i}" ${i===L.c?'selected':''}>${c.n}</option>`).join('')}</select></label>${flag(C.code)}
- <div class="seg" style="max-width:100%;overflow-x:auto">${Array.from({length:C.lv},(_,i)=>`<button data-a="liga-lv" data-v="${i}" aria-pressed="${L.lv===i}">${LV_NAMES[i]}</button>`).join('')}</div>
- ${lg!==uLg()?`<button class="btn sm" data-a="liga-mine">Ir a mi liga</button>`:''}</div>`;
+ const pickRow=world?`<div class="wcountries">${wcs().map(i=>[i,COUNTRIES[i]]).map(([i,c])=>`<button class="wc${i===L.c?' on':''}" data-a="w-country" data-v="${i}">${flag(c.code,'sm')}<span>${esc(c.n)}</span></button>`).join('')}</div>
+ <div class="row" style="margin:0 0 10px;align-items:center;gap:8px"><div class="seg" style="max-width:100%;overflow-x:auto">${Array.from({length:C.lv},(_,i)=>`<button data-a="liga-lv" data-v="${i}" aria-pressed="${L.lv===i}">${LV_NAMES[i]}</button>`).join('')}</div>${lg!==uLg()?`<button class="btn sm" data-a="liga-mine">Ir a mi liga</button>`:''}</div>`:'';
  const head=(h,e)=>`<div class="panel-h"><h2>${h}</h2><span class="eyebrow">${e||`${esc(C.n)} · ${LV_NAMES[L.lv]}`}</span></div>`;
  const pRow=(p,i,cols)=>`<tr class="${p.team===S.user?'me':''}"><td class="n">${i+1}</td><td>${posChip(p)} ${nameBtn(p)}</td><td><span class="teamcell">${crest(T(p.team),'sm')}${esc(T(p.team).short)}</span></td>${cols.map(c=>`<td class="${c[1]?'pts':'n'}">${c[0]}</td>`).join('')}</tr>`;
  const top=(f,n=20)=>pl.filter(p=>p.st&&f(p)>0).sort((a,b)=>f(b)-f(a)||(a.st.pj-b.st.pj)).slice(0,n);

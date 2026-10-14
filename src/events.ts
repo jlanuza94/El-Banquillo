@@ -47,7 +47,7 @@ import {loadPlan,planInMatch,savePlan} from './plans';
 import {addPair,removePair} from './mentor';
 import {DIFF} from './difficulty';
 import {queueScout,scoutWeeks} from './scouting';
-import {fireStaff,hireStaff,renewStaff} from './staff';
+import {fireStaff,hireStaff,renewStaff,staffCourse,staffMax} from './staff';
 import {KEY,clamp,money,pick,r2,r3,rnd} from './core';
 import {ATTRS,COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
 import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
@@ -95,10 +95,11 @@ document.addEventListener('click',e=>{
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
  switch(a){
-  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}if(d.v==='plantilla')markPre('pl');else if(d.v==='tacticas')markPre('tac');else if(d.v==='mercado')markPre('mk');S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
+  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}if(d.v==='plantilla')markPre('pl');else if(d.v==='tacticas')markPre('tac');else if(d.v==='mercado')markPre('mk');S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'||(d.v==='mundo'&&S.ligaLg==null)){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'lj-k':S.ljK=d.v;break;
+  case'mk-view':S.mk.view=d.v;break;
   case'm-w':S.mw=d.v;break;
   case'lph':S.lph=d.v;S.oopSel=null;S.sel=null;break;
   case'oop-slot':{const i=+d.i;if(S.oopSel==null||S.oopSel===i)S.oopSel=S.oopSel===i?null:i;else{oopSwap(T(S.user),S.oopSel,i);S.oopSel=null;}break;}
@@ -159,7 +160,7 @@ document.addEventListener('click',e=>{
   case'io-players':download('jugadores.csv',exportPlayersCSV(null),'text/csv');break;
   case'io-paste':{S.ioMsg=importData(document.getElementById('ioTxt')?.value||'');break;}
   case'gsearch':S.modal={type:'search'};render();setTimeout(()=>document.getElementById('gsq')?.focus(),30);return;
-  case'gs-lg':S.modal=null;S.view='liga';S.ligaLg=+d.id;break;
+  case'gs-lg':S.modal=null;S.view='mundo';S.ligaLg=+d.id;break;
   case'set-mode':S.mode=d.v;toast(d.v==='rapido'?'Modo rápido: tu segundo se encarga de lo rutinario.':'Modo profundo: controlas todo.');break;
   case'an-tab':S.anTab=d.v;break;
   case'an-p90':S.anP90=d.v==='1';break;
@@ -203,6 +204,7 @@ document.addEventListener('click',e=>{
   case'liga-r':S.ligaRound=clamp(S.ligaRound+(+d.d),0,nRounds()-1);break;
   case'liga-lv':S.ligaLg=findLg(LG(S.ligaLg).c,+d.v).id;break;
   case'liga-mine':S.ligaLg=uLg();break;
+  case'w-country':{const c=+d.v,cur=LG(S.ligaLg);S.ligaLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;break;}
   case'cup-tab':S.cupTab=d.v;break;
   case'more':S.moreOpen=true;break;
   case'press':answerPress(+d.i);break;
@@ -238,7 +240,7 @@ document.addEventListener('click',e=>{
   case'ct-sel':S.ctSel=+d.v;break;
   case'ct-open':S.modal=null;S.view='copas';S.cupTab='ct';S.ctSel=+d.v;break;
   case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
-  case'scout-hire':{const i=S.scoutPool.findIndex(x=>x.id===d.id);if(i>=0&&S.scoutPool[i].fee&&S.budget<S.scoutPool[i].fee){toast(`No te llega para la indemnización (${money(S.scoutPool[i].fee)}).`);break;}if(i>=0&&S.scouts.length<3){const sc=S.scoutPool.splice(i,1)[0];if(sc.fee){S.budget=r3(S.budget-sc.fee);if(T(sc.club))T(sc.club).cash=r2((T(sc.club).cash||0)+sc.fee);sc.fee=0;sc.club=null;}sc.reg=Math.max(0,regionOf(LG(uLg()).c));S.scouts.push(sc);toast(`${sc.name} se une como ojeador.`);}break;}
+  case'scout-hire':{const i=S.scoutPool.findIndex(x=>x.id===d.id);if(i>=0&&S.scoutPool[i].fee&&S.budget<S.scoutPool[i].fee){toast(`No te llega para la indemnización (${money(S.scoutPool[i].fee)}).`);break;}if(i>=0&&S.scouts.length<staffMax('sc')){const sc=S.scoutPool.splice(i,1)[0];if(sc.fee){S.budget=r3(S.budget-sc.fee);if(T(sc.club))T(sc.club).cash=r2((T(sc.club).cash||0)+sc.fee);sc.fee=0;sc.club=null;}sc.reg=Math.max(0,regionOf(LG(uLg()).c));S.scouts.push(sc);toast(`${sc.name} se une como ojeador.`);}break;}
   case'scout-fire':S.scouts=S.scouts.filter(x=>x.id!==d.id);break;
   case'pros-sign':signProspect(d.id);break;
   case'ac-up':promoteYouth(d.id);break;
@@ -258,6 +260,9 @@ document.addEventListener('click',e=>{
   case'st-fire':S.modal={type:'stfire',id:d.id};break;
   case'st-fire-ok':fireStaff(d.id);S.modal=null;break;
   case'st-renew':renewStaff(d.id);break;
+  case'st-course':{const err=staffCourse(d.id);if(err)toast(err);break;}
+  case'st-slot':S.vt=S.vt||{};S.vt.st='fich';S.stRole=d.v;break;
+  case'st-role':S.stRole=d.v||null;break;
   case'cup-open':S.modal=null;S.view='copas';S.cupTab='cup';S.cupC=null;break;
   case'cwc-open':S.modal=null;S.view='copas';S.cupTab='cwc';break;
   case'mk-tab':S.mk.tab=d.v;S.mk.limit=40;break;

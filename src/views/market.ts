@@ -12,11 +12,37 @@ import {table} from '../tactics';
 import {askPrice,inWindow,refuses,sell,windowTxt} from '../market';
 import {contractTxt} from '../contracts';
 import {attrCells,attrHead,clubCell,nameBtn,pBadgeS,potTxt} from './common';
+import {faceSVG,starsHTML,starsOf} from './pcard';
+import {suggestions} from '../quick';
+import {seen} from '../scouting';
 import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
 export function marketRow(p){
  const pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id),gem=p.gem&&knowledge(p)>=60?' <span class="tag gem" title="Tu ojeador cree que puede ser una joya">💎</span>':'';
  return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}${gem}</td><td>${clubCell(p)}</td><td class="n">${p.age}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${attrCells(p)}<td>${contractTxt(p)}</td><td class="n">${money(pr)}${trendTag(p)}</td>
  <td class="r">${no?'<span class="tag" title="No quiere jugar en tu liga">No vendría</span>':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">Ofertar</button>${canBuyback(p)?`<button class="btn sm primary" data-a="buyback" data-id="${p.id}" title="Cláusula de recompra">Recomprar · ${money(p.bb.price)}</button>`:''}${p.team!==null?`<button class="btn sm" data-a="loan" data-id="${p.id}">Cesión</button>`:''}${knowledge(p)<EXACT?`<button class="btn sm" data-a="scout" data-id="${p.id}" title="Pedir un informe">Ojear</button>`:''}</span>`}</td></tr>`;
+}
+/** Tarjeta de jugador para el mercado (estilo FM Mobile): cara, estrellas, edad, club y precio. */
+export function mkCard(p,mini){
+ const sn=seen(p),v=sn.exact?p.ovr:(sn.ovr[0]+sn.ovr[1])/2,st=starsOf(v),pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id),t=p.team!=null?T(p.team):null,gem=p.gem&&knowledge(p)>=60;
+ return `<div class="mkc${mini?' mini':''}${no?' no':''}"><button class="mkc-f" data-a="ficha" data-id="${p.id}" aria-label="Ver ficha de ${esc(p.name)}">${faceSVG(p)}</button>
+ <div class="mkc-b"><div class="mkc-t">${posChip(p)}<button class="linkname mkc-n" data-a="ficha" data-id="${p.id}">${esc(p.name)}</button>${gem?'<span title="Posible joya">💎</span>':''}</div>
+ ${starsHTML(st)}<div class="mkc-m small muted">${p.age} años · ${t?`${crest(t,'sm')} ${esc(t.short)}`:'Libre'}</div>
+ ${mini?'':`<div class="mkc-m small">${pBadgeS(p)} <span class="muted">pot.</span> ${potTxt(p)} ${trendTag(p)}</div>`}</div>
+ <div class="mkc-p"><b>${p.team===null?'Libre':money(pr)}</b>${mini?'':`<small>${money(p.wage)}/sem</small>`}${no?'<span class="tag">No vendría</span>':`<button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">${p.team===null?'Fichar':'Ofertar'}</button>`}${mini?'':`<button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-pressed="${fav}" aria-label="${fav?'Dejar de seguir':'Seguir'}">${fav?'★':'☆'}</button>`}</div></div>`;
+}
+/** Destacados arriba del buscador: lo que recomienda tu segundo, gangas y agentes libres. */
+let HL={k:'',v:null};
+function highlights(){
+ const key=[S.day,S.week,Math.round(S.budget*100),S.user].join('|');
+ if(HL.k!==key){const est=p=>{const sn=seen(p);return sn.exact?p.ovr:(sn.ovr[0]+sn.ovr[1])/2;},myAvg=squad(S.user).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11).reduce((a,b,_,A)=>a+b/A.length,0);
+  const pool=Object.values(S.players).filter(p=>p.team!==S.user&&!p.loan&&p.age<=33&&est(p)>=myAvg-4);
+  const fa=pool.filter(p=>p.team===null&&!refuses(p)).sort((a,b)=>est(b)-est(a)).slice(0,3);
+  const cand=[];for(const p of pool.filter(p=>p.team!==null).sort((a,b)=>est(b)-est(a))){if(cand.length>=60)break;if(p.value<=S.budget*1.4&&!refuses(p)&&askPrice(p)<=S.budget)cand.push(p);}
+  const gang=cand.sort((a,b)=>est(b)/Math.sqrt(askPrice(b)+.05)-est(a)/Math.sqrt(askPrice(a)+.05)).slice(0,3);
+  let sg=[];try{sg=suggestions(3).list||[];}catch(e){}
+  HL={k:key,v:{sg,gang,fa}};}
+ const H=HL.v,col=(ic,t,L,e)=>`<div class="mkhl-c"><div class="mkhl-h"><span>${ic}</span><b>${t}</b></div>${L.length?L.map(p=>mkCard(p,true)).join(''):`<div class="empty small">${e}</div>`}</div>`;
+ return `<div class="mkhl">${col('🧠','Tu segundo recomienda',H.sg,'La plantilla está bien cubierta.')}${col('💰','Gangas a tu alcance',H.gang,'Nada interesante con tu presupuesto.')}${col('🆓','Agentes libres',H.fa,'No hay libres de tu nivel.')}</div>`;
 }
 export function mkList(){
  RT.keyCache=null;const mk=S.mk;
@@ -59,7 +85,7 @@ export function mkList(){
  list.sort(so);
  const total=list.length;list=list.slice(0,mk.limit);
  if(!total)return `<div class="empty">Ningún jugador cumple estos filtros. Prueba a subir el precio máximo o quitar algún filtro.</div>`;
- return `<p class="small muted" style="margin:0 0 8px">${total} jugador${total>1?'es':''} encontrado${total>1?'s':''}</p><div class="tbl"><table>${head}<tbody>${list.map(marketRow).join('')}</tbody></table></div>
+ return `<div class="row" style="margin:0 0 8px;align-items:center"><span class="small muted">${total} jugador${total>1?'es':''} encontrado${total>1?'s':''}</span><span class="spacer"></span><div class="seg"><button data-a="mk-view" data-v="card" aria-pressed="${mk.view!=='tbl'}">▦ Tarjetas</button><button data-a="mk-view" data-v="tbl" aria-pressed="${mk.view==='tbl'}">☰ Tabla</button></div></div>${mk.view==='tbl'?`<div class="tbl"><table>${head}<tbody>${list.map(marketRow).join('')}</tbody></table></div>`:`<div class="mkgrid">${list.map(p=>mkCard(p)).join('')}</div>`}
  ${total>list.length?`<div class="row" style="justify-content:center;margin-top:12px"><button class="btn" data-a="mk-more">Mostrar más (${total-list.length})</button></div>`:''}`;
 }
 /** Todas las negociaciones en un sitio: tus ofertas en curso, las que recibes y tus transferibles. */
@@ -88,7 +114,7 @@ export function mercadoView(){
  const feed=S.dlD===S.day&&S.dlFeed&&S.dlFeed.length?`<section class="panel dlfeed"><div class="panel-h"><h2>⏰ Día de cierre en directo</h2><span class="eyebrow">${S.dlDone===S.day?'Mercado cerrado':'Pulsa Continuar para avanzar la hora'}</span></div>${S.dlFeed.slice().reverse().map(x=>`<div class="offer"><b class="num" style="min-width:44px">${x.h}</b><span class="t small">${esc(x.t)}</span></div>`).join('')}</section>`:'';
  return feed+`<div class="${inWindow()?'negmsg ok':'negmsg'} wbanner" style="margin:0 0 14px">${windowTxt()}</div><section class="panel"><div class="panel-h"><div class="seg"><button data-a="mk-tab" data-v="moves" aria-pressed="${mk.tab==='moves'}">Movimientos</button><button data-a="mk-tab" data-v="buy" aria-pressed="${mk.tab==='buy'}">Buscar</button><button data-a="mk-tab" data-v="short" aria-pressed="${mk.tab==='short'}">Seguimiento (${S.short.filter(id=>PL(id)&&PL(id).team!==S.user).length})</button><button data-a="mk-tab" data-v="ofe" aria-pressed="${mk.tab==='ofe'}">Ofertas${(()=>{const k=Object.values(S.neg||{}).filter(n=>n.wait||n.agreed).length+Object.values(S.offers||{}).filter(o=>o.incoming).length;return k?' ('+k+')':'';})()}</button><button data-a="mk-tab" data-v="ojeo" aria-pressed="${mk.tab==='ojeo'}">Misiones de ojeo</button><button data-a="mk-tab" data-v="sell" aria-pressed="${mk.tab==='sell'}">Vender</button></div>
  <span class="small muted">Presupuesto ${money(S.budget)} · Sueldos ${money(wages)}/sem · ${squad(S.user).length} jugadores</span></div>
- ${mk.tab==='buy'?`<div class="filters">
+ ${mk.tab==='buy'?`${!mk.q&&!mk.adv?highlights():''}<div class="filters mkfil">
   <div class="chips">${['ALL','POR','DEF','MED','DEL'].map(p=>`<button class="btn sm ${mk.pos===p?'dark':''}" data-a="mk-pos" data-v="${p}">${p==='ALL'?'Todos':p}</button>`).join('')}</div>
   <label class="f"><span class="eyebrow">Buscar</span><input type="search" id="mkq" placeholder="Nombre o club" value="${esc(mk.q)}"></label>
   <label class="f"><span class="eyebrow">Posición exacta</span>${sel('mksp',mk.sp||'',[['','Cualquiera'],...Object.entries(SPN).map(([k,v])=>[k,v])])}</label>

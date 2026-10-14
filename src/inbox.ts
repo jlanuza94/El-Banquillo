@@ -43,7 +43,7 @@ export function mail(txt,o={}){
  const quiet=o.quiet!=null?o.quiet:cat==='not'||/^Jornada \d+:/.test(txt)||/cumplirá \d+ partido/.test(txt);
  // un aviso nuevo del mismo tipo deja leído el anterior (p. ej. la rueda de prensa que no contestaste)
  if(o.key)S.inbox.forEach(m=>{if(m.key===o.key)m.read=1;});
- S.inbox.unshift({id:'m'+(S.nextId++),wk:S.week+1,sn:seasonLabel(),cat,from:o.from||CATS[cat].from,subj:o.subj||autoSubj(txt),txt,kind:o.kind||'',act:o.act||null,read:quiet?1:0,key:o.key||undefined});
+ S.inbox.unshift({id:'m'+(S.nextId++),wk:S.week+1,sn:seasonLabel(),cat,from:o.from||CATS[cat].from,subj:o.subj||autoSubj(txt),txt,kind:o.kind||'',act:o.act||null,once:o.once||undefined,read:quiet?1:0,key:o.key||undefined});
  if(S.inbox.length>150){const keep=S.inbox.filter((m,i)=>i<120||(!m.read&&i<150));S.inbox=keep.slice(0,150);}
 }
 export const unread=()=>(S.inbox||[]).filter(m=>!m.read).length;

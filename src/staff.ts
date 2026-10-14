@@ -21,15 +21,15 @@ export const ST_ROLES={
 export const crew=role=>(S.crew||[]).filter(x=>x.role===role);
 const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
 /** Media de un atributo en un puesto, contando las plazas vacías como `empty`. */
-function slotAvg(role,k,empty){const c=crew(role),n=ST_ROLES[role].max;let s=c.reduce((a,x)=>a+x.at[k],0)+(n-c.length)*empty;return s/n;}
+function slotAvg(role,k,empty){const c=crew(role),n=Math.max(ST_ROLES[role].max,c.length);let s=c.reduce((a,x)=>a+x.at[k],0)+(n-c.length)*empty;return s/n;}
 
 /* ---------- Efectos en el juego ---------- */
 /** Multiplicador de la mejora en el entrenamiento (≈1 con entrenadores normales; hasta ×1.5). */
-export const trainMult=()=>.85+.065*slotAvg('ent','ent',1.5);
+export const trainMult=()=>(.85+.065*slotAvg('ent','ent',1.5))*(1+.015*Math.max(0,crew('ent').length-3));
 /** Multiplicador de la mejora de la cantera. */
 export const youthMult=()=>.02*(mgrAt('can')-5)+.85+.065*slotAvg('ent','jov',1.5)+(crew('dca')[0]?(crew('dca')[0].at.jov-5)*.025:0);
 /** Nivel médico de 0 (sin fisios) a 10. */
-export const medLevel=()=>slotAvg('fis','fis',0);
+export const medLevel=()=>Math.min(10,slotAvg('fis','fis',0)+.35*Math.max(0,crew('fis').length-2));
 // Con un solo fisio normal (nivel médico ≈2) no hay ni bonus ni penalización.
 export const recBonusStaff=()=>(medLevel()-2)*.012;
 export const injDaysMult=()=>clamp(1-.035*(medLevel()-2),.7,1.08);
@@ -76,7 +76,7 @@ export const contactNames=m=>(m.contacts||[]).map(c=>COUNTRIES[c].n).join(', ');
 export function hireStaff(id){
  const i=(S.staffPool||[]).findIndex(x=>x.id===id);if(i<0)return 'Ese candidato ya no está disponible.';
  const m=S.staffPool[i],R=ST_ROLES[m.role];
- if(crew(m.role).length>=R.max)return `Ya tienes ${R.max===1?'un':R.max} ${R.n.toLowerCase()}${R.max>1?'s':''}. Despide a alguno antes.`;
+ if(crew(m.role).length>=staffMax(m.role))return `Tu club solo puede tener ${staffMax(m.role)} ${staffMax(m.role)>1?R.pl.toLowerCase():R.n.toLowerCase()}. Despide a alguno antes.`;
  m.wage=staffWage(m);m.yrs=2;S.staffPool.splice(i,1);S.crew.push(m);
  news(`${m.name} se incorpora como ${R.n.toLowerCase()} (${money(m.wage)}/sem, 2 temporadas).`,'good',{cat:'sta',subj:`Nuevo ${R.n.toLowerCase()}: ${m.name}`,act:[{l:'Ver cuerpo técnico',a:'view',v:'staff'}]});
  return '';
@@ -102,3 +102,17 @@ export function crewWeekly(){
  const mot=segAt('mot');S.chem=clamp(S.chem+(mot-5)*.08,20,100);
  if(S.week===26){const ex=(S.crew||[]).filter(m=>m.yrs<=1);if(ex.length)news(`Acaban contrato en junio: ${ex.map(m=>m.name).join(', ')}. Renuévalos en Cuerpo técnico si quieres que sigan.`,'bad',{cat:'sta',subj:'Contratos del cuerpo técnico',act:[{l:'Ver cuerpo técnico',a:'view',v:'staff'}]});}
 }
+
+/* ---------- Tamaño del cuerpo técnico según el club y nivel de cada técnico ---------- */
+/** Tamaño del club (0 modesto … 4 grande): división, reputación y dinero. */
+export function clubTier(){const L=LG(uLg()),t=T(S.user),rep=t?t.rep||50:50;return clamp(3-L.lv+(rep>=80?1:0)-(rep<35?1:0)+(S.budget>unit(L.rep)*20?1:0),0,4);}
+const MAXES={ent:[2,2,3,4,5],fis:[1,2,2,3,4],sc:[1,2,3,4,5]};
+/** Plazas de cada puesto: los clubes grandes tienen más entrenadores, fisios y ojeadores. */
+export const staffMax=role=>MAXES[role]?MAXES[role][clubTier()]:ST_ROLES[role]?ST_ROLES[role].max:1;
+/** Nivel de un técnico: bronce, plata, oro o élite (según sus atributos de su puesto). */
+export function tierOf(m){const ks=ST_ROLES[m.role]?ST_ROLES[m.role].at:['jui','jpo'],a=avg(ks.map(k=>m.at?m.at[k]:m[k]||0));return a>=8?['elite','Élite',4]:a>=6?['oro','Oro',3]:a>=4?['plata','Plata',2]:['bronce','Bronce',1];}
+/** Curso de formación: una vez por temporada, sube sus atributos de puesto (y su sueldo). */
+export const courseCost=m=>r3(Math.max(.003,m.wage*20));
+export function staffCourse(id){const m=(S.crew||[]).find(x=>x.id===id);if(!m)return 'No está en tu cuerpo técnico.';if(m.course===S.seasonN)return 'Ya hizo un curso esta temporada.';const c=courseCost(m);if(S.budget<c)return `No te llega: el curso cuesta ${money(c)}.`;
+ const ks=ST_ROLES[m.role].at,t0=tierOf(m)[1];S.budget=r3(S.budget-c);ks.forEach((k,i)=>{if(m.at[k]<10&&(i===0||rnd()<.6))m.at[k]++;});m.course=S.seasonN;m.wage=r3(staffWage(m));
+ const t1=tierOf(m)[1];news(`${m.name} termina un curso de formación${t1!==t0?` y sube a nivel ${t1.toLowerCase()}`:''} (${money(c)}).`,'good',{cat:'sta'});return '';}

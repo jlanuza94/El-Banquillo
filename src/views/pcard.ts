@@ -35,15 +35,16 @@ export function cardHTML(p){
  const sn=seen(p),t=p.team!=null?T(p.team):null,s=p.st||{},ex=sn.exact,v=ex?p.ovr:(sn.ovr[0]+sn.ovr[1])/2,st=starsOf(v),pot=p.age<=23?starsOf(Math.max(v,((seen(p).pot[0]+seen(p).pot[1])/2)*10)):null;
  const tier=st>=4?'gold':st>=2.5?'silver':'bronze',mine=p.team===S.user,hap=p.hap==null?70:p.hap;
  const dots=Object.keys(SPXY).map(sp=>{const pr=prof(p,sp),[x,y]=SPXY[sp],c=sp===p.sp?'n':pr>=.95?'c':pr>=.86?'u':'';return c?`<span class="pd ${c}" style="left:${x}%;top:${y}%" title="${SPN[sp]}">${sp}</span>`:'';}).join('');
- const col=ks=>ks.map(k=>`<div class="fa"><span>${AT_NAME[k]}</span>${atCellS(p,k,sn)}</div>`).join('');
+ const col=ks=>ks.map(k=>{const r=sn.at[k],v=sn.exact?p.at[k]:(r[0]+r[1])/2;return `<div class="fa"><span>${AT_NAME[k]}</span><i class="fab"><b class="${qc(v)}" style="width:${v*10}%"></b></i>${atCellS(p,k,sn)}</div>`;}).join('');
  const G=AT_GROUPS.filter(([n])=>n!=='Portero'||p.sp==='POR');
  const extra=`<div class="fa"><span>Energía</span><b class="${p.energy>=75?'ok':p.energy>=55?'mid':'low'}">${Math.round(p.energy)}%</b></div><div class="fa"><span>Moral</span><b>${hap>=75?'Excelente':hap>=55?'Buena':hap>=40?'Normal':hap>=25?'Baja':'Muy baja'}</b></div><div class="fa"><span>Forma</span><b>${formRow(p)}</b></div><div class="fa"><span>Nota media</span><b>${s.pj?(s.rs/s.pj).toFixed(2):'—'}</b></div>`;
- return `<div class="pcard">
+ return `<div class="pfc">
  <div class="pc ${tier}" style="${t?crestStyle(t):''}"><span class="pnum">${p.num||''}</span>${t?`<span class="pcrest crest ${t.cs?'cs-'+t.cs:''}">${esc(t.short)}</span>`:''}<span class="pflag">${nf(p.nat)}</span>${faceSVG(p)}<b class="psur">${esc(p.name.split(' ').slice(1).join(' ')||p.name)}</b><span class="ppos">${SPN[p.sp]}</span>${starsHTML(st)}${pot!=null&&pot>st?`<span class="small" style="opacity:.8">Potencial ${starsHTML(pot,1)}</span>`:''}</div>
  <div class="pinfo"><div class="pig"><div><b>${p.age} años</b><small>${esc(COUNTRIES[p.nat].n)}${p.caps?` · ${p.caps} int.`:''}</small></div><div><b>${money(p.value)}</b><small>Valor</small></div><div><b>${money(p.wage)}</b><small>Sueldo/sem</small></div><div><b>${esc(contractLabel(p))}</b><small>Contrato</small></div></div>
   <div class="pclub"><b>${t?esc(t.name):'Agente libre'}</b>${t?`<small>${esc(lgName(t.lg))}</small>`:''}${mine?`<span class="prole">${ROLES[p.role||'ro'].n}</span>`:''}</div>
   <div class="pmedia">Media ${pBadgeS(p,'lg')}</div></div>
  <div class="ppos2"><div class="pmap"><span class="ln out"></span><span class="ln half"></span><span class="ln box"></span>${dots}</div>${feet(p)}</div>
  </div>
- <div class="fattrs"><div><div class="fah">${G[0][0]}</div>${col(G[0][1])}${G[3]?`<div class="fah">Portero</div>${col(G[3][1])}`:''}</div><div><div class="fah">${G[1][0]}</div>${col(G[1][1])}</div><div><div class="fah">${G[2][0]}</div>${col(G[2][1])}<div class="fah">Estado</div>${extra}</div></div>`;
+ <div class="fattrs"><div><div class="fah">${G[0][0]}</div>${col(G[0][1])}${G[3]?`<div class="fah">Portero</div>${col(G[3][1])}`:''}</div><div><div class="fah">${G[1][0]}</div>${col(G[1][1])}</div><div><div class="fah">${G[2][0]}</div>${col(G[2][1])}<div class="fah">Estado</div>${extra}</div></div>
+ <div class="fstats">${[['PJ',s.pj||0],['Minutos',s.mi||0],['Goles',s.g||0],['Asist.',s.a||0],['Nota',s.pj?(s.rs/s.pj).toFixed(2):'—'],['MVP',s.mv||0],['Tarjetas',`${s.yc||0}/${s.rc||0}`],...(p.sp==='POR'||['DFC','LI','LD'].includes(p.sp)?[['Port. a 0',s.cs||0]]:[])].map(([l,v])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
 }

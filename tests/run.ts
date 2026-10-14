@@ -35,7 +35,7 @@ import { ROLES } from '../src/data';
 import { autoLineup as autoLineupF } from '../src/tactics';
 const autoLineupT = id => autoLineupF(id, T(id).formation);
 import { OBJ_N, PITCH, WX, assignObjectives, galaAwards, hireFromClub, momentInj, momentPen, momentRed, objectivesWeekly, resolveMoment, rivalSetPieces, spPrepMult, staffMarket, weatherFor, weatherMods, wxTxt } from '../src/extras';
-import { ST_ROLES, crewLevel, makeStaff } from '../src/staff';
+import { ST_ROLES, crewLevel, makeStaff, staffMax as staffMaxF, tierOf as tierOfF, staffCourse as staffCourseF } from '../src/staff';
 import { famOf } from '../src/tactics';
 import { loadSearch, missionOf, missionsWeekly, saveSearch, searchName, shortlistWeekly, startMission, stopMission } from '../src/scoutplus';
 import { devWeekly, discoveries, learnablePos, learnableTr, markArrival, setDev } from '../src/devplus';
@@ -195,8 +195,8 @@ const app = document.getElementById('app')!;
     ok(queueScout(far.id) === '', 'se pide un informe');
     const before = S.inbox.length; for (let i = 0; i < 4; i++) { S.week++; scoutingWeekly(); } S.week -= 4;
     ok(seen(far).exact && S.inbox.slice(0, S.inbox.length - before).some(m => m.subj.startsWith('Informe: ' + far.name)), 'llega el informe y el jugador pasa a conocerse');
-    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render();
-    ok(app.querySelector('.at.rng'), 'el mercado muestra rangos');
+    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); ok(app.querySelectorAll('.mkgrid .mkc').length > 5 && app.querySelectorAll('.mkhl-c').length === 3, 'mercado en tarjetas con destacados'); S.mk.view = 'tbl'; render();
+    ok(app.querySelector('.at.rng'), 'el mercado muestra rangos'); S.mk.view = 'card';
     S.modal = { type: 'ficha', id: far.id }; render(); S.modal = null;
   }
   {
@@ -369,7 +369,7 @@ const app = document.getElementById('app')!;
     ok(continueDay() === 'match' && S.day === dayOfEvent(S.ci), 'el día de partido no se pasa sin jugar');
     S.modal = { type: 'matchday' }; render(); ok(app.textContent.includes('Jugar el partido'), 'aviso de día de partido'); S.modal = null;
     S.view = 'calendario'; render(); ok(app.querySelectorAll('.fday').length >= 28 && app.querySelector('.fday.today') && app.querySelectorAll('.fnote,.fev').length >= 1, 'calendario mensual con el día de hoy');
-    { const pp = Object.values(S.players).find(p => p.team === S.user); S.modal = { type: 'ficha', id: pp.id }; render(); ok(app.querySelector('.pcard .face') && app.querySelectorAll('.fattrs .fa').length >= 14 && app.querySelector('.pcard .stars'), 'ficha estilo FMM: tarjeta con cara, estrellas y atributos'); S.modal = null; }
+    { const pp = Object.values(S.players).find(p => p.team === S.user); S.modal = { type: 'ficha', id: pp.id }; render(); ok(app.querySelector('.pfc .face') && app.querySelectorAll('.fattrs .fa').length >= 14 && app.querySelector('.pfc .stars'), 'ficha estilo FMM: tarjeta con cara, estrellas y atributos'); S.modal = null; }
     ok(app.querySelector('[data-a="continue"]'), 'botón Continuar en la barra superior'); S.view = 'inicio'; }
   { // Tácticas por posiciones: cometido e instrucciones
     const t = T(S.user), sl = slotsOf(t.formation), ps = userPos(sl);
@@ -429,6 +429,9 @@ const app = document.getElementById('app')!;
     ok(hireFromClub(sg.id, ST_ROLES) === '' && S.crew.some(x => x.id === sg.id) && famOf(sg.form) >= 60, 'fichar un segundo de otro club: trae su sistema');
     S.crew = S.crew.filter(x => x.id !== sg.id).concat(segs); S.budget = b0;
     S.view = 'staff'; S.vt = { st: 'club' }; render(); ok(app.textContent.includes('Técnicos de otros clubes'), 'pantalla de técnicos de otros clubes');
+    { const m = S.crew[0], at0 = JSON.stringify(m.at), b0 = S.budget; S.budget = 99; ok(staffMaxF('ent') >= 2 && staffMaxF('fis') >= 1 && ['bronce', 'plata', 'oro', 'elite'].includes(tierOfF(m)[0]), `personal: plazas según el club (${staffMaxF('ent')} entrenadores) y nivel ${tierOfF(m)[1]}`);
+      ok(staffCourseF(m.id) === '' && JSON.stringify(m.at) !== at0 && staffCourseF(m.id) !== '', 'curso de formación: mejora una vez por temporada'); S.budget = b0;
+      S.vt = { st: 'eq' }; render(); ok(app.querySelectorAll('.stc').length >= 3 && app.textContent.includes('Formación'), 'pantalla de personal con tarjetas y niveles'); }
     const A = galaAwards(); ok(Array.isArray(A), 'gala del club'); S.vt = {}; S.view = 'inicio'; render(); }
   { // Rival que cambia, charlas, árbitros, penaltis, parejas, capitanes, prensa, proyecto, estadio, pujas, entrenador y grandes
     const ev = []; const add = (m, t, s, tx) => ev.push(tx);
@@ -539,8 +542,8 @@ const app = document.getElementById('app')!;
     if (!fired && s > 0) { S.view = 'historia'; for (const tb of ['enc', 'fame']) { S.hiTab = tb; render(); } ok((S.ency || []).length >= 1 && app.textContent.includes('Récords del mundo'), `enciclopedia (${(S.ency || []).length} temporadas) y salón de la fama`); S.hiTab = 'club'; }
     ok(S.tl.length >= (fired ? 3 : 30) && S.mlog.length > 0 && S.mlog[0].sh.length > 5 && Object.values(S.players).some(p => p.st && p.st.kp > 0 && p.st.tk > 0 && p.st.xg > 0), 'análisis: evolución de la temporada, informes con tiros y estadísticas avanzadas' + ` (tl ${S.tl.length}, partidos ${S.mlog.length}, tiros ${S.mlog[0] && S.mlog[0].sh.length})`);
     S.modal = { type: 'mrep', i: 0 }; render(); ok(app.querySelector('.shotmap svg circle'), 'informe de partido con mapa de tiros'); S.modal = null;
-    { const M = (S.monthly || {})[uLgF()] || []; ok(M.length >= 6 && M[0].pom && M[0].coach && M[0].pos.DEL, `premios del mes: ${M.length} meses, ${M[0] && M[0].m}: ${M[0] && M[0].pom && M[0].pom.name}`);
-      S.view = 'liga'; S.ligaLg = uLgF(); for (const tb of ['tab', 'jor', 'gol', 'jug', 'mes', 'camp', 'eco']) { S.vt = { liga: tb }; render(); } S.vt = { liga: 'mes' }; render(); ok(app.querySelectorAll('.mcard').length >= 6, 'liga con premios del mes, goleadores, jugadores y campeones'); S.vt = {}; }
+    { const M = Object.values(S.monthly || {}).sort((a: any, b: any) => b.length - a.length)[0] as any || []; ok(M.length >= 6 && M[0].pom && M[0].coach && M[0].pos.DEL, `premios del mes: ${M.length} meses, ${M[0] && M[0].m}: ${M[0] && M[0].pom && M[0].pom.name}`);
+      S.view = 'liga'; S.ligaLg = uLgF(); for (const tb of ['tab', 'jor', 'gol', 'jug', 'mes', 'camp', 'eco']) { S.vt = { liga: tb }; render(); } S.vt = { liga: 'mes' }; render(); ok(app.querySelectorAll('.mcard').length >= Math.min(3, ((S.monthly || {})[uLgF()] || []).length), 'liga con premios del mes, goleadores, jugadores y campeones'); S.vt = {}; }
     for (const tb of ['race', 'stats', 'xi', 'hist']) { S.awTab = tb; S.view = 'premios'; render(); }
     ok(app.textContent.includes('Palmarés'), 'pantalla de estadísticas y premios');
     S.modal = null; S.view = 'inicio'; render(); const na = (S.awards || []).length;

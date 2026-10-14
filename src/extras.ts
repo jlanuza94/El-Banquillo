@@ -3,6 +3,7 @@
  * gala de fin de temporada, clima y estado del campo, vídeo del rival a balón parado y fichar técnicos de otros clubes. */
 // @ts-nocheck — usa el estado heredado S.
 import {playShootout} from './extras2';
+import {staffMax} from './staff';
 import {nextMatch} from './competitions';
 import {dateOf,dayOfEvent} from './calendar';
 import {clamp,money,pick,r2,r3,ri} from './core';
@@ -135,7 +136,7 @@ export function staffMarket(makeStaff,crewLevel){
 /** Contratar a un técnico de otro club: pagas su indemnización y trae lo que sabe. */
 export function hireFromClub(id,R){
  const i=(S.staffMk||[]).findIndex(x=>x.id===id);if(i<0)return 'Ya no está disponible.';const m=S.staffMk[i],role=R[m.role];
- if((S.crew||[]).filter(x=>x.role===m.role).length>=role.max)return `Ya tienes el cupo de ${role.pl.toLowerCase()}: despide a alguno antes.`;
+ if((S.crew||[]).filter(x=>x.role===m.role).length>=staffMax(m.role))return `Ya tienes el cupo de ${role.pl.toLowerCase()}: despide a alguno antes.`;
  if(S.budget<m.fee)return `Su club pide ${money(m.fee)} de indemnización y no tienes tanto presupuesto.`;
  S.budget=r3(S.budget-m.fee);m.yrs=3;S.staffMk.splice(i,1);S.crew.push(m);const from=T(m.club);
  let extra='';if(m.form){S.famil=S.famil||{};S.famil[m.form]=clamp((S.famil[m.form]??40)+25,0,100);extra=` Conoce a fondo el ${m.form}: tu equipo lo domina mejor.`;}
