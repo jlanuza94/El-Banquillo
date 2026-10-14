@@ -19,6 +19,7 @@ import {segAt} from './staff';
 import {clamp,fill,gauss,pick,r3,ri,rnd} from './core';
 import {AT_NAME,GRP,MENT,TAC0,TX,W,WIDE,newSt} from './data';
 import {condTick} from './plans';
+import {synergies,synergyMods} from './synergy';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
 import {rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
@@ -80,7 +81,9 @@ export function tacMods(m,s,log){
  const ords=m.lu[s].map(id=>id&&m.ord[s][id]).filter(Boolean);const up=ords.filter(x=>x==='sube').length,back=ords.filter(x=>x==='fija').length;
  f('ord',1+.015*up-.01*back,1+.012*up-.012*back);
  {const re=roleEffects(slotsOf(m.f[s]),m.ro&&m.ro[s]);f('rol',re.own,re.opp,1,re.poss);}
- {const sl=slotsOf(m.f[s]),du=m.du&&m.du[s],pi=m.pi&&m.pi[s];if(du&&du.length===sl.length){const pe=posTeam(sl,du,pi);f('pos',pe.own,pe.opp,pe.drain,pe.poss);}}
+ {const sl=slotsOf(m.f[s]),du=m.du&&m.du[s],pi=m.pi&&m.pi[s];if(du&&du.length===sl.length){const pe=posTeam(sl,du,pi);f('pos',pe.own,pe.opp,pe.drain,pe.poss);}
+  // sinergias del once (roles, cometidos e instrucciones que se complementan)
+  const ro=m.ro&&m.ro[s];if(ro&&ro.length===sl.length){const k=m.f[s]+'|'+ro.join()+'|'+(du||[]).join()+'|'+JSON.stringify(pi||[]);m.syn=m.syn||{};if(!m.syn[s]||m.syn[s].k!==k){const sy=synergyMods(synergies(sl,ro,du,pi,m.lu[s]));m.syn[s]={k,own:sy.own,opp:sy.opp,g:sy.g,b:sy.b};}f('sin',m.syn[s].own,m.syn[s].opp);}}
  // instrucciones al rival: las que da el otro equipo (o) frenan a este (s); las propias tienen un coste
  const OI=(m.oi&&m.oi[o])||{},MY=(m.oi&&m.oi[s])||{};
  if(OI.ban)f('oiR',1-Math.max(0,w)/220,1);if(MY.ban)f('oi',.992,1);

@@ -50,6 +50,7 @@ import { delegWeekly, setDeleg } from '../src/delegate';
 import { a2Reset, buildSeq } from '../src/match2d';
 import { renState as renStateT } from '../src/contracts';
 import { stories as storiesT } from '../src/narrative';
+import { synergies as synergiesT, synergyMods as synergyModsT } from '../src/synergy';
 import { PRESETS_T as PRESETS_TR } from '../src/training2';
 import { nextMatch as nextMatchTR } from '../src/competitions';
 import { boot } from '../src/boot';
@@ -142,6 +143,11 @@ const app = document.getElementById('app')!;
   { const opp = S.teams.find(x => x.id !== S.user && x.lg === T(S.user).lg).id, pid = T(S.user).lineup.filter(Boolean).pop(), g = (s2, min) => ({ t: 'goal', s: s2, pid: s2 === 'h' ? pid : null, min });
     const m1 = { us: 'h', h: S.user, a: opp, score: { h: 3, a: 2 }, ev: [g('a', 5), g('a', 10), g('h', 50), g('h', 60), g('h', 80)], ref: { k: 'lg' } };
     const st = storiesT(m1).map(x => x[2]); ok(st.some(x => /Remontada/.test(x)) && st.some(x => /Hat-trick/.test(x)), 'prensa con memoria: remontada y hat-trick (' + st.length + ' historias)'); }
+  { const sl = ['POR', 'LI', 'DFC', 'DFC', 'LD', 'MI', 'MC', 'MC', 'MD', 'DC', 'DC'];
+    const good = synergiesT(sl, ['por', 'lde', 'sto', 'cen', 'lof', 'int', 'org', 'mcc', 'int', 'dob', 'dar'], null, [[], [], [], [], [], [], [], [], ['den'], [], []], null);
+    const bad = synergiesT(sl, ['por', 'lde', 'sto', 'sto', 'lof', 'int', 'org', 'org', 'eba', 'dar', 'dar'], null, null, null);
+    const G = synergyModsT(good), B = synergyModsT(bad);
+    ok(G.g >= 4 && G.b === 0 && B.b >= 3 && G.own > 1 && B.own < 1, `sinergias: buen once ${G.g} buenas, mal once ${B.b} malas (${good.map(x => sl[x[0]] + '+' + sl[x[1]]).join(' ')})`); }
   { const t = T(S.user), c0 = t.cond; t.cond = [{ w: 'draw', min: 1, plan: null, ment: 'att' }]; S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === t.lg).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; S.fr.pop();
     step(m); step(m); ok(m.ment[m.us] === 'att' && m.ev.some(e => /Plan previsto/.test(e.tx)), 'plan previsto: empatando desde el 1\' pasa a ofensiva'); t.cond = c0; }
   { setDeleg('tr', true); setDeleg('oj', true); S.missions = []; delegWeekly(); const k = Object.keys(PRESETS_TR).find(k => PRESETS_TR[k].s.join() === S.sched.join());

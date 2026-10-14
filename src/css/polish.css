@@ -160,3 +160,11 @@ td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
 .mrat.q4{background:#1e8a4c}.mrat.q3{background:#5aa02c}.mrat.q2{background:#c9a227;color:#111}.mrat.q1{background:#c23a2e}
 .ebar{display:inline-block;width:44px;height:6px;background:var(--line);border-radius:3px;overflow:hidden;vertical-align:middle}.ebar i{display:block;height:100%;background:var(--win)}.ebar i.mid{background:#c9a227}.ebar i.low{background:var(--loss)}
 @media (orientation:landscape) and (max-height:540px){.mcom{font-size:12.5px;padding:5px 10px}.mlL .p2d{max-width:min(100%,calc((100dvh - 185px)*100/62))}}
+
+/* Sinergias */
+.pcard{position:relative}
+.pcard.lk-g{outline:3px solid #8dff6a;outline-offset:1px;background:rgba(60,160,40,.45)}.pcard.lk-b{outline:3px solid #ff5a4d;outline-offset:1px;background:rgba(180,40,30,.45)}
+.synb{position:absolute;top:-6px;right:-4px;display:flex;gap:2px}.synb i{font-style:normal;font-family:var(--f-num);font-weight:700;font-size:10.5px;padding:0 4px;border-radius:8px;color:#fff;line-height:15px}
+.synb i.g{background:var(--win)}.synb i.b{background:var(--loss)}
+.syn{display:flex;flex-direction:column;gap:2px;padding:6px 9px;border-left:3px solid var(--line);background:var(--surface2);border-radius:4px;margin-bottom:5px;font-size:13px}
+.syn.g{border-left-color:var(--win)}.syn.b{border-left-color:var(--loss)}.syn span{color:var(--muted)}

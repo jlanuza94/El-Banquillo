@@ -138,7 +138,7 @@ export function tacticasView(){
  const spT=spOf(t),spP=`<section class="panel"><div class="panel-h"><h2>Jugadas ensayadas</h2><span class="eyebrow">Ensayo ${Math.round(S.spFam??40)}%</span></div>
  ${Object.entries(SP).map(([k,v])=>`<div style="margin-bottom:10px"><div class="eyebrow" style="margin-bottom:4px">${v.n}</div><div class="seg">${Object.entries(v.o).map(([o,[l]])=>`<button data-a="sp" data-k="${k}" data-v="${o}" aria-pressed="${spT[k]===o}">${l}</button>`).join('')}</div><p class="small muted" style="margin:4px 0 0">${esc(v.o[spT[k]][1])}</p></div>`).join('')}
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
- const tb=vtab('tac',[['ali','Alineación'],['tac','Táctica'],['ord','Posiciones'],['bp','Balón parado'],['rival','Rival'],['piz','Pizarra libre'],['plan','Tácticas guardadas']],'ali');
+ const tb=vtab('tac',[['ord','Táctica'],['ali','Alineación'],['tac','Instrucciones'],['rival','Rival'],['bp','Balón parado'],['plan','Guardadas'],['piz','Mi formación']],'ord');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
  const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
  return tb.bar+body;
