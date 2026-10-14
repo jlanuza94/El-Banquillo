@@ -8,6 +8,7 @@ import {prof} from '../tactics';
 import {seen} from '../scouting';
 import {atCellS,nf,pBadgeS} from './common';
 import {contractLabel} from '../contracts';
+import {askPrice} from '../market';
 
 const H=s=>{let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return h;};
 const SKIN=['#f1c9a5','#e0ac83','#c68a5e','#9c6644','#6f4a32','#f5d5b8'],HAIR=['#1d1612','#3b2618','#6b4423','#a26a33','#d9b26a','#2a2a2a','#7a7a7a'];
@@ -40,11 +41,12 @@ export function cardHTML(p){
  const extra=`<div class="fa"><span>Energía</span><b class="${p.energy>=75?'ok':p.energy>=55?'mid':'low'}">${Math.round(p.energy)}%</b></div><div class="fa"><span>Moral</span><b>${hap>=75?'Excelente':hap>=55?'Buena':hap>=40?'Normal':hap>=25?'Baja':'Muy baja'}</b></div><div class="fa"><span>Forma</span><b>${formRow(p)}</b></div><div class="fa"><span>Nota media</span><b>${s.pj?(s.rs/s.pj).toFixed(2):'—'}</b></div>`;
  return `<div class="pfc">
  <div class="pc ${tier}" style="${t?crestStyle(t):''}"><span class="pnum">${p.num||''}</span>${t?`<span class="pcrest crest ${t.cs?'cs-'+t.cs:''}">${esc(t.short)}</span>`:''}<span class="pflag">${nf(p.nat)}</span>${faceSVG(p)}<b class="psur">${esc(p.name.split(' ').slice(1).join(' ')||p.name)}</b><span class="ppos">${SPN[p.sp]}</span>${starsHTML(st)}${pot!=null&&pot>st?`<span class="small" style="opacity:.8">Potencial ${starsHTML(pot,1)}</span>`:''}</div>
- <div class="pinfo"><div class="pig"><div><b>${p.age} años</b><small>${esc(COUNTRIES[p.nat].n)}${p.caps?` · ${p.caps} int.`:''}</small></div><div><b>${money(p.value)}</b><small>Valor</small></div><div><b>${money(p.wage)}</b><small>Sueldo/sem</small></div><div><b>${esc(contractLabel(p))}</b><small>Contrato</small></div></div>
+ <div class="pinfo"><div class="pig"><div><b>${p.age} años</b><small>Edad</small></div><div><b>${esc(COUNTRIES[p.nat].n)}</b><small>${p.caps?`${p.caps} internacional${p.caps>1?'es':''}`:'Nacionalidad'}</small></div></div>
   <div class="pclub"><b>${t?esc(t.name):'Agente libre'}</b>${t?`<small>${esc(lgName(t.lg))}</small>`:''}${mine?`<span class="prole">${ROLES[p.role||'ro'].n}</span>`:''}</div>
   <div class="pmedia">Media ${pBadgeS(p,'lg')}</div></div>
  <div class="ppos2"><div class="pmap"><span class="ln out"></span><span class="ln half"></span><span class="ln box"></span>${dots}</div>${feet(p)}</div>
  </div>
  <div class="fattrs"><div><div class="fah">${G[0][0]}</div>${col(G[0][1])}${G[3]?`<div class="fah">Portero</div>${col(G[3][1])}`:''}</div><div><div class="fah">${G[1][0]}</div>${col(G[1][1])}</div><div><div class="fah">${G[2][0]}</div>${col(G[2][1])}<div class="fah">Estado</div>${extra}</div></div>
- <div class="fstats">${[['PJ',s.pj||0],['Minutos',s.mi||0],['Goles',s.g||0],['Asist.',s.a||0],['Nota',s.pj?(s.rs/s.pj).toFixed(2):'—'],['MVP',s.mv||0],['Tarjetas',`${s.yc||0}/${s.rc||0}`],...(p.sp==='POR'||['DFC','LI','LD'].includes(p.sp)?[['Port. a 0',s.cs||0]]:[])].map(([l,v])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
+ <div class="fstats">${[['PJ',s.pj||0],['Minutos',s.mi||0],['Goles',s.g||0],['Asist.',s.a||0],['Nota',s.pj?(s.rs/s.pj).toFixed(2):'—'],['MVP',s.mv||0],['Tarjetas',`${s.yc||0}/${s.rc||0}`],...(p.sp==='POR'||['DFC','LI','LD'].includes(p.sp)?[['Port. a 0',s.cs||0]]:[])].map(([l,v])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+ <div class="fstats fmon">${[['Valor',money(p.value)],['Sueldo/sem',money(p.wage)],['Contrato',esc(contractLabel(p).replace('Hasta junio de ','Jun. '))],...(p.team!=null&&!p.loan?[['Cláusula',money(p.cl||0)]]:[]),...(p.team!==S.user?[['Piden',money(askPrice(p))]]:[])].map(([l,v])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
 }

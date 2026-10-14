@@ -6,6 +6,7 @@ import {LG,S,T,lgTeams,squad,uLg} from './state';
 import {MONTHS_L,dateOf,lgDay} from './calendar';
 import {news} from './world';
 import {clamp} from './core';
+import {giveBadge} from './mgrcareer';
 
 const nR=lg=>(S.fixtures[lg]||[]).length;
 const monthKey=r=>{const d=dateOf(lgDay(r));return d.getUTCFullYear()*12+d.getUTCMonth();};
@@ -31,7 +32,7 @@ export function monthlyAwards(r){
   (S.monthly[lg]=S.monthly[lg]||[]).push(A);if(S.monthly[lg].length>24)S.monthly[lg].shift();
   if(lg===uLg()){
    if(A.pom&&A.pom.tid===S.user)news(`🏅 ${A.pom.name} es el jugador del mes de ${A.m.toLowerCase()} en tu liga: ${A.pom.r.toFixed(2)} de nota, ${A.pom.g} goles y ${A.pom.a} asistencias.`,'good',{cat:'pla',subj:`Jugador del mes: ${A.pom.name}`});
-   if(coach&&coach.tid===S.user){news(`🏅 Eres el entrenador del mes de ${A.m.toLowerCase()}: ${coach.pts} de ${coach.of} puntos.`,'good',{cat:'dir',subj:'Entrenador del mes'});if(S.mgr)S.mgr.rep=clamp(S.mgr.rep+1,0,100);}
+   if(coach&&coach.tid===S.user){news(`🏅 Eres el entrenador del mes de ${A.m.toLowerCase()}: ${coach.pts} de ${coach.of} puntos.`,'good',{cat:'dir',subj:'Entrenador del mes'});if(S.mgr)S.mgr.rep=clamp(S.mgr.rep+1,0,100);giveBadge('mes');}
   }
  });
  const ns={};lgs.forEach(lg=>lgTeams(lg).forEach(t=>squad(t.id).forEach(p=>{ns[p.id]=snapOf(p);})));S.monSnap=ns;

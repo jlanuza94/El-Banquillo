@@ -1,6 +1,7 @@
 /* El Banquillo · views/staff.ts — Pantalla del cuerpo técnico. */
 // @ts-nocheck — usa el estado heredado S.
 import {DELEG,deleg} from '../delegate';
+import {retiring,suggestRole} from '../mgrcareer';
 import {staffMarket} from '../extras';
 import {vtab} from './common';
 import {PLANS,injRisk} from '../medical';
@@ -51,8 +52,11 @@ export function staffView(){
  <div class="stgrid">${pool.length?pool.map(m=>{const R=ST_ROLES[m.role],full=crew(m.role).length>=staffMax(m.role),t=tierOf(m);return `<div class="stc ${t[0]}"><div class="stc-h"><span class="stc-av">${esc(m.name.split(' ').map(x=>x[0]).slice(0,2).join(''))}</span><div style="min-width:0;flex:1"><b class="stc-n">${esc(m.name)}</b><small>${R.n} · ${m.age} años${m.ex?' · ex jugador':''}</small></div>${medal(t)}</div><div class="stc-at">${atBars(m,R.at)}</div><div class="stc-f"><span class="small muted">${money(m.wage)}/sem</span></div><div class="stc-b"><button class="btn sm primary" data-a="st-hire" data-id="${m.id}" ${full?'disabled title="Puesto completo"':''}>${full?'Puesto completo':'Contratar'}</button></div></div>`;}).join(''):'<div class="empty">No hay candidatos ahora.</div>'}</div>
  <p class="small muted" style="margin:8px 0 0">Firman por 2 temporadas. Despedir a alguien cuesta unas 12 semanas de sueldo por cada temporada de contrato que le quede.</p></section>`;
  const med=`<section class="panel">${medHTML()}</section>`;
- const tb=vtab('st',[['eq','Tu personal'],['fich','Contratar'],['club','De otros clubes'],['ef','Efectos'],['med','Parte médico']],'eq');
- return tb.bar+(tb.cur==='eq'?sizeP+`<div class="stroles">${roles}</div>`+delegHTML():tb.cur==='fich'?cands:tb.cur==='club'?clubStaffHTML():tb.cur==='ef'?eff:med);
+ const R2=retiring(),retP=`<section class="panel"><div class="panel-h"><h2>Veteranos que se retiran</h2><span class="eyebrow">De jugador a técnico</span></div>
+ <p class="small muted" style="margin:0 0 8px">Jugadores de 33 años o más que pueden colgar las botas este verano. Ofrécele un puesto: si acepta, al retirarse entra en tu cuerpo técnico. Su liderazgo, sus decisiones y su visión marcan qué tal entrenará. Aceptan más si es de tu plantilla y si tienes buena reputación.</p>
+ ${R2.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Jugador</th><th>Club</th><th class="r">Edad</th><th class="r">Liderazgo</th><th class="r">Decisiones</th><th>Puesto</th><th></th></tr></thead><tbody>${R2.map(p=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${esc(T(p.team).short)}</td><td class="n">${p.age}</td><td class="n">${p.at.lid??'—'}</td><td class="n">${p.at.dec??'—'}</td><td>${p.toStaff?`<span class="tag onxi">Será ${esc(ST_ROLES[p.toStaff].n.toLowerCase())}</span>`:p.toStaffNo===S.seasonN?'<span class="tag">Dijo que no</span>':`<select id="rr_${p.id}" aria-label="Puesto para ${esc(p.name)}">${Object.entries(ST_ROLES).map(([k,R])=>`<option value="${k}" ${suggestRole(p)===k?'selected':''}>${R.n}</option>`).join('')}</select>`}</td><td class="r">${p.toStaff||p.toStaffNo===S.seasonN?'':`<button class="btn sm primary" data-a="st-offer" data-id="${p.id}">Ofrecer puesto</button>`}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No hay veteranos a punto de retirarse.</div>'}</section>`;
+ const tb=vtab('st',[['eq','Tu personal'],['fich','Contratar'],['ret','Se retiran'],['club','De otros clubes'],['ef','Efectos'],['med','Parte médico']],'eq');
+ return tb.bar+(tb.cur==='eq'?sizeP+`<div class="stroles">${roles}</div>`+delegHTML():tb.cur==='fich'?cands:tb.cur==='ret'?retP:tb.cur==='club'?clubStaffHTML():tb.cur==='ef'?eff:med);
 }
 export function fireModal(m){return `<h2>¿Despedir a ${esc(m.name)}?</h2><p>Tendrás que pagarle una indemnización de <b>${money(fireCost(m))}</b>.</p><div class="acts"><button class="btn" data-a="modal-close">Cancelar</button><button class="btn danger" data-a="st-fire-ok" data-id="${m.id}">Despedir</button></div>`;}
 

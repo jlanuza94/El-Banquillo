@@ -1,6 +1,7 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {oopSwap} from './oop';
+import {offerStaffRole} from './mgrcareer';
 import {INT_MAX,friendlyWait as fWait2,inPre,internalMatch} from './preseason';
 import {playTour} from './season';
 import {eff} from './tactics';
@@ -260,6 +261,7 @@ document.addEventListener('click',e=>{
   case'st-fire':S.modal={type:'stfire',id:d.id};break;
   case'st-fire-ok':fireStaff(d.id);S.modal=null;break;
   case'st-renew':renewStaff(d.id);break;
+  case'st-offer':{const r=document.getElementById('rr_'+d.id)?.value||'ent';const err=offerStaffRole(d.id,r);if(err)toast(err);break;}
   case'st-course':{const err=staffCourse(d.id);if(err)toast(err);break;}
   case'st-slot':S.vt=S.vt||{};S.vt.st='fich';S.stRole=d.v;break;
   case'st-role':S.stRole=d.v||null;break;

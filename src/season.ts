@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {careerSeasonEnd,retireToStaff} from './mgrcareer';
 import {friendlyWait,preWelcome,ptAfter,ptNext} from './preseason';
 import {poAdvance} from './playoffs';
 import {mgrGrow,projOffer,projSeasonEnd} from './extras2';
@@ -156,7 +157,7 @@ export function newSeason(){
  S.monSnap=null;
  const brief0={budget:S.budget,cap:S.wageCap,rep:T(S.user).rep,lv:LG(uLg()).lv,pos:sm.pos,up:!!sm.up,down:!!sm.down,club:S.user};
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
- const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);userBankruptcy();seasonContracts(sm);
+ const mgrOut=mgrSeasonEnd(sm);careerSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);userBankruptcy();seasonContracts(sm);
  seasonAwards();objectivesSeasonEnd();galaSeasonEnd();projSeasonEnd(sm);mgrGrow(sm);
  // hall of fame
  {const h={season:seasonLabel(),lg:wcs().map(c=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}
@@ -197,7 +198,7 @@ export function newSeason(){
   // los libres siguen en el mercado: se retiran por edad o si llevan demasiado tiempo sin equipo
   if(p.team===null)p.fa=(p.fa||0)+1;
   const retireFA=p.team===null&&((p.age>=32&&rnd()<.45)||p.fa>=3||(p.fa>=2&&p.ovr<45)||(p.age>=30&&p.ovr<40));
-  if(retireFA||(p.age>=34&&rnd()<(p.age-33)*.35)){if(p.team!==null&&p.car&&(p.car[1]>=40||p.car[0]>=320)){S.legends=(S.legends||[]).concat([{name:p.name,nat:p.nat,pos:p.sp,pj:p.car[0],g:p.car[1],a:p.car[2],club:T(p.team).short,end:seasonLabel()}]).sort((a,b)=>b.g-a.g).slice(0,60);}if(p.team===S.user)retired.push(p.name);onRetire(p);delete S.players[p.id];}
+  if(retireFA||(p.age>=34&&rnd()<(p.age-33)*.35)||(p.toStaff&&p.age>=33)){retireToStaff(p);if(p.team!==null&&p.car&&(p.car[1]>=40||p.car[0]>=320)){S.legends=(S.legends||[]).concat([{name:p.name,nat:p.nat,pos:p.sp,pj:p.car[0],g:p.car[1],a:p.car[2],club:T(p.team).short,end:seasonLabel()}]).sort((a,b)=>b.g-a.g).slice(0,60);}if(p.team===S.user)retired.push(p.name);onRetire(p);delete S.players[p.id];}
  });
  dirty();
  // expired contracts

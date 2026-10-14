@@ -26,6 +26,7 @@ import { COUNTRIES } from '../src/data';
 import { projOptions, projSeasonEnd } from '../src/extras2';
 import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
 import { seatCost } from '../src/club';
+import { joinWill as joinWillF, retiring as retiringF, offerStaffRole as offerStaffRoleF, retireToStaff as retireToStaffF } from '../src/mgrcareer';
 import { oopLineup, oopMap, oopSwap } from '../src/oop';
 import { createMatch as createMatchF, tacMods as tacModsF } from '../src/engine';
 import { nextMatch as nextMatchF } from '../src/competitions';
@@ -195,8 +196,9 @@ const app = document.getElementById('app')!;
     ok(queueScout(far.id) === '', 'se pide un informe');
     const before = S.inbox.length; for (let i = 0; i < 4; i++) { S.week++; scoutingWeekly(); } S.week -= 4;
     ok(seen(far).exact && S.inbox.slice(0, S.inbox.length - before).some(m => m.subj.startsWith('Informe: ' + far.name)), 'llega el informe y el jugador pasa a conocerse');
-    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); ok(app.querySelectorAll('.mkgrid .mkc').length > 5 && app.querySelectorAll('.mkhl-c').length === 3, 'mercado en tarjetas con destacados'); S.mk.view = 'tbl'; render();
-    ok(app.querySelector('.at.rng'), 'el mercado muestra rangos'); S.mk.view = 'card';
+    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); ok(app.querySelectorAll('.mkhl-c').length === 4 && app.querySelectorAll('#mklist tbody tr').length > 5 && app.querySelector('.will'), 'mercado en lista con destacados y ganas de venir');
+    { const w = joinWillF(Object.values(S.players).find(p => p.team === null)); ok(w.v >= 0 && w.v <= 100, `ganas de venir de un libre: ${w.v}%`); S.mk.tab = 'int'; render(); ok(app.textContent.includes('Licencia'), 'pestaña de interesados'); S.mk.tab = 'buy'; render(); }
+    ok(app.querySelector('.at.rng'), 'el mercado muestra rangos');
     S.modal = { type: 'ficha', id: far.id }; render(); S.modal = null;
   }
   {
@@ -432,6 +434,9 @@ const app = document.getElementById('app')!;
     { const m = S.crew[0], at0 = JSON.stringify(m.at), b0 = S.budget; S.budget = 99; ok(staffMaxF('ent') >= 2 && staffMaxF('fis') >= 1 && ['bronce', 'plata', 'oro', 'elite'].includes(tierOfF(m)[0]), `personal: plazas según el club (${staffMaxF('ent')} entrenadores) y nivel ${tierOfF(m)[1]}`);
       ok(staffCourseF(m.id) === '' && JSON.stringify(m.at) !== at0 && staffCourseF(m.id) !== '', 'curso de formación: mejora una vez por temporada'); S.budget = b0;
       S.vt = { st: 'eq' }; render(); ok(app.querySelectorAll('.stc').length >= 3 && app.textContent.includes('Formación'), 'pantalla de personal con tarjetas y niveles'); }
+    { const R = retiringF(); if (R.length) { const p = R[0], rep0 = S.mgr.rep; S.mgr.rep = 100; offerStaffRoleF(p.id, 'ent'); S.mgr.rep = rep0; ok(p.toStaff === 'ent' || p.toStaffNo === S.seasonN, 'ofrecer puesto de técnico a un veterano'); if (p.toStaff) { const n0 = (S.crew || []).length + (S.staffPool || []).length; retireToStaffF(p); ok((S.crew || []).length + (S.staffPool || []).length === n0 + 1, 'el veterano se retira y pasa a técnico'); delete p.toStaff; } }
+      S.view = 'staff'; S.vt = { st: 'ret' }; render(); ok(app.textContent.includes('Veteranos que se retiran'), 'pestaña de veteranos que se retiran');
+      S.view = 'club'; S.vt = { club: 'ent' }; render(); ok(app.querySelectorAll('.lic').length === 4 && app.querySelectorAll('.bdg').length >= 6, 'licencias e insignias del entrenador'); S.vt = {}; }
     const A = galaAwards(); ok(Array.isArray(A), 'gala del club'); S.vt = {}; S.view = 'inicio'; render(); }
   { // Rival que cambia, charlas, árbitros, penaltis, parejas, capitanes, prensa, proyecto, estadio, pujas, entrenador y grandes
     const ev = []; const add = (m, t, s, tx) => ev.push(tx);

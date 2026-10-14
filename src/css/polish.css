@@ -640,3 +640,38 @@ body.fmdrag .fpitch .slot.fit4 .shirt svg{stroke:#c23a2e;stroke-width:5}
 .fstats div{display:flex;flex-direction:column;align-items:center;padding:8px 4px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.08));border:1px solid var(--line)}
 .fstats b{font-family:var(--f-display);font-weight:900;font-size:24px;line-height:1}.fstats span{font:700 10.5px var(--f-num);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:3px}
 @media (orientation:landscape) and (max-height:540px){.fstats b{font-size:18px}.fstats div{padding:5px 3px}.fa{grid-template-columns:minmax(0,1fr) 46px auto}}
+.mkhl{grid-template-columns:repeat(4,minmax(0,1fr))}
+.mkhr{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center;padding:4px 2px;border-bottom:1px solid var(--line);font-size:12.5px}
+.mkhr .t{min-width:0;display:flex;flex-direction:column}.mkhr .t .linkname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;font-weight:700}
+.mkhr small{font-size:10.5px;color:var(--muted);display:flex;gap:4px;align-items:center}.mkhr small .q{font-size:10px;padding:0 3px}
+.mkhr b{font-family:var(--f-num);font-size:12.5px}
+.will{font-size:13px;cursor:help}
+tr.tsl td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+@media (orientation:landscape) and (max-height:540px){.mkhl{grid-template-columns:repeat(2,minmax(0,1fr))}.mkhr .btn.sm{padding:2px 6px;font-size:10px}}
+.lics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lic{display:flex;flex-direction:column;align-items:center;padding:8px 4px;border-radius:10px;border:1px solid var(--line);opacity:.45;text-align:center}
+.lic b{font-family:var(--f-display);font-weight:900;font-size:22px}.lic span{font-size:11px}
+.lic.on{opacity:1;background:color-mix(in srgb,var(--accent) 14%,transparent)}.lic.cur{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.bdg{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 6px;border-radius:10px;border:1px dashed var(--line);opacity:.5}
+.bdg span{font-size:24px;filter:grayscale(1)}.bdg b{font-size:12.5px}.bdg small{font-size:10.5px;color:var(--muted)}
+.bdg.on{opacity:1;border-style:solid;border-color:var(--accent)}.bdg.on span{filter:none}
+.fstats.fmon b{font-size:18px}.fstats.fmon div{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+/* Inicio: franja fina del próximo partido y fila de datos */
+.hero.slim{min-height:0;margin-bottom:6px}
+.hero.slim .hin{grid-template-columns:minmax(0,1fr) auto;align-items:center;padding:8px 14px;gap:12px}
+.hero.slim .hmain{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hero.slim .hcomp{text-align:left;font-size:11px}
+.hero.slim .hvs{grid-template-columns:auto auto auto;justify-content:start;margin:0;gap:14px}
+.hero.slim .hteam{flex-direction:row;gap:8px;text-align:left}.hero.slim .hteam .crest.lg{width:34px;height:34px;font-size:10px}
+.hero.slim .hteam b{font-size:17px}.hero.slim .hteam>span:not(.crest){display:none}
+.hero.slim .hmid{flex-direction:row;gap:8px;align-items:baseline}.hero.slim .hmid b{font-size:20px}
+.hero.slim .hbtns{flex-wrap:nowrap}
+.hstats{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.hstats .hstat{grid-template-columns:1fr;gap:0;padding:5px 9px;background:var(--surface);border-color:var(--line);color:inherit;backdrop-filter:none}
+.hstats .hstat span{color:var(--muted)}.hstats .hstat small{color:var(--muted)}
+.hstats .hstat.warn b{color:var(--loss)}.hstats .hstat.ok b{color:var(--win)}.hstats .hstat.hot b{color:var(--accent)}
+@media (orientation:landscape) and (max-height:540px){
+ .hero.slim .hin{padding:5px 10px}.hero.slim .hcomp{font-size:9px}.hero.slim .hteam b{font-size:13px}.hero.slim .hteam .crest.lg{width:24px;height:24px;font-size:7px}.hero.slim .hmid b{font-size:15px}.hero.slim .hvs{gap:8px}
+ .hstats{gap:4px;margin-bottom:6px}.hstats .hstat{padding:2px 7px}.hstats .hstat b{font-size:14px}.hstats .hstat span{font-size:8.5px}.hstats .hstat small{font-size:9px}
+}

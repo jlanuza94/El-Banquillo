@@ -7,6 +7,7 @@ import {retosPanel} from './retos';
 import {MODES} from '../quick';
 import {nameBtn,vtab} from './common';
 import {BSTYLE,cupTarget,evaluation,styleScore} from '../board';
+import {BADGES,LICS,badges,licence} from '../mgrcareer';
 import {MAX_AFF,MAX_BANK,affCandidates,affiliates,filial,loanOffers,wageBill} from '../clubplus';
 import {DIFF} from '../difficulty';
 import {debtTotal} from '../market2';
@@ -56,6 +57,10 @@ export function clubView(){
  const fac=`<section class="panel"><div class="panel-h"><h2>Instalaciones</h2><span class="eyebrow">Mantenimiento ${money(facMaint())}/sem</span></div>
  ${[['ent','Ciudad deportiva','Todos los jugadores mejoran un 10% más rápido por nivel.'],['can','Academia de cantera','Más juveniles cada verano y con más potencial.'],['med','Centro médico','Las lesiones de tus jugadores duran un 8% menos por nivel.']].map(([k,n,d])=>`<div class="offer"><span class="t"><b>${n}</b> · nivel ${C.fac[k]||1} de 5<br><span class="small muted">${d}</span></span><button class="btn sm" data-a="build" data-t="${k}" ${C.build||(C.fac[k]||1)>=5?'disabled':''}>Mejorar · ${money(facCost(k))}</button></div>`).join('')}</section>`;
  const spo=`<section class="panel"><div class="panel-h"><h2>Patrocinio</h2></div>${S.sponsor?`<p style="margin:0"><b>${esc(S.sponsor.name)}</b>: ${spDesc(S.sponsor)}</p><p class="small muted" style="margin:6px 0 0">El contrato dura hasta final de temporada. En verano recibirás nuevas ofertas.</p>`:S.spOffers.map((o,i)=>`<div class="offer"><span class="t"><b>${esc(o.name)}</b><br><span class="small muted">${spDesc(o)}</span></span><button class="btn sm primary" data-a="sponsor" data-i="${i}">Firmar</button></div>`).join('')}</section>`;
+ const lic=licence(),bd=badges(),licP=`<section class="panel"><div class="panel-h"><h2>Licencia e insignias</h2><span class="eyebrow">${M.seasons||0} temporada${(M.seasons||0)===1?'':'s'} de carrera</span></div>
+ <div class="lics">${LICS.map((x,i)=>`<div class="lic${i<=lic?' on':''}${i===lic?' cur':''}"><b>${['C','B','A','PRO'][i]}</b><span>${x[0]}</span></div>`).join('')}</div>
+ <p class="small muted" style="margin:6px 0 10px">${LICS[lic][1]}. Sube de licencia con reputación y temporadas: a más licencia, más jugadores querrán fichar por tu club y más fácil convencer a veteranos para tu cuerpo técnico.</p>
+ <div class="badges">${Object.entries(BADGES).map(([k,b])=>`<div class="bdg${bd.includes(k)?' on':''}" title="${esc(b[2])}"><span>${b[0]}</span><b>${b[1]}</b><small>${bd.includes(k)?'Conseguida':esc(b[2])}</small></div>`).join('')}</div></section>`;
  const mgrP=`<section class="panel"><div class="panel-h"><h2>Tu contrato</h2><span class="eyebrow">Entrenador de ${esc(T(S.user).name)}</span></div>
  <div class="kv" style="margin-top:0"><span>Salario</span><b>${money(M.sal)}/sem</b><span>Contrato</span><b>Hasta junio de ${mgrEnd()}</b><span>Reputación</span><b>${Math.round(M.rep)}/100</b><span>Ahorros</span><b>${money(M.savings)}</b></div>
  <div class="arow" style="grid-template-columns:150px minmax(0,1fr) 34px;margin-top:12px"><span>Confianza directiva</span>${bar(M.conf)}<b class="num">${Math.round(M.conf)}</b></div>
@@ -112,7 +117,7 @@ export function clubView(){
   case'fin':return two(finP+budP,spo+bankP);
   case'est':return two(stadium,fac+nsP);
   case'fil':return two(filP,affP);
-  case'ent':return two(mgrP,atP);
+  case'ent':return two(licP+mgrP,atP);
   case'par':return two(save,'');
  }
  return two(evalP()+objP(),styleP()+board+projP);

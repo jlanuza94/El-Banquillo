@@ -48,17 +48,17 @@ function dashHTML(nm,tb){
  const ev=dayOfEvent(S.ci),home=fx.h===S.user,O=S.mgr?Math.round(S.mgr.conf):60,mk=inWindow();
  const tside=tm=>{const r=tb.find(x=>x.id===tm.id);return `<div class="hteam">${crest(tm,'lg')}<b>${esc(tm.name)}</b><span>${r&&S.week?`${posOf(tm.id)}º · `:''}${r&&r.form&&r.form.length?formDots(r.form.slice(-5)):`<span class="divtag">${lgName(tm.lg,true)}</span>`}</span></div>`;};
  const stat=(l,v,sub,a,vv,cls='')=>`<button class="hstat ${cls}" data-a="${a}" data-v="${vv}"><span>${l}</span><b>${v}</b><small>${sub}</small></button>`;
- const hero=`<section class="hero"><div class="hbg">${stadiumSVG()}</div><div class="hin">
+ const hero=`<section class="hero slim"><div class="hbg">${stadiumSVG()}</div><div class="hin">
   <div class="hmain"><div class="hcomp">${esc(nm.label)} · ${dateTxt(ev)} · ${nm.ref.k==='cwc'?'campo neutral':home?'en casa':'a domicilio'}</div>
   <div class="hvs">${tside(T(fx.h))}<div class="hmid"><b>VS</b><span class="${dtm===0?'today':''}">${dtm===0?'¡Hoy!':dtm===1?'Mañana':`en ${dtm} días`}</span></div>${tside(T(fx.a))}</div>
-  <div class="hbtns"><button class="btn" data-a="view" data-v="tacticas">Tácticas</button>${dtm===0?'<button class="btn" data-a="sim-menu">Simular</button><button class="btn primary" data-a="play">Jugar partido</button>':'<button class="btn primary" data-a="continue">Continuar</button>'}</div></div>
+  </div><div class="hbtns"><button class="btn" data-a="view" data-v="tacticas">Tácticas</button>${dtm===0?'<button class="btn" data-a="sim-menu">Simular</button><button class="btn primary" data-a="play">Jugar partido</button>':'<button class="btn primary" data-a="continue">Continuar</button>'}</div></div></section>
   <div class="hstats">
    ${stat('Liga',S.week?`${posOf(S.user)}º`:'—',me?`${me.pts} pts · ${me.pj} PJ`:'','view','liga')}
    ${stat('Confianza',O,O>=60?'La directiva confía':O>=35?'Algo de dudas':'¡En peligro!','view','club',O<35?'warn':'')}
    ${stat('Enfermería',inj,`lesionado${inj===1?'':'s'}${sus?` · ${sus} sanc.`:''}`,'view','plantilla',inj?'warn':'')}
    ${stat('Mercado',mk?'Abierto':'Cerrado',mk?`${negs} negoc. · ${inc} ofertas`:S.week<winRounds()[1]?`invierno en ${winRounds()[1]-S.week} jorn.`:'abre en verano','view','mercado',mk?'ok':'')}
    ${stat('Bandeja',un,un===1?'sin leer':'sin leer','view','buzon',un?'hot':'')}
-  </div></div></section>`;
+  </div>`;
  return `${hero}${T_.length?`<div class="tasks"><span class="eyebrow">Pendiente</span>${T_.join('')}</div>`:''}`;
 }
 export function inicioView(){
