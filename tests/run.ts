@@ -116,7 +116,7 @@ const app = document.getElementById('app')!;
   ok(S.teams.length === 1100 && S.leagues.length === 55, 'se crean 1100 clubes en 55 ligas de 16 países');
   ok(app.querySelector('.title [data-a="start-go"][data-v="new"]') && app.textContent!.includes('El Banquillo'), 'portada con el estadio y «Nueva partida»');
   RT.startScreen = 'new'; render();
-  ok(app.textContent!.includes('Empieza tu carrera'), 'pantalla de inicio');
+  ok(app.querySelector('.sbar') && app.querySelectorAll('.ccard').length === 16, 'pantalla de inicio');
   ok(app.querySelectorAll('.ccard svg.flag').length === 16, 'países con bandera');
   for (const st of ['d', 'club', 'c']) { RT.startStep = st; render(); }
   ok(app.querySelector('.ccard'), 'pasos de inicio: país, división y club');
