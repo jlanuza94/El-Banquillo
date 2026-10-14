@@ -26,6 +26,7 @@ import { COUNTRIES } from '../src/data';
 import { projOptions, projSeasonEnd } from '../src/extras2';
 import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
 import { seatCost } from '../src/club';
+import { uLg as uLgF } from '../src/state';
 import { BSTYLE, evaluation, styleScore } from '../src/board';
 import { ROLES } from '../src/data';
 import { autoLineup as autoLineupF } from '../src/tactics';
@@ -341,7 +342,7 @@ const app = document.getElementById('app')!;
     ok(sq.length <= 26 && sq.filter(x => x.pos === 'POR').length >= 2, `plan de verano de la IA: ${sq.length} jugadores, ${sq.filter(x => x.pos === 'POR').length} porteros`);
     ok(TARGET.POR === 3 && !!needOf(ai.id).g, 'la IA sabe qué línea necesita');
     S.view = 'plantilla'; S.plTab = 'prof'; render(); ok(app.querySelector('.dgrid') && app.textContent.includes('Valor de la plantilla'), 'pestaña de profundidad');
-    S.view = 'liga'; S.ldTab = 'eco'; render(); ok(app.textContent.includes('Valor plantilla'), 'tabla del dinero de los clubes');
+    S.view = 'liga'; S.vt = { liga: 'eco' }; render(); S.vt = {}; const ecoOk = app.textContent.includes('Valor plantilla'); ok(ecoOk, 'tabla del dinero de los clubes');
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
   { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
     const t = T(S.user); t.subs = []; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
@@ -530,6 +531,8 @@ const app = document.getElementById('app')!;
     if (!fired && s > 0) { S.view = 'historia'; for (const tb of ['enc', 'fame']) { S.hiTab = tb; render(); } ok((S.ency || []).length >= 1 && app.textContent.includes('Récords del mundo'), `enciclopedia (${(S.ency || []).length} temporadas) y salón de la fama`); S.hiTab = 'club'; }
     ok(S.tl.length >= (fired ? 3 : 30) && S.mlog.length > 0 && S.mlog[0].sh.length > 5 && Object.values(S.players).some(p => p.st && p.st.kp > 0 && p.st.tk > 0 && p.st.xg > 0), 'análisis: evolución de la temporada, informes con tiros y estadísticas avanzadas' + ` (tl ${S.tl.length}, partidos ${S.mlog.length}, tiros ${S.mlog[0] && S.mlog[0].sh.length})`);
     S.modal = { type: 'mrep', i: 0 }; render(); ok(app.querySelector('.shotmap svg circle'), 'informe de partido con mapa de tiros'); S.modal = null;
+    { const M = (S.monthly || {})[uLgF()] || []; ok(M.length >= 6 && M[0].pom && M[0].coach && M[0].pos.DEL, `premios del mes: ${M.length} meses, ${M[0] && M[0].m}: ${M[0] && M[0].pom && M[0].pom.name}`);
+      S.view = 'liga'; S.ligaLg = uLgF(); for (const tb of ['tab', 'jor', 'gol', 'jug', 'mes', 'camp', 'eco']) { S.vt = { liga: tb }; render(); } S.vt = { liga: 'mes' }; render(); ok(app.querySelectorAll('.mcard').length >= 6, 'liga con premios del mes, goleadores, jugadores y campeones'); S.vt = {}; }
     for (const tb of ['race', 'stats', 'xi', 'hist']) { S.awTab = tb; S.view = 'premios'; render(); }
     ok(app.textContent.includes('Palmarés'), 'pantalla de estadísticas y premios');
     S.modal = null; S.view = 'inicio'; render(); const na = (S.awards || []).length;

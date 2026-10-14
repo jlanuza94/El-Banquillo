@@ -5,10 +5,11 @@ import {ecoTable} from './economy';
 import {flag} from '../flags';
 import {clamp,esc,money,pick,r2} from '../core';
 import {COUNTRIES,LV_NAMES,W,posChip} from '../data';
-import {LG,S,T,crest,lgTeams,seasonLabel,squad,uLg,unit} from '../state';
+import {PL,LG,S,T,crest,lgTeams,seasonLabel,squad,uLg,unit} from '../state';
 import {nRounds,table} from '../tactics';
 import {CONTS,CT_STAGES,CUP_AFTER,NCUP,CWC_NAMES,GL,ctOf,ctStatus,ctTable,cupName,cupRoundName,cupStatus,cwcStatus,cwcTable} from '../competitions';
-import {nameBtn,resRow,tableHTML} from './common';
+import {nameBtn,resRow,tableHTML,vtab} from './common';
+import {dateTxt,lgDay} from '../calendar';
 export function ctView(){
  if(!S.conts)return '<section class="panel"><div class="empty">Las competiciones continentales empiezan la próxima temporada.</div></section>';
  const ci=S.ctSel!=null?S.ctSel:Math.max(0,ctOf(S.user)),C=S.conts[ci],D=CONTS[ci],u=unit(D.top);
@@ -42,16 +43,38 @@ export function copasView(){
  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))">${groups}</div>`;
 }
 export function ligaView(){
- const lg=S.ligaLg,L=LG(lg),C=COUNTRIES[L.c],tb=table(lg),r=clamp(S.ligaRound,0,nRounds()-1);
- const ld=S.ldTab||'g',pl=squadsInLeague(lg);
- const scorers=ld==='g'?pl.filter(p=>p.goals>0).sort((a,b)=>b.goals-a.goals||a.apps-b.apps).slice(0,10):ld==='a'?pl.filter(p=>p.st&&p.st.a>0).sort((a,b)=>b.st.a-a.st.a).slice(0,10):pl.filter(p=>p.st&&p.st.pj>=5).sort((a,b)=>b.st.rs/b.st.pj-a.st.rs/a.st.pj).slice(0,10);
- const ldVal=p=>ld==='g'?p.goals:ld==='a'?p.st.a:(p.st.rs/p.st.pj).toFixed(2);
- return `<div class="row" style="margin-bottom:14px;align-items:flex-end"><label class="f"><span class="eyebrow">País</span><select id="lgC">${wcs().map(i=>COUNTRIES[i]).map((c,i)=>`<option value="${i}" ${i===L.c?'selected':''}>${c.n}</option>`).join('')}</select></label>${flag(C.code)}
+ const lg=S.ligaLg,L=LG(lg),C=COUNTRIES[L.c],tb=table(lg),r=clamp(S.ligaRound,0,nRounds()-1),pl=squadsInLeague(lg);
+ const T_=vtab('liga',[['tab','Clasificación'],['jor','Jornadas'],['gol','Goleadores'],['jug','Jugadores'],['mes','Premios del mes'],['camp','Campeones'],['eco','Dinero']],'tab');
+ const pickRow=`<div class="row" style="margin-bottom:10px;align-items:flex-end"><label class="f"><span class="eyebrow">País</span><select id="lgC">${wcs().map(i=>COUNTRIES[i]).map((c,i)=>`<option value="${i}" ${i===L.c?'selected':''}>${c.n}</option>`).join('')}</select></label>${flag(C.code)}
  <div class="seg" style="max-width:100%;overflow-x:auto">${Array.from({length:C.lv},(_,i)=>`<button data-a="liga-lv" data-v="${i}" aria-pressed="${L.lv===i}">${LV_NAMES[i]}</button>`).join('')}</div>
- ${lg!==uLg()?`<button class="btn sm" data-a="liga-mine">Ir a mi liga</button>`:''}</div>
- <div class="grid"><section class="panel"><div class="panel-h"><h2>${esc(C.n)} · ${LV_NAMES[L.lv]}</h2><span class="eyebrow">Tras ${S.week} jornada${S.week===1?'':'s'}</span></div>${tableHTML(tb,lg,false)}</section>
- <div class="stack"><section class="panel"><div class="panel-h"><h2>Jornada ${r+1}</h2><div class="row"><button class="btn sm" data-a="liga-r" data-d="-1" ${r===0?'disabled':''} aria-label="Jornada anterior">‹</button><button class="btn sm" data-a="liga-r" data-d="1" ${r>=nRounds()-1?'disabled':''} aria-label="Jornada siguiente">›</button></div></div>
- ${S.fixtures[lg][r].map(f=>resRow(f,null)).join('')}</section>
- <section class="panel"><div class="panel-h"><h2>Líderes</h2><div class="seg"><button data-a="ld-tab" data-v="g" aria-pressed="${ld==='g'}">Goles</button><button data-a="ld-tab" data-v="a" aria-pressed="${ld==='a'}">Asistencias</button><button data-a="ld-tab" data-v="r" aria-pressed="${ld==='r'}">Nota media</button><button data-a="ld-tab" data-v="eco" aria-pressed="${ld==='eco'}">Dinero</button></div></div>${ld==='eco'?ecoTable(lg):scorers.length?`<div class="tbl"><table><thead><tr><th>Jugador</th><th>Equipo</th><th class="r">PJ</th><th class="r">${ld==='g'?'Goles (liga)':ld==='a'?'Asist.':'Nota'}</th></tr></thead><tbody>${scorers.map(p=>`<tr class="${p.team===S.user?'me':''}"><td>${posChip(p)} ${nameBtn(p)}</td><td><span class="teamcell">${crest(T(p.team),'sm')}${T(p.team).short}</span></td><td class="n">${p.st?p.st.pj:p.apps}</td><td class="pts">${ldVal(p)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Aún no hay datos.</div>'}${ld!=='g'&&ld!=='eco'?'<p class="small muted" style="margin:8px 0 0">Asistencias y nota cuentan todas las competiciones. La nota exige 5 partidos.</p>':''}</section></div></div>`;
+ ${lg!==uLg()?`<button class="btn sm" data-a="liga-mine">Ir a mi liga</button>`:''}</div>`;
+ const head=(h,e)=>`<div class="panel-h"><h2>${h}</h2><span class="eyebrow">${e||`${esc(C.n)} · ${LV_NAMES[L.lv]}`}</span></div>`;
+ const pRow=(p,i,cols)=>`<tr class="${p.team===S.user?'me':''}"><td class="n">${i+1}</td><td>${posChip(p)} ${nameBtn(p)}</td><td><span class="teamcell">${crest(T(p.team),'sm')}${esc(T(p.team).short)}</span></td>${cols.map(c=>`<td class="${c[1]?'pts':'n'}">${c[0]}</td>`).join('')}</tr>`;
+ const top=(f,n=20)=>pl.filter(p=>p.st&&f(p)>0).sort((a,b)=>f(b)-f(a)||(a.st.pj-b.st.pj)).slice(0,n);
+ let body='';
+ if(T_.cur==='tab')body=`<div class="grid"><section class="panel">${head(`${esc(C.n)} · ${LV_NAMES[L.lv]}`,`Tras ${S.week} jornada${S.week===1?'':'s'}`)}${tableHTML(tb,lg,false)}</section>
+  <div class="stack"><section class="panel"><div class="panel-h"><h2>Jornada ${r+1}</h2><div class="row"><button class="btn sm" data-a="liga-r" data-d="-1" ${r===0?'disabled':''} aria-label="Jornada anterior">‹</button><button class="btn sm" data-a="liga-r" data-d="1" ${r>=nRounds()-1?'disabled':''} aria-label="Jornada siguiente">›</button></div></div>${S.fixtures[lg][r].map(f=>resRow(f,null)).join('')}</section>
+  <section class="panel">${head('Pichichi','Top 5')}${(()=>{const g=top(p=>p.st.g,5);return g.length?`<div class="tbl"><table><tbody>${g.map((p,i)=>pRow(p,i,[[p.st.g,1]])).join('')}</tbody></table></div>`:'<div class="empty">Aún sin goles.</div>';})()}</section></div></div>`;
+ else if(T_.cur==='jor')body=`<section class="panel"><div class="panel-h"><h2>Jornada ${r+1}</h2><div class="row"><button class="btn sm" data-a="liga-r" data-d="-1" ${r===0?'disabled':''} aria-label="Jornada anterior">‹</button><span class="eyebrow">${dateTxt(lgDay(r))}</span><button class="btn sm" data-a="liga-r" data-d="1" ${r>=nRounds()-1?'disabled':''} aria-label="Jornada siguiente">›</button></div></div>${S.fixtures[lg][r].map(f=>resRow(f,null)).join('')}</section>`;
+ else if(T_.cur==='gol'){const g=top(p=>p.st.g),a=top(p=>p.st.a),th=l=>`<thead><tr><th>#</th><th>Jugador</th><th>Equipo</th><th class="r">PJ</th><th class="r">${l}</th></tr></thead>`;
+  body=`<div class="grid"><section class="panel">${head('Goleadores')}${g.length?`<div class="tbl"><table>${th('Goles')}<tbody>${g.map((p,i)=>pRow(p,i,[[p.st.pj],[p.st.g,1]])).join('')}</tbody></table></div>`:'<div class="empty">Aún sin goles.</div>'}</section>
+  <section class="panel">${head('Asistentes')}${a.length?`<div class="tbl"><table>${th('Asist.')}<tbody>${a.map((p,i)=>pRow(p,i,[[p.st.pj],[p.st.a,1]])).join('')}</tbody></table></div>`:'<div class="empty">Aún sin asistencias.</div>'}</section></div>`;}
+ else if(T_.cur==='jug'){const k=S.ljK||'r',m=Math.max(1,Math.floor(S.week/3)),D={r:['Nota',p=>p.st.pj>=m?p.st.rs/p.st.pj:0,v=>v.toFixed(2)],mv:['MVP',p=>p.st.mv,v=>v],ga:['G+A',p=>p.st.g+p.st.a,v=>v],cs:['Porterías a 0',p=>['POR','DFC','LI','LD'].includes(p.sp)?p.st.cs:0,v=>v],yc:['Tarjetas',p=>p.st.yc+2*p.st.rc,v=>v],mi:['Minutos',p=>p.st.mi,v=>v]};
+  const L2=top(D[k][1],30);
+  body=`<section class="panel"><div class="panel-h"><h2>Cómo van los jugadores</h2><div class="seg">${Object.entries(D).map(([kk,v])=>`<button data-a="lj-k" data-v="${kk}" aria-pressed="${k===kk}">${v[0]}</button>`).join('')}</div></div>
+  ${L2.length?`<div class="tbl"><table><thead><tr><th>#</th><th>Jugador</th><th>Equipo</th><th class="r">PJ</th><th class="r">Goles</th><th class="r">Asist.</th><th class="r">MVP</th><th class="r">Nota</th><th class="r">${D[k][0]}</th></tr></thead><tbody>${L2.map((p,i)=>pRow(p,i,[[p.st.pj],[p.st.g],[p.st.a],[p.st.mv],[p.st.pj?(p.st.rs/p.st.pj).toFixed(2):'—'],[D[k][2](D[k][1](p)),1]])).join('')}</tbody></table></div>`:'<div class="empty">Aún no hay datos.</div>'}
+  ${k==='r'?`<p class="small muted" style="margin:8px 0 0">La nota exige haber jugado ${m} partido${m>1?'s':''}.</p>`:''}</section>`;}
+ else if(T_.cur==='mes'){const M=((S.monthly||{})[lg]||[]).slice().reverse();
+  const who=(x,ex)=>x?`<div class="mw">${PL(x.pid)?nameBtn(PL(x.pid)):esc(x.name)}<small>${esc(x.club)} · ${x.pj} PJ · nota ${x.r.toFixed(2)}${x.g?` · ${x.g} G`:''}${x.a?` · ${x.a} A`:''}${ex||''}</small></div>`:'<div class="mw muted">—</div>';
+  body=M.length?`<div class="mgrid">${M.map(A=>`<section class="panel mcard"><div class="panel-h"><h2>${esc(A.m)}</h2><span class="eyebrow">${A.sn===S.seasonN?'Esta temporada':'Temporada anterior'}</span></div>
+  <div class="mtop"><span class="mic">🏅</span><div><div class="eyebrow">Jugador del mes</div>${who(A.pom)}</div></div>
+  <div class="mtop"><span class="mic">🧑‍💼</span><div><div class="eyebrow">Entrenador del mes</div>${A.coach?`<div class="mw">${esc(A.coach.name)}<small>${T(A.coach.tid)?esc(T(A.coach.tid).name):''} · ${A.coach.pts} de ${A.coach.of} puntos</small></div>`:'—'}</div></div>
+  <div class="mtop"><span class="mic">⭐</span><div><div class="eyebrow">Mejor joven (sub-21)</div>${who(A.young)}</div></div>
+  <div class="mpos">${[['POR','Portero'],['DEF','Defensa'],['MED','Centrocampista'],['DEL','Delantero']].map(([g,n])=>`<div><div class="eyebrow">${n}</div>${who(A.pos[g])}</div>`).join('')}</div></section>`).join('')}</div>`
+  :`<section class="panel"><div class="empty">Los premios del mes se entregan tras la última jornada de cada mes en las ligas de tu país: jugador del mes, entrenador del mes, mejor joven y el mejor de cada línea.</div></section>`;}
+ else if(T_.cur==='camp'){const E=(S.ency||[]).slice().reverse().map(e=>({s:e.season,c:(e.champs||[]).find(x=>x.c===L.c&&x.lv===L.lv),cup:L.lv===0?((e.cups||[]).find(x=>x.c===L.c)||{}).w:null,boot:L.lv===0&&e.boot?e.boot:null})).filter(x=>x.c);
+  body=`<section class="panel">${head('Campeones')}${E.length?`<div class="tbl"><table><thead><tr><th>Temporada</th><th>Campeón</th><th>Subcampeón</th><th class="r">Pts</th>${L.lv===0?'<th>Copa</th>':''}</tr></thead><tbody>${E.map(x=>`<tr><td class="num">${x.s}</td><td><b>🏆 ${esc(x.c.champ)}</b></td><td>${esc(x.c.runner)}</td><td class="n">${x.c.pts}</td>${L.lv===0?`<td>${esc(x.cup||'—')}</td>`:''}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">Al acabar la primera temporada aparecerán aquí los campeones de esta liga.</div>'}</section>`;}
+ else body=`<section class="panel">${head('Dinero de los clubes')}${ecoTable(lg)}</section>`;
+ return T_.bar+pickRow+body;
 }
 export const squadsInLeague=lg=>lgTeams(lg).flatMap(t=>squad(t.id));

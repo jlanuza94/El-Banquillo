@@ -97,6 +97,7 @@ document.addEventListener('click',e=>{
   case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}if(d.v==='plantilla')markPre('pl');else if(d.v==='tacticas')markPre('tac');else if(d.v==='mercado')markPre('mk');S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
+  case'lj-k':S.ljK=d.v;break;
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;if(d.go)S.view=d.go;document.querySelector('main')?.scrollTo?.(0,0);break;
   case'loan-recall':{const err=recallLoan(d.id);if(err)toast(err);break;}
   case'dev-set':break;

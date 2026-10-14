@@ -153,6 +153,7 @@ export function seasonSummary(){
 }
 export function newSeason(){
  const sm=seasonSummary(),tabs=S.leagues.map(L=>table(L.id));
+ S.monSnap=null;
  const brief0={budget:S.budget,cap:S.wageCap,rep:T(S.user).rep,lv:LG(uLg()).lv,pos:sm.pos,up:!!sm.up,down:!!sm.down,club:S.user};
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
  const mgrOut=mgrSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);userBankruptcy();seasonContracts(sm);

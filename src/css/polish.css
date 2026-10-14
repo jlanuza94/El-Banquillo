@@ -433,3 +433,10 @@ body.fmdrag .fpitch .slot.fit4 .shirt svg{stroke:#c23a2e;stroke-width:5}
  .fa{font-size:12px;padding:2px 6px}.fa .at{font-size:12px;min-width:28px}.fah{font-size:13px}
 }
 @media (max-width:520px) and (orientation:portrait){.pcard{grid-template-columns:1fr 1fr}.pinfo{grid-column:1/-1;order:3}.fattrs{grid-template-columns:1fr}}
+
+/* Premios del mes */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
+.mtop{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.mic{font-size:22px;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:color-mix(in srgb,var(--accent) 22%,transparent);flex:none}
+.mw{font-weight:700}.mw small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
+.mpos{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:8px}
