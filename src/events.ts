@@ -97,7 +97,7 @@ document.addEventListener('click',e=>{
   case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}if(d.v==='plantilla')markPre('pl');else if(d.v==='tacticas')markPre('tac');else if(d.v==='mercado')markPre('mk');S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
-  case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;document.querySelector('main')?.scrollTo?.(0,0);break;
+  case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;if(d.go)S.view=d.go;document.querySelector('main')?.scrollTo?.(0,0);break;
   case'loan-recall':{const err=recallLoan(d.id);if(err)toast(err);break;}
   case'dev-set':break;
   case'pub-fine':fineHim(d.id);break;
@@ -377,7 +377,7 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.fb
 /* Alineación estilo FM: arrastra jugadores de la lista al campo, al banquillo o de vuelta a la lista.
  * En el móvil se coge desde el asa ⠿ (así la lista sigue pudiendo desplazarse); en el campo y el banquillo, directamente. */
 let DG=null,DG_T=0;
-const fitOf=pid=>{const r=document.querySelector(`.fmrow[data-pid="${pid}"]`);return r?r.dataset.fit||'':'';};
+const fitOf=pid=>{const r=document.querySelector(`[data-fit][data-pid="${pid}"]`);return r?r.dataset.fit||'':'';};
 const dropAt=(x,y)=>{const el=document.elementFromPoint(x,y);return el&&el.closest('.fmgrid .slot[data-i], .bslot[data-k], .fmlist');};
 document.addEventListener('pointerdown',e=>{if(!S||S.user==null||e.button>0)return;const el=e.target.closest&&e.target.closest('.fmgrid [data-drag]');if(!el)return;
  if(e.pointerType!=='mouse'&&el.dataset.drag==='list'&&!e.target.closest('.grip'))return;

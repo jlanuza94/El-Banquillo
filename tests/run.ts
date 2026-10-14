@@ -26,6 +26,7 @@ import { COUNTRIES } from '../src/data';
 import { projOptions, projSeasonEnd } from '../src/extras2';
 import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
 import { seatCost } from '../src/club';
+import { BSTYLE, evaluation, styleScore } from '../src/board';
 import { ROLES } from '../src/data';
 import { autoLineup as autoLineupF } from '../src/tactics';
 const autoLineupT = id => autoLineupF(id, T(id).formation);
@@ -299,7 +300,7 @@ const app = document.getElementById('app')!;
     ok(C.socios > 0 && inc > 0 && Math.abs(S.budget - b0 - inc) < 1e-6, `campaña de abonos (${C.socios} socios, ${inc} M)`);
     ok(sociosFor(C.abo * 2) < sociosFor(C.abo), 'abono más caro, menos socios');
     ok(shopWeekly() > 0, 'la tienda da dinero cada jornada');
-    S.view = 'club'; render(); ok(app.textContent.includes('Centro médico') && app.textContent.includes('Abono de temporada'), 'estadio con abonos y centro médico'); S.budget = b0; }
+    S.view = 'club'; S.vt = { club: 'est' }; render(); ok(app.textContent.includes('Centro médico') && app.textContent.includes('Abono de temporada'), 'estadio con abonos y centro médico'); S.budget = b0; }
   { // Selecciones nacionales
     initIntl(); ok(ranking().length === 16, 'ranking de selecciones (16)');
     ok(callOf(0).length === 23, 'convocatoria automática de 23');
@@ -328,7 +329,7 @@ const app = document.getElementById('app')!;
     tutStart(true); render(); ok(app.querySelector('.tutcard') && S.view === TUT[0].v, 'el tutorial aparece');
     for (let i = 0; i < TUT.length; i++) tutGo(1); render(); ok(S.tut == null && !app.querySelector('.tutcard'), 'el tutorial se completa');
     ok(/^El-Banquillo-.+\.ebsave$/.test(saveName()), 'nombre del archivo de partida: ' + saveName());
-    S.view = 'club'; render(); ok(app.querySelector('[data-a=save-file]') && app.querySelector('#saveFile'), 'botones para pasar la partida'); }
+    S.view = 'club'; S.vt = { club: 'par' }; render(); ok(app.querySelector('[data-a=save-file]') && app.querySelector('#saveFile'), 'botones para pasar la partida'); }
   { // Economía viva: valores, caja de los clubes y plantillas de la IA
     const p = squad(S.user).find(x => x.pos !== 'POR'), st0 = p.st; p.st = { ...st0, pj: 10, rs: 80, g: 2 }; const hi = targetValue(p); p.st = { ...st0, pj: 10, rs: 55, g: 0 }; const lo = targetValue(p); p.st = st0;
     ok(hi > lo * 1.3, `el valor depende del rendimiento (${hi.toFixed(2)} con notas de 8 frente a ${lo.toFixed(2)} con notas de 5.5)`);
@@ -344,7 +345,7 @@ const app = document.getElementById('app')!;
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
   { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
     const t = T(S.user); t.subs = []; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
-    ok(app.querySelector('.fmlist') && app.querySelectorAll('.bslot').length === MAX_SUBS && app.querySelectorAll('.fmrow[data-fit]').length > 0, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
+    ok(app.querySelector('.fmlist') && app.querySelectorAll('.bslot').length === MAX_SUBS && app.querySelectorAll('.frow[data-fit]').length > 0 && app.querySelectorAll('.fpitch .slot[data-i]').length === 11, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
     ok(app.querySelectorAll('[data-a="vtab"]').length === 7, 'siete pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
@@ -435,7 +436,7 @@ const app = document.getElementById('app')!;
     ok(!S.proj && S.projHist.some(x => x.ok), 'proyecto cumplido y archivado'); ok(projOptions().find(o => o.k === 'can').need > canN, 'el siguiente proyecto es más ambicioso'); S.projHist = [];
     S.proj = null; startProject('eco'); ok(S.proj && S.proj.k === 'eco' && projState().done === false, 'proyecto a 3 años pactado'); const b0 = S.budget; S.budget = S.proj.budget * 2; ok(projState().done, 'proyecto: sanear cuentas cumplido'); S.budget = b0; S.proj = null;
     const C = S.club, cf = S.mgr.conf; S.mgr.conf = 80; S.budget = 999; ok(startStadium(seatCost) === '' && C.ns, 'empiezan las obras del estadio nuevo'); const cap0 = C.cap; C.ns.left = 1; stadiumWeekly(); ok(C.cap > cap0 && !C.ns, 'inauguración del estadio nuevo'); S.mgr.conf = cf; S.budget = b0;
-    S.view = 'club'; render(); ok(app.textContent.includes('Proyecto con la directiva') && app.textContent.includes('Tus atributos de entrenador'), 'pantalla del club con proyecto, estadio y atributos');
+    S.view = 'club'; S.vt = { club: 'dir' }; render(); const pj0 = app.textContent.includes('Proyecto con la directiva'); S.vt = { club: 'ent' }; render(); ok(pj0 && app.textContent.includes('Tus atributos de entrenador'), 'pantalla del club con proyecto, estadio y atributos');
     mgrInit(); const a0 = mgrAt('tac'); mgrGrow({ ok: true }); ok(mgrAt('tac') > a0, 'el entrenador mejora en táctica al cumplir');
     const target = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan && p.ovr >= 50); const n = { msg: '' }; for (let i = 0; i < 30 && !n.rival; i++) maybeRival(target, n, () => [S.teams.find(t => t.id !== S.user && t.id !== target.team).id]);
     ok(n.rival && n.rival.w > 0, 'otro club puja por el mismo jugador'); const lost = rivalWins(target, n, { w: n.rival.w * 3, role: 'cl' }, ROLES); ok(lost === false, 'con mejor propuesta, el jugador te elige');
@@ -463,7 +464,10 @@ const app = document.getElementById('app')!;
     for (let k = 0; k < 3; k++) poAdvance(quickMatchF, applyResultF, mkTieF); ok(S.po.done && S.po.champ != null, 'liguilla jugada hasta la final: campeón ' + T(S.po.champ).name); S.po = po0;
     const wk = S.week; S.week = winRounds()[0]; S.day = lgDay(S.week) - 1; S.dlDone = null; ok(dlActive(isDeadlineF, lgDay), 'hoy es el día de cierre');
     for (let k = 0; k < 6; k++) dlStep(aiTransfersF, incomingOfferF); ok(S.dlDone === S.day && S.dlFeed.length === 6 && !dlActive(isDeadlineF, lgDay), 'día de cierre por horas hasta las 23:59'); S.week = wk;
-    S.view = 'inicio'; render(); ok(app.querySelectorAll('.dcard').length === 6, 'panel de mando en inicio');
+    S.view = 'inicio'; render(); ok(app.querySelector('.hero .hvs') && app.querySelectorAll('.hstat').length === 5, 'inicio con la tarjeta del próximo partido y el resumen');
+    { const E = evaluation(), st = styleScore(); ok(E.areas.length === 7 && E.tot >= 0 && E.tot <= 100 && 'ABCDE'.includes(E.g[0]) && BSTYLE[st.k] && st.s >= 0 && st.s <= 100, `evaluación de la directiva: nota ${E.g[0]} (${E.tot}), estilo ${BSTYLE[st.k].n} ${st.s}%`);
+      S.view = 'club'; S.vt = { club: 'dir' }; render(); ok(app.textContent.includes('Evaluación del entrenador') && app.textContent.includes('Objetivos de la temporada') && app.textContent.includes('Estilo de juego') && app.querySelectorAll('.evrow').length === 7, 'pestaña Directiva: evaluación, objetivos y estilo');
+      ok(app.querySelectorAll('.side [data-v=calendario]').length >= 1, 'Calendario en el menú lateral'); S.vt = {}; S.view = 'inicio'; }
     setPreset('intensa'); ok(S.train.int === 'i' && S.train.focus === 'fis', 'semana intensa: físico e intensidad alta'); setPreset('tactica'); ok(S.train.focus === 'tac', 'semana táctica');
     const f = T(S.user).formation, fa = famOf(f); schedWeekly(famOf); ok(famOf(f) >= fa && squad(S.user).every(p => p.loan || p.trA != null), 'la semana táctica sube el dominio y todos tienen nota de entrenamiento');
     const pp = squad(S.user).find(p => !p.loan); pp.trA = 8; ok(trMult(pp) > 1.1, 'buena nota de entrenamiento: mejora más rápido'); setSession(0, 'des'); ok(sched()[0] === 'des', 'cambiar una sesión'); setPreset('normal');
@@ -569,7 +573,7 @@ const app = document.getElementById('app')!;
     S.budget = 50; ok(moveBudget(1) === '' && S.wageCap > cap, 'se puede pasar dinero de fichajes a sueldos');
     const b0 = S.budget; ok(takeBankLoan(0) === '' && S.budget > b0 && S.bank.length === 1, 'préstamo bancario'); const pay = bankWeekly(); ok(pay > 0 && S.bank[0].left === S.bank[0].yrs * 38 - 1, 'se devuelve cada semana');
     const aff = affCandidates()[0]; ok(addAffiliate(aff.id) === '' && affiliates().length === 1, 'club afiliado');
-    S.view = 'club'; render(); ok(app.textContent.includes('Filial') && app.textContent.includes('Préstamos bancarios'), 'pantalla del club con filial, afiliados y presupuestos');
+    S.view = 'club'; S.vt = { club: 'fil' }; render(); const fl0 = app.textContent.includes('Filial'); S.vt = { club: 'fin' }; render(); ok(fl0 && app.textContent.includes('Préstamos bancarios'), 'pantalla del club con filial, afiliados y presupuestos');
     S.pre.left = 0; await simLoop('season', false, { stopped: () => false, progress: () => {}, yield: async () => {} }); if (S.jobless) takeJob(S.jobless.offers[0]); else { S.modal = null; newSeason(); }
     ok(S.leagues.every(L => S.teams.filter(t => t.lg === L.id).length === 20), 'tras una temporada con filial, todas las ligas siguen teniendo 20 equipos');
     ok(!filial() || S.leagues[filial().lg].lv > S.leagues[T(S.user).lg].lv, 'y el filial sigue por debajo de su primer equipo');

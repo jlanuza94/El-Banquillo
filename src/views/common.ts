@@ -77,7 +77,7 @@ export function header(){
 }
 /** Menú principal de 7 secciones (como FM Mobile); las que agrupan varias pantallas se despliegan con sus subsecciones. */
 export const NAV7=[{k:'inicio',l:'Inicio',i:'home',v:['inicio']},{k:'buzon',l:'Bandeja',i:'mail',v:['buzon']},{k:'equipo',l:'Plantilla',i:'shirt',v:['plantilla','entreno','cantera','staff']},
- {k:'tacticas',l:'Tácticas',i:'board',v:['tacticas']},{k:'comp',l:'Competición',i:'table',v:['calendario','liga','copas','selecciones','premios','analisis']},{k:'mercado',l:'Mercado',i:'swap',v:['mercado']},{k:'club',l:'Club',i:'bank',v:['club','historia','editor']}];
+ {k:'tacticas',l:'Tácticas',i:'board',v:['tacticas']},{k:'cal',l:'Calendario',i:'cal',v:['calendario']},{k:'comp',l:'Competición',i:'table',v:['liga','copas','selecciones','premios','analisis']},{k:'mercado',l:'Mercado',i:'swap',v:['mercado']},{k:'club',l:'Club',i:'bank',v:['club','historia','editor']}];
 function navMain(cur,badge,tv){
  S.gLast=S.gLast||{};
  return NAV7.map(g=>{const vs=g.v.filter(v=>!quick()||!DEEP_ONLY.includes(v)||v===cur);if(!vs.length)return '';const on=vs.includes(cur);if(on&&vs.length>1)S.gLast[g.k]=cur;
@@ -134,20 +134,27 @@ export function tableHTML(tb,lg,compact){
  ${tb.map((r,i)=>{const tm=T(r.id);return `<tr class="${r.id===S.user?'me':''}"><td class="n"><span class="zone ${zoneOf(lg,i)}"></span>${i+1}</td><td><span class="teamcell">${crest(tm,'sm')}<button class="linkname" data-a="club-open" data-id="${tm.id}">${esc(tm.name)}</button></span></td><td class="n">${r.pj}</td>${compact?'':`<td class="n">${r.g}</td><td class="n">${r.e}</td><td class="n">${r.p}</td><td class="n">${r.gf}</td><td class="n">${r.gc}</td>`}<td class="n">${r.gf-r.gc>0?'+':''}${r.gf-r.gc}</td><td class="pts"${r.ded?` title="${r.ded} puntos de sanción por quiebra"`:""}>${r.pts}${r.ded?`<sup class="neg">−${r.ded}</sup>`:""}</td>${compact?'':`<td>${formDots(r.form)}</td>`}</tr>`;}).join('')}
  </tbody></table></div><div class="row small muted" style="margin-top:10px;gap:14px">${legend}</div>`;
 }
-export function pitchHTML(t,lu,f,opts={}){
- const slots=slotsOf(f),rows=[[['POR'],89]].concat(formRows(f)),fc=f===FREE?freeCoords():null;let si=0,h='';
+/** Coordenadas (en %) de cada puesto de una formación, con el campo de pie: x de banda a banda, y de arriba (ataque) a abajo (portería). */
+export function slotCoords(f){
+ const rows=[[['POR'],89]].concat(formRows(f)),fc=f===FREE?freeCoords():null,out=[];let si=0;
  rows.forEach(([list,y0])=>list.forEach((s,k)=>{
   const sx=si++,n=list.length;let x=(k+1)/(n+1)*100,y=y0;
   if(n===5&&GRP[s]==='DEF'&&(k===0||k===4))y-=8;
   if(n===5&&GRP[s]==='MED'&&(k===0||k===4))y-=5;
   if(s==='MCD'&&list.some(x=>x!=='MCD'))y+=7;
   if(fc){x=fc[sx].x;y=fc[sx].y;}
+  out.push({s,x,y});}));
+ return out;
+}
+export function pitchHTML(t,lu,f,opts={}){
+ let h='';
+ slotCoords(f).forEach(({s,x,y},sx)=>{
   const p=PL(lu[sx]);let cls='',sh='+',nm=s,rtv='';
   if(!p)cls='empty';else{sh=p.num;nm=p.name.split(' ').slice(1).join(' ');rtv=(eff(p,s,opts.en?opts.en[p.id]:null,opts.roles?opts.roles[sx]:null)/10).toFixed(1);if(!available(p)||p.team!==S.user)cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';}
   if(opts.sel===sx)cls+=' sel';
   const rate=opts.rat&&p&&opts.rat[p.id]!=null?`<span class="rt" style="background:${opts.mvp===p.id?'#c99a06':'rgba(0,0,0,.6)'}">${opts.rat[p.id].toFixed(1)}${opts.mvp===p.id?' · MVP':''}</span>`:'';
   h+=`<button class="slot ${cls}" style="left:${x}%;top:${y}%;--px:${x};--py:${y};${crestStyle(t)}" ${opts.click?`data-a="slot" data-i="${sx}"${p?` data-pid="${p.id}" data-drag="slot"`:''}`:'tabindex="-1"'} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}"><span class="sh">${sh}</span><span class="nm">${esc(nm)}</span>${rate||(rtv!==''?`<span class="rt">${s} ${rtv}${p&&p.sp!==s?' · '+p.sp:''}</span>`:`<span class="rt">${s}</span>`)}</button>`;
- }));
+ });
  return `<div class="pitch"><span class="ln out"></span><span class="ln half"></span><span class="ln circ"></span><span class="ln box1"></span><span class="ln box2"></span>${h}</div>`;
 }
 /** Pinta la pantalla actual. Solo actualiza en el DOM lo que ha cambiado (morphdom). */

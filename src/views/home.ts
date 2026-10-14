@@ -5,7 +5,8 @@ import {INT_MAX,PRE_GAP,daysToLeague,friendlyWait,inPre,preTasks,ptNext} from '.
 import {needsPO,poRound,setupPO,userTie} from '../playoffs';
 import {mkTie} from '../competitions';
 import {galaAwards} from '../extras';
-import {MONTHS_L,agenda,dateOf,dateTxt,daysToMatch,eventDays,seasonStart,syncDay} from '../calendar';
+import {MONTHS_L,agenda,dateOf,dateTxt,dayOfEvent,daysToMatch,eventDays,seasonStart,syncDay} from '../calendar';
+import {stadiumSVG} from './title';
 import {nC} from '../state';
 import {derbyName,h2hDots,h2hStreak,h2hTxt,isDerby} from '../rivals';
 import {TOPICS} from '../talks';
@@ -36,15 +37,6 @@ export function offersPanel(){
 function dashHTML(nm,tb){
  const fx=nm.fx,opp=T(fx.h===S.user?fx.a:fx.h),dtm=daysToMatch(),me=tb.find(r=>r.id===S.user),sq=squad(S.user),inj=sq.filter(p=>p.inj).length,sus=sq.filter(p=>p.susp).length;
  const negs=Object.values(S.neg||{}).filter(n=>n.wait||n.agreed).length,inc=Object.values(S.offers||{}).filter(o=>o.incoming).length,un=unread();
- const card=(icon,lbl,big,sub,a,v,cls='')=>`<button class="dcard ${cls}" data-a="${a}" data-v="${v}"><span class="dl">${icon} ${lbl}</span><b>${big}</b><span class="ds">${sub}</span></button>`;
- const cards=[
-  card('⚽','Próximo partido',`${fx.h===S.user?'vs':'en'} ${esc(opp.short)}`,dtm===0?'¡Hoy!':dtm===1?'Mañana':`En ${dtm} días`,'view','calendario',dtm===0?'hot':''),
-  card('📊','Liga',S.week?`${posOf(S.user)}º`:'—',me?`${me.pts} pts · ${me.pj} PJ`:'',  'view','liga'),
-  card('📈','Forma',me&&me.form&&me.form.length?formDots(me.form):'—',`${S.chem?'Química '+Math.round(S.chem):''}`,'view','analisis'),
-  card('🩹','Enfermería',`${inj}`,`${inj===1?'lesionado':'lesionados'}${sus?` · ${sus} sancionado${sus>1?'s':''}`:''}`,'view','plantilla',inj?'warn':''),
-  card('💼','Mercado',inWindow()?'Abierto':'Cerrado',inWindow()?`${negs} negociación${negs===1?'':'es'} · ${inc} oferta${inc===1?'':'s'}`:S.week<winRounds()[1]?`El de invierno abre en ${winRounds()[1]-S.week} jornada${winRounds()[1]-S.week>1?'s':''}`:'Abre en verano · libres sí','view','mercado',inWindow()?'ok':''),
-  card('✉️','Bandeja',`${un}`,un===1?'mensaje sin leer':'mensajes sin leer','view','buzon',un?'hot':''),
- ].join('');
  const T_=[];const add=(t,a,v)=>T_.push(`<button class="task" data-a="${a}" data-v="${v||''}">${t}</button>`);
  if(lineupIssues().length)add('⚠️ Completa tu once','view','tacticas');
  if(S.spOffers&&S.spOffers.length&&!S.sponsor)add('🤝 Elige patrocinador','view','inicio');
@@ -53,7 +45,21 @@ function dashHTML(nm,tb){
  const exp=sq.filter(p=>!p.loan&&p.contract<=1).length;if(exp)add(`📝 ${exp} contrato${exp>1?'s':''} acaba${exp>1?'n':''}`,'view','inicio');
  const sad=sq.filter(p=>(p.hap??70)<40).length;if(sad)add(`😠 ${sad} jugador${sad>1?'es':''} descontento${sad>1?'s':''}`,'view','plantilla');
  if(!S.proj&&S.projOpts)add('🎯 Pacta un proyecto con la directiva','view','club');
- return `<div class="dash">${cards}</div>${T_.length?`<div class="tasks"><span class="eyebrow">Pendiente</span>${T_.join('')}</div>`:''}`;
+ const ev=dayOfEvent(S.ci),home=fx.h===S.user,O=S.mgr?Math.round(S.mgr.conf):60,mk=inWindow();
+ const tside=tm=>{const r=tb.find(x=>x.id===tm.id);return `<div class="hteam">${crest(tm,'lg')}<b>${esc(tm.name)}</b><span>${r&&S.week?`${posOf(tm.id)}º · `:''}${r&&r.form&&r.form.length?formDots(r.form.slice(-5)):`<span class="divtag">${lgName(tm.lg,true)}</span>`}</span></div>`;};
+ const stat=(l,v,sub,a,vv,cls='')=>`<button class="hstat ${cls}" data-a="${a}" data-v="${vv}"><span>${l}</span><b>${v}</b><small>${sub}</small></button>`;
+ const hero=`<section class="hero"><div class="hbg">${stadiumSVG()}</div><div class="hin">
+  <div class="hmain"><div class="hcomp">${esc(nm.label)} · ${dateTxt(ev)} · ${nm.ref.k==='cwc'?'campo neutral':home?'en casa':'a domicilio'}</div>
+  <div class="hvs">${tside(T(fx.h))}<div class="hmid"><b>VS</b><span class="${dtm===0?'today':''}">${dtm===0?'¡Hoy!':dtm===1?'Mañana':`en ${dtm} días`}</span></div>${tside(T(fx.a))}</div>
+  <div class="hbtns"><button class="btn" data-a="view" data-v="tacticas">Tácticas</button>${dtm===0?'<button class="btn" data-a="sim-menu">Simular</button><button class="btn primary" data-a="play">Jugar partido</button>':'<button class="btn primary" data-a="continue">Continuar</button>'}</div></div>
+  <div class="hstats">
+   ${stat('Liga',S.week?`${posOf(S.user)}º`:'—',me?`${me.pts} pts · ${me.pj} PJ`:'','view','liga')}
+   ${stat('Confianza',O,O>=60?'La directiva confía':O>=35?'Algo de dudas':'¡En peligro!','view','club',O<35?'warn':'')}
+   ${stat('Enfermería',inj,`lesionado${inj===1?'':'s'}${sus?` · ${sus} sanc.`:''}`,'view','plantilla',inj?'warn':'')}
+   ${stat('Mercado',mk?'Abierto':'Cerrado',mk?`${negs} negoc. · ${inc} ofertas`:S.week<winRounds()[1]?`invierno en ${winRounds()[1]-S.week} jorn.`:'abre en verano','view','mercado',mk?'ok':'')}
+   ${stat('Bandeja',un,un===1?'sin leer':'sin leer','view','buzon',un?'hot':'')}
+  </div></div></section>`;
+ return `${hero}${T_.length?`<div class="tasks"><span class="eyebrow">Pendiente</span>${T_.join('')}</div>`:''}`;
 }
 export function inicioView(){
  const nm=nextMatch(),lg=uLg(),tb=table(lg),t=T(S.user);if(!nm)return '<div class="empty">Cargando la siguiente fecha…</div>';
@@ -62,9 +68,9 @@ export function inicioView(){
  const issues=lineupIssues(),rowT=id=>tb.find(r=>r.id===id);
  const side=tm=>`<div class="side">${crest(tm,'lg')}<div class="tn">${esc(tm.name)}</div><div class="row small muted">${rowT(tm.id)?`${S.week?posOf(tm.id)+'º · ':''}${formDots(rowT(tm.id).form)}`:`<span class="divtag">${lgName(tm.lg,true)}</span>`}</div></div>`;
  const L=home?myP:opP,R=home?opP:myP;
- const next=`<section class="panel"><div class="panel-h"><h2>Próximo partido</h2><span class="eyebrow">${esc(nm.label)} · ${nm.ref.k==='cwc'?'Campo neutral':home?'En casa':'A domicilio'}</span></div>
+ const next=`<section class="panel"><div class="panel-h"><h2>Previa del partido</h2><span class="eyebrow">${esc(nm.label)} · ${nm.ref.k==='cwc'?'Campo neutral':home?'En casa':'A domicilio'}</span></div>
   ${(()=>{const opp=fx.h===S.user?fx.a:fx.h,dv=isDerby(S.user,opp),st=h2hStreak(opp);return `${dv?`<div class="derbytag">🔥 ${derbyName(S.user,opp)} · más tensión, más público y la ciudad pendiente</div>`:''}<div class="small muted" style="text-align:center;margin:0 0 6px">Tu historial: ${h2hTxt(opp)} ${h2hDots(opp)}${st?' · '+st:''}</div>`;})()}
-  <div class="versus">${side(T(fx.h))}<div class="vs">VS</div>${side(T(fx.a))}</div>
+  <div class="pvs"><span>${esc(T(fx.h).short)}</span><span class="small muted">vs</span><span>${esc(T(fx.a).short)}</span></div>
   ${cmpRow('Ataque',L.atk,R.atk)}${cmpRow('Medio',L.mid,R.mid)}${cmpRow('Defensa',L.def,R.def)}
   ${issues.length?`<div class="warnbox" style="margin-top:14px"><span>Tu once tiene ${issues.length} hueco${issues.length>1?'s':''} sin cubrir o con jugadores no disponibles.</span><button class="btn sm" data-a="fixlu">Completar con suplentes</button></div>`:''}
   <div class="row" style="margin-top:16px"><span class="muted small">${t.formation} · Mentalidad ${MENT[t.ment].label.toLowerCase()} · Química ${Math.round(S.chem)} · Entreno: ${FOCUS[S.train.focus].n.toLowerCase()}</span><span class="spacer"></span>

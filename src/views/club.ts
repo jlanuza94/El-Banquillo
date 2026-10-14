@@ -5,7 +5,8 @@ import {wcs} from '../state';
 import {enciclopediaHTML,fameHTML} from './worldhist';
 import {retosPanel} from './retos';
 import {MODES} from '../quick';
-import {nameBtn} from './common';
+import {nameBtn,vtab} from './common';
+import {BSTYLE,cupTarget,evaluation,styleScore} from '../board';
 import {MAX_AFF,MAX_BANK,affCandidates,affiliates,filial,loanOffers,wageBill} from '../clubplus';
 import {DIFF} from '../difficulty';
 import {debtTotal} from '../market2';
@@ -105,5 +106,39 @@ export function clubView(){
  const atP=`<section class="panel"><div class="panel-h"><h2>Tus atributos de entrenador</h2><span class="eyebrow">Mejoran con la experiencia</span></div>
  ${Object.entries(MGR_AT).map(([k,n])=>`<div class="arow" style="grid-template-columns:110px minmax(0,1fr) 34px"><span>${n}</span>${bar(mgrAt(k)*10)}<b class="num">${mgrAt(k).toFixed(1)}</b></div>`).join('')}
  <p class="small muted" style="margin:8px 0 0">Táctica: tu equipo rinde algo más. Motivación: mejor vestuario. Cantera: los jóvenes crecen antes. Negociación: fichajes más baratos. Al final de cada temporada mejoras en lo que más has trabajado (resultados, canteranos que juegan, fichajes y ventas, vestuario contento).</p></section>`;
- return `<div class="grid"><div class="stack">${board}${projP}${budP}${filP}${stadium}${nsP}${spo}${fac}</div><div class="stack">${finP}${bankP}${affP}${mgrP}${atP}${save}</div></div>`;
+ const tb=vtab('club',[['dir','Directiva'],['fin','Finanzas'],['est','Estadio'],['fil','Filial y afiliados'],['ent','Entrenador'],['par','Partida']],'dir');
+ const two=(a,b)=>`${tb.bar}<div class="grid"><div class="stack">${a}</div><div class="stack">${b}</div></div>`;
+ switch(tb.cur){
+  case'fin':return two(finP+budP,spo+bankP);
+  case'est':return two(stadium,fac+nsP);
+  case'fil':return two(filP,affP);
+  case'ent':return two(mgrP,atP);
+  case'par':return two(save,'');
+ }
+ return two(evalP()+objP(),styleP()+board+projP);
+}
+const gchip=(g,big)=>`<span class="grade g${g[0]}${big?' big':''}" title="${g[1]}">${g[0]}</span>`;
+function evalP(){
+ const E=evaluation(),M=S.mgr;
+ return `<section class="panel"><div class="panel-h"><h2>Evaluación del entrenador</h2><span class="eyebrow">Temporada ${seasonLabel()}</span></div>
+ <div class="evtop">${gchip(E.g,1)}<div style="min-width:0;flex:1"><div class="evv">${E.tot}<small>/100 · ${E.g[1]}</small></div><p class="small" style="margin:2px 0 6px">${E.verdict}</p>
+ <div class="arow" style="grid-template-columns:120px minmax(0,1fr) 30px;margin:0"><span class="small">Confianza</span><span class="abar" style="display:block"><i class="${qc(M.conf/10)}" style="width:${M.conf}%"></i></span><b class="num">${Math.round(M.conf)}</b></div></div></div>
+ <div class="evlist">${E.areas.map(a=>`<div class="evrow">${gchip(a.g)}<div style="min-width:0"><div class="evn"><b>${a.n}</b><span class="small muted">${a.w}%</span></div><span class="abar" style="display:block"><i class="${qc(a.s/10)}" style="width:${a.s}%"></i></span><div class="small muted">${esc(a.d)}</div></div></div>`).join('')}</div>
+ <p class="small muted" style="margin:8px 0 0">La nota pesa cada área según su importancia para la directiva. Con una nota baja la confianza va cayendo; por debajo de 8 te despiden.</p></section>`;
+}
+function objP(){
+ const O=S.obj,st=styleScore(),E=evaluation(),A=k=>E.areas.find(x=>x.k===k),P=S.proj,tit=(S.titles||[]).filter(x=>x.season===seasonLabel());
+ const ic=s=>s>=70?'<span class="oki ok">✓</span>':s>=50?'<span class="oki mid">●</span>':'<span class="oki ko">✗</span>';
+ const L=[[A('lg').s,`Liga: ${O.txt}`,A('lg').d],[A('cup').s,`Copa: ${cupTarget()}`,A('cup').d],[st.s,`Estilo: ${BSTYLE[st.k].n}`,BSTYLE[st.k].how],[A('fin').s,'Finanzas: no pasarse del límite salarial',A('fin').d]];
+ if(P)L.push([projState().done?80:45,`Proyecto: ${P.n}`,P.d]);
+ return `<section class="panel"><div class="panel-h"><h2>Objetivos de la temporada</h2><span class="eyebrow">Lo que pide la directiva</span></div>
+ ${L.map(([s,t,d])=>`<div class="objrow">${ic(s)}<span class="t"><b>${esc(t)}</b><br><span class="small muted">${esc(d)}</span></span></div>`).join('')}
+ <h3 style="margin:14px 0 6px">Logros de esta temporada</h3>${tit.length?`<ul class="news">${tit.map(x=>`<li><span class="wk">🏆</span><span class="t"><b>${esc(x.name)}</b></span></li>`).join('')}</ul>`:'<p class="small muted" style="margin:0">Aún ningún título esta temporada.</p>'}</section>`;
+}
+function styleP(){
+ const st=styleScore(),B=BSTYLE[st.k];
+ return `<section class="panel"><div class="panel-h"><h2>Estilo de juego</h2><span class="eyebrow">El que quiere la directiva</span></div>
+ <div class="evtop"><div style="min-width:0;flex:1"><div class="evv" style="font-size:24px">${B.n}</div><p class="small" style="margin:2px 0 6px">${B.d}</p><p class="small muted" style="margin:0 0 8px">Cómo cumplirlo: ${B.how}</p>
+ <div class="arow" style="grid-template-columns:120px minmax(0,1fr) 30px;margin:0"><span class="small">Cumplimiento</span><span class="abar" style="display:block"><i class="${qc(st.s/10)}" style="width:${st.s}%"></i></span><b class="num">${st.s}</b></div><p class="small muted" style="margin:6px 0 0">${esc(st.why)}</p></div></div>
+ <div class="row" style="margin-top:10px"><button class="btn sm" data-a="vtab" data-k="tac" data-v="tac" data-go="tacticas">Ajustar en Tácticas</button></div></section>`;
 }
