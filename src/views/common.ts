@@ -75,6 +75,16 @@ export function header(){
  <div class="kpis"><div class="kpi"><span class="eyebrow">Presupuesto</span><b>${money(S.budget)}</b></div><div class="kpi"><span class="eyebrow">${esc(lgName(t.lg,true))}</span><b class="${played?(pos<=o.max?'ok':'bad'):''}">${played?pos+'º':'—'}</b></div><div class="kpi"><span class="eyebrow">Objetivo</span><b class="obj">${o.txt}</b></div><div class="kpi"><span class="eyebrow">Confianza</span><b class="${S.mgr.conf>=50?'ok':S.mgr.conf<25?'bad':''}">${Math.round(S.mgr.conf)}</b></div></div>
  <div class="tbtns"><button class="gsbtn" data-a="gsearch" aria-label="Buscar" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>${themeBtn()}${cont}</div></header>`;
 }
+/** Menú principal de 7 secciones (como FM Mobile); las que agrupan varias pantallas se despliegan con sus subsecciones. */
+export const NAV7=[{k:'inicio',l:'Inicio',i:'home',v:['inicio']},{k:'buzon',l:'Bandeja',i:'mail',v:['buzon']},{k:'equipo',l:'Plantilla',i:'shirt',v:['plantilla','entreno','cantera','staff']},
+ {k:'tacticas',l:'Tácticas',i:'board',v:['tacticas']},{k:'comp',l:'Competición',i:'table',v:['calendario','liga','copas','selecciones','premios','analisis']},{k:'mercado',l:'Mercado',i:'swap',v:['mercado']},{k:'club',l:'Club',i:'bank',v:['club','historia','editor']}];
+function navMain(cur,badge,tv){
+ S.gLast=S.gLast||{};
+ return NAV7.map(g=>{const vs=g.v.filter(v=>!quick()||!DEEP_ONLY.includes(v)||v===cur);if(!vs.length)return '';const on=vs.includes(cur);if(on&&vs.length>1)S.gLast[g.k]=cur;
+  const go=vs.includes(S.gLast[g.k])?S.gLast[g.k]:vs[0],b=g.v.map(v=>badge[v]).find(Boolean),hl=tv&&vs.includes(tv)&&!on;
+  return `<button class="nitem${hl?' tuthl':''}" data-a="view" data-v="${go}" title="${g.l}" aria-current="${on}">${icon(g.i)}<span>${g.l}</span><small class="sl" aria-hidden="true">${g.l}</small>${b?`<span class="badge">${b}</span>`:''}</button>`+
+   (on&&vs.length>1?`<div class="nsubs">${vs.map(v=>`<button class="nsub${tv===v&&cur!==v?' tuthl':''}" data-a="view" data-v="${v}" aria-current="${cur===v}" title="${NAVL[v][0]}">${icon(NAVL[v][1])}<span>${SHORT[v]||NAVL[v][0]}</span></button>`).join('')}</div>`:'');}).join('');
+}
 export function nav(){
  const cur=S.view==='partido'?'':S.view,badge={inicio:Object.values(S.offers).filter(o=>o.incoming).length+(S.jobOffers||[]).length,buzon:unread(),mercado:inWindow()?'●':''};
  const tv=tutView(),it=([v,l,i])=>`<button class="nitem${tv===v&&cur!==v?' tuthl':''}" data-a="view" data-v="${v}" title="${l}" aria-current="${cur===v}">${icon(i)}<span>${l}</span><small class="sl" aria-hidden="true">${SHORT[v]||l}</small>${badge[v]?`<span class="badge">${badge[v]}</span>`:''}</button>`;
@@ -82,7 +92,7 @@ export function nav(){
  const side=`<aside class="side"><div class="brand">El Banquillo<small>${esc(S.mgr?'Reputación '+Math.round(S.mgr.rep)+'/100':'')}</small></div>
  <div class="sclub">${crest(t)}<div style="min-width:0"><div class="n">${esc(t.name)}</div><div class="small muted">${esc(lgName(t.lg,true))} · ${money(S.budget)}</div></div></div>
  ${S.match?`<button class="nitem" data-a="view" data-v="partido" aria-current="${S.view==='partido'}" ${S.view==='partido'?'':'style="color:var(--loss)"'}>${icon('ball')}<span>En juego ${S.match.min}'</span></button>`:''}
- ${NAVG.map(g=>{const items=g.it.filter(([v])=>!quick()||!DEEP_ONLY.includes(v));return items.length?`<div class="ngroup">${g.g?`<div class="gt">${g.g}</div>`:''}${items.map(it).join('')}</div>`:'';}).join('')}
+ <div class="ngroup">${navMain(cur,badge,tv)}</div>
  <button class="nitem" data-a="set-mode" data-v="${quick()?'profundo':'rapido'}" style="margin-top:auto;opacity:.8"><span class="small">Modo ${quick()?'rápido':'profundo'} · cambiar</span></button></aside>`;
  const mob=['inicio','buzon','plantilla','mercado'];
  const bnav=`<nav class="bnav" aria-label="Secciones">${mob.map(v=>`<button data-a="view" data-v="${v}" aria-current="${cur===v}">${icon(NAVL[v][1])}<span>${v==='buzon'?'Bandeja':NAVL[v][0].split(' ')[0]}</span>${badge[v]&&v==='buzon'?`<span class="badge">${badge[v]}</span>`:''}</button>`).join('')}<button data-a="more" aria-current="${!mob.includes(cur)&&cur!==''}">${icon('more')}<span>Más</span></button></nav>`;
