@@ -17,6 +17,7 @@ import {roleEffects,roleMult} from './roles';
 import {learnFromMatch} from './scouting';
 import {segAt} from './staff';
 import {clamp,fill,gauss,pick,r3,ri,rnd} from './core';
+import {oopForm,oopLineup,oopMap} from './oop';
 import {AT_NAME,GRP,MENT,TAC0,TX,W,WIDE,newSt} from './data';
 import {condTick} from './plans';
 import {synergies,synergyMods} from './synergy';
@@ -36,6 +37,7 @@ export function createMatch(ref){
   m.tac[s]=Object.assign({},TAC0,t.tac||{});m.ord[s]=m.us===s?Object.assign({},t.orders||{}):{};});
  m.derby=m.ref.k!=='fr'&&isDerby(m.h,m.a);
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
+ if(m.us){const t=T(m[m.us]),of=oopForm(t);if(of)m.oop={s:m.us,f:of,map:oopMap(t)};}
  if(m.us){if(S.prepB&&S.prepB>1&&ref.k!=='fr'){m.mult[m.us]*=S.prepB;S.prepB=1;}m.refr=refFor(ref,m.h);m.mult[m.us]*=duoMult(m.lu[m.us].filter(Boolean))*(1+.004*(mgrAt('tac')-5));}
  if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;if(spPrepFor(op))m.spd=spPrepMult();}
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
@@ -84,6 +86,8 @@ export function tacMods(m,s,log){
  {const sl=slotsOf(m.f[s]),du=m.du&&m.du[s],pi=m.pi&&m.pi[s];if(du&&du.length===sl.length){const pe=posTeam(sl,du,pi);f('pos',pe.own,pe.opp,pe.drain,pe.poss);}
   // sinergias del once (roles, cometidos e instrucciones que se complementan)
   const ro=m.ro&&m.ro[s];if(ro&&ro.length===sl.length){const k=m.f[s]+'|'+ro.join()+'|'+(du||[]).join()+'|'+JSON.stringify(pi||[]);m.syn=m.syn||{};if(!m.syn[s]||m.syn[s].k!==k){const sy=synergyMods(synergies(sl,ro,du,pi,m.lu[s]));m.syn[s]={k,own:sy.own,opp:sy.opp,g:sy.g,b:sy.b};}f('sin',m.syn[s].own,m.syn[s].opp);}}
+ // forma sin balón: si defiendes con otra formación, cuenta lo bien que cubre (y si el equipo la conoce)
+ if(m.oop&&m.oop.s===s){const k=m.lu[s].join();if(!m.oop.c||m.oop.c.k!==k){const ip=teamPower(m.lu[s],m.f[s]).def||1,od=teamPower(oopLineup(m.lu[s],m.oop.map),m.oop.f).def,fm=famOf(m.oop.f);m.oop.c={k,v:clamp(1-(od/ip-1)*.8,.97,1.03)*(fm<50?1.02:fm<70?1.008:1)};}f('oop',.996,m.oop.c.v);}
  // instrucciones al rival: las que da el otro equipo (o) frenan a este (s); las propias tienen un coste
  const OI=(m.oi&&m.oi[o])||{},MY=(m.oi&&m.oi[s])||{};
  if(OI.ban)f('oiR',1-Math.max(0,w)/220,1);if(MY.ban)f('oi',.992,1);
@@ -332,7 +336,7 @@ export function applyResult(m){
  if(m.us)learnFromMatch(Object.keys(m.played).filter(id=>PL(id)&&PL(id).team!==S.user));
  if(m.us){const xi=m.xi0[m.us].filter(Boolean),stable=xi.filter(id=>S.lastXI.includes(id)).length;
   S.chem=clamp(S.chem+(S.lastXI.length?(stable-8)*.7:0)+res[m.us]*.8,20,100);S.lastXI=xi;
-  const f=m.f[m.us];S.famil[f]=clamp(famOf(f)+6,0,100);}
+  const f=m.f[m.us];S.famil[f]=clamp(famOf(f)+6,0,100);if(m.oop)S.famil[m.oop.f]=clamp(famOf(m.oop.f)+4,0,100);}
 }
 export function playerTick(full){
  Object.values(S.players).forEach(p=>{

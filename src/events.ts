@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {oopSwap} from './oop';
 import {INT_MAX,friendlyWait as fWait2,inPre,internalMatch} from './preseason';
 import {playTour} from './season';
 import {eff} from './tactics';
@@ -98,6 +99,8 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'lj-k':S.ljK=d.v;break;
+  case'lph':S.lph=d.v;S.oopSel=null;S.sel=null;break;
+  case'oop-slot':{const i=+d.i;if(S.oopSel==null||S.oopSel===i)S.oopSel=S.oopSel===i?null:i;else{oopSwap(T(S.user),S.oopSel,i);S.oopSel=null;}break;}
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;if(d.go)S.view=d.go;document.querySelector('main')?.scrollTo?.(0,0);break;
   case'loan-recall':{const err=recallLoan(d.id);if(err)toast(err);break;}
   case'dev-set':break;
@@ -333,6 +336,7 @@ document.addEventListener('change',e=>{
  const map={mksp:'sp',mkc:'c',mklv:'lv',mkmin:'min',mkage:'age',mkmax:'max',mksort:'sort',mknat:'nat',mkwage:'wage',mkpot:'pot',mkatk:'atk',mkatv:'atv'};
  if(e.target.dataset&&e.target.dataset.cond!=null){const t=T(S.user),r=(t.cond||[])[+e.target.dataset.cond],k=e.target.dataset.k;if(r){r[k]=k==='min'?+v:(v||null);}save();render();return;}
  if(id==='formSel'){setFormation(v);S.sel=null;}
+ if(id==='oopSel'){const t=T(S.user);t.oop=v||null;t.oopMap=null;S.oopSel=null;}
  else if(id==='cupC'){S.cupC=+v;}
  else if(id==='hiC'){S.hiC=+v;}
  else if(id==='t-cap'||id==='t-pk'||id==='t-fk'||id==='t-ck'){T(S.user)[id.slice(2)]=v||null;}

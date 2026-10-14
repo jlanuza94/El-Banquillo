@@ -440,3 +440,10 @@ body.fmdrag .fpitch .slot.fit4 .shirt svg{stroke:#c23a2e;stroke-width:5}
 .mic{font-size:22px;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:color-mix(in srgb,var(--accent) 22%,transparent);flex:none}
 .mw{font-weight:700}.mw small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
 .mpos{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:8px}
+.fph button{white-space:nowrap}
+.fpitch .slot .fpos2{display:none}
+.fpitch .slot.oopm .shirt svg{fill:color-mix(in srgb,var(--c1) 70%,#000)}
+.fpitch .slot.oopm.sel .shirt svg{stroke:#ffd34d;stroke-width:4}
+.oopt{color:#4aa3ff;font-weight:700}
+.ophint{margin:0 0 6px}
+@media (orientation:landscape) and (max-height:540px){.ophint{display:none}}

@@ -26,6 +26,9 @@ import { COUNTRIES } from '../src/data';
 import { projOptions, projSeasonEnd } from '../src/extras2';
 import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
 import { seatCost } from '../src/club';
+import { oopLineup, oopMap, oopSwap } from '../src/oop';
+import { createMatch as createMatchF, tacMods as tacModsF } from '../src/engine';
+import { nextMatch as nextMatchF } from '../src/competitions';
 import { uLg as uLgF } from '../src/state';
 import { BSTYLE, evaluation, styleScore } from '../src/board';
 import { ROLES } from '../src/data';
@@ -347,6 +350,11 @@ const app = document.getElementById('app')!;
   { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
     const t = T(S.user); t.subs = []; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
     ok(app.querySelector('.fmlist') && app.querySelectorAll('.bslot').length === MAX_SUBS && app.querySelectorAll('.frow[data-fit]').length > 0 && app.querySelectorAll('.fpitch .slot[data-i]').length === 11, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
+    { const t = T(S.user); t.oop = Object.keys(FORMS).find(f => f !== t.formation && f.startsWith('4-')) || Object.keys(FORMS).find(f => f !== t.formation); const mp = oopMap(t);
+      ok(mp && new Set(mp).size === mp.length && mp[0] === 0 && oopLineup(t.lineup, mp).filter(Boolean).length === t.lineup.filter(Boolean).length, `forma sin balón ${t.formation} → ${t.oop}: cada jugador tiene su puesto`);
+      oopSwap(t, mp[1], mp[2]); ok(oopMap(t)[1] === mp[2], 'intercambiar puestos sin balón');
+      S.lph = 'oop'; render(); ok(app.querySelectorAll('.fpitch .oopm').length === 11 && app.querySelector('#oopSel'), 'alineación sin balón en pantalla');
+      const m = createMatchF(nextMatchF().ref); const lg = {}; tacModsF(m, m.us, lg); ok(m.oop && lg.oop, 'la forma sin balón cuenta en el partido'); S.lph = 'ip'; t.oop = null; t.oopMap = null; }
     ok(app.querySelectorAll('[data-a="vtab"]').length === 7, 'siete pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);

@@ -39,3 +39,15 @@ export function freeWarn(){
  if(n('MED')<2)return 'Muy pocos centrocampistas: perderás la batalla del medio.';
  return '';
 }
+/** Coordenadas (en %) de cada puesto de una formación, con el campo de pie: x de banda a banda, y de arriba (ataque) a abajo (portería). */
+export function slotCoords(f){
+ const rows=[[['POR'],89]].concat(formRows(f)),fc=f===FREE?freeCoords():null,out=[];let si=0;
+ rows.forEach(([list,y0])=>list.forEach((s,k)=>{
+  const sx=si++,n=list.length;let x=(k+1)/(n+1)*100,y=y0;
+  if(n===5&&GRP[s]==='DEF'&&(k===0||k===4))y-=8;
+  if(n===5&&GRP[s]==='MED'&&(k===0||k===4))y-=5;
+  if(s==='MCD'&&list.some(x=>x!=='MCD'))y+=7;
+  if(fc){x=fc[sx].x;y=fc[sx].y;}
+  out.push({s,x,y});}));
+ return out;
+}

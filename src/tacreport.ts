@@ -12,7 +12,7 @@ const r2=x=>Math.round(x*100)/100;
 const dec=x=>x.toFixed(2).replace('.',',');
 const fx=x=>(x>=0?'+':'−')+Math.abs(x).toFixed(2).replace('.',',');
 const tacLbl=(k,v)=>TACS[k]&&TACS[k].o[v]?TACS[k].o[v].toLowerCase():v;
-const NAMES={pre:'Presión',lin:'Línea defensiva',rit:'Ritmo',anc:'Anchura',est:'Estilo',fase:'Al perder / al recuperar',rol:'Roles de tus jugadores',pos:'Cometidos e instrucciones por puesto',ord:'Órdenes especiales',oi:'Tus instrucciones al rival',oiR:'Las instrucciones del rival',clima:'Clima y campo',mom:'Tus decisiones en momentos clave',cap:'El capitán',ment:'Mentalidad',sin:'Sinergias del once'};
+const NAMES={pre:'Presión',lin:'Línea defensiva',rit:'Ritmo',anc:'Anchura',est:'Estilo',fase:'Al perder / al recuperar',rol:'Roles de tus jugadores',pos:'Cometidos e instrucciones por puesto',ord:'Órdenes especiales',oi:'Tus instrucciones al rival',oiR:'Las instrucciones del rival',clima:'Clima y campo',mom:'Tus decisiones en momentos clave',cap:'El capitán',ment:'Mentalidad',sin:'Sinergias del once',oop:'Forma sin balón'};
 const sideOf=sp=>/^(LD|CAD|MD|ED)$/.test(sp)?'r':/^(LI|CAI|MI|EI)$/.test(sp)?'l':null;
 
 /** Datos del informe (compactos: se guardan con el partido). */
@@ -72,6 +72,7 @@ function why(R,k){
  if(k==='fase')return u.per==='cpr'&&r.rec==='cont'?'Tu contrapresión sufre contra un rival que sale rápido al contraataque.':u.rec==='cont'?'Salir rápido al recuperar castiga a rivales abiertos.':'';
  if(k==='pos')return 'Muchos cometidos de «Atacar» crean más pero dejan huecos; «Defender» lo contrario.';
  if(k==='riv'){const t=[];if(r.est==='con'&&u.lin==='alt')t.push('se pusieron al contragolpe para aprovechar tu línea alta');if(r.pre==='alt'&&u.est==='pos')t.push('te presionaron arriba para cortar tu posesión');if(r.rec==='cont'&&u.per==='cpr')t.push('salían rápido para castigar tu contrapresión');return t.length?'El rival se adaptó: '+t.join('; ')+'.':'Lo que el rival ganó o perdió con su propia táctica (en verde si te favoreció).';}
+ if(k==='oop')return 'Cómo se coloca tu once al defender (Tácticas › Alineación › Sin balón): si cubre peor que la forma con balón, o el equipo no la conoce, concedes más.';
  if(k==='sin')return 'Parejas del once que se complementan (o se estorban) por su rol, cometido e instrucciones. Míralo en Tácticas.';
  if(k==='ment')return '';
  return '';

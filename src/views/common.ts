@@ -7,7 +7,7 @@ import {lgDay} from '../calendar';
 import {torneo} from '../calendar';
 import {applySorts} from '../sorttable';
 import {agenda,dateTxt,daysToMatch,isMatchDay,syncDay} from '../calendar';
-import {FREE,formRows,freeCoords} from '../freeboard';
+import {FREE,formRows,freeCoords,slotCoords} from '../freeboard';
 import {riskTag} from '../medical';
 import {tutCard,tutView} from '../tutorial';
 import {seleccionesView} from './nations';
@@ -134,18 +134,7 @@ export function tableHTML(tb,lg,compact){
  ${tb.map((r,i)=>{const tm=T(r.id);return `<tr class="${r.id===S.user?'me':''}"><td class="n"><span class="zone ${zoneOf(lg,i)}"></span>${i+1}</td><td><span class="teamcell">${crest(tm,'sm')}<button class="linkname" data-a="club-open" data-id="${tm.id}">${esc(tm.name)}</button></span></td><td class="n">${r.pj}</td>${compact?'':`<td class="n">${r.g}</td><td class="n">${r.e}</td><td class="n">${r.p}</td><td class="n">${r.gf}</td><td class="n">${r.gc}</td>`}<td class="n">${r.gf-r.gc>0?'+':''}${r.gf-r.gc}</td><td class="pts"${r.ded?` title="${r.ded} puntos de sanción por quiebra"`:""}>${r.pts}${r.ded?`<sup class="neg">−${r.ded}</sup>`:""}</td>${compact?'':`<td>${formDots(r.form)}</td>`}</tr>`;}).join('')}
  </tbody></table></div><div class="row small muted" style="margin-top:10px;gap:14px">${legend}</div>`;
 }
-/** Coordenadas (en %) de cada puesto de una formación, con el campo de pie: x de banda a banda, y de arriba (ataque) a abajo (portería). */
-export function slotCoords(f){
- const rows=[[['POR'],89]].concat(formRows(f)),fc=f===FREE?freeCoords():null,out=[];let si=0;
- rows.forEach(([list,y0])=>list.forEach((s,k)=>{
-  const sx=si++,n=list.length;let x=(k+1)/(n+1)*100,y=y0;
-  if(n===5&&GRP[s]==='DEF'&&(k===0||k===4))y-=8;
-  if(n===5&&GRP[s]==='MED'&&(k===0||k===4))y-=5;
-  if(s==='MCD'&&list.some(x=>x!=='MCD'))y+=7;
-  if(fc){x=fc[sx].x;y=fc[sx].y;}
-  out.push({s,x,y});}));
- return out;
-}
+export {slotCoords} from '../freeboard';
 export function pitchHTML(t,lu,f,opts={}){
  let h='';
  slotCoords(f).forEach(({s,x,y},sx)=>{
