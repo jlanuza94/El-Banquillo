@@ -180,6 +180,9 @@ document.addEventListener('click',e=>{
   case'm-ment':if(m.ment[m.us]!==d.v){m.ment[m.us]=d.v;addEv(m,'sys',null,`${T(m[m.us]).short} cambia a mentalidad ${MENT[d.v].label.toLowerCase()}`);}break;
   case'm-oi':{m.oi=m.oi||{};const o=m.oi[m.us]=m.oi[m.us]||{};o[d.v]=!o[d.v];addEv(m,'sys',null,`${o[d.v]?'Nueva instrucción':'Se retira la instrucción'}: ${OIS[d.v].n.toLowerCase()}.`);break;}
   case'oi':{const t=T(S.user);t.oi=t.oi||{};t.oi[d.v]=!t.oi[d.v];break;}
+  case'm-tab':S.mtab=d.v;break;
+  case'm-side':S.mside=d.v;break;
+  case'm-subout':m.subOut=d.id;m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-subs':m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-subclose':m.subOpen=false;break;
   case'm-dosub':{const o=document.getElementById('subOut').value,n=document.getElementById('subIn').value;if(o&&n&&doSub(m,m.us,o,n)){m.alert='';m.subOpen=false;toast('Cambio hecho.');}break;}

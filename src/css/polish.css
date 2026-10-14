@@ -148,3 +148,15 @@ td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
 .cond select{min-width:0;flex:0 1 auto}
 .hbtn{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-family:var(--f-num);font-weight:700;font-size:13px;line-height:1;padding:0;display:inline-grid;place-items:center;margin-left:4px;cursor:pointer}
 .hbtn:hover{color:var(--ink);border-color:var(--accent)}
+
+/* Partido estilo FM Mobile: barra de mando, narración bajo el campo, pestañas y jugadores */
+.mbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.mtabs{display:flex;width:100%;margin-bottom:6px}.mtabs button{flex:1}
+.mtab{padding:10px}
+.mcom{background:#0f2a1b;color:#e9f5ec;font-family:var(--f-num);font-weight:600;font-size:14px;line-height:1.25;padding:7px 12px;min-height:2.6em;display:flex;align-items:center;border-top:1px solid rgba(255,255,255,.12)}
+.ptab{width:100%;border-collapse:collapse;font-size:13.5px}.ptab td,.ptab th{padding:4px 5px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ptab .nm{max-width:130px;overflow:hidden;text-overflow:ellipsis}.ptab .r{text-align:right}
+.mrat{display:inline-block;min-width:34px;text-align:center;border-radius:4px;padding:1px 4px;font-family:var(--f-num);font-weight:700;color:#fff}
+.mrat.q4{background:#1e8a4c}.mrat.q3{background:#5aa02c}.mrat.q2{background:#c9a227;color:#111}.mrat.q1{background:#c23a2e}
+.ebar{display:inline-block;width:44px;height:6px;background:var(--line);border-radius:3px;overflow:hidden;vertical-align:middle}.ebar i{display:block;height:100%;background:var(--win)}.ebar i.mid{background:#c9a227}.ebar i.low{background:var(--loss)}
+@media (orientation:landscape) and (max-height:540px){.mcom{font-size:12.5px;padding:5px 10px}.mlL .p2d{max-width:min(100%,calc((100dvh - 185px)*100/62))}}

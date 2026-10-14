@@ -45,6 +45,29 @@ const GOAL_SEQ={
   add(0,R_(48,54),R_(40,60),a);add(450,R_(60,64),R_(35,65),b);add(850,R_(68,72),R_(42,58),sh);add(1200,R_(73,77),R_(38,62),b);add(1600,R_(83,87),R_(44,56),sh,'thr');return 1600;},
  reb:(m,s,o,L,sh,ph,add,K)=>{const md=pickIn(m,s,'MED',L,sh),f=pickIn(m,s,'DEL',50,sh)||md;add(0,R_(50,56),L,md);add(650,R_(70,76),R_(40,60),f);add(1150,R_(80,84),R_(42,58),f,'d');return 1150;},
 };
+/** Narración de cada momento de la jugada, como en FM: sale debajo del campo cuando ocurre. */
+const nm=id=>{const p=PL(id);return p?p.name.split(' ').slice(1).join(' ')||p.name:'';};
+const pk=a=>a[Math.floor(Math.random()*a.length)];
+function narrate(m,ph,s,o,K,shooter){
+ const tm=T(m[s]).short,band=y=>y<22?'la banda izquierda':y>78?'la banda derecha':'el centro';
+ K.forEach((k,i)=>{const n=nm(k.who),prev=i?K[i-1]:null;let t='';
+  switch(k.k){
+   case'set':t=ph.kind==='corner'?`Córner para el ${tm}. ${n} se dispone a sacar.`:ph.kind==='pen'?`¡Penalti para el ${tm}! ${n} coloca el balón.`:`Falta peligrosa para el ${tm}. Se prepara ${n}.`;break;
+   case'p':t=i===0?(k.ax<35?pk([`${n} saca el balón jugado desde atrás.`,`El ${tm} inicia la jugada con ${n}.`]):k.ax<65?pk([`${n} la mueve en el medio campo.`,`${n} recibe y levanta la cabeza.`]):`${n} recibe en tres cuartos.`):
+     k.ax>=84?pk([`${n} la recibe dentro del área…`,`¡${n} se queda solo en el área!`]):k.ax>=64?pk([`Pase para ${n}, que entra en zona de peligro.`,`${n} recibe cerca del área.`]):pk([`Pase de ${nm(prev&&prev.who)} para ${n}.`,`${n} recibe y busca opciones.`]);break;
+   case'd':t=(k.ay<22||k.ay>78)?pk([`${n} encara por ${band(k.ay)}.`,`${n} corre por ${band(k.ay)}…`]):k.ax>=80?pk([`¡${n} se mete hasta la cocina!`,`${n} se planta frente al portero…`]):pk([`${n} conduce hacia el área.`,`${n} avanza con el balón.`]);break;
+   case'cross':t=pk([`Centro al área… ¡busca a ${n}!`,`¡Centro peligroso! ${n} va arriba.`]);break;
+   case'thr':t=pk([`¡Pase al hueco para ${n}!`,`¡Balón filtrado! ${n} se queda solo.`]);break;
+   case'tk':t=pk([`¡Robo de ${n}! Recupera el ${T(m[o]).short}.`,`${n} corta la jugada.`]);break;
+   case'sh':t=ph.gt==='lej'&&ph.out==='goal'?`¡${n} prueba desde lejos!`:ph.gt==='cab'&&ph.out==='goal'||(prev&&prev.k==='cross')?`¡Cabezazo de ${n}!`:ph.kind==='pen'?`${n} chuta el penalti…`:pk([`¡Dispara ${n}!`,`¡Remate de ${n}!`]);break;
+   case'sv':t=pk([`¡Parada de ${n}!`,`¡Qué paradón de ${n}!`]);break;
+   case'po':t='¡AL PALO! Se salva el rival.';break;
+   case'ms':t=pk(['Se marcha fuera.','Desviado, por poco.','Por encima del larguero.']);break;
+   case'rb':t='Rechace en el área…';break;
+   case'g':t=`¡GOOOL del ${tm}! ¡Marca ${nm(shooter)}!`;break;}
+  k.tx=t;});
+ if(ph.out==='build'&&K.length)K[K.length-1].tx=K[K.length-1].tx||`El ${tm} mueve el balón sin prisa.`;
+}
 export function buildSeq(m,ph){
  const s=ph.s,o=s==='h'?'a':'h',L=ph.lane==='l'?R_(10,22):ph.lane==='r'?R_(78,90):R_(38,62),K=[];
  const add=(t,ax,ay,who,k)=>K.push({t,ax,ay,who,k:k||'p'});
@@ -76,6 +99,7 @@ export function buildSeq(m,ph){
   else add(st+sp,101.5,Math.random()<.5?R_(30,42):R_(58,70),null,'ms');
  }
  const end=K[K.length-1].t+(ph.out==='goal'?1900:ph.out==='lost'||ph.out==='build'?150:700);
+ narrate(m,ph,s,o,K,shooter);
  return {ph,s,K:K.map(k=>({...k,...real(s,k.ax,k.ay)})),end,el:0};
 }
 /** Siguiente jugada a dibujar: los goles pasan delante; si vamos con retraso, se saltan las jugadas sin peligro. */
@@ -115,6 +139,7 @@ export function a2Frame(ts){
    if(Q.el<30)A2.lastI=-1;
    if(st.a.who!==st.b.who&&st.a.who&&st.b.k!=='tk'){const key=Q.ph.min+'|'+st.i;if(!A2.trail.some(x=>x.key===key))A2.trail.push({key,x1:st.a.x,y1:st.a.y,x2:st.b.x,y2:st.b.y,t:ts,s:Q.s});}
    A2.shot=st.a.k==='sh'||st.b.k==='g'?{goal:st.b.k==='g'||st.a.k==='g'}:null;
+   {const kk=st.f>=.98&&st.b&&st.b.tx?st.b:st.a,tx=kk&&kk.tx;if(tx){const line=tx;if(RT.com2d!==line){RT.com2d=line;const el=document.getElementById('mcom');if(el)el.textContent=line;}}}
    if(st.a.k==='g'||st.f>=1&&st.b.k==='g')A2.goalT=A2.goalT&&ts-A2.goalT<2000?A2.goalT:ts;
   }
  }else{A2.side=R.s;A2.holder=rp.who;A2.ball={x:rp.x,y:rp.y,z:0};}

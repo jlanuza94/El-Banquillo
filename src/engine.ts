@@ -236,6 +236,10 @@ export function liveRatings(m){
  const t=Math.min(1,m.min/90);
  Object.keys(m.played).forEach(id=>{const p=PL(id);if(!p)return;const s=p.team===m.h?'h':'a',g=GRP[p.sp]||p.pos;
   let r=6.3+res[s]*.3*t+(gl[id]||0)+(as[id]||0)*.6;if(g==='POR'||g==='DEF')r+=conc[s]===0?.4*t:-.2*conc[s];if(m.off.includes(id))r-=1.2;
+  // lo que se ve en el partido: tiros, paradas, tarjetas y la calidad del jugador
+  const sd=s==='h'?0:1;(m.sh||[]).forEach(x=>{if(x[1]!==id||x[3]==='g')return;r+=x[3]==='s'?.15:x[3]==='p'?.1:-.04;});
+  if(g==='POR'&&m.lu[s][0]===id)r+=.22*(m.sh||[]).filter(x=>x[0]!==sd&&x[3]==='s').length;
+  if(m.ycm&&m.ycm[id])r-=.3;r+=((p.ovr||60)/10-6)*.12*t;
   rat[id]=clamp(Math.round(r*10)/10,3,10);});
  return rat;
 }
