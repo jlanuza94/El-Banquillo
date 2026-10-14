@@ -12,7 +12,10 @@ import {startBudget} from '../world';
 import {start} from '../boot';
 import {flag} from '../flags';
 import {themeBtn} from '../theme';
+import {logoSVG,stadiumSVG,titleHTML} from './title';
 export function startView(){
+ const scr=RT.startScreen||(RT.startStep?'new':'title');
+ if(scr==='title')return titleHTML(`${nC()} países · ${S.leagues.length} ligas · ${S.teams.length.toLocaleString('es')} clubes`)+themeBtn('onhero');
  const C=COUNTRIES[RT.startC];RT.startLv=Math.min(RT.startLv,C.lv-1);
  const L=findLg(RT.startC,RT.startLv),teams=lgTeams(L.id).sort((a,b)=>b.rep-a.rep);
  const cards=teams.map((t,r)=>{const lowestL=lowest(L);
@@ -31,9 +34,11 @@ export function startView(){
  <div class="dlist">${Array.from({length:C.lv},(_,i)=>{const Li=findLg(RT.startC,i),ts=lgTeams(Li.id).map(t=>strength(t.id)/10),lo=Math.min(...ts),hi=Math.max(...ts);
   return `<button class="dcard" data-a="start-lv" data-v="${i}"><span class="dn">${LV_SH[i]}</span><span class="dt"><b>${esc((S.lgNames||{})[Li.id]||LV_NAMES[i])}</b><span class="small muted">${i===0?'La élite: pelea por el título. Bajan los tres últimos.':i===C.lv-1?'Última categoría: sin descenso, suben los tres primeros.':'Suben los tres primeros y bajan los tres últimos.'}</span></span><span class="dl"><span class="eyebrow">Nivel</span><b>${lo.toFixed(1)}–${hi.toFixed(1)}</b></span>${i===C.lv-1?'<span class="dtag">Para empezar desde abajo</span>':i===0?'<span class="dtag top">Máximo reto</span>':''}</button>`;}).join('')}</div>`;
  const chosen=`<div class="row cchosen" style="margin-bottom:14px">${flag(C.code)}<div style="min-width:0;flex:1"><b>${esc(C.n)}</b><div class="small muted">${esc((S.lgNames||{})[L.id]||LV_NAMES[L.lv])}</div></div><button class="btn sm" data-a="start-step" data-v="d">Cambiar división</button><button class="btn sm" data-a="start-step" data-v="c">Cambiar país</button></div>`;
- return `<div class="wrap"><section class="hero">${themeBtn('onhero')}<div class="eyebrow">${nC()} países · ${S.leagues.length} ligas de 20 equipos · ${S.teams.length} clubes · 3 ascensos y 3 descensos</div><h1>El Banquillo</h1>
+ const bar=`<div class="snav"><button class="btn sm" data-a="start-go" data-v="title">← Portada</button><div class="ssteps">${[['c','País'],['d','División'],['club','Club']].map(([k,l],i)=>`<span class="sst${step===k?' on':''}">${i+1} · ${l}</span>`).join('')}</div></div>`;
+ if(scr==='saves')return `<div class="wrap sflow"><div class="shead">${stadiumSVG()}<div class="shin">${logoSVG()}<h1>Mis partidas</h1></div></div><div class="snav"><button class="btn sm" data-a="start-go" data-v="title">← Portada</button></div>${saved||'<div class="empty">No tienes partidas guardadas.</div>'}${openF}</div>`;
+ return `<div class="wrap sflow"><div class="shead">${stadiumSVG()}<div class="shin">${logoSVG()}<h1>Nueva partida</h1></div></div>${bar}<section class="hero" style="display:none">${themeBtn('onhero')}<div class="eyebrow">${nC()} países · ${S.leagues.length} ligas de 20 equipos · ${S.teams.length} clubes · 3 ascensos y 3 descensos</div><h1>El Banquillo</h1>
  <p>Elige país y división. Coge un club modesto de la última categoría y súbelo hasta Primera, o ve directo a pelear el título. Monta tu formación, rebusca gangas en el mercado de todo el mundo y negocia cada fichaje.</p></section>
- ${saved}${openF}<h2 id="nuevo" style="margin:0 0 12px;scroll-margin-top:12px">${slots.length?'Nueva partida':'Empieza tu carrera'}</h2>
+ <h2 id="nuevo" style="margin:0 0 12px;scroll-margin-top:12px">${slots.length?'Nueva partida':'Empieza tu carrera'}</h2>
 ${step==='c'?pickC:step==='d'?pickD:chosen+`
  <div class="eyebrow" style="margin-bottom:8px">3 · Dificultad</div>
  <div class="seg" style="margin-bottom:6px">${Object.entries(DIFF).map(([k,v])=>`<button data-a="start-diff" data-v="${k}" aria-pressed="${(RT.diff||'normal')===k}">${v.n}</button>`).join('')}</div>

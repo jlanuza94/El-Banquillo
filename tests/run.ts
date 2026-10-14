@@ -109,6 +109,8 @@ const app = document.getElementById('app')!;
   const t0 = Date.now();
   setS(null); dirty(); render();
   ok(S.teams.length === 1100 && S.leagues.length === 55, 'se crean 1100 clubes en 55 ligas de 16 países');
+  ok(app.querySelector('.title [data-a="start-go"][data-v="new"]') && app.textContent!.includes('El Banquillo'), 'portada con el estadio y «Nueva partida»');
+  RT.startScreen = 'new'; render();
   ok(app.textContent!.includes('Empieza tu carrera'), 'pantalla de inicio');
   ok(app.querySelectorAll('.ccard svg.flag').length === 16, 'países con bandera');
   for (const st of ['d', 'club', 'c']) { RT.startStep = st; render(); }
@@ -547,7 +549,7 @@ const app = document.getElementById('app')!;
   const loaded = await loadAsync();
   ok(loaded && loaded.slot === 1 && loaded.week === week && loaded.teams[loaded.user].name === club, 'la partida se guarda y se carga');
   ok(slots.length === 1, 'aparece en «Tus partidas»');
-  setS(null); dirty(); render();
+  setS(null); RT.startScreen = null; RT.startStep = null; dirty(); render();
   ok(app.textContent!.includes(club), 'la pantalla de inicio muestra la partida guardada');
   pickTeam(S.teams.find(t => t.id !== team)!.id); await saveNow(); await flush();
   ok(S.slot === 2 && slots.length === 2, 'segunda partida en otra ranura');

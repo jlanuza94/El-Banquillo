@@ -188,3 +188,36 @@ td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
 .ptask .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none;color:#fff}
 .ptask.ok .ck{background:var(--win);border-color:var(--win)}.ptask.ok .t{color:var(--muted);text-decoration:line-through}
 .ptask .t{flex:1;min-width:0}
+
+/* Portada: estadio de noche */
+.title{position:relative;min-height:100vh;min-height:100dvh;overflow:hidden;color:#f4f1e6;display:flex}
+.title .stadium,.shead .stadium{position:absolute;inset:0;width:100%;height:100%}
+.title .beams{animation:beams 6s ease-in-out infinite alternate}
+@keyframes beams{from{opacity:.55}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.title .beams{animation:none}}
+.tinner{position:relative;z-index:1;margin:auto;width:min(1100px,100%);padding:28px 22px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:center}
+.tbrand{display:flex;align-items:center;gap:18px}
+.ebcrest{width:clamp(70px,11vw,130px);height:auto;flex:none;filter:drop-shadow(0 8px 24px rgba(0,0,0,.6))}
+.tname{margin:0;white-space:nowrap;font-family:var(--f-display);font-weight:900;text-transform:uppercase;line-height:.88;font-size:clamp(46px,7vw,96px);background:linear-gradient(180deg,#fff3c4 0%,#f1c75a 45%,#b8861d 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 14px rgba(0,0,0,.55))}
+.tag{margin:6px 0 0;font-family:var(--f-num);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:clamp(13px,1.6vw,18px);color:#f4f1e6}
+.tstats{margin:6px 0 0;font-size:13px;color:rgba(244,241,230,.7)}
+.tmenu{display:flex;flex-direction:column;gap:10px}
+.tbtn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.18);background:rgba(8,24,16,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#f4f1e6;font:inherit;text-align:left;cursor:pointer;transition:transform .12s,background .12s}
+.tbtn:hover{transform:translateY(-1px);background:rgba(20,50,32,.75)}
+.tbtn b{display:block;font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:20px;letter-spacing:.02em;line-height:1}
+.tbtn small{display:block;margin-top:3px;font-size:12.5px;color:rgba(244,241,230,.75)}
+.tbtn .ti{width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.1);font-size:18px}
+.tbtn.main{background:linear-gradient(180deg,#f4cf5c,#d6a32b);color:#1b1505;border-color:#ffe39a;box-shadow:0 10px 30px rgba(214,163,43,.35)}
+.tbtn.main small{color:rgba(27,21,5,.75)}.tbtn.main .ti{background:rgba(0,0,0,.12)}
+.tbtn .crest{flex:none}
+@media (max-width:760px){.tinner{grid-template-columns:1fr;gap:18px}}
+@media (orientation:landscape) and (max-height:540px){.tinner{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);padding:14px 18px;gap:16px}.tmenu{gap:7px}.tbtn{padding:8px 12px}.tbtn b{font-size:16px}.tbtn small{font-size:11px}.tname{font-size:clamp(40px,8vw,72px)}.ebcrest{width:74px}}
+/* Flujo de partida nueva */
+.sflow{padding-top:0}
+.shead{position:relative;height:150px;border-radius:0 0 18px 18px;overflow:hidden;margin:0 -16px 12px}
+.shin{position:relative;z-index:1;height:100%;display:flex;align-items:center;gap:14px;padding:0 22px}
+.shin .ebcrest{width:64px}.shin h1{margin:0;font-family:var(--f-display);font-weight:900;text-transform:uppercase;font-size:clamp(30px,5vw,52px);color:#f8e7a6;text-shadow:0 3px 12px rgba(0,0,0,.6)}
+.snav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.ssteps{display:flex;gap:6px}.sst{padding:4px 10px;border-radius:999px;border:1px solid var(--menu-line);color:var(--menu-dim);font-family:var(--f-num);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em}
+.sst.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (orientation:landscape) and (max-height:540px){.shead{height:84px}.shin .ebcrest{width:44px}}

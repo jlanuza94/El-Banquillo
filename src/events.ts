@@ -84,6 +84,7 @@ document.addEventListener('click',e=>{
  if(!S||S.user==null){if(a==='slot-load'){loadSlot(+d.id).then(o=>{if(o)boot(o);else{toast('No se pudo cargar esa partida.');}});return;}
   if(a==='slot-del'){RT.delConfirm=+d.id;render();return;}if(a==='slot-del-no'){RT.delConfirm=null;render();return;}
   if(a==='slot-del-ok'){RT.delConfirm=null;deleteSlot(+d.id).then(render);return;}
+  if(a==='start-go'){RT.startScreen=d.v;if(d.v==='new')RT.startStep=RT.startStep||'c';render();window.scrollTo(0,0);return;}
   if(a==='start-diff'){RT.diff=d.v;render();return;}
   if(a==='start-mode'){RT.mode=d.v;render();return;}
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
@@ -310,7 +311,7 @@ document.addEventListener('click',e=>{
   case'offer-no':{const o=S.offers[d.id];if(!o)break;delete S.offers[d.id];const p=PL(d.id);news(`Rechazas la oferta de ${T(o.team).name} por ${p.name}.`);onOfferRejected(p,o.amount);if(LG(T(o.team).lg).rep>LG(uLg()).rep+3&&(p.per==='amb'||p.hap<60)){p.hap=clamp(p.hap-12,0,100);news(`${p.name} quería ese traspaso a un club más grande y está molesto.`,'bad');if(p.hap<25&&!p.req){p.req=1;news(`${p.name} pide salir del club.`,'bad');}}break;}
   case'ov':case'modal-close':S.modal=null;break;
   case'new-season':newSeason();return;
-  case'new-game':case'to-saves':saveNow();clearInterval(RT.timer);RT.timer=null;setS(null);dirty();render();window.scrollTo(0,0);return;
+  case'new-game':case'to-saves':RT.startScreen=a==='to-saves'?'saves':'title';RT.startStep=null;saveNow();clearInterval(RT.timer);RT.timer=null;setS(null);dirty();render();window.scrollTo(0,0);return;
   case'new-game-ok':clearInterval(RT.timer);RT.timer=null;clearTimeout(RT.saveT);RT.saveT=null;setS(null);dirty();try{localStorage.removeItem(KEY);}catch(err){}render();window.scrollTo(0,0);return;
  }
  save();render();
