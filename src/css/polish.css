@@ -348,3 +348,88 @@ body.fmdrag .fpitch .slot.fit4 .shirt svg{stroke:#c23a2e;stroke-width:5}
  .hbtns .btn{padding:4px 10px;font-size:11px}
 }
 @media (max-width:640px) and (orientation:portrait){.hin{grid-template-columns:1fr}}
+
+/* Calendario mensual estilo FM */
+.fcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.fwd{background:var(--surface2,var(--surface));padding:5px 6px;font-family:var(--f-num);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:center}
+.fwd span:last-child{display:none}
+.fday{background:var(--surface);min-height:96px;padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.fday.out{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.fday.past{background:color-mix(in srgb,var(--surface) 75%,var(--bg))}
+.fday.past .fev{opacity:.85}
+.fday.win{box-shadow:inset 0 3px 0 color-mix(in srgb,var(--win) 70%,transparent)}
+.fday.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.fday .dn{font-family:var(--f-num);font-weight:700;font-size:12px;color:var(--muted)}
+.fday.today .dn{color:var(--accent)}
+.fev{display:flex;flex-direction:column;gap:1px;width:100%;border:0;border-left:4px solid #3b6fd8;border-radius:5px;padding:3px 5px;background:color-mix(in srgb,#3b6fd8 18%,var(--surface));color:inherit;font:inherit;text-align:left;cursor:pointer;min-width:0}
+.fev.k-cup{border-left-color:#c9a227;background:color-mix(in srgb,#c9a227 18%,var(--surface))}
+.fev.k-ct,.fev.k-cwc{border-left-color:#8e44d8;background:color-mix(in srgb,#8e44d8 18%,var(--surface))}
+.fev.k-fr{border-left-color:#7f8c8d;background:color-mix(in srgb,#7f8c8d 18%,var(--surface))}
+.fev .fcomp{font-family:var(--f-num);font-weight:700;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fev .fmain{display:flex;align-items:center;gap:4px;min-width:0}
+.fev .fmain b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.fev .fmain em{font-style:normal;font-family:var(--f-num);font-weight:800;font-size:12px;padding:0 4px;border-radius:3px;background:rgba(127,127,127,.25)}
+.fev.G .fmain em{background:#1f9d55;color:#fff}.fev.E .fmain em{background:#d6a32b;color:#1b1505}.fev.P .fmain em{background:#c8352e;color:#fff}
+.fev .fha{font-size:10px;color:var(--muted)}
+.fev .crest.sm{width:16px;height:16px;font-size:0;flex:none}
+.fnote{font-size:10.5px;font-weight:600;line-height:1.2;padding:2px 4px;border-radius:4px;background:rgba(127,127,127,.12);color:var(--muted)}
+.fnote.mk{color:var(--win);background:color-mix(in srgb,var(--win) 12%,transparent)}
+.fnote.brk{color:#d07a2a}.fnote.lg{color:var(--ink,inherit)}.fnote.pre{color:var(--accent)}
+.fleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 8px;vertical-align:-1px}
+.fleg i.G{background:#1f9d55}.fleg i.E{background:#d6a32b}.fleg i.P{background:#c8352e}.fleg i.w{background:var(--win);height:3px;vertical-align:2px}
+@media (orientation:landscape) and (max-height:540px){
+ .fday{min-height:64px;padding:2px}
+ .fwd{padding:2px;font-size:10px}.fwd span:first-child{display:none}.fwd span:last-child{display:inline}
+ .fev{padding:1px 3px;border-left-width:3px}.fev .fcomp{font-size:8px}.fev .fmain b{font-size:10px}.fev .fmain em{font-size:10px}.fev .fha{display:none}
+ .fnote{font-size:9px;padding:1px 3px}
+}
+
+/* Ficha del jugador estilo FM Mobile */
+.pcard{display:grid;grid-template-columns:150px minmax(0,1fr) 170px;gap:12px;align-items:stretch}
+.pc{position:relative;border-radius:12px;padding:8px 8px 10px;display:flex;flex-direction:column;align-items:center;text-align:center;color:#1b1505;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+.pc.gold{background:linear-gradient(160deg,#ffe7a0,#e8b33a 55%,#c98d17)}
+.pc.silver{background:linear-gradient(160deg,#f2f4f6,#c3c9cf 55%,#9aa3ab)}
+.pc.bronze{background:linear-gradient(160deg,#f1c9a0,#c98b55 55%,#9b6332)}
+.pc .pnum{position:absolute;left:8px;top:6px;font-family:var(--f-display);font-weight:900;font-size:24px;line-height:1}
+.pc .pcrest{position:absolute;left:8px;top:36px;width:22px;height:22px;font-size:7px}
+.pc .pflag{position:absolute;right:8px;top:8px}
+.pc .face{width:96px;height:96px;margin-top:6px;border-radius:50% 50% 8px 8px}
+.pc .psur{display:block;width:100%;margin-top:2px;padding:2px 0;font-family:var(--f-display);font-weight:900;font-size:19px;text-transform:uppercase;border-top:2px solid rgba(0,0,0,.18);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .ppos{font-family:var(--f-num);font-weight:700;font-size:13px;opacity:.85}
+.stars{display:inline-flex;gap:1px;font-size:17px;line-height:1;letter-spacing:0}
+.stars i{font-style:normal;color:rgba(0,0,0,.2)}
+.stars i.f{color:#e0531f;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.stars i.h{background:linear-gradient(90deg,#e0531f 50%,rgba(0,0,0,.2) 50%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stars.pot{font-size:12px}.stars.pot i.f{color:transparent;-webkit-text-stroke:1px #6b4a12}.stars.pot i.h{-webkit-text-stroke:1px #6b4a12}
+.pinfo{display:flex;flex-direction:column;gap:8px;justify-content:space-between;border-radius:12px;padding:8px 12px;background:var(--surface2,rgba(127,127,127,.08))}
+.pig{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px}
+.pig div,.pclub{display:flex;flex-direction:column;align-items:center;text-align:center}
+.pig b{font-family:var(--f-display);font-weight:800;font-size:18px;line-height:1.05}
+.pig small,.pclub small{font-size:11.5px;color:var(--muted)}
+.pclub{border-top:1px solid var(--line);padding-top:6px}
+.pclub b{font-family:var(--f-display);font-weight:800;font-size:17px}
+.prole{margin-top:3px;font-family:var(--f-num);font-weight:700;font-size:12px;padding:1px 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.pmedia{display:flex;justify-content:center;align-items:center;gap:6px;font-family:var(--f-num);font-weight:700;text-transform:uppercase;font-size:12px;color:var(--muted)}
+.ppos2{display:flex;flex-direction:column;gap:8px;border-radius:12px;padding:8px;background:var(--surface2,rgba(127,127,127,.08))}
+.pmap{position:relative;flex:1;min-height:120px;border-radius:6px;background:#2a8343}
+.pmap .ln{position:absolute;border:1.5px solid rgba(255,255,255,.6)}
+.pmap .out{inset:4%}.pmap .half{left:4%;right:4%;top:50%;border-width:1.5px 0 0}.pmap .box{left:25%;right:25%;bottom:4%;height:14%;border-bottom:0}
+.pmap .pd{position:absolute;transform:translate(-50%,-50%);font:700 9px var(--f-num);padding:1px 3px;border-radius:3px;color:#fff;background:rgba(0,0,0,.4)}
+.pmap .pd.n{background:#2fd06a;color:#06220f;box-shadow:0 0 0 2px #fff}.pmap .pd.c{background:#9bd63a;color:#152200}.pmap .pd.u{background:#e0b02a;color:#1b1505}
+.feet{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px}
+.feet b{font-weight:700}
+.ft{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:800 11px var(--f-num);color:#111}
+.ft.g{background:#2fd06a}.ft.y{background:#e8c23a}.ft.r{background:#e2683f;color:#fff}
+.fattrs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 12px;margin-top:12px}
+.fah{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:15px;padding:4px 8px;margin-top:4px;border-radius:6px 6px 0 0;background:color-mix(in srgb,var(--accent) 22%,var(--surface))}
+.fa{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 8px;border-bottom:1px solid var(--line);font-size:14px}
+.fa:nth-child(odd){background:rgba(127,127,127,.06)}
+.fa .at{min-width:34px;text-align:center;font-family:var(--f-num);font-weight:800;font-size:14px;padding:1px 5px;border-radius:4px}
+.fa b{font-family:var(--f-num);font-weight:700;font-size:13.5px}.fa b.ok{color:#2fa85a}.fa b.mid{color:#c9a227}.fa b.low{color:var(--loss)}
+@media (max-width:760px),(orientation:landscape) and (max-height:540px){
+ .pcard{grid-template-columns:118px minmax(0,1fr) 128px;gap:8px}
+ .pc .face{width:70px;height:70px}.pc .psur{font-size:15px}.pc .pnum{font-size:18px}.pc .pcrest{top:28px;width:18px;height:18px}
+ .stars{font-size:13px}.pig b{font-size:14px}.pclub b{font-size:14px}.pmap{min-height:90px}
+ .fa{font-size:12px;padding:2px 6px}.fa .at{font-size:12px;min-width:28px}.fah{font-size:13px}
+}
+@media (max-width:520px) and (orientation:portrait){.pcard{grid-template-columns:1fr 1fr}.pinfo{grid-column:1/-1;order:3}.fattrs{grid-template-columns:1fr}}

@@ -80,11 +80,11 @@ export function playFriendly(tid){
  if(!S.pre||S.pre.left<=0||S.week>0||S.ci>0)return;
  if(friendlyWait()>0){toast(`Los jugadores necesitan descanso: el próximo amistoso, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
  S.pre.last=S.day??0;S.pre.opts=null;
- S.fr.push(mkTie(S.user,tid));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.label='Amistoso de pretemporada';S.view='partido';save();render();
+ S.fr.push(Object.assign(mkTie(S.user,tid),{day:S.day??0,lbl:'Amistoso'}));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.label='Amistoso de pretemporada';S.view='partido';save();render();
 }
 export function playTour(){
  const nx=ptNext();if(!nx||S.match)return;if(friendlyWait()>0){toast(`Los jugadores necesitan descanso: el partido del torneo, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
- S.pre.last=S.day??0;S.fr.push(mkTie(S.user,nx[0]));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.pt=nx[1];S.match.label=`${S.ptour.n} · ${nx[1]}`;S.view='partido';save();render();
+ S.pre.last=S.day??0;S.fr.push(Object.assign(mkTie(S.user,nx[0]),{day:S.day??0,lbl:S.ptour.n}));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.pt=nx[1];S.match.label=`${S.ptour.n} · ${nx[1]}`;S.view='partido';save();render();
 }
 const simAI=(h,a)=>{S.fr.push(mkTie(h,a));const q=quickMatch({k:'fr',i:S.fr.length-1});S.fr.pop();return [q.score.h,q.score.a];};
 export function friendlyOpts(){

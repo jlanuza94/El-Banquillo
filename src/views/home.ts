@@ -5,7 +5,7 @@ import {INT_MAX,PRE_GAP,daysToLeague,friendlyWait,inPre,preTasks,ptNext} from '.
 import {needsPO,poRound,setupPO,userTie} from '../playoffs';
 import {mkTie} from '../competitions';
 import {galaAwards} from '../extras';
-import {MONTHS_L,agenda,dateOf,dateTxt,dayOfEvent,daysToMatch,eventDays,seasonStart,syncDay} from '../calendar';
+import {FIRST_LG,cal,lgDay,MONTHS_L,agenda,dateOf,dateTxt,dayOfEvent,daysToMatch,eventDays,seasonStart,syncDay} from '../calendar';
 import {stadiumSVG} from './title';
 import {nC} from '../state';
 import {derbyName,h2hDots,h2hStreak,h2hTxt,isDerby} from '../rivals';
@@ -20,13 +20,13 @@ import {LG,PL,S,T,crest,lgName,pBadge,rt,seasonLabel,squad,uLg} from '../state';
 import {strength} from '../players';
 import {news} from '../world';
 import {autoLineup,chemMult,lineupIssues,posOf,table,teamPower,userRoles} from '../tactics';
-import {CONTS,CT_STAGES,compLabel,ctOf,ctStatus,cupName,cupSlotRound,cupStatus,cwcStatus,getFx,nextMatch,userCup,userRefFor} from '../competitions';
+import {cupRoundName,CONTS,CT_STAGES,compLabel,ctOf,ctStatus,cupName,cupSlotRound,cupStatus,cwcStatus,getFx,nextMatch,userCup,userRefFor} from '../competitions';
 import {friendlyOpts,seasonSummary} from '../season';
 import {askPrice,inWindow,sell,windowTxt} from '../market';
 import {contractsPanel} from '../contracts';
 import {spDesc} from '../club';
 import {FOCUS} from '../squad';
-import {cmpRow,formDots,nameBtn,pBadgeS,resRow,tableHTML} from './common';
+import {cmpRow,formDots,nameBtn,pBadgeS,resRow,tableHTML,vtab} from './common';
 export function offersPanel(){
  const inc=Object.entries(S.offers).filter(([id,o])=>o.incoming&&PL(id)&&PL(id).team===S.user);
  if(!inc.length)return '';
@@ -106,21 +106,37 @@ export function reportHTML(oid,compact){
  <ul class="news" style="margin-top:8px">${tips.slice(0,Math.min(compact?3:6,segAt('tac')>=7?6:segAt('tac')>=4?4:2)).map(t=>`<li><span class="wk"></span><span class="t">${esc(t)}</span></li>`).join('')}</ul></section>`;
 }
 /** Calendario mensual día a día: partidos (con rival y resultado), entrenamientos, mercado y el día de hoy. */
+/** Eventos del calendario que no son partidos tuyos: mercado, parones, sorteos y rondas de otras competiciones. */
+function calNotes(){
+ const N={},add=(d,t,c='')=>{(N[d]=N[d]||[]).push([t,c]);},W=winRounds(),C=cal(),evd=eventDays();
+ add(0,'Empieza la pretemporada','pre');add(0,`Abre el mercado ${C.wn[0]}`,'mk');
+ add(lgDay(W[0]),`Cierre del mercado ${C.wn[0]}`,'mk');add(lgDay(W[1]),`Abre el mercado ${C.wn[1]}`,'mk');add(lgDay(W[2]),`Cierre del mercado ${C.wn[1]}`,'mk');
+ add(FIRST_LG,'Jornada 1 de liga','lg');
+ if(C.brk)add(lgDay(C.brk[0])+3,C.brk[2],'brk');
+ const nL=S.fixtures[uLg()].length;add(lgDay(nL-1),'Última jornada de liga','lg');
+ const cup=userCup();S.cal.forEach((ev,i)=>{let ref=null;try{ref=userRefFor(ev);}catch(e){}if(ref)return;
+  if(ev.t==='cup'&&cup){const k=cupSlotRound(cup,ev.s);if(k!=null)add(evd[i],`${cupName(cup.c)} · ${cup.rounds[k]?cupRoundName(cup.rounds[k]):'ronda '+(k+1)}`,'oth');}
+  else if(ev.t==='ct')add(evd[i],`Continental · ${CT_STAGES[ev.s]||''}`,'oth');});
+ return N;
+}
 function monthHTML(){
- syncDay();const me=f=>f.h===S.user||f.a===S.user,evd=eventDays(),byDay={};
- S.cal.forEach((ev,i)=>{let ref=null;try{ref=userRefFor(ev);}catch(e){}let fx=null,lbl='';
-  if(ev.t==='lg'){fx=S.fixtures[uLg()][ev.r].find(me);lbl='Liga';}else if(ref){fx=getFx(ref);lbl=ev.t==='cup'?'Copa':ev.t==='ct'?'Continental':'Mundial';}
-  if(fx)(byDay[evd[i]]=byDay[evd[i]]||[]).push({fx,lbl,i});});
+ syncDay();const me=f=>f.h===S.user||f.a===S.user,evd=eventDays(),byDay={},notes=calNotes();
+ S.cal.forEach((ev,i)=>{let ref=null;try{ref=userRefFor(ev);}catch(e){}let fx=null,lbl='',k=ev.t;
+  if(ev.t==='lg'){fx=S.fixtures[uLg()][ev.r].find(me);lbl=`${LV_NAMES[LG(uLg()).lv]} · J${ev.r+1}`;}else if(ref){fx=getFx(ref);lbl=compLabel(ref);}
+  if(fx)(byDay[evd[i]]=byDay[evd[i]]||[]).push({fx,lbl,k});});
+ (S.fr||[]).forEach(f=>{if(f.day!=null&&me(f))(byDay[f.day]=byDay[f.day]||[]).push({fx:f,lbl:f.lbl||'Amistoso',k:'fr'});});
  const off=S.calM||0,base=dateOf(S.day),y=base.getUTCFullYear(),mo=base.getUTCMonth()+off,first=new Date(Date.UTC(y,mo,1)),M=first.getUTCMonth(),Y=first.getUTCFullYear();
  const start=seasonStart(),dayIdx=dt=>Math.round((dt-start)/864e5),lead=(first.getUTCDay()+6)%7,nDays=new Date(Date.UTC(Y,M+1,0)).getUTCDate();
- const winEnd=evd[S.cal.findIndex(e=>e.t==='lg'&&e.r===4)]||0,w2s=evd[S.cal.findIndex(e=>e.t==='lg'&&e.r===19)]||0,w2e=evd[S.cal.findIndex(e=>e.t==='lg'&&e.r===22)]||0;
- let cells='';for(let k=0;k<lead;k++)cells+='<div class="cday out"></div>';
- for(let d=1;d<=nDays;d++){const di=dayIdx(new Date(Date.UTC(Y,M,d))),evs=byDay[di]||[],win=(di>=0&&di<=winEnd)||(di>=w2s&&di<=w2e),wd=(lead+d-1)%7;
-  cells+=`<div class="cday${di===S.day?' today':''}${di<S.day?' past':''}${win?' win':''}${evs.length?' has':''}"><span class="dn">${d}</span>${evs.map(x=>{const f=x.fx,home=f.h===S.user,opp=T(home?f.a:f.h),res=f.played?`${home?f.hg:f.ag}-${home?f.ag:f.hg}`:'';const r=f.played?((home?f.hg>f.ag:f.ag>f.hg)?'G':(f.hg===f.ag?'E':'P')):'';
-   return `<button class="cev ${r}" data-a="club-open" data-id="${opp.id}" title="${esc(x.lbl)}: ${home?'vs':'en'} ${esc(opp.name)}">${crest(opp,'sm')}<span>${home?'':'@'}${esc(opp.short)}</span>${res?`<b>${res}</b>`:`<i>${x.lbl[0]}</i>`}</button>`;}).join('')}${!evs.length&&di>=0&&di<S.day+60&&wd!==6&&di>=S.day?'<span class="tr">·</span>':''}</div>`;}
- return `<section class="panel"><div class="panel-h"><h2>${MONTHS_L[M]} ${Y}</h2><div class="row" style="gap:6px"><button class="btn sm" data-a="cal-m" data-v="-1" aria-label="Mes anterior">◀</button><button class="btn sm" data-a="cal-m" data-v="0">Hoy</button><button class="btn sm" data-a="cal-m" data-v="1" aria-label="Mes siguiente">▶</button></div></div>
- <div class="cgridm">${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(x=>`<div class="cwd">${x}</div>`).join('')}${cells}</div>
- <p class="small muted" style="margin:8px 0 0">Hoy: <b>${esc(dateTxt(S.day,true))}</b> · ${esc(agenda())}. Liga los sábados; copa y competiciones continentales entre semana. En verde, el mercado abierto. Pulsa «Continuar» (arriba a la derecha) para avanzar un día.</p></section>`;
+ const W=winRounds(),win=di=>(di>=0&&di<=lgDay(W[0]))||(di>=lgDay(W[1])&&di<=lgDay(W[2]));
+ const card=x=>{const f=x.fx,home=f.h===S.user,opp=T(home?f.a:f.h),r=f.played?((home?f.hg>f.ag:f.ag>f.hg)?'G':(f.hg===f.ag?'E':'P')):'';
+  return `<button class="fev k-${x.k} ${r}" data-a="club-open" data-id="${opp.id}" title="${esc(x.lbl)}"><span class="fcomp">${esc(x.lbl)}</span><span class="fmain">${crest(opp,'sm')}<b>${esc(opp.name)}</b>${f.played?`<em>${home?f.hg:f.ag}-${home?f.ag:f.hg}</em>`:''}</span><span class="fha">${home?'Casa':'Fuera'}</span></button>`;};
+ let cells='';for(let k=0;k<lead;k++)cells+='<div class="fday out"></div>';
+ for(let d=1;d<=nDays;d++){const di=dayIdx(new Date(Date.UTC(Y,M,d))),evs=byDay[di]||[],nt=notes[di]||[];
+  cells+=`<div class="fday${di===S.day?' today':''}${di<S.day?' past':''}${win(di)?' win':''}"><span class="dn">${d}${di===S.day?' · Hoy':''}</span>${evs.map(card).join('')}${nt.map(([t,c])=>`<span class="fnote ${c}">${esc(t)}</span>`).join('')}</div>`;}
+ const tail=(7-(lead+nDays)%7)%7;for(let k=0;k<tail;k++)cells+='<div class="fday out"></div>';
+ return `<section class="panel fcalp"><div class="panel-h"><h2>${MONTHS_L[M]} ${Y}</h2><div class="row" style="gap:6px"><button class="btn sm" data-a="cal-m" data-v="-1" aria-label="Mes anterior">◀</button><button class="btn sm" data-a="cal-m" data-v="0">Hoy</button><button class="btn sm" data-a="cal-m" data-v="1" aria-label="Mes siguiente">▶</button></div></div>
+ <div class="fcal">${['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(x=>`<div class="fwd"><span>${x}</span><span>${x.slice(0,3)}</span></div>`).join('')}${cells}</div>
+ <p class="small muted" style="margin:8px 0 0">Hoy: <b>${esc(dateTxt(S.day,true))}</b> · ${esc(agenda())}. <span class="fleg"><i class="G"></i>victoria <i class="E"></i>empate <i class="P"></i>derrota <i class="w"></i>mercado abierto</span></p></section>`;
 }
 export function calendarioView(){
  const me=f=>f.h===S.user||f.a===S.user,items=[];
@@ -131,9 +147,10 @@ export function calendarioView(){
   if(ev.t==='ct'&&ctOf(S.user)>=0){const C=S.conts[ctOf(S.user)];if(!C.dates[ev.s]&&ctStatus().indexOf('Eliminado')<0&&ctStatus()!=='¡Campeón!')items.push({lbl:`${CONTS[ctOf(S.user)].n} · ${CT_STAGES[ev.s]}`,fx:null,txt:'Si pasas de ronda'});}
  }
  const past=[];S.fixtures[uLg()].slice(0,S.week).forEach((rd,r)=>{const f=rd.find(me);if(f)past.push([r,f]);});
- return `<div class="grid"><div class="stack">${monthHTML()}</div><div class="stack"><section class="panel"><div class="panel-h"><h2>Próximas fechas</h2><span class="eyebrow">${windowTxt()}</span></div>
- ${items.length?items.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="eyebrow">${esc(x.lbl)}</div>${x.fx?resRow(x.fx,null):`<div class="small muted">${esc(x.txt||'')}</div>`}</div>`).join(''):'<div class="empty">No quedan partidos esta temporada.</div>'}</section>
- <section class="panel"><div class="panel-h"><h2>Resultados de liga</h2><span class="eyebrow">${past.length} jugados</span></div>${past.length?past.slice().reverse().map(([r,f])=>resRow(f,r)).join(''):'<div class="empty">Aún no has jugado ninguna jornada.</div>'}</section></div></div>`;
+ const tb=vtab('cal',[['mes','Calendario'],['lista','Lista']],'mes');if(tb.cur==='mes')return tb.bar+monthHTML();
+ return tb.bar+`<div class="grid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Próximas fechas</h2><span class="eyebrow">${windowTxt()}</span></div>
+ ${items.length?items.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="eyebrow">${esc(x.lbl)}</div>${x.fx?resRow(x.fx,null):`<div class="small muted">${esc(x.txt||'')}</div>`}</div>`).join(''):'<div class="empty">No quedan partidos esta temporada.</div>'}</section></div>
+ <div class="stack"><section class="panel"><div class="panel-h"><h2>Resultados de liga</h2><span class="eyebrow">${past.length} jugados</span></div>${past.length?past.slice().reverse().map(([r,f])=>resRow(f,r)).join(''):'<div class="empty">Aún no has jugado ninguna jornada.</div>'}</section></div></div>`;
 }
 /** Liguilla o playoffs: cuadro, tu partido y simular la ronda. */
 function poHTML(){const P=S.po;if(!P||P.season!==S.seasonN)return '';const ui=userTie();

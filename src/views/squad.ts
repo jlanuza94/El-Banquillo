@@ -41,6 +41,7 @@ import {REGIONS,scoutWages} from '../academy';
 import {vtab} from './common';
 import {atCellS,attrHead,attrCells,clubCell,energyBar,formCell,knowTag,nameBtn,pBadgeS,pitchHTML,potTxt,slotCoords,status} from './common';
 import {reportHTML} from './home';
+import {cardHTML} from './pcard';
 import {start} from '../boot';
 export function entrenoView(){
  const sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),t=T(S.user);
@@ -284,13 +285,10 @@ export function fichaHTML(p){
  const posMap=`<div class="pitch" style="max-width:150px;margin:0">${dots}<span class="ln out"></span><span class="ln half"></span></div>`;
  const wf='●'.repeat(p.wf||3)+'○'.repeat(5-(p.wf||3));
  const hist=(p.hist||[]).slice().reverse();
- return `<div class="row" style="gap:14px;align-items:flex-start"><div style="flex:1;min-width:0"><div class="eyebrow">${p.team===null?'Agente libre':esc(T(p.team).name)+' · '+esc(lgName(T(p.team).lg))}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
- <div class="row small muted" style="margin-top:6px">${posChip(p)}<span>${SPN[p.sp]} · ${p.age} años · ${nf(p.nat)} ${esc(COUNTRIES[p.nat].n)}${p.age<=23?' · potencial '+potTxt(p):''}${p.caps?` · internacional: ${p.caps} partido${p.caps>1?'s':''}${p.ig?`, ${p.ig} gol${p.ig>1?'es':''}`:''}`:''}</span></div>${mine?'':`<div style="margin-top:6px">${knowTag(p)}</div>`}</div>${pBadgeS(p,'lg')}</div>
- <div class="row" style="gap:16px;margin-top:14px;align-items:flex-start">${posMap}
- <div class="kv" style="margin-top:0;flex:1;min-width:180px"><span>Altura</span><b>${p.h} cm</b><span>Pie bueno</span><b>${FOOT[p.foot||'D']}</b><span>Pie malo</span><b title="${p.wf||3} de 5" style="letter-spacing:2px">${wf}</b><span>Carácter</span><b>${known?PERS[p.per||'nor'].n:'<span class="muted">Desconocido</span>'}</b><span>Dorsal</span><b>${p.num||'—'}</b></div></div>
- <p class="small muted" style="margin:8px 0 0">${known?esc(PERS[p.per||'nor'].d)+' ':''}${p.alt&&p.alt.length?'También juega de '+p.alt.map(x=>SPN[x].toLowerCase()).join(' y ')+'.':'Solo rinde al máximo en su posición.'}</p>
- ${known&&p.tr&&p.tr.length?`<div class="chips" style="margin-top:10px">${p.tr.map(t=>`<span class="tag xi">${TRAITS[t]}</span>`).join('')}</div>`:''}
- <div class="attrs">${bars}</div>
+ return `${cardHTML(p)}
+ <div class="row small" style="margin-top:8px;gap:8px;align-items:center">${mine?'':knowTag(p)}<span class="muted">${posChip(p)} ${SPN[p.sp]}${p.alt&&p.alt.length?' · también '+p.alt.map(x=>SPN[x].toLowerCase()).join(' y '):''} · ${p.h} cm · pie malo <b title="${p.wf||3} de 5" style="letter-spacing:2px">${wf}</b> · carácter ${known?PERS[p.per||'nor'].n.toLowerCase():'desconocido'}</span></div>
+ ${known?`<p class="small muted" style="margin:4px 0 0">${esc(PERS[p.per||'nor'].d)}</p>`:''}
+ ${known&&p.tr&&p.tr.length?`<div class="chips" style="margin-top:8px">${p.tr.map(t=>`<span class="tag xi">${TRAITS[t]}</span>`).join('')}</div>`:''}
  ${(()=>{const pts=(p.ph||[]).map(x=>[x[0],x[1]]);if(!pts.length||pts[pts.length-1][1]!==p.ovr||pts[pts.length-1][0]!==seasonLabel())pts.push(['Ahora',p.ovr]);if(pts.length<2)return '';const W=300,H=80,vs=pts.map(x=>x[1]/10),mn=Math.floor(Math.min(...vs)-.5),mx=Math.ceil(Math.max(...vs)+.5),X=i=>14+i*(W-28)/(pts.length-1),Y=v=>H-16-(v-mn)/(mx-mn||1)*(H-30);
   return `<h3 style="margin:16px 0 4px">Evolución de la media</h3><svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto" role="img" aria-label="Evolución de ${esc(p.name)}"><polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${vs.map((v,i)=>X(i)+','+Y(v)).join(' ')}"/>${vs.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="var(--ink)"/><text x="${X(i)}" y="${Y(v)-7}" font-size="10" text-anchor="middle" fill="var(--ink)" font-family="Barlow Condensed,Arial">${v.toFixed(1)}</text><text x="${X(i)}" y="${H-3}" font-size="9" text-anchor="middle" fill="var(--muted)" font-family="Barlow Condensed,Arial">${esc(String(pts[i][0]).replace('20',''))}</text>`).join('')}</svg>`;})()}
  <h3 style="margin:16px 0 4px">Temporada ${seasonLabel()}</h3>

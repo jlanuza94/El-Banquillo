@@ -359,7 +359,8 @@ const app = document.getElementById('app')!;
     ok(r === 'match' && S.day > d0 && S.ci === ci0 && isMatchDay(), `Continuar avanza día a día hasta el partido (${n} días)`);
     ok(continueDay() === 'match' && S.day === dayOfEvent(S.ci), 'el día de partido no se pasa sin jugar');
     S.modal = { type: 'matchday' }; render(); ok(app.textContent.includes('Jugar el partido'), 'aviso de día de partido'); S.modal = null;
-    S.view = 'calendario'; render(); ok(app.querySelectorAll('.cday').length >= 28 && app.querySelector('.cday.today'), 'calendario mensual con el día de hoy');
+    S.view = 'calendario'; render(); ok(app.querySelectorAll('.fday').length >= 28 && app.querySelector('.fday.today') && app.querySelectorAll('.fnote,.fev').length >= 1, 'calendario mensual con el día de hoy');
+    { const pp = Object.values(S.players).find(p => p.team === S.user); S.modal = { type: 'ficha', id: pp.id }; render(); ok(app.querySelector('.pcard .face') && app.querySelectorAll('.fattrs .fa').length >= 14 && app.querySelector('.pcard .stars'), 'ficha estilo FMM: tarjeta con cara, estrellas y atributos'); S.modal = null; }
     ok(app.querySelector('[data-a="continue"]'), 'botón Continuar en la barra superior'); S.view = 'inicio'; }
   { // Tácticas por posiciones: cometido e instrucciones
     const t = T(S.user), sl = slotsOf(t.formation), ps = userPos(sl);
