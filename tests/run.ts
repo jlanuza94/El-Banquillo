@@ -19,7 +19,7 @@ import { dlActive, dlStep } from '../src/marketfm';
 import { aiTransfers as aiTransfersF, isDeadline as isDeadlineF } from '../src/market';
 import { incomingOffer as incomingOfferF } from '../src/squad';
 import { sched, schedWeekly, setPreset, setSession, trMult } from '../src/training2';
-import { cal, lgDay, seasonStart, torneo, winRounds } from '../src/calendar';
+import { cal, dateOf, lgDay, seasonStart, torneo, winRounds } from '../src/calendar';
 import { inWindow as inWindowF, windowTxt as windowTxtF } from '../src/market';
 import { processBids, sendBid, tsWeight } from '../src/marketfm';
 import { COUNTRIES } from '../src/data';
@@ -128,7 +128,7 @@ const app = document.getElementById('app')!;
     S.chem = keep.chem; S.famil[T(S.user).formation] = keep.fam; S.prepB = keep.prep; hp.forEach(([p, h, rf]) => { p.hap = h; p.rf = rf; }); }
   { const m = S.match; ok(fmtMin(93) === '90+3' && fmtMin(40) === '40', 'el descuento se ve como 90+3'); const gt = goalType(m, m.us, m.lu[m.us].filter(Boolean).pop()); ok(!!GOALT[gt], 'tipo de gol: ' + GOALT[gt].n); }
   simToEnd(); matchView(); finishRound();
-  ok(S.pre.left === 2, 'amistoso de pretemporada');
+  ok(S.pre.left === 3, 'amistoso de pretemporada');
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
   for (let i = 0; i < 3; i++) { playMatch(); matchView(); simToEnd(); finishRound(); modalView(); if (S.press) answerPress(0); }
@@ -440,8 +440,8 @@ const app = document.getElementById('app')!;
     S.view = 'inicio'; render(); }
   { // Calendario real por país y mercado al estilo FM Mobile
     const c0 = S.calC; const byCode = k => COUNTRIES.findIndex(c => c.code === k);
-    S.calC = byCode('BRA'); ok(seasonStart().getUTCMonth() === 3 && cal().wn[0] === 'de pretemporada', 'Brasil empieza en abril');
-    S.calC = byCode('MEX'); ok(seasonStart().getUTCMonth() === 6 && torneo(0) === 'Apertura' && torneo(30) === 'Clausura', 'México: Apertura y Clausura');
+    S.calC = byCode('BRA'); ok(dateOf(lgDay(0)).getUTCMonth() === 3 && cal().wn[0] === 'de pretemporada', 'Brasil empieza la liga en abril');
+    S.calC = byCode('MEX'); ok(dateOf(lgDay(0)).getUTCMonth() === 6 && torneo(0) === 'Apertura' && torneo(30) === 'Clausura', 'México: Apertura (julio) y Clausura');
     S.calC = byCode('ALE'); ok(lgDay(17) - lgDay(16) === 28, 'Alemania: parón invernal de 3 semanas');
     S.calC = byCode('ESP'); ok(seasonStart().getUTCMonth() === 7 && /septiembre/.test(windowTxtF()) || !inWindowF(), 'España: el mercado de verano cierra a principios de septiembre');
     S.calC = c0;

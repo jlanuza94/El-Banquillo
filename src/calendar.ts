@@ -10,7 +10,8 @@ const DAYS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const DAYS_L=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const MONTHS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 export const MONTHS_L=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-export const FIRST_LG=12; // la primera jornada de liga es el sábado de la segunda semana
+export const FIRST_LG=33; // pretemporada de unas 4 semanas: la primera jornada de liga es el sábado de la quinta semana
+const PRE_EXTRA=FIRST_LG-12; // días que se adelanta el inicio para que la primera jornada caiga en su fecha real
 
 /** Día (desde el inicio de la temporada) de cada evento del calendario de competiciones. */
 /** Calendario real de cada país: inicio de temporada [mes, día], parón [tras la jornada, semanas] con su nombre,
@@ -52,7 +53,7 @@ export function eventDays(){
 }
 export const dayOfEvent=i=>{const d=eventDays();return i<d.length?d[i]:(d.length?d[d.length-1]+3:0);};
 /** Lunes de inicio de temporada (primera semana de agosto). */
-export function seasonStart(n=S.seasonN){const C=cal(),y=(C.st[0]>=6?2025:2026)+n,dt=new Date(Date.UTC(y,C.st[0],C.st[1]));while(dt.getUTCDay()!==1)dt.setUTCDate(dt.getUTCDate()+1);return dt;}
+export function seasonStart(n=S.seasonN){const C=cal(),y=(C.st[0]>=6?2025:2026)+n,dt=new Date(Date.UTC(y,C.st[0],C.st[1]));while(dt.getUTCDay()!==1)dt.setUTCDate(dt.getUTCDate()+1);dt.setUTCDate(dt.getUTCDate()-PRE_EXTRA);return dt;}
 export function dateOf(day){const dt=seasonStart();dt.setUTCDate(dt.getUTCDate()+day);return dt;}
 export const dateTxt=(day,long)=>{const dt=dateOf(day),w=(dt.getUTCDay()+6)%7;return long?`${DAYS_L[w]} ${dt.getUTCDate()} de ${MONTHS_L[dt.getUTCMonth()].toLowerCase()} de ${dt.getUTCFullYear()}`:`${DAYS[w]} ${dt.getUTCDate()} ${MONTHS[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`;};
 export const weekday=day=>(dateOf(day).getUTCDay()+6)%7;

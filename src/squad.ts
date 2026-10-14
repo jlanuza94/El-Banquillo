@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {winterWeekly} from './preseason';
 import {delegWeekly} from './delegate';
 import {schedWeekly,trMult} from './training2';
 import {loanRequests,processBids,tsWeight} from './marketfm';
@@ -32,7 +33,8 @@ import {assignNum,baseWage,rateA,refresh,wpick} from './players';
 import {news} from './world';
 import {famOf,fixLineup,langOf,leaders,nRounds,nextFixture} from './tactics';
 import {playerTick} from './engine';
-import {aiTransfers,expRole,inWindow,isDeadline} from './market';
+import {aiTransfers,expRole,inWindow,isDeadline,windowTxt} from './market';
+import {winRounds} from './calendar';
 import {attendance,clubWeekly,facMaint,shopWeekly,unlock} from './club';
 import {mgrWeekly} from './career';
 import {academyWeekly,scoutWages,scoutsWeekly} from './academy';
@@ -134,6 +136,7 @@ export function processWeek(){
  if(S.week===Math.floor(nRounds()/2)){const ex=squad(S.user).filter(p=>!p.loan&&p.contract<=1);if(ex.length)news(`Mitad de temporada: ${ex.length} jugador${ex.length>1?'es acaban':' acaba'} contrato en junio. Renuévalos desde Inicio o su ficha, o se irán libres.`,'bad',{cat:'dir',subj:'Contratos que acaban en junio',act:[{l:'Ver contratos',a:'pl-open',v:'cont'}]});}
  incomingOffer();
  if(S.week>=nRounds())news('Termina la temporada. Mira cómo ha quedado todo en Inicio.','good');
+ winterWeekly(winRounds,inWindow,windowTxt);
 }
 export function ticket(){if(!S.club)return 0;return r3(Math.max(0,attendance()-(S.club.socios||0))*S.club.price/1e6);}
 export function incomingOffer(){

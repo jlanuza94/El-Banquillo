@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {markPre} from './preseason';
 import {COND_MAX} from './plans';
 import {DELEG,deleg,delegWeekly,setDeleg} from './delegate';
 import {PRESETS_T,setPreset,setSession} from './training2';
@@ -88,7 +89,7 @@ document.addEventListener('click',e=>{
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
  switch(a){
-  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
+  case'view':if(S.match&&d.v!=='partido'&&!S.match.paused){S.match.paused=true;clearInterval(RT.timer);RT.timer=null;}if(d.v==='plantilla')markPre('pl');else if(d.v==='tacticas')markPre('tac');else if(d.v==='mercado')markPre('mk');S.view=d.v;S.sel=null;S.moreOpen=false;if(d.v==='liga'){S.ligaLg=uLg();S.ligaRound=clamp(S.week-(S.week>=nRounds()?1:0),0,nRounds()-1);}window.scrollTo(0,0);break;
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;document.querySelector('main')?.scrollTo?.(0,0);break;
@@ -201,6 +202,8 @@ document.addEventListener('click',e=>{
   case'sim-go':{const st=document.getElementById('simStop');S.simStop=st?st.checked:true;S.modal=null;S.moreOpen=false;if(S.match&&!S.match.done){toast('Termina antes el partido en juego.');break;}simRun(d.v,S.simStop);return;}
   case'sim-stop':stopSim();return;
   case'friendly':playFriendly(+d.id);return;
+  case'pre-rep':markPre('rep');S.modal={type:'prerep'};break;
+  case'pre-buy':markPre('mk');S.modal=null;S.view='mercado';S.mk.tab='buy';S.mk.pos='ALL';S.mk.sp=d.v;S.mk.limit=40;break;
   case'pre-skip':if(S.pre)S.pre.left=0;break;
   case'sponsor':{const o=S.spOffers[+d.i];if(o){S.sponsor=o;news(`Firmas con ${o.name}: ${spDesc(o)}`,'good');}break;}
   case'abo':S.club.abo=clamp(S.club.abo+(+d.d)*(S.club.abo>=300?20:S.club.abo>=100?10:5),20,6000);break;

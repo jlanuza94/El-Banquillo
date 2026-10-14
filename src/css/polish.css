@@ -180,3 +180,11 @@ td>.flag,td>b>.flag{display:inline-block;vertical-align:-2px}
  .nsub{flex-direction:column;gap:1px;padding:4px 2px;font-size:10px;text-align:center}
  .nsub span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 }
+
+/* Pretemporada */
+.prep{border-top:3px solid var(--accent)}
+.ptasks{display:flex;flex-direction:column;gap:4px}
+.ptask{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:var(--surface2)}
+.ptask .ck{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none;color:#fff}
+.ptask.ok .ck{background:var(--win);border-color:var(--win)}.ptask.ok .t{color:var(--muted);text-decoration:line-through}
+.ptask .t{flex:1;min-width:0}

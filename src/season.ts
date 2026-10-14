@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {friendlyWait,preWelcome} from './preseason';
 import {poAdvance} from './playoffs';
 import {mgrGrow,projOffer,projSeasonEnd} from './extras2';
 import {assignObjectives,galaSeasonEnd,objectivesSeasonEnd} from './extras';
@@ -76,6 +77,8 @@ export function finishRound(){
 }
 export function playFriendly(tid){
  if(!S.pre||S.pre.left<=0||S.week>0||S.ci>0)return;
+ if(friendlyWait()>0){toast(`Los jugadores necesitan descanso: el próximo amistoso, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
+ S.pre.last=S.day??0;S.pre.opts=null;
  S.fr.push(mkTie(S.user,tid));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.label='Amistoso de pretemporada';S.view='partido';save();render();
 }
 export function friendlyOpts(){
@@ -207,7 +210,7 @@ export function newSeason(){
  crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();seedGems(10);discoveries();const youth=academyIntake(3);maybeGolden(makeYouth);setupYouth();genScoutPool();aiTransfers(160);
  genFreeAgents();crisisSales(poorClubs);
  S.short=S.short.filter(id=>PL(id));
- S.seasonN++;setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
+ S.seasonN++;setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();preWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
  devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${(p.ovr/10).toFixed(1)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
  if(retired.length)news(`Se retiran: ${retired.join(', ')}.`);
  if(freed.length)news(`Acaban contrato y se van libres: ${freed.join(', ')}.`,'bad');

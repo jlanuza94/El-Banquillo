@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {preReportHTML} from '../preseason';
 import {agentName} from '../connected';
 import {agentFee} from '../market';
 import {REFS,refFor} from '../extras2';
@@ -29,7 +30,7 @@ import {CONTS,CT_STAGES,CWC_NAMES,cupName,cupRoundName} from '../competitions';
 import {askPrice,inWindow,negState,sell,termsForm} from '../market';
 import {contractLabel,loanFee,loansIn,optPrice,renState} from '../contracts';
 import {hapReasons,hapTag} from '../squad';
-import {atCellS,keyAttrs,pBadgeS,resRow} from './common';
+import {atCellS,keyAttrs,nameBtn,pBadgeS,resRow} from './common';
 import {fichaHTML} from './squad';
 import {reportHTML,tacReport} from '../tacreport';
 import {helpHTML} from '../help';
@@ -119,6 +120,7 @@ export function modalView(){
  else if(md.type==='search'){body=searchModal();}
  else if(md.type==='club'){if(!T(md.id)){S.modal=null;return '';}body=clubModal(md.id);}
  else if(md.type==='mrep'){const r=(S.mlog||[])[md.i];if(!r){S.modal=null;return '';}body=reportBody(r)+`<div class="acts">${r.tr?`<button class="btn" data-a="trep" data-v="${r.n}">Informe táctico</button>`:''}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
+ else if(md.type==='prerep'){body=preReportHTML(esc,nameBtn,PL)+`<div class="acts"><button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='help'){body=helpHTML(md.v)+`<div class="acts"><button class="btn primary" data-a="modal-close">Entendido</button></div>`;}
  else if(md.type==='trep'){const r=md.live?null:(S.mlog||[]).find(x=>x.n===md.n),R=md.live?(S.match&&tacReport(S.match)):r&&r.tr;if(!R){S.modal=null;return '';}const h=md.live?S.match:r;
   body=`<div class="eyebrow">Informe táctico de tu segundo entrenador</div><h2 style="margin:4px 0 10px">${esc(T(h.h).name)} ${md.live?h.score.h:h.hg}-${md.live?h.score.a:h.ag} ${esc(T(h.a).name)}</h2>${reportHTML(R)}<div class="acts">${md.live?'':`<button class="btn" data-a="an-match" data-i="${(S.mlog||[]).indexOf(r)}">Estadísticas del partido</button>`}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
