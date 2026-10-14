@@ -10,9 +10,9 @@ import {matchRecord} from '../analysis';
 import {esc,fill,fmtMin} from '../core';
 import {GRP,MENT,OIS,TACS} from '../data';
 import {slotsOf} from '../tactics';
-import {PL,RT,S,T,crest,lastNm,rt} from '../state';
+import {PL,RT,S,T,crest,crestStyle,lastNm,rt} from '../state';
 import {GOALT,TALKS,bench,liveRatings} from '../engine';
-import {pitchHTML} from './common';
+import {pitchHTML,slotCoords} from './common';
 export const ICON={goal:'<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="#fff" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.6l2.6 1.9-1 3.1H6.4l-1-3.1z" fill="currentColor"/></svg>',
  yc:'<span class="ic yc" aria-label="Amarilla"></span>',red:'<span class="ic rc" aria-label="Roja"></span>',
  sub:'<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2v10M1.5 9.5L4 12l2.5-2.5" stroke="#2b8a4b" stroke-width="1.8" fill="none"/><path d="M12 14V4M9.5 6.5L12 4l2.5 2.5" stroke="#c23a2e" stroke-width="1.8" fill="none"/></svg>',
@@ -24,7 +24,7 @@ function lanesHTML(m){
  const a=row('h'),b=row('a');if(!a&&!b)return '';const tip=laneTip(m);
  return `<section class="panel"><div class="panel-h"><h2>Por dónde se ataca</h2><span class="eyebrow">Banda de quien ataca</span></div>${a}${b}${tip?`<p class="small" style="margin:8px 0 0">💡 ${esc(tip)}</p>`:''}</section>`;
 }
-const MTABS=[['com','Comentarios'],['jug','Jugadores'],['est','Estadísticas'],['tac','Tácticas']];
+const MTABS=[['com','Comentarios'],['jug','Jugadores'],['tac','Tácticas']];
 /** Pestaña de jugadores: nota y cansancio en directo, con el cambio a mano (como en FM Mobile). */
 function playersTab(m,us){
  const side=S.mside==='riv'?(us==='h'?'a':'h'):us,mine=side===us,rat=m.min>0||m.done?(m.done?m.rat:liveRatings(m)):{},sl=slotsOf(m.f[side]);
@@ -38,6 +38,33 @@ function playersTab(m,us){
  return `<div class="panel-h"><h2>Jugadores</h2><div class="seg"><button data-a="m-side" data-v="mine" aria-pressed="${mine}">${esc(T(m[us]).short)}</button><button data-a="m-side" data-v="riv" aria-pressed="${!mine}">${esc(T(m[us==='h'?'a':'h']).short)}</button></div></div>
  <table class="ptab"><thead><tr><th>Pos</th><th>Jugador</th><th class="r">Nota</th><th>Energía</th><th></th></tr></thead><tbody>${xi}</tbody></table>
  ${bn?`<div class="eyebrow" style="margin:10px 0 4px">Banquillo</div><table class="ptab"><tbody>${bn}</tbody></table>`:''}`;
+}
+
+const shirtS=n=>`<span class="wsh"><svg viewBox="0 0 40 36" aria-hidden="true"><path d="M13 2 4 6.5 1 15l6.5 2.2L8 34h24l.5-16.8L39 15l-3-8.5L27 2c-1.6 2.6-4 4-7 4s-5.4-1.4-7-4z"/></svg><b>${n}</b></span>`;
+const rq=r=>r>=7.5?'q4':r>=6.8?'q3':r>=6?'q2':'q1';
+/** Formación en directo de un equipo: camiseta, nota, puesto y nombre (como en el FM de PC). */
+function wForm(m,s){
+ const t=T(m[s]),rat=m.min>0||m.done?(m.done?m.rat:liveRatings(m)):{},sl=slotsOf(m.f[s]),C=slotCoords(m.f[s]).length===sl.length?slotCoords(m.f[s]):sl.map((x,i)=>({x:50,y:90-i*7}));
+ const g={};m.ev.forEach(e=>{if(e.t==='goal'&&e.pid)g[e.pid]=(g[e.pid]||0)+1;});
+ return `<div class="wpitch" style="${crestStyle(t)}"><span class="ln out"></span><span class="ln half"></span><span class="ln circ"></span><span class="ln b1"></span><span class="ln b2"></span>${m.lu[s].map((id,i)=>{const p=PL(id);if(!p||!C[i])return '';const r=rat[id];
+  return `<span class="wpl${m.off.includes(id)?' off':''}" style="left:${C[i].x}%;top:${C[i].y}%">${shirtS(p.num||'')}<span class="wr">${r!=null?`<i class="${rq(r)}">${r.toFixed(1)}</i>`:''}<i class="wp">${sl[i]}</i></span><span class="wn">${g[id]?'⚽':''}${m.ycm&&m.ycm[id]?'🟨':''}${esc(lastNm(id))}</span></span>`;}).join('')}</div>`;
+}
+/** Goles, tarjetas, cambios y lesiones, cada uno en el lado de su equipo. */
+function wEvents(m){
+ const L=m.ev.filter(e=>['goal','yc','red','sub','inj'].includes(e.t)&&e.s);
+ return L.length?`<div class="wevs">${L.map(e=>`<div class="wevr ${e.s}"><span>${ICON[e.t]||''}</span><span class="tx">${esc(e.pid&&PL(e.pid)?lastNm(e.pid):e.tx.split('.')[0].slice(0,40))}${e.ast&&PL(e.ast)?` <small>(${esc(lastNm(e.ast))})</small>`:''}</span><b>${fmtMin(e.min)}'</b></div>`).join('')}</div>`:'<div class="empty small">Aún no ha pasado nada importante.</div>';
+}
+/** Los otros partidos de la misma jornada. */
+function wScores(m){
+ const r=m.ref,list=r.k==='lg'?(S.fixtures[r.lg]&&S.fixtures[r.lg][r.r]||[]):r.k==='cup'?((S.cups[r.c].rounds[r.r]||{}).matches||[]):[];
+ const o=list.filter(f=>!(f.h===m.h&&f.a===m.a));
+ return o.length?`<div class="wscs">${o.map(f=>`<div class="wscr"><span class="h">${esc(T(f.h).short)} ${crest(T(f.h),'sm')}</span><b>${f.played?`${f.hg} - ${f.ag}`:m.done?'—':'en juego'}</b><span class="a">${crest(T(f.a),'sm')} ${esc(T(f.a).short)}</span></div>`).join('')}</div>`:'<div class="empty small">No hay otros partidos a la vez.</div>';
+}
+/** Barra inferior con tu once: puesto, energía (corazón) y nota. Toca para cambiarlo. */
+function wStrip(m,us){
+ const rat=m.min>0||m.done?(m.done?m.rat:liveRatings(m)):{},sl=slotsOf(m.f[us]),can=!m.done&&m.min>0&&m.subs[us]<5;
+ return `<div class="mstrip"><span class="msub">${m.subs[us]}/5 cambios</span>${m.lu[us].map((id,i)=>{const p=PL(id);if(!p)return '';const en=Math.round(m.en[id]??p.energy),r=rat[id];
+  return `<button class="mst" ${can?`data-a="m-subout" data-id="${id}"`:'disabled'} title="${esc(p.name)} · ${en}%"><span>${sl[i]}</span><i class="hrt ${en>=75?'g':en>=55?'y':'r'}">♥</i>${r!=null?`<b class="${rq(r)}">${r.toFixed(1)}</b>`:''}</button>`;}).join('')}</div>`;
 }
 export function matchView(){
  const m=S.match,H=T(m.h),A=T(m.a),us=m.us,ut=T(m[us]);
@@ -65,29 +92,33 @@ export function matchView(){
  const feed=m.ev.map((e,i)=>({e,i})).reverse().map(({e,i})=>`<div class="ev ${e.t==='goal'?'goal':e.t==='sys'?'sys':''}"><span class="m">${fmtMin(e.min)}'</span><span>${ICON[e.t]||''}</span><span class="tx">${e.s?`<b>${T(m[e.s]).short}</b> · `:''}${esc(e.tx)}${e.t==='goal'?` <button class="btn sm rpbtn" data-a="replay" data-i="${i}">▶ Repetición</button>`:''}</span></div>`).join('')||`<div class="empty">${esc(H.name)} recibe a ${esc(A.name)}. Pulsa “Comenzar partido” cuando quieras.</div>`;
  const tab=S.mtab||'com';
  const scorers=s=>m.ev.filter(e=>e.t==='goal'&&e.s===s).map(e=>`${lastNm(e.pid)} ${fmtMin(e.min)}'`).join(', ');
- return `<div class="row" style="margin-bottom:10px"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button><span class="small muted mhint">El partido sigue en pausa si sales; vuelve desde el menú.</span><span class="spacer"></span><button class="btn sm" data-a="sound" aria-pressed="${soundOn()}" title="Sonido y vibración">${soundOn()?'Sonido: sí':'Sonido: no'}</button><div class="seg"><button data-a="v2d" data-v="1" aria-pressed="${S.v2d!==false}">Vista 2D</button><button data-a="v2d" data-v="0" aria-pressed="${S.v2d===false}">Solo texto</button></div></div>
- ${m.label?`<div class="eyebrow" style="margin-bottom:8px">${m.derby?`<span class="derbytag sm">${derbyName(m.h,m.a)}</span> `:''}${esc(m.label)}${m.agg?` · vuelta: ida ${m.agg[1]}-${m.agg[0]}, si el global empata hay penaltis`:m.ko?' · eliminatoria: si hay empate, penaltis':''}</div>`:''}
- <div class="mlay"><div class="mlL"><div class="board ${flash?'flash':''}"><div class="bs">${crest(H,'lg')}<div class="tn">${esc(H.name)}</div><div class="small" style="color:var(--board-dim)">${esc(scorers('h'))}</div></div>
- <div class="sc">${m.score.h}<span style="opacity:.4">:</span>${m.score.a}</div>
- <div class="bs">${crest(A,'lg')}<div class="tn">${esc(A.name)}</div><div class="small" style="color:var(--board-dim)">${esc(scorers('a'))}</div></div>
- <div class="mn">${label}${m.agg?` · global ${m.score.h+m.agg[0]}-${m.score.a+m.agg[1]}`:''}${m.pen?` · pen. ${m.pen[0]}-${m.pen[1]}`:''}</div><div class="prog"><i style="width:${Math.min(100,m.min/m.end*100)}%"></i></div></div>
+ const estC=`<div class="panel-h"><h2>Estadísticas</h2>${m.wx?`<span class="eyebrow" title="${esc(WX[m.wx.k].d)}">${esc(wxTxt(m.wx))}${m.refr?` · árbitro ${esc(REFS[m.refr.k].n.toLowerCase())}`:''}</span>`:''}</div>
+  <div class="stat"><span>${poss}%</span><span class="c">Posesión</span><span class="r">${100-poss}%</span></div><div class="pbar"><i style="width:${poss}%;background:${H.c1}"></i><i style="width:${100-poss}%;background:${A.c1}"></i></div>
+  ${stat('Goles esperados (xG)',(m.st.h.xg||0).toFixed(2),(m.st.a.xg||0).toFixed(2))}${stat('Tiros',m.st.h.sh,m.st.a.sh)}${stat('A puerta',m.st.h.ot,m.st.a.ot)}${stat('Córners',m.st.h.co||0,m.st.a.co||0)}${stat('Faltas',m.st.h.fo||0,m.st.a.fo||0)}${stat('Pases buenos',(m.st.h.pa?Math.round(m.st.h.pc/m.st.h.pa*100):0)+'%',(m.st.a.pa?Math.round(m.st.a.pc/m.st.a.pa*100):0)+'%')}${stat('Amarillas',m.st.h.yc,m.st.a.yc)}${stat('Rojas',m.st.h.rc,m.st.a.rc)}${stat('Cambios',m.subs.h,m.subs.a)}${(()=>{const G=m.ev.filter(e=>e.t==='goal');if(!G.length)return '';const ks=[...new Set(G.map(e=>e.gt||'otro'))];return `<div class="eyebrow" style="margin:10px 0 4px">Cómo llegaron los goles</div>${ks.map(k=>stat(GOALT[k]?GOALT[k].n:k,G.filter(e=>e.s==='h'&&(e.gt||'otro')===k).length,G.filter(e=>e.s==='a'&&(e.gt||'otro')===k).length)).join('')}`;})()}
+  ${lanesHTML(m)}${m.done&&m.sh?`<div class="panel-h" style="margin-top:12px"><h2>Mapa de tiros</h2></div><div class="shotmaps">${shotMap(matchRecord(m),0,T(m.h).name)}${shotMap(matchRecord(m),1,T(m.a).name)}</div>`:''}`;
+ const mw=S.mw||'par';
+ return `<div class="mtopb"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button>${m.label?`<span class="eyebrow mlbl">${m.derby?`<span class="derbytag sm">${derbyName(m.h,m.a)}</span> `:''}${esc(m.label)}${m.agg?` · vuelta: ida ${m.agg[1]}-${m.agg[0]}`:m.ko?' · eliminatoria':''}</span>`:''}<span class="spacer"></span><button class="btn sm" data-a="sound" aria-pressed="${soundOn()}" title="Sonido y vibración">${soundOn()?'🔊':'🔇'}</button><div class="seg"><button data-a="v2d" data-v="1" aria-pressed="${S.v2d!==false}">2D</button><button data-a="v2d" data-v="0" aria-pressed="${S.v2d===false}">Texto</button></div></div>
+ <div class="mfm mw-${mw}"><div class="mlL"><div class="mscore ${flash?'flash':''}"><span class="mtime">${label}</span><span class="mtm" style="${crestStyle(H)}">${esc(H.short)}</span><b class="msc h">${m.score.h}</b>${crest(m.us?T(m[m.us]):H,'sm')}<b class="msc a">${m.score.a}</b><span class="mtm" style="${crestStyle(A)}">${esc(A.short)}</span></div>
+ <div class="mscr"><span>${esc(scorers('h'))}</span><span class="mag">${m.agg?`global ${m.score.h+m.agg[0]}-${m.score.a+m.agg[1]}`:''}${m.pen?` pen. ${m.pen[0]}-${m.pen[1]}`:''}</span><span>${esc(scorers('a'))}</span></div><div class="mprog"><i style="width:${Math.min(100,m.min/m.end*100)}%"></i></div>
  ${S.v2d!==false?`<div class="p2d"><canvas id="pitch2d" width="800" height="512" aria-label="Vista del partido en 2D"></canvas><div class="mcom" id="mcom" aria-live="polite">${esc(RT.com2d||'')}</div></div>`:''}
  ${RT.replay?`<div class="row" style="justify-content:center;margin-top:8px"><span class="small muted">Viendo la repetición</span><button class="btn sm dark" data-a="replay-stop">Cerrar repetición</button></div>`:''}
- </div><div class="mlR">
+ </div><div class="mlR"><div class="seg mwsel">${[['par','Partido'],['est','Estadísticas'],['eve','Eventos'],['for','Formaciones'],['res','Resultados']].map(([k,l])=>`<button data-a="m-w" data-v="${k}" aria-pressed="${mw===k}">${l}</button>`).join('')}</div><div class="wpar">
  <div class="mbar">${m.done?`<button class="btn primary" data-a="m-finish">Ver resultados de la jornada</button>${m.us?`<button class="btn" data-a="trep" data-v="live">📋 Informe táctico</button>`:''}`:`${m.paused?`<button class="btn primary" data-a="m-play">${resumeL}</button>`:`<button class="btn dark" data-a="m-pause">Pausar</button>`}
   <div class="seg" aria-label="Velocidad">${[1,2,4,9].map(v=>`<button data-a="m-speed" data-v="${v}" aria-pressed="${m.speed===v}" ${v===9?'title="Solo ocasiones, goles y decisiones"':''}>${v===9?'Clave':'x'+v}</button>`).join('')}</div>
   <button class="btn" data-a="m-subs" ${m.subs[us]>=5||m.min===0?'disabled':''}>Cambios ${m.subs[us]}/5</button><button class="btn" data-a="m-sim">Simular</button>`}</div>
  ${m.mom&&!m.done?`<div class="momb"><b>${esc(m.mom.txt)}</b><div class="stack" style="gap:6px;margin-top:8px">${m.mom.opts.map(([v,l])=>`<button class="btn ${v===m.mom.opts[0][0]?'primary':''}" data-a="mom" data-v="${v}">${esc(l)}</button>`).join('')}</div></div>`:''}${m.half&&m.paused&&!m.done&&m.min===45&&m.us?`<div class="itkb"><b>Habla con un jugador</b> <span class="small muted">(hasta 2)</span><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><select id="itkP">${m.lu[m.us].filter(Boolean).map(id=>`<option value="${id}">${esc(PL(id).name)}${m.itk&&m.itk[id]?' ✓':''}</option>`).join('')}</select>${Object.entries(ITALK).map(([k,l])=>`<button class="btn sm" data-a="itk" data-v="${k}">${l}</button>`).join('')}</div></div>`:''}${m.alert&&!m.done?`<div class="alert">${esc(m.alert)}</div>`:''}${talkP}${subsP}
  <div class="seg mtabs" role="tablist">${MTABS.map(([k,l])=>`<button data-a="m-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>
- <section class="panel mtab">${tab==='jug'?playersTab(m,us):tab==='est'?`<div class="panel-h"><h2>Estadísticas</h2>${m.wx?`<span class="eyebrow" title="${esc(WX[m.wx.k].d)}">${esc(wxTxt(m.wx))}${m.refr?` · árbitro ${esc(REFS[m.refr.k].n.toLowerCase())}`:''}</span>`:''}</div>
-  <div class="stat"><span>${poss}%</span><span class="c">Posesión</span><span class="r">${100-poss}%</span></div><div class="pbar"><i style="width:${poss}%;background:${H.c1}"></i><i style="width:${100-poss}%;background:${A.c1}"></i></div>
-  ${stat('Goles esperados (xG)',(m.st.h.xg||0).toFixed(2),(m.st.a.xg||0).toFixed(2))}${stat('Tiros',m.st.h.sh,m.st.a.sh)}${stat('A puerta',m.st.h.ot,m.st.a.ot)}${stat('Córners',m.st.h.co||0,m.st.a.co||0)}${stat('Faltas',m.st.h.fo||0,m.st.a.fo||0)}${stat('Pases buenos',(m.st.h.pa?Math.round(m.st.h.pc/m.st.h.pa*100):0)+'%',(m.st.a.pa?Math.round(m.st.a.pc/m.st.a.pa*100):0)+'%')}${stat('Amarillas',m.st.h.yc,m.st.a.yc)}${stat('Rojas',m.st.h.rc,m.st.a.rc)}${stat('Cambios',m.subs.h,m.subs.a)}${(()=>{const G=m.ev.filter(e=>e.t==='goal');if(!G.length)return '';const ks=[...new Set(G.map(e=>e.gt||'otro'))];return `<div class="eyebrow" style="margin:10px 0 4px">Cómo llegaron los goles</div>${ks.map(k=>stat(GOALT[k]?GOALT[k].n:k,G.filter(e=>e.s==='h'&&(e.gt||'otro')===k).length,G.filter(e=>e.s==='a'&&(e.gt||'otro')===k).length)).join('')}`;})()}
-  ${lanesHTML(m)}${m.done&&m.sh?`<div class="panel-h" style="margin-top:12px"><h2>Mapa de tiros</h2></div><div class="shotmaps">${shotMap(matchRecord(m),0,T(m.h).name)}${shotMap(matchRecord(m),1,T(m.a).name)}</div>`:''}`
+ <section class="panel mtab">${tab==='jug'?playersTab(m,us):tab==='est'?estC
  :tab==='tac'?(m.done?`<div class="empty">El partido ha terminado.</div>`:`<div class="panel-h"><h2>Tácticas</h2><span class="eyebrow">${m.f[us]} · ${MENT[m.ment[us]].label}</span></div><div class="mctl">
   <div class="seg" aria-label="Mentalidad">${Object.entries(MENT).map(([k,v])=>`<button data-a="m-ment" data-v="${k}" aria-pressed="${m.ment[us]===k}">${v.label}</button>`).join('')}</div>
   <label class="f"><span class="eyebrow">Estilo</span><select id="m-est">${Object.entries(TACS.est.o).map(([k,v])=>`<option value="${k}" ${m.tac[us].est===k?'selected':''}>${v}</option>`).join('')}</select></label><label class="f"><span class="eyebrow">Presión</span><select id="m-pre">${Object.entries(TACS.pre.o).map(([k,v])=>`<option value="${k}" ${m.tac[us].pre===k?'selected':''}>${v}</option>`).join('')}</select></label><label class="f"><span class="eyebrow">Al perder</span><select id="m-per">${Object.entries(TACS.per.o).map(([k,v])=>`<option value="${k}" ${(m.tac[us].per||'nor')===k?'selected':''}>${v}</option>`).join('')}</select></label><label class="f"><span class="eyebrow">Al recuperar</span><select id="m-rec">${Object.entries(TACS.rec.o).map(([k,v])=>`<option value="${k}" ${(m.tac[us].rec||'nor')===k?'selected':''}>${v}</option>`).join('')}</select></label>
   ${Object.keys(ut.plans||{}).length?`<div class="seg" aria-label="Tácticas guardadas">${['A','B','C'].filter(k=>ut.plans[k]).map(k=>`<button data-a="m-plan" data-v="${k}" aria-pressed="${m.plan===k}" title="${esc(ut.plans[k].name)}">Táctica ${k}</button>`).join('')}</div>`:''}
   <div class="chips" aria-label="Instrucciones al rival">${Object.entries(OIS).map(([k,v])=>`<button class="btn sm ${m.oi&&m.oi[us]&&m.oi[us][k]?'dark':''}" data-a="m-oi" data-v="${k}" title="${esc(v.d)}" aria-pressed="${!!(m.oi&&m.oi[us]&&m.oi[us][k])}">${v.n}</button>`).join('')}</div></div>
   ${pitchHTML(ut,m.lu[us],m.f[us],{roles:m.ro&&m.ro[us],en:m.en,rat:m.min>0?liveRatings(m):null})}`)
- :`${m.done&&goalsOf(m).length?`<div class="panel-h"><h2>Los goles</h2><span class="eyebrow">Toca para ver la repetición</span></div><div class="chips" style="margin-bottom:10px">${goalsOf(m).map(({e,i})=>`<button class="btn sm" data-a="replay" data-i="${i}">▶ ${fmtMin(e.min)}' ${esc(T(m[e.s]).short)} · ${esc(lastNm(e.pid))}${e.gt&&GOALT[e.gt]&&e.gt!=='otro'?` <span class="muted">· ${GOALT[e.gt].n.toLowerCase()}</span>`:''}</button>`).join('')}</div>`:''}${m.adv&&!m.done?`<div class="negmsg" style="margin:0 0 10px"><b>${m.adv.min}'</b> · ${esc(m.adv.tx)}</div>`:''}${talkDone}${m.done&&m.mvp?`<p class="small" style="margin:0 0 8px">Jugador del partido: <b>${esc(PL(m.mvp).name)}</b> · ${m.rat[m.mvp].toFixed(1)}</p>`:''}<div class="feed">${feed}</div>`}</section></div></div>`;
+ :`${m.done&&goalsOf(m).length?`<div class="panel-h"><h2>Los goles</h2><span class="eyebrow">Toca para ver la repetición</span></div><div class="chips" style="margin-bottom:10px">${goalsOf(m).map(({e,i})=>`<button class="btn sm" data-a="replay" data-i="${i}">▶ ${fmtMin(e.min)}' ${esc(T(m[e.s]).short)} · ${esc(lastNm(e.pid))}${e.gt&&GOALT[e.gt]&&e.gt!=='otro'?` <span class="muted">· ${GOALT[e.gt].n.toLowerCase()}</span>`:''}</button>`).join('')}</div>`:''}${m.adv&&!m.done?`<div class="negmsg" style="margin:0 0 10px"><b>${m.adv.min}'</b> · ${esc(m.adv.tx)}</div>`:''}${talkDone}${m.done&&m.mvp?`<p class="small" style="margin:0 0 8px">Jugador del partido: <b>${esc(PL(m.mvp).name)}</b> · ${m.rat[m.mvp].toFixed(1)}</p>`:''}<div class="feed">${feed}</div>`}</section></div></div>
+ <section class="w wst"><div class="wh">Estadísticas</div>${estC.replace("<h2>Estadísticas</h2>","")}</section>
+ <section class="w wev"><div class="wh">Eventos <b>${m.score.h} : ${m.score.a}</b></div>${wEvents(m)}</section>
+ <section class="w wfh"><div class="wh">Formación · ${esc(H.short)} <span>${m.f.h}</span></div>${wForm(m,'h')}</section>
+ <section class="w wfa"><div class="wh">Formación · ${esc(A.short)} <span>${m.f.a}</span></div>${wForm(m,'a')}</section>
+ <section class="w wsc"><div class="wh">Otros resultados</div>${wScores(m)}</section></div>${m.us?wStrip(m,us):''}`;
 }

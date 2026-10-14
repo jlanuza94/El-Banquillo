@@ -99,6 +99,7 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'lj-k':S.ljK=d.v;break;
+  case'm-w':S.mw=d.v;break;
   case'lph':S.lph=d.v;S.oopSel=null;S.sel=null;break;
   case'oop-slot':{const i=+d.i;if(S.oopSel==null||S.oopSel===i)S.oopSel=S.oopSel===i?null:i;else{oopSwap(T(S.user),S.oopSel,i);S.oopSel=null;}break;}
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;if(d.go)S.view=d.go;document.querySelector('main')?.scrollTo?.(0,0);break;

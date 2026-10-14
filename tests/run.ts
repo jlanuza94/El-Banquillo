@@ -126,7 +126,7 @@ const app = document.getElementById('app')!;
   ok(app.querySelector('nav, .side, .bnav') !== null, 'se pinta el menú');
 
   playFriendly(friendlyOpts()[0]);
-  { const v0 = S.view; S.view = 'partido'; const h = shell(); S.view = v0; const mm = h.match(/<main>([\s\S]*?)<\/main>/); ok(mm && mm[1].length > 500 && h.includes('Comentarios') && h.includes('Jugadores') && h.includes('id="mcom"'), 'la pantalla del partido en directo se pinta'); }
+  { const v0 = S.view; S.view = 'partido'; const h = shell(); S.view = v0; const mm = h.match(/<main>([\s\S]*?)<\/main>/); ok(mm && mm[1].length > 500 && h.includes('Comentarios') && h.includes('Jugadores') && h.includes('id="mcom"') && (h.match(/class="wpl/g) || []).length >= 20 && h.includes('class="w wst"') && h.includes('class="w wev"') && h.includes('class="w wsc"') && h.includes('class="mstrip"'), 'la pantalla del partido en directo se pinta'); }
   { const m = S.match; ok(m.soft && m.soft[1] <= 1 + SOFT_CAP + 1e-9, 'techo de familiaridad en un partido normal: ' + m.soft.join(' → '));
     const keep = { chem: S.chem, fam: S.famil[T(S.user).formation], prep: S.prepB }; S.chem = 100; S.famil[T(S.user).formation] = 100; S.prepB = 1.05;
     const hp = squad(S.user).map(p => [p, p.hap, p.rf]); squad(S.user).forEach(p => { p.hap = 100; p.rf = Object.fromEntries(Object.keys(p.rf || {}).map(k => [k, 100])); });
