@@ -1,6 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {friendlyWait,preWelcome} from './preseason';
+import {friendlyWait,preWelcome,ptAfter,ptNext} from './preseason';
 import {poAdvance} from './playoffs';
 import {mgrGrow,projOffer,projSeasonEnd} from './extras2';
 import {assignObjectives,galaSeasonEnd,objectivesSeasonEnd} from './extras';
@@ -33,7 +33,7 @@ import {assignNum,baseWage,decline,devSeason,ensureSquad,genFreeAgents,genPlayer
 import {trainMult} from './staff';
 import {news,setupSeason} from './world';
 import {fixLineup,lineupIssues,nRounds,rotateLineup,table} from './tactics';
-import {applyResult,createMatch,playerTick,quickMatch,step} from './engine';
+import {applyResult,createMatch,playerTick,quickMatch,shootout,step} from './engine';
 import {advance,completeEvent,ctQualify,ctWelcome,curEvent,cwcWelcome,mkTie,nextMatch} from './competitions';
 import {aiTransfers,inWindow} from './market';
 import {achSeason,finishBuild,genSponsors,sellAbonos} from './club';
@@ -68,6 +68,7 @@ export function finishCore(){
 }
 export function finishRound(){
  const m=S.match;
+ if(m.ref.k==='fr'&&m.pt){applyResult(m);playerTick(false);S.match=null;const tx=ptAfter(m,simAI,shootout,money);news(tx,/Campeones|final!/.test(tx)?'good':'',{cat:'com',subj:S.ptour.n});S.view='inicio';S.modal={type:'ptour'};saveNow();render();return;}
  if(m.ref.k==='fr'){applyResult(m);playerTick(false);S.match=null;S.pre.left--;const inc=r3(unit(LG(uLg()).rep)*.3);S.budget=r3(S.budget+inc);const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'];
   news(`Amistoso: ${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}. Taquilla ${money(inc)}. Química ${Math.round(S.chem)}.`,my>op?'good':my<op?'bad':'');S.view='inicio';saveNow();render();return;}
  if(m.ref.k==='po'){applyResult(m);playerTick(false);S.match=null;poAdvance(quickMatch,applyResult,mkTie);S.view='inicio';saveNow();render();return;}
@@ -81,6 +82,11 @@ export function playFriendly(tid){
  S.pre.last=S.day??0;S.pre.opts=null;
  S.fr.push(mkTie(S.user,tid));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.label='Amistoso de pretemporada';S.view='partido';save();render();
 }
+export function playTour(){
+ const nx=ptNext();if(!nx||S.match)return;if(friendlyWait()>0){toast(`Los jugadores necesitan descanso: el partido del torneo, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
+ S.pre.last=S.day??0;S.fr.push(mkTie(S.user,nx[0]));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.pt=nx[1];S.match.label=`${S.ptour.n} · ${nx[1]}`;S.view='partido';save();render();
+}
+const simAI=(h,a)=>{S.fr.push(mkTie(h,a));const q=quickMatch({k:'fr',i:S.fr.length-1});S.fr.pop();return [q.score.h,q.score.a];};
 export function friendlyOpts(){
  if(S.pre.opts)return S.pre.opts;const me=strength(S.user),cs=S.teams.filter(t=>t.id!==S.user);
  const near=d=>cs.filter(t=>Math.abs(t.rep-(me+d))<3);

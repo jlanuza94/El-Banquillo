@@ -1,5 +1,9 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {INT_MAX,friendlyWait as fWait2,inPre,internalMatch} from './preseason';
+import {playTour} from './season';
+import {eff} from './tactics';
+import {poisson} from './engine';
 import {markPre} from './preseason';
 import {COND_MAX} from './plans';
 import {DELEG,deleg,delegWeekly,setDeleg} from './delegate';
@@ -203,6 +207,10 @@ document.addEventListener('click',e=>{
   case'sim-stop':stopSim();return;
   case'friendly':playFriendly(+d.id);return;
   case'pre-rep':markPre('rep');S.modal={type:'prerep'};break;
+  case'pt-join':if(S.ptour&&S.ptour.st==='inv'){S.ptour.st=d.v==='yes'?'sf':'no';toast(d.v==='yes'?`Te apuntas al ${S.ptour.n}.`:'Rechazas la invitación.');}S.modal=null;break;
+  case'pt-play':playTour();return;
+  case'pt-view':S.modal={type:'ptour'};break;
+  case'int-play':{if(!inPre()||(S.pre.intN||0)>=INT_MAX)break;if(fWait2()>0){toast(`Los jugadores necesitan descanso: dentro de ${fWait2()} día${fWait2()>1?'s':''}.`);break;}internalMatch(eff,slotsOf,autoLineup,rnd,poisson,news);markPre('int');S.modal={type:'intm'};break;}
   case'pre-buy':markPre('mk');S.modal=null;S.view='mercado';S.mk.tab='buy';S.mk.pos='ALL';S.mk.sp=d.v;S.mk.limit=40;break;
   case'pre-skip':if(S.pre)S.pre.left=0;break;
   case'sponsor':{const o=S.spOffers[+d.i];if(o){S.sponsor=o;news(`Firmas con ${o.name}: ${spDesc(o)}`,'good');}break;}
