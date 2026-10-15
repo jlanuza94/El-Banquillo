@@ -1,6 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {TITLES,hasTitle,setTitle} from './mtitles';
+import {TITLES,hasTitle,setTitle,tInc} from './mtitles';
 const TITLES_CAT=k=>TITLES[k]?TITLES[k][0]:'peo';
 import {askMentor,interviewChance,interviewQs,pickSpec} from './mgrcareer';
 import {convalidate,eligibility,enroll} from './coach';
@@ -110,12 +110,15 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'lj-k':S.ljK=d.v;break;
+  case'mk-kind':S.mkKind=d.v;break;
+  case'mk-sort':{const k=d.v;if(S.mk.sort===k)S.mk.dir=-(S.mk.dir||1);else{S.mk.sort=k;S.mk.dir=1;}S.mk.limit=40;break;}
   case'mk-attr':S.mk.attr=!S.mk.attr;break;
   case'm-preok':if(S.match)S.match.preOk=true;break;
   case'sub-add':{const t=T(S.user),n=subsOf(t).length;if(n<MAX_SUBS)setSub(d.id,n);break;}
   case'sub-rem':removeFromTeam(d.id);break;
   case'mk-view':S.mk.view=d.v;break;
   case'm-w':S.mw=d.v;break;
+  case'lmode':S.lmode=d.v;break;
   case'lph':S.lph=d.v;S.oopSel=null;S.sel=null;break;
   case'oop-slot':{const i=+d.i;if(S.oopSel==null||S.oopSel===i)S.oopSel=S.oopSel===i?null:i;else{oopSwap(T(S.user),S.oopSel,i);S.oopSel=null;}break;}
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;if(d.go)S.view=d.go;document.querySelector('main')?.scrollTo?.(0,0);break;
@@ -256,7 +259,7 @@ document.addEventListener('click',e=>{
   case'rs-go':{const v=document.getElementById('rsTxt')?.value;if(importCode(v)){toast('Partida restaurada.');return;}S.modal={type:'restore',err:'El código no es válido o está incompleto. Copia el texto entero, empezando por EB1:'};break;}
   case'ct-sel':S.ctSel=+d.v;break;
   case'ct-open':S.modal=null;S.view='copas';S.cupTab='ct';S.ctSel=+d.v;break;
-  case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);if(hasTitle('sec')&&(d.v==='exi'||d.v==='bro'))r.d=r.d>0?r.d*1.4:r.d*.6;m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
+  case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);if(d.v==='exi'||d.v==='bro'){if(m.ref.k!=='fr')tInc('bro');if(hasTitle('sec'))r.d=r.d>0?r.d*1.4:r.d*.6;}m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
   case'scout-hire':{const i=S.scoutPool.findIndex(x=>x.id===d.id);if(i>=0&&S.scoutPool[i].fee&&S.budget<S.scoutPool[i].fee){toast(`No te llega para la indemnización (${money(S.scoutPool[i].fee)}).`);break;}if(i>=0&&S.scouts.length<staffMax('sc')){const sc=S.scoutPool.splice(i,1)[0];if(sc.fee){S.budget=r3(S.budget-sc.fee);if(T(sc.club))T(sc.club).cash=r2((T(sc.club).cash||0)+sc.fee);sc.fee=0;sc.club=null;}sc.reg=Math.max(0,regionOf(LG(uLg()).c));S.scouts.push(sc);toast(`${sc.name} se une como ojeador.`);}break;}
   case'scout-fire':S.scouts=S.scouts.filter(x=>x.id!==d.id);break;
   case'pros-sign':signProspect(d.id);break;
@@ -383,7 +386,7 @@ document.addEventListener('change',e=>{
  else if(id==='rotTh'){S.rot={th:+v};}
  else if(id==='awC'){const c=+v,cur=LG(S.awLg!=null?S.awLg:uLg());S.awLg=findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1)).id;}
  else if(id==='lgC'){const c=+v,cur=LG(S.ligaLg);S.ligaLg=(findLg(c,Math.min(cur.lv,COUNTRIES[c].lv-1))).id;}
- else if(map[id]){S.mk[map[id]]=v;S.mk.limit=40;}
+ else if(map[id]){S.mk[map[id]]=v;S.mk.limit=40;if(id==='mksort')S.mk.dir=1;}
  else if(id==='mkok'){S.mk.ok=e.target.checked;S.mk.limit=40;}
  else if(id==='mklast'){S.mk.last=e.target.checked;S.mk.limit=40;}
  else if(id==='mkrep'){S.mk.rep=e.target.checked;S.mk.limit=40;}

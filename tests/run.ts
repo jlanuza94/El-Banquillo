@@ -355,11 +355,11 @@ const app = document.getElementById('app')!;
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
   { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
     const t = T(S.user); t.subs = []; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
-    ok(app.querySelector('.fmlist') && app.querySelectorAll('.fsb').length >= 1 && app.querySelectorAll('.frow[data-fit]').length > 0 && app.querySelectorAll('.fpitch .slot[data-i]').length === 11, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
+    ok(app.querySelector('.fmlist') && app.querySelectorAll('.fsb').length >= 1 && app.querySelectorAll('.frow[data-fit]').length > 0 && app.querySelectorAll('.vpitch .slot[data-i]').length === 11, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
     { const t = T(S.user); t.oop = Object.keys(FORMS).find(f => f !== t.formation && f.startsWith('4-')) || Object.keys(FORMS).find(f => f !== t.formation); const mp = oopMap(t);
       ok(mp && new Set(mp).size === mp.length && mp[0] === 0 && oopLineup(t.lineup, mp).filter(Boolean).length === t.lineup.filter(Boolean).length, `forma sin balón ${t.formation} → ${t.oop}: cada jugador tiene su puesto`);
       oopSwap(t, mp[1], mp[2]); ok(oopMap(t)[1] === mp[2], 'intercambiar puestos sin balón');
-      S.lph = 'oop'; render(); ok(app.querySelectorAll('.fpitch .oopm').length === 11 && app.querySelector('#oopSel'), 'alineación sin balón en pantalla');
+      S.lph = 'oop'; render(); ok(app.querySelectorAll('.vpitch .oopm').length === 11 && app.querySelector('#oopSel'), 'alineación sin balón en pantalla');
       const m = createMatchF(nextMatchF().ref); const lg = {}; tacModsF(m, m.us, lg); ok(m.oop && lg.oop, 'la forma sin balón cuenta en el partido'); S.lph = 'ip'; t.oop = null; t.oopMap = null; }
     ok(app.querySelectorAll('[data-a="vtab"]').length === 7, 'siete pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
@@ -383,7 +383,7 @@ const app = document.getElementById('app')!;
     const i = sl.indexOf('DC'), d0 = ps.du[i]; t.duty[i] = 'def'; t.pi[i] = ['esp'];
     const e = posTeam(sl, t.duty, t.pi); ok(e.own < 1 && e.opp < 1, 'delantero con cometido defender: menos ataque y más seguridad');
     ok(posMult('DC', 'def', ['esp'], 'sc') < 1 && posMult('DC', 'ata', ['esp'], 'sc') > 1.1, 'goles del jugador según cometido e instrucciones');
-    S.view = 'tacticas'; S.vt = { tac: 'ord' }; S.posSel = i; render(); ok(app.querySelectorAll('.pcard').length === sl.length && app.querySelector('[data-a="pi-tog"]') && app.textContent.includes('Mejores de tu plantilla'), 'pantalla de posiciones');
+    S.view = 'tacticas'; S.vt = { tac: 'ord' }; S.posSel = i; render(); ok(app.querySelectorAll('.tchip').length === sl.length && app.querySelector('[data-a="pi-tog"]') && app.textContent.includes('Mejores de tu plantilla'), 'pantalla de posiciones');
     const f0 = t.formation, other = Object.keys(FORMS).find(f => f !== f0 && slotsOf(f).includes('DC')); setFormation(other);
     const j = slotsOf(other).indexOf('DC'); ok(t.duty.length === slotsOf(other).length && t.duty[j] === 'def' && t.pi[j].includes('esp'), 'al cambiar de formación se conserva lo del puesto');
     setFormation(f0); t.duty[i] = d0; t.pi[i] = []; S.vt = {}; S.view = 'inicio'; }
@@ -619,8 +619,9 @@ const app = document.getElementById('app')!;
   }
   { // ronda FMM 2: títulos del entrenador, relaciones, instrucciones nuevas, previa y lista de partidos
     const MT = await import('../src/mtitles'), RL = await import('../src/relations'), TC = await import('../src/tactics');
-    ok(MT.hasTitle('sec') && MT.hasTitle('tod') && !MT.tUnlocked('pad'), 'títulos: empiezas con uno por categoría y los demás bloqueados');
-    S.mgr.tc.games = 60; MT.checkTitles(); MT.setTitle('pad'); ok(MT.tUnlocked('pad') && MT.hasTitle('pad') && !MT.hasTitle('sec'), 'títulos: se desbloquean jugando y puedes cambiar el de la categoría');
+    S.mgr.tc = {}; S.mgr.titles = {}; S.mgr.tnew = {};
+    ok(!MT.hasTitle('sec') && !MT.tUnlocked('sec') && !MT.tUnlocked('pad'), 'títulos: empiezas sin ninguno, todos se ganan jugando');
+    S.mgr.tc.games = 60; MT.checkTitles(); const auto = MT.hasTitle('pad'); MT.tInc('bro', 8); MT.setTitle('sec'); ok(auto && MT.hasTitle('sec') && !MT.hasTitle('pad'), 'títulos: se desbloquean jugando y puedes cambiar el de la categoría');
     MT.setTitle('roc'); ok(!MT.hasTitle('roc'), 'títulos: uno bloqueado no se puede elegir');
     const R = RL.relations(squad(S.user)[5]); ok(R.infL && R.hier && R.group && Array.isArray(R.pos) && Array.isArray(R.neg), 'relaciones del vestuario: influencia, jerarquía, grupo y relaciones');
     const t = T(S.user); t.tac = Object.assign({}, t.tac || {}, { ent: 'dur', off: 'si', tie: 'si' });

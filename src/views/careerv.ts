@@ -61,12 +61,12 @@ function titlesP(){const M=S.mgr,my=myTitles(),cat=(S.vt&&S.vt.ttc)||'peo',lvl=m
  const L=Object.entries(TITLES).filter(([,T])=>T[0]===cat);
  return `<div class="ttl"><div class="tcard"><div class="tsil"><svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="20" r="11" fill="#0d0d12"/><path d="M8 60c1-17 10-25 22-25s21 8 22 25z" fill="#0d0d12"/></svg><span class="tfl">${nf(M.nat??0)}</span>${crest(T(S.user),'sm')}</div>
   <b class="trole">Primer entrenador</b><span class="trep">${repLabel(M.rep)}</span><span class="tclub">${esc(T(S.user).name)}</span><span class="ttier ${tier[1]}">${tier[0]}</span>
-  <div class="tmy">${TCATS.map(([c,n])=>`<span title="${esc(n)}">${TITLES[my[c]][1]} ${esc(TITLES[my[c]][2])}</span>`).join('')}</div></div>
+  <div class="tmy">${TCATS.map(([c,n])=>`<span title="${esc(n)}">${my[c]?TITLES[my[c]][1]+' '+esc(TITLES[my[c]][2]):'🔒 '+esc(n)+': sin título'}</span>`).join('')}</div></div>
  <div class="tmain"><div class="seg ttabs">${TCATS.map(([c,n])=>`<button data-a="car-tcat" data-v="${c}" aria-pressed="${c===cat}">${esc(n)}</button>`).join('')}</div>
   <div class="eyebrow" style="text-align:center;margin:8px 0 6px">Reputación del entrenador</div>
   <div class="tgrid">${L.map(([k,T])=>{const on=tUnlocked(k),sel=my[cat]===k,r=T[5];return `<button class="ttile${on?'':' lock'}${sel?' sel':''}" ${on?`data-a="car-title" data-v="${k}"`:'disabled'}><span class="tico">${on?T[1]:'🔒'}</span><span class="tt"><b>${esc(T[2])}</b>${on?`<small>${esc(T[4])}</small>`:`<small>${esc(r[2])} · ${Math.min(tCount(r[0]),r[1])}/${r[1]}</small><i class="tprog"><i style="width:${Math.min(100,tCount(r[0])/r[1]*100)}%"></i></i>`}</span></button>`;}).join('')}</div>
-  <div class="tdesc"><h3>${cur[1]} ${esc(cur[2])}</h3><p>${esc(cur[3])} <b>${esc(cur[4])}</b></p></div>
-  <p class="small muted" style="margin:6px 0 0">Elige un título por categoría: es tu sello como entrenador. Los bloqueados se ganan jugando; toca uno desbloqueado para lucirlo.</p></div></div>`;}
+  <div class="tdesc">${cur?`<h3>${cur[1]} ${esc(cur[2])}</h3><p>${esc(cur[3])} <b>${esc(cur[4])}</b></p>`:`<h3>Aún no tienes título en ${esc(TCATS.find(x=>x[0]===cat)[1].toLowerCase())}</h3><p>Cumple uno de los retos de arriba para ganarlo: se te pondrá solo y podrás cambiarlo cuando consigas otros.</p>`}</div>
+  <p class="small muted" style="margin:6px 0 0">Los títulos se ganan jugando: ninguno viene de regalo. Cuando consigues uno, toca su tarjeta para lucirlo (uno por categoría).</p></div></div>`;}
 export function carreraView(){const tb=vtab('car',[['per','Perfil'],['tit','Títulos'],['for','Formación'],['emp','Empleo'],['tra','Trayectoria'],['ins','Insignias']],'per');
  return tb.bar+(tb.cur==='for'?trainingP():tb.cur==='emp'?jobsP():tb.cur==='tra'?historyP():tb.cur==='ins'?badgesP():tb.cur==='tit'?titlesP():`<div class="grid">${profileP()}</div>`);}
 /** Normativa: requisitos por competición, con fuente, revisión y estado de verificación. */

@@ -845,3 +845,77 @@ tr.tsl td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .ccname{font-size:15px;margin-top:4px}
 @media (max-width:640px){.ccw{grid-template-columns:1fr}.ccside{display:none}.cclic{grid-template-columns:1fr}}
 @media (orientation:landscape) and (max-height:540px){.ccfig{height:70px}.ccfig svg{height:64px}.ccopt{padding:4px 8px}}
+/* Campo vertical estilo FMM (alineación y táctica) */
+.vpitch{position:relative;width:100%;max-width:min(100%,calc((100dvh - 190px)*1.25));aspect-ratio:100/80;margin:6px auto 0;border-radius:8px;overflow:hidden;background:repeating-linear-gradient(180deg,#2c9a48 0 10%,#279043 10% 20%);box-shadow:inset 0 0 50px rgba(0,0,0,.25)}
+.vpitch .ln{position:absolute;border:2px solid rgba(255,255,255,.7);pointer-events:none}
+.vpitch .out{inset:3%}.vpitch .half{left:3%;right:3%;top:50%;border-width:2px 0 0 0}
+.vpitch .circ{left:50%;top:50%;width:16%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%)}
+.vpitch .b1{left:28%;right:28%;top:3%;height:15%;border-top:0}.vpitch .b2{left:28%;right:28%;bottom:3%;height:15%;border-bottom:0}
+.vpitch .g1{left:40%;right:40%;top:3%;height:6%;border-top:0}.vpitch .g2{left:40%;right:40%;bottom:3%;height:6%;border-bottom:0}
+.vpitch .atk{position:absolute;left:4%;top:4%;font-size:10px;font-weight:800;letter-spacing:.08em;color:rgba(255,255,255,.55)}
+.slot.vs{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;padding:0;border:0;background:none;color:#fff;cursor:pointer;min-width:58px;z-index:1}
+.vs .vpos{min-width:34px;padding:2px 5px;border-radius:4px;font-weight:900;font-size:11px;letter-spacing:.02em;text-align:center;background:#1f9d55;color:#fff;border:1.5px solid rgba(255,255,255,.8);box-shadow:0 2px 4px rgba(0,0,0,.35)}
+.vs .vpos.su2{background:#9bb31d}.vs .vpos.su3{background:#e07a2a}.vs .vpos.su4{background:#c23a2e}.vs .vpos.su0{background:rgba(0,0,0,.35);border-style:dashed}
+.vs .vnm{font-size:11px;font-weight:800;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.6);white-space:nowrap;max-width:84px;overflow:hidden;text-overflow:ellipsis}
+.vs .vv{font-size:10px;font-weight:800;padding:0 4px;border-radius:3px;line-height:14px;background:var(--q3,#d6a32b);color:#111}
+.vs .vv.q1{background:#c8352e;color:#fff}.vs .vv.q2{background:#e07a2a;color:#fff}.vs .vv.q3{background:#d6a32b}.vs .vv.q4{background:#7cc242}.vs .vv.q5{background:#1f9d55;color:#fff}.vs .vv.qv{background:#e9e4dc}.vs .vv.qh{background:none;font-size:13px}.vs .vv.q0{background:#555;color:#ddd}
+.vs .ven{position:absolute;top:-3px;right:6px;width:7px;height:7px;border-radius:50%;background:#e0a33a;box-shadow:0 0 0 1.5px #fff}.vs .ven.low{background:#c8352e}
+.slot.vs.sel .vpos{outline:3px solid #f3c64a;outline-offset:1px}.slot.vs.bad .vnm{color:#ffb4ae}.slot.vs.empty{opacity:.85}
+.fmmL .lmode{display:flex;flex-wrap:wrap;margin-top:6px}.lmode button{padding:3px 8px;font-size:12px}
+.fmlist .q.qv,.fmlist .q.qh,.fmlist .q.q0{background:transparent;color:inherit;font-size:12px;min-width:0}
+@media (orientation:landscape) and (max-height:540px){.vpitch{max-width:min(100%,calc((100dvh - 150px)*1.25))}.vs .vnm{font-size:10px}.vs .vpos{font-size:10px;min-width:30px;padding:1px 4px}}
+.vpitch{aspect-ratio:100/68;max-width:min(100%,calc((100dvh - 150px)*100/68))}
+.vover{position:absolute;right:3.5%;bottom:4%;display:flex;gap:4px;z-index:2}.vover select{padding:2px 4px;font-size:11px;border-radius:6px;max-width:120px}.vover .btn{padding:3px 8px;font-size:10px}
+@media (orientation:landscape) and (max-height:540px){.vpitch{max-width:min(100%,calc((100dvh - 128px)*100/68))}.fmm .panel{padding:6px 8px}}
+/* Táctica: chips de rol sobre el campo vertical (como el FMM) */
+.tacp{max-width:min(100%,calc((100dvh - 150px)*100/68))}
+.tchip{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;padding:0;border:0;background:none;color:#fff;cursor:pointer;z-index:1;min-width:60px}
+.tchip .tpos{min-width:38px;padding:2px 6px;border-radius:4px;font-weight:900;font-size:11px;text-align:center;color:#fff;background:#1f9d55;border:1.5px solid rgba(255,255,255,.85);box-shadow:0 2px 4px rgba(0,0,0,.35)}
+.tchip .tpos.du-def{background:#2f6fd0}.tchip .tpos.du-ata{background:#d0452f}.tchip .tpos.du-apo{background:#1f9d55}
+.tchip b{font-size:11px;text-shadow:0 1px 2px #000,0 0 4px rgba(0,0,0,.6);white-space:nowrap;max-width:86px;overflow:hidden;text-overflow:ellipsis}
+.tchip .du{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:0 4px;border-radius:3px;background:rgba(0,0,0,.45)}
+.tchip.on .tpos{outline:3px solid #f3c64a;outline-offset:1px}
+.tchip.lk-g .tpos{box-shadow:0 0 0 3px #8dff6a}.tchip.lk-b .tpos{box-shadow:0 0 0 3px #ff5a4d}
+.tchip .synb{position:absolute;top:-8px;right:-2px;display:flex;gap:2px}.tchip .synb i{font-style:normal;font-size:9px;font-weight:900;padding:0 3px;border-radius:6px;color:#fff}.tchip .synb .g{background:#2f9a4e}.tchip .synb .b{background:#c8463e}
+/* Mercado: cabeceras que ordenan la lista completa y selector Jugadores / Personal */
+.mkth{background:none;border:0;padding:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;white-space:nowrap}
+th.sorted .mkth{color:var(--accent)}
+.mklg{white-space:nowrap;font-size:12px}
+.wbanner{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.mkkind{flex:none}.mkkind button{padding:5px 12px}
+/* Calendario mensual más limpio */
+.fdh{display:flex;align-items:center;gap:4px;min-width:0}
+.fday .hoy{font-size:9.5px;font-weight:900;text-transform:uppercase;padding:0 5px;border-radius:3px;background:var(--accent);color:#111}
+.fday.today{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.fday.we{background:color-mix(in srgb,var(--surface) 88%,#000)}
+.fday.pre0{background:color-mix(in srgb,var(--surface) 50%,transparent)}.fday.pre0 .dn{opacity:.4}
+.ftr{margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--muted);min-width:0;overflow:hidden}.ftr small{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fnote{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.fnote.more{align-self:flex-start;font-weight:800}
+.fev.k-pt{border-left-color:#e0473e;background:color-mix(in srgb,#e0473e 16%,var(--surface))}
+@media (orientation:landscape) and (max-height:540px){.ftr small{display:none}.fday{height:calc((100dvh - 168px)/5)}}
+/* Cuadro del torneo de pretemporada */
+.bracket{display:grid;grid-template-columns:1.2fr 1.2fr .9fr;gap:12px;align-items:center}
+.brc{display:flex;flex-direction:column;gap:10px}
+.brm{border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.brt{display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:13px;min-width:0}.brt+.brt{border-top:1px solid var(--line)}
+.brt span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brt b{font-variant-numeric:tabular-nums}
+.brt.me{background:color-mix(in srgb,var(--accent) 14%,transparent);font-weight:700}.brt.w b{color:var(--win)}.brt.l{opacity:.6}
+.brch .brt{border:1px solid var(--accent);border-radius:8px;font-weight:800}
+@media (max-width:560px){.bracket{grid-template-columns:1fr}}
+/* Pretemporada en Inicio */
+.prep2{margin-bottom:12px;border-top:3px solid var(--accent)}
+.pprog{position:relative;height:18px;border-radius:9px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden;margin-bottom:8px}
+.pprog i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#1f9d55,#7cc242)}.pprog span{position:relative;display:block;text-align:center;font-size:11px;font-weight:800;line-height:18px}
+.ptk{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.ptk1{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
+.ptk1 .pti{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:color-mix(in srgb,var(--accent) 22%,transparent);font-size:14px}
+.ptk1.ok{opacity:.7}.ptk1.ok .pti{background:#1f9d55;color:#fff;font-weight:900}.ptk1:not(.ok):not([disabled]):hover{border-color:var(--accent)}
+.pcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.pcol{padding:10px;border-radius:10px;background:color-mix(in srgb,var(--ink) 5%,transparent);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.pcol h3{margin:0;font-size:15px}.pcol h3 small{color:var(--muted);font-size:12px;margin-left:4px}.pcol p{margin:0}
+.prr{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.prr span{flex:1;min-width:0;display:flex;flex-direction:column}.prr b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prr small{font-size:11px;color:var(--muted)}
+.prr i{font-style:normal;font-size:11px;font-weight:800;color:var(--accent);white-space:nowrap}.prr[disabled]{opacity:.55;cursor:default}
+.ptourc{border-color:color-mix(in srgb,#e0473e 50%,var(--line))}
+
+.prr .crest{flex:none;width:28px;height:28px}.ptk1{font-size:12px;padding:6px 7px}.ptk1 span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:900px){.ptk{grid-template-columns:repeat(3,minmax(0,1fr))}}

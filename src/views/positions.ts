@@ -9,9 +9,11 @@ import {eff,slotsOf,userRoles} from '../tactics';
 import {formRows} from '../freeboard';
 import {roleDef,roleList} from '../roles';
 import {DUTIES,piList,posSummary,userPos} from '../positions';
-import {nameBtn} from './common';
+import {nameBtn,VLINES} from './common';
 import {roleFam} from '../tactics2';
 
+/** Abreviatura del rol (como en el FMM: DLI, MCE, DT…): iniciales del nombre del rol, o el puesto si no hay rol. */
+function roleAbbr(s,rk){const n=(roleDef(s,rk)||[])[1]||s,w=n.replace(/\(.*\)/,'').split(/[\s-]+/).filter(x=>x&&!/^(de|del|la|el|en|a|y|al)$/i.test(x));return w.length>1?w.slice(0,3).map(x=>x[0].toUpperCase()).join(''):/^(central|portero)$/i.test(n)?s:n.slice(0,3).toUpperCase();}
 export function posicionesHTML(){
  const t=T(S.user),sl=slotsOf(t.formation),ro=userRoles(),{du,pi}=userPos(sl);
  let sel=S.posSel;if(sel==null||sel>=sl.length)sel=S.posSel=Math.max(0,sl.indexOf('DC'));
@@ -21,8 +23,8 @@ export function posicionesHTML(){
  const C=slotCoords(t.formation),B={};C.forEach((c,i)=>{const key=Math.round(c.y/9);(B[key]=B[key]||[]).push({s:c.s,i,x:c.x,y:c.y});});const R=Object.keys(B).map(k=>({y:+k,it:B[k].sort((a,b)=>a.x-b.x)})).sort((a,b)=>a.y-b.y);
  const card=({s,i})=>{const p=PL(t.lineup[i]),d=DUTIES[du[i]]||DUTIES.apo,n=(pi[i]||[]).length;
   const lk=i!==sel&&link(i),g=cnt(i,1),b=cnt(i,-1);
-  return `<button class="pcard${i===sel?' on':''}${lk?(lk[2]>0?' lk-g':' lk-b'):''}" data-a="pos-sel" data-i="${i}">${g||b?`<span class="synb">${g?`<i class="g">+${g}</i>`:''}${b?`<i class="b">−${b}</i>`:''}</span>`:''}<span class="pos ${GRP[s]}">${s}</span><b>${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'—'}</b><span class="rl">${esc(roleDef(s,ro[i])[1])}</span><span class="du du-${du[i]}">${d.n}${n?` · ${n} instr.`:''}</span></button>`;};
- const field=`<div class="pfield">${R.map(r=>`<div class="prow">${r.it.map(card).join('')}</div>`).join('')}</div>`;
+  return `<button class="tchip${i===sel?' on':''}${lk?(lk[2]>0?' lk-g':' lk-b'):''}" style="left:${C[i].x.toFixed(1)}%;top:${C[i].y.toFixed(1)}%" data-a="pos-sel" data-i="${i}">${g||b?`<span class="synb">${g?`<i class="g">+${g}</i>`:''}${b?`<i class="b">−${b}</i>`:''}</span>`:''}<span class="tpos du-${du[i]}">${esc(roleAbbr(s,ro[i]))}</span><b>${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'—'}</b><span class="du du-${du[i]}">${d.n}${n?` · ${n}`:''}</span></button>`;};
+ const field=`<div class="vpitch tacp">${VLINES}<span class="atk">▲ Ataque</span>${R.map(r=>r.it.map(card).join('')).join('')}</div>`;
  // detalle del puesto elegido
  const s=sl[sel],p=PL(t.lineup[sel]),rk=ro[sel],myPi=pi[sel]||[];
  const best=squad(S.user).filter(x=>!x.loan&&available(x)).map(x=>[x,eff(x,s,null,rk)]).sort((a,b)=>b[1]-a[1]).slice(0,5);

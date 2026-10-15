@@ -81,7 +81,7 @@ const winner=(h,a,sh,sa,pen)=>sh>sa?h:sa>sh?a:pen[0]>pen[1]?h:a;
 /** Tras jugar tu partido del torneo (m: el partido ya acabado). sim(h,a) simula un partido de la IA y devuelve [goles h, goles a]. */
 export function ptAfter(m,sim,shootout,money){
  const P=S.ptour,us=m.us,h=m.h,a=m.a,pen=m.score.h===m.score.a?shootout():null,w=winner(h,a,m.score.h,m.score.a,pen||[0,0]);
- P.res.push({f:P.st,h,a,sh:m.score.h,sa:m.score.a,pen});
+ P.res.push({f:P.st,h,a,sh:m.score.h,sa:m.score.a,pen,d:S.day??0});
  if(P.st==='sf'){const [x,y]=P.sf[1],[gx,gy]=sim(x,y),p2=gx===gy?shootout():null,w2=winner(x,y,gx,gy,p2||[0,0]);P.res.push({f:'sf',h:x,a:y,sh:gx,sa:gy,pen:p2});
   if(w===S.user){P.final=[S.user,w2];P.st='final';return `${P.n}: ¡a la final! Ganas ${m.score[us]}-${m.score[us==='h'?'a':'h']}${pen?' en los penaltis':''}. En la final, contra ${T(w2).name}.`;}
   const [gf1,gf2]=sim(w,w2),p3=gf1===gf2?shootout():null,ch=winner(w,w2,gf1,gf2,p3||[0,0]);P.res.push({f:'final',h:w,a:w2,sh:gf1,sa:gf2,pen:p3});P.champ=ch;P.st='done';

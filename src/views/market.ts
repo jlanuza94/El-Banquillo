@@ -1,17 +1,18 @@
 /* El Banquillo · views/market.js — Pantallas del mercado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {staffView} from './staff';
 import {wcs} from '../state';
 import {TS} from '../marketfm';
 import {missionCountries,missionOf,missionScouts} from '../scoutplus';
 import {canBuyback} from '../negotiate';
 import {trendTag} from '../economy';
 import {esc,money,plain} from '../core';
-import {ATTRS,COUNTRIES,LV_NAMES,AT_NAME,AT_SH,POS_ORD,SPN,posChip} from '../data';
+import {AT_COLS,ATTRS,COUNTRIES,LV_NAMES,AT_NAME,AT_SH,POS_ORD,SPN,posChip} from '../data';
 import {RT,LG,PL,S,T,crest,lgName,pBadge,rt,seasonLabel,squad} from '../state';
 import {table} from '../tactics';
 import {askPrice,inWindow,refuses,sell,windowTxt} from '../market';
 import {contractTxt} from '../contracts';
-import {attrCells,attrHead,clubCell,nameBtn,pBadgeS,potTxt} from './common';
+import {attrCells,attrHead,clubCell,nameBtn,nf,pBadgeS,potTxt} from './common';
 import {faceSVG,starsHTML,starsOf} from './pcard';
 import {suggestions} from '../quick';
 import {interested,joinWill,licName,licence} from '../mgrcareer';
@@ -19,7 +20,7 @@ import {seen} from '../scouting';
 import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
 export function marketRow(p){
  const pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id),gem=p.gem&&knowledge(p)>=60?' <span class="tag gem" title="Tu ojeador cree que puede ser una joya">💎</span>':'';
- return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}${gem}${(()=>{if(p.team===S.user)return '';const w=joinWill(p);return ` <span class="will ${w.v>=70?'hi':w.v>=40?'md':'lo'}" title="Ganas de venir: ${w.v}%${w.why?' · '+esc(w.why):''}">${w.v>=70?'😊':w.v>=40?'😐':'🙁'}</span>`;})()}</td><td>${clubCell(p)}</td><td class="n">${p.age}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${S.mk&&S.mk.attr?attrCells(p):''}<td class="n">${money(p.value)}</td><td>${contractTxt(p)}</td><td class="n">${money(pr)}${trendTag(p)}</td>
+ return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}${gem}${(()=>{if(p.team===S.user)return '';const w=joinWill(p);return ` <span class="will ${w.v>=70?'hi':w.v>=40?'md':'lo'}" title="Ganas de venir: ${w.v}%${w.why?' · '+esc(w.why):''}">${w.v>=70?'😊':w.v>=40?'😐':'🙁'}</span>`;})()}</td><td class="n">${p.age}</td><td>${p.team===null?'<span class="tag">Libre</span>':`<span class="teamcell">${crest(T(p.team),'sm')}${esc(T(p.team).name)}</span>`}</td><td class="mklg">${p.team===null?'—':`${nf(LG(T(p.team).lg).c)} ${esc(lgName(T(p.team).lg,true))}`}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${S.mk&&S.mk.attr?attrCells(p):''}<td>${contractTxt(p)}</td><td class="n">${money(pr)}${trendTag(p)}</td>
  <td class="r">${no?`<span class="tag" title="${esc(joinWill(p).why||'No quiere jugar en tu liga')}">No vendría</span>`:`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm ${S.budget>=pr?'primary':''}" data-a="neg" data-id="${p.id}">Ofertar</button>${canBuyback(p)?`<button class="btn sm primary" data-a="buyback" data-id="${p.id}" title="Cláusula de recompra">Recomprar · ${money(p.bb.price)}</button>`:''}</span>`}</td></tr>`;
 }
 /** Tarjeta de jugador para el mercado (estilo FM Mobile): cara, estrellas, edad, club y precio. */
@@ -54,7 +55,8 @@ export function mkList(){
   return `<p class="small muted" style="margin:0 0 8px"><b>${nl} en la lista de transferibles</b> (arriba). Marca el estado de cada jugador: <b>Transferible</b> (le llegarán más ofertas), <b>Cedible</b> (habrá clubes que pidan su cesión) o <b>Intocable</b> (nadie preguntará por él).</p><div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Valor</th><th class="r">Sueldo/sem</th><th>Contrato</th><th>Estado</th><th></th></tr></thead><tbody>
   ${sq.map(p=>`<tr class="${p.ts==='list'?'tsl':''}"><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td class="n">${money(p.wage)}</td><td>${contractTxt(p)}</td><td>${p.loan?'':`<select data-ts="${p.id}" class="ts-${p.ts||'n'}" aria-label="Estado de ${esc(p.name)}">${Object.entries(TS).map(([k,l])=>`<option value="${k}" ${(p.ts||'')===k?'selected':''}>${l}</option>`).join('')}</select>`}</td><td class="r">${p.loan?'':`<span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm" data-a="sell" data-id="${p.id}">Buscar oferta</button><button class="btn sm" data-a="loanout" data-id="${p.id}">Ceder</button><button class="btn sm" data-a="renew" data-id="${p.id}">Renovar</button></span>`}</td></tr>`).join('')}</tbody></table></div>`;
  }
- const head=`<thead><tr><th></th><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Pot.</th>${mk.attr?attrHead():''}<th class="r">Valor</th><th>Contrato</th><th class="r">Precio</th><th></th></tr></thead>`;
+ const so0=mk.sort,dr=(mk.dir||1)>0?'▼':'▲',th=(k,l,c='')=>`<th class="${c}${so0===k?' sorted':''}"><button class="mkth" data-a="mk-sort" data-v="${k}">${l}${so0===k?' '+dr:''}</button></th>`;
+ const head=`<thead data-nosort><tr><th></th><th>Pos</th>${th('name','Nombre')}${th('age','Edad','r')}${th('club','Club')}${th('lg','País')}${th('ovr','Media','r')}${th('pot','Pot.','r')}${mk.attr?AT_COLS.map(k=>th(k,AT_SH[k],'r')).join(''):''}${th('con','Contrato')}${th('price','Precio','r')}<th></th></tr></thead>`;
  if(mk.tab==='rec')return highlights();
  if(mk.tab==='int'){const L=interested(40),lic=licence();
   return `<p class="small muted" style="margin:0 0 8px">Jugadores que tendrían ganas de fichar por tu club: buscan minutos, un club más grande o un entrenador con prestigio. Tu licencia: <b>${licName(lic)}</b> · reputación ${Math.round(S.mgr.rep)}/100. Cuanto más subas, más y mejores jugadores querrán venir.</p>${L.length?`<div class="tbl"><table>${head}<tbody>${L.map(([p])=>marketRow(p)).join('')}</tbody></table></div>`:'<div class="empty">Ahora mismo nadie de tu nivel tiene especial interés. Gana partidos, cumple objetivos y sube de licencia.</div>'}`;}
@@ -86,7 +88,7 @@ export function mkList(){
  // se ordena por lo que sabes de cada jugador (el centro de su rango), no por sus valores reales
  const memo=(fn)=>{const c=new Map();return p=>{let v=c.get(p.id);if(v===undefined){v=fn(p);c.set(p.id,v);}return v;};};
  const estOvr=memo(estOvr0),estPot=memo(estPot0),estAt=(p,k)=>memoAt(p.id+k,p,k),atC=new Map(),memoAt=(key,p,k)=>{let v=atC.get(key);if(v===undefined){v=estAt0(p,k);atC.set(key,v);}return v;};
- const so={ovr:(a,b)=>estOvr(b)-estOvr(a),price:(a,b)=>askPrice(a)-askPrice(b),age:(a,b)=>a.age-b.age,pot:(a,b)=>estPot(b)-estPot(a),ganga:(a,b)=>estOvr(b)/Math.sqrt(askPrice(b)+.05)-estOvr(a)/Math.sqrt(askPrice(a)+.05)}[mk.sort]||((a,b)=>estAt(b,mk.sort)-estAt(a,mk.sort)||estOvr(b)-estOvr(a));
+ const so1={name:(a,b)=>a.name.localeCompare(b.name),club:(a,b)=>(a.team===null?'~':T(a.team).name).localeCompare(b.team===null?'~':T(b.team).name),lg:(a,b)=>(a.team===null?99:LG(T(a.team).lg).lv)-(b.team===null?99:LG(T(b.team).lg).lv),con:(a,b)=>(a.contract||0)-(b.contract||0),ovr:(a,b)=>estOvr(b)-estOvr(a),price:(a,b)=>askPrice(b)-askPrice(a),age:(a,b)=>a.age-b.age,pot:(a,b)=>estPot(b)-estPot(a),ganga:(a,b)=>estOvr(b)/Math.sqrt(askPrice(b)+.05)-estOvr(a)/Math.sqrt(askPrice(a)+.05)}[mk.sort]||((a,b)=>estAt(b,mk.sort)-estAt(a,mk.sort)||estOvr(b)-estOvr(a)),dir=mk.dir||1,so=(a,b)=>so1(a,b)*dir;
  list.sort(so);
  const total=list.length;list=list.slice(0,mk.limit);
  if(!total)return `<div class="empty">Ningún jugador cumple estos filtros. Prueba a subir el precio máximo o quitar algún filtro.</div>`;
@@ -114,10 +116,15 @@ function missionsHTML(){
  ${M?`<button class="btn sm" data-a="mis-stop" data-id="${sc.id}">Volver</button>`:`<button class="btn sm primary" data-a="mis-go" data-id="${sc.id}">Enviar</button>`}</div>`;}).join('')}`;
 }
 export function mercadoView(){
+ const kind=S.mkKind==='staff'?'staff':'pl',ksw=`<div class="seg mkkind"><button data-a="mk-kind" data-v="pl" aria-pressed="${kind==='pl'}">⚽ Jugadores</button><button data-a="mk-kind" data-v="staff" aria-pressed="${kind==='staff'}">🧑‍🏫 Personal técnico</button></div>`;
+ if(kind==='staff')return `<div class="${inWindow()?'negmsg ok':'negmsg'} wbanner" style="margin:0 0 10px">${ksw}<span>${esc(windowTxt())} El personal técnico se puede fichar en cualquier momento.</span></div>`+staffView('mk');
+ return mercadoViewPl(ksw);
+}
+function mercadoViewPl(ksw){
  const mk=S.mk,wages=squad(S.user).reduce((a,p)=>a+p.wage,0);
  const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur)===v?'selected':''}>${l}</option>`).join('')}</select>`;
  const feed=S.dlD===S.day&&S.dlFeed&&S.dlFeed.length?`<section class="panel dlfeed"><div class="panel-h"><h2>⏰ Día de cierre en directo</h2><span class="eyebrow">${S.dlDone===S.day?'Mercado cerrado':'Pulsa Continuar para avanzar la hora'}</span></div>${S.dlFeed.slice().reverse().map(x=>`<div class="offer"><b class="num" style="min-width:44px">${x.h}</b><span class="t small">${esc(x.t)}</span></div>`).join('')}</section>`:'';
- return feed+`<div class="${inWindow()?'negmsg ok':'negmsg'} wbanner" style="margin:0 0 14px">${windowTxt()}</div><section class="panel"><div class="panel-h"><div class="seg"><button data-a="mk-tab" data-v="moves" aria-pressed="${mk.tab==='moves'}">Movimientos</button><button data-a="mk-tab" data-v="buy" aria-pressed="${mk.tab==='buy'}">Buscar</button><button data-a="mk-tab" data-v="rec" aria-pressed="${mk.tab==='rec'}">Recomendaciones</button><button data-a="mk-tab" data-v="short" aria-pressed="${mk.tab==='short'}">Seguimiento (${S.short.filter(id=>PL(id)&&PL(id).team!==S.user).length})</button><button data-a="mk-tab" data-v="ofe" aria-pressed="${mk.tab==='ofe'}">Ofertas${(()=>{const k=Object.values(S.neg||{}).filter(n=>n.wait||n.agreed).length+Object.values(S.offers||{}).filter(o=>o.incoming).length;return k?' ('+k+')':'';})()}</button><button data-a="mk-tab" data-v="int" aria-pressed="${mk.tab==='int'}">Interesados</button><button data-a="mk-tab" data-v="ojeo" aria-pressed="${mk.tab==='ojeo'}">Misiones de ojeo</button><button data-a="mk-tab" data-v="sell" aria-pressed="${mk.tab==='sell'}">Transferibles${(n=>n?' ('+n+')':'')(squad(S.user).filter(p=>p.ts==='list').length)}</button></div>
+ return feed+`<div class="${inWindow()?'negmsg ok':'negmsg'} wbanner" style="margin:0 0 10px">${ksw}<span>${windowTxt()}</span></div><section class="panel"><div class="panel-h"><div class="seg"><button data-a="mk-tab" data-v="moves" aria-pressed="${mk.tab==='moves'}">Movimientos</button><button data-a="mk-tab" data-v="buy" aria-pressed="${mk.tab==='buy'}">Buscar</button><button data-a="mk-tab" data-v="rec" aria-pressed="${mk.tab==='rec'}">Recomendaciones</button><button data-a="mk-tab" data-v="short" aria-pressed="${mk.tab==='short'}">Seguimiento (${S.short.filter(id=>PL(id)&&PL(id).team!==S.user).length})</button><button data-a="mk-tab" data-v="ofe" aria-pressed="${mk.tab==='ofe'}">Ofertas${(()=>{const k=Object.values(S.neg||{}).filter(n=>n.wait||n.agreed).length+Object.values(S.offers||{}).filter(o=>o.incoming).length;return k?' ('+k+')':'';})()}</button><button data-a="mk-tab" data-v="int" aria-pressed="${mk.tab==='int'}">Interesados</button><button data-a="mk-tab" data-v="ojeo" aria-pressed="${mk.tab==='ojeo'}">Misiones de ojeo</button><button data-a="mk-tab" data-v="sell" aria-pressed="${mk.tab==='sell'}">Transferibles${(n=>n?' ('+n+')':'')(squad(S.user).filter(p=>p.ts==='list').length)}</button></div>
  <span class="small muted">Presupuesto ${money(S.budget)} · Sueldos ${money(wages)}/sem · ${squad(S.user).length} jugadores</span></div>
  ${mk.tab==='buy'?`<div class="filters mkfil">
   <div class="chips">${['ALL','POR','DEF','MED','DEL'].map(p=>`<button class="btn sm ${mk.pos===p?'dark':''}" data-a="mk-pos" data-v="${p}">${p==='ALL'?'Todos':p}</button>`).join('')}</div>

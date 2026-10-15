@@ -45,6 +45,7 @@ import {buzonView} from './inbox';
 import {unread} from '../inbox';
 export function toast(msg){if(typeof document==='undefined')return;let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.className='toast';el.setAttribute('role','status');document.body.appendChild(el);}
  el.textContent=msg;el.hidden=false;clearTimeout(RT.toastT);RT.toastT=setTimeout(()=>{el.hidden=true;},3400);}
+export const VLINES='<span class="ln out"></span><span class="ln half"></span><span class="ln circ"></span><span class="ln b1"></span><span class="ln b2"></span><span class="ln g1"></span><span class="ln g2"></span>';
 export function formDots(arr){return `<span class="formdots">${arr.slice(-5).map(x=>`<span class="${x}" title="${x==='G'?'Ganado':x==='E'?'Empate':'Perdido'}">${x}</span>`).join('')}</span>`;}
 export function energyBar(e){return `<span class="bar" title="Energía ${Math.round(e)}%"><i class="${e>=75?'':e>=55?'mid':'low'}" style="width:${Math.round(e)}%"></i></span>`;}
 export function formCell(f){return f>0?`<span class="fm up">▲${f}</span>`:f<0?`<span class="fm dn">▼${-f}</span>`:`<span class="fm eq">–</span>`;}
