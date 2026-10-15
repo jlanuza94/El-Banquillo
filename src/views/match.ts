@@ -66,7 +66,21 @@ function wStrip(m,us){
  return `<div class="mstrip"><span class="msub">${m.subs[us]}/5 cambios</span>${m.lu[us].map((id,i)=>{const p=PL(id);if(!p)return '';const en=Math.round(m.en[id]??p.energy),r=rat[id];
   return `<button class="mst" ${can?`data-a="m-subout" data-id="${id}"`:'disabled'} title="${esc(p.name)} · ${en}%"><span>${sl[i]}</span><i class="hrt ${en>=75?'g':en>=55?'y':'r'}">♥</i>${r!=null?`<b class="${rq(r)}">${r.toFixed(1)}</b>`:''}</button>`;}).join('')}</div>`;
 }
+/** Previa del partido: tu once, el rival y la charla. Al hablar (o saltarla) pasas al partido. */
+function preMatchView(m){
+ const us=m.us,o=us==='h'?'a':'h',U=T(m[us]),O=T(m[o]),sl=slotsOf(m.f[us]),osl=slotsOf(m.f[o]);
+ const xi=m.lu[us].map((id,i)=>{const p=PL(id);if(!p)return '';const en=Math.round(m.en[id]??p.energy);return `<div class="pmr"><span class="pos ${GRP[sl[i]]||p.pos}">${sl[i]}</span><span class="nm">${esc(p.name)}</span><span class="q ${qcv(p.ovr/10)}">${(p.ovr/10).toFixed(1)}</span><i class="hrt ${en>=75?'g':en>=55?'y':'r'}">♥</i></div>`;}).join('');
+ const best=m.lu[o].map(id=>PL(id)).filter(Boolean).sort((a,b)=>b.ovr-a.ovr).slice(0,3);
+ return `<div class="mtopb"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button><span class="eyebrow mlbl">${esc(m.label||'Partido')}</span><span class="spacer"></span></div>
+ <div class="prem"><div class="prem-h"><div class="pmt">${crest(T(m.h),'lg')}<b>${esc(T(m.h).name)}</b></div><div class="pmvs"><b>VS</b><span>${m.wx?esc(wxTxt(m.wx)):''}${m.refr?` · árbitro ${esc(REFS[m.refr.k].n.toLowerCase())}`:''}</span></div><div class="pmt">${crest(T(m.a),'lg')}<b>${esc(T(m.a).name)}</b></div></div>
+ <div class="prem-g"><section class="panel"><div class="panel-h"><h2>Tu once</h2><span class="eyebrow">${m.f[us]} · ${MENT[m.ment[us]].label}</span></div>${xi}<button class="btn sm" data-a="view" data-v="tacticas" style="margin-top:8px">Cambiar alineación</button></section>
+ <section class="panel"><div class="panel-h"><h2>${esc(O.short)}</h2><span class="eyebrow">${m.f[o]}</span></div><p class="small muted" style="margin:0 0 6px">Sus jugadores más peligrosos:</p>${best.map(p=>`<div class="pmr"><span class="pos ${p.pos}">${p.sp}</span><span class="nm">${esc(p.name)}</span><span class="q ${qcv(p.ovr/10)}">${(p.ovr/10).toFixed(1)}</span></div>`).join('')}</section>
+ <section class="panel prtalk"><div class="panel-h"><h2>Charla antes del partido</h2></div>${Object.entries(TALKS.pre).map(([k,v])=>{const [a,b]=v.split(':');return `<button class="talkc" data-a="talk" data-p="pre" data-v="${k}"><b>${esc(a)}</b><span>${esc((b||'').trim())}</span></button>`;}).join('')}
+ <p class="small muted" style="margin:6px 0">Motivar funciona mejor si eres el débil; tranquilizar, si eres favorito o en copa. Exigir es arriesgado si el equipo viene mal.</p><button class="btn" data-a="m-preok">Saltar la charla e ir al partido →</button></section></div></div>`;
+}
+const qcv=v=>v>=8?'q5':v>=7?'q4':v>=6?'q3':v>=5?'q2':'q1';
 export function matchView(){
+ if(S.match&&S.match.us&&S.match.min===0&&!S.match.done&&!S.match.talks.pre&&!S.match.preOk)return preMatchView(S.match);
  const m=S.match,H=T(m.h),A=T(m.a),us=m.us,ut=T(m[us]);
  const poss=m.min?Math.round(m.possSum/m.min*100):50;
  const label=m.done?'Final':m.min===0?'Previa':m.paused&&m.min===45?'Descanso':fmtMin(m.min)+"'";
@@ -78,7 +92,7 @@ export function matchView(){
   <div class="row"><label class="f" style="flex:1"><span class="eyebrow">Sale</span><select id="subOut">${xi.map(x=>{const p=PL(x.id);return `<option value="${x.id}" ${m.subOut===x.id?'selected':''}>${p.pos} · ${esc(p.name)} · ${Math.round(m.en[x.id])}%${m.hurt[x.id]?' · lesionado':''}</option>`;}).join('')}</select></label>
   <label class="f" style="flex:1"><span class="eyebrow">Entra</span><select id="subIn">${bn.map(p=>`<option value="${p.id}">${p.pos} · ${esc(p.name)} · ${rt(p)}</option>`).join('')}</select></label></div>
   <div class="row"><button class="btn primary" data-a="m-dosub" ${bn.length&&xi.length?'':'disabled'}>Hacer cambio</button><button class="btn" data-a="m-subclose">Cerrar</button></div></div>`;})():'';
- const tph=m.done?null:m.min===0?'pre':(m.half&&m.min===45&&m.paused?'half':null);
+ const tph=m.done?null:m.min===0?(m.preOk?null:'pre'):(m.half&&m.min===45&&m.paused?'half':null);
  const talkP=tph&&!m.talks[tph]?`<div class="subs"><h3>${tph==='pre'?'Charla antes del partido':'Charla del descanso'}</h3><div class="chips">${Object.entries(TALKS[tph]).map(([k,v])=>`<button class="btn sm" data-a="talk" data-p="${tph}" data-v="${k}">${esc(v)}</button>`).join('')}</div><p class="small muted" style="margin:0">${tph==='pre'?'Motivar funciona mejor si eres el débil; tranquilizar, si eres favorito o en partidos de copa. Exigir es arriesgado si el equipo viene mal.':'La bronca puede despertar a un equipo que pierde, pero sienta mal si vais ganando. Con ventaja, mejor pedir calma.'}</p></div>`:'';
  const talkDone=Object.entries(m.talks).map(([ph,x])=>`<div class="negmsg ${x.d>0?'ok':x.d<-.005?'no':''}" style="margin:0 0 10px">${ph==='pre'?'Charla previa':'Descanso'}: ${esc(TALKS[ph][x.opt].split(':')[0])}: ${esc(x.txt)}</div>`).join('');
  const ctl=m.done?`<button class="btn primary big" data-a="m-finish">Ver resultados de la jornada</button>${m.us?`<button class="btn big" data-a="trep" data-v="live">📋 Informe táctico</button>`:''}`:`

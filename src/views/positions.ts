@@ -1,5 +1,6 @@
 /* El Banquillo · views/positions.ts — Tácticas › Posiciones: toca un puesto y decide rol, cometido e instrucciones (como en FM). */
 // @ts-nocheck — usa el estado heredado S.
+import {slotCoords} from '../freeboard';
 import {synergies,synergyMods} from '../synergy';
 import {esc} from '../core';
 import {GRP,ORDERS,SPN,posChip} from '../data';
@@ -17,7 +18,7 @@ export function posicionesHTML(){
  const SY=synergies(sl,ro,du,pi,t.lineup),SM=synergyMods(SY),link=i=>SY.find(x=>x[0]===sel&&x[1]===i||x[1]===sel&&x[0]===i),cnt=(i,v)=>SY.filter(x=>(x[0]===i||x[1]===i)&&Math.sign(x[2])===v).length;
  const nmOf=i=>{const p=PL(t.lineup[i]);return p?esc(p.name.split(' ').slice(1).join(' ')||p.name):sl[i];};
  // campo: filas de la formación, el ataque arriba
- const rows=[[['POR'],89]].concat(formRows(t.formation));let k=0;const R=rows.map(([list,y])=>({y,it:list.map(s=>({s,i:k++}))})).sort((a,b)=>a.y-b.y);
+ const C=slotCoords(t.formation),B={};C.forEach((c,i)=>{const key=Math.round(c.y/9);(B[key]=B[key]||[]).push({s:c.s,i,x:c.x,y:c.y});});const R=Object.keys(B).map(k=>({y:+k,it:B[k].sort((a,b)=>a.x-b.x)})).sort((a,b)=>a.y-b.y);
  const card=({s,i})=>{const p=PL(t.lineup[i]),d=DUTIES[du[i]]||DUTIES.apo,n=(pi[i]||[]).length;
   const lk=i!==sel&&link(i),g=cnt(i,1),b=cnt(i,-1);
   return `<button class="pcard${i===sel?' on':''}${lk?(lk[2]>0?' lk-g':' lk-b'):''}" data-a="pos-sel" data-i="${i}">${g||b?`<span class="synb">${g?`<i class="g">+${g}</i>`:''}${b?`<i class="b">−${b}</i>`:''}</span>`:''}<span class="pos ${GRP[s]}">${s}</span><b>${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'—'}</b><span class="rl">${esc(roleDef(s,ro[i])[1])}</span><span class="du du-${du[i]}">${d.n}${n?` · ${n} instr.`:''}</span></button>`;};

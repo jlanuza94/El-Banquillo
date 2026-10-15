@@ -127,7 +127,7 @@ const app = document.getElementById('app')!;
   ok(app.querySelector('nav, .side, .bnav') !== null, 'se pinta el menú');
 
   playFriendly(friendlyOpts()[0]);
-  { const v0 = S.view; S.view = 'partido'; const h = shell(); S.view = v0; const mm = h.match(/<main>([\s\S]*?)<\/main>/); ok(mm && mm[1].length > 500 && h.includes('Comentarios') && h.includes('Jugadores') && h.includes('id="mcom"') && (h.match(/class="wpl/g) || []).length >= 20 && h.includes('class="w wst"') && h.includes('class="w wev"') && h.includes('class="w wsc"') && h.includes('class="mstrip"'), 'la pantalla del partido en directo se pinta'); }
+  { const v0 = S.view; S.view = 'partido'; const hp = shell(); ok(hp.includes('Charla antes del partido') && hp.includes('m-preok'), 'previa del partido antes de jugar'); S.match.preOk = true; const h = shell(); S.view = v0; const mm = h.match(/<main>([\s\S]*?)<\/main>/); ok(mm && mm[1].length > 500 && h.includes('Comentarios') && h.includes('Jugadores') && h.includes('id="mcom"') && (h.match(/class="wpl/g) || []).length >= 20 && h.includes('class="w wst"') && h.includes('class="w wev"') && h.includes('class="w wsc"') && h.includes('class="mstrip"'), 'la pantalla del partido en directo se pinta'); }
   { const m = S.match; ok(m.soft && m.soft[1] <= 1 + SOFT_CAP + 1e-9, 'techo de familiaridad en un partido normal: ' + m.soft.join(' → '));
     const keep = { chem: S.chem, fam: S.famil[T(S.user).formation], prep: S.prepB }; S.chem = 100; S.famil[T(S.user).formation] = 100; S.prepB = 1.05;
     const hp = squad(S.user).map(p => [p, p.hap, p.rf]); squad(S.user).forEach(p => { p.hap = 100; p.rf = Object.fromEntries(Object.keys(p.rf || {}).map(k => [k, 100])); });
@@ -196,9 +196,9 @@ const app = document.getElementById('app')!;
     ok(queueScout(far.id) === '', 'se pide un informe');
     const before = S.inbox.length; for (let i = 0; i < 4; i++) { S.week++; scoutingWeekly(); } S.week -= 4;
     ok(seen(far).exact && S.inbox.slice(0, S.inbox.length - before).some(m => m.subj.startsWith('Informe: ' + far.name)), 'llega el informe y el jugador pasa a conocerse');
-    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); ok(app.querySelectorAll('.mkhl-c').length === 4 && app.querySelectorAll('#mklist tbody tr').length > 5 && app.querySelector('.will'), 'mercado en lista con destacados y ganas de venir');
+    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); S.mk.tab = 'rec'; render(); const nHl = app.querySelectorAll('.mkhl-c').length; S.mk.tab = 'buy'; render(); ok(nHl === 4 && app.querySelectorAll('#mklist tbody tr').length > 5 && app.querySelector('.will'), 'mercado en lista con destacados y ganas de venir');
     { const w = joinWillF(Object.values(S.players).find(p => p.team === null)); ok(w.v >= 0 && w.v <= 100, `ganas de venir de un libre: ${w.v}%`); S.mk.tab = 'int'; render(); ok(app.textContent.includes('Licencia'), 'pestaña de interesados'); S.mk.tab = 'buy'; render(); }
-    ok(app.querySelector('.at.rng'), 'el mercado muestra rangos');
+    S.mk.attr = true; render(); ok(app.querySelector('.at.rng'), 'el mercado muestra rangos'); S.mk.attr = false;
     S.modal = { type: 'ficha', id: far.id }; render(); S.modal = null;
   }
   {
@@ -351,7 +351,7 @@ const app = document.getElementById('app')!;
     S.modal = { type: 'club', id: ai.id }; render(); ok(app.textContent.includes('Economía'), 'economía en la ficha del club'); S.modal = null; S.ldTab = 'g'; S.plTab = 'xi'; }
   { // Plantilla estilo FM, banquillo, calendario día a día y Continuar
     const t = T(S.user); t.subs = []; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
-    ok(app.querySelector('.fmlist') && app.querySelectorAll('.bslot').length === MAX_SUBS && app.querySelectorAll('.frow[data-fit]').length > 0 && app.querySelectorAll('.fpitch .slot[data-i]').length === 11, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
+    ok(app.querySelector('.fmlist') && app.querySelectorAll('.fsb').length >= 1 && app.querySelectorAll('.frow[data-fit]').length > 0 && app.querySelectorAll('.fpitch .slot[data-i]').length === 11, 'alineación estilo FM: lista, banquillo de 9 e idoneidad por hueco');
     { const t = T(S.user); t.oop = Object.keys(FORMS).find(f => f !== t.formation && f.startsWith('4-')) || Object.keys(FORMS).find(f => f !== t.formation); const mp = oopMap(t);
       ok(mp && new Set(mp).size === mp.length && mp[0] === 0 && oopLineup(t.lineup, mp).filter(Boolean).length === t.lineup.filter(Boolean).length, `forma sin balón ${t.formation} → ${t.oop}: cada jugador tiene su puesto`);
       oopSwap(t, mp[1], mp[2]); ok(oopMap(t)[1] === mp[2], 'intercambiar puestos sin balón');

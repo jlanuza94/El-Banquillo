@@ -28,7 +28,7 @@ import {recallLoan,setDev} from './devplus';
 import {delSearch,loadSearch,saveSearch,searchName,startMission,stopMission} from './scoutplus';
 import {PRESETS,applyPreset} from './tactics2';
 import {userPos} from './positions';
-import {removeFromTeam,setSub,subsOf} from './tactics';
+import {MAX_SUBS,removeFromTeam,setSub,subsOf} from './tactics';
 import {continueDay} from './calendar';
 import {FREE,afterMove,coordsOf,moveDot,spAt} from './freeboard';
 import {roleList} from './roles';
@@ -100,6 +100,10 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'lj-k':S.ljK=d.v;break;
+  case'mk-attr':S.mk.attr=!S.mk.attr;break;
+  case'm-preok':if(S.match)S.match.preOk=true;break;
+  case'sub-add':{const t=T(S.user),n=subsOf(t).length;if(n<MAX_SUBS)setSub(d.id,n);break;}
+  case'sub-rem':removeFromTeam(d.id);break;
   case'mk-view':S.mk.view=d.v;break;
   case'm-w':S.mw=d.v;break;
   case'lph':S.lph=d.v;S.oopSel=null;S.sel=null;break;

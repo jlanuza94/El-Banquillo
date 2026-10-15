@@ -7,6 +7,7 @@ import {mkTie} from '../competitions';
 import {galaAwards} from '../extras';
 import {FIRST_LG,cal,lgDay,MONTHS_L,agenda,dateOf,dateTxt,dayOfEvent,daysToMatch,eventDays,seasonStart,syncDay} from '../calendar';
 import {stadiumSVG} from './title';
+import {SES,sched} from '../training2';
 import {nC} from '../state';
 import {derbyName,h2hDots,h2hStreak,h2hTxt,isDerby} from '../rivals';
 import {TOPICS} from '../talks';
@@ -130,9 +131,10 @@ function monthHTML(){
  const W=winRounds(),win=di=>(di>=0&&di<=lgDay(W[0]))||(di>=lgDay(W[1])&&di<=lgDay(W[2]));
  const card=x=>{const f=x.fx,home=f.h===S.user,opp=T(home?f.a:f.h),r=f.played?((home?f.hg>f.ag:f.ag>f.hg)?'G':(f.hg===f.ag?'E':'P')):'';
   return `<button class="fev k-${x.k} ${r}" data-a="club-open" data-id="${opp.id}" title="${esc(x.lbl)}"><span class="fcomp">${esc(x.lbl)}</span><span class="fmain">${crest(opp,'sm')}<b>${esc(opp.name)}</b>${f.played?`<em>${home?f.hg:f.ag}-${home?f.ag:f.hg}</em>`:''}</span><span class="fha">${home?'Casa':'Fuera'}</span></button>`;};
- let cells='';for(let k=0;k<lead;k++)cells+='<div class="fday out"></div>';
+ const SCH=sched();let cells='';for(let k=0;k<lead;k++)cells+='<div class="fday out"></div>';
  for(let d=1;d<=nDays;d++){const di=dayIdx(new Date(Date.UTC(Y,M,d))),evs=byDay[di]||[],nt=notes[di]||[];
-  cells+=`<div class="fday${di===S.day?' today':''}${di<S.day?' past':''}${win(di)?' win':''}"><span class="dn">${d}${di===S.day?' · Hoy':''}</span>${evs.map(card).join('')}${nt.map(([t,c])=>`<span class="fnote ${c}">${esc(t)}</span>`).join('')}</div>`;}
+  const wd=(lead+d-1)%7,tk=!evs.length&&di>=S.day&&di>=0&&di<S.day+70?SCH[wd]:null,tr=tk&&SES[tk]?`<span class="fnote tr" title="${esc(SES[tk].n)}">${SES[tk].i} ${esc(SES[tk].n)}</span>`:'';
+  cells+=`<div class="fday${di===S.day?' today':''}${di<S.day?' past':''}${win(di)?' win':''}"><span class="dn">${d}${di===S.day?' · Hoy':''}</span>${evs.map(card).join('')}${nt.map(([t,c])=>`<span class="fnote ${c}">${esc(t)}</span>`).join('')}${tr}</div>`;}
  const tail=(7-(lead+nDays)%7)%7;for(let k=0;k<tail;k++)cells+='<div class="fday out"></div>';
  return `<section class="panel fcalp"><div class="panel-h"><h2>${MONTHS_L[M]} ${Y}</h2><div class="row" style="gap:6px"><button class="btn sm" data-a="cal-m" data-v="-1" aria-label="Mes anterior">◀</button><button class="btn sm" data-a="cal-m" data-v="0">Hoy</button><button class="btn sm" data-a="cal-m" data-v="1" aria-label="Mes siguiente">▶</button></div></div>
  <div class="fcal">${['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map(x=>`<div class="fwd"><span>${x}</span><span>${x.slice(0,3)}</span></div>`).join('')}${cells}</div>
