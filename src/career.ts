@@ -1,6 +1,6 @@
 /* El Banquillo · career.js — Carrera del entrenador: contrato, confianza, despidos y ofertas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {LICS,reqLic} from './mgrcareer';
+import {eligibility,histNewJob} from './coach';
 import {bigOfferWeekly} from './extras2';
 import {ntSalary} from './nations';
 import {setWageCap} from './clubplus';
@@ -28,7 +28,7 @@ export function takeJob(o){
  initClub(t);S.budget=startBudget(t);S.chem=50;S.famil={};S.famil[t.formation]=60;S.lastXI=[];defaultCrew();setupYouth();S.affil=[];S.bank=[];S.scouts=[];S.prospects=[];S.academy=[];genScoutPool();academyIntake(3);
  S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.fin=[];S.jobOffers=[];S.jobless=null;S.obj=objectiveFor(t.id);S.sel=null;
  t.lineup=autoLineup(t.id,t.formation);S.view='inicio';S.modal=null;S.ligaLg=t.lg;assignRoles(true);squad(S.user).forEach(p=>{p.hap=65;p.req=0;p.prom=null;if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;
- setWageCap();{const need=reqLic(t);if((S.mgr.lic??0)<need)news(`Ojo: ${LG(t.lg).lv===0?'esta primera división':'esta división'} exige la ${LICS[need][0]}. Apúntate al curso en Club › Mi carrera antes de que acabe la temporada.`,'bad',{cat:'dir',subj:'Licencia necesaria'});}
+ setWageCap();histNewJob(t);{const E=eligibility(t);if(!E.ok){S.mgr.disp=S.seasonN;news(`La federación te concede una dispensa temporal: ${E.miss[0]}. Matricúlate en Mi carrera › Formación antes de que acabe la temporada.`,'bad',{cat:'dir',subj:'Licencia necesaria'});}}
  news(`Nuevo reto: firmas por ${t.name} (${lgName(t.lg)}) hasta junio de ${mgrEnd()} por ${money(o.sal)}/semana. Objetivo: ${S.obj.txt.toLowerCase()}.`,'good');
  advance();
 }

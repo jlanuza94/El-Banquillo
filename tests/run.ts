@@ -26,7 +26,8 @@ import { COUNTRIES } from '../src/data';
 import { projOptions, projSeasonEnd } from '../src/extras2';
 import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
 import { seatCost } from '../src/club';
-import { startCourse as startCourseF, careerWeekly as careerWeeklyF, pickSpec as pickSpecF, addXp as addXpF, mgrLevel as mgrLevelF } from '../src/mgrcareer';
+import { careerWeekly as careerWeeklyF, addXp as addXpF, mgrLevel as mgrLevelF, licence as licenceF0 } from '../src/mgrcareer';
+import { courseBlock as courseBlockF, enroll as enrollF, licStatus as licStatusF, eligibility as eligibilityF, validLevel as licenceF } from '../src/coach';
 import { mgrAt as mgrAtF } from '../src/extras2';
 import { joinWill as joinWillF, retiring as retiringF, offerStaffRole as offerStaffRoleF, retireToStaff as retireToStaffF } from '../src/mgrcareer';
 import { oopLineup, oopMap, oopSwap } from '../src/oop';
@@ -438,14 +439,21 @@ const app = document.getElementById('app')!;
       S.vt = { st: 'eq' }; render(); ok(app.querySelectorAll('.stc').length >= 3 && app.textContent.includes('Formación'), 'pantalla de personal con tarjetas y niveles'); }
     { const R = retiringF(); if (R.length) { const p = R[0], rep0 = S.mgr.rep; S.mgr.rep = 100; offerStaffRoleF(p.id, 'ent'); S.mgr.rep = rep0; ok(p.toStaff === 'ent' || p.toStaffNo === S.seasonN, 'ofrecer puesto de técnico a un veterano'); if (p.toStaff) { const n0 = (S.crew || []).length + (S.staffPool || []).length; retireToStaffF(p); ok((S.crew || []).length + (S.staffPool || []).length === n0 + 1, 'el veterano se retira y pasa a técnico'); delete p.toStaff; } }
       S.view = 'staff'; S.vt = { st: 'ret' }; render(); ok(app.textContent.includes('Veteranos que se retiran'), 'pestaña de veteranos que se retiran');
-      S.view = 'club'; S.vt = { club: 'ent' }; render(); ok(app.querySelectorAll('.lic').length === 4 && app.querySelectorAll('.bdg').length >= 6, 'licencias e insignias del entrenador'); S.vt = {}; }
-    { const M = S.mgr, sv = M.savings, r0 = M.rep, s0 = M.seasons, lic0 = M.lic; M.savings = 999; M.rep = 99; M.seasons = 5; M.lic = 0; M.course = null; M.spec = [];
-      ok(startCourseF() === '' && M.course && M.course.to === 1, 'apuntarse al curso de la Licencia B'); for (let i = 0; i < 20 && M.course; i++) careerWeeklyF(); ok(M.lic === 1 && !M.course, 'aprobar el curso: Licencia B');
-      pickSpecF('tac'); ok(M.spec.includes('tac') && mgrAtF('tac') >= (M.at.tac || 5) + 1 - 1e-9, 'especialidad Táctico suma a tu atributo'); pickSpecF('mot'); ok(M.spec.length === 1, 'una especialidad por licencia');
+      S.view = 'club'; S.vt = { club: 'ent' }; render(); ok(app.textContent.includes('Mi carrera'), 'el club enlaza con Mi carrera'); S.vt = {}; }
+    { const M = S.mgr, sv = M.savings, r0 = M.rep, s0 = M.seasons, lics0 = JSON.parse(JSON.stringify(M.lics || [])); M.savings = 999; M.rep = 99; M.seasons = 5; M.lics = []; M.course = null;
+      ok(M.v2 && M.at20 && Object.keys(M.at20).length >= 18 && M.pot >= 12, 'perfil de entrenador con atributos 1-20 y potencial');
+      ok(courseBlockF('B') !== '' && /Licencia C/.test(courseBlockF('B')), 'curso sin requisitos: bloqueado con explicación');
+      ok(enrollF('C') === '' && M.course && M.course.k === 'C', 'matricularse en la Licencia C'); for (let i = 0; i < 20 && M.course; i++) careerWeeklyF();
+      if (!M.lics.length) { enrollF('C'); for (let i = 0; i < 20 && M.course; i++) careerWeeklyF(); }
+      ok(M.lics.some(l => l.k === 'C') && licenceF() >= 0, 'aprobar el examen: Licencia C vigente');
+      M.lics.push({ k: 'A', jur: 'UEFA', got: 1, exp: S.seasonN - 1, conv: [] }); ok(licStatusF(M.lics[M.lics.length - 1], 'UEFA').exp && licenceF() < 2, 'licencia caducada: se conserva pero no vale');
+      M.lics.push({ k: 'PRO', jur: 'CONMEBOL', got: 1, exp: S.seasonN + 3, conv: [] }); ok(!licStatusF(M.lics[M.lics.length - 1], 'UEFA').rec, 'licencia de otra confederación: sin reconocer');
+      const top = S.teams.find(t => LG(t.lg).lv === 0 && LG(t.lg).rep >= 70); if (top) { const E = eligibilityF(top); ok(E.need === 3 && (E.ok === (licenceF(E.jur) >= 3)), 'elegibilidad: primera fuerte exige Pro'); }
       const x0 = M.xp || 0; addXpF(100, 'prueba'); ok(M.xp === x0 + 100 && mgrLevelF() >= 2, `experiencia y nivel (${mgrLevelF()})`);
       const t = S.teams.find(x => x.id !== S.user); S.modal = { type: 'interview', tid: t.id, i: 0, score: 0 }; render(); ok(app.querySelectorAll('[data-a=iv-ans]').length === 3, 'entrevista de trabajo con preguntas');
-      S.modal = null; S.view = 'club'; S.vt = { club: 'ent' }; render(); ok(app.textContent.includes('Tu perfil') && app.textContent.includes('Especialidades') && app.textContent.includes('Red de contactos'), 'pantalla Mi carrera');
-      S.vt = {}; M.savings = sv; M.rep = r0; M.seasons = s0; M.lic = lic0; M.spec = []; }
+      S.modal = { type: 'rules' }; render(); ok(app.textContent.includes('Pendiente de verificación'), 'normativa con fuente y estado'); S.modal = null;
+      S.view = 'carrera'; for (const tb of ['per', 'for', 'emp', 'tra', 'ins']) { S.vt = { car: tb }; render(); } ok(app.querySelectorAll('.bsvg').length >= 10, 'Mi carrera: perfil, formación, empleo, trayectoria e insignias');
+      S.vt = {}; S.view = 'inicio'; M.savings = sv; M.rep = r0; M.seasons = s0; M.lics = lics0; M.course = null; }
     const A = galaAwards(); ok(Array.isArray(A), 'gala del club'); S.vt = {}; S.view = 'inicio'; render(); }
   { // Rival que cambia, charlas, árbitros, penaltis, parejas, capitanes, prensa, proyecto, estadio, pujas, entrenador y grandes
     const ev = []; const add = (m, t, s, tx) => ev.push(tx);

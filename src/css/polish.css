@@ -721,3 +721,15 @@ tr.tsl td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .spec{display:flex;flex-direction:column;gap:3px;padding:8px;border-radius:10px;border:1px solid var(--line);font-size:12px}
 .spec>span{font-size:22px}.spec b{font-size:13.5px}.spec small{color:var(--muted)}.spec em{font-style:normal;font-weight:700;color:var(--win)}
 .spec.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}.spec .btn{align-self:flex-start}
+/* Mi carrera */
+.at20{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 12px}
+.at20 .fa{grid-template-columns:minmax(0,1fr) 60px 30px}
+.at20 .at{min-width:26px;text-align:center;font:800 12px var(--f-num);padding:1px 4px;border-radius:4px;color:#fff}
+.at.q1{background:#c23a2e}.at.q2{background:#e07a2a}.at.q3{background:#c9a227}.at.q4{background:#5aa832}.at.q5{background:#1f9d55}
+.bshelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.bitem{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.bsvg{width:74px;height:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}.bsvg.off{filter:grayscale(1) opacity(.35)}
+.bitem b{font-size:12.5px}.bitem small{font-size:10.5px;color:var(--muted)}.bitem:not(.on) b{opacity:.6}
+.ccreate{padding:10px 12px;border-radius:12px;background:rgba(10,24,16,.88);border:1px solid rgba(255,255,255,.14);color:#f4f1e6;margin-bottom:10px}
+.ccreate input,.ccreate select{padding:5px 8px}
+@media (orientation:landscape) and (max-height:540px){.bsvg{width:56px}.bshelf{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}.ccreate{padding:6px 8px}.ccreate .seg button{padding:3px 7px;font-size:10.5px}}

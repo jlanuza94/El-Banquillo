@@ -14,7 +14,7 @@ import {contractTxt} from '../contracts';
 import {attrCells,attrHead,clubCell,nameBtn,pBadgeS,potTxt} from './common';
 import {faceSVG,starsHTML,starsOf} from './pcard';
 import {suggestions} from '../quick';
-import {LICS,interested,joinWill,licence} from '../mgrcareer';
+import {interested,joinWill,licName,licence} from '../mgrcareer';
 import {seen} from '../scouting';
 import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
 export function marketRow(p){
@@ -57,7 +57,7 @@ export function mkList(){
  const head=`<thead><tr><th></th><th>Pos</th><th>Nombre</th><th>Club</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Pot.</th>${mk.attr?attrHead():''}<th class="r">Valor</th><th>Contrato</th><th class="r">Precio</th><th></th></tr></thead>`;
  if(mk.tab==='rec')return highlights();
  if(mk.tab==='int'){const L=interested(40),lic=licence();
-  return `<p class="small muted" style="margin:0 0 8px">Jugadores que tendrían ganas de fichar por tu club: buscan minutos, un club más grande o un entrenador con prestigio. Tu licencia: <b>${LICS[lic][0]}</b> · reputación ${Math.round(S.mgr.rep)}/100. Cuanto más subas, más y mejores jugadores querrán venir.</p>${L.length?`<div class="tbl"><table>${head}<tbody>${L.map(([p])=>marketRow(p)).join('')}</tbody></table></div>`:'<div class="empty">Ahora mismo nadie de tu nivel tiene especial interés. Gana partidos, cumple objetivos y sube de licencia.</div>'}`;}
+  return `<p class="small muted" style="margin:0 0 8px">Jugadores que tendrían ganas de fichar por tu club: buscan minutos, un club más grande o un entrenador con prestigio. Tu licencia: <b>${licName(lic)}</b> · reputación ${Math.round(S.mgr.rep)}/100. Cuanto más subas, más y mejores jugadores querrán venir.</p>${L.length?`<div class="tbl"><table>${head}<tbody>${L.map(([p])=>marketRow(p)).join('')}</tbody></table></div>`:'<div class="empty">Ahora mismo nadie de tu nivel tiene especial interés. Gana partidos, cumple objetivos y sube de licencia.</div>'}`;}
  if(mk.tab==='ojeo')return missionsHTML();
  if(mk.tab==='ofe')return offersHub();
  if(mk.tab==='short'){

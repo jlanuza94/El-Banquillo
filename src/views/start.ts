@@ -1,5 +1,6 @@
 /* El Banquillo · views/start.js — Pantallas de inicio de partida y de entrenador sin club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {createCoachHTML} from './careerv';
 import {nC} from '../state';
 import {MODES} from '../quick';
 import {DIFF} from '../difficulty';
@@ -36,7 +37,7 @@ export function startView(){
  if(scr==='saves')return `<div class="wrap sflow"><div class="shead">${stadiumSVG()}<div class="shin">${logoSVG()}<h1>Mis partidas</h1></div></div><div class="snav"><button class="btn sm" data-a="start-go" data-v="title">← Portada</button></div>${saved||'<div class="empty">No tienes partidas guardadas.</div>'}${openF}</div>`;
  return `<div class="wrap sflow snew"><div class="sbg">${stadiumSVG()}</div>${bar}
  <h2 class="sq">${step==='c'?'¿En qué país quieres entrenar?':step==='d'?'¿En qué división empiezas?':'Elige tu club'}</h2>
-${step==='c'?pickC:step==='d'?pickD:`<div class="sopts"><div><span class="eyebrow">Dificultad</span><div class="seg">${Object.entries(DIFF).map(([k,v])=>`<button data-a="start-diff" data-v="${k}" aria-pressed="${(RT.diff||'normal')===k}" title="${esc(v.d)}">${v.n}</button>`).join('')}</div></div><div><span class="eyebrow">Modo</span><div class="seg">${Object.entries(MODES).map(([k,v])=>`<button data-a="start-mode" data-v="${k}" aria-pressed="${(RT.mode||'profundo')===k}" title="${esc(v.d)}">${v.n}</button>`).join('')}</div></div></div>
+${step==='c'?pickC:step==='d'?pickD:`${createCoachHTML(RT)}<div class="sopts"><div><span class="eyebrow">Dificultad</span><div class="seg">${Object.entries(DIFF).map(([k,v])=>`<button data-a="start-diff" data-v="${k}" aria-pressed="${(RT.diff||'normal')===k}" title="${esc(v.d)}">${v.n}</button>`).join('')}</div></div><div><span class="eyebrow">Modo</span><div class="seg">${Object.entries(MODES).map(([k,v])=>`<button data-a="start-mode" data-v="${k}" aria-pressed="${(RT.mode||'profundo')===k}" title="${esc(v.d)}">${v.n}</button>`).join('')}</div></div></div>
  <p class="small muted" style="margin:0 0 10px">${DIFF[RT.diff||'normal'].d} ${MODES[RT.mode||'profundo'].d}</p>
  <div class="teams">${cards}</div>`}
  <details style="margin-top:22px"><summary class="small">Semilla del mundo: <b>${S?S.seed:''}</b></summary>

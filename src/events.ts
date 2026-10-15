@@ -1,6 +1,7 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {askMentor,interviewChance,interviewQs,pickSpec,startCourse} from './mgrcareer';
+import {askMentor,interviewChance,interviewQs,pickSpec} from './mgrcareer';
+import {convalidate,eligibility,enroll} from './coach';
 import {oopSwap} from './oop';
 import {offerStaffRole} from './mgrcareer';
 import {INT_MAX,friendlyWait as fWait2,inPre,internalMatch} from './preseason';
@@ -93,7 +94,9 @@ document.addEventListener('click',e=>{
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
-  if(a==='pick-team')pickTeam(+d.i);else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;RT.startStep='d';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-lv'){RT.startLv=+d.v;RT.startStep='club';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-step'){RT.startStep=d.v;render();}return;}
+  const rdC=()=>{const g=id=>document.getElementById(id);RT.coach=Object.assign(RT.coach||{},{name:(g('cName')&&g('cName').value||'').trim()||undefined,nat:g('cNat')?+g('cNat').value:undefined,age:g('cAge')?+g('cAge').value:undefined});};
+  if(a==='start-bg'||a==='start-lead'){rdC();RT.coach[a==='start-bg'?'bg':'lead']=d.v;render();return;}
+  if(a==='pick-team'){rdC();pickTeam(+d.i);}else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;RT.startStep='d';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-lv'){RT.startLv=+d.v;RT.startStep='club';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-step'){RT.startStep=d.v;render();}return;}
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
  switch(a){
@@ -254,9 +257,11 @@ document.addEventListener('click',e=>{
   case'job-yes':{const o=S.jobOffers[+d.i];if(o){jobDecision(o,true);takeJob(o);}break;}
   case'job-no':jobDecision(S.jobOffers[+d.i],false);S.jobOffers.splice(+d.i,1);break;
   case'job-search':S.showJobs=!S.showJobs;break;
-  case'job-apply':{const t=T(+d.id);S.modal={type:'interview',tid:t.id,i:0,score:0};break;}
+  case'job-apply':{const t=T(+d.id),E=eligibility(t);if(!E.ok){toast(`No puedes optar: ${E.miss[0]}.`);break;}S.modal={type:'interview',tid:t.id,i:0,score:0};break;}
   case'iv-ans':{const md=S.modal;if(!md||md.type!=='interview')break;const t=T(md.tid),Q=interviewQs(t);md.score+=Q[md.i].o[+d.v][1];md.i++;if(md.i>=Q.length){const ch=interviewChance(t,md.score,clubReq);if(rnd()<ch){S.modal={type:'joboffer',o:makeJobOffer(t)};}else{S.applied[t.id]=S.seasonN;S.modal=null;toast(`${t.name} prefiere a otro candidato (tenías un ${Math.round(ch*100)}% de opciones).`);}}break;}
-  case'car-course':{const e=startCourse();if(e)toast(e);break;}
+  case'car-course':{const e=enroll(d.v);if(e)toast(e);break;}
+  case'car-conv':{const e=convalidate(d.v);if(e)toast(e);break;}
+  case'car-rules':S.modal={type:'rules'};break;
   case'car-spec':pickSpec(d.v);break;
   case'car-mentor':{const e=askMentor(d.id);if(e)toast(e);break;}
   case'joboffer-ok':{const o=S.modal&&S.modal.o;if(o)takeJob(o);break;}

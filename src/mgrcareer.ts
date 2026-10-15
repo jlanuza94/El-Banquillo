@@ -4,20 +4,20 @@
 // @ts-nocheck — usa el estado heredado S.
 import {clamp,money,pick,rnd} from './core';
 import {unit} from './state';
-import {LG,S,T,squad,uLg} from './state';
+import {COURSES,MAIN,at20Grow,courseWeekly,eligibility,histMatch,histTitle,licExpiryCheck,validLevel} from './coach';
+import {LG,S,T,seasonLabel,squad,uLg} from './state';
 import {news} from './world';
 import {ST_ROLES,crew,makeStaff,crewLevel,staffMax,staffWage} from './staff';
 
 export const LICS=[['Licencia C','Recién empezado'],['Licencia B','Entrenador con oficio'],['Licencia A','Entrenador de prestigio'],['Licencia Pro','Élite de los banquillos']];
 /** Licencia actual (0-3): sube con la reputación y las temporadas dirigidas. */
-/** Licencia que tendrías por trayectoria (para partidas guardadas antes de que existieran los cursos). */
-function legacyLic(){const M=S.mgr,yrs=M.seasons||0;return M.rep>=72&&yrs>=3?3:M.rep>=52&&yrs>=2?2:M.rep>=32||yrs>=1?1:0;}
-/** Licencia conseguida (0 C, 1 B, 2 A, 3 Pro). Se saca con cursos (ver CURSOS). */
-export function licence(){const M=S.mgr;if(!M)return 0;if(M.lic==null)M.lic=legacyLic();return M.lic;}
+/** Nivel de licencia válido en tu federación (-1 sin licencia, 0 C … 3 Pro). */
+export function licence(){return S.mgr?validLevel():-1;}
+export const licName=lv=>lv<0?'Sin licencia':COURSES[MAIN[lv]].n;
 /** Insignias: lo que has logrado en tu carrera. */
-export const BADGES={pro:['🎓','Licencia Pro','Has sacado la licencia más alta'],cien:['💯','Centenario','100 partidos oficiales dirigidos'],invicto:['🛡️','Invicto','10 partidos seguidos sin perder'],mentor:['👨‍🏫','Aprendiz','Has tenido un mentor'],sel:['🌍','Seleccionador','Has dirigido a una selección'],asc:['⬆️','Ascenso','Has subido de categoría'],liga:['🏆','Campeón de liga','Has ganado una liga'],copa:['🥇','Copa','Has ganado una copa'],cant:['🌱','Cantera','Has hecho debutar a 5 canteranos'],obj:['🎯','Cumplidor','3 objetivos de la directiva cumplidos'],ojo:['🔎','Buen ojo','Has vendido un jugador por el triple de lo que costó'],fiel:['🤝','Fiel','5 temporadas en el mismo club'],mes:['🏅','Entrenador del mes','Has sido entrenador del mes']};
+export const BADGES={lic_C:['C','Licencia C','Consigue la Licencia C','basic'],lic_B:['B','Licencia B','Consigue la Licencia B','basic'],lic_A:['A','Licencia A','Consigue la Licencia A','adv'],lic_PRO:['PRO','Licencia Pro','Consigue la Licencia Pro','pro'],lic_YB:['🌱','Youth B','Especialista en desarrollo juvenil','spec'],lic_EYA:['🌳','Elite Youth A','Especialista en jóvenes de élite','spec'],lic_GKB:['🧤','Goalkeeper B','Entrenador de porteros','spec'],lic_GKA:['🥅','Goalkeeper A','Porteros de alto nivel','spec'],lic_FUT:['⚽','Futsal B','Entrenador de fútbol sala','spec'],cien:['💯','Centenario','100 partidos oficiales dirigidos'],invicto:['🛡️','Invicto','10 partidos seguidos sin perder'],mentor:['👨‍🏫','Aprendiz','Has tenido un mentor'],sel:['🌍','Seleccionador','Has dirigido a una selección'],asc:['⬆️','Ascenso','Has subido de categoría'],liga:['🏆','Campeón de liga','Has ganado una liga'],copa:['🥇','Copa','Has ganado una copa'],cant:['🌱','Cantera','Has hecho debutar a 5 canteranos'],obj:['🎯','Cumplidor','3 objetivos de la directiva cumplidos'],ojo:['🔎','Buen ojo','Has vendido un jugador por el triple de lo que costó'],fiel:['🤝','Fiel','5 temporadas en el mismo club'],mes:['🏅','Entrenador del mes','Has sido entrenador del mes']};
 export function badges(){const B=S.mgr&&S.mgr.badges||{};return Object.keys(BADGES).filter(k=>B[k]);}
-export function giveBadge(k){S.mgr.badges=S.mgr.badges||{};if(S.mgr.badges[k])return;S.mgr.badges[k]=S.seasonN;const b=BADGES[k];news(`Nueva insignia de entrenador: ${b[0]} ${b[1]}. ${b[2]}.`,'good',{cat:'dir',subj:`Insignia: ${b[1]}`});}
+export function giveBadge(k){S.mgr.badges=S.mgr.badges||{};if(S.mgr.badges[k]||!BADGES[k])return;S.mgr.badges[k]={s:seasonLabel(),club:T(S.user).name};const b=BADGES[k];news(`Nueva insignia de entrenador: ${b[0]} ${b[1]}. ${b[2]}.`,'good',{cat:'dir',subj:`Insignia: ${b[1]}`});}
 /** Al acabar la temporada: cuenta la temporada, revisa la licencia y las insignias. */
 export function careerSeasonEnd(sm){
  const M=S.mgr;if(!M)return;const l0=licence();M.seasons=(M.seasons||0)+1;M.objOk=(M.objOk||0)+(sm.ok?1:0);M.sameClub=M.lastClub===S.user?(M.sameClub||1)+1:1;M.lastClub=S.user;
@@ -27,7 +27,9 @@ export function careerSeasonEnd(sm){
  // experiencia de la temporada, mentor y licencia que exige tu división
  addXp((sm.ok?60:15)+(sm.up?80:0)+(sm.champ?120:0),'temporada');
  if(M.mentor){mentorSeasonEnd();}
- const need=reqLic(T(S.user));if(licence()<need&&!M.course){M.conf=clamp(M.conf-15,0,100);news(`La federación recuerda que tu división exige la ${LICS[need][0]} y aún no la tienes. La directiva no está contenta: apúntate al curso en Club › Mi carrera.`,'bad',{cat:'dir',subj:'Te falta la licencia'});}
+ const E=eligibility(T(S.user));if(!E.ok&&!(M.course)){M.conf=clamp(M.conf-15,0,100);news(`Incumples la normativa: ${E.miss[0]}. La directiva no está contenta: matricúlate en Mi carrera › Formación.`,'bad',{cat:'dir',subj:'Te falta la licencia'});}
+ (S.titles||[]).filter(x=>x.season===seasonLabel()).forEach(x=>histTitle(x.name));
+ licExpiryCheck();
 }
 /* ---------- Ganas de venir a tu club ---------- */
 let XI={k:'',v:55};
@@ -77,22 +79,11 @@ export function retireToStaff(p){if(!p.toStaff)return false;const m=staffFromPla
  return true;}
 
 /* =================== Carrera profunda: cursos, experiencia, especialidades, mentor y contactos =================== */
-/** Cursos de licencia: requisitos de trayectoria, duración (jornadas) y coste (lo pagas de tus ahorros). */
-export const CURSOS={1:{n:'Licencia B',wk:6,k:1.5,seasons:0,rep:15},2:{n:'Licencia A',wk:10,k:3,seasons:1,rep:32},3:{n:'Licencia Pro',wk:14,k:6,seasons:2,rep:50}};
-export const courseFee=to=>Math.round(unit(LG(uLg()).rep)*CURSOS[to].k*1000)/1000;
-/** Licencia que exige un club: las primeras divisiones fuertes piden la Pro. */
-export function reqLic(t){const L=LG(t.lg);return L.lv===0?(L.rep>=70?3:2):L.lv===1?1:0;}
-/** Por qué no puedes apuntarte al siguiente curso ('' si puedes). */
-export function courseBlock(){const M=S.mgr,to=licence()+1,C=CURSOS[to];if(!C)return 'Ya tienes la licencia más alta.';if(M.course)return 'Ya estás haciendo un curso.';
- if((M.seasons||0)<C.seasons)return `Necesitas ${C.seasons} temporada${C.seasons>1?'s':''} completa${C.seasons>1?'s':''} como entrenador.`;if(M.rep<C.rep)return `Necesitas reputación ${C.rep} (tienes ${Math.round(M.rep)}).`;return '';}
-/** Apuntarse: lo pagas de tus ahorros; si no te llega y la directiva confía en ti (70+), lo paga el club. */
-export function startCourse(){const M=S.mgr,to=licence()+1,b=courseBlock();if(b)return b;const fee=courseFee(to);
- if((M.savings||0)>=fee)M.savings=Math.round((M.savings-fee)*1000)/1000;else if(M.conf>=70&&S.budget>=fee){S.budget=Math.round((S.budget-fee)*1000)/1000;}else return `El curso cuesta ${money(fee)} y no te llega con tus ahorros (${money(M.savings||0)}). Con confianza 70 o más, la directiva te lo pagaría.`;
- M.course={to,left:CURSOS[to].wk,tot:CURSOS[to].wk};news(`Empiezas el curso de la ${CURSOS[to].n}: ${CURSOS[to].wk} jornadas de clases entre semana.`,'good',{cat:'dir',subj:`Curso: ${CURSOS[to].n}`});return '';}
+/** Licencia que exige un club según la normativa. */
+export function reqLic(t){return eligibility(t).need;}
 /** Cada jornada: avanza el curso y la mentoría. */
 export function careerWeekly(){const M=S.mgr;if(!M)return;
- if(M.course){M.course.left--;if(M.course.left<=0){const to=M.course.to;M.course=null;M.lic=to;M.rep=clamp(M.rep+2,0,100);addXp(40,'licencia');M.specPick=(M.spec||[]).length<to;
-  news(`¡Aprobado! Ya tienes la ${LICS[to][0]}. ${to===3?'Puedes entrenar en cualquier liga del mundo.':'Se te abren clubes más grandes.'} Elige una especialidad en Club › Mi carrera.`,'good',{cat:'dir',subj:`Nueva licencia: ${LICS[to][0]}`,act:[{l:'Elegir especialidad',a:'vtab',k:'club',v:'ent',go:'club'}]});if(to===3)giveBadge('pro');}}
+ courseWeekly(k=>{M.rep=clamp(M.rep+(COURSES[k].lv!=null?2:1),0,100);addXp(COURSES[k].lv!=null?40:20,'formación');giveBadge('lic_'+k);});
  if(M.mentor)addXp(2,'mentor');
 }
 /* ---------- Experiencia y nivel ---------- */
@@ -101,7 +92,7 @@ export const mgrLevel=()=>Math.floor(Math.sqrt(((S.mgr&&S.mgr.xp)||0)/40))+1;
 export const levelXp=l=>40*(l-1)*(l-1);
 /** Tras cada partido oficial: experiencia, partidos dirigidos y racha. */
 export function careerMatch(m){const M=S.mgr;if(!M||!m.us||m.ref.k==='fr')return;const us=m.us,o=us==='h'?'a':'h',d=m.score[us]-m.score[o];
- M.games=(M.games||0)+1;M.wins=(M.wins||0)+(d>0?1:0);M.unb=d<0?0:(M.unb||0)+1;addXp(d>0?12:d===0?7:3,'partido');
+ M.games=(M.games||0)+1;histMatch(d);M.wins=(M.wins||0)+(d>0?1:0);M.unb=d<0?0:(M.unb||0)+1;addXp(d>0?12:d===0?7:3,'partido');
  if(M.games>=100)giveBadge('cien');if(M.unb>=10)giveBadge('invicto');}
 /* ---------- Especialidades ---------- */
 export const SPECS={tac:['🧠','Táctico','+1 en Táctica: tu equipo rinde algo más y aprende antes las tácticas.'],mot:['🔥','Motivador','+1 en Motivación: charlas más efectivas y vestuario más unido.'],can:['🌱','Formador','+1 en Cantera: los jóvenes crecen más rápido.'],neg:['🤝','Negociador','+1 en Negociación: fichajes más baratos.'],fis:['💪','Preparador físico','Menos lesiones y mejor recuperación.']};
@@ -128,4 +119,4 @@ export function interviewQs(t){const big=reqLic(t)>=2,lv=LG(t.lg).lv;return [
  {q:'¿Qué harás con los jóvenes de la cantera?',o:[['Les daré minutos de verdad',lv>=2?2:1],['Jugarán si se lo ganan',1],['Prefiero veteranos que ganen ya',big?1:-1]]},
  {q:'¿Cómo quieres que juegue el equipo?',o:[['Fútbol de ataque y posesión',big?2:0],['Ordenado y difícil de batir',big?0:2],['Me adapto a la plantilla',1]]}];}
 /** Probabilidad de que te contraten tras la entrevista (score: suma de respuestas). */
-export function interviewChance(t,score,clubReq){const M=S.mgr,miss=Math.max(0,reqLic(t)-licence());return clamp(.3+(M.rep-clubReq(t))/30+score*.05+(inNetwork(t.id)?.15:0)-miss*.25+mgrLevel()*.01,.03,.92);}
+export function interviewChance(t,score,clubReq){const M=S.mgr,E=eligibility(t),miss=Math.max(0,E.need-validLevel(E.jur));return clamp(.3+(M.rep-clubReq(t))/30+score*.05+(inNetwork(t.id)?.15:0)-miss*.25+mgrLevel()*.01,.03,.92);}

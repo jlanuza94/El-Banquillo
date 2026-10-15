@@ -17,6 +17,7 @@ export const HELP:Record<string,{c:number,t:string,l:string[]}>={
  mercado:{c:11,t:'Fichajes y ventas.',l:['Las ofertas tardan 1-2 días en responderse; otro club puede pujar por el mismo jugador.','Marca a tus jugadores como transferibles, cedibles o intocables.','«Más filtros» abre la búsqueda avanzada; la ☆ sigue a un jugador.','El último día de mercado se vive por horas.']},
  club:{c:13,t:'El club y sus cuentas.',l:['Ingresos, gastos, presupuestos, estadio, afición e instalaciones.','Peticiones a la directiva y el proyecto a varios años.','Ojo con la deuda: una muy grande lleva al concurso de acreedores (−10 puntos).']},
  historia:{c:16,t:'Tu carrera y la historia del mundo.',l:['Palmarés, récords, campeones, goleadores históricos, retos con medallas y logros.']},
+ carrera:{c:13,t:'Tu carrera de entrenador.',l:['Perfil: atributos de 1 a 20, reputación, nivel y licencia vigente.','Formación: cursos de licencia (C, B, A, Pro) y especializaciones, con requisitos, horas, coste y examen.','Empleo: vacantes con su requisito de licencia y tus opciones; postúlate y pasa la entrevista.','Trayectoria e insignias: tus clubes, mentor, contactos y la vitrina de logros.']},
  editor:{c:17,t:'Editor y mods.',l:['Cambia nombres, colores, escudos y jugadores; exporta e importa mods en JSON o CSV.']},
 };
 export function helpHTML(v:string){

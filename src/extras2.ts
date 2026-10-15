@@ -3,6 +3,7 @@
  * jugadores que hablan en la prensa, proyecto a 3 años, estadio nuevo, pujas por fichajes, atributos del entrenador
  * y ofertas de grandes clubes. */
 // @ts-nocheck — usa el estado heredado S.
+import {bumpAt,legacyAt} from './coach';
 import {clamp,money,pick,r2,r3,rnd} from './core';
 import {COUNTRIES,GRP,NAMES} from './data';
 import {LG,PL,S,T,lgName,seasonLabel,setTeam,squad,uLg} from './state';
@@ -158,10 +159,10 @@ export function rivalWins(p,n,t,ROLES){
 
 /* ---------- 11. Atributos del entrenador ---------- */
 export const MGR_AT={tac:'Táctica',mot:'Motivación',can:'Cantera',neg:'Negociación'};
-export const mgrAt=k=>Math.min(11,((S&&S.mgr&&S.mgr.at&&S.mgr.at[k])??5)+(S&&S.mgr&&(S.mgr.spec||[]).includes(k)?1:0));
+export const mgrAt=k=>Math.min(11,(legacyAt(k)??((S&&S.mgr&&S.mgr.at&&S.mgr.at[k])??5))+(S&&S.mgr&&(S.mgr.spec||[]).includes(k)?1:0));
 export function mgrInit(){if(S.mgr&&!S.mgr.at)S.mgr.at={tac:5,mot:5,can:5,neg:5};}
 /** Al terminar la temporada mejoras en lo que más has trabajado. */
-export function mgrGrow(sm){mgrInit();const A=S.mgr.at,up=[],add=(k,v)=>{if(A[k]>=10)return;A[k]=Math.min(10,r2(A[k]+v));up.push(MGR_AT[k]);};
+export function mgrGrow(sm){mgrInit();const A=S.mgr.at,up=[],G={tac:['ofe','dfn','est','eva'],mot:['mot','ves','com'],can:['dvi','tec'],neg:['gpe','dir','pla']},add=(k,v)=>{if(S.mgr.at20){G[k].forEach(x=>bumpAt(x,v*2));up.push(MGR_AT[k]);return;}if(A[k]>=10)return;A[k]=Math.min(10,r2(A[k]+v));up.push(MGR_AT[k]);};
  if(sm.ok||sm.up||sm.champ)add('tac',.5);const sq=squad(S.user);if(sq.filter(p=>p.home&&p.st&&p.st.pj>=10).length>=2)add('can',.5);
  if((S.buysSeason||0)+((S.tlog||[]).filter(x=>x.from===S.user&&x.season===seasonLabel()).length)>=3)add('neg',.5);
  const avg=sq.length?sq.reduce((a,p)=>a+(p.hap??70),0)/sq.length:60;if(avg>=65)add('mot',.5);
