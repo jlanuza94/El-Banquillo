@@ -210,6 +210,7 @@ document.addEventListener('click',e=>{
   case'offer-view':{const o=S.offers[d.id];if(o&&o.incoming&&PL(d.id)&&PL(d.id).team===S.user)S.modal={type:'sell',id:d.id};else toast('Esa oferta ya ha caducado.');break;}
   case'pl-open':S.view='plantilla';S.plTab=d.v;window.scrollTo(0,0);break;
   case'ment':T(S.user).ment=d.v;break;
+  case'xi-clear':{const t=T(S.user);t.lineup=t.lineup.map(()=>null);t.subs=[];S.sel=null;toast('Once vacío: arrastra jugadores de la lista al campo, o toca un hueco y luego un jugador.');break;}
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}
   case'play':S.modal=null;playMatch();return;
@@ -428,7 +429,7 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.fb
  * En el móvil se coge desde el asa ⠿ (así la lista sigue pudiendo desplazarse); en el campo y el banquillo, directamente. */
 let DG=null,DG_T=0;
 const fitOf=pid=>{const r=document.querySelector(`[data-fit][data-pid="${pid}"]`);return r?r.dataset.fit||'':'';};
-const dropAt=(x,y)=>{const el=document.elementFromPoint(x,y);return el&&el.closest('.fmgrid .slot[data-i], .bslot[data-k], .fmlist, .fmgrid .vcell');};
+const dropAt=(x,y)=>{for(const el of document.elementsFromPoint(x,y)){if(el.closest('.toast,.dragghost'))continue;const t=el.closest('.fmgrid .slot[data-i], .bslot[data-k], .fmlist, .fmgrid .vcell');if(t)return t;}return null;};
 document.addEventListener('pointerdown',e=>{if(!S||S.user==null||e.button>0)return;const el=e.target.closest&&e.target.closest('.fmgrid [data-drag]');if(!el)return;
  if(e.pointerType!=='mouse'&&el.dataset.drag==='list'&&!e.target.closest('.grip'))return;
  if(el.dataset.drag==='list'&&e.target.closest('.grip'))e.preventDefault();

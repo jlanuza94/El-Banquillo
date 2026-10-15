@@ -643,6 +643,8 @@ const app = document.getElementById('app')!;
     TC.tcPreset('normal'); ok(TC.tcPlan().d[1][0] && !TC.tcPlan().d[1][1], 'plantillas de semana');
     S.view = 'entreno'; for (const v of ['cal', 'ses', 'ind', 'staff', 'inf']) { S.vt = { ent: v }; render(); } ok(app.textContent.includes('Informe de desarrollo'), 'pantallas del centro de entrenamiento'); S.vt = {}; S.view = 'inicio';
   }
+  { const t = T(S.user), lu0 = t.lineup.slice(); t.lineup = t.lineup.map(() => null); S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 });
+    ok(m.lu[m.us].filter(Boolean).length === 11, 'once vacío: el partido completa los huecos'); S.fr.pop(); t.lineup = lu0; }
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 
   { // una partida de la versión anterior (sin bandeja, cuerpo técnico, sub-19…) se convierte al cargarla

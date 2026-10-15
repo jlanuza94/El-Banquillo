@@ -999,4 +999,11 @@ body.fmdrag .vcell{border-color:rgba(255,255,255,.55);background:rgba(255,255,25
 .dragghost.dgchip .ven{display:none}
 .slot.vs.over .vpos,.slot.vs.fit1.over .vpos{outline:3px solid #f3c64a;outline-offset:2px}
 @media (orientation:landscape) and (max-height:540px){.vtop .fph button{padding:4px 8px;font-size:12px}.vtop select{padding:3px 6px;font-size:12px}.vpitch{max-width:min(100%,calc((100dvh - 165px)*100/68))}}
-.vtop .fph{flex:1 1 280px;min-width:0}.vtop .fph button{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vtop .fph{flex:0 1 250px;min-width:0}.vtop .fph button{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Alineación: campo más grande y lista a toda altura */
+.fmgrid.fmm{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);align-items:start}
+.fmm .fmmR{position:sticky;top:0;max-height:calc(100dvh - 120px);overflow:auto}
+.vpitch{max-width:min(100%,calc((100dvh - 120px)*100/68))}
+.vtop{flex-wrap:nowrap}.vtop .btn{white-space:nowrap}
+@media (orientation:landscape) and (max-height:540px){.vpitch{max-width:min(100%,calc((100dvh - 120px)*100/68))}.fmm .fmmR{max-height:calc(100dvh - 105px)}}
+.toast{pointer-events:none}

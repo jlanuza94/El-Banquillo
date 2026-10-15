@@ -9,7 +9,7 @@ import {eff,slotsOf,userRoles} from '../tactics';
 import {formRows} from '../freeboard';
 import {roleDef,roleList} from '../roles';
 import {DUTIES,piList,posSummary,userPos} from '../positions';
-import {nameBtn,VLINES} from './common';
+import {nameBtn,VLINES,vCoords} from './common';
 import {roleFam} from '../tactics2';
 
 /** Abreviatura del rol (como en el FMM: DLI, MCE, DT…): iniciales del nombre del rol, o el puesto si no hay rol. */
@@ -20,7 +20,7 @@ export function posicionesHTML(){
  const SY=synergies(sl,ro,du,pi,t.lineup),SM=synergyMods(SY),link=i=>SY.find(x=>x[0]===sel&&x[1]===i||x[1]===sel&&x[0]===i),cnt=(i,v)=>SY.filter(x=>(x[0]===i||x[1]===i)&&Math.sign(x[2])===v).length;
  const nmOf=i=>{const p=PL(t.lineup[i]);return p?esc(p.name.split(' ').slice(1).join(' ')||p.name):sl[i];};
  // campo: filas de la formación, el ataque arriba
- const C=slotCoords(t.formation),B={};C.forEach((c,i)=>{const key=Math.round(c.y/9);(B[key]=B[key]||[]).push({s:c.s,i,x:c.x,y:c.y});});const R=Object.keys(B).map(k=>({y:+k,it:B[k].sort((a,b)=>a.x-b.x)})).sort((a,b)=>a.y-b.y);
+ const C=vCoords(t.formation),B={};C.forEach((c,i)=>{const key=Math.round(c.y/9);(B[key]=B[key]||[]).push({s:c.s,i,x:c.x,y:c.y});});const R=Object.keys(B).map(k=>({y:+k,it:B[k].sort((a,b)=>a.x-b.x)})).sort((a,b)=>a.y-b.y);
  const card=({s,i})=>{const p=PL(t.lineup[i]),d=DUTIES[du[i]]||DUTIES.apo,n=(pi[i]||[]).length;
   const lk=i!==sel&&link(i),g=cnt(i,1),b=cnt(i,-1);
   return `<button class="tchip${i===sel?' on':''}${lk?(lk[2]>0?' lk-g':' lk-b'):''}" style="left:${C[i].x.toFixed(1)}%;top:${C[i].y.toFixed(1)}%" data-a="pos-sel" data-i="${i}">${g||b?`<span class="synb">${g?`<i class="g">+${g}</i>`:''}${b?`<i class="b">−${b}</i>`:''}</span>`:''}<span class="tpos du-${du[i]}">${esc(roleAbbr(s,ro[i]))}</span><b>${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'—'}</b><span class="du du-${du[i]}">${d.n}${n?` · ${n}`:''}</span></button>`;};
