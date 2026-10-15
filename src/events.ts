@@ -443,7 +443,9 @@ const dropAt=(x,y)=>{for(const el of document.elementsFromPoint(x,y)){if(el.clos
 document.addEventListener('pointerdown',e=>{if(!S||S.user==null||e.button>0)return;const el=e.target.closest&&e.target.closest('.fmgrid [data-drag]');if(!el)return;
  if(e.pointerType!=='mouse'&&el.dataset.drag==='list'&&!e.target.closest('.grip'))return;
  if(el.dataset.drag==='list'&&e.target.closest('.grip'))e.preventDefault();
- DG={el,pid:el.dataset.pid,src:el.dataset.drag,x0:e.clientX,y0:e.clientY,moved:false,over:null};});
+ DG={el,pid:el.dataset.pid,src:el.dataset.drag,x0:e.clientX,y0:e.clientY,moved:false,over:null};if(el.dataset.drag!=='list'){try{el.setPointerCapture(e.pointerId);}catch(err){}}});
+/* En algunos móviles (WebView de Android) el navegador intenta desplazar la página a mitad del arrastre y lo corta: mientras arrastras, se bloquea el desplazamiento. */
+document.addEventListener('touchmove',e=>{if(DG)e.preventDefault();},{passive:false});
 document.addEventListener('pointermove',e=>{if(!DG)return;if(!DG.moved){if(Math.hypot(e.clientX-DG.x0,e.clientY-DG.y0)<7)return;DG.moved=true;
   const p=PL(DG.pid);const g=document.createElement('div');if(DG.src==='slot'){g.className='dragghost vs dgchip';g.innerHTML=DG.el.innerHTML;DG.el.classList.add('dragging');}else{g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';}document.body.appendChild(g);DG.g=g;
   document.body.classList.add('fmdrag');const fit=fitOf(DG.pid);document.querySelectorAll('.fmgrid .slot[data-i]').forEach(s=>s.classList.add('fit'+(fit[+s.dataset.i]||4)));
@@ -455,7 +457,8 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
  DG_T=Date.now();if(e.type==='pointercancel')return;
  const t=dropAt(e.clientX,e.clientY);if(!t)return;
- if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);toast('Formación libre: puedes seguir moviendo jugadores o volver a una fija en el selector.');}}
+ if(d.src==='oop'){if(t.matches('.slot[data-i]')&&+t.dataset.i!==+d.el.dataset.i)oopSwap(T(S.user),+d.el.dataset.i,+t.dataset.i);S.oopSel=null;}
+ else if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);toast('Formación libre: puedes seguir moviendo jugadores o volver a una fija en el selector.');}}
  else if(t.matches('.slot[data-i]'))placeInSlot(d.pid,+t.dataset.i);
  else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);
  else if(d.src!=='list')removeFromTeam(d.pid);
