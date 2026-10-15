@@ -1007,3 +1007,4 @@ body.fmdrag .vcell{border-color:rgba(255,255,255,.55);background:rgba(255,255,25
 .vtop{flex-wrap:nowrap}.vtop .btn{white-space:nowrap}
 @media (orientation:landscape) and (max-height:540px){.vpitch{max-width:min(100%,calc((100dvh - 120px)*100/68))}.fmm .fmmR{max-height:calc(100dvh - 105px)}}
 .toast{pointer-events:none}
+.vtop .fph{flex:0 0 auto!important}.vtop .fph button{flex:0 0 auto!important;overflow:visible!important;padding:5px 10px}.vtop select{min-width:0;flex:1 1 auto}
