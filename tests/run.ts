@@ -617,6 +617,20 @@ const app = document.getElementById('app')!;
     ok(!filial() || S.leagues[filial().lg].lv > S.leagues[T(S.user).lg].lv, 'y el filial sigue por debajo de su primer equipo');
     await saveNow(); await flush(); await deleteSlot(S.slot);
   }
+  { // ronda FMM 2: títulos del entrenador, relaciones, instrucciones nuevas, previa y lista de partidos
+    const MT = await import('../src/mtitles'), RL = await import('../src/relations'), TC = await import('../src/tactics');
+    ok(MT.hasTitle('sec') && MT.hasTitle('tod') && !MT.tUnlocked('pad'), 'títulos: empiezas con uno por categoría y los demás bloqueados');
+    S.mgr.tc.games = 60; MT.checkTitles(); MT.setTitle('pad'); ok(MT.tUnlocked('pad') && MT.hasTitle('pad') && !MT.hasTitle('sec'), 'títulos: se desbloquean jugando y puedes cambiar el de la categoría');
+    MT.setTitle('roc'); ok(!MT.hasTitle('roc'), 'títulos: uno bloqueado no se puede elegir');
+    const R = RL.relations(squad(S.user)[5]); ok(R.infL && R.hier && R.group && Array.isArray(R.pos) && Array.isArray(R.neg), 'relaciones del vestuario: influencia, jerarquía, grupo y relaciones');
+    const t = T(S.user); t.tac = Object.assign({}, t.tac || {}, { ent: 'dur', off: 'si', tie: 'si' });
+    const DT = await import('../src/data'); ok(['ent', 'off', 'tie'].every(k => DT.TACS[k] && DT.TAC0[k]), 'instrucciones nuevas: entradas, fuera de juego y perder tiempo');
+    S.view = 'tacticas'; S.vt = { tac: 'tac', ins: 'def' }; render(); const iD = app.textContent.includes('Trampa del fuera de juego'); S.vt = { tac: 'tac', ins: 'atk' }; render();
+    ok(iD && app.textContent.includes('Anchura') && app.querySelector('.inspitch'), 'instrucciones estilo FMM con campo y pestañas Defensa/Ataque');
+    S.view = 'calendario'; S.vt = { cal: 'fx' }; render(); ok(app.querySelectorAll('.fxtbl tbody tr').length >= 10, 'calendario: lista de partidos del club');
+    S.view = 'carrera'; S.vt = { car: 'tit' }; render(); ok(app.querySelectorAll('.ttile').length === 4, 'mi carrera: pantalla de títulos');
+    t.tac.ent = 'nor'; t.tac.off = 'no'; t.tac.tie = 'no'; S.view = 'inicio'; S.vt = {};
+  }
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 
   { // una partida de la versión anterior (sin bandeja, cuerpo técnico, sub-19…) se convierte al cargarla

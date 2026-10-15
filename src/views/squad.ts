@@ -41,7 +41,8 @@ import {REGIONS,scoutWages} from '../academy';
 import {vtab} from './common';
 import {atCellS,attrHead,attrCells,clubCell,energyBar,formCell,knowTag,nameBtn,pBadgeS,pitchHTML,potTxt,slotCoords,status} from './common';
 import {reportHTML} from './home';
-import {cardHTML} from './pcard';
+import {cardHTML,faceSVG} from './pcard';
+import {relations} from '../relations';
 import {oopForm,oopLineup,oopMap} from '../oop';
 import {start} from '../boot';
 export function entrenoView(){
@@ -107,12 +108,32 @@ export function canteraView(){
  const tb=vtab('can',[['can','Cantera'],['vida','Vida de la cantera'],['ojeo','Ojeadores'],['inf','Informes'],...(yl?[['sub19','Liga sub-19']]:[])],'can');
  return tb.bar+(tb.cur==='can'?academy:tb.cur==='vida'?life:tb.cur==='ojeo'?scouts:tb.cur==='inf'?reports:yl||academy);
 }
+/** Campo de las instrucciones (como el FMM): en defensa, la altura de la línea, hasta dónde presionas y la dureza;
+ * en ataque, la anchura, el ritmo y el estilo con flechas. */
+function insPitch(tac,mode){
+ const L={baj:74,med:63,alt:52}[tac.lin],P={baj:58,med:42,alt:24}[tac.pre],col={pru:'#3fbf6a',nor:'#e3a33a',dur:'#e0473e'}[tac.ent],X=[18,30,42];
+ let g='';
+ if(mode==='def'){
+  X.forEach(x=>{for(let y=L-4;y>=P;y-=4.2)g+=`<path d="M${x-4} ${y+2}l4-2.6 4 2.6" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" opacity="${.45+.55*(L-y)/(L-P+1)}"/>`;});
+  [9,19,30,41,51].forEach(x=>g+=`<rect x="${x-3}" y="${L}" width="6" height="2.4" rx=".8" fill="${col}"/>`);
+  if(tac.off==='si')g+=`<path d="M3 ${L-1.6}H57" stroke="#fff" stroke-width=".6" stroke-dasharray="2 1.5"/><text x="57" y="${L-3}" text-anchor="end" font-size="3.2" fill="#fff" opacity=".85">Fuera de juego</text>`;
+  if(tac.per==='cpr')g+=`<circle cx="30" cy="${P-5}" r="4" fill="none" stroke="${col}" stroke-width="1"/><text x="30" y="${P-3.8}" text-anchor="middle" font-size="3.4" fill="#fff">⟲</text>`;
+  if(tac.tie==='si')g+=`<text x="5" y="86" font-size="5">⏱</text>`;
+ }else{
+  const W={est:[22,30,38],nor:[13,30,47],anc:[6,30,54]}[tac.anc],len={len:16,nor:24,rap:32}[tac.rit],st=tac.est,c=st==='dir'?'#e3a33a':st==='con'?'#e0473e':st==='pos'?'#4aa3ff':'#d8d8d8';
+  W.forEach((x,i)=>{const y0=60,y1=y0-len-(i===1?4:0);g+=st==='pos'?`<path d="M${x} ${y0}V${y1}" stroke="${c}" stroke-width="1.4" stroke-dasharray="1.6 2.2"/>`:`<path d="M${x} ${y0}V${y1+3}" stroke="${c}" stroke-width="${st==='dir'?2.4:1.6}"/>`;g+=`<path d="M${x-3} ${y1+3}l3-4 3 4z" fill="${c}"/>`;});
+  if(tac.rec==='cont')g+=`<path d="M30 76 L22 50" stroke="#e0473e" stroke-width="1" stroke-dasharray="2 1.5"/><text x="30" y="84" text-anchor="middle" font-size="3.4" fill="#fff">Contraataque</text>`;
+  else if(tac.rec==='pau')g+=`<text x="30" y="84" text-anchor="middle" font-size="3.4" fill="#fff">Pausar</text>`;
+ }
+ return `<svg class="inspitch" viewBox="0 0 60 90" aria-hidden="true"><rect width="60" height="90" fill="#1f7a3a"/>${[0,1,2,3,4,5].map(i=>`<rect y="${i*15}" width="60" height="7.5" fill="#23843f"/>`).join('')}<g fill="none" stroke="rgba(255,255,255,.75)" stroke-width=".5"><rect x="2" y="2" width="56" height="86"/><path d="M2 45H58"/><circle cx="30" cy="45" r="7"/><rect x="15" y="2" width="30" height="12"/><rect x="15" y="76" width="30" height="12"/></g>${g}</svg>`;
+}
 export function tacticasView(){
  const t=T(S.user),tac=Object.assign({},TAC0,t.tac||{}),xi=t.lineup.filter(id=>id&&PL(id)).map(PL),sq=squad(S.user).filter(p=>!p.inj);
  const nm=nextMatch(),opp=nm?(nm.fx.h===S.user?nm.fx.a:nm.fx.h):null;
- const inst=`<section class="panel"><div class="panel-h"><h2>Instrucciones de equipo</h2><span class="eyebrow">${t.formation} · ${MENT[t.ment].label}</span></div>
- ${Object.entries(TACS).map(([k,v])=>`<div style="margin-bottom:14px"><div class="eyebrow" style="margin-bottom:6px">${v.n}</div><div class="seg" style="max-width:100%;overflow-x:auto">${Object.entries(v.o).map(([ok,ol])=>`<button data-a="tac" data-k="${k}" data-v="${ok}" aria-pressed="${tac[k]===ok}">${ol}</button>`).join('')}</div><p class="small muted" style="margin:5px 0 0">${v.d}</p></div>`).join('')}
- <p class="small muted" style="margin:0">El rival también se adapta: si ve que juegas con presión alta o línea alta, puede cambiar a contragolpe. Puedes cambiar el estilo y la presión durante el partido.</p></section>`;
+ const IG={def:['lin','pre','ent','off','tie','per'],atk:['est','rit','anc','rec']},it=vtab('ins',[['def','Defensa'],['atk','Ataque']],'def');
+ const inst=`<section class="panel insp"><div class="panel-h"><h2>Instrucciones de equipo</h2><div class="row" style="gap:8px"><span class="eyebrow">${t.formation} · ${MENT[t.ment].label}</span>${it.bar.replace('seg pltabs','seg insseg')}</div></div>
+ <div class="insg">${insPitch(tac,it.cur)}<div class="insr">${IG[it.cur].map(k=>{const v=TACS[k];return `<div class="insrow"><div class="insl">${v.n}</div><div class="inso" style="--n:${Object.keys(v.o).length}">${Object.entries(v.o).map(([ok,ol])=>`<button data-a="tac" data-k="${k}" data-v="${ok}" aria-pressed="${tac[k]===ok}">${ol}</button>`).join('')}</div></div>`;}).join('')}
+ <p class="small muted insd">${IG[it.cur].map(k=>`<b>${TACS[k].n}:</b> ${TACS[k].d}`).join(' ')}</p></div></div></section>`;
  const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
  const pl=sq.map(p=>[p.id,`${p.sp} · ${p.name}`]);
  const sp=`<section class="panel"><div class="panel-h"><h2>Capitán y balón parado</h2></div><div class="filters">
@@ -142,7 +163,7 @@ export function tacticasView(){
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
  const tb=vtab('tac',[['ord','Táctica'],['ali','Alineación'],['tac','Instrucciones'],['rival','Rival'],['bp','Balón parado'],['plan','Guardadas'],['piz','Mi formación']],'ord');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?two(inst,famP):tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
+ const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?inst+famP:tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
  return tb.bar+body;
 }
 /* ---------- Desarrollo: aprender puestos y rasgos, y cedidos ---------- */
@@ -282,6 +303,11 @@ function valueBox(p){
   chart=`<svg viewBox="0 0 ${W} ${H}" class="vchart" role="img" aria-label="Evolución del valor"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/></svg><div class="small muted">De ${money(vh[0][2])} a ${money(p.value)}</div>`;}
  return why.length||chart?`<div style="margin-top:10px"><div class="eyebrow" style="margin-bottom:4px">Su valor de mercado</div>${chart}<div class="chips" style="margin-top:6px">${why.map(([t,k])=>`<span class="tag ${k==='bad'?'bad':'xi'}">${esc(t)}</span>`).join('')}</div></div>`:'';
 }
+/** Relaciones en el vestuario (como el FMM): influencia, jerarquía, grupo y relaciones positivas y negativas. */
+function relHTML(p){const R=relations(p),card=(x,c)=>`<button class="relc ${c}" data-a="ficha" data-id="${x.p.id}">${faceSVG(x.p)}<b>${esc(x.p.name.split(' ').slice(-1)[0])}</b><small>${esc(x.why)}</small></button>`;
+ return `<section class="relp"><h3>Relaciones en el vestuario</h3><div class="relg"><div class="kv" style="margin:0"><span>Influencia</span><b>${R.infL}</b><span>Jerarquía</span><b>${R.hier}</b><span>Grupo social</span><b>${R.group}</b><span>Personalidad</span><b>${PERS[p.per||'nor'].n}</b><span>Rol</span><b>${ROLES[p.role||'ro'].n}</b></div>
+ <div class="relcol"><span class="relh pos">Positivas</span><div class="rell">${R.pos.length?R.pos.map(x=>card(x,'pos')).join(''):'<span class="small muted">Aún no tiene amigos en el vestuario.</span>'}</div>
+ <span class="relh neg">Negativas</span><div class="rell">${R.neg.length?R.neg.map(x=>card(x,'neg')).join(''):'<span class="small muted">No tiene roces con nadie.</span>'}</div></div></div></section>`;}
 export function fichaHTML(p){
  const mine=p.team===S.user,fav=S.short.includes(p.id),s=p.st||newSt(),g=GRP[p.sp],sn=seen(p),known=sn.k>=60;
  const bar=k=>{const [a,b]=sn.at[k],v=(a+b)/2;return `<div class="arow"><span>${AT_NAME[k]}</span><span class="abar"><i class="${qc(v)} ${sn.exact?'':'rng'}" style="width:${v*10}%"></i></span>${atCellS(p,k,sn)}</div>`;};
@@ -290,7 +316,7 @@ export function fichaHTML(p){
  const posMap=`<div class="pitch" style="max-width:150px;margin:0">${dots}<span class="ln out"></span><span class="ln half"></span></div>`;
  const wf='●'.repeat(p.wf||3)+'○'.repeat(5-(p.wf||3));
  const hist=(p.hist||[]).slice().reverse();
- return `${cardHTML(p)}
+ return `${cardHTML(p)}${mine&&!p.loan?relHTML(p):''}
  <div class="row small" style="margin-top:8px;gap:8px;align-items:center">${mine?'':knowTag(p)}<span class="muted">${posChip(p)} ${SPN[p.sp]}${p.alt&&p.alt.length?' · también '+p.alt.map(x=>SPN[x].toLowerCase()).join(' y '):''} · ${p.h} cm · pie malo <b title="${p.wf||3} de 5" style="letter-spacing:2px">${wf}</b> · carácter ${known?PERS[p.per||'nor'].n.toLowerCase():'desconocido'}</span></div>
  ${known?`<p class="small muted" style="margin:4px 0 0">${esc(PERS[p.per||'nor'].d)}</p>`:''}
  ${known&&p.tr&&p.tr.length?`<div class="chips" style="margin-top:8px">${p.tr.map(t=>`<span class="tag xi">${TRAITS[t]}</span>`).join('')}</div>`:''}

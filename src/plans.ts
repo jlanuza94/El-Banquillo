@@ -1,5 +1,6 @@
 /* El Banquillo · plans.ts — Tácticas guardadas (A, B y C), aprendizaje de la táctica y jugadas ensayadas. */
 // @ts-nocheck — usa el estado heredado S.
+import {hasTitle} from './mtitles';
 import {clamp} from './core';
 import {GRP,TAC0,TACS} from './data';
 import {PL,S,T} from './state';
@@ -40,7 +41,7 @@ export function planInMatch(m,k){
 /* ---------- Aprender la táctica ---------- */
 /** Dominio de cada opción de las instrucciones (0-100). Sube al usarla en partidos y con el entrenamiento táctico. */
 export function tfam(){
- if(!S.tfam){S.tfam={};Object.entries(TACS).forEach(([k,v])=>{S.tfam[k]={};Object.keys(v.o).forEach(o=>S.tfam[k][o]=o===TAC0[k]?70:35);});}
+ S.tfam=S.tfam||{};Object.entries(TACS).forEach(([k,v])=>{if(!S.tfam[k]){S.tfam[k]={};Object.keys(v.o).forEach(o=>S.tfam[k][o]=o===TAC0[k]?70:35);}});
  return S.tfam;
 }
 /** Media del dominio de las instrucciones que usas ahora. */
@@ -49,7 +50,7 @@ export function planFam(tac){const F=tfam(),t=Object.assign({},TAC0,tac||{});con
 export const famMult=tac=>clamp(.985+.015*planFam(tac)/70,.985,1.006);
 /** Cada partido oficial con unas instrucciones las afianza; lo que no se usa se olvida poco a poco. */
 export function learnTactic(tac,extra=0){
- const F=tfam(),t=Object.assign({},TAC0,tac||{});
+ if(hasTitle('piz'))extra+=1.5;const F=tfam(),t=Object.assign({},TAC0,tac||{});
  Object.keys(TACS).forEach(k=>Object.keys(F[k]).forEach(o=>{F[k][o]=clamp(F[k][o]+(o===t[k]?5+extra:-.6),15,100);}));
  S.spFam=clamp((S.spFam??40)+(extra?3:.5),0,100);
 }

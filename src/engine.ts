@@ -24,6 +24,7 @@ import {synergies,synergyMods} from './synergy';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
 import {rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
+import {titleMods} from './mtitles';
 import {autoLineup,chemMult,eff,famOf,hapMult,hasTr,slotsOf,subsOf,teamPower,userRoles,xg} from './tactics';
 import {getFx} from './competitions';
 import {makePress,unlock} from './club';
@@ -77,6 +78,9 @@ export function tacMods(m,s,log){
  if(A.pre==='alt')f('pre',1,.94*(B.est==='con'?1.08:1),1.08,.03);else if(A.pre==='baj')f('pre',1,1.04,.9,-.03);
  if(A.lin==='alt')f('lin',1.04,1.04*(B.est==='con'?1.06:1));else if(A.lin==='baj')f('lin',.96,.93);
  if(A.rit==='rap')f('rit',1.06,1.03,1.06);else if(A.rit==='len')f('rit',.93,.95,.92,.02);
+ if(A.ent==='dur')f('ent',1,.96);else if(A.ent==='pru')f('ent',1,1.03);
+ if(A.off==='si'){const c=avgAt(m,s,'DEF','col'),v=avgAt(m,s,'DEF','vel');f('off',1,A.lin==='alt'?(c>=6?.95:c+v/2<8?1.06:1):(c>=6?.98:1.03));}
+ if(A.tie==='si'&&m.score&&m.score[s]>m.score[o])f('tie',.9,.9,.95,.03);
  const w=(m.wide&&m.wide[s])||0;if(A.anc==='anc')f('anc',1+w/150,1);else if(A.anc==='est')f('anc',1-w/150,1);
  const mq=(m.mq&&m.mq[s])||[50,50];
  if(A.est==='pos'){const pq=avgAt(m,s,'MED','pas')*.7+avgAt(m,s,'DEF','pas')*.3;f('est',(B.pre==='baj'?1.06:B.pre==='alt'?Math.min(1,.93+.015*(pq-5)):1)*(1+.015*(pq-5)),1,1,.05);}else if(A.est==='dir')f('est',mq[1]>mq[0]?1.05:.98,1,1,-.02);else if(A.est==='con')f('est',((B.lin==='alt'||m.ment[o]==='att')?1.09:.95)*(1+.012*(avgAt(m,s,'DEL','vel')-5)),1,1,-.05);
@@ -96,6 +100,7 @@ export function tacMods(m,s,log){
  {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);f('fase',ph.own,ph.opp,ph.drain,ph.poss);}
  {const w=weatherMods(m.wx,A);f('clima',w.own,w.opp,w.drain,w.poss);const mm=m.mm&&m.mm[s];if(mm)f('mom',mm.own,mm.opp);}
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)f('cap',1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4),1);
+ {const tm=titleMods(m,s);if(tm)f('tit',tm.own,tm.opp,tm.dr,tm.ps);}
  return{own,opp,drain,poss};
 }
 /** Techo suave a todo lo que solo tiene tu equipo (química, dominio, roles aprendidos, ánimo, parejas, preparación…):
@@ -301,7 +306,7 @@ export function step(m){
  if(live)momentsTick(m);
  if(live)phaseLog(m,clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8));
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
- {const dh=m.oi&&m.oi.h&&m.oi.h.dur?1.6:1,da=m.oi&&m.oi.a&&m.oi.a.dur?1.6:1,ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
+ {const ec=x=>x&&x.ent==='dur'?1.35:x&&x.ent==='pru'?.7:1,dh=(m.oi&&m.oi.h&&m.oi.h.dur?1.6:1)*ec(m.tac.h),da=(m.oi&&m.oi.a&&m.oi.a.dur?1.6:1)*ec(m.tac.a),ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
   if(rnd()<.034*(ph+pa)*(m.derby?1.3:1)*(m.refr?REFS[m.refr.k].c:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
  if(rnd()<.0032){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}

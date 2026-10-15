@@ -1,5 +1,6 @@
 /* El Banquillo · career.js — Carrera del entrenador: contrato, confianza, despidos y ofertas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {hasTitle,tInc} from './mtitles';
 import {eligibility,histNewJob} from './coach';
 import {bigOfferWeekly} from './extras2';
 import {ntSalary} from './nations';
@@ -34,7 +35,7 @@ export function takeJob(o){
 }
 export function mgrWeekly(my,op){
  const M=S.mgr,D=diff(),pos=posOf(S.user);let d=my>op?D.win:my<op?D.loss:D.draw;d+=pos<=S.obj.max?.5:-Math.min(D.pos,(pos-S.obj.max)*.15);if(S.budget<0)d-=1.5;
- M.conf=clamp(M.conf+d,inGrace()?30:0,100);M.savings=r3(M.savings+M.sal+ntSalary());
+ if(d<0&&hasTitle('fie'))d*=.7;M.conf=clamp(M.conf+d,inGrace()?30:0,100);M.savings=r3(M.savings+M.sal+ntSalary());
  if(M.conf<25&&!M.warned){M.warned=1;news('La directiva está descontenta. Si los resultados no mejoran, peligra tu puesto.','bad');}
  if(M.conf>=35)M.warned=0;
  if(S.club&&S.club.mood<30)M.conf=clamp(M.conf-.5,0,100);
@@ -46,7 +47,7 @@ export function mgrWeekly(my,op){
 }
 export function mgrSeasonEnd(sm){
  const M=S.mgr,lbl=seasonLabel();let d=sm.ok?4:-4;if(sm.up)d+=8;if(sm.champ)d+=sm.L.lv===0?12:6;if(sm.down)d-=8;d+=S.titles.filter(x=>x.season===lbl&&!x.name.startsWith('Liga')).length*6;
- M.rep=clamp(M.rep+d,0,100);M.conf=clamp(M.conf+(sm.ok?15:-15)+(sm.up?15:0),0,100);if(sm.ok||sm.up)M.conf=Math.max(M.conf,55);M.grace=sm.up?diff().grace:null;M.yrs--;
+ M.rep=clamp(M.rep+d,0,100);M.conf=clamp(M.conf+(sm.ok?15:-15)+(sm.up?15:0),0,100);if(sm.ok||sm.up)M.conf=Math.max(M.conf,55);M.grace=sm.up?diff().grace:null;M.yrs--;M.tc=M.tc||{};M.tc.seas=Math.max(M.tc.seas||0,S.seasonN-(M.joinN??S.seasonN)+1);tInc('seas',0);
  news(`Tu reputación como entrenador: ${Math.round(M.rep)}/100 (${d>=0?'+':''}${d} esta temporada).`,d>=0?'good':'bad');
  if(M.yrs<=0){if(M.conf>=45){M.yrs=ri(2,3);M.sal=r3(M.sal*1.1);news(`La directiva te renueva ${M.yrs} temporadas más, con un 10% más de salario.`,'good');return false;}
   news(`Se acaba tu contrato y ${T(S.user).name} no te renueva.`,'bad');return true;}

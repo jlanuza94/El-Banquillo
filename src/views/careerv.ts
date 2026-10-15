@@ -4,10 +4,11 @@
 import {esc,money} from '../core';
 import {COUNTRIES} from '../data';
 import {LG,S,T,crest,lgName,qc,seasonLabel} from '../state';
-import {AT20,BG,COURSES,JURS,LEAD,MAIN,RULES,VALID,coachAge,courseBlock,courseCost,courseWeeks,diplomas,eligibility,licLabel,licStatus,myJur,topDiploma,validLevel} from '../coach';
+import {START_LIC,jurOf,ruleFor,startRepBonus,AT20,BG,COURSES,JURS,LEAD,MAIN,RULES,VALID,coachAge,courseBlock,courseCost,courseWeeks,diplomas,eligibility,licLabel,licStatus,myJur,topDiploma,validLevel} from '../coach';
 import {BADGES,badges,interviewChance,interviewQs,levelXp,licName,mentorCands,mgrLevel,network} from '../mgrcareer';
 import {clubReq,jobCandidates,mgrEnd,mgrSalary} from '../career';
-import {vtab} from './common';
+import {vtab,nf} from './common';
+import {TCATS,TITLES,myTitles,tCount,tUnlocked} from '../mtitles';
 
 /* ---------- Insignias metálicas ---------- */
 const FAM={basic:['#2e7d4f','#cfd6dc','#e7c35a'],adv:['#163a6b','#d5dde5','#9fb3c8'],pro:['#111317','#f3cf66','#b8861d'],spec:['#6b2f7a','#e5d6ee','#c9a227'],career:['#7a4b12','#f6dfa0','#c98d17']};
@@ -54,8 +55,20 @@ function historyP(){const M=S.mgr,H=(M.hist||[]).slice().reverse(),net=network()
 function badgesP(){const B=(S.mgr.badges)||{},fams=[['basic','Licencias básicas'],['adv','Licencias avanzadas'],['pro','Licencia Pro'],['spec','Especializaciones'],['career','Logros de carrera']];
  return fams.map(([f,n])=>{const L=Object.entries(BADGES).filter(([,b])=>(b[3]||'career')===f);return `<section class="panel"><div class="panel-h"><h2>${n}</h2><span class="eyebrow">${L.filter(([k])=>B[k]).length} de ${L.length}</span></div><div class="bshelf">${L.map(([k,b],i)=>{const g=B[k];return `<div class="bitem${g?' on':''}" title="${esc(b[2])}">${badgeSVG(k,b,!!g)}<b>${esc(b[1])}</b><small>${g?`${esc(g.s||'')} · ${esc(g.club||'')}`:esc(b[2])}</small></div>`;}).join('')}</div></section>`;}).join('');}
 
-export function carreraView(){const tb=vtab('car',[['per','Perfil'],['for','Formación'],['emp','Empleo'],['tra','Trayectoria'],['ins','Insignias']],'per');
- return tb.bar+(tb.cur==='for'?trainingP():tb.cur==='emp'?jobsP():tb.cur==='tra'?historyP():tb.cur==='ins'?badgesP():`<div class="grid">${profileP()}</div>`);}
+/* ---------- Títulos de reputación (como el FMM) ---------- */
+export const repLabel=r=>r>=80?'Leyenda de los banquillos':r>=60?'Entrenador reputado':r>=40?'Entrenador respetado':r>=20?'Entrenador modesto':'Entrenador desconocido';
+function titlesP(){const M=S.mgr,my=myTitles(),cat=(S.vt&&S.vt.ttc)||'peo',lvl=mgrLevel(),tier=lvl>=12?['Insignia de oro','gold']:lvl>=6?['Insignia de plata','silver']:['Insignia de bronce','bronze'],cur=TITLES[my[cat]];
+ const L=Object.entries(TITLES).filter(([,T])=>T[0]===cat);
+ return `<div class="ttl"><div class="tcard"><div class="tsil"><svg viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="20" r="11" fill="#0d0d12"/><path d="M8 60c1-17 10-25 22-25s21 8 22 25z" fill="#0d0d12"/></svg><span class="tfl">${nf(M.nat??0)}</span>${crest(T(S.user),'sm')}</div>
+  <b class="trole">Primer entrenador</b><span class="trep">${repLabel(M.rep)}</span><span class="tclub">${esc(T(S.user).name)}</span><span class="ttier ${tier[1]}">${tier[0]}</span>
+  <div class="tmy">${TCATS.map(([c,n])=>`<span title="${esc(n)}">${TITLES[my[c]][1]} ${esc(TITLES[my[c]][2])}</span>`).join('')}</div></div>
+ <div class="tmain"><div class="seg ttabs">${TCATS.map(([c,n])=>`<button data-a="car-tcat" data-v="${c}" aria-pressed="${c===cat}">${esc(n)}</button>`).join('')}</div>
+  <div class="eyebrow" style="text-align:center;margin:8px 0 6px">Reputación del entrenador</div>
+  <div class="tgrid">${L.map(([k,T])=>{const on=tUnlocked(k),sel=my[cat]===k,r=T[5];return `<button class="ttile${on?'':' lock'}${sel?' sel':''}" ${on?`data-a="car-title" data-v="${k}"`:'disabled'}><span class="tico">${on?T[1]:'🔒'}</span><span class="tt"><b>${esc(T[2])}</b>${on?`<small>${esc(T[4])}</small>`:`<small>${esc(r[2])} · ${Math.min(tCount(r[0]),r[1])}/${r[1]}</small><i class="tprog"><i style="width:${Math.min(100,tCount(r[0])/r[1]*100)}%"></i></i>`}</span></button>`;}).join('')}</div>
+  <div class="tdesc"><h3>${cur[1]} ${esc(cur[2])}</h3><p>${esc(cur[3])} <b>${esc(cur[4])}</b></p></div>
+  <p class="small muted" style="margin:6px 0 0">Elige un título por categoría: es tu sello como entrenador. Los bloqueados se ganan jugando; toca uno desbloqueado para lucirlo.</p></div></div>`;}
+export function carreraView(){const tb=vtab('car',[['per','Perfil'],['tit','Títulos'],['for','Formación'],['emp','Empleo'],['tra','Trayectoria'],['ins','Insignias']],'per');
+ return tb.bar+(tb.cur==='for'?trainingP():tb.cur==='emp'?jobsP():tb.cur==='tra'?historyP():tb.cur==='ins'?badgesP():tb.cur==='tit'?titlesP():`<div class="grid">${profileP()}</div>`);}
 /** Normativa: requisitos por competición, con fuente, revisión y estado de verificación. */
 export function rulesModal(){const jur=myJur();return `<div class="eyebrow">Reglas y reconocimiento · ${esc(JURS[jur])}</div><h2 style="margin:4px 0 10px">Normativa de licencias</h2>
  <div class="tbl"><table><thead><tr><th>Competición</th><th>Cargo</th><th>Licencia mínima</th><th>Fuente</th><th>Revisión</th><th>Estado</th></tr></thead><tbody>${RULES.map(r=>`<tr><td>${esc(r.comp)}</td><td>${esc(r.role)}</td><td><b>${esc(COURSES[MAIN[r.need]].n)}</b></td><td class="small">${esc(r.src)}</td><td class="n">${esc(r.rev)}</td><td><span class="tag">${esc(r.st)}</span></td></tr>`).join('')}</tbody></table></div>
@@ -65,11 +78,22 @@ export function interviewModal(md){const t=T(md.tid),Q=interviewQs(t),q=Q[md.i];
  return `<div class="eyebrow">Entrevista · ${esc(t.name)} · pregunta ${md.i+1} de ${Q.length}</div><h2 style="margin:4px 0 12px">«${esc(q.q)}»</h2>
  <div class="stack" style="gap:6px">${q.o.map((o,i)=>`<button class="btn" style="text-align:left;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:600" data-a="iv-ans" data-v="${i}">${esc(o[0])}</button>`).join('')}</div>
  <p class="small muted" style="margin:10px 0 0">Piensa en el club: los grandes quieren ambición; los modestos, realismo y cantera. Tu reputación, tu licencia y tus contactos también cuentan.</p>`;}
-/** Panel de creación del entrenador (al empezar partida). */
-export function createCoachHTML(RT){const c=RT.coach||{};return `<div class="ccreate"><span class="eyebrow">Tu entrenador</span>
- <div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end"><label class="f"><span class="eyebrow">Nombre</span><input id="cName" maxlength="28" placeholder="Tu nombre" value="${esc(c.name||'')}"></label>
- <label class="f"><span class="eyebrow">Nacionalidad</span><select id="cNat">${COUNTRIES.map((C,i)=>`<option value="${i}" ${(c.nat??RT.startC)===i?'selected':''}>${esc(C.n)}</option>`).join('')}</select></label>
- <label class="f"><span class="eyebrow">Edad</span><select id="cAge">${[28,32,36,40,45,50].map(a=>`<option value="${a}" ${(c.age||36)===a?'selected':''}>${a}</option>`).join('')}</select></label></div>
- <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px"><div><span class="eyebrow">Pasado como jugador</span><div class="seg">${Object.entries(BG).map(([k,v])=>`<button data-a="start-bg" data-v="${k}" aria-pressed="${(c.bg||'amat')===k}" title="${esc(v[1])}">${esc(v[0])}</button>`).join('')}</div></div>
- <div><span class="eyebrow">Estilo de liderazgo</span><div class="seg">${Object.entries(LEAD).map(([k,v])=>`<button data-a="start-lead" data-v="${k}" aria-pressed="${(c.lead||'tac')===k}" title="${esc(v[1])}">${esc(v[0])}</button>`).join('')}</div></div></div>
- <p class="small muted" style="margin:4px 0 0">${esc((BG[c.bg||'amat'])[1])} Empiezas como un desconocido: tendrás que estudiar, ganar experiencia y construir tu reputación.</p></div>`;}
+/** Creación del entrenador por pasos (como en FM26): biografía, carrera como jugador, titulación, estilo y resumen. */
+export const CC_STEPS=['Biografía','Carrera como jugador','Titulación','Estilo','Resumen'];
+export function createCoachHTML(RT,PT){const c=RT.coach||{},st=RT.cstep||0,bg=c.bg||'amat',lic=c.lic||(bg==='none'?'none':'C'),lead=c.lead||'tac',jur=PT?jurOf(LG(PT.lg).c):'UEFA';
+ const base=PT?Math.min(clubReq(PT)+8,12+clubReq(PT)*.4):10,rep=Math.round(Math.max(5,Math.min(100,base+startRepBonus({bg,lic}))));
+ const opt=(a,k,cur,n,d)=>`<button class="ccopt" data-a="${a}" data-v="${k}" aria-pressed="${cur===k}"><span class="ccr"></span><span><b>${esc(n)}</b><small>${esc(d)}</small></span></button>`;
+ const body=st===0?`<h3>¿Quién eres?</h3><div class="ccbio"><label class="f"><span class="eyebrow">Nombre</span><input id="cName" maxlength="28" placeholder="Tu nombre" value="${esc(c.name||'')}"></label>
+  <label class="f"><span class="eyebrow">Nacionalidad</span><select id="cNat">${COUNTRIES.map((C,i)=>`<option value="${i}" ${(c.nat??RT.startC)===i?'selected':''}>${esc(C.n)}</option>`).join('')}</select></label>
+  <label class="f"><span class="eyebrow">Edad</span><select id="cAge">${[28,32,36,40,45,50].map(a=>`<option value="${a}" ${(c.age||36)===a?'selected':''}>${a} años</option>`).join('')}</select></label></div><p class="small muted">Los entrenadores jóvenes tienen algo más de margen de mejora; los veteranos, más poso.</p>`
+ :st===1?`<h3>¿Cuál fue tu carrera como jugador?</h3><div class="ccopts">${Object.entries(BG).map(([k,v])=>opt('start-bg',k,bg,v[0],v[1])).join('')}</div>`
+ :st===2?`<h3>¿Tienes alguna <em>licencia de entrenador</em>?</h3><p class="small muted" style="margin:0 0 6px">Las licencias reflejan tu formación: cuanto más alta, más reputación y a más banquillos puedes optar. Son de ${esc(JURS[jur]||jur)}.</p>
+  <div class="cclic"><div><span class="cclh">🏅 Élite</span>${opt('start-lic','PRO',lic,START_LIC.PRO[0]+' '+jur,START_LIC.PRO[1])}</div><div><span class="cclh">🥈 Avanzadas</span>${opt('start-lic','A',lic,START_LIC.A[0],START_LIC.A[1])}${opt('start-lic','B',lic,START_LIC.B[0],START_LIC.B[1])}</div><div><span class="cclh">🥉 Básica</span>${opt('start-lic','C',lic,START_LIC.C[0],START_LIC.C[1])}</div><div><span class="cclh">✕ Ninguna</span>${opt('start-lic','none',lic,START_LIC.none[0],START_LIC.none[1])}</div></div>`
+ :st===3?`<h3>¿Cómo diriges a tu equipo?</h3><div class="ccopts">${Object.entries(LEAD).map(([k,v])=>opt('start-lead',k,lead,v[0],'Empiezas con '+v[1]+'.')).join('')}</div>`
+ :`<h3>Resumen</h3><div class="kv" style="margin:0"><span>Nombre</span><b>${esc(c.name||'Tú')}</b><span>Nacionalidad</span><b>${esc(COUNTRIES[c.nat??RT.startC??0].n)}</b><span>Edad</span><b>${c.age||36} años</b><span>Carrera como jugador</span><b>${esc(BG[bg][0])}</b><span>Titulación</span><b>${esc(START_LIC[lic][0])}${lic!=='none'?' · '+esc(jur):''}</b><span>Estilo</span><b>${esc(LEAD[lead][0])}</b>${PT?`<span>Primer club</span><b>${esc(PT.name)}</b>`:''}</div>
+  ${PT&&!eligibleWith(PT,lic)?`<div class="negmsg no" style="margin-top:8px">⚠️ Para entrenar en ${esc(lgName(PT.lg))} hace falta más licencia: la federación te dará una dispensa temporal y tendrás que estudiar esta temporada.</div>`:''}`;
+ return `<div class="ccreate ccw"><div class="ccmain"><div class="ccbc">${CC_STEPS.map((n,i)=>`<button data-a="cc-step" data-v="${i}" class="${i===st?'on':i<st?'done':''}">${esc(n)}</button>`).join('<span>›</span>')}</div>${body}</div>
+ <div class="ccside"><div class="ccfig"><svg viewBox="0 0 60 80" aria-hidden="true"><circle cx="30" cy="16" r="10" fill="#c9b8a6"/><path d="M14 80l2-38c1-8 7-12 14-12s13 4 14 12l2 38z" fill="#5a4330"/><path d="M26 30l4 10 4-10" fill="#e9e4dc"/><path d="M29 34h2l1 14h-4z" fill="#7a2b2b"/></svg></div>
+  <div class="ccrep"><span class="eyebrow">Reputación</span><b>${repLabel(rep)}</b><i class="ccbar"><i style="width:${rep}%"></i></i></div>
+  <b class="ccname">${esc(c.name||'Tu entrenador')}</b><small>${c.age||36} años · ${nf(c.nat??RT.startC??0)} ${esc(COUNTRIES[c.nat??RT.startC??0].n)}</small><small>⚽ ${esc(BG[bg][0])}</small><small>🎓 ${esc(START_LIC[lic][0])}</small><small>🧭 ${esc(LEAD[lead][0])}</small></div></div>`;}
+const eligibleWith=(t,lic)=>{const need=ruleFor(LG(t.lg)).need;return ['none','C','B','A','PRO'].indexOf(lic)-1>=need;};

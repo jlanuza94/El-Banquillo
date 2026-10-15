@@ -120,12 +120,26 @@ function calNotes(){
   else if(ev.t==='ct')add(evd[i],`Continental · ${CT_STAGES[ev.s]||''}`,'oth');});
  return N;
 }
-function monthHTML(){
- syncDay();const me=f=>f.h===S.user||f.a===S.user,evd=eventDays(),byDay={},notes=calNotes();
+/** Tus partidos de la temporada por día: liga, copas, continental y amistosos. */
+function userDays(){
+ const me=f=>f.h===S.user||f.a===S.user,evd=eventDays(),byDay={};
  S.cal.forEach((ev,i)=>{let ref=null;try{ref=userRefFor(ev);}catch(e){}let fx=null,lbl='',k=ev.t;
   if(ev.t==='lg'){fx=S.fixtures[uLg()][ev.r].find(me);lbl=`${LV_NAMES[LG(uLg()).lv]} · J${ev.r+1}`;}else if(ref){fx=getFx(ref);lbl=compLabel(ref);}
   if(fx)(byDay[evd[i]]=byDay[evd[i]]||[]).push({fx,lbl,k});});
  (S.fr||[]).forEach(f=>{if(f.day!=null&&me(f))(byDay[f.day]=byDay[f.day]||[]).push({fx:f,lbl:f.lbl||'Amistoso',k:'fr'});});
+ return byDay;
+}
+/** Lista de partidos de la temporada, como «Partidos del club» del FM: fecha, rival, campo, resultado y competición. */
+function fixturesHTML(){
+ syncDay();const byDay=userDays(),days=Object.keys(byDay).map(Number).sort((a,b)=>a-b);
+ const rows=days.flatMap(d=>byDay[d].map(x=>{const f=x.fx,home=f.h===S.user,opp=T(home?f.a:f.h),r=f.played?((home?f.hg>f.ag:f.ag>f.hg)?'G':(f.hg===f.ag?'E':'P')):'';
+  return `<tr class="${d===S.day?'today':''}${d<S.day&&!f.played?' dim':''}"><td class="fxd">${esc(dateTxt(d))}</td><td class="fxo">${crest(opp,'sm')}<button class="linkname" data-a="club-open" data-id="${opp.id}">${esc(opp.name)}</button></td><td class="c"><span class="fxha ${home?'h':'a'}">${home?'C':'F'}</span></td><td class="c">${f.played?`<span class="fxr ${r}">${r}</span><b class="num">${home?f.hg:f.ag}-${home?f.ag:f.hg}</b>${f.pen?` <small>(${home?f.pen[0]:f.pen[1]}-${home?f.pen[1]:f.pen[0]} p.)</small>`:''}`:'<span class="muted">—</span>'}</td><td class="fxc k-${x.k}">${esc(x.lbl)}</td></tr>`;})).join('');
+ const P=days.flatMap(d=>byDay[d]).filter(x=>x.fx.played),w=P.filter(x=>{const f=x.fx,h=f.h===S.user;return h?f.hg>f.ag:f.ag>f.hg;}).length,dr=P.filter(x=>x.fx.hg===x.fx.ag).length;
+ return `<section class="panel"><div class="panel-h"><h2>Partidos · temporada ${seasonLabel()}</h2><span class="eyebrow">${P.length} jugados · ${w}G ${dr}E ${P.length-w-dr}P</span></div>
+ <div class="tbl fxtbl"><table><thead><tr><th>Fecha</th><th>Rival</th><th class="c">C/F</th><th class="c">Resultado</th><th>Competición</th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="muted">Sin partidos.</td></tr>'}</tbody></table></div></section>`;
+}
+function monthHTML(){
+ syncDay();const me=f=>f.h===S.user||f.a===S.user,evd=eventDays(),byDay=userDays(),notes=calNotes();
  const off=S.calM||0,base=dateOf(S.day),y=base.getUTCFullYear(),mo=base.getUTCMonth()+off,first=new Date(Date.UTC(y,mo,1)),M=first.getUTCMonth(),Y=first.getUTCFullYear();
  const start=seasonStart(),dayIdx=dt=>Math.round((dt-start)/864e5),lead=(first.getUTCDay()+6)%7,nDays=new Date(Date.UTC(Y,M+1,0)).getUTCDate();
  const W=winRounds(),win=di=>(di>=0&&di<=lgDay(W[0]))||(di>=lgDay(W[1])&&di<=lgDay(W[2]));
@@ -149,7 +163,7 @@ export function calendarioView(){
   if(ev.t==='ct'&&ctOf(S.user)>=0){const C=S.conts[ctOf(S.user)];if(!C.dates[ev.s]&&ctStatus().indexOf('Eliminado')<0&&ctStatus()!=='¡Campeón!')items.push({lbl:`${CONTS[ctOf(S.user)].n} · ${CT_STAGES[ev.s]}`,fx:null,txt:'Si pasas de ronda'});}
  }
  const past=[];S.fixtures[uLg()].slice(0,S.week).forEach((rd,r)=>{const f=rd.find(me);if(f)past.push([r,f]);});
- const tb=vtab('cal',[['mes','Calendario'],['lista','Lista']],'mes');if(tb.cur==='mes')return tb.bar+monthHTML();
+ const tb=vtab('cal',[['mes','Calendario'],['fx','Partidos'],['lista','Próximas fechas']],'mes');if(tb.cur==='mes')return tb.bar+monthHTML();if(tb.cur==='fx')return tb.bar+fixturesHTML();
  return tb.bar+`<div class="grid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Próximas fechas</h2><span class="eyebrow">${windowTxt()}</span></div>
  ${items.length?items.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="eyebrow">${esc(x.lbl)}</div>${x.fx?resRow(x.fx,null):`<div class="small muted">${esc(x.txt||'')}</div>`}</div>`).join(''):'<div class="empty">No quedan partidos esta temporada.</div>'}</section></div>
  <div class="stack"><section class="panel"><div class="panel-h"><h2>Resultados de liga</h2><span class="eyebrow">${past.length} jugados</span></div>${past.length?past.slice().reverse().map(([r,f])=>resRow(f,r)).join(''):'<div class="empty">Aún no has jugado ninguna jornada.</div>'}</section></div></div>`;

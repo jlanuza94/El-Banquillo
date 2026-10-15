@@ -86,8 +86,11 @@ export const TACS={pre:{n:'Presión',o:{baj:'Baja',med:'Media',alt:'Alta'},d:'Al
  anc:{n:'Anchura',o:{est:'Estrecho',nor:'Normal',anc:'Ancho'},d:'Ancho: aprovecha laterales y extremos buenos. Estrecho: juega por dentro si tus medios son mejores.'},
  per:{n:'Al perder el balón',o:{nor:'Normal',cpr:'Contrapresión',rep:'Replegar'},d:'Contrapresión: a por el balón en cuanto se pierde (robas arriba, cansa y te expone a la contra). Replegar: todos atrás a defender (sólido, pero atacas menos).'},
  rec:{n:'Al recuperar el balón',o:{nor:'Normal',cont:'Contraataque',pau:'Pausar'},d:'Contraataque: rápido a la espalda del rival (mortal si tiene la línea alta o está volcado; mejor con delanteros rápidos). Pausar: guardar el balón y ordenarse.'},
+ ent:{n:'Entradas',o:{pru:'Prudentes',nor:'Normales',dur:'Duras'},d:'Duras: robas más balones y el rival crea menos, pero ves más tarjetas. Prudentes: casi sin tarjetas, aunque el rival progresa con más facilidad.'},
+ off:{n:'Trampa del fuera de juego',o:{no:'No',si:'Sí'},d:'Con defensas bien colocados y la línea alta deja al rival en fuera de juego; con defensas lentos o mal colocados es un riesgo.'},
+ tie:{n:'Perder tiempo',o:{no:'No',si:'Sí'},d:'Sólo cuando vas ganando: el partido se enfría y el rival crea menos, aunque tú también atacas menos. El árbitro puede amonestar.'},
  est:{n:'Estilo',o:{equ:'Equilibrado',pos:'Posesión',dir:'Directo',con:'Contragolpe'},d:'Posesión: castiga la presión baja. Directo: bueno con delanteros fuertes. Contragolpe: mortal contra líneas altas y rivales ofensivos.'}};
-export const TAC0={pre:'med',lin:'med',rit:'nor',anc:'nor',est:'equ',per:'nor',rec:'nor'};
+export const TAC0={pre:'med',lin:'med',rit:'nor',anc:'nor',est:'equ',per:'nor',rec:'nor',ent:'nor',off:'no',tie:'no'};
 export const ORDERS={'':'Sin orden',sube:'Sube al ataque',libre:'Libertad creativa',marca:'Marcar a su estrella',fija:'Quédate atrás'};
 /** Instrucciones al rival (se aplican a todo su equipo). */
 export const OIS={ban:{n:'Cerrar las bandas',d:'Frena a los rivales que atacan por fuera, a cambio de un poco menos de ataque propio.'},

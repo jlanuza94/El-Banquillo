@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {hasTitle} from './mtitles';
 import {careerWeekly} from './mgrcareer';
 import {monthlyAwards} from './monthly';
 import {winterWeekly} from './preseason';
@@ -65,6 +66,7 @@ export function hapWeekly(res){
   if(p.wage<baseWage(p)*.7)d-=.8;if(p.contract<=1&&!p.loan&&S.week>=19)d-=.4;if(p.per==='amb'&&p.ovr>LG(uLg()).rep+12)d-=.7;
   if(lead.some(([L])=>L!==p&&L.hap<35&&langOf(L)===langOf(p)))d-=.6;
   if(p.adapt>0){p.adapt--;if(!p.adapt)news(`${p.name} ya se ha adaptado al club y al país.`,'good');}
+  if(hasTitle('pad'))d+=.25;if(hasTitle('cnt')&&p.home&&p.playedWk)d+=.4;
   if(d<0&&p.per==='lea')d*=.5;p.hap=clamp(p.hap+d,0,100);
   checkProm(p);
   if(p.hap<25&&!p.req&&!p.loan){p.req=1;news(`${p.name} está descontento y pide salir del club.`,'bad',{cat:'pla',from:p.name,subj:'Quiero salir del club',act:[{l:'Hablar con él',a:'chat',id:p.id}]});}
@@ -96,7 +98,7 @@ export function recBonus(){const F=FOCUS[S.train.focus],I=INTS[S.train.int];retu
 export function growChance(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];
  const age=p.age<=21?.075:p.age<=24?.05:p.age<=28?.025:p.age<=31?.01:0;
- return trMult(p)*age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*trainMult()*(mentorOf(p.id)?1.2:1)*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1);
+ return trMult(p)*age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*trainMult()*(mentorOf(p.id)?1.2:1)*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1)*(p.age<=21&&hasTitle('est')?1.1:1)*(p.home&&hasTitle('cnt')?1.05:1);
 }
 export function trainPlayer(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];

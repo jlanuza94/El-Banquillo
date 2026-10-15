@@ -1,5 +1,7 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {TITLES,hasTitle,setTitle} from './mtitles';
+const TITLES_CAT=k=>TITLES[k]?TITLES[k][0]:'peo';
 import {askMentor,interviewChance,interviewQs,pickSpec} from './mgrcareer';
 import {convalidate,eligibility,enroll} from './coach';
 import {oopSwap} from './oop';
@@ -94,9 +96,11 @@ document.addEventListener('click',e=>{
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
-  const rdC=()=>{const g=id=>document.getElementById(id);RT.coach=Object.assign(RT.coach||{},{name:(g('cName')&&g('cName').value||'').trim()||undefined,nat:g('cNat')?+g('cNat').value:undefined,age:g('cAge')?+g('cAge').value:undefined});};
+  const rdC=()=>{const g=id=>document.getElementById(id),c=RT.coach=RT.coach||{};if(g('cName'))c.name=g('cName').value.trim()||undefined;if(g('cNat'))c.nat=+g('cNat').value;if(g('cAge'))c.age=+g('cAge').value;};
+  if(a==='cc-step'){rdC();RT.cstep=+d.v;render();return;}
+  if(a==='start-lic'){rdC();RT.coach.lic=d.v;render();return;}
   if(a==='start-bg'||a==='start-lead'){rdC();RT.coach[a==='start-bg'?'bg':'lead']=d.v;render();return;}
-  if(a==='pick-team'){RT.pickT=+d.i;RT.startStep='coach';render();window.scrollTo(0,0);return;}
+  if(a==='pick-team'){RT.pickT=+d.i;RT.startStep='coach';RT.cstep=0;render();window.scrollTo(0,0);return;}
   if(a==='start-sign'){rdC();pickTeam(RT.pickT);RT.pickT=null;return;}
   if(false){}else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;RT.startStep='d';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-lv'){RT.startLv=+d.v;RT.startStep='club';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-step'){RT.startStep=d.v;render();}return;}
  if(a==='ov'&&e.target!==el)return;
@@ -236,6 +240,8 @@ document.addEventListener('click',e=>{
   case'abo':S.club.abo=clamp(S.club.abo+(+d.d)*(S.club.abo>=300?20:S.club.abo>=100?10:5),20,6000);break;
   case'price':S.club.price=clamp(S.club.price+(+d.d)*(S.club.price>=30?2:1),2,250);break;
   case'build':startBuild(d.t,+d.n||0);break;
+  case'car-title':setTitle(d.v);S.vt=S.vt||{};S.vt.ttc=TITLES_CAT(d.v);break;
+  case'car-tcat':S.vt=S.vt||{};S.vt.ttc=d.v;break;
   case'tac':{const t=T(S.user);t.tac=Object.assign({},TAC0,t.tac||{});t.tac[d.k]=d.v;break;}
   case'hi-tab':S.hiTab=d.v;break;
   case'v2d':S.v2d=d.v==='1';break;
@@ -250,7 +256,7 @@ document.addEventListener('click',e=>{
   case'rs-go':{const v=document.getElementById('rsTxt')?.value;if(importCode(v)){toast('Partida restaurada.');return;}S.modal={type:'restore',err:'El código no es válido o está incompleto. Copia el texto entero, empezando por EB1:'};break;}
   case'ct-sel':S.ctSel=+d.v;break;
   case'ct-open':S.modal=null;S.view='copas';S.cupTab='ct';S.ctSel=+d.v;break;
-  case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
+  case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);if(hasTitle('sec')&&(d.v==='exi'||d.v==='bro'))r.d=r.d>0?r.d*1.4:r.d*.6;m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
   case'scout-hire':{const i=S.scoutPool.findIndex(x=>x.id===d.id);if(i>=0&&S.scoutPool[i].fee&&S.budget<S.scoutPool[i].fee){toast(`No te llega para la indemnización (${money(S.scoutPool[i].fee)}).`);break;}if(i>=0&&S.scouts.length<staffMax('sc')){const sc=S.scoutPool.splice(i,1)[0];if(sc.fee){S.budget=r3(S.budget-sc.fee);if(T(sc.club))T(sc.club).cash=r2((T(sc.club).cash||0)+sc.fee);sc.fee=0;sc.club=null;}sc.reg=Math.max(0,regionOf(LG(uLg()).c));S.scouts.push(sc);toast(`${sc.name} se une como ojeador.`);}break;}
   case'scout-fire':S.scouts=S.scouts.filter(x=>x.id!==d.id);break;
   case'pros-sign':signProspect(d.id);break;

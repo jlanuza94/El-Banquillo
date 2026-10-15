@@ -2,6 +2,7 @@
  * a temporada, insignias por lo conseguido, y cómo eso cambia las ganas de los jugadores de venir a tu club.
  * También: ofrecer un puesto de técnico a los jugadores que se van a retirar (como en FM Mobile). */
 // @ts-nocheck — usa el estado heredado S.
+import {titlesMatch} from './mtitles';
 import {clamp,money,pick,rnd} from './core';
 import {unit} from './state';
 import {COURSES,MAIN,at20Grow,courseWeekly,eligibility,histMatch,histTitle,licExpiryCheck,validLevel} from './coach';
@@ -95,7 +96,7 @@ export const levelXp=l=>40*(l-1)*(l-1);
 export function careerMatch(m){const M=S.mgr;if(!M||!m.us||m.ref.k==='fr')return;const us=m.us,o=us==='h'?'a':'h',d=m.score[us]-m.score[o];
  M.games=(M.games||0)+1;histMatch(d);M.wst=d>0?(M.wst||0)+1:0;M.cs=m.score[o]===0?(M.cs||0)+1:0;giveBadge('debut');if(d>0)giveBadge('win1');if(M.wst>=5)giveBadge('racha');if(d>=5)giveBadge('goleada');if(M.cs>=5)giveBadge('cero');if(d>0&&isDerby(m.h,m.a))giveBadge('derbi');
  {let a=0,b=0,worst=0;m.ev.forEach(e=>{if(e.t==='goal'){if(e.s===us)a++;else b++;worst=Math.min(worst,a-b);}});if(d>0&&worst<=-2)giveBadge('remontada');}M.wins=(M.wins||0)+(d>0?1:0);M.unb=d<0?0:(M.unb||0)+1;addXp(d>0?12:d===0?7:3,'partido');
- if(M.games>=100)giveBadge('cien');if(M.unb>=10)giveBadge('invicto');}
+ if(M.games>=100)giveBadge('cien');if(M.unb>=10)giveBadge('invicto');titlesMatch(m);}
 /* ---------- Especialidades ---------- */
 export const SPECS={tac:['🧠','Táctico','+1 en Táctica: tu equipo rinde algo más y aprende antes las tácticas.'],mot:['🔥','Motivador','+1 en Motivación: charlas más efectivas y vestuario más unido.'],can:['🌱','Formador','+1 en Cantera: los jóvenes crecen más rápido.'],neg:['🤝','Negociador','+1 en Negociación: fichajes más baratos.'],fis:['💪','Preparador físico','Menos lesiones y mejor recuperación.']};
 export const hasSpec=k=>!!(S.mgr&&(S.mgr.spec||[]).includes(k));

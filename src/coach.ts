@@ -107,15 +107,22 @@ export function legacyAt(k){const A=S.mgr&&S.mgr.at20;if(!A)return null;const g=
 /** Crecimiento al final de la temporada (lo que más has trabajado, hasta tu potencial). */
 export function at20Grow(sm,ctx){const ks=[];if(sm.ok||sm.up||sm.champ)ks.push('ofe','dfn','est');if(ctx.youth)ks.push('dvi','pla');if(ctx.deals)ks.push('gpe','dir');if(ctx.happy)ks.push('ves','mot');ks.push('eva','dec');ks.forEach(k=>bumpAt(k,.6));}
 /* ---------- Perfil inicial ---------- */
-export const BG={none:['Sin pasado como jugador','Empiezas desde cero: sin licencias.'],amat:['Exjugador amateur','Empiezas con la Licencia C.'],pro:['Exjugador profesional','Licencias C y B por la vía de exjugador, y más reputación.']};
+export const BG={none:['Sin pasado como jugador','Nunca jugaste en serio: te lo tendrás que ganar todo en los banquillos.'],amat:['Exjugador amateur','Jugaste en categorías regionales: conoces el fútbol modesto.'],semi:['Exjugador semiprofesional','Jugaste en Tercera y Segunda RFEF: algo de nombre en el fútbol modesto.'],pro:['Exjugador profesional','Jugaste en Primera o Segunda: los jugadores te respetan y la prensa te conoce.'],int:['Exinternacional','Fuiste internacional con tu selección: el vestuario te respeta desde el primer día.']};
+/** Titulación al empezar (como en FM26): cuanto más alta, más reputación inicial. */
+export const START_LIC={none:['Sin titulación','No tienes ninguna licencia: tendrás que empezar por la C.',0],C:['Licencia C','Licencia básica: entrenar en categorías modestas.',0],B:['Licencia B','Licencia intermedia: hasta las categorías semiprofesionales.',3],A:['Licencia A','Licencia avanzada: hasta Segunda División.',6],PRO:['Licencia Pro','La máxima titulación: cualquier banquillo, en cualquier categoría.',10]};
+const BG_REP={none:0,amat:0,semi:1,pro:6,int:12},BG_AT={none:6,amat:7,semi:7.5,pro:9,int:10};
+/** Reputación extra con la que empiezas según tu pasado y tu titulación. */
+export const startRepBonus=o=>(BG_REP[o.bg||'amat']||0)+(o.lic?START_LIC[o.lic][2]:o.bg==='pro'?8:0);
 export const LEAD={tac:['Estratega','+táctica y análisis'],mot:['Motivador','+motivación y comunicación'],dis:['Disciplinado','+disciplina y preparación física'],pat:['Paternal','+vestuario y desarrollo de jóvenes']};
 /** Crea el entrenador al empezar partida (o migra el de una partida antigua). */
 export function createCoach(o={}){const M=S.mgr,bg=o.bg||'amat',lead=o.lead||'tac',c=LG(uLg()).c;
  M.name=o.name||M.name||'Tú';M.nat=o.nat??c;M.born=o.age?(2025+S.seasonN-o.age):(M.born||2025+S.seasonN-34);M.bg=bg;M.lead=lead;M.langs=o.langs||[COUNTRIES[M.nat]?COUNTRIES[M.nat].lang:'es'];
- const base=bg==='pro'?9:bg==='amat'?7:6,A={};AT20K.forEach(k=>A[k]=clamp(Math.round(base+rnd()*3),1,20));
+ const base=BG_AT[bg]??7,A={};AT20K.forEach(k=>A[k]=clamp(Math.round(base+rnd()*3),1,20));
  const boost={tac:['ofe','dfn','est','obs','eva'],mot:['mot','com','ves'],dis:['dis','pfi','pla'],pat:['ves','dvi','com']}[lead];boost.forEach(k=>A[k]=clamp(A[k]+3,1,20));
  M.at20=A;M.pot=clamp(Math.round(14+rnd()*5+(o.age&&o.age<35?1:0)),12,20);M.lics=[];
- if(bg!=='none')grant('C',myJur());if(bg==='pro'){grant('B',myJur());M.rep=clamp(M.rep+8,0,100);}
+ if(o.lic){const n=['none','C','B','A','PRO'].indexOf(o.lic);for(let i=0;i<n;i++)grant(MAIN[i],myJur());}
+ else{if(bg!=='none')grant('C',myJur());if(bg==='pro')grant('B',myJur());}
+ M.rep=clamp(M.rep+startRepBonus(o),0,100);
  M.hist=[{tid:S.user,club:T(S.user).name,lg:T(S.user).lg,from:seasonLabel(),to:null,g:0,w:0,d:0,l:0,titles:[]}];M.v2=1;}
 /** Partidas anteriores: crea el perfil a partir de lo que ya había, sin tocar nada del juego. */
 export function migrateCoach(){const M=S.mgr;if(!M||M.v2)return;

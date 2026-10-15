@@ -9,7 +9,10 @@ import {shotMap} from './analysis';
 import {matchRecord} from '../analysis';
 import {esc,fill,fmtMin} from '../core';
 import {GRP,MENT,OIS,TACS} from '../data';
-import {slotsOf} from '../tactics';
+import {slotsOf,table,teamPower} from '../tactics';
+import {AT_NAME} from '../data';
+import {squad} from '../state';
+import {starsHTML,starsOf} from './pcard';
 import {PL,RT,S,T,crest,crestStyle,lastNm,rt} from '../state';
 import {GOALT,TALKS,bench,liveRatings} from '../engine';
 import {pitchHTML,slotCoords} from './common';
@@ -66,17 +69,40 @@ function wStrip(m,us){
  return `<div class="mstrip"><span class="msub">${m.subs[us]}/5 cambios</span>${m.lu[us].map((id,i)=>{const p=PL(id);if(!p)return '';const en=Math.round(m.en[id]??p.energy),r=rat[id];
   return `<button class="mst" ${can?`data-a="m-subout" data-id="${id}"`:'disabled'} title="${esc(p.name)} · ${en}%"><span>${sl[i]}</span><i class="hrt ${en>=75?'g':en>=55?'y':'r'}">♥</i>${r!=null?`<b class="${rq(r)}">${r.toFixed(1)}</b>`:''}</button>`;}).join('')}</div>`;
 }
-/** Previa del partido: tu once, el rival y la charla. Al hablar (o saltarla) pasas al partido. */
+/** Previa del partido (como el «Pre-Match Hub» del FMM): los dos equipos con su forma, estilo y formación,
+ * el jugador clave, fortalezas y debilidades del rival comparadas con tu once, las bajas y la charla. */
+const PM_AT=['vel','pas','reg','tir','cab','def','fis','res','dec','vis','col'];
+function pmForm(tid){const tb=table(T(tid).lg),r=tb.find(x=>x.id===tid);return r?r.form.slice(-5):[];}
+function pmAvg(lu,k){const L=lu.map(id=>PL(id)).filter(p=>p&&p.sp!=='POR');return L.length?L.reduce((a,p)=>a+(p.at[k]||0),0)/L.length:0;}
+function pmMini(m,s,big){const sl=slotsOf(m.f[s]),C=slotCoords(m.f[s]);
+ return `<div class="pmpitch${big?' big':''}">${sl.map((x,i)=>C[i]?(big?`<span class="pmp ${GRP[x]||''}" style="left:${C[i].x}%;top:${C[i].y}%">${x}</span>`:`<i class="pmd ${GRP[x]||''}" style="left:${C[i].x}%;top:${C[i].y}%"></i>`):'').join('')}</div>`;}
 function preMatchView(m){
- const us=m.us,o=us==='h'?'a':'h',U=T(m[us]),O=T(m[o]),sl=slotsOf(m.f[us]),osl=slotsOf(m.f[o]);
- const xi=m.lu[us].map((id,i)=>{const p=PL(id);if(!p)return '';const en=Math.round(m.en[id]??p.energy);return `<div class="pmr"><span class="pos ${GRP[sl[i]]||p.pos}">${sl[i]}</span><span class="nm">${esc(p.name)}</span><span class="q ${qcv(p.ovr/10)}">${(p.ovr/10).toFixed(1)}</span><i class="hrt ${en>=75?'g':en>=55?'y':'r'}">♥</i></div>`;}).join('');
- const best=m.lu[o].map(id=>PL(id)).filter(Boolean).sort((a,b)=>b.ovr-a.ovr).slice(0,3);
- return `<div class="mtopb"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button><span class="eyebrow mlbl">${esc(m.label||'Partido')}</span><span class="spacer"></span></div>
- <div class="prem"><div class="prem-h"><div class="pmt">${crest(T(m.h),'lg')}<b>${esc(T(m.h).name)}</b></div><div class="pmvs"><b>VS</b><span>${m.wx?esc(wxTxt(m.wx)):''}${m.refr?` · árbitro ${esc(REFS[m.refr.k].n.toLowerCase())}`:''}</span></div><div class="pmt">${crest(T(m.a),'lg')}<b>${esc(T(m.a).name)}</b></div></div>
- <div class="prem-g"><section class="panel"><div class="panel-h"><h2>Tu once</h2><span class="eyebrow">${m.f[us]} · ${MENT[m.ment[us]].label}</span></div>${xi}<button class="btn sm" data-a="view" data-v="tacticas" style="margin-top:8px">Cambiar alineación</button></section>
- <section class="panel"><div class="panel-h"><h2>${esc(O.short)}</h2><span class="eyebrow">${m.f[o]}</span></div><p class="small muted" style="margin:0 0 6px">Sus jugadores más peligrosos:</p>${best.map(p=>`<div class="pmr"><span class="pos ${p.pos}">${p.sp}</span><span class="nm">${esc(p.name)}</span><span class="q ${qcv(p.ovr/10)}">${(p.ovr/10).toFixed(1)}</span></div>`).join('')}</section>
- <section class="panel prtalk"><div class="panel-h"><h2>Charla antes del partido</h2></div>${Object.entries(TALKS.pre).map(([k,v])=>{const [a,b]=v.split(':');return `<button class="talkc" data-a="talk" data-p="pre" data-v="${k}"><b>${esc(a)}</b><span>${esc((b||'').trim())}</span></button>`;}).join('')}
- <p class="small muted" style="margin:6px 0">Motivar funciona mejor si eres el débil; tranquilizar, si eres favorito o en copa. Exigir es arriesgado si el equipo viene mal.</p><button class="btn" data-a="m-preok">Saltar la charla e ir al partido →</button></section></div></div>`;
+ const us=m.us,o=us==='h'?'a':'h',U=T(m[us]),O=T(m[o]),H=T(m.h),A=T(m.a);
+ const pw=s=>teamPower(m.lu[s],m.f[s]).ovr,pu=pw(us),po=pw(o),fav=pu+(us==='h'?8:-8)-po;
+ const st=s=>`${TACS.est.o[(m.tac[s]||{}).est||'equ']} · ${MENT[m.ment[s]].label.toLowerCase()}`;
+ const fd=f=>f.length?`<span class="pmform">${f.map(x=>`<i class="${x}">${x}</i>`).join('')}</span>`:'<span class="pmform muted small">Sin partidos</span>';
+ const key=m.lu[o].map(id=>PL(id)).filter(p=>p&&p.sp!=='POR').sort((a,b)=>b.ovr-a.ovr)[0];
+ const df=PM_AT.map(k=>[k,pmAvg(m.lu[o],k)-pmAvg(m.lu[us],k)]).sort((a,b)=>b[1]-a[1]),fo=pmForm(m[o]),T0=Object.assign({},m.tac[o]||{});
+ const str=df.filter(x=>x[1]>.35).slice(0,3).map(x=>AT_NAME[x[0]]),weak=df.filter(x=>x[1]<-.35).slice(-3).reverse().map(x=>AT_NAME[x[0]]);
+ if(fo.filter(x=>x==='G').length>=3)str.push('Buena racha');if(fo.filter(x=>x==='P').length>=3)weak.push('Mala racha');
+ if(T0.lin==='alt')weak.push('Espacio a la espalda (línea alta)');if(T0.pre==='alt')str.push('Presión alta');
+ const out=squad(m[us]).filter(p=>p.inj||p.susp).slice(0,6);
+ const quote=Math.abs(fav)<4?`${U.name} y ${O.name} llegan muy igualados: los detalles decidirán.`:fav>0?(us==='a'?`Pese a jugar fuera, ${U.name} llega como favorito ante ${O.name}.`:`${U.name} llega como ${fav>12?'claro':'ligero'} favorito en casa ante ${O.name}.`):(us==='h'?`Pese a jugar en casa, ${U.name} llega como ${fav<-12?'claro':'ligero'} tapado ante ${O.name}.`:`${U.name} visita a ${O.name} como ${fav<-12?'claro':'ligero'} tapado.`);
+ const team=(t,s)=>`<div class="pmt">${crest(t,'lg')}<b>${esc(t.name)}</b>${starsHTML(starsOf(pw(s)))}${fd(pmForm(t.id))}</div>`;
+ return `<div class="mtopb"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button><span class="eyebrow mlbl">Previa del partido</span><span class="spacer"></span><button class="btn sm" data-a="view" data-v="tacticas">Tácticas</button><button class="btn sm primary" data-a="m-preok">Ir al partido →</button></div>
+ <div class="pmhub"><div class="stack">
+ <section class="panel pmvs2"><h2 class="pmcomp">${esc(m.label||'Partido')}</h2><div class="pmteams">${team(H,'h')}<b class="pmx">VS</b>${team(A,'a')}</div>
+  <div class="pmwx"><span>${esc(m.ref&&m.ref.k==='cwc'?'Campo neutral':'Estadio de '+H.name)}</span><span>${m.wx?esc(wxTxt(m.wx)):''}${m.refr?` · árbitro ${esc(REFS[m.refr.k].n.toLowerCase())}`:''}</span></div></section>
+ <section class="panel pmme"><div class="pmrl"><h2>${esc(U.name)}</h2><div class="kv2"><span>Estilo</span><b>${esc(st(us))}</b><span>Formación</span><b>${m.f[us]}</b></div></div>${pmMini(m,us,false)}
+  <div class="pmout"><h3>No disponibles</h3>${out.length?out.map(p=>`<p><span class="pmi ${p.inj?'inj':p.susp?'sus':'int'}">${p.inj?'✚':p.susp?'■':'Int'}</span>${esc(lastNm(p.id))}</p>`).join(''):'<p class="muted">Toda la plantilla disponible</p>'}</div></section>
+</div>
+ <div class="stack"><section class="panel pmriv"><div class="pmrl"><h2>${esc(O.name)}</h2><div class="kv2"><span>Estilo</span><b>${esc(st(o))}</b><span>Formación</span><b>${m.f[o]}</b>${key?`<span>Jugador clave</span><b>${esc(lastNm(key.id))} · ${key.sp}</b>`:''}</div></div>${pmMini(m,o,true)}
+  <div class="pmsw"><div><h3>Fortalezas</h3>${str.length?str.slice(0,4).map(x=>`<p>▸ ${esc(x)}</p>`).join(''):'<p class="muted">Ninguna destacable</p>'}</div><div><h3>Debilidades</h3>${weak.length?weak.slice(0,4).map(x=>`<p>▸ ${esc(x)}</p>`).join(''):'<p class="muted">No se aprecian debilidades</p>'}</div></div></section>
+ <section class="panel pmq"><p>«${esc(quote)}»</p></section>
+
+</div>
+ <section class="panel prtalk"><div class="panel-h"><h2>Charla antes del partido</h2><span class="eyebrow">Al hablar pasas al partido</span></div><div class="pmtalks">${Object.entries(TALKS.pre).map(([k,v])=>{const [a,b]=v.split(':');return `<button class="talkc" data-a="talk" data-p="pre" data-v="${k}"><b>${esc(a)}</b><span>${esc((b||'').trim())}</span></button>`;}).join('')}</div>
+ <p class="small muted" style="margin:6px 0 0">Motivar funciona mejor si eres el débil; tranquilizar, si eres favorito o en copa. Exigir es arriesgado si el equipo viene mal.</p></section></div>`;
 }
 const qcv=v=>v>=8?'q5':v>=7?'q4':v>=6?'q3':v>=5?'q2':'q1';
 export function matchView(){
