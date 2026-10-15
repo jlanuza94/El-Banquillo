@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {callUp,makePermanent,sendDown,toU19} from './u19';
 import {setDrill,setLead,setPLoad,tcPreset} from './tcenter';
 import {TITLES,hasTitle,setTitle,tInc} from './mtitles';
 const TITLES_CAT=k=>TITLES[k]?TITLES[k][0]:'peo';
@@ -56,7 +57,7 @@ import {queueScout,scoutWeeks} from './scouting';
 import {fireStaff,hireStaff,renewStaff,staffCourse,staffMax} from './staff';
 import {KEY,clamp,money,pick,r2,r3,rnd} from './core';
 import {ATTRS,COUNTRIES,MENT,OIS,TAC0,TACS} from './data';
-import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,uLg,setS} from './state';
+import {RT,LG,PL,S,T,available,dirty,findLg,lgName,rt,squad,uLg,setS} from './state';
 import {news,pickTeam} from './world';
 import {autoLineup,fixLineup,nRounds,rotateLineup,setFormation,slotsOf,teamPower,userRoles} from './tactics';
 import {addEv,doSub,talkEffect} from './engine';
@@ -114,6 +115,12 @@ document.addEventListener('click',e=>{
   case'slot':{const i=+d.i,t=T(S.user);if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,i);}else if(S.sel&&S.sel.type==='slot'){if(S.sel.i===i)S.sel=null;else{const x=t.lineup[i];t.lineup[i]=t.lineup[S.sel.i];t.lineup[S.sel.i]=x;S.sel=null;}}else S.sel={type:'slot',i};break;}
   case'bslot':{if(S.sel&&S.sel.type==='player'&&S.sel.id!==d.pid){setSub(S.sel.id,+d.k);S.sel=null;}else if(S.sel&&S.sel.type==='slot'&&d.pid){placeInSlot(d.pid,S.sel.i);}else S.sel=d.pid&&!(S.sel&&S.sel.id===d.pid)?{type:'player',id:d.pid}:null;break;}
   case'lj-k':S.ljK=d.v;break;
+  case'u19-up':toU19(d.id);break;
+  case'u19-call':callUp(d.id);break;
+  case'u19-down':sendDown(d.id);S.modal=null;break;
+  case'u19-perm':makePermanent(d.id);break;
+  case'u19-sign':{const p=(S.u19||[]).find(x=>x.id===d.id);callUp(d.id);const q=squad(S.user).find(x=>x.yid===d.id&&x.cu);if(q)makePermanent(q.id);break;}
+  case'sm-role':S.smF=S.smF||{};S.smF.role=d.v;break;
   case'mk-kind':S.mkKind=d.v;break;
   case'mk-sort':{const k=d.v;if(S.mk.sort===k)S.mk.dir=-(S.mk.dir||1);else{S.mk.sort=k;S.mk.dir=1;}S.mk.limit=40;break;}
   case'mk-attr':S.mk.attr=!S.mk.attr;break;
@@ -150,7 +157,7 @@ document.addEventListener('click',e=>{
   case'duty':{const t=T(S.user);userPos(slotsOf(t.formation));t.duty[+d.i]=d.v;break;}
   case'pi-tog':{const t=T(S.user),sl=slotsOf(t.formation);userPos(sl);const L=t.pi[+d.i]=t.pi[+d.i]||[],k=L.indexOf(d.v);if(k>=0)L.splice(k,1);else{if(L.length>=3){toast('Máximo 3 instrucciones por puesto.');break;}L.push(d.v);}break;}
   case'pos-put':placeInSlot(d.id,+d.i);break;
-  case'subs-auto':T(S.user).subs=[];toast('Banquillo automático: entran los mejores disponibles.');break;
+  case'subs-auto':T(S.user).subs=[];T(S.user).subsNone=false;toast('Banquillo automático: entran los mejores disponibles.');break;
   case'row':{if(S.view==='plantilla'){S.sel=null;S.modal={type:'ficha',id:d.id};break;}if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'mk-adv':S.mk.adv=!S.mk.adv;break;
   case'ficha':S.modal={type:'ficha',id:d.id};break;
@@ -210,7 +217,7 @@ document.addEventListener('click',e=>{
   case'offer-view':{const o=S.offers[d.id];if(o&&o.incoming&&PL(d.id)&&PL(d.id).team===S.user)S.modal={type:'sell',id:d.id};else toast('Esa oferta ya ha caducado.');break;}
   case'pl-open':S.view='plantilla';S.plTab=d.v;window.scrollTo(0,0);break;
   case'ment':T(S.user).ment=d.v;break;
-  case'xi-clear':{const t=T(S.user);t.lineup=t.lineup.map(()=>null);t.subs=[];S.sel=null;toast('Once vacío: arrastra jugadores de la lista al campo, o toca un hueco y luego un jugador.');break;}
+  case'xi-clear':{const t=T(S.user);t.lineup=t.lineup.map(()=>null);t.subs=[];t.subsNone=true;S.sel=null;toast('Once vacío: arrastra jugadores de la lista al campo, o toca un hueco y luego un jugador.');break;}
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}
   case'play':S.modal=null;playMatch();return;
@@ -379,7 +386,10 @@ document.addEventListener('change',e=>{
  if(!S||S.user==null)return;const id=e.target.id,v=e.target.value;
  const map={mksp:'sp',mkc:'c',mklv:'lv',mkmin:'min',mkage:'age',mkmax:'max',mksort:'sort',mknat:'nat',mkwage:'wage',mkpot:'pot',mkatk:'atk',mkatv:'atv'};
  if(e.target.dataset&&e.target.dataset.cond!=null){const t=T(S.user),r=(t.cond||[])[+e.target.dataset.cond],k=e.target.dataset.k;if(r){r[k]=k==='min'?+v:(v||null);}save();render();return;}
- if(id==='formSel'){setFormation(v);S.sel=null;}
+ if(id==='lmodeSel'){S.lmode=v;}
+ else if(id==='smSort'){S.smF=S.smF||{};S.smF.sort=v;}
+ else if(id==='smFree'){S.smF=S.smF||{};S.smF.free=e.target.checked;}
+ else if(id==='formSel'){setFormation(v);S.sel=null;}
  if(id==='oopSel'){const t=T(S.user);t.oop=v||null;t.oopMap=null;S.oopSel=null;}
  else if(id==='cupC'){S.cupC=+v;}
  else if(id==='hiC'){S.hiC=+v;}

@@ -200,7 +200,7 @@ const app = document.getElementById('app')!;
     ok(queueScout(far.id) === '', 'se pide un informe');
     const before = S.inbox.length; for (let i = 0; i < 4; i++) { S.week++; scoutingWeekly(); } S.week -= 4;
     ok(seen(far).exact && S.inbox.slice(0, S.inbox.length - before).some(m => m.subj.startsWith('Informe: ' + far.name)), 'llega el informe y el jugador pasa a conocerse');
-    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); S.mk.tab = 'rec'; render(); const nHl = app.querySelectorAll('.mkhl-c').length; S.mk.tab = 'buy'; render(); ok(nHl === 4 && app.querySelectorAll('#mklist tbody tr').length > 5 && app.querySelector('.will'), 'mercado en lista con destacados y ganas de venir');
+    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); S.view = 'mrec'; S.mk.tab = 'rec'; render(); const nHl = app.querySelectorAll('.mkhl-c').length; S.view = 'mercado'; S.mk.tab = 'buy'; render(); ok(nHl === 4 && app.querySelectorAll('#mklist tbody tr').length > 5 && app.querySelector('.will'), 'mercado en lista con destacados y ganas de venir');
     { const w = joinWillF(Object.values(S.players).find(p => p.team === null)); ok(w.v >= 0 && w.v <= 100, `ganas de venir de un libre: ${w.v}%`); S.mk.tab = 'int'; render(); ok(app.textContent.includes('Licencia'), 'pestaña de interesados'); S.mk.tab = 'buy'; render(); }
     S.mk.attr = true; render(); ok(app.querySelector('.at.rng'), 'el mercado muestra rangos'); S.mk.attr = false;
     S.modal = { type: 'ficha', id: far.id }; render(); S.modal = null;
@@ -409,7 +409,7 @@ const app = document.getElementById('app')!;
     const sc = { id: 'sX', name: 'Ojeador Prueba', q: 4, jui: 8, jpo: 9, job: 'sen', reg: 0, wage: .001 }; S.scouts.push(sc);
     const c = LG(T(gems[0].team).lg).c; ok(startMission('sX', c, 'ALL', '21', '4') === '', 'enviar a un ojeador de misión');
     for (let k = 0; k < 6; k++) missionsWeekly(); ok((missionOf('sX') || { found: [1] }).found.length >= 1 || !missionOf('sX'), 'la misión trae informes');
-    S.mk.tab = 'ojeo'; render(); ok(app.textContent.includes('Ojeador Prueba'), 'pestaña de misiones de ojeo'); S.mk.tab = 'buy'; stopMission('sX'); S.scouts = S.scouts.filter(x => x.id !== 'sX');
+    S.view = 'mojeo'; S.mk.tab = 'ojeo'; render(); ok(app.textContent.includes('Ojeador Prueba'), 'pestaña de misiones de ojeo'); S.mk.tab = 'buy'; stopMission('sX'); S.scouts = S.scouts.filter(x => x.id !== 'sX');
     const other = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan); S.short.push(other.id); shortlistWeekly(); const v0 = other.value; other.value = v0 * .5; const n0 = S.inbox.length; shortlistWeekly();
     ok(S.inbox.length > n0 && /más barato/.test(S.inbox[0].subj), 'aviso: un jugador seguido baja de precio'); other.value = v0; S.short.pop();
     const yp = squad(S.user).filter(p => !p.loan && p.sp !== 'POR').sort((a, b) => a.age - b.age)[0], pos = learnablePos(yp)[0]; setDev(yp.id, 'pos', pos); yp.dev.posP = 99; devWeekly(); ok(yp.alt.includes(pos) && !yp.dev.pos, 'aprende un puesto nuevo con el plan de desarrollo');
@@ -492,7 +492,7 @@ const app = document.getElementById('app')!;
       S.day = A.until + 1; processBids(false); ok(tg.team === R.id && !(S.auc || []).length, 'puja: si no mejoras a tiempo, el rival se lleva al jugador'); S.auc = []; }
     delete S.neg[tg.id]; S.budget = b0; S.week = wk0;
     const mp = squad(S.user)[0]; mp.ts = 'no'; ok(tsWeight(mp) === 0, 'intocable: nadie pregunta'); mp.ts = 'list'; ok(tsWeight(mp) > 1, 'transferible: más ofertas'); mp.ts = '';
-    S.view = 'mercado'; S.mk.tab = 'ofe'; render(); ok(app.textContent.includes('Tus ofertas') && app.textContent.includes('Ofertas que recibes'), 'pestaña de ofertas'); S.mk.tab = 'sell'; render(); ok(app.querySelector('[data-ts]'), 'estado de cada jugador en Vender'); S.mk.tab = 'buy';
+    S.view = 'mofer'; S.mk.tab = 'ofe'; render(); ok(app.textContent.includes('Tus ofertas') && app.textContent.includes('Ofertas que recibes'), 'pestaña de ofertas'); S.mk.tab = 'sell'; render(); ok(app.querySelector('[data-ts]'), 'estado de cada jugador en Vender'); S.mk.tab = 'buy';
     S.view = 'plantilla'; render(); ok(app.querySelector('.vrow .vhead'), 'cabecera de sección junto a las pestañas'); S.view = 'inicio'; render(); }
   { // Copas reales, liguilla, día de cierre, panel de inicio y semana de entrenamiento
     const esp = COUNTRIES.findIndex(c => c.code === 'ESP'), ing = COUNTRIES.findIndex(c => c.code === 'ING'); ok(cupNameF(esp) === 'Copa del Rey' && cupNameF(ing) === 'FA Cup', 'copas con su nombre real');
@@ -559,7 +559,7 @@ const app = document.getElementById('app')!;
     console.log(`     temporada ${seasonLabel()}: puesto ${pos}, presupuesto ${money(S.budget)}, ${gpm.toFixed(2)} goles por partido`);
     ok(gpm > 2 && gpm < 4, 'goles por partido razonables');
     { const top = Object.values(S.players).filter(p => p.st && p.team !== null).sort((a, b) => b.st.g - a.st.g).slice(0, 5); console.log('     máximos goleadores (todas las comp.): ' + top.map(p => p.st.g + ' en ' + p.st.pj).join(', ')); }
-    if (!fired) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.academy.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
+    if (!fired) { const tb = ylTable(); ok(S.yl.round === S.yl.fx.length && tb.every(r => r.pj === 18) && S.u19.some(p => p.yst && p.yst.pj > 0), `liga sub-19 completa (tu sub-19: ${tb.findIndex(r => r.id === 'u') + 1}º)`);
       S.view = 'cantera'; S.vt = { can: 'sub19' }; render(); ok(app.textContent.includes('Liga sub-19'), 'panel de la liga sub-19'); }
     for (const tb of ['temp', 'part', 'jug', 'riv']) { S.anTab = tb; S.view = 'analisis'; render(); }
     if (!fired && s > 0) { S.view = 'historia'; for (const tb of ['enc', 'fame']) { S.hiTab = tb; render(); } ok((S.ency || []).length >= 1 && app.textContent.includes('Récords del mundo'), `enciclopedia (${(S.ency || []).length} temporadas) y salón de la fama`); S.hiTab = 'club'; }
@@ -645,6 +645,18 @@ const app = document.getElementById('app')!;
   }
   { const t = T(S.user), lu0 = t.lineup.slice(); t.lineup = t.lineup.map(() => null); S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 });
     ok(m.lu[m.us].filter(Boolean).length === 11, 'once vacío: el partido completa los huecos'); S.fr.pop(); t.lineup = lu0; }
+  { // Sub-19 como plantilla: cantera → sub-19 → primer equipo
+    const U = await import('../src/u19');
+    U.ensureU19(); ok(S.u19.length >= 25, `sub-19 con al menos 25 jugadores (${S.u19.length})`);
+    const n0 = squad(S.user).length, y = S.u19[0]; if (n0 >= 30) { const x = squad(S.user).filter(p => !p.loan).sort((a, b) => a.ovr - b.ovr)[0]; delete S.players[x.id]; }
+    const n1 = squad(S.user).length; U.callUp(y.id); const cu = squad(S.user).find(p => p.cu);
+    ok(cu && squad(S.user).length === n1 + 1 && !S.u19.includes(y), 'convocar a un juvenil al primer equipo');
+    U.sendDown(cu.id); ok(squad(S.user).length === n1 && S.u19.some(p => p.name === cu.name), 'devolverlo a la sub-19');
+    const t = T(S.user); t.lineup = t.lineup.map(() => null); t.subs = []; t.subsNone = true; ok(subsOf(t).length === 0, 'banquillo vacío');
+    t.subsNone = false; t.lineup = autoLineupF(S.user, t.formation);
+    S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
+    S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
+  }
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 
   { // una partida de la versión anterior (sin bandeja, cuerpo técnico, sub-19…) se convierte al cargarla

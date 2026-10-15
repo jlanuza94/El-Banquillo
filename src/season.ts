@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {u19SeasonEnd} from './u19';
 import {careerSeasonEnd,retireToStaff} from './mgrcareer';
 import {friendlyWait,preWelcome,ptAfter,ptNext} from './preseason';
 import {poAdvance} from './playoffs';
@@ -152,7 +153,7 @@ export function seasonSummary(){
  const prize=r2(e.prize*(21-pos)*.5+(up?e.promo:0)+(champ?e.champ:0));
  return{lg,L,tb,pos,up,down,champ,prize,ok:pos<=S.obj.max};
 }
-export function newSeason(){
+export function newSeason(){u19SeasonEnd();
  const sm=seasonSummary(),tabs=S.leagues.map(L=>table(L.id));
  S.monSnap=null;
  const brief0={budget:S.budget,cap:S.wageCap,rep:T(S.user).rep,lv:LG(uLg()).lv,pos:sm.pos,up:!!sm.up,down:!!sm.down,club:S.user};

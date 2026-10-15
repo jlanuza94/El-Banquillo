@@ -1,5 +1,6 @@
 /* El Banquillo · youth.ts — Liga sub-19: tu cantera juega contra las de otros nueve clubes de tu país. */
 // @ts-nocheck — usa el estado heredado S.
+import {u19List} from './u19';
 import {clamp,gauss,pick,rnd,shuffle} from './core';
 import {GRP} from './data';
 import {LG,S,T,seasonLabel,uLg} from './state';
@@ -9,7 +10,7 @@ import {poisson} from './engine';
 
 const USER='u';
 /** Fuerza de tu sub-19: media de los 11 mejores canteranos (los huecos los cubren juveniles de nivel bajo). */
-export function userYouthStr(){const o=(S.academy||[]).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11);while(o.length<11)o.push(28);return o.reduce((a,b)=>a+b,0)/11;}
+export function userYouthStr(){const o=u19List().map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11);while(o.length<11)o.push(28);return o.reduce((a,b)=>a+b,0)/11;}
 /** Crea la liga al empezar la temporada con otros nueve clubes del país de tu liga. */
 export function setupYouth(){
  const c=LG(uLg()).c,pool=shuffle(S.teams.filter(t=>t.id!==S.user&&LG(t.lg).c===c)).slice(0,9);
@@ -17,7 +18,7 @@ export function setupYouth(){
  const teams=[{id:USER,tid:S.user},...pool.map(t=>({id:'t'+t.id,tid:t.id,str:clamp(base+(t.rep-T(S.user).rep)*.35+gauss()*3,25,75)}))];
  const ids=teams.map(t=>t.id),fx=makeFixtures(ids).map(rd=>rd.map(f=>({h:f.h,a:f.a,hg:null,ag:null})));
  S.yl={season:seasonLabel(),teams,fx,round:0};
- (S.academy||[]).forEach(p=>{p.yst={pj:0,g:0,a:0,rs:0};});
+ u19List().forEach(p=>{p.yst={pj:0,g:0,a:0,rs:0};});
 }
 const yname=t=>T(t.tid).name+' Sub-19';
 export const ylName=id=>{const t=S.yl.teams.find(x=>x.id===id);return t?yname(t):'';};
@@ -37,7 +38,7 @@ export function youthRound(){
 }
 /** Reparte minutos, goles, asistencias y notas entre tus canteranos. Jugar ayuda a mejorar. */
 function userYouthMatch(f,side){
- const ac=(S.academy||[]).slice().sort((a,b)=>b.ovr-a.ovr),xi=ac.slice(0,11);
+ const ac=u19List().slice().sort((a,b)=>b.ovr-a.ovr),xi=ac.slice(0,11);
  // algún suplente entra en lugar de un titular
  ac.slice(11).forEach(p=>{if(rnd()<.35&&xi.length)xi[Math.floor(rnd()*xi.length)]=p;});
  const my=side==='h'?f.hg:f.ag,op=side==='h'?f.ag:f.hg,res=Math.sign(my-op);

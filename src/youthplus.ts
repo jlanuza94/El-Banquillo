@@ -1,5 +1,6 @@
 /* El Banquillo · youthplus.ts — Cantera con más vida: director de cantera, Torneo Internacional Sub-19 y generaciones doradas. */
 // @ts-nocheck — usa el estado heredado S.
+import {u19List} from './u19';
 import {clamp,gauss,pick,r2,rnd,shuffle} from './core';
 import {COUNTRIES,W} from './data';
 import {LG,S,T,seasonLabel,uLg} from './state';
@@ -28,10 +29,10 @@ export function maybeGolden(makeYouth){
 export const YT_WEEK=19;
 const ytName='Torneo Internacional Sub-19';
 /** Fuerza de una cantera: media de sus 11 mejores (o chavales de relleno si no llega). */
-function myYouthStrength(){const v=S.academy.map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11);while(v.length<11)v.push(30);return v.reduce((a,b)=>a+b,0)/11;}
+function myYouthStrength(){const v=u19List().map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11);while(v.length<11)v.push(30);return v.reduce((a,b)=>a+b,0)/11;}
 /** En el parón de invierno tu cantera juega un torneo de 8 equipos a eliminatoria. */
 export function youthTournament(){
- if(S.week!==YT_WEEK||!S.academy||S.academy.length<6)return;
+ if(S.week!==YT_WEEK||u19List().length<6)return;
  const myC=LG(uLg()).c,rivals=shuffle(S.teams.filter(t=>t.id!==S.user&&LG(t.lg).lv===0&&LG(t.lg).c!==myC)).slice(0,7);
  const my=myYouthStrength(),teams=[{id:S.user,n:T(S.user).name,s:my}].concat(rivals.map(t=>({id:t.id,n:t.name,s:clamp(COUNTRIES[LG(t.lg).c].top-18+gauss()*3,30,70)})));
  let round=shuffle(teams.slice()),log=[],names=['Cuartos','Semifinal','Final'],k=0,mine=[];
@@ -42,7 +43,7 @@ export function youthTournament(){
   round=next;k++;}
  const champ=round[0].id===S.user;
  // los que juegan el torneo crecen
- S.academy.slice().sort((a,b)=>b.ovr-a.ovr).slice(0,11).forEach(p=>{p.ypw=1;if(rnd()<(champ?.6:.35)&&rateA(p.at,p.pos)<p.pot){const kk=wpick(W[p.pos]);if(p.at[kk]<10){p.at[kk]++;p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}}});
+ u19List().slice().sort((a,b)=>b.ovr-a.ovr).slice(0,11).forEach(p=>{p.ypw=1;if(rnd()<(champ?.6:.35)&&rateA(p.at,p.pos)<p.pot){const kk=wpick(W[p.pos]);if(p.at[kk]<10){p.at[kk]++;p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}}});
  if(champ){S.titles.push({season:seasonLabel(),name:ytName});}
  (S.ytHist=S.ytHist||[]).push({season:seasonLabel(),champ:round[0].n,mine:champ});
  news(`${ytName}: ${mine.join(' · ')}.${champ?' ¡Tu cantera es campeona!':` Campeón: ${round[0].n}.`} Los que jugaron han dado un paso adelante.`,champ?'good':'',{cat:'oje',subj:champ?`¡Tu cantera gana el ${ytName}!`:`${ytName}: ${mine.length?mine[mine.length-1].split(':')[0]:'eliminados'}`});

@@ -43,15 +43,15 @@ export function xg(A,D,home,mA,mD){return clamp(1.2*Math.pow(A.atk/D.def,2.6)*(h
 export function lineupIssues(){const t=T(S.user);return t.lineup.map((id,i)=>({i,id})).filter(x=>!x.id||!available(PL(x.id))||PL(x.id).team!==S.user);}
 /** Banquillo: los suplentes que eliges (hasta 9) o, si no eliges, los mejores disponibles. */
 export const MAX_SUBS=9;
-export function subsOf(t){const xi=t.lineup;let ids=(t.subs||[]).filter(id=>{const p=PL(id);return p&&p.team===t.id&&!p.loan&&!xi.includes(id);});
+export function subsOf(t){const xi=t.lineup;if(t.subsNone&&!(t.subs||[]).length)return [];let ids=(t.subs||[]).filter(id=>{const p=PL(id);return p&&p.team===t.id&&!p.loan&&!xi.includes(id);});
  if(!(t.subs||[]).length){ids=squad(t.id).filter(p=>!p.loan&&available(p)&&!xi.includes(p.id)).sort((a,b)=>b.ovr-a.ovr).slice(0,MAX_SUBS).map(p=>p.id);}
  return ids.slice(0,MAX_SUBS);}
 /** Coloca a un jugador en el banquillo (posición k). Si venía del once, deja su hueco al que estuviera ahí. */
-export function setSub(pid,k){const t=T(S.user);let subs=subsOf(t).filter(x=>x!==pid);const prev=subs[k],xi=t.lineup.indexOf(pid);
+export function setSub(pid,k){const t=T(S.user);t.subsNone=false;let subs=subsOf(t).filter(x=>x!==pid);const prev=subs[k],xi=t.lineup.indexOf(pid);
  if(xi>=0){t.lineup[xi]=prev&&available(PL(prev))?prev:null;if(t.lineup[xi])subs=subs.filter(x=>x!==prev);}
  subs.splice(Math.min(k,subs.length),0,pid);t.subs=subs.filter((id,i,a)=>a.indexOf(id)===i).slice(0,MAX_SUBS);}
 /** Quita a un jugador del once o del banquillo. */
-export function removeFromTeam(pid){const t=T(S.user);const i=t.lineup.indexOf(pid);if(i>=0)t.lineup[i]=null;t.subs=(t.subs||subsOf(t)).filter(x=>x!==pid);}
+export function removeFromTeam(pid){const t=T(S.user);const i=t.lineup.indexOf(pid);if(i>=0)t.lineup[i]=null;const base=(t.subs&&t.subs.length)?t.subs:subsOf(t);t.subs=base.filter(x=>x!==pid);if(!t.subs.length)t.subsNone=true;}
 export function fixLineup(){
  const t=T(S.user),slots=slotsOf(t.formation);let fixed=0;
  t.lineup=slots.map((s,i)=>{const id=t.lineup[i];return (id&&PL(id)&&PL(id).team===S.user&&available(PL(id)))?id:null;});

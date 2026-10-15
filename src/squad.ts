@@ -41,7 +41,8 @@ import {aiTransfers,expRole,inWindow,isDeadline,windowTxt} from './market';
 import {winRounds} from './calendar';
 import {attendance,clubWeekly,facMaint,shopWeekly,unlock} from './club';
 import {mgrWeekly} from './career';
-import {academyWeekly,scoutWages,scoutsWeekly} from './academy';
+import {academyWeekly,growYouth,scoutWages,scoutsWeekly} from './academy';
+import {u19Weekly} from './u19';
 export function hapTag(p){const h=p.hap==null?70:p.hap;return h>=75?'<span class="tag xi">Muy contento</span>':h>=55?'<span class="tag">Contento</span>':h>=40?'<span class="tag">Normal</span>':h>=25?'<span class="tag bad">Descontento</span>':'<span class="tag bad">Enfadado</span>';}
 export function minShare(p){const tg=S.tg||0;return tg?((p.st&&p.st.pj)||0)/tg:1;}
 export function hapReasons(p){
@@ -131,7 +132,7 @@ export function processWeek(){
  {const bon=weeklyBonuses();S.fin.push({wk:wk+1,tv,tix,spo,shop,wages:r3(wages+bon)});}
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();u19Weekly(growYouth);crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(isDeadline()?70:28);
  if(isDeadline())news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0&&S.week%6===0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');

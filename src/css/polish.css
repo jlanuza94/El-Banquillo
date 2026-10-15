@@ -1008,3 +1008,6 @@ body.fmdrag .vcell{border-color:rgba(255,255,255,.55);background:rgba(255,255,25
 @media (orientation:landscape) and (max-height:540px){.vpitch{max-width:min(100%,calc((100dvh - 120px)*100/68))}.fmm .fmmR{max-height:calc(100dvh - 105px)}}
 .toast{pointer-events:none}
 .vtop .fph{flex:0 0 auto!important}.vtop .fph button{flex:0 0 auto!important;overflow:visible!important;padding:5px 10px}.vtop select{min-width:0;flex:1 1 auto}
+.lmtool{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.lmsel{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:3px 4px 3px 10px;border-radius:8px;border:1px solid var(--accent);color:var(--accent)}
+.lmsel select{border:0;background:transparent;color:inherit;font-weight:800;font-size:13px;padding:2px 4px}
