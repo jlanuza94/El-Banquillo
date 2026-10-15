@@ -50,7 +50,7 @@ export function licStatus(l,jur=myJur()){const exp=l.exp<S.seasonN,rec=l.jur===j
 export function validLevel(jur){return Math.max(-1,...diplomas().filter(l=>COURSES[l.k]&&COURSES[l.k].lv!=null&&licStatus(l,jur).ok).map(l=>COURSES[l.k].lv));}
 /** Nivel principal obtenido alguna vez (aunque haya caducado o no se reconozca aquí). */
 export const topDiploma=()=>Math.max(-1,...diplomas().filter(l=>COURSES[l.k]&&COURSES[l.k].lv!=null).map(l=>COURSES[l.k].lv));
-function grant(k,jur){S.mgr.lics=S.mgr.lics||[];const old=S.mgr.lics.find(l=>l.k===k);if(old){old.exp=S.seasonN+VALID;if(!old.conv)old.conv=[];if(old.jur!==jur&&!old.conv.includes(jur))old.conv.push(jur);return old;}const l={k,jur,got:S.seasonN,exp:S.seasonN+VALID,conv:[]};S.mgr.lics.push(l);S.mgr.badges=S.mgr.badges||{};if(!S.mgr.badges['lic_'+k])S.mgr.badges['lic_'+k]={s:seasonLabel(),club:T(S.user)?T(S.user).name:''};return l;}
+function grant(k,jur){S.mgr.lics=S.mgr.lics||[];const old=S.mgr.lics.find(l=>l.k===k);if(old){old.exp=S.seasonN+VALID;if(!old.conv)old.conv=[];if(old.jur!==jur&&!old.conv.includes(jur))old.conv.push(jur);return old;}const l={k,jur,got:S.seasonN,exp:S.seasonN+VALID,conv:[]};S.mgr.lics.push(l);return l;}
 /* ---------- Reglas (motor normativo) ---------- */
 /** Cada regla: jurisdicción, competición, cargo, licencia mínima, vigencia, fuente y estado de verificación. */
 export const RULES=[

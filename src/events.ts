@@ -96,7 +96,9 @@ document.addEventListener('click',e=>{
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
   const rdC=()=>{const g=id=>document.getElementById(id);RT.coach=Object.assign(RT.coach||{},{name:(g('cName')&&g('cName').value||'').trim()||undefined,nat:g('cNat')?+g('cNat').value:undefined,age:g('cAge')?+g('cAge').value:undefined});};
   if(a==='start-bg'||a==='start-lead'){rdC();RT.coach[a==='start-bg'?'bg':'lead']=d.v;render();return;}
-  if(a==='pick-team'){rdC();pickTeam(+d.i);}else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;RT.startStep='d';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-lv'){RT.startLv=+d.v;RT.startStep='club';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-step'){RT.startStep=d.v;render();}return;}
+  if(a==='pick-team'){RT.pickT=+d.i;RT.startStep='coach';render();window.scrollTo(0,0);return;}
+  if(a==='start-sign'){rdC();pickTeam(RT.pickT);RT.pickT=null;return;}
+  if(false){}else if(a==='start-c'){RT.startC=+d.v;RT.startLv=COUNTRIES[RT.startC].lv-1;RT.startStep='d';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-lv'){RT.startLv=+d.v;RT.startStep='club';render();document.getElementById('nuevo')?.scrollIntoView({block:'start'});}else if(a==='start-step'){RT.startStep=d.v;render();}return;}
  if(a==='ov'&&e.target!==el)return;
  const m=S.match;
  switch(a){

@@ -124,6 +124,7 @@ const app = document.getElementById('app')!;
   ok(app.querySelectorAll('.ccard svg.flag').length === 16, 'países con bandera');
   for (const st of ['d', 'club', 'c']) { RT.startStep = st; render(); }
   ok(app.querySelector('.ccard'), 'pasos de inicio: país, división y club');
+  { const tid = S.teams.find(t => S.leagues[t.lg].c === 0).id; RT.pickT = tid; RT.startStep = 'coach'; render(); ok(app.querySelector('.csign [data-a=start-sign]') && app.querySelector('#cName'), 'tras elegir club: pantalla del entrenador'); RT.startStep = 'c'; RT.pickT = null; render(); }
   const team = S.teams.filter(t => S.leagues[t.lg].c === 0 && S.leagues[t.lg].lv === 4).sort((a, b) => b.rep - a.rep)[0].id;
   pickTeam(team);
   ok(S.user === team && S.slot === 1, 'se elige club (partida 1)');
@@ -411,7 +412,7 @@ const app = document.getElementById('app')!;
     S.mk.tab = 'ojeo'; render(); ok(app.textContent.includes('Ojeador Prueba'), 'pestaña de misiones de ojeo'); S.mk.tab = 'buy'; stopMission('sX'); S.scouts = S.scouts.filter(x => x.id !== 'sX');
     const other = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan); S.short.push(other.id); shortlistWeekly(); const v0 = other.value; other.value = v0 * .5; const n0 = S.inbox.length; shortlistWeekly();
     ok(S.inbox.length > n0 && /más barato/.test(S.inbox[0].subj), 'aviso: un jugador seguido baja de precio'); other.value = v0; S.short.pop();
-    const yp = squad(S.user).filter(p => !p.loan).sort((a, b) => a.age - b.age)[0], pos = learnablePos(yp)[0]; setDev(yp.id, 'pos', pos); yp.dev.posP = 99; devWeekly(); ok(yp.alt.includes(pos) && !yp.dev.pos, 'aprende un puesto nuevo con el plan de desarrollo');
+    const yp = squad(S.user).filter(p => !p.loan && p.sp !== 'POR').sort((a, b) => a.age - b.age)[0], pos = learnablePos(yp)[0]; setDev(yp.id, 'pos', pos); yp.dev.posP = 99; devWeekly(); ok(yp.alt.includes(pos) && !yp.dev.pos, 'aprende un puesto nuevo con el plan de desarrollo');
     const tr = learnableTr(yp)[0]; if (tr) { setDev(yp.id, 'tr', tr); yp.dev.trP = 99.9; devWeekly(); ok(yp.tr.includes(tr), 'aprende un rasgo nuevo'); }
     S.view = 'entreno'; S.vt = { ent: 'dev' }; render(); ok(app.textContent.includes('Plan de desarrollo') && app.querySelector('[data-dev]'), 'pantalla de desarrollo');
     markArrival(yp); yp.h0[0] = Math.min(yp.h0[0], yp.ovr - 15); const ovr0 = yp.ovr; if (yp.ovr < 70) yp.ovr = 70; discoveries(); ok(yp.h0[2] === 1 && S.ach.desc, 'logro «lo descubrí yo»'); yp.ovr = ovr0;
