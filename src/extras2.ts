@@ -158,7 +158,7 @@ export function rivalWins(p,n,t,ROLES){
 
 /* ---------- 11. Atributos del entrenador ---------- */
 export const MGR_AT={tac:'Táctica',mot:'Motivación',can:'Cantera',neg:'Negociación'};
-export const mgrAt=k=>(S&&S.mgr&&S.mgr.at&&S.mgr.at[k])??5;
+export const mgrAt=k=>Math.min(11,((S&&S.mgr&&S.mgr.at&&S.mgr.at[k])??5)+(S&&S.mgr&&(S.mgr.spec||[]).includes(k)?1:0));
 export function mgrInit(){if(S.mgr&&!S.mgr.at)S.mgr.at={tac:5,mot:5,can:5,neg:5};}
 /** Al terminar la temporada mejoras en lo que más has trabajado. */
 export function mgrGrow(sm){mgrInit();const A=S.mgr.at,up=[],add=(k,v)=>{if(A[k]>=10)return;A[k]=Math.min(10,r2(A[k]+v));up.push(MGR_AT[k]);};

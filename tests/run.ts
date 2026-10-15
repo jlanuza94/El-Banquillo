@@ -26,6 +26,8 @@ import { COUNTRIES } from '../src/data';
 import { projOptions, projSeasonEnd } from '../src/extras2';
 import { REFS, aiInMatch, duoMult, duosOf, indivTalk, maybeRival, mgrAt, mgrGrow, mgrInit, playShootout, projState, publicWeekly, refFor, rivalWins, startProject, startStadium, stadiumWeekly } from '../src/extras2';
 import { seatCost } from '../src/club';
+import { startCourse as startCourseF, careerWeekly as careerWeeklyF, pickSpec as pickSpecF, addXp as addXpF, mgrLevel as mgrLevelF } from '../src/mgrcareer';
+import { mgrAt as mgrAtF } from '../src/extras2';
 import { joinWill as joinWillF, retiring as retiringF, offerStaffRole as offerStaffRoleF, retireToStaff as retireToStaffF } from '../src/mgrcareer';
 import { oopLineup, oopMap, oopSwap } from '../src/oop';
 import { createMatch as createMatchF, tacMods as tacModsF } from '../src/engine';
@@ -157,7 +159,7 @@ const app = document.getElementById('app')!;
     const G = synergyModsT(good), B = synergyModsT(bad);
     ok(G.g >= 4 && G.b === 0 && B.b >= 3 && G.own > 1 && B.own < 1, `sinergias: buen once ${G.g} buenas, mal once ${B.b} malas (${good.map(x => sl[x[0]] + '+' + sl[x[1]]).join(' ')})`); }
   { const t = T(S.user), c0 = t.cond; t.cond = [{ w: 'draw', min: 1, plan: null, ment: 'att' }]; S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user && x.lg === t.lg).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; S.fr.pop();
-    step(m); step(m); ok(m.ment[m.us] === 'att' && m.ev.some(e => /Plan previsto/.test(e.tx)), 'plan previsto: empatando desde el 1\' pasa a ofensiva'); t.cond = c0; }
+    for (let k = 0; k < 6 && !m.ev.some(e => /Plan previsto/.test(e.tx)) && m.score.h === m.score.a; k++) step(m); const pv = m.ev.some(e => /Plan previsto/.test(e.tx)); ok((pv && m.ment[m.us] === 'att') || (!pv && m.score.h !== m.score.a), 'plan previsto: empatando desde el 1\' pasa a ofensiva'); t.cond = c0; }
   { setDeleg('tr', true); setDeleg('oj', true); S.missions = []; delegWeekly(); const k = Object.keys(PRESETS_TR).find(k => PRESETS_TR[k].s.join() === S.sched.join());
     ok(k && S.delegWhy && (S.missions || []).length >= 1, `delegar: tu segundo planifica la semana (${k}: ${S.delegWhy}) y los ojeadores salen solos (${(S.missions || []).length} misiones)`);
     setDeleg('tr', false); setDeleg('oj', false); S.missions = []; render(); }
@@ -437,6 +439,13 @@ const app = document.getElementById('app')!;
     { const R = retiringF(); if (R.length) { const p = R[0], rep0 = S.mgr.rep; S.mgr.rep = 100; offerStaffRoleF(p.id, 'ent'); S.mgr.rep = rep0; ok(p.toStaff === 'ent' || p.toStaffNo === S.seasonN, 'ofrecer puesto de técnico a un veterano'); if (p.toStaff) { const n0 = (S.crew || []).length + (S.staffPool || []).length; retireToStaffF(p); ok((S.crew || []).length + (S.staffPool || []).length === n0 + 1, 'el veterano se retira y pasa a técnico'); delete p.toStaff; } }
       S.view = 'staff'; S.vt = { st: 'ret' }; render(); ok(app.textContent.includes('Veteranos que se retiran'), 'pestaña de veteranos que se retiran');
       S.view = 'club'; S.vt = { club: 'ent' }; render(); ok(app.querySelectorAll('.lic').length === 4 && app.querySelectorAll('.bdg').length >= 6, 'licencias e insignias del entrenador'); S.vt = {}; }
+    { const M = S.mgr, sv = M.savings, r0 = M.rep, s0 = M.seasons, lic0 = M.lic; M.savings = 999; M.rep = 99; M.seasons = 5; M.lic = 0; M.course = null; M.spec = [];
+      ok(startCourseF() === '' && M.course && M.course.to === 1, 'apuntarse al curso de la Licencia B'); for (let i = 0; i < 20 && M.course; i++) careerWeeklyF(); ok(M.lic === 1 && !M.course, 'aprobar el curso: Licencia B');
+      pickSpecF('tac'); ok(M.spec.includes('tac') && mgrAtF('tac') >= (M.at.tac || 5) + 1 - 1e-9, 'especialidad Táctico suma a tu atributo'); pickSpecF('mot'); ok(M.spec.length === 1, 'una especialidad por licencia');
+      const x0 = M.xp || 0; addXpF(100, 'prueba'); ok(M.xp === x0 + 100 && mgrLevelF() >= 2, `experiencia y nivel (${mgrLevelF()})`);
+      const t = S.teams.find(x => x.id !== S.user); S.modal = { type: 'interview', tid: t.id, i: 0, score: 0 }; render(); ok(app.querySelectorAll('[data-a=iv-ans]').length === 3, 'entrevista de trabajo con preguntas');
+      S.modal = null; S.view = 'club'; S.vt = { club: 'ent' }; render(); ok(app.textContent.includes('Tu perfil') && app.textContent.includes('Especialidades') && app.textContent.includes('Red de contactos'), 'pantalla Mi carrera');
+      S.vt = {}; M.savings = sv; M.rep = r0; M.seasons = s0; M.lic = lic0; M.spec = []; }
     const A = galaAwards(); ok(Array.isArray(A), 'gala del club'); S.vt = {}; S.view = 'inicio'; render(); }
   { // Rival que cambia, charlas, árbitros, penaltis, parejas, capitanes, prensa, proyecto, estadio, pujas, entrenador y grandes
     const ev = []; const add = (m, t, s, tx) => ev.push(tx);
@@ -454,7 +463,7 @@ const app = document.getElementById('app')!;
     ok(!S.proj && S.projHist.some(x => x.ok), 'proyecto cumplido y archivado'); ok(projOptions().find(o => o.k === 'can').need > canN, 'el siguiente proyecto es más ambicioso'); S.projHist = [];
     S.proj = null; startProject('eco'); ok(S.proj && S.proj.k === 'eco' && projState().done === false, 'proyecto a 3 años pactado'); const b0 = S.budget; S.budget = S.proj.budget * 2; ok(projState().done, 'proyecto: sanear cuentas cumplido'); S.budget = b0; S.proj = null;
     const C = S.club, cf = S.mgr.conf; S.mgr.conf = 80; S.budget = 999; ok(startStadium(seatCost) === '' && C.ns, 'empiezan las obras del estadio nuevo'); const cap0 = C.cap; C.ns.left = 1; stadiumWeekly(); ok(C.cap > cap0 && !C.ns, 'inauguración del estadio nuevo'); S.mgr.conf = cf; S.budget = b0;
-    S.view = 'club'; S.vt = { club: 'dir' }; render(); const pj0 = app.textContent.includes('Proyecto con la directiva'); S.vt = { club: 'ent' }; render(); ok(pj0 && app.textContent.includes('Tus atributos de entrenador'), 'pantalla del club con proyecto, estadio y atributos');
+    S.view = 'club'; S.vt = { club: 'dir' }; render(); const pj0 = app.textContent.includes('Proyecto con la directiva'); S.vt = { club: 'ent' }; render(); ok(pj0 && app.textContent.includes('Tus atributos'), 'pantalla del club con proyecto, estadio y atributos');
     mgrInit(); const a0 = mgrAt('tac'); mgrGrow({ ok: true }); ok(mgrAt('tac') > a0, 'el entrenador mejora en táctica al cumplir');
     const target = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.loan && p.ovr >= 50); const n = { msg: '' }; for (let i = 0; i < 30 && !n.rival; i++) maybeRival(target, n, () => [S.teams.find(t => t.id !== S.user && t.id !== target.team).id]);
     ok(n.rival && n.rival.w > 0, 'otro club puja por el mismo jugador'); const lost = rivalWins(target, n, { w: n.rival.w * 3, role: 'cl' }, ROLES); ok(lost === false, 'con mejor propuesta, el jugador te elige');

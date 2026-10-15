@@ -1,5 +1,6 @@
 /* El Banquillo · analysis.ts — Datos de partido: estadísticas por jugador, informes, forma de los equipos y evolución de tu temporada. */
 // @ts-nocheck — usa el estado heredado S.
+import {careerMatch} from './mgrcareer';
 import {clamp,rnd} from './core';
 import {GRP,WIDE} from './data';
 import {PL,S,T,uLg} from './state';
@@ -51,7 +52,7 @@ export function recordMatch(m){
  if(m.ref.k==='fr')return;
  teamForm(m);
  if(m.us){S.mlog=S.mlog||[];const rec=matchRecord(m);S.mlogN=(S.mlogN||0)+1;rec.n=S.mlogN;S.mlog.unshift(rec);if(S.mlog.length>40)S.mlog.length=40;
-  pressStory(m);
+  pressStory(m);careerMatch(m);
   if(rec.tr)news(`Informe táctico: ${reportHeadline(rec.tr)}`,'',{cat:'sta',subj:`Informe táctico: ${T(m.h).short} ${m.score.h}-${m.score.a} ${T(m.a).short}`,quiet:true,act:[{l:'Ver informe',a:'trep',v:rec.n}]});}
 }
 /** Evolución de tu temporada en liga: puntos, puesto y xG jornada a jornada. */

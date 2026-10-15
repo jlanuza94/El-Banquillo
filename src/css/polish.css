@@ -711,3 +711,13 @@ tr.tsl td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
  .fday .dn{font-size:10px}.fnote{font-size:8.5px;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fnote.tr{font-size:8.5px}
  .fev{padding:0 3px}.fev .fcomp{display:none}.fev .fmain b{font-size:9.5px}.fev .crest.sm{width:12px;height:12px}
 }
+.cprof{display:flex;gap:12px;align-items:center}
+.clvl{width:64px;height:64px;flex:none;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#f1c75a,#b8861d);color:#1b1505}
+.clvl b{font-family:var(--f-display);font-weight:900;font-size:30px;line-height:1}.clvl span{font:700 10px var(--f-num);text-transform:uppercase}
+.lic small{font-size:9.5px;color:var(--muted);margin-top:2px}
+.ccourse{display:flex;flex-direction:column;gap:4px;margin-top:10px;padding:10px;border-radius:10px;background:var(--surface2,rgba(127,127,127,.06));border:1px solid var(--line)}
+.ccourse .btn{align-self:flex-start}
+.specs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.spec{display:flex;flex-direction:column;gap:3px;padding:8px;border-radius:10px;border:1px solid var(--line);font-size:12px}
+.spec>span{font-size:22px}.spec b{font-size:13.5px}.spec small{color:var(--muted)}.spec em{font-style:normal;font-weight:700;color:var(--win)}
+.spec.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}.spec .btn{align-self:flex-start}

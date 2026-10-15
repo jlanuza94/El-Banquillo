@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {careerWeekly} from './mgrcareer';
 import {monthlyAwards} from './monthly';
 import {winterWeekly} from './preseason';
 import {delegWeekly} from './delegate';
@@ -131,7 +132,7 @@ export function processWeek(){
  if(inWindow())aiTransfers(isDeadline()?70:28);
  if(isDeadline())news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0&&S.week%6===0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');
- S.week++;S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};monthlyAwards(wk);
+ S.week++;S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};monthlyAwards(wk);careerWeekly();
  {const nx=S.week<nRounds()?nextFixture():null;if(nx){const opp=nx.h===S.user?nx.a:nx.h;if(isDerby(S.user,opp))derbyWeekNews(opp);piqueWeekly(opp,isDerby(S.user,opp));}}
  rumoursWeekly();deadlineDeals();
  if(S.week===Math.floor(nRounds()/2)){const ex=squad(S.user).filter(p=>!p.loan&&p.contract<=1);if(ex.length)news(`Mitad de temporada: ${ex.length} jugador${ex.length>1?'es acaban':' acaba'} contrato en junio. Renuévalos desde Inicio o su ficha, o se irán libres.`,'bad',{cat:'dir',subj:'Contratos que acaban en junio',act:[{l:'Ver contratos',a:'pl-open',v:'cont'}]});}

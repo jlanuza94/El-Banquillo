@@ -128,11 +128,11 @@ export function applyNT(c){
  if(rnd()<ch){takeNT(c);return '';}
  news(`La federación de ${COUNTRIES[c].n} prefiere a otro candidato.`,'bad',{cat:'dir'});return `${COUNTRIES[c].n} ha elegido a otro seleccionador.`;
 }
-export function takeNT(c){S.nt={c,since:seasonLabel(),call:[],res:[]};unlock('selec');news(`Eres el nuevo seleccionador de ${COUNTRIES[c].n}. Compaginarás el cargo con tu club. Cobrarás ${money(NT_SAL(c))}/sem extra y tú eliges la convocatoria.`,'good',{cat:'dir',subj:`Seleccionador de ${COUNTRIES[c].n}`,act:[{l:'Convocatoria',a:'view',v:'selecciones'}]});}
+export function takeNT(c){S.nt={c,since:seasonLabel(),call:[],res:[]};S.mgr.badges=S.mgr.badges||{};if(!S.mgr.badges.sel)S.mgr.badges.sel=S.seasonN;unlock('selec');news(`Eres el nuevo seleccionador de ${COUNTRIES[c].n}. Compaginarás el cargo con tu club. Cobrarás ${money(NT_SAL(c))}/sem extra y tú eliges la convocatoria.`,'good',{cat:'dir',subj:`Seleccionador de ${COUNTRIES[c].n}`,act:[{l:'Convocatoria',a:'view',v:'selecciones'}]});}
 export function leaveNT(){if(!S.nt)return;news(`Dejas el cargo de seleccionador de ${COUNTRIES[S.nt.c].n}.`,'',{cat:'dir'});S.nt=null;}
 /** Al final de temporada alguna federación puede llamarte si tu reputación es alta. */
 export function ntOffers(){
- initIntl();if(S.nt||rnd()>.35)return;const c=wcs().filter(c=>S.mgr.rep>=ntReq(c)-4).sort((a,b)=>ntReq(b)-ntReq(a))[0];if(c==null)return;
+ initIntl();if(S.nt||rnd()>.35||(S.mgr.lic??1)<2)return;const c=wcs().filter(c=>S.mgr.rep>=ntReq(c)-4).sort((a,b)=>ntReq(b)-ntReq(a))[0];if(c==null)return;
  S.ntOffer=c;news(`La federación de ${COUNTRIES[c].n} te ofrece ser su seleccionador, compaginándolo con tu club.`,'good',{cat:'dir',subj:`Oferta: seleccionador de ${COUNTRIES[c].n}`,act:[{l:'Aceptar',a:'nt-accept'},{l:'Ver selecciones',a:'view',v:'selecciones'}]});
 }
 /** Marca o desmarca un jugador en tu convocatoria (máximo 23). */

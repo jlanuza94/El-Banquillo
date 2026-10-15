@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {askMentor,interviewChance,interviewQs,pickSpec,startCourse} from './mgrcareer';
 import {oopSwap} from './oop';
 import {offerStaffRole} from './mgrcareer';
 import {INT_MAX,friendlyWait as fWait2,inPre,internalMatch} from './preseason';
@@ -253,7 +254,11 @@ document.addEventListener('click',e=>{
   case'job-yes':{const o=S.jobOffers[+d.i];if(o){jobDecision(o,true);takeJob(o);}break;}
   case'job-no':jobDecision(S.jobOffers[+d.i],false);S.jobOffers.splice(+d.i,1);break;
   case'job-search':S.showJobs=!S.showJobs;break;
-  case'job-apply':{const t=T(+d.id),ch=clamp(.3+(S.mgr.rep-clubReq(t))/30,.05,.9);if(rnd()<ch){S.modal={type:'joboffer',o:makeJobOffer(t)};}else{S.applied[t.id]=S.seasonN;toast(`${t.name} prefiere a otro candidato.`);}break;}
+  case'job-apply':{const t=T(+d.id);S.modal={type:'interview',tid:t.id,i:0,score:0};break;}
+  case'iv-ans':{const md=S.modal;if(!md||md.type!=='interview')break;const t=T(md.tid),Q=interviewQs(t);md.score+=Q[md.i].o[+d.v][1];md.i++;if(md.i>=Q.length){const ch=interviewChance(t,md.score,clubReq);if(rnd()<ch){S.modal={type:'joboffer',o:makeJobOffer(t)};}else{S.applied[t.id]=S.seasonN;S.modal=null;toast(`${t.name} prefiere a otro candidato (tenías un ${Math.round(ch*100)}% de opciones).`);}}break;}
+  case'car-course':{const e=startCourse();if(e)toast(e);break;}
+  case'car-spec':pickSpec(d.v);break;
+  case'car-mentor':{const e=askMentor(d.id);if(e)toast(e);break;}
   case'joboffer-ok':{const o=S.modal&&S.modal.o;if(o)takeJob(o);break;}
   case'resign':S.modal={type:'resign'};break;
   case'resign-ok':S.mgr.rep=clamp(S.mgr.rep-3,0,100);news(`Dimites como entrenador de ${T(S.user).name}.`);loseJob('dimisión');break;

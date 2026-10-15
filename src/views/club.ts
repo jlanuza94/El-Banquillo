@@ -8,6 +8,7 @@ import {MODES} from '../quick';
 import {nameBtn,vtab} from './common';
 import {BSTYLE,cupTarget,evaluation,styleScore} from '../board';
 import {BADGES,LICS,badges,licence} from '../mgrcareer';
+import {careerHTML} from './careerv';
 import {MAX_AFF,MAX_BANK,affCandidates,affiliates,filial,loanOffers,wageBill} from '../clubplus';
 import {DIFF} from '../difficulty';
 import {debtTotal} from '../market2';
@@ -111,13 +112,13 @@ export function clubView(){
  const atP=`<section class="panel"><div class="panel-h"><h2>Tus atributos de entrenador</h2><span class="eyebrow">Mejoran con la experiencia</span></div>
  ${Object.entries(MGR_AT).map(([k,n])=>`<div class="arow" style="grid-template-columns:110px minmax(0,1fr) 34px"><span>${n}</span>${bar(mgrAt(k)*10)}<b class="num">${mgrAt(k).toFixed(1)}</b></div>`).join('')}
  <p class="small muted" style="margin:8px 0 0">Táctica: tu equipo rinde algo más. Motivación: mejor vestuario. Cantera: los jóvenes crecen antes. Negociación: fichajes más baratos. Al final de cada temporada mejoras en lo que más has trabajado (resultados, canteranos que juegan, fichajes y ventas, vestuario contento).</p></section>`;
- const tb=vtab('club',[['dir','Directiva'],['fin','Finanzas'],['est','Estadio'],['fil','Filial y afiliados'],['ent','Entrenador'],['par','Partida']],'dir');
+ const tb=vtab('club',[['dir','Directiva'],['fin','Finanzas'],['est','Estadio'],['fil','Filial y afiliados'],['ent','Mi carrera'],['par','Partida']],'dir');
  const two=(a,b)=>`${tb.bar}<div class="grid"><div class="stack">${a}</div><div class="stack">${b}</div></div>`;
  switch(tb.cur){
   case'fin':return two(finP+budP,spo+bankP);
   case'est':return two(stadium,fac+nsP);
   case'fil':return two(filP,affP);
-  case'ent':return two(licP+mgrP,atP);
+  case'ent':{const cv=careerHTML();return two(cv.left,mgrP+cv.right);}
   case'par':return two(save,'');
  }
  return two(evalP()+objP(),styleP()+board+projP);
