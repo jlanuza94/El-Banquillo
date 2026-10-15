@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {pickAt,tcCountUp,tcGrowMult,tcTacLearn,tcWeekly} from './tcenter';
 import {hasTitle} from './mtitles';
 import {careerWeekly} from './mgrcareer';
 import {monthlyAwards} from './monthly';
@@ -98,21 +99,21 @@ export function recBonus(){const F=FOCUS[S.train.focus],I=INTS[S.train.int];retu
 export function growChance(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];
  const age=p.age<=21?.075:p.age<=24?.05:p.age<=28?.025:p.age<=31?.01:0;
- return trMult(p)*age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*trainMult()*(mentorOf(p.id)?1.2:1)*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1)*(p.age<=21&&hasTitle('est')?1.1:1)*(p.home&&hasTitle('cnt')?1.05:1);
+ return trMult(p)*age*F.g*I.g*(p.per==='pro'?1.25:1)*(S.club?1+.1*(S.club.fac.ent-1):1)*trainMult()*(mentorOf(p.id)?1.2:1)*(rateA(p.at,p.pos)<p.pot?1:0)*(p.playedWk?1.2:.9)*(p.loan?.8:1)*(p.age<=21&&hasTitle('est')?1.1:1)*(p.home&&hasTitle('cnt')?1.05:1)*tcGrowMult(p);
 }
 export function trainPlayer(p){
  const F=FOCUS[S.train.focus],I=INTS[S.train.int];
  if(F.g>0&&rnd()<I.inj*(1+(p.prone||0))*trainInjMult()&&!p.inj){p.inj=ri(1,2);p.injT='Sobrecarga muscular';S.trainLog.unshift({wk:S.week+1,txt:`${p.name} se lesiona entrenando (${p.inj} partido${p.inj>1?'s':''}).`,bad:1});news(`${p.name} se lesiona en el entrenamiento: ${p.inj} partido${p.inj>1?'s':''} de baja.`,'bad');}
  const base=p.ph&&p.ph.length?p.ph[p.ph.length-1][1]:null;
  if((base==null||p.ovr-base<7)&&rnd()<growChance(p)){
-  const k=p.tf&&p.tf!=='auto'?p.tf:F.at?pick(F.at):wpick(W[p.pos]);
-  if(p.at[k]<10){const before=p.ovr;p.at[k]++;refresh(p);p.sg=(p.sg||0)+1;
+  const k=pickAt(p,W)||(F.at?pick(F.at):wpick(W[p.pos]));
+  if(p.at[k]<10){const before=p.ovr;p.at[k]++;refresh(p);p.sg=(p.sg||0)+1;tcCountUp();
    if(p.age<=21&&p.boomS!==S.seasonN){const base=p.ph&&p.ph.length?p.ph[p.ph.length-1][1]:before;if(p.ovr-base>=6){p.boomS=S.seasonN;news(`¡${p.name} está explotando! Ya tiene ${rt(p)} de media con ${p.age} años.`,'good');}}S.trainLog.unshift({wk:S.week+1,txt:`${p.name}: ${AT_NAME[k].toLowerCase()} sube a ${p.at[k]}${p.ovr>before?' · media '+rt(p):''}.`});}
  }
  S.trainLog=S.trainLog.slice(0,30);
 }
 export function weeklyTeamTraining(){
- schedWeekly(famOf);
+ schedWeekly(famOf);tcWeekly(famOf);tcTacLearn();
  if(S.train.focus==='tac'){learnTactic(T(S.user).tac,S.train.int==='i'?4:S.train.int==='s'?1.5:2.5);const g=S.train.int==='i'?4.5:S.train.int==='s'?2:3;S.chem=clamp(S.chem+g,20,100);const f=T(S.user).formation;S.famil[f]=clamp(famOf(f)+g+1,0,100);}
  Object.keys(FORMS).forEach(f=>{if(f!==T(S.user).formation&&famOf(f)>30)S.famil[f]=famOf(f)-1;});
  const n=squad(S.user).length;if(n>26)S.chem=clamp(S.chem-.5,20,100);

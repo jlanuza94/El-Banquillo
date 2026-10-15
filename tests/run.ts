@@ -262,7 +262,7 @@ const app = document.getElementById('app')!;
     ok(t.formation === f0 && t.plans.B.formation === '3-5-2', 'tácticas guardadas A y B');
     S.fr.push(mkTie(S.user, S.teams.find(x => x.id !== S.user).id)); const m = createMatch({ k: 'fr', i: S.fr.length - 1 }); m.auto = true; for (let i = 0; i < 30; i++) step(m);
     ok(planInMatch(m, 'B') && m.f[m.us] === '3-5-2' && m.lu[m.us].filter(Boolean).length >= 10 && m.tac[m.us].est === 'pos', 'cambio de táctica en pleno partido'); while (!m.done) step(m); S.fr = [];
-    const before = planFam(t.tac); learnTactic(t.tac); ok(planFam(t.tac) > before, 'el equipo aprende la táctica que usa'); render(); S.view = 'tacticas'; S.vt = { tac: 'bp' }; render(); ok(app.textContent.includes('Jugadas ensayadas'), 'pantalla de tácticas con planes y jugadas'); }
+    S.tfam = null; const before = planFam(t.tac); learnTactic(t.tac); ok(planFam(t.tac) > before, 'el equipo aprende la táctica que usa'); render(); S.view = 'tacticas'; S.vt = { tac: 'bp' }; render(); ok(app.textContent.includes('Jugadas ensayadas'), 'pantalla de tácticas con planes y jugadas'); }
   { // sistemas conectados
     const ags = {}; Object.values(S.players).slice(0, 3000).forEach(p => { const a = agentOf(p); ags[a.n] = (ags[a.n] || 0) + 1; });
     ok(Object.keys(ags).length === 4, 'agentes: ' + Object.entries(ags).map(([k, v]) => k + ' ' + v).join(', '));
@@ -414,7 +414,7 @@ const app = document.getElementById('app')!;
     ok(S.inbox.length > n0 && /más barato/.test(S.inbox[0].subj), 'aviso: un jugador seguido baja de precio'); other.value = v0; S.short.pop();
     const yp = squad(S.user).filter(p => !p.loan && p.sp !== 'POR').sort((a, b) => a.age - b.age)[0], pos = learnablePos(yp)[0]; setDev(yp.id, 'pos', pos); yp.dev.posP = 99; devWeekly(); ok(yp.alt.includes(pos) && !yp.dev.pos, 'aprende un puesto nuevo con el plan de desarrollo');
     const tr = learnableTr(yp)[0]; if (tr) { setDev(yp.id, 'tr', tr); yp.dev.trP = 99.9; devWeekly(); ok(yp.tr.includes(tr), 'aprende un rasgo nuevo'); }
-    S.view = 'entreno'; S.vt = { ent: 'dev' }; render(); ok(app.textContent.includes('Plan de desarrollo') && app.querySelector('[data-dev]'), 'pantalla de desarrollo');
+    S.view = 'entreno'; S.vt = { ent: 'ind' }; render(); ok(app.textContent.includes('Plan de desarrollo') && app.querySelector('[data-dev]'), 'pantalla de desarrollo');
     markArrival(yp); yp.h0[0] = Math.min(yp.h0[0], yp.ovr - 15); const ovr0 = yp.ovr; if (yp.ovr < 70) yp.ovr = 70; discoveries(); ok(yp.h0[2] === 1 && S.ach.desc, 'logro «lo descubrí yo»'); yp.ovr = ovr0;
     S.vt = {}; S.view = 'inicio'; render(); }
   { // Objetivos, momentos, entrenadores, gala, clima, vídeo del rival y técnicos de otros clubes
@@ -507,7 +507,7 @@ const app = document.getElementById('app')!;
     setPreset('intensa'); ok(S.train.int === 'i' && S.train.focus === 'fis', 'semana intensa: físico e intensidad alta'); setPreset('tactica'); ok(S.train.focus === 'tac', 'semana táctica');
     const f = T(S.user).formation, fa = famOf(f); schedWeekly(famOf); ok(famOf(f) >= fa && squad(S.user).every(p => p.loan || p.trA != null), 'la semana táctica sube el dominio y todos tienen nota de entrenamiento');
     const pp = squad(S.user).find(p => !p.loan); pp.trA = 8; ok(trMult(pp) > 1.1, 'buena nota de entrenamiento: mejora más rápido'); setSession(0, 'des'); ok(sched()[0] === 'des', 'cambiar una sesión'); setPreset('normal');
-    S.view = 'entreno'; S.vt = { ent: 'plan' }; render(); ok(app.querySelectorAll('.wkd').length === 7 && app.querySelector('[data-ses]'), 'calendario semanal de entrenamiento'); S.vt = {}; S.view = 'inicio'; render(); }
+    S.view = 'entreno'; S.vt = { ent: 'cal' }; render(); ok(app.querySelectorAll('.tcday').length === 7 && app.querySelector('[data-a="tc-slot"]'), 'calendario semanal de entrenamiento'); S.vt = {}; S.view = 'inicio'; render(); }
   { // Derbis y lesiones
     initRivals(); const riv = rivalsOf(S.user); ok(riv.length >= 1 && isDerby(S.user, riv[0][0]), 'tu club tiene un rival de derbi: ' + T(riv[0][0]).name);
     const opp = riv[0][0]; S.club.mood = 50; const w0 = (h2hOf(opp) || { w: 0 }).w; recordH2H({ us: 'h', h: S.user, a: opp, ref: { k: 'lg' }, score: { h: 2, a: 0 } });
@@ -631,6 +631,17 @@ const app = document.getElementById('app')!;
     S.view = 'calendario'; S.vt = { cal: 'fx' }; render(); ok(app.querySelectorAll('.fxtbl tbody tr').length >= 10, 'calendario: lista de partidos del club');
     S.view = 'carrera'; S.vt = { car: 'tit' }; render(); ok(app.querySelectorAll('.ttile').length === 4, 'mi carrera: pantalla de títulos');
     t.tac.ent = 'nor'; t.tac.off = 'no'; t.tac.tie = 'no'; S.view = 'inicio'; S.vt = {};
+  }
+  { // Centro de entrenamiento
+    const TC = await import('../src/tcenter'), TR = await import('../src/training2');
+    const P = TC.tcPlan(); ok(P.d.length === 7 && P.d[TR.MATCH_DAY].every(x => !x), 'centro de entrenamiento: semana de 7 días con el partido fijo');
+    TC.setDrill(1, 0, 'veloc'); TC.setDrill(1, 1, 'fuerza'); ok(TC.tcPlan().d[1][0] === 'veloc' && S.sched[1] === 'fis' && TC.dayLoad(1) === 4, 'elegir sesiones: mañana y tarde, y el plan antiguo se sincroniza');
+    ok(TC.weekAt().vel > 0 && TC.areaMult('fis') > 0.8, 'las sesiones deciden qué atributos se entrenan, según su responsable');
+    const p0 = squad(S.user)[3]; TC.setPLoad(p0.id, 'rest'); ok(TC.pLoad(p0) === 'rest' && TC.tcGrowMult(p0) === 0, 'carga individual: descanso no mejora');
+    TC.setPLoad(p0.id, 'nor'); TC.setDrill(TR.MATCH_DAY - 1, 0, 'rival');
+    const R = TC.tcWeekly(f => S.famil[f] ?? 40); ok(R && R.load >= 4 && TC.tcPlan().hist.length >= 1 && S.tcRiv && TC.rivMult(S.tcRiv.opp) > 1, 'informe semanal y ventaja por preparar al rival');
+    TC.tcPreset('normal'); ok(TC.tcPlan().d[1][0] && !TC.tcPlan().d[1][1], 'plantillas de semana');
+    S.view = 'entreno'; for (const v of ['cal', 'ses', 'ind', 'staff', 'inf']) { S.vt = { ent: v }; render(); } ok(app.textContent.includes('Informe de desarrollo'), 'pantallas del centro de entrenamiento'); S.vt = {}; S.view = 'inicio';
   }
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 

@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {setDrill,setLead,setPLoad,tcPreset} from './tcenter';
 import {TITLES,hasTitle,setTitle,tInc} from './mtitles';
 const TITLES_CAT=k=>TITLES[k]?TITLES[k][0]:'peo';
 import {askMentor,interviewChance,interviewQs,pickSpec} from './mgrcareer';
@@ -133,7 +134,13 @@ document.addEventListener('click',e=>{
   case'ns-build':{const err=startStadium(seatCost);if(err)toast(err);break;}
   case'po-play':{if(!S.po)break;S.match=createMatch({k:'po',i:+d.i});S.match.label=compLabel({k:'po',i:+d.i});S.view='partido';break;}
   case'po-sim':poAdvance(quickMatch,applyResult,mkTie);break;
-  case'tr-preset':setPreset(d.v);toast('Semana: '+PRESETS_T[d.v].n.toLowerCase()+'.');break;
+  case'tc-slot':S.tcSel={d:+d.d,s:+d.s};S.vt=S.vt||{};S.vt.ent='ses';break;
+  case'tc-pick':if(S.tcSel){setDrill(S.tcSel.d,S.tcSel.s,d.v);S.tcSel=null;S.vt.ent='cal';}break;
+  case'tc-clear':if(S.tcSel){setDrill(S.tcSel.d,S.tcSel.s,'');S.tcSel=null;S.vt.ent='cal';}break;
+  case'tc-cancel':S.tcSel=null;S.vt.ent='cal';break;
+  case'tc-cat':S.tcCat=d.v;break;
+  case'tc-load':setPLoad(d.id,d.v);break;
+  case'tr-preset':tcPreset(d.v);toast('Semana: '+PRESETS_T[d.v].n.toLowerCase()+'.');break;
   case'pique':if(S.pique){S.pique.resp=d.v;toast(d.v==='r'?'Le respondes en la prensa. Ahora toca ganar.':'Prefieres no entrar al trapo.');}break;
   case'sp-prep':S.spPrep={opp:+d.id};toast('El equipo prepara la defensa a balón parado contra este rival.');break;
   case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
@@ -381,6 +388,7 @@ document.addEventListener('change',e=>{
  else if((id==='m-est'||id==='m-pre'||id==='m-per'||id==='m-rec')&&S.match){const k=id.slice(2);S.match.tac[S.match.us][k]=v;addEv(S.match,'sys',null,`Cambio táctico: ${TACS[k].n.toLowerCase()} · ${TACS[k].o[v].toLowerCase()}`);}
  else if(e.target.dataset&&e.target.dataset.job){const sc=S.scouts.find(x=>x.id===e.target.dataset.job);if(sc)sc.job=v;}
  else if(e.target.dataset&&e.target.dataset.reg){const sc=S.scouts.find(x=>x.id===e.target.dataset.reg);if(sc)sc.reg=+v;}
+ else if(e.target.dataset&&e.target.dataset.tclead){setLead(e.target.dataset.tclead,v);}
  else if(e.target.dataset&&e.target.dataset.tf){const p=PL(e.target.dataset.tf);if(p)p.tf=v;}
  else if(e.target.dataset&&e.target.dataset.dev){const [pid,k]=e.target.dataset.dev.split('|');setDev(pid,k,v);}
  else if(id==='t-vc0'||id==='t-vc1'){const t=T(S.user);t.vc=t.vc||[];t.vc[+id.slice(4)]=v||null;}
@@ -426,13 +434,13 @@ document.addEventListener('pointerdown',e=>{if(!S||S.user==null||e.button>0)retu
  if(el.dataset.drag==='list'&&e.target.closest('.grip'))e.preventDefault();
  DG={el,pid:el.dataset.pid,src:el.dataset.drag,x0:e.clientX,y0:e.clientY,moved:false,over:null};});
 document.addEventListener('pointermove',e=>{if(!DG)return;if(!DG.moved){if(Math.hypot(e.clientX-DG.x0,e.clientY-DG.y0)<7)return;DG.moved=true;
-  const p=PL(DG.pid);const g=document.createElement('div');g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';document.body.appendChild(g);DG.g=g;
+  const p=PL(DG.pid);const g=document.createElement('div');if(DG.src==='slot'){g.className='dragghost vs dgchip';g.innerHTML=DG.el.innerHTML;DG.el.classList.add('dragging');}else{g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';}document.body.appendChild(g);DG.g=g;
   document.body.classList.add('fmdrag');const fit=fitOf(DG.pid);document.querySelectorAll('.fmgrid .slot[data-i]').forEach(s=>s.classList.add('fit'+(fit[+s.dataset.i]||4)));
   try{DG.el.setPointerCapture(e.pointerId);}catch(err){}}
- e.preventDefault();DG.g.style.transform=`translate(${e.clientX+10}px,${e.clientY-28}px)`;
+ e.preventDefault();DG.g.style.transform=DG.src==='slot'?`translate(${e.clientX}px,${e.clientY}px) translate(-50%,-60%)`:`translate(${e.clientX+10}px,${e.clientY-28}px)`;
  const t=dropAt(e.clientX,e.clientY);if(t!==DG.over){DG.over&&DG.over.classList.remove('over');DG.over=t;t&&t.classList.add('over');}},{passive:false});
 const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
- d.g&&d.g.remove();document.body.classList.remove('fmdrag');d.over&&d.over.classList.remove('over');
+ d.g&&d.g.remove();d.el&&d.el.classList.remove('dragging');document.body.classList.remove('fmdrag');d.over&&d.over.classList.remove('over');
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
  DG_T=Date.now();if(e.type==='pointercancel')return;
  const t=dropAt(e.clientX,e.clientY);if(!t)return;

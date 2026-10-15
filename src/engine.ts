@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {rivMult} from './tcenter';
 import {REFS,aiInMatch,duoMult,mgrAt,momentShootout,refFor} from './extras2';
 import {forcedAfter,momentInj,momentPen,momentRed,momentsTick,recordCoach,spPrepFor,spPrepMult,weatherFor,weatherMods} from './extras';
 import {dateOf,dayOfEvent} from './calendar';
@@ -40,7 +41,7 @@ export function createMatch(ref){
  m.ro={h:m.us==='h'?userRoles().slice():null,a:m.us==='a'?userRoles().slice():null};
  if(m.us){const t=T(m[m.us]),of=oopForm(t);if(of)m.oop={s:m.us,f:of,map:oopMap(t)};}
  if(m.us){if(S.prepB&&S.prepB>1&&ref.k!=='fr'){m.mult[m.us]*=S.prepB;S.prepB=1;}m.refr=refFor(ref,m.h);m.mult[m.us]*=duoMult(m.lu[m.us].filter(Boolean))*(1+.004*(mgrAt('tac')-5));}
- if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;if(spPrepFor(op))m.spd=spPrepMult();}
+ if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;m.mult[m.us]*=rivMult(op);if(spPrepFor(op))m.spd=spPrepMult();}
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
  m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult();m.plan=T(m[m.us]).curPlan||null;}
