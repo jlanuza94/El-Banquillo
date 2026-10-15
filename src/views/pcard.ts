@@ -5,7 +5,7 @@ import {clamp,esc,money} from '../core';
 import {AT_GROUPS,AT_NAME,COUNTRIES,ROLES,SPN,SPXY} from '../data';
 import {S,T,crestStyle,lgName,qc,squad} from '../state';
 import {prof} from '../tactics';
-import {seen} from '../scouting';
+import {scouted,seen} from '../scouting';
 import {atCellS,nf,pBadgeS} from './common';
 import {contractLabel} from '../contracts';
 import {askPrice} from '../market';
@@ -34,13 +34,13 @@ function feet(p){const f=p.foot||'D',wf=p.wf||3,L=f==='I'||f==='A'?5:wf,R=f==='D
 function formRow(p){const L=(S.mlog||[]).map(r=>(r.pl||[]).find(x=>x[0]===p.id)).filter(Boolean).slice(0,5).map(x=>x[2]).filter(Boolean);return L.length?L.map(v=>v.toFixed(1)).join(' · '):'—';}
 export function cardHTML(p){
  const sn=seen(p),t=p.team!=null?T(p.team):null,s=p.st||{},ex=sn.exact,v=ex?p.ovr:(sn.ovr[0]+sn.ovr[1])/2,st=starsOf(v),pot=p.age<=23?starsOf(Math.max(v,((seen(p).pot[0]+seen(p).pot[1])/2)*10)):null;
- const tier=st>=4?'gold':st>=2.5?'silver':'bronze',mine=p.team===S.user,hap=p.hap==null?70:p.hap;
+ const sc=scouted(p),tier=!sc?'bronze':st>=4?'gold':st>=2.5?'silver':'bronze',mine=p.team===S.user,hap=p.hap==null?70:p.hap;
  const dots=Object.keys(SPXY).map(sp=>{const pr=prof(p,sp),[x,y]=SPXY[sp],c=sp===p.sp?'n':pr>=.95?'c':pr>=.86?'u':'';return c?`<span class="pd ${c}" style="left:${x}%;top:${y}%" title="${SPN[sp]}">${sp}</span>`:'';}).join('');
- const col=ks=>ks.map(k=>{const r=sn.at[k],v=sn.exact?p.at[k]:(r[0]+r[1])/2;return `<div class="fa"><span>${AT_NAME[k]}</span><i class="fab"><b class="${qc(v)}" style="width:${v*10}%"></b></i>${atCellS(p,k,sn)}</div>`;}).join('');
+ const col=ks=>ks.map(k=>{const r=sn.at[k],v=sn.exact?p.at[k]:(r[0]+r[1])/2;return `<div class="fa"><span>${AT_NAME[k]}</span><i class="fab"><b class="${qc(v)}" style="width:${sc?v*10:0}%"></b></i>${atCellS(p,k,sn)}</div>`;}).join('');
  const G=AT_GROUPS.filter(([n])=>n!=='Portero'||p.sp==='POR');
  const extra=`<div class="fa"><span>Energía</span><b class="${p.energy>=75?'ok':p.energy>=55?'mid':'low'}">${Math.round(p.energy)}%</b></div><div class="fa"><span>Moral</span><b>${hap>=75?'Excelente':hap>=55?'Buena':hap>=40?'Normal':hap>=25?'Baja':'Muy baja'}</b></div><div class="fa"><span>Forma</span><b>${formRow(p)}</b></div><div class="fa"><span>Nota media</span><b>${s.pj?(s.rs/s.pj).toFixed(2):'—'}</b></div>`;
  return `<div class="pfc">
- <div class="pc ${tier}" style="${t?crestStyle(t):''}"><span class="pnum">${p.num||''}</span>${t?`<span class="pcrest crest ${t.cs?'cs-'+t.cs:''}">${esc(t.short)}</span>`:''}<span class="pflag">${nf(p.nat)}</span>${faceSVG(p)}<b class="psur">${esc(p.name.split(' ').slice(1).join(' ')||p.name)}</b><span class="ppos">${SPN[p.sp]}</span>${starsHTML(st)}${pot!=null&&pot>st?`<span class="small" style="opacity:.8">Potencial ${starsHTML(pot,1)}</span>`:''}</div>
+ <div class="pc ${tier}" style="${t?crestStyle(t):''}"><span class="pnum">${p.num||''}</span>${t?`<span class="pcrest crest ${t.cs?'cs-'+t.cs:''}">${esc(t.short)}</span>`:''}<span class="pflag">${nf(p.nat)}</span>${faceSVG(p)}<b class="psur">${esc(p.name.split(' ').slice(1).join(' ')||p.name)}</b><span class="ppos">${SPN[p.sp]}</span>${sc?starsHTML(st):'<span class="small" style="opacity:.8">Sin ojear</span>'}${sc&&pot!=null&&pot>st?`<span class="small" style="opacity:.8">Potencial ${starsHTML(pot,1)}</span>`:''}</div>
  <div class="pinfo"><div class="pig"><div><b>${p.age} años</b><small>Edad</small></div><div><b>${esc(COUNTRIES[p.nat].n)}</b><small>${p.caps?`${p.caps} internacional${p.caps>1?'es':''}`:'Nacionalidad'}</small></div></div>
   <div class="pclub"><b>${t?esc(t.name):'Agente libre'}</b>${t?`<small>${esc(lgName(t.lg))}</small>`:''}${mine?`<span class="prole">${ROLES[p.role||'ro'].n}</span>`:''}</div>
   <div class="pmedia">Media ${pBadgeS(p,'lg')}</div></div>

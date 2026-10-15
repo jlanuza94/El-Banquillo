@@ -34,7 +34,7 @@ import {PRESETS,applyPreset} from './tactics2';
 import {userPos} from './positions';
 import {MAX_SUBS,removeFromTeam,setSub,subsOf} from './tactics';
 import {continueDay} from './calendar';
-import {FREE,afterMove,coordsOf,moveDot,spAt} from './freeboard';
+import {FREE,afterMove,coordsOf,moveDot,spAt,moveSlotTo} from './freeboard';
 import {roleList} from './roles';
 import {doBuyback,setBuyback} from './negotiate';
 import {PLANS,setPlan} from './medical';
@@ -83,9 +83,12 @@ export function placeInSlot(pid,i){
  else if(t.subs&&t.subs.length){const b=t.subs.indexOf(pid);t.subs=t.subs.filter(x=>x!==pid);if(prev&&b>=0)t.subs.splice(b,0,prev);}
  t.lineup[i]=pid;S.sel=null;
 }
+/** Barra de probabilidad de la oferta (se actualiza al escribir o tocar +/−). */
+function oddsUpd(i){const o=document.getElementById('ngOdds');if(!o)return;const v=+i.value||0,ask=+i.dataset.ask||0,L=v>=ask?['Muy probable','hi']:v>=ask*.92?['Posible contraoferta','md']:v>=ask*.8?['Difícil','lo']:['Casi imposible','no'];o.className='ngodds '+L[1];o.querySelector('span').textContent=L[0];}
 document.addEventListener('click',e=>{
  const el=e.target.closest('[data-a]');if(!el)return;
  const a=el.dataset.a,d=el.dataset;
+ if(a==='bid-step'||a==='bid-set'){const i=document.getElementById('bidAmt');if(!i)return;const ask=+i.dataset.ask||0;let v=a==='bid-set'?+d.v:Math.max(0,(+i.value||0)+(+d.v)*Math.max(1,ask));i.value=(Math.round(v*1000)/1000).toFixed(3);oddsUpd(i);return;}
  if(a==='theme'){const t=cycleTheme();toast('Tema: '+THEMES[t]+(t==='auto'?' (como el móvil)':''));render();return;}
  if(!S||S.user==null){if(a==='slot-load'){loadSlot(+d.id).then(o=>{if(o)boot(o);else{toast('No se pudo cargar esa partida.');}});return;}
   if(a==='slot-del'){RT.delConfirm=+d.id;render();return;}if(a==='slot-del-no'){RT.delConfirm=null;render();return;}
@@ -96,7 +99,7 @@ document.addEventListener('click',e=>{
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
-  const rdC=()=>{const g=id=>document.getElementById(id),c=RT.coach=RT.coach||{};if(g('cName'))c.name=g('cName').value.trim()||undefined;if(g('cNat'))c.nat=+g('cNat').value;if(g('cAge'))c.age=+g('cAge').value;};
+  const rdC=()=>{const g=id=>document.getElementById(id),c=RT.coach=RT.coach||{};if(g('cName')){c.first=g('cName').value.trim();c.sur=g('cSur')?g('cSur').value.trim():'';c.name=[c.first,c.sur].filter(Boolean).join(' ')||undefined;}if(g('cNat'))c.nat=+g('cNat').value;if(g('cAge'))c.age=+g('cAge').value;};
   if(a==='cc-step'){rdC();RT.cstep=+d.v;render();return;}
   if(a==='start-lic'){rdC();RT.coach.lic=d.v;render();return;}
   if(a==='start-bg'||a==='start-lead'){rdC();RT.coach[a==='start-bg'?'bg':'lead']=d.v;render();return;}
@@ -396,6 +399,7 @@ document.addEventListener('change',e=>{
  save();render();
 });
 document.addEventListener('input',e=>{
+ if(e.target.id==='bidAmt'){oddsUpd(e.target);return;}
  if(S&&e.target.id==='gsq'){const box=document.getElementById('gsres');if(box)box.innerHTML=searchResults(e.target.value);return;}
  if(!S||e.target.id!=='mkq')return;S.mk.q=e.target.value;S.mk.limit=40;
  const box=document.getElementById('mklist');if(box)box.innerHTML=mkList();
@@ -416,7 +420,7 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.fb
  * En el móvil se coge desde el asa ⠿ (así la lista sigue pudiendo desplazarse); en el campo y el banquillo, directamente. */
 let DG=null,DG_T=0;
 const fitOf=pid=>{const r=document.querySelector(`[data-fit][data-pid="${pid}"]`);return r?r.dataset.fit||'':'';};
-const dropAt=(x,y)=>{const el=document.elementFromPoint(x,y);return el&&el.closest('.fmgrid .slot[data-i], .bslot[data-k], .fmlist');};
+const dropAt=(x,y)=>{const el=document.elementFromPoint(x,y);return el&&el.closest('.fmgrid .slot[data-i], .bslot[data-k], .fmlist, .fmgrid .vcell');};
 document.addEventListener('pointerdown',e=>{if(!S||S.user==null||e.button>0)return;const el=e.target.closest&&e.target.closest('.fmgrid [data-drag]');if(!el)return;
  if(e.pointerType!=='mouse'&&el.dataset.drag==='list'&&!e.target.closest('.grip'))return;
  if(el.dataset.drag==='list'&&e.target.closest('.grip'))e.preventDefault();
@@ -432,7 +436,8 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
  DG_T=Date.now();if(e.type==='pointercancel')return;
  const t=dropAt(e.clientX,e.clientY);if(!t)return;
- if(t.matches('.slot[data-i]'))placeInSlot(d.pid,+t.dataset.i);
+ if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);toast('Formación libre: puedes seguir moviendo jugadores o volver a una fija en el selector.');}}
+ else if(t.matches('.slot[data-i]'))placeInSlot(d.pid,+t.dataset.i);
  else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);
  else if(d.src!=='list')removeFromTeam(d.pid);
  S.sel=null;save();render();};

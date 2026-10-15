@@ -17,7 +17,7 @@ import {faceSVG,starsHTML,starsOf} from './pcard';
 import {suggestions} from '../quick';
 import {interested,joinWill,licName,licence} from '../mgrcareer';
 import {seen} from '../scouting';
-import {EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
+import {scouted,EXACT,estAt as estAt0,estOvr as estOvr0,estPot as estPot0,knowledge} from '../scouting';
 export function marketRow(p){
  const pr=askPrice(p),no=refuses(p),fav=S.short.includes(p.id),gem=p.gem&&knowledge(p)>=60?' <span class="tag gem" title="Tu ojeador cree que puede ser una joya">💎</span>':'';
  return `<tr><td><button class="star ${fav?'on':''}" data-a="fav" data-id="${p.id}" aria-label="${fav?'Dejar de seguir':'Seguir'}" aria-pressed="${fav}">${fav?'★':'☆'}</button></td><td>${posChip(p)}</td><td>${nameBtn(p)}${gem}${(()=>{if(p.team===S.user)return '';const w=joinWill(p);return ` <span class="will ${w.v>=70?'hi':w.v>=40?'md':'lo'}" title="Ganas de venir: ${w.v}%${w.why?' · '+esc(w.why):''}">${w.v>=70?'😊':w.v>=40?'😐':'🙁'}</span>`;})()}</td><td class="n">${p.age}</td><td>${p.team===null?'<span class="tag">Libre</span>':`<span class="teamcell">${crest(T(p.team),'sm')}${esc(T(p.team).name)}</span>`}</td><td class="mklg">${p.team===null?'—':`${nf(LG(T(p.team).lg).c)} ${esc(lgName(T(p.team).lg,true))}`}</td><td class="r">${pBadgeS(p)}</td><td class="n">${potTxt(p)}</td>${S.mk&&S.mk.attr?attrCells(p):''}<td>${contractTxt(p)}</td><td class="n">${money(pr)}${trendTag(p)}</td>
@@ -88,11 +88,11 @@ export function mkList(){
  // se ordena por lo que sabes de cada jugador (el centro de su rango), no por sus valores reales
  const memo=(fn)=>{const c=new Map();return p=>{let v=c.get(p.id);if(v===undefined){v=fn(p);c.set(p.id,v);}return v;};};
  const estOvr=memo(estOvr0),estPot=memo(estPot0),estAt=(p,k)=>memoAt(p.id+k,p,k),atC=new Map(),memoAt=(key,p,k)=>{let v=atC.get(key);if(v===undefined){v=estAt0(p,k);atC.set(key,v);}return v;};
- const so1={name:(a,b)=>a.name.localeCompare(b.name),club:(a,b)=>(a.team===null?'~':T(a.team).name).localeCompare(b.team===null?'~':T(b.team).name),lg:(a,b)=>(a.team===null?99:LG(T(a.team).lg).lv)-(b.team===null?99:LG(T(b.team).lg).lv),con:(a,b)=>(a.contract||0)-(b.contract||0),ovr:(a,b)=>estOvr(b)-estOvr(a),price:(a,b)=>askPrice(b)-askPrice(a),age:(a,b)=>a.age-b.age,pot:(a,b)=>estPot(b)-estPot(a),ganga:(a,b)=>estOvr(b)/Math.sqrt(askPrice(b)+.05)-estOvr(a)/Math.sqrt(askPrice(a)+.05)}[mk.sort]||((a,b)=>estAt(b,mk.sort)-estAt(a,mk.sort)||estOvr(b)-estOvr(a)),dir=mk.dir||1,so=(a,b)=>so1(a,b)*dir;
+ const dir=mk.dir||1,so1={name:(a,b)=>a.name.localeCompare(b.name),club:(a,b)=>(a.team===null?'~':T(a.team).name).localeCompare(b.team===null?'~':T(b.team).name),lg:(a,b)=>(a.team===null?99:LG(T(a.team).lg).lv)-(b.team===null?99:LG(T(b.team).lg).lv),con:(a,b)=>(a.contract||0)-(b.contract||0),ovr:(a,b)=>(scouted(b)-scouted(a))*dir||estOvr(b)-estOvr(a),price:(a,b)=>askPrice(b)-askPrice(a),age:(a,b)=>a.age-b.age,pot:(a,b)=>(scouted(b)-scouted(a))*dir||estPot(b)-estPot(a),ganga:(a,b)=>estOvr(b)/Math.sqrt(askPrice(b)+.05)-estOvr(a)/Math.sqrt(askPrice(a)+.05)}[mk.sort]||((a,b)=>estAt(b,mk.sort)-estAt(a,mk.sort)||estOvr(b)-estOvr(a)),so=(a,b)=>so1(a,b)*dir;
  list.sort(so);
  const total=list.length;list=list.slice(0,mk.limit);
  if(!total)return `<div class="empty">Ningún jugador cumple estos filtros. Prueba a subir el precio máximo o quitar algún filtro.</div>`;
- return `<div class="row" style="margin:0 0 8px;align-items:center"><span class="small muted">${total} jugador${total>1?'es':''} encontrado${total>1?'s':''}</span><span class="spacer"></span><span class="small muted">😊 quiere venir · 😐 se lo piensa · 🙁 no le convence</span><button class="btn sm" data-a="mk-attr" aria-pressed="${!!mk.attr}">${mk.attr?'Ocultar atributos':'Ver atributos'}</button></div><div class="tbl"><table>${head}<tbody>${list.map(marketRow).join('')}</tbody></table></div>
+ return `<div class="row" style="margin:0 0 8px;align-items:center"><span class="small muted">${total} jugador${total>1?'es':''} encontrado${total>1?'s':''}</span><span class="spacer"></span><span class="small muted"><b class="q unk" style="display:inline-block">?</b> sin ojear · 😊 quiere venir · 😐 se lo piensa · 🙁 no le convence</span><button class="btn sm" data-a="mk-attr" aria-pressed="${!!mk.attr}">${mk.attr?'Ocultar atributos':'Ver atributos'}</button></div><div class="tbl"><table>${head}<tbody>${list.map(marketRow).join('')}</tbody></table></div>
  ${total>list.length?`<div class="row" style="justify-content:center;margin-top:12px"><button class="btn" data-a="mk-more">Mostrar más (${total-list.length})</button></div>`:''}`;
 }
 /** Todas las negociaciones en un sitio: tus ofertas en curso, las que recibes y tus transferibles. */
@@ -115,11 +115,9 @@ function missionsHTML(){
  :`<span class="row" style="gap:6px;margin-top:4px;flex-wrap:wrap">${sel('misC',F.misC??wcs()[0],missionCountries().map(i=>[i,COUNTRIES[i].n]))}${sel('misG',F.misG||'ALL',[['ALL','Cualquier puesto'],['POR','Porteros'],['DEF','Defensas'],['MED','Medios'],['DEL','Delanteros']])}${sel('misA',F.misA||'21',[['19','Hasta 19 años'],['21','Hasta 21'],['23','Hasta 23'],['0','Cualquier edad']])}${sel('misW',F.misW||'4',[['4','4 jornadas'],['8','8 jornadas']])}</span>`}</span>
  ${M?`<button class="btn sm" data-a="mis-stop" data-id="${sc.id}">Volver</button>`:`<button class="btn sm primary" data-a="mis-go" data-id="${sc.id}">Enviar</button>`}</div>`;}).join('')}`;
 }
-export function mercadoView(){
- const kind=S.mkKind==='staff'?'staff':'pl',ksw=`<div class="seg mkkind"><button data-a="mk-kind" data-v="pl" aria-pressed="${kind==='pl'}">⚽ Jugadores</button><button data-a="mk-kind" data-v="staff" aria-pressed="${kind==='staff'}">🧑‍🏫 Personal técnico</button></div>`;
- if(kind==='staff')return `<div class="${inWindow()?'negmsg ok':'negmsg'} wbanner" style="margin:0 0 10px">${ksw}<span>${esc(windowTxt())} El personal técnico se puede fichar en cualquier momento.</span></div>`+staffView('mk');
- return mercadoViewPl(ksw);
-}
+export function mercadoView(){return mercadoViewPl('');}
+/** Mercado de personal técnico: aparte del de jugadores, dentro de la sección Mercado. */
+export function mstaffView(){return `<div class="negmsg ok wbanner" style="margin:0 0 10px"><span>El personal técnico se puede fichar en cualquier momento de la temporada, aunque el mercado de jugadores esté cerrado.</span></div>`+staffView('mk');}
 function mercadoViewPl(ksw){
  const mk=S.mk,wages=squad(S.user).reduce((a,p)=>a+p.wage,0);
  const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur)===v?'selected':''}>${l}</option>`).join('')}</select>`;

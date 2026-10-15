@@ -14,7 +14,7 @@ import {medHTML} from './staff';
 import {MAX_SUBS,subsOf} from '../tactics';
 import {footF,removeFromTeam,setSub} from '../tactics';
 import {boardHTML} from './freeboard';
-import {FREE} from '../freeboard';
+import {CELLS,FREE} from '../freeboard';
 import {YT_WEEK,goldenChance} from '../youthplus';
 import {crew} from '../staff';
 import {trendTag,valueWhy} from '../economy';
@@ -163,7 +163,7 @@ export function tacticasView(){
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
  const tb=vtab('tac',[['ali','Alineación'],['ord','Táctica'],['tac','Instrucciones'],['rival','Rival'],['bp','Balón parado'],['plan','Guardadas'],['piz','Mi formación']],'ali');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?inst+famP:tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
+ const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?inst+famP+`<section class="panel">${rotHTML()}</section>`:tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
  return tb.bar+body;
 }
 /* ---------- Desarrollo: aprender puestos y rasgos, y cedidos ---------- */
@@ -235,6 +235,9 @@ function planHTML(sq){
   ${ps.map(p=>{const f=fut(p);return `<tr class="${p.contract<=1?'endc':''}"><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age+1}</td><td class="r">${pBadge(p)}</td><td>${contractTxt(p)}</td><td class="n">${money(p.value)}${trendTag(p)}</td><td><span class="tag ${f[1]}">${f[0]}</span></td></tr>`;}).join('')}</tbody></table></div>`;}).join('')}`;
 }
 /** Alineación estilo FM: campo, banquillo y lista para arrastrar (dentro de Tácticas). */
+function rotHTML(){return `<details class="frot"><summary>Rotación del segundo · ${S.autoRot!==false?'activada':'desactivada'}</summary><div class="offer" style="margin-top:6px"><span class="t"><span class="small muted">Al simular, cambia a los titulares cansados (por debajo del ${(S.rot&&S.rot.th)||72}% de energía), lesionados o sancionados por el mejor suplente.</span></span>
+  <select id="rotTh" aria-label="Energía mínima">${[[60,'Poca rotación'],[72,'Normal'],[82,'Mucha rotación']].map(([v,l])=>`<option value="${v}" ${((S.rot&&S.rot.th)||72)===v?'selected':''}>${l}</option>`).join('')}</select>
+  <button class="btn sm ${S.autoRot!==false?'dark':''}" data-a="rot-tog" aria-pressed="${S.autoRot!==false}">${S.autoRot!==false?'Activada':'Desactivada'}</button><button class="btn sm" data-a="rot-now">Rotar ahora</button></div></details>`;}
 function alineacionHTML(){
  const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr);
  const sel=S.sel,selSlot=sel&&sel.type==='slot'?sel.i:null,selPid=sel&&sel.type==='player'?sel.id:null;
@@ -248,7 +251,8 @@ function alineacionHTML(){
   const v=p?lval(p,s,ro[i]):null,su=p?suitOf(p,s):0;
   return `<button class="slot vs ${cls}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%" data-a="slot" data-i="${i}"${p?` data-pid="${p.id}" data-drag="slot"`:''} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}">
   <span class="vpos su${su||0}">${s}</span><span class="vnm">${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'Vacío'}</span>${p?`<span class="vv ${v[1]}">${v[0]}</span>`:''}${p&&p.energy<75?`<span class="ven ${p.energy>=55?'mid':'low'}" title="Energía ${Math.round(p.energy)}%"></span>`:''}</button>`;}).join('');
- const pitch=`<div class="vpitch">${VLINES}<span class="atk">${ph==='oop'?'🛡 Sin balón':'▲ Ataque'}</span><div class="vover">${fsel}<button class="btn sm primary" data-a="auto">Alinear mejores</button></div>${marks}</div>`;
+ const cells=ph==='oop'?'':CELLS.map(c=>`<span class="vcell" data-cx="${c.x}" data-cy="${c.y}" style="left:${c.x}%;top:${c.y}%"><i>${c.s}</i></span>`).join('');
+ const pitch=`<div class="vpitch">${VLINES}${cells}<span class="atk">${ph==='oop'?'🛡 Sin balón':'▲ Ataque'}</span><div class="vover">${fsel}<button class="btn sm primary" data-a="auto">Alinear mejores</button></div>${marks}</div>`;
  const subs=subsOf(t),chosen=(t.subs||[]).length>0;
  const bench=`<div class="fbench"><div class="fbh"><span class="eyebrow">Banquillo ${subs.length}/${MAX_SUBS}${chosen?'':' · automático'}</span>${chosen?'<button class="btn sm" data-a="subs-auto">Automático</button>':''}</div><div class="bslots">${Array.from({length:MAX_SUBS},(_,k)=>{const p=PL(subs[k]);return `<div class="bslot${p?'':' empty'}${p&&selPid===p.id?' sel':''}" data-a="bslot" data-k="${k}" ${p?`data-drag="bench" data-pid="${p.id}"`:''}>${p?`${posChip(p)}<span class="nm">${esc(p.name.split(' ').slice(1).join(' ')||p.name)}</span>${pBadge(p)}`:'<span class="small muted">+</span>'}</div>`;}).join('')}</div></div>`;
  const bar=`<div class="fmmbar">
@@ -256,11 +260,9 @@ function alineacionHTML(){
   ${ph==='oop'?`<select id="oopSel" aria-label="Formación sin balón"><option value="">Igual que con balón</option>${Object.keys(FORMS).filter(f=>f!==t.formation).map(f=>`<option value="${f}" ${f===of?'selected':''}>${f} · ${Math.round(famOf(f))}%</option>`).join('')}</select>`:`<div class="seg">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div>`}
 </div>
   <div class="fmmstats"><span>Media <b>${(pw.ovr/10).toFixed(1)}</b></span><span>Ataque <b>${(pw.atk/10).toFixed(1)}</b></span><span>Medio <b>${(pw.mid/10).toFixed(1)}</b></span><span>Defensa <b>${(pw.def/10).toFixed(1)}</b></span><span>Química <b>${Math.round(S.chem)}</b></span>${of?`<span title="Defensa con la forma sin balón">Def. sin balón <b>${(teamPower(oopLineup(t.lineup,om),of).def/10).toFixed(1)}</b></span>`:''}</div>${ph==='oop'?`<p class="small ophint">${of?`Al defender, tu once se coloca en ${of}. Toca dos jugadores para intercambiar sus puestos sin balón. Cuenta en el partido: si esta forma cubre peor o el equipo no la conoce (${Math.round(famOf(of))}%), concedes más.`:'👆 Elige arriba la formación para defender (por ejemplo, atacas en 4-3-3 y defiendes en 4-4-2): tu once se recoloca solo al perder el balón y aquí verás dónde se pone cada uno.'}</p>`:''}`;
- const rot=`<details class="frot"><summary>Rotación del segundo · ${S.autoRot!==false?'activada':'desactivada'}</summary><div class="offer" style="margin-top:6px"><span class="t"><span class="small muted">Al simular, cambia a los titulares cansados (por debajo del ${(S.rot&&S.rot.th)||72}% de energía), lesionados o sancionados por el mejor suplente.</span></span>
-  <select id="rotTh" aria-label="Energía mínima">${[[60,'Poca rotación'],[72,'Normal'],[82,'Mucha rotación']].map(([v,l])=>`<option value="${v}" ${((S.rot&&S.rot.th)||72)===v?'selected':''}>${l}</option>`).join('')}</select>
-  <button class="btn sm ${S.autoRot!==false?'dark':''}" data-a="rot-tog" aria-pressed="${S.autoRot!==false}">${S.autoRot!==false?'Activada':'Desactivada'}</button><button class="btn sm" data-a="rot-now">Rotar ahora</button></div></details>`;
+
  const qt=`<div class="qtac"><span class="eyebrow">Instrucciones rápidas</span>${['pre','est','rit'].map(k=>`<div class="qtrow"><span>${esc(TACS[k].n)}</span><div class="seg">${Object.entries(TACS[k].o).map(([v,l])=>`<button data-a="tac" data-k="${k}" data-v="${v}" aria-pressed="${(t.tac||TAC0)[k]===v}">${esc(l)}</button>`).join('')}</div></div>`).join('')}</div>`;
- return `<div class="fmgrid fmm"><section class="panel fmmL">${pitch}${lmodeBar()}${bar}${qt}${rot}</section><section class="panel fmmR">${fmList(t,sq,selSlot,selPid)}</section></div>`;
+ return `<div class="fmgrid fmm"><section class="panel fmmL">${pitch}<p class="small muted vhint">Arrastra a un jugador a otro jugador para cambiarlos, o a una casilla vacía del campo para moverlo (la formación pasa a «Libre»).</p>${lmodeBar()}${bar}</section><section class="panel fmmR">${fmList(t,sq,selSlot,selPid)}</section></div>`;
 }
 export function plantillaView(){
  const t=T(S.user),sq=squad(S.user).sort((a,b)=>POS_ORD[a.pos]-POS_ORD[b.pos]||b.ovr-a.ovr),tab=!S.plTab||S.plTab==='xi'||S.plTab==='ali'?'jug':S.plTab;

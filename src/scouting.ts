@@ -19,6 +19,8 @@ export function knowledge(p){
  return clamp(Math.round(k),0,100);
 }
 export const EXACT=80;
+/** ¿Lo has ojeado (o es tuyo, o lo has visto jugar contra ti)? Si no, no sabes su media ni su potencial: solo ves «?». */
+export function scouted(p){if(!p)return false;if(p.id[0]==='y'||p.team===S.user||(p.loan&&p.loan.from===S.user))return true;if(p.team!==null&&(isAffiliate(p.team)||T(p.team).parent===S.user))return true;return ((S.know&&S.know[p.id])||0)>=20||inContacts(p);}
 const span=k=>k>=EXACT?0:k>=50?1:2;
 /** Número estable entre 0 y 1 para un jugador y una clave: el rango no cambia al repintar. */
 function h01(id,key){let x=2166136261;const s=id+':'+key;for(let i=0;i<s.length;i++){x^=s.charCodeAt(i);x=Math.imul(x,16777619);}return ((x>>>0)%1000)/1000;}

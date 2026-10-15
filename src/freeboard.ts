@@ -28,6 +28,10 @@ export function formRows(f){if(f!==FREE)return FORMS[f]||FORMS['4-4-2'];return f
 export const freeCoords=()=>[{x:50,y:89}].concat(freeOf(T(S.user)));
 /** Mueve a un jugador de la pizarra (índice 0-9 sin contar al portero). */
 export function moveDot(i,x,y){const F=freeOf(T(S.user));F[i]={x:Math.round(Math.max(6,Math.min(94,x))),y:Math.round(Math.max(12,Math.min(82,y)))};}
+/** Desde la alineación: mueve el hueco i (0 = portero, que no se mueve) a una casilla del campo; si la formación era fija, pasa a «Libre» conservando a todos en su sitio. */
+export function moveSlotTo(i,x,y){if(!i)return false;const t=T(S.user);if(t.formation!==FREE){t.free=coordsOf(t.formation);t.formation=FREE;}moveDot(i-1,x,y);return true;}
+/** Casillas del campo donde puedes soltar a un jugador (5 de ancho por 5 de fondo). */
+export const CELLS=(()=>{const o=[];[18,30,46,58,72].forEach(y=>[12,31,50,69,88].forEach(x=>o.push({x,y,s:spAt(x,y)})));return o;})();
 /** Aviso si la colocación es arriesgada. */
 /** Tras mover a alguien: los roles que ya no encajan en su nuevo puesto vuelven al de por defecto, y la pizarra pierde algo de dominio. */
 export function afterMove(slots,roleList){const t=T(S.user);if(t.roles&&t.roles.length===slots.length)t.roles=t.roles.map((r,j)=>roleList(slots[j]).some(x=>x[0]===r)?r:roleList(slots[j])[0][0]);

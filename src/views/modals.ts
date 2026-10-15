@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {faceSVG} from './pcard';
 import {interviewModal,rulesModal} from './careerv';
 import {wageBill} from '../clubplus';
 import {cal,dateTxt,lgDay,winRounds} from '../calendar';
@@ -26,7 +27,7 @@ import {SON_PCT,dealPrice,swapValue} from '../market2';
 import {fireModal} from './staff';
 import {esc,money,r2} from '../core';
 import {AT_SH,PERS,ROLES,posChip} from '../data';
-import {PL,S,T,atCell,crest,lgName,pBadge,seasonLabel,squad,uLg} from '../state';
+import {crestStyle,PL,S,T,atCell,crest,lgName,pBadge,seasonLabel,squad,uLg} from '../state';
 import {news,objectiveFor,startBudget} from '../world';
 import {step} from '../engine';
 import {CONTS,CT_STAGES,CWC_NAMES,cupName,cupRoundName} from '../competitions';
@@ -45,15 +46,21 @@ export function modalView(){
   <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadgeS(p)}<span>${p.age} años</span>${keyAttrs(p).map(k=>`<span>${AT_SH[k]} ${atCellS(p,k)}</span>`).join('')}</div>`;
   if(n.agreed!=null){body=head+`<div class="negmsg ok">Traspaso acordado: ${money(n.agreed)}. Falta el contrato del jugador.</div>${n.closed?'':termsForm(p,'buy')}${n.msg&&n.kind==='no'?`<div class="negmsg no">${esc(n.msg)}</div>`:''}${counterBox(n,p,'buy')}
    <div class="acts"><button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button>${n.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="buy">Proponer contrato</button>`}</div>`;}
-  else body=head+`<div class="kv"><span>Valor de mercado</span><b>${money(p.value)}</b>${p.team!==null?`<span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Cláusula de rescisión</span><b>${money(p.cl)}</b>`:''}<span>${p.team===null?'Prima que pide':'Precio que piden'}</span><b>${money(ask)}</b>${n.counter?`<span>Su última contraoferta</span><b>${money(n.counter)}</b>`:''}<span>Agente</span><b>${esc(agentName(p))} · comisión ${money(agentFee(p,ask))}</b><span>Tu presupuesto</span><b>${money(S.budget)}</b></div>
-  ${n.closed?'':`<div class="row" style="margin-top:14px;align-items:flex-end"><label class="f"><span class="eyebrow">Tu oferta (en millones de €)</span><input type="number" id="bidAmt" min="0" step="0.01" value="${suggest.toFixed(3)}"></label></div>
-  ${p.team!==null?`<div class="filters" style="margin-top:10px"><label class="f"><span class="eyebrow">Forma de pago</span><select id="bidInst">${[[1,'Todo ahora'],[2,'2 plazos (hoy y en un año)'],[3,'3 plazos (hoy y en dos años)']].map(([v,l])=>`<option value="${v}" ${(n.opt&&n.opt.inst||1)===v?'selected':''}>${l}</option>`).join('')}</select></label>
-  <label class="f"><span class="eyebrow">Incluir a un jugador tuyo</span><select id="bidSwap"><option value="">Nadie</option>${squad(S.user).filter(q=>!q.loan).sort((a,b)=>b.value-a.value).map(q=>`<option value="${q.id}" ${n.opt&&n.opt.swap===q.id?'selected':''}>${esc(q.name)} · ${q.sp} · lo valoran en ${money(swapValue(q,p.team))}</option>`).join('')}</select></label>
-  <label class="chk"><input type="checkbox" id="bidSon" ${n.opt&&n.opt.son?'checked':''}> Ofrecer un ${Math.round(SON_PCT*100)}% de una futura venta</label></div>`:''}
-  ${dealPrice(p.id)!=null?`<div class="negmsg ok">Ganga del día de cierre: lo dejan ir por ${money(dealPrice(p.id))} si cerráis hoy.</div>`:''}
-  <p class="small muted" style="margin:6px 0 0">Ejemplo: 0.25 = €250k. Pagar a plazos te deja más dinero ahora, pero el club lo valora un 5% menos por cada plazo. Ofrecer un % de futura venta o incluir a un jugador tuyo hace la oferta más atractiva. Si ofreces menos de lo que piden pueden aceptar, rechazar o contraofertar. Tienes 3 intentos por jornada. Si el club acepta, después negocias el contrato con el jugador.</p>`}
+  else{const T0=p.team!=null?T(p.team):null,lk=v=>v>=ask?['Muy probable','hi']:v>=ask*.92?['Posible contraoferta','md']:v>=ask*.8?['Difícil','lo']:['Casi imposible','no'],L=lk(suggest),af=agentFee(p,ask),bud=Math.min(100,Math.round(S.budget/Math.max(.001,ask)*100));
+  body=`<div class="ngw"><div class="ngl"><div class="ngpc" style="${T0?crestStyle(T0):''}">${faceSVG(p)}<div><span class="eyebrow">${n.viaClause?'Cláusula de rescisión':T0?'Negociación con '+esc(T0.name):'Agente libre'}</span><h2>${esc(p.name)}</h2><div class="row" style="gap:6px;align-items:center">${posChip(p)}${pBadgeS(p)}<span class="small">${p.age} años${T0?' · '+esc(lgName(T0.lg,true)):''}</span></div></div></div>
+  <div class="ngtiles"><div><span>Piden</span><b>${money(ask)}</b></div>${n.counter?`<div class="hl"><span>Contraoferta</span><b>${money(n.counter)}</b></div>`:''}${p.team!==null?`<div><span>Cláusula</span><b>${money(p.cl)}</b></div><div><span>Contrato</span><b>${esc(contractLabel(p).replace('Hasta junio de ','Jun. '))}</b></div>`:''}<div><span>Agente</span><b title="${esc(agentName(p))}">${money(af)}</b></div></div>
+  <div class="ngbud"><span>Tu presupuesto <b>${money(S.budget)}</b></span><i><i style="width:${bud}%" class="${bud>=100?'ok':'bad'}"></i></i><small>${bud>=100?'Te llega para lo que piden':'No te llega para lo que piden: prueba a plazos o incluye a un jugador'}</small></div></div>
+  <div class="ngr">${n.closed?`<div class="negmsg no">Negociación cerrada.</div>`:`<span class="eyebrow">Tu oferta</span>
+  <div class="ngamt"><button class="btn" data-a="bid-step" data-v="-0.05" aria-label="Bajar">−</button><label><input type="number" id="bidAmt" min="0" step="0.01" value="${suggest.toFixed(3)}" data-ask="${ask}"><small>millones de €</small></label><button class="btn" data-a="bid-step" data-v="0.05" aria-label="Subir">+</button></div>
+  <div class="ngq">${[[.8,'−20%'],[.9,'−10%'],[1,'Lo que piden'],[1.1,'+10%']].map(([f,l])=>`<button class="btn sm" data-a="bid-set" data-v="${(ask*f).toFixed(3)}">${l}</button>`).join('')}</div>
+  <div class="ngodds ${L[1]}" id="ngOdds"><i></i><span>${L[0]}</span></div>
+  ${p.team!==null?`<details class="ngmore"${n.opt&&(n.opt.inst>1||n.opt.swap||n.opt.son)?' open':''}><summary>Más opciones: plazos, jugador incluido, % de futura venta</summary><div class="filters" style="margin-top:6px"><label class="f"><span class="eyebrow">Forma de pago</span><select id="bidInst">${[[1,'Todo ahora'],[2,'2 plazos'],[3,'3 plazos']].map(([v,l])=>`<option value="${v}" ${(n.opt&&n.opt.inst||1)===v?'selected':''}>${l}</option>`).join('')}</select></label>
+  <label class="f"><span class="eyebrow">Incluir a un jugador tuyo</span><select id="bidSwap"><option value="">Nadie</option>${squad(S.user).filter(q=>!q.loan).sort((a,b)=>b.value-a.value).map(q=>`<option value="${q.id}" ${n.opt&&n.opt.swap===q.id?'selected':''}>${esc(q.name)} · ${q.sp} · ${money(swapValue(q,p.team))}</option>`).join('')}</select></label>
+  <label class="chk"><input type="checkbox" id="bidSon" ${n.opt&&n.opt.son?'checked':''}> ${Math.round(SON_PCT*100)}% de una futura venta</label></div><p class="small muted" style="margin:4px 0 0">A plazos te queda más dinero ahora, pero lo valoran un 5% menos por plazo. Incluir a un jugador o un % de futura venta hace la oferta más atractiva.</p></details>`:''}
+  ${dealPrice(p.id)!=null?`<div class="negmsg ok">Ganga del día de cierre: ${money(dealPrice(p.id))} si cerráis hoy.</div>`:''}`}
   ${n.msg?`<div class="negmsg ${n.kind}">${esc(n.msg)}</div>`:''}
-  <div class="acts"><button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button>${n.closed?'':`${p.team!==null&&p.cl<=S.budget?`<button class="btn" data-a="pay-clause" data-id="${p.id}">Pagar cláusula · ${money(p.cl)}</button>`:''}<button class="btn primary" data-a="bid" data-id="${p.id}">Enviar oferta</button>`}</div>`;}
+  <div class="acts">${n.closed?'':`${p.team!==null&&p.cl<=S.budget?`<button class="btn" data-a="pay-clause" data-id="${p.id}">Pagar cláusula</button>`:''}<button class="btn primary" data-a="bid" data-id="${p.id}">Enviar oferta</button>`}<button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button></div>
+  <p class="small muted" style="margin:6px 0 0">3 intentos por jornada. Si el club acepta, luego negocias el contrato con el jugador.</p></div></div>`;}}
  else if(md.type==='renew'){const p=PL(md.id),st=renState(md.id);
   body=`<div class="eyebrow">Renovación de contrato</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
   <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadge(p)}<span>${p.age} años · ${hapTag(p)}</span></div>
