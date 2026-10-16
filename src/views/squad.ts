@@ -370,8 +370,7 @@ export function fichaHTML(p){
  const tb=vtab('fi',T_,'per'),ks=T_.map(x=>x[0]),ix=ks.indexOf(tb.cur);
  let body='';
  if(tb.cur==='per')body=`${cardHTML(p)}
- <div class="row small" style="margin-top:8px;gap:8px;align-items:center">${mine?'':knowTag(p)}<span class="muted">${posChip(p)} ${SPN[p.sp]}${p.alt&&p.alt.length?' · también '+p.alt.map(x=>SPN[x].toLowerCase()).join(' y '):''} · ${p.h} cm · pie malo <b title="${p.wf||3} de 5" style="letter-spacing:2px">${wf}</b> · carácter ${known?PERS[p.per||'nor'].n.toLowerCase():'desconocido'}</span></div>
- ${known?`<p class="small muted" style="margin:4px 0 0">${esc(PERS[p.per||'nor'].d)}</p>`:''}
+ <div class="row small fipers" style="gap:6px;align-items:center">${mine?'':knowTag(p)}<span class="muted">${p.alt&&p.alt.length?'También '+p.alt.map(x=>SPN[x].toLowerCase()).join(' y ')+' · ':''}${p.h} cm · pie malo <b title="${p.wf||3} de 5" style="letter-spacing:1px">${wf}</b> · carácter <b title="${known?esc(PERS[p.per||'nor'].d):''}">${known?PERS[p.per||'nor'].n.toLowerCase():'desconocido'}</b>${known?' ('+esc(PERS[p.per||'nor'].d.replace(/\.$/,'').toLowerCase())+')':''}</span></div>
  ${known&&p.tr&&p.tr.length?`<div class="chips" style="margin-top:8px">${p.tr.map(t=>`<span class="tag xi">${TRAITS[t]}</span>`).join('')}</div>`:''}
 `;
  else if(tb.cur==='est')body=fiStats(p)+heatHTML(p)+percHTML(p);

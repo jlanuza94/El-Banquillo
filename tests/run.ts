@@ -657,6 +657,15 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // arreglos: ordenar tablas, quién quiere venir, ficha compacta
+    const ST = await import('../src/sorttable'); const td = (t: string) => { const e = document.createElement('td'); e.textContent = t; return e; };
+    ok(ST.cellVal(td('43')) === 43 && ST.cellVal(td('€190k')) === 190000 && ST.cellVal(td('-3')) === -3 && ST.cellVal(td('€1.5M')) === 1500000, 'leer números de las celdas para ordenar');
+    S.view = 'plantilla'; S.plTab = 'jug'; render(); const th = app.querySelectorAll('main thead th')[4] as HTMLElement; th.click();
+    const v = [...app.querySelector('main table')!.tBodies[0].rows].map(r => +r.cells[4].textContent!.trim()); ok(v.every((x, i) => i === 0 || v[i - 1] >= x), 'plantilla ordenada por media de mayor a menor');
+    const MC = await import('../src/mgrcareer'); const rep0 = S.mgr.rep; S.mgr.rep = 10; const n = MC.interested(40).length; S.mgr.rep = rep0;
+    ok(n <= 6, `en 5ª y sin prestigio casi nadie quiere venir (${n})`);
+    const pp = squad(S.user)[0]; S.vt = {}; S.modal = { type: 'ficha', id: pp.id }; render(); ok(!!app.querySelector('.fest') && !app.textContent!.includes('ESTADO'), 'estado del jugador en una línea'); S.modal = null; S.view = 'inicio';
+  }
   { // ronda: ojeo con encargo, plan individual, charlas, cedidos, promesas, datos, récords, superávit y 2ª equipación
     const SP = await import('../src/scoutplus'); const sc = SP.missionScouts()[0]; const c0 = LG(T(S.user).lg).c;
     ok(SP.startMission(sc.id, c0, 'DEF', '23', '4', '65', '0') === '', 'encargo: país, línea, edad y potencial');

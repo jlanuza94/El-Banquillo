@@ -8,7 +8,7 @@ export function cellVal(td){
  if(!td)return null;if(td.dataset&&td.dataset.v!=null)return +td.dataset.v;
  const t=(td.textContent||'').replace(/\s+/g,' ').trim();if(!t||t==='—'||t==='-'||t==='–')return null;
  const w=t.split(' ')[0];if(POS.includes(w))return 100-POS.indexOf(w);
- const m=t.replace(/[€$£]/g,'').match(/^([+-−]?)\s*(\d+(?:[.,]\d+)?)\s*([kKM])?/);
+ const m=t.replace(/[€$£]/g,'').match(/^([+\-−]?)\s*(\d+(?:[.,]\d+)?)\s*([kKM])?/);
  if(m){let n=parseFloat(m[2].replace(',','.'));if(m[3]==='M')n*=1e6;else if(m[3])n*=1e3;return m[1]&&m[1]!=='+'?-n:n;}
  return t.toLowerCase();
 }

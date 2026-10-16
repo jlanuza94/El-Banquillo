@@ -137,7 +137,7 @@ document.addEventListener('click',e=>{
   case'm-w':S.mw=d.v;break;
   case'lmode':S.lmode=d.v;break;
   case'lph':S.lph=d.v;S.oopSel=null;S.sel=null;break;
-  case'oop-slot':{const i=+d.i;if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,ipIdx(i));S.oopSel=null;break;}if(S.oopSel==null||S.oopSel===i)S.oopSel=S.oopSel===i?null:i;else{oopSwap(T(S.user),S.oopSel,i);S.oopSel=null;}break;}
+  case'oop-slot':{const i=+d.i;if(S.sel&&S.sel.type==='player'){placeInSlot(S.sel.id,ipIdx(i));S.oopSel=null;break;}if(S.oopSel==null||S.oopSel===i)S.oopSel=S.oopSel===i?null:i;else{if(oopMap(T(S.user)))oopSwap(T(S.user),S.oopSel,i);else{const a=T(S.user).lineup[S.oopSel];if(a)placeInSlot(a,i);}S.oopSel=null;}break;}
   case'vtab':S.vt=S.vt||{};S.vt[d.k]=d.v;S.sel=null;if(d.go)S.view=d.go;document.querySelector('main')?.scrollTo?.(0,0);break;
   case'loan-recall':{const err=recallLoan(d.id);if(err)toast(err);break;}
   case'dev-set':break;
@@ -475,9 +475,15 @@ let DG=null,DG_T=0;
 const fitOf=pid=>{const r=document.querySelector(`[data-fit][data-pid="${pid}"]`);return r?r.dataset.fit||'':'';};
 const dropAt=(x,y)=>{for(const el of document.elementsFromPoint(x,y)){if(el.closest('.toast,.dragghost'))continue;const t=el.closest('.fmgrid .slot[data-i], .bslot[data-k], .fmlist, .fmgrid .vcell');if(t)return t;}return null;};
 document.addEventListener('pointerdown',e=>{if(!S||S.user==null||e.button>0)return;const el=e.target.closest&&e.target.closest('.fmgrid [data-drag]');if(!el)return;
- if(e.pointerType!=='mouse'&&el.dataset.drag==='list'&&!e.target.closest('.grip'))return;
+ if(e.pointerType!=='mouse'&&el.dataset.drag==='list'&&!e.target.closest('.grip')){
+  // en el móvil, mantener pulsado un jugador de la lista también lo coge (sin tener que atinar en el asa)
+  clearTimeout(LP.t);LP={x:e.clientX,y:e.clientY,t:setTimeout(()=>{DG={el,pid:el.dataset.pid,src:'list',x0:LP.x,y0:LP.y,moved:false,over:null,lp:1};try{navigator.vibrate&&navigator.vibrate(15);}catch(err){}el.classList.add('lpick');},300)};return;}
  if(el.dataset.drag==='list'&&e.target.closest('.grip'))e.preventDefault();
  DG={el,pid:el.dataset.pid,src:el.dataset.drag,x0:e.clientX,y0:e.clientY,moved:false,over:null};if(el.dataset.drag!=='list'){try{el.setPointerCapture(e.pointerId);}catch(err){}}});
+let LP={t:0,x:0,y:0};
+document.addEventListener('pointermove',e=>{if(LP.t&&!DG&&Math.hypot(e.clientX-LP.x,e.clientY-LP.y)>8){clearTimeout(LP.t);LP.t=0;}},{passive:true});
+document.addEventListener('pointerup',()=>{clearTimeout(LP.t);LP.t=0;document.querySelectorAll('.lpick').forEach(x=>x.classList.remove('lpick'));},true);
+document.addEventListener('pointercancel',()=>{clearTimeout(LP.t);LP.t=0;},true);
 /* En algunos móviles (WebView de Android) el navegador intenta desplazar la página a mitad del arrastre y lo corta: mientras arrastras, se bloquea el desplazamiento. */
 document.addEventListener('touchmove',e=>{if(DG)e.preventDefault();},{passive:false});
 document.addEventListener('pointermove',e=>{if(!DG)return;if(!DG.moved){if(Math.hypot(e.clientX-DG.x0,e.clientY-DG.y0)<7)return;DG.moved=true;
@@ -491,7 +497,7 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
  DG_T=Date.now();if(e.type==='pointercancel')return;
  const t=dropAt(e.clientX,e.clientY);if(!t)return;
- if(d.src==='oop'){if(t.matches('.slot[data-i]')&&+t.dataset.i!==+d.el.dataset.i)oopSwap(T(S.user),+d.el.dataset.i,+t.dataset.i);S.oopSel=null;}
+ if(d.src==='oop'){if(t.matches('.slot[data-i]')&&+t.dataset.i!==+d.el.dataset.i){if(oopMap(T(S.user)))oopSwap(T(S.user),+d.el.dataset.i,+t.dataset.i);else placeInSlot(d.pid,+t.dataset.i);}else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);else if(t.matches('.fmlist'))removeFromTeam(d.pid);S.oopSel=null;}
  else if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);toast('Formación libre: puedes seguir moviendo jugadores o volver a una fija en el selector.');}}
  else if(t.matches('.slot[data-i]'))placeInSlot(d.pid,t.matches('.oopm')?ipIdx(+t.dataset.i):+t.dataset.i);
  else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);

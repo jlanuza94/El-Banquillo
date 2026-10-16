@@ -44,7 +44,9 @@ export function joinWill(p){
  const m=(S.mgr.rep-40)*.45+licence()*5;v+=m;if(m<-6)why.push('aún no te conoce como entrenador');else if(m>12)why.push('le atrae tu prestigio');
  if(p.ovr>=xi+2){v+=10;why.push('sería titular');}else if(p.ovr<xi-8){v-=12;why.push('tendría pocos minutos');}
  if(his&&LG(his.lg).c===LG(uLg()).c&&LG(his.lg).lv<LG(uLg()).lv){v-=15;why.push('juega en una división superior');}
- if(p.team===null){v+=18;why.push('está sin equipo');}if(p.age>=31)v+=6;if((p.hap??70)<40){v+=15;why.push('no está a gusto en su club');}
+ if(p.team===null){v+=10;why.push('está sin equipo');}if(p.age>=31)v+=3;
+ const lv=LG(uLg()).lv;if(lv>=2&&p.ovr>=xi-2)v-=(lv-1)*3;
+ if(S.mgr.rep<35&&p.ovr>=xi)v-=6;if((p.hap??70)<40){v+=15;why.push('no está a gusto en su club');}
  if(p.ovr>xi+12)v-=(p.ovr-xi-12)*2;
  return {v:Math.round(clamp(v,0,100)),why:why.slice(0,2).join(' y ')};
 }
@@ -53,7 +55,7 @@ let INT={k:'',v:[]};
 export function interested(n=30){
  const k=S.day+'|'+S.week+'|'+S.user+'|'+Math.round(S.mgr?S.mgr.rep:0);if(INT.k===k)return INT.v;
  const xi=xiAvg(),c=LG(uLg()).c,L=Object.values(S.players).filter(p=>p.team!==S.user&&!p.loan&&p.ovr>=xi-3&&p.age<=33&&(p.team===null||LG(T(p.team).lg).c===c||p.ovr>=xi+3));
- const out=L.map(p=>[p,joinWill(p)]).filter(x=>x[1].v>=70).sort((a,b)=>b[0].ovr-a[0].ovr).slice(0,n);INT={k,v:out};return out;
+ const out=L.map(p=>[p,joinWill(p)]).filter(x=>x[1].v>=72).sort((a,b)=>b[1].v-a[1].v||b[0].ovr-a[0].ovr).slice(0,n);INT={k,v:out};return out;
 }
 /* ---------- De jugador a técnico ---------- */
 /** Puesto que mejor le va a un jugador que se retira. */
