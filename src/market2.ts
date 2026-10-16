@@ -60,11 +60,11 @@ export const hotMult=p=>S.hot&&S.hot[p.id]>=S.week?1.12:1;
 
 /* ---------- Día de cierre ---------- */
 /** El último día de mercado, algunos clubes aceptan vender barato (solo jugadores que conoces algo). */
-export function deadlineDeals(){
- S.deals={};if(!isDeadline())return;
+export function deadlineDeals(more){
+ if(!more)S.deals={};if(!isDeadline()&&!more)return;S.deals=S.deals||{};
  const my=LG(uLg()).rep,budget=Math.max(S.budget,0);
- const cands=Object.values(S.players).filter(p=>p.team!==null&&p.team!==S.user&&!p.loan&&!refuses(p)&&p.age<=31&&p.ovr>=my-4&&knowledge(p)>=40&&askPrice(p)*.6<=budget*1.1&&(squad(p.team).length>=24||p.contract<=1));
- const pickN=[];for(let i=0;i<40&&pickN.length<3&&cands.length;i++){const p=cands.splice(Math.floor(rnd()*cands.length),1)[0];pickN.push(p);}
+ const cands=Object.values(S.players).filter(p=>!S.deals[p.id]&&p.team!==null&&p.team!==S.user&&!p.loan&&!refuses(p)&&p.age<=31&&p.ovr>=my-4&&knowledge(p)>=40&&askPrice(p)*.6<=budget*1.1&&(squad(p.team).length>=24||p.contract<=1));
+ const pickN=[];for(let i=0;i<40&&pickN.length<(more?1:3)&&cands.length;i++){const p=cands.splice(Math.floor(rnd()*cands.length),1)[0];pickN.push(p);}
  pickN.forEach(p=>{const price=r2(Math.max(.005,askPrice(p)*(.55+rnd()*.15)));S.deals[p.id]=price;
   news(`Día de cierre: ${T(p.team).name} quiere sacarse de encima a ${p.name} y lo deja ir por ${money(price)} si cerráis hoy.`,'good',{cat:'mer',from:T(p.team).name,subj:`Ganga de última hora: ${p.name} por ${money(price)}`,act:[{l:'Negociar',a:'neg',id:p.id},{l:'Ver ficha',a:'ficha',id:p.id}]});});
 }

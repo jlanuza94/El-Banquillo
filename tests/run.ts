@@ -657,6 +657,12 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // seguimiento: avisa también si baja de precio poco a poco
+    const SP2 = await import('../src/scoutplus'); const q = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.inj); const sh0 = S.short.slice(), sn0 = S.shortSnap, v0 = q.value;
+    S.short.push(q.id); S.shortSnap = {}; SP2.shortlistWeekly(); const n0 = S.news.length; let hit = false;
+    for (let k = 0; k < 4; k++) { q.value = Math.round(q.value * .95 * 1000) / 1000; SP2.shortlistWeekly(); if (S.news.slice(0, 3).some(n => /bajado de valor/.test(n.txt) && n.txt.includes(q.name))) hit = true; }
+    ok(hit, 'seguimiento: una bajada poco a poco (5% por semana) también avisa'); q.value = v0; S.short = sh0; S.shortSnap = sn0; void n0;
+  }
   { // Champions Sub-19 / Libertadores Sub-20 y economía por país
     const YC = await import('../src/youthcl'); const { u19List } = await import('../src/u19'); const wk0 = S.week, ycl0 = S.ycl, ch0 = S.ylChampS; S.ycl = null; S.ylChampS = S.seasonN - 1;
     const pj0 = u19List().reduce((a, p) => a + (p.yst ? p.yst.pj : 0), 0);

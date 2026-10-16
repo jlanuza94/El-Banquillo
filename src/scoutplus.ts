@@ -20,10 +20,10 @@ export function searchName(){const m=S.mk,p=[];if(m.sp)p.push(SPN[m.sp]);else if
 /* ---------- Avisos de la lista de seguimiento ---------- */
 export function shortlistWeekly(){
  S.shortSnap=S.shortSnap||{};const snap={};
- (S.short||[]).forEach(id=>{const p=PL(id);if(!p||p.team===S.user)return;const o=S.shortSnap[id],now={v:p.value,inj:p.inj||0,t:p.team,c:p.contract};snap[id]=now;if(!o)return;
+ (S.short||[]).forEach(id=>{const p=PL(id);if(!p||p.team===S.user)return;const o=S.shortSnap[id],now={v:p.value,inj:p.inj||0,t:p.team,c:p.contract,b:o?(o.b??o.v):p.value};snap[id]=now;if(!o)return;
   const act=[{l:'Ver ficha',a:'ficha',id}];
   if(now.t!==o.t)news(`${p.name}, al que seguías, ha fichado por ${now.t===null?'nadie (es agente libre)':T(now.t).name}.`,now.t===null?'good':'bad',{cat:'oje',subj:`Seguimiento: ${p.name} cambia de club`,act});
-  else if(now.v<=o.v*.88)news(`${p.name} ha bajado de valor: ahora ${money(now.v)} (antes ${money(o.v)}). Buen momento para ofertar.`,'good',{cat:'oje',subj:`Seguimiento: ${p.name} más barato`,act});
+  else if(now.v<=now.b*.88){const was=now.b;now.b=now.v;news(`${p.name} ha bajado de valor: ahora ${money(now.v)} (antes ${money(was)}). Buen momento para ofertar.`,'good',{cat:'oje',subj:`Seguimiento: ${p.name} más barato`,act});}
   if(now.inj>2&&!o.inj)news(`${p.name}, al que sigues, se ha lesionado (${now.inj} jornadas).`,'bad',{cat:'oje',subj:`Seguimiento: ${p.name} lesionado`,act});
   if(now.c<=1&&o.c>1&&now.t!==null)news(`${p.name} entra en su último año de contrato: su club lo venderá más barato y en verano podría salir gratis.`,'good',{cat:'oje',subj:`Seguimiento: ${p.name} acaba contrato`,act});
  });
