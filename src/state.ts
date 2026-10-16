@@ -37,4 +37,19 @@ export const pBadge=p=>qBadge(p.ovr/10);
 export const atCell=v=>`<span class="at ${qc(v)}">${Math.round(v*10)}</span>`;
 /* economy scales with league level */
 export const unit=rep=>.4*Math.pow(2.5,(rep-74.5)/10);
-export const econ=id=>{const L=LG(id),u=unit(L.rep);return{tv:r3(u*.5),tix:u*.875,prize:u,promo:L.lv>0?u*12.5:0,champ:L.lv===0?u*5:0,cap:L.lv===0?L.rep+20:L.rep+12};};
+/** Riqueza de cada país (como en el mundo real): la Premier tiene mucho más dinero; Portugal, Argentina o Escocia, mucho menos.
+ * Orden de COUNTRIES: España, Inglaterra, Italia, Alemania, Francia, Portugal, Brasil, Argentina, Países Bajos, México, Bélgica, Turquía, Escocia, EE. UU., Japón, Colombia. */
+export const CWEALTH=[1,2.4,1,1.25,.95,.45,.5,.3,.6,.7,.5,.55,.35,.9,.7,.3];
+/** La riqueza del país pesa sobre todo arriba: en las categorías bajas todos se parecen más. */
+export const cwF=(c,lv)=>1+((CWEALTH[c]??.5)-1)*(lv===0?1:lv===1?.7:lv===2?.45:.25);
+/** «Unidad» de dinero de una liga: su nivel y lo rico que es su país. */
+export const lunit=id=>{const L=LG(id);return unit(L.rep)*cwF(L.c,L.lv);};
+/** Los gigantes de cada liga (como Madrid, Barça y Atlético en España, o PSG en Francia) tienen muchísimo más dinero que el resto. */
+const GIANTS={0:[3.2,3,2],1:[2,1.9,1.8,1.7,1.5,1.4],2:[2.2,1.9,1.7,1.4],3:[3.2,1.7,1.4],4:[3.6,1.4,1.2],5:[2.4,2.2,1.8],6:[1.8,1.7,1.6,1.5],7:[2.2,2],8:[2,1.8,1.6]};
+/** Factor de riqueza de un club: los grandes de Primera según su reputación; en las categorías bajas, 1. */
+export function clubWF(t){const L=LG(t.lg);if(!L||L.lv>0)return 1;RT.cwf=RT.cwf&&RT.cwf.s===S.seasonN?RT.cwf:{s:S.seasonN,m:{}};
+ let r=RT.cwf.m[L.id];if(!r){r=RT.cwf.m[L.id]={};lgTeams(L.id).slice().sort((a,b)=>b.rep-a.rep).forEach((x,i)=>{const G=GIANTS[L.c]||[2,1.5,1.3];r[x.id]=i<G.length?G[i]:i>=14?.85:1;});}
+ return r[t.id]??1;}
+/** Parte de la tele que se lleva cada club: los grandes cobran más. */
+export const tvShare=t=>.7+.3*clubWF(t);
+export const econ=id=>{const L=LG(id),u=lunit(id);return{tv:r3(u*.5),tix:u*.875,prize:u,promo:L.lv>0?u*12.5:0,champ:L.lv===0?u*5:0,cap:L.lv===0?L.rep+20:L.rep+12};};

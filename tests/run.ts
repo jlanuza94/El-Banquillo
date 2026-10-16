@@ -657,6 +657,19 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // economía por país y por club: Inglaterra más rica, gigantes en cada liga y en Quinta se puede fichar
+    const W = await import('../src/world'); const St = await import('../src/state'); const { askPrice } = await import('../src/market'); const CP = await import('../src/clubplus');
+    const top = c => S.leagues.find(L => L.c === c && L.lv === 0), byB = L => S.teams.filter(t => t.lg === L.id).map(t => [t, W.startBudget(t)]).sort((a, b) => b[1] - a[1]);
+    const es = byB(top(0)), en = byB(top(1)), med = a => a[Math.floor(a.length / 2)][1];
+    console.log(`     economía: España top ${es.slice(0, 3).map(x => St.money ? '' : '').join('')}${es.slice(0, 3).map(x => x[0].name + ' ' + x[1].toFixed(1) + 'M').join(', ')} · mediana ${med(es).toFixed(1)}M | Inglaterra top ${en[0][0].name} ${en[0][1].toFixed(1)}M · mediana ${med(en).toFixed(1)}M`);
+    ok(es[0][1] >= med(es) * 2.2 && es[2][1] >= med(es) * 1.5, 'los tres grandes de España tienen mucho más dinero que el resto');
+    ok(med(en) > med(es) * 1.6 && en[0][1] > es[0][1], 'la Premier tiene más dinero que LaLiga');
+    const u5 = S.leagues.find(L => L.c === LG(uLg()).c && L.lv === 4), tm = S.teams.find(t => t.lg === u5.id), b5 = W.startBudget(tm);
+    const mk = Object.values(S.players).filter(p => p.team !== null && p.team !== S.user && T(p.team).lg === u5.id), cheap = mk.filter(p => askPrice(p) <= b5 * .35);
+    const ex = mk.sort((a, b) => b.ovr - a.ovr)[5]; console.log(`     Quinta: presupuesto ${(b5 * 1000).toFixed(0)}k · jugador típico de Quinta (media ${ex.ovr}) vale ${(ex.value * 1000).toFixed(0)}k y cobra ${(ex.wage * 1e6).toFixed(0)}€/sem · ${cheap.length} de ${mk.length} asequibles`);
+    ok(cheap.length >= mk.length * .5, 'en Quinta la mayoría de jugadores de tu categoría son asequibles');
+    CP.setWageCap(); ok(CP.wageRoom() >= ex.wage * 2, 'en Quinta caben al menos dos sueldos nuevos');
+  }
   { // ronda: atributos finos, progreso mensual, cambios en directo, mi camino, joyas codiciadas, cesiones, comparar y negocios
     const Pl = await import('../src/players'); const mine = squad(S.user).find(p => !p.loan && p.age <= 30), ai = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && p.age <= 22);
     const k = Object.keys(mine.at).find(x => mine.at[x] < 9 && x !== 'por'); const a0 = mine.at[k]; Pl.gainAt(mine, k); ok(Math.abs(mine.at[k] - a0 - .4) < .05 || mine.at[k] - a0 > .3, `atributos finos en tu equipo (${a0} → ${mine.at[k]})`);

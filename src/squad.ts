@@ -35,7 +35,7 @@ import {sellMult} from './staff';
 import {crewWages,crewWeekly,recBonusStaff,trainInjMult,trainMult} from './staff';
 import {clamp,money,pick,r2,r3,ri,rnd} from './core';
 import {AT_NAME,FORMS,ROLES,W} from './data';
-import {LG,PL,S,T,econ,lgName,rt,seasonLabel,setTeam,squad,uLg,unit} from './state';
+import {LG,PL,S,T,econ,lgName,rt,seasonLabel,setTeam,squad,uLg,unit,tvShare} from './state';
 import {assignNum,baseWage,gainAt,rateA,refresh,wpick} from './players';
 import {news} from './world';
 import {famOf,fixLineup,langOf,leaders,nRounds,nextFixture} from './tactics';
@@ -126,7 +126,7 @@ export function weeklyTeamTraining(){
 export function processWeek(){
  const wk=S.week,fx=nextFixture();
  delegWeekly();if(S.week===Math.floor(nRounds()/2))midSeasonReleases();playerTick(true);weeklyTeamTraining();
- const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,derbyH=home&&isDerby(fx.h,fx.a),tix=home?r3(ticket()*(derbyH?1.25:1)*bizMult('tix')):0,shop=r3(shopWeekly()*bizMult('shop')*kitMult()),biz=bizWeekly();shirtsWeekly(shop);
+ const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=r3(e.tv*tvShare(T(S.user))),derbyH=home&&isDerby(fx.h,fx.a),tix=home?r3(ticket()*(derbyH?1.25:1)*bizMult('tix')):0,shop=r3(shopWeekly()*bizMult('shop')*kitMult()),biz=bizWeekly();shirtsWeekly(shop);
  const my=home?fx.hg:fx.ag,op=home?fx.ag:fx.hg;
  if(home){S.club.lastAtt=Math.min(S.club.cap,Math.round(attendance()*(derbyH?1.25:1)));if(S.club.lastAtt>=S.club.cap)S.fullHomes=(S.fullHomes||0)+1;if(!S.rec)S.rec={};if(!S.rec.att||S.club.lastAtt>S.rec.att.v)S.rec.att={v:S.club.lastAtt,season:seasonLabel()};}
  if(!S.sponsor&&S.week>=3&&S.spOffers&&S.spOffers.length){S.sponsor=S.spOffers[0];news(`La directiva firma con ${S.sponsor.name} como patrocinador al no elegir tú.`);}

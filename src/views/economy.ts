@@ -1,5 +1,6 @@
 /* El Banquillo · views/economy.ts — Dinero de los clubes: tabla de la liga y bloque de la ficha de cada club. */
 // @ts-nocheck — usa el estado heredado S.
+import {CWEALTH,LG as LGx,clubWF} from '../state';
 import {esc,money} from '../core';
 import {S,T,crest,lgTeams} from '../state';
 import {initCash,squadValue,wageBillOf} from '../economy';
@@ -16,8 +17,10 @@ export function ecoTable(lg){
  <p class="small muted" style="margin:8px 0 0">Tu caja es tu presupuesto de fichajes. La flecha indica cuánto ha ganado o gastado cada club desde el inicio de la temporada.</p>`;
 }
 /** Bloque «Economía» en la ficha de un club. */
+/** Cómo de rico es un club: gigante, grande o normal, y lo rica que es la liga de su país. */
+export function wealthLabel(t){const w=clubWF(t),L=LGx(t.lg),c=CWEALTH[L.c]??.5;return `${w>=2.5?'💰💰💰 Gigante':w>=1.5?'💰💰 Grande':w<1?'Modesto':'Normal'} · liga ${c>=2?'muy rica':c>=1.2?'rica':c>=.9?'media':c>=.55?'modesta':'pobre'}`;}
 export function clubEco(t){
  initCash();const me=t.id===S.user,L=t.last;
- return `<h3 style="margin:14px 0 4px">Economía</h3><div class="kv" style="margin-top:0"><span>${me?'Presupuesto de fichajes':'Caja'}</span><b>${money(cashOf(t))} ${delta(t)}</b><span>Valor de la plantilla</span><b>${money(squadValue(t.id))}</b><span>Sueldos</span><b>${money(me?wageBill():wageBillOf(t.id))}/sem</b>
+ return `<h3 style="margin:14px 0 4px">Economía</h3><div class="kv" style="margin-top:0"><span>Poder económico</span><b>${wealthLabel(t)}</b><span>${me?'Presupuesto de fichajes':'Caja'}</span><b>${money(cashOf(t))} ${delta(t)}</b><span>Valor de la plantilla</span><b>${money(squadValue(t.id))}</b><span>Sueldos</span><b>${money(me?wageBill():wageBillOf(t.id))}/sem</b>
  ${L&&!me?`<span>Temporada ${esc(L.season)}</span><b>${L.pos}º · premio ${money(L.prize)} · explotación ${money(L.op)} · traspasos ${L.fees>=0?'+':''}${money(L.fees)}</b>`:''}</div>`;
 }

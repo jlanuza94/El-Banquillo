@@ -17,7 +17,7 @@ import {setupYouth} from './youth';
 import {defaultCrew} from './staff';
 import {clamp,gauss,money,newSeed,pick,plain,r2,rnd,seedRng,shuffle} from './core';
 import {COUNTRIES,FORMS,KITS,LV_STEP,SP_SEQ,TOWNS} from './data';
-import {RT,LG,S,T,dirty,lgName,lgTeams,lowest,seasonLabel,squad,uLg,unit,setS} from './state';
+import {RT,LG,S,T,dirty,lgName,lgTeams,lowest,seasonLabel,squad,uLg,unit,setS,lunit,clubWF} from './state';
 import {assignNum,genFreeAgents,genPlayer,strength} from './players';
 import {autoLineup} from './tactics';
 import {advance,buildCal,ctWelcome,cwcWelcome,setupConts,setupCups} from './competitions';
@@ -48,7 +48,7 @@ export function buildWorld(seed){
  });
  genFreeAgents(1100);
 }
-export function startBudget(t){const L=LG(t.lg);return r2(Math.max(unit(L.rep)*4,unit(L.rep)*(12+(t.rep-L.rep)*2))*diff().budget);}
+export function startBudget(t){const L=LG(t.lg),u=lunit(t.lg);return r2(Math.max(u*4,u*(12+(t.rep-L.rep)*2))*clubWF(t)*diff().budget);}
 export function objectiveFor(tid){
  const t=T(tid),L=LG(t.lg),r=lgTeams(L.id).sort((a,b)=>strength(b.id)-strength(a.id)).findIndex(x=>x.id===tid)+1;
  if(L.lv===0){if(r<=3)return{txt:'Pelear el título',max:3};if(r<=7)return{txt:'Parte alta',max:7};if(r<=13)return{txt:'Mitad de tabla',max:13};return{txt:'Evitar el descenso',max:17};}

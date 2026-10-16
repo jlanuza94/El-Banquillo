@@ -2,7 +2,7 @@
 // @ts-nocheck — usa el estado heredado S.
 import {clamp,money,pick,r2,r3,rnd} from './core';
 import {COUNTRIES} from './data';
-import {LG,PL,S,T,dirty,findLg,lgName,lowest,setTeam,squad,uLg,unit} from './state';
+import {LG,PL,S,T,dirty,findLg,lgName,lowest,setTeam,squad,uLg,unit,lunit,clubWF} from './state';
 import {news,townName} from './world';
 import {assignNum} from './players';
 import {fixLineup} from './tactics';
@@ -10,7 +10,7 @@ import {fixLineup} from './tactics';
 /* ---------- Límite salarial (presupuesto de sueldos separado del de fichajes) ---------- */
 export const wageBill=()=>squad(S.user).reduce((a,p)=>a+p.wage,0)+(filial()?squad(filial().id).reduce((a,p)=>a+p.wage,0):0);
 /** La directiva fija un límite de sueldos semanal: algo por encima de lo que pagas ahora. */
-export function setWageCap(extra=0){const b=wageBill();S.wageCap=r3(Math.max(b*1.1,b+unit(LG(uLg()).rep)*.02)+extra);}
+export function setWageCap(extra=0){const b=wageBill();S.wageCap=r3(Math.max(b*1.25,b+lunit(uLg())*.08*clubWF(T(S.user)))+extra);}
 export const wageRoom=()=>r3((S.wageCap??Infinity)-wageBill());
 /** ¿Cabe este sueldo nuevo (o la subida) en el límite? Devuelve '' o el motivo. */
 export function wageCheck(newWage,oldWage=0){if(S.wageCap==null)return '';const room=wageRoom()+oldWage;return newWage<=room+1e-9?'':`La directiva no lo aprueba: con ese sueldo superas el límite salarial (te quedan ${money(Math.max(0,room))}/sem). Puedes subirlo en Club y finanzas a cambio de presupuesto de fichajes.`;}
