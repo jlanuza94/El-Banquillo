@@ -38,7 +38,7 @@ export function recallLoan(pid){
  news(`${p.name} vuelve antes de tiempo de su cesión en ${from.name}.`,'',{cat:'pla',subj:`Cesión cancelada: ${p.name}`});return '';
 }
 /** Al llegar a tu club (fichado o subido de la cantera) se apunta su nivel para «lo descubrí yo». */
-export function markArrival(p){if(p&&!p.h0)p.h0=[p.ovr,seasonLabel(),0];}
+export function markArrival(p){if(p&&!p.h0)p.h0=[p.ovr,seasonLabel(),0,p.value];}
 /** Fin de temporada: si un jugador que llegó flojo ya es una estrella, es mérito tuyo. */
 export function discoveries(){
  squad(S.user).forEach(p=>{const h=p.h0;if(!h||h[2]||p.ovr<70||p.ovr<h[0]+15)return;h[2]=1;

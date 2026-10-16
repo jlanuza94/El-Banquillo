@@ -39,6 +39,11 @@ export function autoCall(c){const P=pool(c,90),out=[];Object.entries(NEED).forEa
  if(out.length<23)out.push(...P.filter(p=>!out.includes(p)).slice(0,23-out.length));return out.slice(0,23).map(p=>p.id);}
 /** Convocatoria vigente de un país: la tuya si eres su seleccionador, si no la automática. */
 export function callOf(c){if(S.nt&&S.nt.c===c&&S.nt.call&&S.nt.call.length){const ids=S.nt.call.filter(id=>PL(id)&&PL(id).nat===c);if(ids.length>=18)return ids;}return autoCall(c);}
+/** Sub-21: los mejores de 21 años o menos de un país, contando su potencial y cómo están jugando (no solo la media).
+ * Así un chaval de Quinta que destaca puede acabar con la selección sub-21. Los de la absoluta no cuentan. */
+export function u21Score(p){const r=p.st&&p.st.pj>=4?p.st.rs/p.st.pj:6.5;return p.ovr+Math.max(0,p.pot*10-p.ovr)*.45+(r-6.5)*6;}
+export function u21Call(c){const abs=new Set(callOf(c)),P=Object.values(S.players).filter(p=>p.nat===c&&p.age<=21&&p.team!=null&&!p.ret&&!abs.has(p.id)).sort((a,b)=>u21Score(b)-u21Score(a)).slice(0,80),out=[];
+ Object.entries(NEED).forEach(([g,k])=>out.push(...P.filter(p=>grp(p)===g&&!p.inj).slice(0,k)));if(out.length<23)out.push(...P.filter(p=>!out.includes(p)).slice(0,23-out.length));return out.slice(0,23).map(p=>p.id);}
 /** Once titular de una convocatoria (4-4-2 por media) y su fuerza. */
 export function xiOf(ids){const ps=ids.map(PL).filter(p=>p&&!p.inj).sort((a,b)=>b.ovr-a.ovr),take=(g,k)=>ps.filter(p=>grp(p)===g).slice(0,k);
  let xi=[...take('POR',1),...take('DEF',4),...take('MED',4),...take('DEL',2)];if(xi.length<11)xi.push(...ps.filter(p=>!xi.includes(p)).slice(0,11-xi.length));return xi;}
@@ -140,6 +145,13 @@ export function fifaWeek(){
  called.forEach(p=>{p.energy=Math.max(40,(p.energy??100)-12);p.hap=clamp((p.hap??70)+2,0,100);if(rnd()<.04&&!p.inj){p.inj=1+(rnd()<.4?1:0);p.injT='Lesión con su selección';hurt.push(p);}});
  const my=S.nt?res.find(r=>r.a===S.nt.c||r.b===S.nt.c):null;
  if(my){const won=my.w===S.nt.c&&my.ga!==my.gb;S.mgr.rep=clamp(S.mgr.rep+(my.ga===my.gb?0:won?.6:-.6),0,100);}
+ // primeras convocatorias con la absoluta: un momento especial
+ called.forEach(p=>{p.ntc=(p.ntc||0)+1;if(p.ntc===1){p.hap=clamp((p.hap??70)+10,0,100);p.value=r2(p.value*1.08);news(`¡${p.name} debuta en una convocatoria de ${COUNTRIES[p.nat].n}! Jugar en ${T(S.user).name} le ha llevado a la selección absoluta. Está como un niño con zapatos nuevos y su valor sube.`,'good',{cat:'pla',subj:`¡${p.name}, internacional absoluto!`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});}});
+ // sub-21
+ const U={},u21=squad(S.user).filter(p=>!p.loan&&p.age<=21&&!called.includes(p)&&(U[p.nat]=U[p.nat]||new Set(u21Call(p.nat))).has(p.id));
+ u21.forEach(p=>{const pj=1+(rnd()<.6?1:0);p.u21=(p.u21||0)+pj;p.energy=Math.max(45,(p.energy??100)-8);p.hap=clamp((p.hap??70)+3,0,100);
+  if(!p.u21f){p.u21f=1;p.value=r2(p.value*1.05);news(`¡${p.name} convocado por primera vez con la Sub-21 de ${COUNTRIES[p.nat].n}! Con ${p.age} años, sus actuaciones en ${T(S.user).name} no han pasado desapercibidas.`,'good',{cat:'pla',subj:`${p.name}, a la Sub-21`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});}});
+ if(u21.length)news(`Sub-21: ${u21.map(p=>p.name).join(', ')} ${u21.length>1?'se van':'se va'} con su selección este parón.`,'',{cat:'com',subj:'Convocados con la Sub-21',quiet:true});
  if(called.length||my)news(`Parón de selecciones.${called.length?` Convocados de tu club: ${called.map(p=>p.name).join(', ')}. Vuelven más cansados.`:''}${hurt.length?` ${hurt.map(p=>p.name).join(', ')} vuelve${hurt.length>1?'n':''} lesionado${hurt.length>1?'s':''}.`:''}${my?` Tu selección: ${fmt(my)}.`:''}`,hurt.length?'bad':'',{cat:'com',subj:'Parón de selecciones',quiet:!hurt.length&&!my});
 }
 

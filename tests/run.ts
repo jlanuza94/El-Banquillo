@@ -361,7 +361,7 @@ const app = document.getElementById('app')!;
       oopSwap(t, mp[1], mp[2]); ok(oopMap(t)[1] === mp[2], 'intercambiar puestos sin balón');
       S.lph = 'oop'; render(); ok(app.querySelectorAll('.vpitch .oopm').length === 11 && app.querySelector('#oopSel'), 'alineación sin balón en pantalla');
       const m = createMatchF(nextMatchF().ref); const lg = {}; tacModsF(m, m.us, lg); ok(m.oop && lg.oop, 'la forma sin balón cuenta en el partido'); S.lph = 'ip'; t.oop = null; t.oopMap = null; }
-    ok(app.querySelectorAll('[data-a="vtab"]').length === 9, 'nueve pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho pestañas en la plantilla');
+    ok(app.querySelectorAll('[data-a="vtab"]').length === 9, 'nueve pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 9, 'nueve pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
     setSub(out.id, 0); ok(subsOf(t)[0] === out.id && subsOf(t).length <= MAX_SUBS, 'poner a un suplente en el banquillo');
@@ -657,6 +657,18 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // de abajo arriba: Sub-21 por potencial y rendimiento, «Mis joyas» y cansancio en el campo
+    const N = await import('../src/nations'); const c = LG(uLg()).c, ids = N.u21Call(c);
+    ok(ids.length >= 18 && ids.every(id => PL(id).age <= 21 && PL(id).nat === c) && !ids.some(id => N.callOf(c).includes(id)), `Sub-21: ${ids.length} convocados de 21 años o menos`);
+    const y = squad(S.user).filter(p => !p.loan).sort((a, b) => a.age - b.age)[0], bk = { st: y.st, inj: y.inj, age: y.age, ovr: y.ovr, pot: y.pot, nat: y.nat, u21: y.u21, u21f: y.u21f, value: y.value };
+    y.age = 19; y.nat = c; y.pot = 9.9; y.ovr = 67; y.inj = 0; y.st = { ...(y.st || {}), pj: 10, rs: 80 }; const L21 = N.u21Call(c); ok(L21.includes(y.id), 'un chaval de tu equipo con mucho potencial entra en la Sub-21' + (L21.includes(y.id) ? '' : ` (score ${N.u21Score(y).toFixed(1)}, ultimo ${N.u21Score(PL(L21[L21.length-1])).toFixed(1)}, abs ${N.callOf(c).includes(y.id)}, team ${y.team}, ret ${y.ret}, pos ${y.sp}/${y.pos}, id ${y.id} ${!!PL(y.id)})`));
+    const wk = S.week; S.week = N.FIFA_WEEKS[0]; N.fifaWeek(); S.week = wk; ok(y.u21 > 0 && y.u21f === 1, 'parón: suma partidos con la Sub-21 y primera convocatoria');
+    Object.assign(y, bk);
+    const { markArrival } = await import('../src/devplus'); const q = squad(S.user)[0], h = q.h0; q.h0 = null; markArrival(q); ok(q.h0[3] === q.value, 'al llegar se apunta su valor'); q.ovr += 20;
+    S.view = 'plantilla'; S.plTab = 'joy'; render(); ok(app.textContent.includes('Revalorización') && app.textContent.includes('Tu mejor apuesta'), 'pestaña Mis joyas'); q.ovr -= 20; q.h0 = h; S.plTab = 'jug';
+    const t = T(S.user), p0 = PL(t.lineup[1]), e0 = p0.energy; p0.energy = 50; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
+    ok(!!app.querySelector('.vcond') && app.textContent.includes('Rotar cansados'), 'condición en el campo y aviso para rotar'); p0.energy = e0; S.vt = {}; S.view = 'inicio';
+  }
   { // pestañas Por puesto y Jerarquía, numeración de la pizarra libre y filtros del mercado en hoja aparte
     const FB = await import('../src/freeboard'); const t = T(S.user), f0 = t.formation, fr0 = t.free;
     t.formation = '4-2-3-1'; FB.moveSlotTo(1, 50, 72); ok(t.formation === FB.FREE && /^\d(-\d)+$/.test(FB.fLabel(t.formation)), 'la pizarra libre se llama por su numeración: ' + FB.fLabel(t.formation));
@@ -680,7 +692,7 @@ const app = document.getElementById('app')!;
     const nAc = S.academy.length; while (S.u19.length > 25) S.u19.pop();
     ut.lg = lo.lg; Y.canteraAfterMoves(true, (m: string) => ms.push(m));
     ok(S.academy.length === 0 && S.u19.length >= 25 + Math.min(nAc, 5) && ms[0].includes('pierde la cantera'), 'al bajar a Cuarta la cantera pasa a la sub-19');
-    const { academyIntake } = await import('../src/academy'); const nu = S.u19.length; academyIntake(2);
+    const { academyIntake } = await import('../src/academy'); S.u19 = S.u19.slice(0, 27); const nu = S.u19.length; academyIntake(2);
     ok(S.academy.length === 0 && S.u19.length > nu, 'sin cantera los juveniles nuevos llegan a la sub-19');
     S.vt = { can: 'can' }; ok((await import('../src/views/squad')).canteraView().includes('recuperas la cantera'), 'aviso de cantera bloqueada');
     ut.lg = hi.lg; ms.length = 0; Y.canteraAfterMoves(false, (m: string) => ms.push(m)); ut.lg = lg0; ok(!!ms[0] && ms[0].includes('recupera la cantera'), 'al ascender recupera la cantera');

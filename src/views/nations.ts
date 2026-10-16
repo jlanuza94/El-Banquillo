@@ -4,7 +4,7 @@ import {esc,money} from '../core';
 import {ALLN,COUNTRIES,GRP,posChip} from '../data';
 import {PL,S,T,squad} from '../state';
 import {flag} from '../flags';
-import {NT_SAL,TOURN,autoCall,callOf,initIntl,nextTournaments,ntReq,pool,ranking,strengthOf,summerYear,isV,rankAll,vLevel} from '../nations';
+import {u21Call,u21Score,NT_SAL,TOURN,autoCall,callOf,initIntl,nextTournaments,ntReq,pool,ranking,strengthOf,summerYear,isV,rankAll,vLevel} from '../nations';
 import {nameBtn} from './common';
 
 const fl=c=>flag((ALLN[c]||{code:'---'}).code,'sm');
@@ -27,7 +27,7 @@ export function seleccionesView(){
   const mine=squad(S.user).filter(p=>!p.loan).map(p=>({p,call:callOf(p.nat).includes(p.id)})).filter(x=>x.call||x.p.caps).sort((a,b)=>(b.call-a.call)||(b.p.caps||0)-(a.p.caps||0));
   body=`<section class="panel"><div class="panel-h"><h2>Tus internacionales</h2><span class="eyebrow">${mine.filter(x=>x.call).length} convocados ahora</span></div>
   <p class="small muted" style="margin:0 0 10px">Ir con la selección les da prestigio y ánimo, pero vuelven cansados de los parones y a veces lesionados. Ganar un torneo los revaloriza.</p>
-  ${mine.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Selección</th><th class="r">Partidos</th><th class="r">Goles</th><th>Ahora</th></tr></thead><tbody>${mine.map(({p,call})=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${esc(ALLN[p.nat].n)}</td><td class="num r">${p.caps||0}</td><td class="num r">${p.ig||0}</td><td>${call?'<span class="tag xi">Convocado</span>':'<span class="small muted">No convocado</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Ningún jugador de tu plantilla está en la lista de su selección.</div>'}</section>`;
+  ${mine.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th>Selección</th><th class="r">Partidos</th><th class="r">Goles</th><th>Ahora</th></tr></thead><tbody>${mine.map(({p,call})=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td>${esc(ALLN[p.nat].n)}</td><td class="num r">${p.caps||0}</td><td class="num r">${p.ig||0}</td><td>${call?'<span class="tag xi">Convocado</span>':'<span class="small muted">No convocado</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Ningún jugador de tu plantilla está en la lista de su selección.</div>'}</section>${u21P()}`;
  }else if(!S.nt){
   body=`<section class="panel"><div class="panel-h"><h2>Ser seleccionador</h2><span class="eyebrow">Tu reputación: ${Math.round(S.mgr.rep)}/100</span></div>
   <p class="small muted" style="margin:0 0 10px">Puedes dirigir a una selección a la vez que a tu club: eliges la convocatoria y te juegas el prestigio en los torneos. Las mejores selecciones piden más reputación. Si tu reputación es alta, alguna federación te llamará en verano.</p>
@@ -46,3 +46,12 @@ export function seleccionesView(){
  return seg+next+body;
 }
 export {autoCall};
+
+/** Tus jugadores en la órbita de la Sub-21: convocados, con partidos o cerca de entrar. */
+function u21P(){
+ const U={},inU=p=>(U[p.nat]=U[p.nat]||new Set(u21Call(p.nat))).has(p.id);
+ const L=squad(S.user).filter(p=>!p.loan&&(p.age<=21||p.u21)).map(p=>({p,call:p.age<=21&&inU(p)})).sort((a,b)=>(b.call-a.call)||(b.p.u21||0)-(a.p.u21||0)||u21Score(b.p)-u21Score(a.p)).slice(0,15);
+ return `<section class="panel" style="margin-top:10px"><div class="panel-h"><h2>Sub-21</h2><span class="eyebrow">${L.filter(x=>x.call).length} convocados ahora</span></div>
+ <p class="small muted" style="margin:0 0 10px">La Sub-21 no mira solo la media: cuenta el potencial y cómo está jugando cada chaval esta temporada. Dales minutos y buenas notas y la selección se fijará en ellos, aunque jueguen en Quinta. La primera convocatoria les sube el ánimo y el valor.</p>
+ ${L.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th>Selección</th><th class="r">Partidos Sub-21</th><th>Ahora</th></tr></thead><tbody>${L.map(({p,call})=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td>${esc(ALLN[p.nat].n)}</td><td class="num r">${p.u21||0}</td><td>${call?'<span class="tag xi">Convocado</span>':p.age>21?'<span class="small muted">Ya no es sub-21</span>':'<span class="small muted">Aún no</span>'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No tienes jugadores de 21 años o menos.</div>'}</section>`;
+}

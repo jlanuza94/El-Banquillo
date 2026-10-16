@@ -141,7 +141,7 @@ export function sell(id,son){
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');
  const wasLeader=leaders(3).some(([L])=>L===p);
  const idol=squad(S.user).sort((x,y)=>y.ovr-x.ovr).slice(0,2).includes(p)||p.goals>=10;
- if(!S.rec)S.rec={};if(!S.rec.sell||o.amount>S.rec.sell.fee)S.rec.sell={name:p.name,fee:o.amount,season:seasonLabel()};tlog({name:p.name,pid:p.id,from:S.user,to:o.team,fee:o.amount});
+ if(!S.rec)S.rec={};if(!S.rec.sell||o.amount>S.rec.sell.fee)S.rec.sell={name:p.name,fee:o.amount,season:seasonLabel()};tlog({name:p.name,pid:p.id,from:S.user,to:o.team,fee:o.amount});if(p.h0){(S.jsold=S.jsold||[]).unshift({n:p.name,nat:p.nat,sp:p.sp,o0:p.h0[0],o1:p.ovr,s0:p.h0[1],paid:p.paid||0,fee:o.amount,home:!!p.home,caps:p.caps||0,u21:p.u21||0,s:seasonLabel()});S.jsold=S.jsold.slice(0,30);}
  if(p.paid&&o.amount>=p.paid*5&&p.paid>=.01)unlock('gang');if(p.home&&o.amount>=2)unlock('neg');
  S.budget=r3(S.budget+o.amount);payFee(null,o.team,o.amount);sellOnOut(p,o.amount);if(son)p.son={team:S.user,pct:SON_PCT};setTeam(p,o.team);assignNum(p);p.req=0;p.prom=null;p.cl=r2(p.value*(2+rnd()*2));
  const t=T(S.user),i=t.lineup.indexOf(id);if(i>=0)t.lineup[i]=null;fixLineup();

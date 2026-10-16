@@ -1081,3 +1081,16 @@ details.yclub summary{cursor:pointer}
 .mkfbox .advfil .chk{grid-column:1/-1}
 .mkfbox .advfil select{width:100%}
 .mkffoot{margin-top:12px;display:flex;justify-content:flex-end}
+/* Mis joyas */
+.jk{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.jk>div{border:1px solid var(--line);border-radius:10px;padding:6px 8px;text-align:center;background:rgba(127,127,127,.05)}
+.jk b{display:block;font-family:var(--f-num);font-size:18px}.jk small{font-size:10.5px;color:var(--muted)}
+.jk .up,.jd.up{color:var(--win,#2b8a4b)}.jk .dn,.jd.dn{color:var(--loss,#c23a2e)}
+.jd{font-family:var(--f-num);font-weight:800}
+.jbest{padding:8px 10px;border-radius:10px;background:rgba(201,162,39,.14);border:1px solid rgba(201,162,39,.4);margin-bottom:10px;font-size:13px}
+@media (max-width:700px){.jk{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Condición (cansancio) bajo cada jugador y aviso para rotar */
+.vs .vcond{display:block;width:40px;height:4px;margin-top:2px;border-radius:2px;background:rgba(0,0,0,.45);overflow:hidden}
+.vs .vcond i{display:block;height:100%;background:#4cd17a}.vs .vcond.mid i{background:#e0b33a}.vs .vcond.low i{background:#e0503a}
+.tiredbar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin:6px 0 0;padding:4px 8px;border-radius:8px;background:rgba(224,163,58,.14);border:1px solid rgba(224,163,58,.45);font-size:12px}
+.tiredbar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
