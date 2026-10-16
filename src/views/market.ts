@@ -3,7 +3,7 @@
 import {staffView} from './staff';
 import {wcs} from '../state';
 import {TS} from '../marketfm';
-import {missionCountries,missionOf,missionScouts} from '../scoutplus';
+import {MIS_MX,MIS_POT,missionCountries,missionOf,missionScouts} from '../scoutplus';
 import {canBuyback} from '../negotiate';
 import {trendTag} from '../economy';
 import {esc,money,plain} from '../core';
@@ -117,10 +117,11 @@ function offersHub(){
 function missionsHTML(){
  const sen=missionScouts(),F=S.misF||{};
  const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
- return `<p class="small muted" style="margin:0 0 10px">Manda a un ojeador a un país a buscar un tipo de jugador. Cada semana puede volver con un informe completo; cuanto mejor juzga el potencial, más fácil que encuentre una <b>joya 💎</b>: chavales que hoy no destacan pero pueden ser estrellas. Si tardas en ficharlas, otro club grande se te adelanta. Mejores ojeadores en Cantera y ojeo › Ojeadores.</p>
+ return `<p class="small muted" style="margin:0 0 10px">Dale un <b>encargo</b> a cada ojeador: país, puesto, edad, potencial mínimo y cuánto puedes gastar. Cada semana puede volver con un informe completo; cuanto mejor juzga el potencial, más fácil que encuentre una <b>joya 💎</b>: chavales que hoy no destacan pero pueden ser estrellas. Si tardas en ficharlas, otro club grande se te adelanta. Mejores ojeadores en Cantera y ojeo › Ojeadores.</p>
  ${sen.map(sc=>{const M=missionOf(sc.id);return `<div class="offer" style="align-items:flex-start"><span class="t"><b>${esc(sc.name)}</b> <span class="small muted">· ${sc.virt?'segundo entrenador':'ojeador'} · juzga potencial ${sc.jpo||'?'}</span><br>
- ${M?`<span class="small">En misión en <b>${esc(COUNTRIES[M.c].n)}</b> · ${M.g==='ALL'?'cualquier puesto':M.g} · ${M.age?'hasta '+M.age+' años':'cualquier edad'} · vuelve en ${Math.max(0,M.until-S.week)} jornada${M.until-S.week===1?'':'s'}</span><br><span class="small muted">Encontrados: ${M.found.length?M.found.map(id=>PL(id)?nameBtn(PL(id))+(PL(id).gem?' 💎':''):'').join(', '):'aún nada'}</span>`
- :`<span class="row" style="gap:6px;margin-top:4px;flex-wrap:wrap">${sel('misC',F.misC??wcs()[0],missionCountries().map(i=>[i,COUNTRIES[i].n]))}${sel('misG',F.misG||'ALL',[['ALL','Cualquier puesto'],['POR','Porteros'],['DEF','Defensas'],['MED','Medios'],['DEL','Delanteros']])}${sel('misA',F.misA||'21',[['19','Hasta 19 años'],['21','Hasta 21'],['23','Hasta 23'],['0','Cualquier edad']])}${sel('misW',F.misW||'4',[['4','4 jornadas'],['8','8 jornadas']])}</span>`}</span>
+ ${M?`<span class="small">En misión en <b>${esc(COUNTRIES[M.c].n)}</b> · ${M.g==='ALL'?'cualquier puesto':SPN[M.g]||M.g} · ${M.age?'hasta '+M.age+' años':'cualquier edad'}${M.pot?' · potencial '+M.pot+'+':''}${M.mx&&M.mx!=='0'?' · '+(MIS_MX.find(x=>x[0]===M.mx)||['',''])[1].toLowerCase():''} · vuelve en ${Math.max(0,M.until-S.week)} jornada${M.until-S.week===1?'':'s'}</span>
+ ${M.found.length?`<div class="misrep">${M.found.filter(id=>PL(id)).map(id=>{const p=PL(id),R=(M.rep||{})[id]||[];return `<div class="misr">${posChip(p)}<span class="t">${nameBtn(p)}${p.gem?' 💎':''} <span class="small muted">· ${p.age} años · ${p.team!==null?esc(T(p.team).short||T(p.team).name):'libre'}</span>${R[2]?`<br><span class="small muted">${esc(R[2])}</span>`:''}</span>${R[0]?`<span class="mgr g${R[0]}">${R[0]}</span>`:''}${R[1]?`<span class="mrk ${R[1]}">Riesgo ${R[1]}</span>`:''}</div>`;}).join('')}</div>`:'<br><span class="small muted">Aún no ha encontrado a nadie.</span>'}`
+ :`<span class="row" style="gap:6px;margin-top:4px;flex-wrap:wrap">${sel('misC',F.misC??wcs()[0],missionCountries().map(i=>[i,COUNTRIES[i].n]))}${sel('misG',F.misG||'ALL',[['ALL','Cualquier puesto'],['POR','Porteros'],['DEF','Defensas'],['MED','Medios'],['DEL','Delanteros'],...Object.entries(SPN).filter(([k])=>k!=='POR')])}${sel('misA',F.misA||'21',[['19','Hasta 19 años'],['21','Hasta 21'],['23','Hasta 23'],['0','Cualquier edad']])}${sel('misP',F.misP||'0',MIS_POT)}${sel('misM',F.misM||'0',MIS_MX)}${sel('misW',F.misW||'4',[['4','4 jornadas'],['8','8 jornadas']])}</span>`}</span>
  ${M?`<button class="btn sm" data-a="mis-stop" data-id="${sc.id}">Volver</button>`:`<button class="btn sm primary" data-a="mis-go" data-id="${sc.id}">Enviar</button>`}</div>`;}).join('')}`;
 }
 /** Pestañas de cada submenú del Mercado (las del menú lateral). */

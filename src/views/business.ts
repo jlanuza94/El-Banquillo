@@ -5,7 +5,7 @@ import {posChip} from '../data';
 import {S,squad} from '../state';
 import {BIZ,BIZ_MAX,KIT_P,bizCost,bizLv,bizMult,bizUpkeep,kitActive,kitCost,kitMult,kitPrice,topShirts} from '../business';
 import {nameBtn} from './common';
-import {KIT_PATS,kitLocked,kitSVG,myKit} from '../kit';
+import {KIT_PATS,kitLocked,kitSVG,myKit,myKit2} from '../kit';
 import {seasonLabel} from '../state';
 import {nRounds} from '../tactics';
 
@@ -19,8 +19,8 @@ export function finChart(){
  <p class="small muted" style="margin:4px 0 0">Ahora tienes ${money(S.budget)}. Ganas de media ${avg>=0?'+':''}${money(avg)} por jornada; la línea discontinua es lo que tendrás si sigue igual.</p></section>`;
 }
 /** Diseñador de la camiseta de la temporada: colores y dibujo, con vista previa y las de temporadas pasadas. */
-function kitDesigner(){const k=myKit(),lock=kitLocked(),prev=Object.entries(S.kits||{}).filter(([n])=>+n!==S.seasonN).sort((a,b)=>b[0]-a[0]).slice(0,5);
- return `<div class="kitd"><div class="kitp">${kitSVG(k,'big')}<small>${seasonLabel()}</small></div><div class="kitc"><b>Equipación ${seasonLabel()}</b>
+function kitDesigner(){const aw=S.kitEd==='a',k=aw?myKit2():myKit(),lock=kitLocked(),prev=Object.entries(S.kits||{}).filter(([n])=>+n!==S.seasonN).sort((a,b)=>b[0]-a[0]).slice(0,5);
+ return `<div class="kitd"><div class="kitp">${kitSVG(k,'big')}<small>${seasonLabel()}</small><span class="kit2m" title="${aw?'Primera':'Segunda'} equipación">${kitSVG(aw?myKit():myKit2(),'sm')}</span></div><div class="kitc"><div class="seg kited"><button data-a="kit-ed" data-v="h" aria-pressed="${!aw}">Primera</button><button data-a="kit-ed" data-v="a" aria-pressed="${aw}">Segunda</button></div><b>${aw?'Segunda equipación':'Equipación'} ${seasonLabel()}</b>${aw?'<p class="small muted" style="margin:2px 0 0">Se usa fuera de casa cuando tus colores chocan con los del rival.</p>':''}
  ${lock?'<p class="small muted" style="margin:2px 0 0">Ya presentada: es la camiseta de esta temporada. El próximo verano podrás diseñar otra.</p>':`<div class="row" style="gap:10px;margin:4px 0"><label class="kcol">Color principal <input type="color" id="kitC1" value="${k.c1}"></label><label class="kcol">Color secundario <input type="color" id="kitC2" value="${k.c2}"></label></div>
  <div class="seg kitpats">${KIT_PATS.map(([v,l])=>`<button data-a="kit-pat" data-v="${v}" aria-pressed="${k.pat===v}">${l}</button>`).join('')}</div>
  <p class="small muted" style="margin:4px 0 0">Diséñala y preséntala: si es distinta a la del año pasado, vende algo más. Se ve en tu alineación y en el partido.</p>`}

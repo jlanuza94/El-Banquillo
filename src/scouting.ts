@@ -61,11 +61,11 @@ export function grade(p){
  if(d>=-3)return{g:'C',txt:'Sería un jugador de rotación.'};
  return{g:'D',txt:'No mejora lo que ya tienes.'};
 }
-export function scoutReport(p,by){
+export function scoutReport(p,by,rk){
  const gr=grade(p),traits=p.tr&&p.tr.length?' Destaca por: '+p.tr.length+' rasgo'+(p.tr.length>1?'s':'')+' especial'+(p.tr.length>1?'es':'')+'.':'';
  const pot=p.age<=23?` Potencial estimado: ${seen(p).pot.map(x=>Math.round(x*10)).join('–')}.`:'';
  const price=p.team===null?'Es agente libre.':`Su club pediría unos ${money(p.value*1.2)}.`;
- news(`Informe de ${by} sobre ${p.name} (${SPN[p.sp].toLowerCase()}, ${p.age} años${p.team!==null?', '+T(p.team).name:''}). Nota ${gr.g}: ${gr.txt} Media actual ${Math.round(p.ovr)}.${pot} ${price}${traits}`,gr.g==='A'||gr.g==='B'?'good':'',
+ news(`Informe de ${by} sobre ${p.name} (${SPN[p.sp].toLowerCase()}, ${p.age} años${p.team!==null?', '+T(p.team).name:''}). Nota ${gr.g}: ${gr.txt} Media actual ${Math.round(p.ovr)}.${pot} ${price}${traits}${rk?` Riesgo ${rk.lv}${rk.why.length?': '+rk.why.join(', '):''}.`:''}`,gr.g==='A'||gr.g==='B'?'good':'',
   {cat:'oje',from:by,subj:`Informe: ${p.name} · nota ${gr.g}`,act:[{l:'Ver ficha',a:'ficha',id:p.id},...(p.team!==S.user?[{l:'Hacer oferta',a:'neg',id:p.id},{l:'Seguir',a:'fav',id:p.id}]:[])]});
 }
 /** Cada jornada: termina los informes pendientes y los ojeadores de primer equipo conocen a jugadores de su región. */

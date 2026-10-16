@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {finTalk,talkReactions} from './talkplus';
 import {setKit} from './kit';
 import {buyBiz,launchKit,namingAnswer} from './business';
 import {gemKeep} from './biginterest';
@@ -160,7 +161,9 @@ document.addEventListener('click',e=>{
    toast(`Sistema cargado: ${PRESETS[d.v].n}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
   case'st-g':S.stG=d.v;break;
   case'n2d':S.n2d=!S.n2d;break;
-  case'kit-pat':{const e=setKit({pat:d.v});if(e)toast(e);break;}
+  case'kit-pat':{const e=setKit({pat:d.v},S.kitEd==='a');if(e)toast(e);break;}
+  case'kit-ed':S.kitEd=d.v;break;
+  case'ftalk':{const r=finTalk(m,d.v,m&&(m.rat||liveRatings(m)));if(r)addEv(m,'sys',null,`Charla final: ${r.txt}`);break;}
   case'pl-cols':S.plCols=d.v;break;
   case'loan-pick':S.loanPick=+d.v;break;
   case'biz-buy':toast(buyBiz(d.v));break;
@@ -298,7 +301,7 @@ document.addEventListener('click',e=>{
   case'rs-go':{const v=document.getElementById('rsTxt')?.value;if(importCode(v)){toast('Partida restaurada.');return;}S.modal={type:'restore',err:'El código no es válido o está incompleto. Copia el texto entero, empezando por EB1:'};break;}
   case'ct-sel':S.ctSel=+d.v;break;
   case'ct-open':S.modal=null;S.view='copas';S.cupTab='ct';S.ctSel=+d.v;break;
-  case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);if(d.v==='exi'||d.v==='bro'){if(m.ref.k!=='fr')tInc('bro');if(hasTitle('sec'))r.d=r.d>0?r.d*1.4:r.d*.6;}m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
+  case'talk':{if(!m||m.talks[d.p])break;const r=talkEffect(m,d.p,d.v);if(d.v==='exi'||d.v==='bro'){if(m.ref.k!=='fr')tInc('bro');if(hasTitle('sec'))r.d=r.d>0?r.d*1.4:r.d*.6;}m.talks[d.p]={opt:d.v,d:r.d,txt:r.txt,re:talkReactions(m,d.p,d.v,r.d,d.p==='half'?liveRatings(m):{})};m.mult[m.us]*=1+r.d;addEv(m,'sys',null,`Charla ${d.p==='pre'?'previa':'del descanso'}: ${r.txt}`);break;}
   case'scout-hire':{const i=S.scoutPool.findIndex(x=>x.id===d.id);if(i>=0&&S.scoutPool[i].fee&&S.budget<S.scoutPool[i].fee){toast(`No te llega para la indemnización (${money(S.scoutPool[i].fee)}).`);break;}if(i>=0&&S.scouts.length<staffMax('sc')){const sc=S.scoutPool.splice(i,1)[0];if(sc.fee){S.budget=r3(S.budget-sc.fee);if(T(sc.club))T(sc.club).cash=r2((T(sc.club).cash||0)+sc.fee);sc.fee=0;sc.club=null;}sc.reg=Math.max(0,regionOf(LG(uLg()).c));S.scouts.push(sc);toast(`${sc.name} se une como ojeador.`);}break;}
   case'scout-fire':S.scouts=S.scouts.filter(x=>x.id!==d.id);break;
   case'pros-sign':signProspect(d.id);break;
@@ -335,7 +338,7 @@ document.addEventListener('click',e=>{
   case'mk-save':saveSearch(searchName());toast('Búsqueda guardada.');break;
   case'mk-load':loadSearch(+d.i);break;
   case'mk-del':delSearch(+d.i);break;
-  case'mis-go':{const F=S.misF||{},err=startMission(d.id,F.misC??(S.mk.c!=='ALL'&&S.mk.c!=='FA'?S.mk.c:wcs()[0]),F.misG||'ALL',F.misA||'21',F.misW||'4');if(err)toast(err);else toast('Ojeador en camino.');break;}
+  case'mis-go':{const F=S.misF||{},err=startMission(d.id,F.misC??(S.mk.c!=='ALL'&&S.mk.c!=='FA'?S.mk.c:wcs()[0]),F.misG||'ALL',F.misA||'21',F.misW||'4',F.misP||'0',F.misM||'0');if(err)toast(err);else toast('Ojeador en camino.');break;}
   case'mis-stop':stopMission(d.id);break;
   case'mk-pos':S.mk.pos=d.v;S.mk.limit=40;break;
   case'mk-fa':S.view='mercado';S.mk.tab='buy';S.mk.c='FA';S.mk.adv=true;S.mk.sort='ovr';S.mk.limit=40;S.modal=null;break;
@@ -381,7 +384,7 @@ document.addEventListener('click',e=>{
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);if(S.modal&&S.modal.type==='ficha'){S.chatMsg={id:d.id,msg:r[0],kind:r[1]};}else S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
-  case'pl-tab':S.plTab=d.v;break;
+  case'pl-tab':S.plTab=d.v;if(d.go)S.view=d.go;break;
   case'ld-tab':S.ldTab=d.v;break;
   case'renew':renState(d.id);S.modal={type:'renew',id:d.id};break;
   case'loan':S.modal={type:'loan',id:d.id};break;
@@ -416,7 +419,7 @@ document.addEventListener('change',e=>{
  if(e.target.dataset&&e.target.dataset.cond!=null){const t=T(S.user),r=(t.cond||[])[+e.target.dataset.cond],k=e.target.dataset.k;if(r){r[k]=k==='min'?+v:(v||null);}save();render();return;}
  if(id==='lmodeSel'){S.lmode=v;}
  else if(id==='lsortSel'){S.lsort=v;}
- else if(id==='kitC1'||id==='kitC2'){const e=setKit(id==='kitC1'?{c1:v}:{c2:v});if(e)toast(e);}
+ else if(id==='kitC1'||id==='kitC2'){const e=setKit(id==='kitC1'?{c1:v}:{c2:v},S.kitEd==='a');if(e)toast(e);}
  else if(id==='smSort'){S.smF=S.smF||{};S.smF.sort=v;}
  else if(id==='smFree'){S.smF=S.smF||{};S.smF.free=e.target.checked;}
  else if(id==='smQ'||id==='smMin'||id==='smAge'||id==='smWage'){S.smF=S.smF||{};S.smF[{smQ:'q',smMin:'min',smAge:'age',smWage:'wage'}[id]]=v;}
@@ -444,7 +447,7 @@ document.addEventListener('change',e=>{
  else if(id==='mklast'){S.mk.last=e.target.checked;S.mk.limit=40;}
  else if(id==='mkrep'){S.mk.rep=e.target.checked;S.mk.limit=40;}
  else if(id==='mkgem'){S.mk.gem=e.target.checked;S.mk.limit=40;}
- else if(id==='misC'||id==='misG'||id==='misA'||id==='misW'){S.misF=S.misF||{};S.misF[id]=v;}
+ else if(id==='misC'||id==='misG'||id==='misA'||id==='misW'||id==='misP'||id==='misM'){S.misF=S.misF||{};S.misF[id]=v;}
  else return;
  save();render();
 });

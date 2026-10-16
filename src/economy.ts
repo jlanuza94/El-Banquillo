@@ -153,13 +153,13 @@ export function aiSummerPlan(t,all){
  // cantera: dos juveniles cada verano
  for(let k=0;k<2;k++){const p=genPlayer(pick(['DEF','MED','DEL','MED','DEF']),t.rep-9,t.id,[17,18]);assignNum(p);}
  // salen los que sobran: primero los peores y los más mayores (los jóvenes con futuro se quedan)
- sq=squad(t.id);if(sq.length>24){sq.sort((a,b)=>(a.ovr-a.age*.3+(a.age<=19?(a.pot*10-a.ovr)*.5:0))-(b.ovr-b.age*.3+(b.age<=19?(b.pot*10-b.ovr)*.5:0))).slice(0,sq.length-24).forEach(p=>{setTeam(p,null);p.contract=0;});}
+ sq=squad(t.id);if(sq.length>24){const gk=sq.filter(p=>grp(p)==='POR').length,nOut=sq.length-24;sq=sq.filter(p=>grp(p)!=='POR'||gk>2);sq.sort((a,b)=>(a.ovr-a.age*.3+(a.age<=19?(a.pot*10-a.ovr)*.5:0))-(b.ovr-b.age*.3+(b.age<=19?(b.pot*10-b.ovr)*.5:0))).slice(0,nOut).forEach(p=>{setTeam(p,null);p.contract=0;});}
  // cubre huecos: fichando si hay dinero; si no, con jugadores modestos
  for(let k=0;k<6;k++){const n=needOf(t.id);if(n.miss<=0)break;if(!aiBuy(t,n.g,all)){const p=genPlayer(n.g,t.rep-4,t.id);assignNum(p);}}
  // con caja de sobra, refuerza sus líneas más flojas (los ricos gastan más)
- const u=lunit(t.lg),tries=(t.cash>u*10?3:t.cash>u*6?2:t.cash>u*3?1:0)+(gesOf(t)==='der'?2:0);
+ const u=lunit(t.lg),tries=(t.cash>u*8?3:t.cash>u*4?2:t.cash>u*2?1:0)+(gesOf(t)==='der'?2:0);
  for(let k=0;k<tries;k++){const n=needOf(t.id);if(n.weak<=1)break;const r=aiBuy(t,n.g,all);if(!r)break;
-  const s2=squad(t.id);if(s2.length>25){const w=s2.filter(p=>p!==r.p).sort((a,b)=>(a.ovr-a.age*.3)-(b.ovr-b.age*.3))[0];if(w){setTeam(w,null);w.contract=0;}}}
+  const s2=squad(t.id);if(s2.length>25){const cnt=g=>s2.filter(x=>grp(x)===g).length,w=s2.filter(p=>p!==r.p&&cnt(grp(p))>(grp(p)==='POR'?2:TARGET[grp(p)]-2)).sort((a,b)=>(a.ovr-a.age*.3)-(b.ovr-b.age*.3))[0];if(w){setTeam(w,null);w.contract=0;}}}
 }
 
 /** A mitad de temporada, los clubes con la plantilla larga rescinden a quien no cuenta: la bolsa de libres se renueva. */

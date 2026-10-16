@@ -8,6 +8,7 @@ import {news} from './world';
 import {CONTS} from './competitions';
 import {academyIntake} from './academy';
 import {toast} from './views/common';
+import {addPressProm,promiseQuestion} from './pressplus';
 export const SPONSORS=['Banco Meridiano','Seguros Atalaya','Telecom Brisa','Autos Vértice','Energía Solaris','Café Altura','Aerolínea Nimbo','Supermercados Plaza','Bebidas Rayo','Constructora Pilar','Lácteos Valle','Tecnología Órbita','Hoteles Mirador','Neumáticos Senda','Moda Alba','Logística Faro'];
 export const priceBase=lg=>Math.round(8+unit(LG(lg).rep)*50);
 export function initClub(t){const L=LG(t.lg),cap=Math.round(clamp(1500+(L.rep-40)*360+(t.rep-L.rep)*250,800,90000)/100)*100;
@@ -60,8 +61,9 @@ export function makePress(m){
  if(rnd()>.55||m.ref.k==='fr')return;const us=m.us,o=us==='h'?'a':'h',my=m.score[us],op=m.score[o],opp=T(m[o]);
  const sq=squad(S.user),unhappy=sq.find(p=>p.req||p.hap<28),offer=Object.entries(S.offers).find(([id,x])=>x.incoming&&PL(id)&&PL(id).team===S.user);
  const worst=Object.keys(m.rat||{}).filter(id=>PL(id)&&PL(id).team===S.user).sort((a,b)=>m.rat[a]-m.rat[b])[0];
- let q;
- if(unhappy&&rnd()<.6)q={q:`Se dice que ${unhappy.name} no está a gusto. ¿Qué tiene que decir?`,o:[['Es muy importante para nosotros',{pl:[unhappy.id,8],team:1}],['Nadie es imprescindible',{pl:[unhappy.id,-10],board:2}],['No hablo de casos individuales',{}]]};
+ let q;const pq=(S.week<=4||((S.tl||[]).length>=3&&S.tl.slice(-3).every(x=>x.gf<x.ga)))&&rnd()<.5?promiseQuestion():null;
+ if(pq)q=pq;
+ else if(unhappy&&rnd()<.6)q={q:`Se dice que ${unhappy.name} no está a gusto. ¿Qué tiene que decir?`,o:[['Es muy importante para nosotros',{pl:[unhappy.id,8],team:1}],['Nadie es imprescindible',{pl:[unhappy.id,-10],board:2}],['No hablo de casos individuales',{}]]};
  else if(offer&&rnd()<.6){const p=PL(offer[0]);q={q:`Hay ofertas por ${p.name}. ¿Está en venta?`,o:[['No está en venta',{pl:[p.id,6],fans:3}],['Escucharemos ofertas',{pl:[p.id,-6],board:2}],['Ya veremos qué pasa',{}]]};}
  else if(my>op)q={q:`Victoria ante ${opp.name}. ¿El equipo está para pelear por todo?`,o:[['Vamos partido a partido',{team:2,board:1}],['¡Claro que sí, a por todo!',{fans:6,team:3,board:-1}],['El rival nos lo puso fácil',{fans:-2,team:1,rival:[opp.id,.03]}]]};
  else if(my<op)q={q:`Derrota ante ${opp.name}. ¿Qué ha fallado?`,o:[['La culpa es mía',{team:3,board:-2}],[worst?`${PL(worst).name} no ha estado a la altura`:'Algunos no han estado a la altura',{team:-3,board:1,fans:2,pl:worst?[worst,-10]:null}],['El árbitro nos ha perjudicado',{fans:4,board:-1,team:1}]]};
@@ -74,6 +76,7 @@ export function answerPress(i){
  if(e.fans&&S.club){S.club.mood=clamp(S.club.mood+e.fans,0,100);out.push(e.fans>0?'a la afición le gusta':'la afición se molesta');}
  if(e.board){S.mgr.conf=clamp(S.mgr.conf+e.board,0,100);out.push(e.board>0?'la directiva lo valora':'la directiva prefiere más prudencia');}
  if(e.pl&&PL(e.pl[0])){const p=PL(e.pl[0]);p.hap=clamp(p.hap+e.pl[1],0,100);out.push(`${p.name} ${e.pl[1]>0?'se siente respaldado':'se siente señalado'}`);}
+ if(e.prom)addPressProm(e.prom);
  if(e.rival){S.rivalBoost={team:e.rival[0],v:e.rival[1],until:S.seasonN};out.push(`${T(e.rival[0]).name} se lo apunta para el próximo partido`);}
  news(`Prensa: «${q.o[i][0]}». ${out.length?out.join(', ')+'.':'Sin consecuencias.'}`);S.press=null;markKey('press');
 }

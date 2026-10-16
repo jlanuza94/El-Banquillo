@@ -2,7 +2,7 @@
  * responsables del cuerpo técnico por área, plan individual (carga y foco) e informe semanal de desarrollo.
  * Se apoya en el sistema anterior (S.sched, S.train) para que todo lo demás del juego siga funcionando igual. */
 // @ts-nocheck — usa el estado heredado S.
-import {clamp,rnd} from './core';
+import {clamp,pick,rnd} from './core';
 import {S,T,squad} from './state';
 import {MATCH_DAY,PRESETS_T,applySched,sched} from './training2';
 import {crew} from './staff';
@@ -85,7 +85,8 @@ export function setPLoad(id,l){const P=tcPlan();if(!ILOAD[l])return;P.ind[id]=Ob
 export function weekAt(){const P=tcPlan(),w={};P.d.forEach((x,d)=>{if(d===MATCH_DAY)return;x.forEach(k=>{const D=DRILLS[k];if(!D)return;const m=areaMult(catArea(D.c));D.at.forEach(a=>w[a]=(w[a]||0)+m);});});return w;}
 /** Atributo que trabajará un jugador esta semana: su foco individual o uno del plan, según su puesto. */
 export function pickAt(p,W){
- if(p.tf&&p.tf!=='auto')return p.tf;const w=weekAt(),L=Object.entries(w).filter(([a])=>(a!=='por'||p.pos==='POR')&&p.at[a]<10);if(!L.length)return null;
+ if(p.tf==='rol'){const w=W[p.pos]||{},L=Object.entries(w).sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]).filter(a=>p.at[a]!=null&&p.at[a]<10).sort((a,b)=>p.at[a]-p.at[b]);if(L.length)return rnd()<.7?L[0]:pick(L);}
+ else if(p.tf&&p.tf!=='auto')return p.tf;const w=weekAt(),L=Object.entries(w).filter(([a])=>(a!=='por'||p.pos==='POR')&&p.at[a]<10);if(!L.length)return null;
  const sc=L.map(([a,v])=>[a,v*(.35+((W[p.pos]||{})[a]||0)*3)]),tot=sc.reduce((s,x)=>s+x[1],0);let r=rnd()*tot;for(const [a,v] of sc){r-=v;if(r<=0)return a;}return sc[0][0];}
 /** Multiplicador de mejora de un jugador: la calidad de los técnicos de lo que se entrena y su carga individual. */
 export function tcGrowMult(p){const P=tcPlan(),L=ILOAD[pLoad(p)],cats=P.d.flat().filter(k=>DRILLS[k]&&DRILLS[k].load>0).map(k=>catArea(DRILLS[k].c)),q=cats.length?cats.reduce((a,c)=>a+areaMult(c),0)/cats.length:1;return L.g*q;}

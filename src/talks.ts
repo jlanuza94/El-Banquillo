@@ -10,6 +10,7 @@ import {baseWage} from './players';
 import {minShare} from './squad';
 import {wageCheck} from './clubplus';
 import {langOf} from './tactics';
+import {brokenPromise} from './pressplus';
 
 export const TOPICS={
  min:{n:'Quiere jugar más',q:p=>`Míster, no estoy jugando lo que esperaba. Como ${ROLES[p.role||'ro'].n.toLowerCase()} necesito más minutos.`},
@@ -82,7 +83,7 @@ export function promResult(p,ok,why){
  if(ok){S.promKept=(S.promKept||0)+1;if(S.promKept>=10)unlock('palabra');hapAdd(p,8);S.cred=clamp(cred()+4,0,100);news(`${p.name} está satisfecho: cumpliste tu promesa (${T0.toLowerCase()}).`,'good',{cat:'pla',quiet:true});return;}
  hapAdd(p,-15);S.cred=clamp(cred()-12,0,100);S.chem=clamp((S.chem??60)-3,20,100);
  const mates=squad(S.user).filter(x=>x!==p&&langOf(x)===langOf(p));mates.forEach(x=>hapAdd(x,-4));
- news(`${p.name} se siente engañado: no cumpliste tu promesa (${T0.toLowerCase()})${why?' — '+why:''}. ${mates.length?'Sus compañeros más cercanos también se molestan. ':''}Tu credibilidad en el vestuario baja.`,'bad',{cat:'pla',from:p.name,subj:'Promesa rota'});
+ news(`${p.name} se siente engañado: no cumpliste tu promesa (${T0.toLowerCase()})${why?' — '+why:''}. ${mates.length?'Sus compañeros más cercanos también se molestan. ':''}Tu credibilidad en el vestuario baja.`,'bad',{cat:'pla',from:p.name,subj:'Promesa rota'});brokenPromise(p);
 }
 /** Comprueba las promesas que vencen esta jornada (se llama desde la rutina semanal de ánimo). */
 export function checkProm(p){

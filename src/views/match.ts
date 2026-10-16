@@ -1,5 +1,6 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {FIN,reactHTML} from '../talkplus';
 import {ITALK,REFS} from '../extras2';
 import {WX,wxTxt} from '../extras';
 import {laneShare,laneTip} from '../tactics2';
@@ -128,7 +129,7 @@ export function matchView(){
   <div class="row"><button class="btn primary" data-a="m-dosub" ${bn.length&&xi.length?'':'disabled'}>Hacer cambio</button><button class="btn" data-a="m-subclose">Cerrar</button></div></div>`;})():'';
  const tph=m.done?null:m.min===0?(m.preOk?null:'pre'):(m.half&&m.min===45&&m.paused?'half':null);
  const talkP=tph&&!m.talks[tph]?`<div class="subs"><h3>${tph==='pre'?'Charla antes del partido':'Charla del descanso'}</h3><div class="chips">${Object.entries(TALKS[tph]).map(([k,v])=>`<button class="btn sm" data-a="talk" data-p="${tph}" data-v="${k}">${esc(v)}</button>`).join('')}</div><p class="small muted" style="margin:0">${tph==='pre'?'Motivar funciona mejor si eres el débil; tranquilizar, si eres favorito o en partidos de copa. Exigir es arriesgado si el equipo viene mal.':'La bronca puede despertar a un equipo que pierde, pero sienta mal si vais ganando. Con ventaja, mejor pedir calma.'}</p></div>`:'';
- const talkDone=Object.entries(m.talks).map(([ph,x])=>`<div class="negmsg ${x.d>0?'ok':x.d<-.005?'no':''}" style="margin:0 0 10px">${ph==='pre'?'Charla previa':'Descanso'}: ${esc(TALKS[ph][x.opt].split(':')[0])}: ${esc(x.txt)}</div>`).join('');
+ const talkDone=Object.entries(m.talks).map(([ph,x])=>`<div class="negmsg ${x.d>0?'ok':x.d<-.005?'no':''}" style="margin:0 0 10px;display:block">${ph==='pre'?'Charla previa':ph==='fin'?'Charla final':'Descanso'}: ${esc((ph==='fin'?FIN[x.opt]:TALKS[ph][x.opt]).split(':')[0])}: ${esc(x.txt)}${reactHTML(x.re)}</div>`).join('')+(m.done&&m.us&&m.ref.k!=='fr'&&!m.talks.fin?`<div class="subs" style="margin:0 0 10px"><h3>Charla final</h3><div class="chips">${Object.entries(FIN).map(([k,v])=>`<button class="btn sm" data-a="ftalk" data-v="${k}">${esc(v)}</button>`).join('')}</div><p class="small muted" style="margin:4px 0 0">Elogiar sienta bien tras un buen partido; exigir puede espabilar a los que fallaron, pero molesta a los que cumplieron.</p></div>`:'');
  const ctl=m.done?`<button class="btn primary big" data-a="m-finish">Ver resultados de la jornada</button>${m.us?`<button class="btn big" data-a="trep" data-v="live">📋 Informe táctico</button>`:''}`:`
   ${m.paused?`<button class="btn primary" data-a="m-play">${resumeL}</button>`:`<button class="btn dark" data-a="m-pause">Pausar</button>`}
   <div class="seg" aria-label="Velocidad">${[1,2,4,9].map(v=>`<button data-a="m-speed" data-v="${v}" aria-pressed="${m.speed===v}" ${v===9?'title="Solo ocasiones, goles y decisiones"':''}>${v===9?'Clave':'x'+v}</button>`).join('')}</div>

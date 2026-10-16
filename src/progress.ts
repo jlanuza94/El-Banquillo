@@ -13,8 +13,10 @@ export const atArrow=(p,k)=>{const v=p.atd&&p.atd[k];return v?`<i class="atar ${
 export function progressMonthly(force){
  if(S.user==null||(!force&&(S.week%4!==0||S.progW===S.week)))return null;S.progW=S.week;
  const rows=[];
+ const plans=mine().filter(p=>p.tf&&p.tf!=='auto'&&p.tf!=='rol'&&p.atm&&p.at[p.tf]!=null&&p.atm[p.tf]!=null).map(p=>[p,p.tf,Math.round((p.at[p.tf]-p.atm[p.tf])*10)]);
  mine().forEach(p=>{const d=atDiff(p);p.atd=d||{};if(d){const sum=Object.values(d).reduce((a,b)=>a+b,0),dov=Math.round(p.ovr-(p.ovm??p.ovr));if(sum||dov)rows.push({p,d,sum,dov});}
   p.atm={...p.at};p.ovm=p.ovr;});
+ if(plans.length){const ok=plans.filter(x=>x[2]>0),no=plans.filter(x=>x[2]<=0);news(`Planes individuales del mes. ${ok.length?'Funcionan: '+ok.map(([p,k,d])=>`${p.name} (${AT_NAME[k].toLowerCase()} +${d})`).join(', ')+'.':''}${no.length?` Sin avances: ${no.map(([p,k])=>`${p.name} (${AT_NAME[k].toLowerCase()})`).join(', ')}. Prueba más carga, más minutos o mejores entrenadores.`:''}`,ok.length>=no.length?'good':'',{cat:'pla',subj:`🎯 Planes individuales: ${ok.length} de ${plans.length} funcionan`,act:plans.slice(0,3).map(([p])=>({l:p.name.split(' ').slice(-1)[0],a:'ficha',id:p.id}))});}
  if(!rows.length)return rows;
  const up=rows.filter(r=>r.sum>0).sort((a,b)=>b.sum-a.sum).slice(0,5),dn=rows.filter(r=>r.sum<0).sort((a,b)=>a.sum-b.sum).slice(0,3);
  const det=r=>Object.entries(r.d).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,3).map(([k,v])=>`${AT_NAME[k].toLowerCase()} ${v>0?'▲+':'▼'}${v}`).join(', ');

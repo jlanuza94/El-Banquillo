@@ -361,7 +361,7 @@ const app = document.getElementById('app')!;
       oopSwap(t, mp[1], mp[2]); ok(oopMap(t)[1] === mp[2], 'intercambiar puestos sin balón');
       S.lph = 'oop'; render(); ok(app.querySelectorAll('.vpitch .oopm').length === 11 && app.querySelector('#oopSel'), 'alineación sin balón en pantalla');
       const m = createMatchF(nextMatchF().ref); const lg = {}; tacModsF(m, m.us, lg); ok(m.oop && lg.oop, 'la forma sin balón cuenta en el partido'); S.lph = 'ip'; t.oop = null; t.oopMap = null; }
-    ok(app.querySelectorAll('[data-a="vtab"]').length === 10, 'diez pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 9, 'nueve pestañas en la plantilla');
+    ok(app.querySelectorAll('[data-a="vtab"]').length === 10, 'diez pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 10, 'diez pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
     setSub(out.id, 0); ok(subsOf(t)[0] === out.id && subsOf(t).length <= MAX_SUBS, 'poner a un suplente en el banquillo');
@@ -656,6 +656,32 @@ const app = document.getElementById('app')!;
     t.subsNone = false; t.lineup = autoLineupF(S.user, t.formation);
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
+  }
+  { // ronda: ojeo con encargo, plan individual, charlas, cedidos, promesas, datos, récords, superávit y 2ª equipación
+    const SP = await import('../src/scoutplus'); const sc = SP.missionScouts()[0]; const c0 = LG(T(S.user).lg).c;
+    ok(SP.startMission(sc.id, c0, 'DEF', '23', '4', '65', '0') === '', 'encargo: país, línea, edad y potencial');
+    const M = SP.missionOf(sc.id); for (let i = 0; i < 6 && !M.found.length; i++) SP.missionsWeekly();
+    ok(M.pot === 65 && (!M.found.length || (M.rep[M.found[0]] && ['bajo', 'medio', 'alto'].includes(M.rep[M.found[0]][1]))), `informe con nota y riesgo (${M.found.length} encontrados)`);
+    ok(['bajo', 'medio', 'alto'].includes(SP.riskOf(squad(S.user)[0]).lv), 'riesgo de un fichaje'); SP.stopMission(sc.id);
+    S.view = 'mojeo'; S.mk.tab = 'ojeo'; render(); ok(!!app.querySelector('#misP') && !!app.querySelector('#misM'), 'misiones con potencial mínimo y precio');
+    const K = await import('../src/kit'); const opp = S.teams.find(x => x.id !== S.user); const c1 = opp.c1; const kp = S.kits, ks = S.kitS; S.kits = {}; S.kits2 = {}; S.kitS = null;
+    K.setKit({ c1 }); const mk = K.matchKits(opp.id, S.user); ok(mk.alt && mk.a.c1 === K.myKit2().c1, 'segunda equipación si chocan los colores');
+    ok(K.setKit({ c1: '#abcdef' }, true) === '' && K.myKit2().c1 === '#abcdef', 'diseñar la segunda equipación'); S.kits = kp; S.kitS = ks;
+    const pp = squad(S.user).filter(p => !p.loan)[3]; S.vt = { fi: 'dev' }; S.modal = { type: 'ficha', id: pp.id }; render();
+    ok(!!app.querySelector('.fplan [data-a=tc-load]') && !!app.querySelector('.fplan select[data-tf]') && !!app.querySelector('.fplan select[data-dev]'), 'ficha › Desarrollo: carga, foco, puesto y rasgo');
+    const tf0 = pp.tf; pp.tf = 'rol'; const TC = await import('../src/tcenter'); const DT = await import('../src/data'); const k = TC.pickAt(pp, DT.W); ok(!k || pp.at[k] < 10, 'foco «lo más flojo de su puesto»'); pp.tf = tf0;
+    pp.st = Object.assign(DT.newSt(), { pj: 8, mi: 700, g: 3, a: 2, rs: 54, xg: 250, kp: 9, tk: 12, dr: 7, du: 30 }); S.vt.fi = 'est'; render(); ok(!!app.querySelector('svg.heat'), 'mapa de calor en la ficha');
+    S.modal = null; S.vt = {};
+    const TP = await import('../src/talkplus'); const E = await import('../src/engine'); const fx = { h: S.user, a: opp.id };
+    const mm = { us: 'h', lu: { h: T(S.user).lineup.slice(), a: [] }, ref: { k: 'lg' }, talks: {}, done: true, score: { h: 2, a: 0 }, played: Object.fromEntries(T(S.user).lineup.filter(Boolean).map(id => [id, 1])) };
+    const re = TP.talkReactions(mm, 'pre', 'exi', .02); ok(re.length >= 10 && re.every(x => TP.REACT[x[1]]), 'cada titular reacciona a la charla');
+    const fin = TP.finTalk(mm, 'elo', {}); ok(fin && fin.re.length >= 10 && !!TP.reactHTML(fin.re), 'charla final con reacciones');
+    S.view = 'plantilla'; S.plTab = 'ced'; render(); ok(app.textContent.includes('cedidos') || app.textContent.includes('Cedidos'), 'pestaña Cedidos'); S.plTab = 'jug';
+    const PP = await import('../src/pressplus'); const pr0 = S.pprom; S.pprom = []; PP.addPressProm('fich'); ok(PP.pressProms().length === 1, 'promesa en la prensa apuntada');
+    S.week += 9; PP.pressPromWeekly(); ok(S.pprom[0].ok === false, 'promesa de fichaje vencida = incumplida'); S.week -= 9; S.pprom = pr0;
+    const lead = squad(S.user)[0]; const h0 = lead.hap, sp0 = S.split; lead.hap = 30; lead.req = 0; PP.brokenPromise(lead); ok(lead.req === 1, 'promesa rota: pide salir'); lead.hap = h0; lead.req = 0; S.split = sp0;
+    S.view = 'historia'; S.hiTab = 'club'; render(); ok(app.textContent.includes('Más victorias seguidas') && app.textContent.includes('Peor derrota'), 'más récords del club'); S.view = 'inicio';
+    const SU = await import('../src/surplus'); const b0 = S.budget, sp1 = S.spent; S.spent = null; S.budget = SU.surplusCap() * 2; const take = SU.boardSurplus(); ok(take > 0 && S.budget < SU.surplusCap() * 2, 'la directiva reinvierte el superávit'); S.budget = b0; S.spent = sp1;
   }
   { // ronda: instrucciones desde el campo, camiseta por temporada y partida que no crece sin fin
     const t = T(S.user); S.view = 'tacticas'; S.vt = { tac: 'ali' }; S.lph = 'ip'; S.sel = { type: 'slot', i: 5 }; render();

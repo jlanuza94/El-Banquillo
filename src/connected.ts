@@ -47,7 +47,8 @@ export const loanShare=p=>p.lmt?p.lpj/p.lmt:0;
 /** Tras cada partido de un club con cedidos tuyos: cuenta los partidos que juegan. */
 export function trackLoans(m){
  ['h','a'].forEach(s=>{const tid=m[s];if(tid===S.user)return;
-  squad(tid).forEach(p=>{if(!p.loan||p.loan.from!==S.user)return;p.lmt=(p.lmt||0)+1;if(m.played[p.id])p.lpj=(p.lpj||0)+1;});});
+  squad(tid).forEach(p=>{if(!p.loan||p.loan.from!==S.user)return;p.lmt=(p.lmt||0)+1;if(m.played[p.id])p.lpj=(p.lpj||0)+1;
+   if(p.lmt>=3&&!p.lpj&&!p.lwarn){p.lwarn=1;news(`${p.name} no ha jugado ni un minuto en sus ${p.lmt} partidos con ${T(tid).name}. Puedes repescarlo y buscarle otro destino.`,'bad',{cat:'pla',subj:`Cedido sin minutos: ${p.name}`,act:[{l:'Repescarlo',a:'loan-recall',id:p.id},{l:'Ver cedidos',a:'pl-tab',v:'ced',go:'plantilla'}]});}});});
 }
 /** El club que tiene a tu cedido con objetivo le hace hueco si va por debajo de lo pactado. */
 export function enforceLoanMinutes(m,s,eff,slots){
@@ -70,7 +71,7 @@ export function loanReview(p){
 export function vestMult(){
  const sq=squad(S.user).filter(p=>!p.loan);if(!sq.length)return 1;
  const avg=sq.reduce((a,p)=>a+(p.hap??70),0)/sq.length,L=leaders(3),badLead=L.filter(([p])=>(p.hap??70)<40).length,req=sq.filter(p=>p.req).length;
- return clamp(1+(avg-62)/900-badLead*.008-req*.003+.002*(mgrAt('mot')-5),.96,1.03);
+ return clamp(1+(avg-62)/900-badLead*.008-req*.003+.002*(mgrAt('mot')-5)-(S.split&&S.week<=S.split.until?.01:0),.96,1.03);
 }
 export function vestWeekly(){
  const groups={};squad(S.user).forEach(p=>{const l=langOf(p);(groups[l]=groups[l]||[]).push(p);});

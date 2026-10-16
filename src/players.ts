@@ -128,7 +128,7 @@ export function pruneFree(CAP=1200){trimSquads();const FA=Object.values(S.player
  if(FA.length>CAP){FA.sort((a,b)=>(a.ovr-a.age*1.5+(a.pot*10-a.ovr)*.3)-(b.ovr-b.age*1.5+(b.pot*10-b.ovr)*.3)).slice(0,FA.length-CAP).forEach(p=>{delete S.players[p.id];});RT.SQ=null;RT.keyCache=null;}}
 /** Plantillas de la IA de 27 como mucho: se dejan libres a los que sobran (los peores). */
 export function trimSquads(){S.teams.forEach(t=>{if(t.id===S.user)return;const sq=squad(t.id).filter(p=>!p.loan);if(sq.length<=27)return;
- sq.sort((a,b)=>a.ovr-b.ovr).slice(0,sq.length-27).forEach(p=>{if(T(t.id).lineup)T(t.id).lineup=T(t.id).lineup.map(x=>x===p.id?null:x);setTeam(p,null);});});}
+ const gk=sq.filter(p=>p.pos==='POR').length;sq.filter(p=>p.pos!=='POR'||gk>2).sort((a,b)=>a.ovr-b.ovr).slice(0,sq.length-27).forEach(p=>{if(T(t.id).lineup)T(t.id).lineup=T(t.id).lineup.map(x=>x===p.id?null:x);setTeam(p,null);});});}
 export function genFreeAgents(n=120){
  // unos pocos nuevos (jóvenes sin club y veteranos de ligas menores); el resto de la bolsa son los que no renovaron
  for(let k=0;k<n;k++)genPlayer(pick(['POR','DEF','DEF','MED','MED','DEL','DEL']),ri(36,66),null);

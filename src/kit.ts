@@ -7,10 +7,16 @@ export const KIT_PATS=[['lisa','Lisa'],['rayas','Rayas'],['franjas','Franjas'],[
 const SHIRT='M13 2 4 6.5 1 14l6.5 2.2L8 32h24l.5-15.8L39 14l-3-7.5L27 2c-1.6 2.4-4 3.7-7 3.7S14.6 4.4 13 2z';
 /** Equipación de tu club esta temporada (o la de una temporada pasada). */
 export function myKit(n=S.seasonN){const t=T(S.user);const k=S.kits&&S.kits[n];return k||{c1:t.c1,c2:t.c2,pat:'lisa'};}
-/** Equipación de cualquier club: la tuya según la temporada; las demás, sus colores de siempre. */
-export const kitOf=tid=>tid===S.user?myKit():{c1:T(tid).c1,c2:T(tid).c2,pat:'lisa'};
+/** Segunda equipación (la de visitante): por defecto, clara si la primera es oscura y al revés. */
+export function myKit2(n=S.seasonN){const k=S.kits2&&S.kits2[n];if(k)return k;const a=myKit(n);return lum(a.c1)<.5?{c1:'#f2f2f2',c2:a.c1,pat:'cuello'}:{c1:'#1d1d1d',c2:a.c1,pat:'cuello'};}
+/** Equipación de cualquier club: la tuya según la temporada; las demás, sus colores de siempre. alt = la segunda. */
+export const kitOf=(tid,alt)=>tid===S.user?(alt?myKit2():myKit()):alt?{c1:T(tid).c2,c2:T(tid).c1,pat:'lisa'}:{c1:T(tid).c1,c2:T(tid).c2,pat:'lisa'};
+/** Distancia entre dos colores (0 iguales … 441 opuestos). */
+export function cdist(a,b){const x=parseInt(a.slice(1),16),y=parseInt(b.slice(1),16);return Math.hypot((x>>16)-(y>>16),(x>>8&255)-(y>>8&255),(x&255)-(y&255));}
+/** Qué camisetas se ponen en un partido: el local la primera; el visitante la segunda si chocan los colores. */
+export function matchKits(h,a){const H=kitOf(h);let A=kitOf(a),alt=false;if(cdist(H.c1,A.c1)<110){A=kitOf(a,true);alt=true;}return {h:H,a:A,alt};}
 export const kitLocked=()=>S.kitS===S.seasonN;
-export function setKit(k){if(kitLocked())return 'La equipación de esta temporada ya está presentada: podrás cambiarla el próximo verano.';S.kits=S.kits||{};S.kits[S.seasonN]=Object.assign({},myKit(),k);return '';}
+export function setKit(k,away){if(kitLocked())return 'La equipación de esta temporada ya está presentada: podrás cambiarla el próximo verano.';if(away){S.kits2=S.kits2||{};S.kits2[S.seasonN]=Object.assign({},myKit2(),k);return '';}S.kits=S.kits||{};S.kits[S.seasonN]=Object.assign({},myKit(),k);return '';}
 /** Dibujo de la camiseta (SVG) con su diseño. uid evita choques entre recortes de varias camisetas en la misma pantalla. */
 let UID=0;
 export function kitSVG(k,cls='',label=''){const id='kc'+(++UID),c1=k.c1,c2=k.c2;let fill='';

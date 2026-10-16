@@ -1,6 +1,6 @@
 /* El Banquillo · match2d.js — Animación del partido en 2D (canvas). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
-import {kitOf} from './kit';
+import {matchKits} from './kit';
 import {FREE,formRows,freeCoords} from './freeboard';
 import {fmtMin,pick,rnd} from './core';
 import {FORMS,SPEEDS,W} from './data';
@@ -16,7 +16,7 @@ const DUR=2700;
 const rgb=h=>{const n=parseInt(String(h||'#888').slice(1),16);return [n>>16,n>>8&255,n&255];};
 const cdist=(a,b)=>{const A=rgb(a),B=rgb(b);return Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2]);};
 /** Equipación de cada equipo en la 2D: si se parecen, el visitante sale con la segunda (o de blanco/negro). */
-function kits(m){const kh=kitOf(m.h),ka=kitOf(m.a),h={c1:kh.c1,c2:kh.c2},a={c1:ka.c1,c2:ka.c2},H={f:h.c1,e:h.c2};let A={f:a.c1,e:a.c2};
+function kits(m){const mk=matchKits(m.h,m.a),kh=mk.h,ka=mk.a,h={c1:kh.c1,c2:kh.c2},a={c1:ka.c1,c2:ka.c2},H={f:h.c1,e:h.c2};let A={f:a.c1,e:a.c2};
  if(cdist(h.c1,a.c1)<110){A=cdist(h.c1,a.c2)>=110?{f:a.c2,e:a.c1}:lum(h.c1)>.5?{f:'#1b1b1b',e:'#e9e9e9'}:{f:'#f4f4f4',e:'#1b1b1b'};}
  return {h:H,a:A};}
 const GKX=s=>s==='h'?5:95;

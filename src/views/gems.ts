@@ -3,7 +3,8 @@
 // @ts-nocheck — usa el estado heredado S.
 import {esc,money} from '../core';
 import {posChip} from '../data';
-import {S,qBadge,squad} from '../state';
+import {S,T,qBadge,squad} from '../state';
+import {loanShare} from '../connected';
 import {nameBtn,nf} from './common';
 
 const d1=(a,b)=>{const d=Math.round(b-a);return `<span class="jd ${d>0?'up':d<0?'dn':''}">${d>0?'+':''}${d}</span>`;};
@@ -20,4 +21,16 @@ export function joyasHTML(){
  ${L.map(({p,v0})=>`<tr><td>${posChip(p)}</td><td>${nameBtn(p)}</td><td class="n">${p.age}</td><td class="small">${esc(p.h0[1])}${p.home?' · cantera':''}</td><td class="r">${qBadge(p.h0[0]/10)}</td><td class="r">${qBadge(p.ovr/10)}</td><td class="r">${d1(p.h0[0],p.ovr)}</td><td class="n">${p.pot!=null?Math.round(p.pot*10):'—'}</td><td class="n">${v0!=null?money(v0):'—'}</td><td class="n">${money(p.value)}</td><td>${tag(p)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">Aún no ha llegado nadie desde que entrenas aquí. Ficha a tu primera joya en el mercado.</div>'}
  ${sold.length?`<h3 style="margin:16px 0 6px">Los que vendiste</h3><div class="tbl"><table><thead><tr><th>Jugador</th><th>Llegó</th><th class="r">Media</th><th class="r">Te costó</th><th class="r">Lo vendiste por</th><th class="r">Beneficio</th><th>Vendido</th></tr></thead><tbody>
  ${sold.map(x=>`<tr><td>${nf(x.nat)} ${esc(x.n)} <span class="small muted">${x.sp}</span></td><td class="small">${esc(x.s0)}${x.home?' · cantera':''}</td><td class="r">${Math.round(x.o0)} → ${Math.round(x.o1)}</td><td class="n">${x.paid?money(x.paid):x.home?'Cantera':'Libre'}</td><td class="n">${money(x.fee)}</td><td class="n"><span class="jd ${x.fee-(x.paid||0)>=0?'up':'dn'}">${x.fee-(x.paid||0)>=0?'+':''}${money(x.fee-(x.paid||0))}</span></td><td class="small">${esc(x.s)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
+}
+
+/** Plantilla › Cedidos: cómo les va a tus cedidos (minutos, nota, crecimiento) y si conviene repescarlos. */
+export function cedidosHTML(){
+ const L=Object.values(S.players).filter(p=>p.loan&&p.loan.from===S.user).sort((a,b)=>a.age-b.age);
+ if(!L.length)return '<div class="empty">No tienes jugadores cedidos. Cede a los jóvenes que no juegan desde su ficha: eliges el club según los minutos que le darán.</div>';
+ return `<p class="small muted" style="margin:0 0 10px">Tus cedidos, jornada a jornada. Si un club no le da minutos, repéscalo y búscale otro destino: un joven que no juega no crece.</p>
+ <div class="ced">${L.map(p=>{const sh=Math.round(loanShare(p)*100),s=p.st||{},nota=s.pj?s.rs/s.pj:null,d=Math.round(p.ovr-(p.lo0??p.og??p.ovr)),obj=p.loan.obj?Math.round(p.loan.obj*100):0;
+  const v=!p.lmt?['Acaba de llegar','']:sh>=(obj||50)?['Va bien: juega','ok']:sh>=25?['Pocos minutos','md']:['No cuenta para ellos','bad'];
+  return `<div class="cedr">${posChip(p)}<span class="t">${nameBtn(p)} <span class="small muted">· ${p.age} años · en ${esc(T(p.team).name)}</span><br>
+  <span class="cedb"><i class="${v[1]}" style="width:${Math.max(3,sh)}%"></i>${obj?`<em style="left:${obj}%" title="Objetivo pactado"></em>`:''}</span><span class="small">${sh}% de partidos (${p.lpj||0}/${p.lmt||0})${obj?` · objetivo ${obj}%`:''} · ${s.g||0} goles · nota ${nota?nota.toFixed(1):'—'} · media ${d>0?'+':''}${d}</span></span>
+  <span class="tag ${v[1]==='bad'?'bad':v[1]==='ok'?'xi':''}">${v[0]}</span>${v[1]!=='ok'&&p.lmt?`<button class="btn sm" data-a="loan-recall" data-id="${p.id}">Repescar</button>`:''}</div>`;}).join('')}</div>`;
 }

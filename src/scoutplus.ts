@@ -5,7 +5,7 @@ import {clamp,gauss,money,pick,r2,ri,rnd} from './core';
 import {COUNTRIES,GRP,SPN} from './data';
 import {LG,PL,S,T,setTeam,wcs} from './state';
 import {news} from './world';
-import {knowledge,scoutReport} from './scouting';
+import {grade,knowledge,scoutReport} from './scouting';
 import {assignNum,baseWage} from './players';
 import {crew} from './staff';
 
@@ -52,10 +52,27 @@ export const MIS_WEEKS=[4,8];
 export function missionScouts(){const dd=crew('seg')[0]||crew('dd')[0];return (S.scouts||[]).concat([{id:'seg',name:dd?dd.name:'Tu segundo entrenador',jui:4,jpo:4,virt:1}]);}
 const scoutBy=id=>missionScouts().find(x=>x.id===id);
 /** Manda a un ojeador a buscar un tipo de jugador en un país. */
-export function startMission(scId,c,g,age,weeks){
+export function startMission(scId,c,g,age,weeks,pot,money_){
  const sc=scoutBy(scId);if(!sc)return 'Ese ojeador ya no está.';
  S.missions=(S.missions||[]).filter(x=>x.sc!==scId);
- S.missions.push({sc:scId,c:+c,g:g||'ALL',age:+age||0,until:S.week+(+weeks||4),found:[]});return '';
+ S.missions.push({sc:scId,c:+c,g:g||'ALL',age:+age||0,pot:+pot||0,mx:money_||'0',until:S.week+(+weeks||4),found:[],rep:{}});return '';
+}
+/** El encargo: puesto (línea o puesto exacto), potencial mínimo y lo que te puedes gastar. */
+export const MIS_POT=[['0','Cualquier potencial'],['65','Potencial 65+'],['75','Potencial 75+'],['85','Potencial 85+']];
+export const MIS_MX=[['0','Cualquier precio'],['b','Que pueda pagar'],['c','Barato (¼ del presupuesto)'],['f','Solo libres']];
+const fitsPos=(p,g)=>g==='ALL'||(['POR','DEF','MED','DEL'].includes(g)?(GRP[p.sp]||p.pos)===g:p.sp===g||(p.alt||[]).includes(g));
+const fee=p=>p.team===null?0:p.value*1.2;
+const fitsMx=(p,mx)=>mx==='f'?p.team===null:mx==='b'?fee(p)<=Math.max(0,S.budget):mx==='c'?fee(p)<=Math.max(0,S.budget)*.25:true;
+/** Riesgo del fichaje según el ojeador: lesiones, carácter, adaptación y lo incierto de su potencial. */
+export function riskOf(p,jp=5){
+ const W=[];let r=0;
+ if((p.prone||0)>=.5){r+=2;W.push('propenso a lesionarse');}
+ if(p.per==='tem'){r+=1;W.push('temperamental');}
+ if(p.per==='amb'&&LG(T(S.user).lg).lv>=2){r+=1;W.push('ambicioso: querrá jugar más arriba');}
+ const my=COUNTRIES[LG(T(S.user).lg).c];if(my&&COUNTRIES[p.nat]&&COUNTRIES[p.nat].lang!==my.lang){r+=1;W.push('le costará adaptarse al idioma');}
+ if(p.age<=19&&jp<7){r+=1;W.push('muy joven: su techo es una incógnita');}
+ if(p.per==='pro'||p.per==='lea'){r=Math.max(0,r-1);W.push(p.per==='pro'?'muy profesional':'leal');}
+ return {lv:r>=3?'alto':r>=1?'medio':'bajo',why:W};
 }
 export function stopMission(scId){S.missions=(S.missions||[]).filter(x=>x.sc!==scId);}
 /** Cada jornada: el ojeador busca en su país; cuanto mejor juzga el potencial, más fácil que encuentre una joya. */
@@ -64,11 +81,11 @@ export function missionsWeekly(){
  S.missions=S.missions.filter(M=>{const sc=scoutBy(M.sc);if(!sc)return false;
   const jp=sc.jpo||sc.jui||5;
   if(rnd()<.5+.04*jp){
-   const pool=all.filter(p=>p.team!==S.user&&!p.loan&&!M.found.includes(p.id)&&(p.team===null?p.nat===M.c:LG(T(p.team).lg).c===M.c)&&(M.g==='ALL'||(GRP[p.sp]||p.pos)===M.g)&&(!M.age||p.age<=M.age));
+   const pool=all.filter(p=>p.team!==S.user&&!p.loan&&!M.found.includes(p.id)&&(p.team===null?p.nat===M.c:LG(T(p.team).lg).c===M.c)&&fitsPos(p,M.g)&&(!M.age||p.age<=M.age)&&(!M.pot||p.pot*10>=M.pot-(11-jp))&&fitsMx(p,M.mx||'0'));
    let best=null,bs=-1e9;for(const p of pool){const s=(p.age<=23?p.pot*10:p.ovr)-p.age*.3+(p.gem?6+jp:0)+gauss()*(11-jp)*1.6;if(s>bs){bs=s;best=p;}}
-   if(best){M.found.push(best.id);S.know[best.id]=100;scoutReport(best,sc.name+` (misión en ${COUNTRIES[M.c].n})`);if(best.gem)news(`${sc.name}: «En ${COUNTRIES[M.c].n} he visto a ${best.name}, ${best.age} años. Ahora no destaca, pero tiene algo especial: puede ser una joya.»`,'good',{cat:'oje',subj:`💎 Posible joya: ${best.name}`,act:[{l:'Ver ficha',a:'ficha',id:best.id},{l:'Seguir',a:'fav',id:best.id}]});}
+   if(best){M.found.push(best.id);S.know[best.id]=100;M.rep=M.rep||{};const rk=riskOf(best,jp);M.rep[best.id]=[grade(best).g,rk.lv,rk.why.join(', ')];scoutReport(best,sc.name+` (misión en ${COUNTRIES[M.c].n})`,rk);if(best.gem)news(`${sc.name}: «En ${COUNTRIES[M.c].n} he visto a ${best.name}, ${best.age} años. Ahora no destaca, pero tiene algo especial: puede ser una joya.»`,'good',{cat:'oje',subj:`💎 Posible joya: ${best.name}`,act:[{l:'Ver ficha',a:'ficha',id:best.id},{l:'Seguir',a:'fav',id:best.id}]});}
   }
-  if(S.week>=M.until){news(`${sc.name} vuelve de su misión en ${COUNTRIES[M.c].n}: ${M.found.length} informe${M.found.length===1?'':'s'}.`,'',{cat:'oje',subj:`Fin de la misión en ${COUNTRIES[M.c].n}`,act:[{l:'Ver misiones',a:'mk-tab',v:'ojeo'}]});return false;}
+  if(S.week>=M.until){const R=M.rep||{},top=M.found.filter(id=>PL(id)&&PL(id).team!==S.user).sort((a,b)=>((R[a]||'D')[0]>(R[b]||'D')[0]?1:-1)||PL(b).pot-PL(a).pot)[0];news(`${sc.name} vuelve de su misión en ${COUNTRIES[M.c].n}: ${M.found.length} informe${M.found.length===1?'':'s'}.${top?` Su recomendación: ${PL(top).name} (nota ${(R[top]||'?')[0]}, riesgo ${(R[top]||[])[1]||'?'}).`:''}`,'',{cat:'oje',subj:`Fin de la misión en ${COUNTRIES[M.c].n}`,act:[{l:'Ver misiones',a:'mk-tab',v:'ojeo'}]});return false;}
   return true;});
 }
 export const missionOf=scId=>(S.missions||[]).find(x=>x.sc===scId);

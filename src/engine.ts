@@ -343,7 +343,8 @@ export function applyResult(m){
  if(m.us&&m.ref.k!=='fr')S.tg=(S.tg||0)+1;
  retosMatch(m);
  if(m.us&&m.ref.k!=='fr'){const my0=m.score[m.us],op0=m.score[m.us==='h'?'a':'h'];if(my0-op0>=5)unlock('manita');const xi=m.xi0[m.us].filter(Boolean).map(PL).filter(Boolean);if(xi.filter(p=>p.home).length>=5)unlock('casa');if(xi.some(p=>p.age<=17&&p.st&&p.st.pj<=1))unlock('joven');makePress(m);}
- if(m.us&&m.ref.k!=='fr'){const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'],R0=S.rec||(S.rec={});if(my-op>0&&(!R0.bigWin||my-op>R0.bigWin.d||(my-op===R0.bigWin.d&&my>R0.bigWin.g)))R0.bigWin={d:my-op,g:my,txt:`${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}`,season:seasonLabel(),comp:m.label||''};}
+ if(m.us&&m.ref.k!=='fr'){const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'],R0=S.rec||(S.rec={});if(my-op>0&&(!R0.bigWin||my-op>R0.bigWin.d||(my-op===R0.bigWin.d&&my>R0.bigWin.g)))R0.bigWin={d:my-op,g:my,txt:`${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}`,season:seasonLabel(),comp:m.label||''};const txt=`${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}`;if(op-my>0&&(!R0.bigLoss||op-my>R0.bigLoss.d))R0.bigLoss={d:op-my,txt,season:seasonLabel()};
+  R0.cw=my>op?(R0.cw||0)+1:0;R0.cu=my>=op?(R0.cu||0)+1:0;if(R0.cw>(R0.bw?R0.bw.n:0))R0.bw={n:R0.cw,season:seasonLabel()};if(R0.cu>(R0.bu?R0.bu.n:0))R0.bu={n:R0.cu,season:seasonLabel()};}
  if(m.us)learnFromMatch(Object.keys(m.played).filter(id=>PL(id)&&PL(id).team!==S.user));
  if(m.us){const xi=m.xi0[m.us].filter(Boolean),stable=xi.filter(id=>S.lastXI.includes(id)).length;
   S.chem=clamp(S.chem+(S.lastXI.length?(stable-8)*.7:0)+res[m.us]*.8,20,100);S.lastXI=xi;
