@@ -1,5 +1,6 @@
 /* El Banquillo · contracts.js — Contratos, renovaciones, cesiones y opciones de compra. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {tlAdd} from './timeline';
 import {onLoanedOut} from './talks';
 import {isAffiliate,wageCheck} from './clubplus';
 import {LOAN_OBJ} from './connected';
@@ -34,7 +35,7 @@ export function makeRenew(id,w,n){
  {const wc=wageCheck(w,p.wage);if(wc){st.msg=wc;st.kind='no';return;}}
  st.tries++;
  const ratio=w/st.demand;let ok=ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;
- if(ok){p.wage=r3(w);p.contract=n;delete S.ren[id];S.modal=null;const hot=p.big&&p.big.s===S.seasonN;p.cl=Math.max(p.cl||0,Math.round(p.value*(hot?5:3)*100)/100);if(hot)p.hap=Math.min(100,(p.hap??70)+6);news(`${p.name} renueva hasta junio de ${endYear(p)} por ${money(p.wage)}/semana. Cláusula: ${money(p.cl)}.${hot?' Con este contrato, el club que le seguía tendrá que pagar mucho más.':''}`,'good');toast(`${p.name} ha renovado.`);return;}
+ if(ok){p.wage=r3(w);p.contract=n;delete S.ren[id];tlAdd(p,'📝',`Renueva hasta junio de ${2025+S.seasonN+n}`);S.modal=null;const hot=p.big&&p.big.s===S.seasonN;p.cl=Math.max(p.cl||0,Math.round(p.value*(hot?5:3)*100)/100);if(hot)p.hap=Math.min(100,(p.hap??70)+6);news(`${p.name} renueva hasta junio de ${endYear(p)} por ${money(p.wage)}/semana. Cláusula: ${money(p.cl)}.${hot?' Con este contrato, el club que le seguía tendrá que pagar mucho más.':''}`,'good');toast(`${p.name} ha renovado.`);return;}
  if(st.tries>=3){st.closed=true;st.msg=`${p.name} rompe las negociaciones hasta la próxima jornada.`;st.kind='no';return;}
  st.msg=`Rechaza la propuesta. Quiere al menos ${money(st.demand)} a la semana. Te quedan ${3-st.tries} intento${3-st.tries>1?'s':''}.`;st.kind='no';
 }
@@ -78,7 +79,7 @@ export function acceptLoanOut(id,obj,to){
  if(!inWindow())return toast('El mercado está cerrado.');
  if(sq.length<=16)return toast('Necesitas al menos 16 jugadores en plantilla.');
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');
- onLoanedOut(p);p.loan={from:S.user};if(obj&&LOAN_OBJ[obj])p.loan.obj=LOAN_OBJ[obj][1];p.lpj=0;p.lmt=0;p.lo0=p.ovr;p.lwarn=0;setTeam(p,o.team);assignNum(p);
+ onLoanedOut(p);p.loan={from:S.user};if(obj&&LOAN_OBJ[obj])p.loan.obj=LOAN_OBJ[obj][1];p.lpj=0;p.lmt=0;p.lo0=p.ovr;p.lwarn=0;tlAdd(p,'🔁',`Cedido al ${T(o.team).name}`);setTeam(p,o.team);assignNum(p);
  const t=T(S.user),i=t.lineup.indexOf(id);if(i>=0)t.lineup[i]=null;fixLineup();
  news(`${p.name} se marcha cedido a ${T(o.team).name} hasta final de temporada. Ellos pagan su sueldo.${p.loan.obj?` Se comprometen a que juegue al menos el ${Math.round(p.loan.obj*100)}% de los partidos.`:''}`);
  delete S.lo[id];S.modal=null;toast(`${p.name} cedido a ${T(o.team).name}.`);

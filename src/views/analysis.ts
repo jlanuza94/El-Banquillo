@@ -53,7 +53,8 @@ function xgBars(tl){
 
 export function analisisView(){
  const tab=S.anTab||'temp';
- const seg=`<div class="seg" style="margin-bottom:14px;max-width:100%;overflow-x:auto">${[['temp','Temporada'],['part','Partidos'],['jug','Jugadores'],['riv','Próximo rival']].map(([k,l])=>`<button data-a="an-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
+ const seg=`<div class="seg" style="margin-bottom:14px;max-width:100%;overflow-x:auto">${[['temp','Temporada'],['cmp','Equipo vs liga'],['part','Partidos'],['jug','Jugadores'],['riv','Próximo rival']].map(([k,l])=>`<button data-a="an-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
+ if(tab==='cmp')return seg+teamCmpHTML();
  if(tab==='temp'){
   const tl=S.tl||[];
   if(!tl.length)return seg+'<section class="panel"><div class="empty">Los gráficos aparecen tras la primera jornada de liga.</div></section>';
@@ -93,4 +94,25 @@ ${(()=>{const fx=(S.fixtures[uLg()]||[]).flat().filter(f=>f.played&&(f.h===S.use
  ${F.length?`<h3 style="margin:12px 0 4px">Últimos partidos</h3>${F.map(x=>{const r=x[1]>x[2]?'G':x[1]<x[2]?'P':'E';return `<div class="offer"><span class="formdots"><span class="${r}">${r}</span></span><span class="t">${x[6]?'vs':'en'} ${esc(T(x[0]).name)} <b>${x[1]}-${x[2]}</b><br><span class="small muted">xG ${(x[3]/10).toFixed(1)}–${(x[4]/10).toFixed(1)} · posesión ${x[5]}%</span></span></div>`;}).join('')}`:'<p class="small muted">Aún no ha jugado partidos oficiales esta temporada.</p>'}</section>
  <div class="stack"><section class="panel"><div class="panel-h"><h2>Jugadores peligrosos</h2></div>${top.length?top.map(p=>`<div class="offer">${posChip(p)}<span class="t">${nameBtn(p)}<br><span class="small muted">${p.st.g} goles · ${p.st.a} asist. · xG ${((p.st.xg||0)/100).toFixed(1)}</span></span>${qBadge(p.st.rs/p.st.pj)}</div>`).join(''):'<div class="empty">Sin datos todavía.</div>'}</section>
  <section class="panel"><div class="panel-h"><h2>Claves</h2></div><ul class="news">${(tips.length?tips:['Sin datos suficientes para sacar conclusiones.']).map(t=>`<li><span class="wk"></span><span class="t">${esc(t)}</span></li>`).join('')}</ul></section></div></div>`;
+}
+
+/** Tu equipo comparado con la media de tu liga (últimos 6 partidos de cada club) y tu puesto en cada dato. */
+function teamCmpHTML(){
+ const lg=T(S.user).lg,ids=S.teams.filter(t=>t.lg===lg).map(t=>t.id),F=S.tform||{};
+ const val=(id,f)=>{const L=F[id]||[];return L.length?L.reduce((a,x)=>a+f(x),0)/L.length:null;};
+ const M=[['Goles a favor',x=>x[1],1,'gol'],['Goles en contra',x=>x[2],0,'gol'],['xG a favor',x=>x[3]/10,1,'xg'],['xG en contra',x=>x[4]/10,0,'xg'],['Posesión',x=>x[5],1,'%'],['Puntos por partido',x=>x[1]>x[2]?3:x[1]===x[2]?1:0,1,'pts']];
+ const rows=M.map(([n,f,up,u])=>{const all=ids.map(id=>[id,val(id,f)]).filter(x=>x[1]!=null),mine=all.find(x=>x[0]===S.user);if(!mine||all.length<4)return null;
+  const avg=all.reduce((a,x)=>a+x[1],0)/all.length,rank=all.slice().sort((a,b)=>up?b[1]-a[1]:a[1]-b[1]).findIndex(x=>x[0]===S.user)+1,mx=Math.max(...all.map(x=>x[1]),.01);
+  const fmt=v=>u==='%'?Math.round(v)+'%':v.toFixed(u==='gol'||u==='pts'?2:2);
+  return {n,up,mine:mine[1],avg,rank,N:all.length,mx,fmt,good:rank<=Math.ceil(all.length/3),bad:rank>all.length-Math.ceil(all.length/3)};}).filter(Boolean);
+ if(!rows.length)return '<section class="panel"><div class="empty">Juega unos partidos de liga para comparar a tu equipo con el resto.</div></section>';
+ const tips=[];const R=k=>rows.find(r=>r.n===k);
+ if(R('xG a favor')&&R('xG a favor').bad)tips.push('Creas pocas ocasiones: prueba un estilo más ofensivo, más jugadores en ataque o un mediapunta creativo.');
+ if(R('xG en contra')&&R('xG en contra').bad)tips.push('Concedes muchas ocasiones: baja la línea, presiona menos arriba o ficha un central o un pivote.');
+ if(R('Goles a favor')&&R('xG a favor')&&R('Goles a favor').mine<R('xG a favor').mine-.3)tips.push('Marcas menos de lo que generas: falta puntería. Entrena el remate o busca un delantero.');
+ if(R('Posesión')&&R('Posesión').bad)tips.push('Tienes poco el balón: si quieres dominar, el estilo Posesión y buenos pasadores en el medio ayudan.');
+ return `<section class="panel"><div class="panel-h"><h2>Tu equipo frente a la liga</h2><span class="eyebrow">Media de los últimos 6 partidos de cada club</span></div>
+ <div class="tcmp">${rows.map(r=>`<div class="tcr ${r.good?'good':r.bad?'bad':''}"><span class="tcn">${r.n}</span><span class="tcbars"><i class="me" style="width:${Math.max(3,r.mine/r.mx*100)}%"></i><i class="av" style="width:${Math.max(3,r.avg/r.mx*100)}%"></i></span><b>${r.fmt(r.mine)}</b><small>media ${r.fmt(r.avg)}</small><em>${r.rank}º de ${r.N}</em></div>`).join('')}</div>
+ <p class="small muted" style="margin:6px 0 0"><span class="tcleg me"></span> tu equipo · <span class="tcleg av"></span> media de la liga. El puesto dice dónde estás entre los ${rows[0].N} equipos (1º es el mejor en ese dato).</p>
+ ${tips.length?`<h3 style="margin:10px 0 4px">Dónde mejorar</h3><ul class="ttips">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`:'<p class="small" style="margin:8px 0 0">Tu equipo está en la media o por encima en todo. ¡Buen trabajo!</p>'}</section>`;
 }

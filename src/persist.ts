@@ -9,10 +9,13 @@ import {toast} from './views/common';
 import {boot} from './boot';
 export const PF_V4=['id','name','nat','pos','age','pot','team','num','energy','form','goals','apps','yc','inj','susp','pInj','pSusp','contract','wage','tf','sg'];
 export const PF=PF_V4.concat(['sp','alt','foot','wf','h','per','tr','hap','role','cl','st','car','hist','req','prom','tw','injT','pInjT','prone','recov','agc','ph','adapt','home','paid','boomS','son','ag','lpj','lmt','loanOk','stag','edited','mt','caps','ig','vt','vh','lf','rplan','bon','rel','bpj','bg','bb','gold','rf','dev','gem','h0','og','obj','ts','trA','trL','noRen','fa']);
+/** Datos que solo tienen unos pocos jugadores (los tuyos, sobre todo): se guardan aparte y solo si existen, para no inflar la partida. */
+export const PX=['atd','atm','aw','cu','lo0','lwarn','ntc','ovm','u21','u21f','big','gk','gkPj','gkW','debut','pub','toStaff','tl'];
 export const packName=p=>{const L=NAMES[COUNTRIES[p.nat].lang],i=p.name.indexOf(' '),a=L[0].indexOf(p.name.slice(0,i)),b=L[1].indexOf(p.name.slice(i+1));return a>=0&&b>=0?a+'.'+b:p.name;};
 export function pack(){
  const o=Object.assign({},S);o.players=undefined;o.rng=rngState();
  o.pf=PF;o.pk=Object.values(S.players).map(p=>[...PF.map(k=>k==='name'?packName(p):k==='id'?+p.id.slice(1):k==='st'?(p.st&&p.st.pj?ST_K.map(x=>x==='rs'?Math.round(p.st.rs*10):p.st[x]):0):k==='alt'||k==='tr'?(p[k]||[]).join(','):p[k]===undefined?0:p[k]),ATTRS.map(k=>String.fromCharCode(96+p.at[k])).join(''),p.loan?(p.loan.opt||p.loan.obj?[p.loan.from,p.loan.opt||0,p.loan.obj||0]:p.loan.from):-1,p.playedWk?1:0]);
+ {const X={};Object.values(S.players).forEach(p=>{let r=null;PX.forEach(k=>{const v=p[k];if(v!=null&&v!==0&&v!==''&&!(Array.isArray(v)&&!v.length)&&!(typeof v==='object'&&!Array.isArray(v)&&!Object.keys(v).length)){(r=r||{})[k]=v;}});if(r)X[p.id.slice(1)]=r;});o.px=X;}
  o.fixtures=undefined;o.fk=S.fixtures.map(lg=>lg.map(rd=>rd.map(f=>f.played?(f.ev&&f.ev.length?[f.h,f.a,f.hg,f.ag,f.ev]:[f.h,f.a,f.hg,f.ag]):[f.h,f.a])));
  return JSON.stringify(o);
 }
@@ -20,6 +23,7 @@ export function unpack(str){
  const o=JSON.parse(str);if(!o||o.v!==4||!o.pk)return null;const pf=o.pf||PF_V4;delete o.pf;
  o.fixtures=o.fk.map(lg=>lg.map(rd=>rd.map(a=>a.length>2?{h:a[0],a:a[1],hg:a[2],ag:a[3],played:true,ev:a[4]||[]}:{h:a[0],a:a[1],hg:null,ag:null,played:false,ev:[]})));delete o.fk;
  o.players={};o.pk.forEach(a=>{const p={};pf.forEach((k,i)=>p[k]=a[i]);if(pf.length>PF_V4.length){p.alt=p.alt?p.alt.split(','):[];p.tr=p.tr?p.tr.split(','):[];if(p.st){const v=p.st;p.st={};ST_K.forEach((x,j)=>p.st[x]=x==='rs'?v[j]/10:(v[j]??0));}else p.st=newSt();if(!p.prom)p.prom=null;}p.id='p'+p.id;if(/^\d+\.\d+$/.test(p.name)){const L=NAMES[COUNTRIES[p.nat].lang],[x,y]=p.name.split('.');p.name=L[0][+x]+' '+L[1][+y];}{const s=a[pf.length];p.at={};ATTRS.forEach((k,i)=>{if(i<s.length)p.at[k]=s.charCodeAt(i)-96;});if(s.length<ATTRS.length){if(!p.h)p.h=180;deriveAttrs(p);}}{const L=a[pf.length+1];p.loan=Array.isArray(L)?Object.assign({from:L[0]},L[1]?{opt:L[1]}:{},L[2]?{obj:L[2]}:{}):L>=0?{from:L}:null;}if(!p.ph)p.ph=null;p.playedWk=!!a[pf.length+2];p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);o.players[p.id]=p;});
+ if(o.px){Object.entries(o.px).forEach(([id,r])=>{const p=o.players['p'+id];if(p)Object.assign(p,r);});delete o.px;}
  delete o.pk;return o;
 }
 export let saveWarned=false;
@@ -49,7 +53,7 @@ export async function unzipVal(r){if(r&&typeof r==='object'&&r.z&&r.b){const ds=
 let saveSeq=0;
 /** raw: guardar sin comprimir (al cerrar la app, para no depender de nada asíncrono más). */
 export function saveNow(raw){
- clearTimeout(RT.saveT);RT.saveT=null;if(!S||S.user==null)return;
+ clearTimeout(RT.saveT);RT.saveT=null;RT.savePend=false;if(!S||S.user==null)return;
  if(!S.slot)S.slot=freeSlot()||1;
  let str;try{str=pack();}catch(e){return;}
  const meta=slotMeta(S);slots=slots.filter(x=>x.id!==meta.id).concat([meta]).sort((a,b)=>a.id-b.id);
@@ -59,7 +63,8 @@ export function saveNow(raw){
   .then(()=>{try{localStorage.removeItem(KEY);}catch(e){}})
   .catch(()=>{if(!saveWarned){saveWarned=true;toast('No se pudo guardar la partida en este navegador.');}});
 }
-export function save(){clearTimeout(RT.saveT);RT.saveT=setTimeout(saveNow,400);}
+/** Guardado diferido: espera a que dejes de tocar cosas y a que el móvil esté libre (no se nota al jugar). */
+export function save(){clearTimeout(RT.saveT);RT.savePend=true;RT.saveT=setTimeout(()=>{RT.saveT=null;if(typeof requestIdleCallback==='function')requestIdleCallback(()=>saveNow(),{timeout:2500});else saveNow();},1200);}
 /** Carga la lista de partidas y la última jugada. Convierte el guardado antiguo (una sola partida) en la ranura 1. */
 export async function loadAsync(){
  try{slots=(await idbDo('readonly',st=>st.get('slots')))||[];}catch(e){slots=[];}
@@ -81,4 +86,4 @@ export async function deleteSlot(id){
  slots=slots.filter(x=>x.id!==id);
  try{await idbDo('readwrite',st=>{st.delete(slotKey(id));return st.put(slots,'slots');});}catch(e){}
 }
-export function installSaveGuards(){document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&RT.saveT)saveNow(true);});window.addEventListener('pagehide',()=>{if(RT.saveT)saveNow(true);});}
+export function installSaveGuards(){document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&(RT.saveT||RT.savePend))saveNow(true);});window.addEventListener('pagehide',()=>{if(RT.saveT||RT.savePend)saveNow(true);});}

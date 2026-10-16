@@ -1,5 +1,8 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {goalsSeasonEnd,newBoardGoals} from './boardgoals';
+import {reviewShort,seasonReview} from './review';
+import {fitAdd} from './presched';
 import {pressPromSeason} from './pressplus';
 import {boardSurplus} from './surplus';
 import {bizSeason} from './business';
@@ -74,22 +77,22 @@ export function finishCore(){
 }
 export function finishRound(){
  const m=S.match;
- if(m.ref.k==='fr'&&m.pt){applyResult(m);playerTick(false);S.match=null;const tx=ptAfter(m,simAI,shootout,money);news(tx,/Campeones|final!/.test(tx)?'good':'',{cat:'com',subj:S.ptour.n});S.view='inicio';S.modal={type:'ptour'};saveNow();render();return;}
- if(m.ref.k==='fr'){applyResult(m);playerTick(false);S.match=null;S.pre.left--;const oppF=m.h===S.user?m.a:m.h,inc=friendlyFee(oppF),[tl,tx]=friendlyTire(oppF);if(tx)m.lu[m.us].forEach(id=>{const q=PL(id);if(q)q.energy=Math.max(40,q.energy-tx);});S.budget=r3(S.budget+inc);const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'];
+ if(m.ref.k==='fr'&&m.pt){applyResult(m);playerTick(false);S.match=null;fitAdd(10);const tx=ptAfter(m,simAI,shootout,money);news(tx,/Campeones|final!/.test(tx)?'good':'',{cat:'com',subj:S.ptour.n});S.view='inicio';S.modal={type:'ptour'};saveNow();render();return;}
+ if(m.ref.k==='fr'){applyResult(m);playerTick(false);S.match=null;S.pre.left--;fitAdd(11);const oppF=m.h===S.user?m.a:m.h,inc=friendlyFee(oppF),[tl,tx]=friendlyTire(oppF);if(tx)m.lu[m.us].forEach(id=>{const q=PL(id);if(q)q.energy=Math.max(40,q.energy-tx);});S.budget=r3(S.budget+inc);const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'];
   news(`Amistoso: ${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}. Taquilla ${money(inc)}${tx?` · cansancio ${tl}`:''}. Química ${Math.round(S.chem)}.`,my>op?'good':my<op?'bad':'');S.view='inicio';saveNow();render();return;}
  if(m.ref.k==='po'){applyResult(m);playerTick(false);S.match=null;poAdvance(quickMatch,applyResult,mkTie);S.view='inicio';saveNow();render();return;}
  const {ev}=finishCore();S.view='inicio';
  S.modal=ev.t==='lg'?{type:'round',round:ev.r}:ev.t==='cup'?{type:'cupres',c:m.ref.c,r:m.ref.r}:ev.t==='ct'?{type:'ctres',ct:m.ref.ct,s:ev.s}:{type:'cwcres',s:ev.s};
  saveNow();render();
 }
-export function playFriendly(tid){
+export function playFriendly(tid,sched){
  if(!S.pre||S.pre.left<=0||S.week>0||S.ci>0)return;
- if(friendlyWait()>0){toast(`Los jugadores necesitan descanso: el próximo amistoso, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
+ if(!sched&&friendlyWait()>0){toast(`Los jugadores necesitan descanso: el próximo amistoso, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
  S.pre.last=S.day??0;S.pre.opts=null;
  S.fr.push(Object.assign(mkTie(S.user,tid),{day:S.day??0,lbl:'Amistoso'}));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.label='Amistoso de pretemporada';S.view='partido';save();render();
 }
-export function playTour(){
- const nx=ptNext();if(!nx||S.match)return;if(friendlyWait()>0){toast(`Los jugadores necesitan descanso: el partido del torneo, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
+export function playTour(sched){
+ const nx=ptNext();if(!nx||S.match)return;if(!sched&&friendlyWait()>0){toast(`Los jugadores necesitan descanso: el partido del torneo, dentro de ${friendlyWait()} día${friendlyWait()>1?'s':''}.`);return;}
  S.pre.last=S.day??0;S.fr.push(Object.assign(mkTie(S.user,nx[0]),{day:S.day??0,lbl:S.ptour.n}));fixLineup();S.match=createMatch({k:'fr',i:S.fr.length-1});S.match.pt=nx[1];S.match.label=`${S.ptour.n} · ${nx[1]}`;S.view='partido';save();render();
 }
 const simAI=(h,a)=>{S.fr.push(mkTie(h,a));const q=quickMatch({k:'fr',i:S.fr.length-1});S.fr.pop();return [q.score.h,q.score.a];};
@@ -169,7 +172,7 @@ export function newSeason(){u19SeasonEnd();
  S.monSnap=null;
  const brief0={budget:S.budget,cap:S.wageCap,rep:T(S.user).rep,lv:LG(uLg()).lv,pos:sm.pos,up:!!sm.up,down:!!sm.down,club:S.user};
  const top=Object.values(S.players).filter(p=>p.team!==null&&T(p.team).lg===sm.lg).sort((a,b)=>b.goals-a.goals)[0];
- pressPromSeason(sm);const mgrOut=mgrSeasonEnd(sm);careerSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);userBankruptcy();seasonContracts(sm);
+ pressPromSeason(sm);goalsSeasonEnd();const mgrOut=mgrSeasonEnd(sm);careerSeasonEnd(sm);achSeason(sm);retosSeason(sm);const poorClubs=clubSeasonFinance(tabs);userBankruptcy();seasonContracts(sm);
  seasonAwards();objectivesSeasonEnd();galaSeasonEnd();projSeasonEnd(sm);mgrGrow(sm);
  // hall of fame
  {const h={season:seasonLabel(),lg:wcs().map(c=>{const tb=tabs[findLg(c,0).id];return tb[0].id;}),cup:S.cups?S.cups.map(c=>c.winner):[],ct:S.conts?S.conts.map(c=>c.winner):[],cwc:S.cwc?S.cwc.winner:null};S.halls=(S.halls||[]).concat([h]).slice(-40);}
@@ -178,6 +181,7 @@ export function newSeason(){u19SeasonEnd();
  if(S.sponsor&&S.sponsor.type==='obj'&&sm.ok){S.budget=r3(S.budget+S.sponsor.obj);news(`${S.sponsor.name} paga ${money(S.sponsor.obj)} por cumplir el objetivo.`,'good');}
  if(S.club){const C=S.club;C.fans=Math.round(clamp(C.fans*(1+(sm.ok?.05:-.03)+(sm.up?.15:0)+(sm.down?-.12:0)+(sm.champ?.08:0)),300,C.cap*1.6));if(C.build&&C.build.until<=999)finishBuild();}
  S.history.unshift({club:T(S.user).name,season:seasonLabel(),lg:lgName(sm.lg),pos:sm.pos,pts:sm.tb[sm.pos-1].pts,champ:T(sm.tb[0].id).name,top:top?`${top.name} (${top.goals})`:'—',obj:sm.ok,res:sm.L.lv===0&&sm.champ?'Campeón':sm.champ?'Campeón y ascenso':sm.up?'Ascenso':sm.down?'Descenso':''});
+try{S.history[0].rev=reviewShort(seasonReview());}catch(e){}
  S.budget=r3(S.budget+sm.prize);payDebts();boardSurplus();
  if(sm.champ)S.titles.push({season:seasonLabel(),name:`Liga · ${lgName(sm.lg)}`});
  { const champ=wcs().map(c=>tabs[findLg(c,0).id]);
@@ -231,7 +235,7 @@ export function newSeason(){u19SeasonEnd();
  crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();seedGems(10);discoveries();const youth=academyIntake(3);maybeGolden(makeYouth);setupYouth();genScoutPool();aiTransfers(160);
  genFreeAgents();crisisSales(poorClubs);
  S.short=S.short.filter(id=>PL(id));
- S.seasonN++;bizSeason();setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();preWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
+ S.seasonN++;bizSeason();setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();preWelcome();newBoardGoals();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
  devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${Math.round(p.ovr)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
  if(retired.length)news(`Se retiran: ${retired.join(', ')}.`);
  if(freed.length)news(`Acaban contrato y se van libres: ${freed.join(', ')}.`,'bad');

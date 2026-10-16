@@ -2,6 +2,7 @@
  * responsables del cuerpo técnico por área, plan individual (carga y foco) e informe semanal de desarrollo.
  * Se apoya en el sistema anterior (S.sched, S.train) para que todo lo demás del juego siga funcionando igual. */
 // @ts-nocheck — usa el estado heredado S.
+import {fitInj} from './presched';
 import {clamp,pick,rnd} from './core';
 import {S,T,squad} from './state';
 import {MATCH_DAY,PRESETS_T,applySched,sched} from './training2';
@@ -104,7 +105,7 @@ export function tcWeekly(famOf){
  squad(S.user).filter(p=>!p.loan).forEach(p=>{const il=ILOAD[pLoad(p)];
   const fat=Math.max(0,(L-7)*1.1+il.f*4)-rest*2.2;p.energy=clamp(Math.round((p.energy||0)-fat),25,100);
   if(hap)p.hap=clamp((p.hap??70)+hap,0,100);
-  const risk=Math.max(0,.0015*(L-8)+(il.f>0?.004:0)+(p.energy<55?.004:0))*Math.max(.3,1+inj)*(1+(p.prone||0))*(1.2-.02*areaQ('rec'));
+  const risk=Math.max(0,.0015*(L-8)+(il.f>0?.004:0)+(p.energy<55?.004:0))*Math.max(.3,1+inj)*(1+(p.prone||0))*(1.2-.02*areaQ('rec'))*fitInj();
   if(!p.inj&&risk>0&&rnd()<risk){p.inj=1+(rnd()<.35?1:0);p.injT='Sobrecarga en el entrenamiento';R.inj.push(p.name);}
   R.en+=p.energy;R.hap+=p.hap??70;R.tr+=p.trA??6;R.n++;});
  if(R.n){R.en=Math.round(R.en/R.n);R.hap=Math.round(R.hap/R.n);R.tr=Math.round(R.tr/R.n*10)/10;}

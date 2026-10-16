@@ -1,5 +1,8 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wcs} from './state';
+import {preAddTour,preCancel,preSchedule,preSetOpp,preTodayOk} from './presched';
+import {friendlyOpts} from './season';
 import {finTalk,talkReactions} from './talkplus';
 import {setKit} from './kit';
 import {buyBiz,launchKit,namingAnswer} from './business';
@@ -259,6 +262,12 @@ document.addEventListener('click',e=>{
   case'm-subclose':m.subOpen=false;break;
   case'm-dosub':{const o=document.getElementById('subOut').value,n=document.getElementById('subIn').value;if(o&&n&&doSub(m,m.us,o,n)){m.alert='';m.subOpen=false;toast('Cambio hecho.');}break;}
   case'm-sim':simToEnd();return;
+  case'adv-apply':{const A=m&&m.adv&&m.adv.act;if(!A)break;const us=m.us;
+   if(A.k==='ment'){m.ment[us]=A.v;addEv(m,'sys',null,`${T(m[us]).short} cambia a mentalidad ${MENT[A.v].label.toLowerCase()} (idea de tu segundo)`);}
+   else if(A.k==='est'){m.tac[us].est=A.v;addEv(m,'sys',null,`Cambio táctico: estilo ${TACS.est.o[A.v].toLowerCase()} (idea de tu segundo)`);}
+   else if(A.k==='oi'){m.oi=m.oi||{};const o=m.oi[us]=m.oi[us]||{};o[A.v]=true;addEv(m,'sys',null,`Nueva instrucción: ${OIS[A.v].n.toLowerCase()} (idea de tu segundo)`);}
+   else if(A.k==='sub'){m.subOut=A.id;m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;}
+   m.adv.act=null;break;}
   case'm-finish':if(m&&m.mom){toast('Primero decide qué hacer.');return;}finishRound();return;
   case'itk':{const pid=document.getElementById('itkP')?.value;const r=indivTalk(m,pid,d.v,liveRatings(m)[pid]);if(typeof r==='string')toast(r);else if(r){addEv(m,'sys',null,`Charla en el descanso: ${r.txt}`);toast(r.txt);}break;}
   case'liga-r':S.ligaRound=clamp(S.ligaRound+(+d.d),0,nRounds()-1);break;
@@ -275,12 +284,15 @@ document.addEventListener('click',e=>{
   case'sim-stop':stopSim();return;
   case'friendly':playFriendly(+d.id);return;
   case'pre-rep':markPre('rep');S.modal={type:'prerep'};break;
-  case'pt-join':if(S.ptour&&S.ptour.st==='inv'){S.ptour.st=d.v==='yes'?'sf':'no';toast(d.v==='yes'?`Te apuntas al ${S.ptour.n}.`:'Rechazas la invitación.');}S.modal=null;break;
+  case'pt-join':if(S.ptour&&S.ptour.st==='inv'){S.ptour.st=d.v==='yes'?'sf':'no';if(d.v==='yes')preAddTour();toast(d.v==='yes'?`Te apuntas al ${S.ptour.n}.`:'Rechazas la invitación.');}S.modal=null;break;
   case'pt-play':playTour();return;
+  case'pre-play':case'pre-sim':{const x=preTodayOk();if(!x)break;x.st=1;S.modal=null;if(x.t==='fr')playFriendly(x.opp,true);else playTour(true);if(d.a==='pre-sim'&&S.match)simToEnd();return;}
+  case'pre-susp':{const x=preTodayOk();if(x){x.st=2;if(x.t==='fr'&&S.pre.left>0)S.pre.left--;toast('Partido suspendido.');}S.modal=null;break;}
+  case'pre-cancel':preCancel(+d.i);break;
   case'pt-view':S.modal={type:'ptour'};break;
   case'int-play':{if(!inPre()||(S.pre.intN||0)>=INT_MAX)break;if(fWait2()>0){toast(`Los jugadores necesitan descanso: dentro de ${fWait2()} día${fWait2()>1?'s':''}.`);break;}internalMatch(eff,slotsOf,autoLineup,rnd,poisson,news);markPre('int');S.modal={type:'intm'};break;}
   case'pre-buy':markPre('mk');S.modal=null;S.view='mercado';S.mk.tab='buy';S.mk.pos='ALL';S.mk.sp=d.v;S.mk.limit=40;break;
-  case'pre-skip':if(S.pre)S.pre.left=0;break;
+  case'pre-skip':if(S.pre){S.pre.left=0;(S.pre.sch||[]).forEach(x=>{if(!x.st)x.st=2;});}break;
   case'sponsor':{const o=S.spOffers[+d.i];if(o){S.sponsor=o;news(`Firmas con ${o.name}: ${spDesc(o)}`,'good');}break;}
   case'abo':S.club.abo=clamp(S.club.abo+(+d.d)*(S.club.abo>=300?20:S.club.abo>=100?10:5),20,6000);break;
   case'price':S.club.price=clamp(S.club.price+(+d.d)*(S.club.price>=30?2:1),2,250);break;
@@ -373,14 +385,14 @@ document.addEventListener('click',e=>{
   case'fb-place':{if(S.fbSel==null)return;const r=el.getBoundingClientRect();moveDot(S.fbSel,(e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100);S.fbSel=null;afterMove(slotsOf(FREE),roleList);break;}
   case'cal-m':S.calM=d.v==='0'?0:(S.calM||0)+(+d.v);break;
   case'continue':{if(S.match){S.view='partido';break;}if(S.week>=nRounds()){S.view='inicio';break;}
+   if(inPre()&&S.pre){preSchedule(friendlyOpts);if(preTodayOk()){S.modal={type:'frday'};break;}}
    if(dlActive(isDeadline,lgDay)){dlStep(aiTransfers,incomingOffer);break;}
    // salta los días tranquilos: para en el día de partido, si llega una noticia, en el cierre de mercado o cuando ya puedes jugar un amistoso
    let r=continueDay(),n=1;processBids(false);
-   const quiet=()=>r!=='match'&&!(S.week===0&&inPre()&&S.pre&&S.pre.left>0&&fWait2()===0&&S.frStop!==S.pre.left)&&!dlActive(isDeadline,lgDay);
+   const quiet=()=>r!=='match'&&!preTodayOk()&&!dlActive(isDeadline,lgDay);
    const n0=S.news.length?S.news[0]:null;
    while(n<14&&quiet()&&(S.news.length?S.news[0]:null)===n0&&!S.modal){r=continueDay();processBids(false);n++;}
-   if(S.week===0&&inPre()&&S.pre&&fWait2()===0)S.frStop=S.pre.left;
-   if(r==='match'){S.modal={type:'matchday'};}else{S.modal=null;if(n>1)toast(`Avanzas ${n} días hasta ${(S.news.length?S.news[0]:null)!==n0?'una novedad':'el siguiente evento'}.`);}break;}
+   if(r==='match'){S.modal={type:'matchday'};}else if(preTodayOk()){S.modal={type:'frday'};}else{S.modal=null;if(n>1)toast(`Avanzas ${n} días hasta ${(S.news.length?S.news[0]:null)!==n0?'una novedad':'el siguiente evento'}.`);}break;}
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);if(S.modal&&S.modal.type==='ficha'){S.chatMsg={id:d.id,msg:r[0],kind:r[1]};}else S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
@@ -447,6 +459,7 @@ document.addEventListener('change',e=>{
  else if(id==='mklast'){S.mk.last=e.target.checked;S.mk.limit=40;}
  else if(id==='mkrep'){S.mk.rep=e.target.checked;S.mk.limit=40;}
  else if(id==='mkgem'){S.mk.gem=e.target.checked;S.mk.limit=40;}
+ else if(id.startsWith('preOpp')){preSetOpp(+id.slice(6),+v);}
  else if(id==='misC'||id==='misG'||id==='misA'||id==='misW'||id==='misP'||id==='misM'){S.misF=S.misF||{};S.misF[id]=v;}
  else return;
  save();render();

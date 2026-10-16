@@ -1,5 +1,6 @@
 /* El Banquillo · awards.ts — Premios de temporada, once ideal y Balón de Oro. */
 // @ts-nocheck — usa el estado heredado S.
+import {tlAdd} from './timeline';
 import {wcs} from './state';
 import {COUNTRIES,GRP} from './data';
 import {LG,PL,S,T,findLg,lgName,seasonLabel,squad} from './state';
@@ -51,8 +52,8 @@ export function seasonAwards(){
  if(leagues[my]&&leagues[my].c===S.user)mine.push(`${leagues[my].name} es el mejor jugador de ${lgName(my)}`);
  const inXI=xi.filter(([,c])=>c&&c.c===S.user).length;if(inXI)mine.push(`${inXI} de los tuyos en el once ideal de la liga`);
  // los premiados de tu equipo se revalorizan y se ponen contentos
- const won=[];[['best','Mejor jugador'],['young','Mejor joven'],['boot','Máximo goleador'],['gk','Mejor portero']].forEach(([k,n])=>{const c=lga[k];if(c&&c.c===S.user){const p=S.players[c.pid];if(p){p.value=Math.round(p.value*1.15*200)/200;p.hap=Math.min(100,(p.hap??70)+10);(p.aw=p.aw||[]).push(`${n} · ${A.season}`);won.push(`${n}: ${p.name}`);}}});
- xi.forEach(([,c])=>{if(c&&c.c===S.user){const p=S.players[c.pid];if(p){p.value=Math.round(p.value*1.06*200)/200;p.hap=Math.min(100,(p.hap??70)+4);(p.aw=p.aw||[]).push(`Once ideal · ${A.season}`);}}});
+ const won=[];[['best','Mejor jugador'],['young','Mejor joven'],['boot','Máximo goleador'],['gk','Mejor portero']].forEach(([k,n])=>{const c=lga[k];if(c&&c.c===S.user){const p=S.players[c.pid];if(p){p.value=Math.round(p.value*1.15*200)/200;p.hap=Math.min(100,(p.hap??70)+10);(p.aw=p.aw||[]).push(`${n} · ${A.season}`);tlAdd(p,'🏅',`${n} de la liga`);won.push(`${n}: ${p.name}`);}}});
+ xi.forEach(([,c])=>{if(c&&c.c===S.user){const p=S.players[c.pid];if(p){p.value=Math.round(p.value*1.06*200)/200;p.hap=Math.min(100,(p.hap??70)+4);(p.aw=p.aw||[]).push(`Once ideal · ${A.season}`);tlAdd(p,'🏅','En el once ideal de la liga');}}});
  news(`🏅 Premios de ${lgName(my)}: mejor jugador ${lga.best?lga.best.name+' ('+lga.best.club+')':'—'}, mejor joven ${lga.young?lga.young.name+' ('+lga.young.club+')':'—'}, máximo goleador ${lga.boot?lga.boot.name+' ('+lga.boot.g+')':'—'}, mejor portero ${lga.gk?lga.gk.name:'—'}.${won.length?` ¡De los tuyos! ${won.join(' · ')}. Se revalorizan y están felices.`:''}${inXI?` Además, ${inXI} de tu equipo en el once ideal.`:''}`,won.length||inXI?'good':'',{cat:'com',subj:`🏅 Premios de ${lgName(my)}${won.length?' · ¡'+won.length+' para tu equipo!':''}`,act:[{l:'Ver premios',a:'view',v:'premios'}]});
  news(`Premios ${A.season}: Balón de Oro para ${A.ballon[0]?A.ballon[0].name+' ('+A.ballon[0].club+')':'—'}. Bota de Oro: ${A.boot?A.boot.name+' ('+A.boot.g+' goles)':'—'}.${mine.length?' '+mine.join('. ')+'.':''}`,mine.length?'good':'',{cat:'com',subj:`Premios de la temporada ${A.season}`,act:[{l:'Ver premios',a:'view',v:'premios'}]});
  return A;

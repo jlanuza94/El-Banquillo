@@ -1,6 +1,7 @@
 /* El Banquillo · nations.ts — Selecciones nacionales: convocatorias, parones FIFA, Mundial, Eurocopa y Copa América,
  * y la posibilidad de ser seleccionador a la vez que entrenas a un club. */
 // @ts-nocheck — usa el estado heredado S.
+import {tlAdd} from './timeline';
 import {nC,wcs} from './state';
 import {retosNT} from './retos';
 import {unlock} from './club';
@@ -146,11 +147,11 @@ export function fifaWeek(){
  const my=S.nt?res.find(r=>r.a===S.nt.c||r.b===S.nt.c):null;
  if(my){const won=my.w===S.nt.c&&my.ga!==my.gb;S.mgr.rep=clamp(S.mgr.rep+(my.ga===my.gb?0:won?.6:-.6),0,100);}
  // primeras convocatorias con la absoluta: un momento especial
- called.forEach(p=>{p.ntc=(p.ntc||0)+1;if(p.ntc===1){p.hap=clamp((p.hap??70)+10,0,100);p.value=r2(p.value*1.08);news(`¡${p.name} debuta en una convocatoria de ${COUNTRIES[p.nat].n}! Jugar en ${T(S.user).name} le ha llevado a la selección absoluta. Está como un niño con zapatos nuevos y su valor sube.`,'good',{cat:'pla',subj:`¡${p.name}, internacional absoluto!`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});}});
+ called.forEach(p=>{p.ntc=(p.ntc||0)+1;if(p.ntc===1){tlAdd(p,'🌍',`Primera convocatoria con la selección absoluta de ${COUNTRIES[p.nat].n}`,'nt');p.hap=clamp((p.hap??70)+10,0,100);p.value=r2(p.value*1.08);news(`¡${p.name} debuta en una convocatoria de ${COUNTRIES[p.nat].n}! Jugar en ${T(S.user).name} le ha llevado a la selección absoluta. Está como un niño con zapatos nuevos y su valor sube.`,'good',{cat:'pla',subj:`¡${p.name}, internacional absoluto!`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});}});
  // sub-21
  const U={},u21=squad(S.user).filter(p=>!p.loan&&p.age<=21&&!called.includes(p)&&(U[p.nat]=U[p.nat]||new Set(u21Call(p.nat))).has(p.id));
  u21.forEach(p=>{const pj=1+(rnd()<.6?1:0);p.u21=(p.u21||0)+pj;p.energy=Math.max(45,(p.energy??100)-8);p.hap=clamp((p.hap??70)+3,0,100);
-  if(!p.u21f){p.u21f=1;p.value=r2(p.value*1.05);news(`¡${p.name} convocado por primera vez con la Sub-21 de ${COUNTRIES[p.nat].n}! Con ${p.age} años, sus actuaciones en ${T(S.user).name} no han pasado desapercibidas.`,'good',{cat:'pla',subj:`${p.name}, a la Sub-21`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});}});
+  if(!p.u21f){p.u21f=1;tlAdd(p,'🌍',`Primera convocatoria con la Sub-21 de ${COUNTRIES[p.nat].n}`,'u21');p.value=r2(p.value*1.05);news(`¡${p.name} convocado por primera vez con la Sub-21 de ${COUNTRIES[p.nat].n}! Con ${p.age} años, sus actuaciones en ${T(S.user).name} no han pasado desapercibidas.`,'good',{cat:'pla',subj:`${p.name}, a la Sub-21`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});}});
  if(u21.length)news(`Sub-21: ${u21.map(p=>p.name).join(', ')} ${u21.length>1?'se van':'se va'} con su selección este parón.`,'',{cat:'com',subj:'Convocados con la Sub-21',quiet:true});
  if(called.length||my)news(`Parón de selecciones.${called.length?` Convocados de tu club: ${called.map(p=>p.name).join(', ')}. Vuelven más cansados.`:''}${hurt.length?` ${hurt.map(p=>p.name).join(', ')} vuelve${hurt.length>1?'n':''} lesionado${hurt.length>1?'s':''}.`:''}${my?` Tu selección: ${fmt(my)}.`:''}`,hurt.length?'bad':'',{cat:'com',subj:'Parón de selecciones',quiet:!hurt.length&&!my});
 }

@@ -1,5 +1,7 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {tlAdd,tlMatch} from './timeline';
+import {fitMult} from './presched';
 import {liveChangeCheck} from './tacreport';
 import {rivMult} from './tcenter';
 import {REFS,aiInMatch,duoMult,mgrAt,momentShootout,refFor} from './extras2';
@@ -48,7 +50,7 @@ export function createMatch(ref){
  if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;m.mult[m.us]*=rivMult(op);if(spPrepFor(op))m.spd=spPrepMult();}
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
  if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
- m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult();m.plan=T(m[m.us]).curPlan||null;}
+ m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult()*(ref.k!=='fr'?fitMult():1);m.plan=T(m[m.us]).curPlan||null;}
  if(m.us)softCap(m);
  prepTactics(m);
  // regularidad (días buenos y malos) y partidos grandes
@@ -165,7 +167,7 @@ export function calcRatings(m){
   if(m.off.includes(id))r-=1.2;if(mins<20)r=6+(r-6)*.4;
   r=clamp(Math.round(r*10)/10,3,10);rat[id]=r;if(r>bv){bv=r;best=id;}
   if(m.ref.k==='fr')return;const st=p.st||(p.st=newSt());st.pj++;st.mi+=mins;st.g+=gl[id]||0;st.a+=as[id]||0;st.rs+=r;if((g==='POR'||g==='DEF')&&conc[s]===0&&mins>=60)st.cs++;st.xg=(st.xg||0)+(dt.xg||0);st.kp=(st.kp||0)+dt.kp;st.tk=(st.tk||0)+dt.tk;st.dr=(st.dr||0)+dt.dr;st.du=(st.du||0)+(dt.du||0);
-  p.car=p.car||[0,0,0];p.car[0]++;p.car[1]+=gl[id]||0;p.car[2]+=as[id]||0;});
+  p.car=p.car||[0,0,0];p.car[0]++;p.car[1]+=gl[id]||0;p.car[2]+=as[id]||0;if(p.team===S.user)tlMatch(p,m[o],gl[id]||0,r);});
  if(best&&m.ref.k!=='fr')PL(best).st.mv++;m.rat=rat;m.mvp=best;
 }
 export function bench(m,s){const t=T(m[s]),pick=m[s]===S.user&&(t.subs||[]).length?subsOf(t).concat(t.lineup):null;return squad(m[s]).filter(p=>(!pick||pick.includes(p.id))&&available(p)&&!m.lu[s].includes(p.id)&&!m.out.includes(p.id)&&!m.off.includes(p.id));}
@@ -231,19 +233,22 @@ export function assistantTip(m){
  const us=m.us,o=us==='h'?'a':'h',a=m.st[us],b=m.st[o],poss=m.possSum/Math.max(1,m.min),myPoss=us==='h'?poss:1-poss,diff=m.score[us]-m.score[o],tac=segAt('tac');
  const name=(S.crew||[]).find(x=>x.role==='seg');const who=name?name.name.split(' ')[0]:'Tu ayudante';
  if(rnd()>.45+.06*tac){m.adv={min:m.min,tx:`${who}: «Seguimos así, de momento no veo nada que cambiar.»`};return;}
- const tips=[];const live=liveRatings(m);
+ const tips=[];const live=liveRatings(m),T_=(t,act)=>tips.push([t,act||null]);
  const tired=m.lu[us].filter(Boolean).filter(id=>m.en[id]<52).sort((x,y)=>m.en[x]-m.en[y])[0];
  const bad=m.lu[us].filter(Boolean).filter(id=>live[id]!=null&&live[id]<5.6).sort((x,y)=>live[x]-live[y])[0];
- if((b.xg||0)>(a.xg||0)+.6&&b.sh>=a.sh+3)tips.push(`Están llegando mucho más que nosotros (${b.sh} tiros). Bajaría la línea o pasaría a mentalidad defensiva.`);
- if(myPoss<.42)tips.push(`Solo tenemos el ${Math.round(myPoss*100)}% del balón. Con el estilo Posesión o un organizador en el medio lo controlaríamos mejor.`);
- if(myPoss>.6&&a.sh<=b.sh)tips.push('Tenemos el balón pero no hacemos daño. Un juego más directo o un llegador nos daría ocasiones.');
- if(diff<0&&m.min>=60)tips.push('Vamos perdiendo: es momento de arriesgar con mentalidad ofensiva y algún cambio en ataque.');
- if(diff>0&&m.min>=70)tips.push('Vamos ganando: cerremos el partido con mentalidad defensiva y ritmo lento.');
- if(tired)tips.push(`${PL(tired).name} está muy cansado (${Math.round(m.en[tired])}%). Yo lo cambiaría.`);
- if(bad&&m.min>=30)tips.push(`${PL(bad).name} está teniendo un mal día (${live[bad].toFixed(1)}).`);
- {const lt=laneTip(m);if(lt)tips.push(lt);}
- if((m.wide&&m.wide[o]||0)>4&&b.sh>=a.sh&&b.sh>=3&&!(m.oi&&m.oi[us]&&m.oi[us].ban))tips.push('Nos hacen mucho daño por las bandas: la instrucción «Cerrar las bandas» ayudaría.');
- m.adv={min:m.min,tx:`${who}: «${tips.length?pick(tips):'Lo estamos haciendo bien, sigamos así.'}»`};
+ const star=m.lu[o].filter(Boolean).filter(id=>live[id]!=null&&live[id]>=7.4).sort((x,y)=>live[y]-live[x])[0];
+ if((b.xg||0)>(a.xg||0)+.6&&b.sh>=a.sh+3&&m.ment[us]!=='def')T_(`Están llegando mucho más que nosotros (${b.sh} tiros). Pasaría a mentalidad defensiva.`,{k:'ment',v:'def'});
+ if(myPoss<.42&&m.tac[us].est!=='pos')T_(`Solo tenemos el ${Math.round(myPoss*100)}% del balón. Con el estilo Posesión lo controlaríamos mejor.`,{k:'est',v:'pos'});
+ if(myPoss>.6&&a.sh<=b.sh&&m.tac[us].est!=='dir')T_('Tenemos el balón pero no hacemos daño. Un juego más directo nos daría ocasiones.',{k:'est',v:'dir'});
+ if(diff<0&&m.min>=60&&m.ment[us]!=='att')T_('Vamos perdiendo: es momento de arriesgar con mentalidad ofensiva.',{k:'ment',v:'att'});
+ if(diff>0&&m.min>=70&&m.ment[us]!=='def')T_('Vamos ganando: cerremos el partido con mentalidad defensiva.',{k:'ment',v:'def'});
+ if(tired&&m.subs[us]<5)T_(`${PL(tired).name} está fundido (${Math.round(m.en[tired])}%). Yo lo cambiaría ya.`,{k:'sub',id:tired});
+ if(bad&&m.min>=30&&m.subs[us]<5)T_(`${PL(bad).name} está teniendo un mal día (${live[bad].toFixed(1)}). Hay gente en el banquillo con ganas.`,{k:'sub',id:bad});
+ if(star&&m.min>=20)T_(`Su ${PL(star).sp} ${PL(star).name} nos está matando (${live[star].toFixed(1)}). ${['ED','EI','LD','LI','MD','MI'].includes(PL(star).sp)&&!(m.oi&&m.oi[us]&&m.oi[us].ban)?'Cerraría las bandas.':'Hay que vigilarle de cerca.'}`,['ED','EI','LD','LI','MD','MI'].includes(PL(star).sp)&&!(m.oi&&m.oi[us]&&m.oi[us].ban)?{k:'oi',v:'ban'}:null);
+ {const lt=laneTip(m);if(lt)T_(lt);}
+ if((m.wide&&m.wide[o]||0)>4&&b.sh>=a.sh&&b.sh>=3&&!(m.oi&&m.oi[us]&&m.oi[us].ban))T_('Nos hacen mucho daño por las bandas: la instrucción «Cerrar las bandas» ayudaría.',{k:'oi',v:'ban'});
+ const pk=tips.length?(tips.find(x=>x[1])||pick(tips)):null;
+ m.adv={min:m.min,tx:`${who}: «${pk?pk[0]:'Lo estamos haciendo bien, sigamos así.'}»`,act:pk?pk[1]:null};
  addEv(m,'sys',null,m.adv.tx);
 }
 /** Notas del partido en directo (sin el azar de la nota final). */
@@ -353,7 +358,7 @@ export function applyResult(m){
 export function playerTick(full){
  Object.values(S.players).forEach(p=>{
   if(p.inj>0){p.inj--;if(!p.inj){onRecovered(p);p.injT=0;}}else if(p.recov>0&&full)p.recov--;if(p.susp>0)p.susp--;
-  if(p.pInj){if(p.team===S.user&&S.club&&S.club.fac&&S.club.fac.med>1)p.pInj=Math.max(1,Math.round(p.pInj*(1-.08*(S.club.fac.med-1))));p.pInj=Math.round(p.pInj*relapseMult(p));p.rplan=null;p.inj+=p.pInj;p.injT=p.pInjT||'Lesión';if(p.team===S.user)news(`${p.name}: ${String(p.injT).toLowerCase()}. Estará ${p.inj} partido${p.inj>1?'s':''} de baja.${p.recov>0?' Es una recaída.':''}`,'bad',{cat:'med',subj:`Lesión: ${p.name} (${p.inj} partido${p.inj>1?'s':''})`,act:[{l:'Plan conservador',a:'rplan',id:p.id,v:'c'},{l:'Plan acelerado',a:'rplan',id:p.id,v:'a'},{l:'Ver ficha',a:'ficha',id:p.id}]});p.pInjT=0;}
+  if(p.pInj){if(p.team===S.user&&S.club&&S.club.fac&&S.club.fac.med>1)p.pInj=Math.max(1,Math.round(p.pInj*(1-.08*(S.club.fac.med-1))));p.pInj=Math.round(p.pInj*relapseMult(p));p.rplan=null;p.inj+=p.pInj;p.injT=p.pInjT||'Lesión';if(p.team===S.user&&p.inj>=4)tlAdd(p,'🩹',`${p.injT}: ${p.inj} partidos de baja`);if(p.team===S.user)news(`${p.name}: ${String(p.injT).toLowerCase()}. Estará ${p.inj} partido${p.inj>1?'s':''} de baja.${p.recov>0?' Es una recaída.':''}`,'bad',{cat:'med',subj:`Lesión: ${p.name} (${p.inj} partido${p.inj>1?'s':''})`,act:[{l:'Plan conservador',a:'rplan',id:p.id,v:'c'},{l:'Plan acelerado',a:'rplan',id:p.id,v:'a'},{l:'Ver ficha',a:'ficha',id:p.id}]});p.pInjT=0;}
   if(p.pSusp){p.susp+=p.pSusp;if(p.team===S.user)news(`${p.name} cumplirá ${p.susp} partido${p.susp>1?'s':''} de sanción.`,'bad');}
   p.pInj=0;p.pSusp=0;
   const mine=p.team===S.user;

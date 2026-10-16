@@ -1,5 +1,6 @@
 /* El Banquillo · world.js — Creación del mundo, objetivos, calendario de liga y elección de club. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {newBoardGoals} from './boardgoals';
 import {chollosMonthly} from './scouting';
 import {progressMonthly} from './progress';
 import {createCoach,eligibility} from './coach';
@@ -66,7 +67,7 @@ export function setupSeason(){
  S.obj=objectiveFor(S.user);
  if(S.coaches)S.teams.forEach(applyStyle);else S.teams.forEach(t=>{if(t.id!==S.user&&rnd()<.4)t.formation=pick(Object.keys(FORMS));});
  setExpectations();
- S.cal=buildCal();S.ci=0;S.day=0;S.tl=[];S.tg=0;S.pre={left:4,opts:null,last:-9,seen:{}};S.fr=[];setupCups();setupConts();S.titles=S.titles||[];S.lastXI=[];if(!S.famil[T(S.user).formation])S.famil[T(S.user).formation]=70;
+ S.cal=buildCal();S.ci=0;S.day=0;S.tl=[];S.tg=0;S.pre={left:5,opts:null,last:-9,seen:{},fit:0};S.fr=[];setupCups();setupConts();S.titles=S.titles||[];S.lastXI=[];if(!S.famil[T(S.user).formation])S.famil[T(S.user).formation]=70;
 }
 export function pickTeam(ti){
  const slot=freeSlot();if(slot==null){toast('Ya tienes '+MAX_SLOTS+' partidas guardadas. Borra una para empezar otra.');return;}
@@ -74,7 +75,7 @@ export function pickTeam(ti){
  setupSeason();t.lineup=autoLineup(ti,t.formation);
  S.mgr={rep:clamp(Math.min(clubReq(t)+8,12+clubReq(t)*.4),5,100),sal:mgrSalary(t),yrs:2,conf:60,savings:0,warned:0,grace:diff().grace,clubs:[{season:seasonLabel(),club:t.name}]};createCoach(RT.coach||{});{const E=eligibility(t);if(!E.ok){S.mgr.disp=S.seasonN;}}
  initClub(t);defaultCrew();genScoutPool();academyIntake(3);setupYouth();setWageCap();assignRoles(true);seedGems(40);chollosMonthly(true);progressMonthly(true);assignObjectives();mgrInit();sched();applySched();squad(ti).forEach(p=>{if(!p.ph)p.ph=[[seasonLabel(),p.ovr]];});S.mgr.joinN=S.seasonN;S.startLow=lowest(LG(t.lg));
- preWelcome();
+ preWelcome();newBoardGoals();
  news(`Bienvenido a ${t.name}, de ${lgName(t.lg)}. Firmas hasta junio de ${2025+S.seasonN+S.mgr.yrs} por ${money(S.mgr.sal)} a la semana. La directiva te pide: ${S.obj.txt.toLowerCase()}.`,'good');
  cwcWelcome();ctWelcome();advance();tutStart();initCash();
  saveNow();render();window.scrollTo(0,0);

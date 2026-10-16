@@ -1,6 +1,8 @@
 /* El Banquillo · preseason.ts — La pretemporada: unas 4 semanas para revisar la plantilla, montar el once,
  * reforzarse en el mercado y jugar amistosos. Tu segundo te prepara un informe y te propone qué fichar. */
 // @ts-nocheck — usa el estado heredado S.
+import {preSchedule} from './presched';
+import {friendlyOpts} from './season';
 import {GRP,SPN} from './data';
 import {LG,S,T,lgTeams,squad,uLg,unit} from './state';
 import {money,pick,rnd} from './core';
@@ -9,7 +11,7 @@ import {slotRate} from './tactics';
 import {FIRST_LG} from './calendar';
 import {news} from './world';
 
-export const PRE_FR=4,PRE_GAP=3;
+export const PRE_FR=5,PRE_GAP=3;
 /** ¿Estamos en pretemporada? */
 export const inPre=()=>!!S.pre&&S.week===0&&S.ci===0&&(S.day??0)<FIRST_LG;
 /** Días que faltan para la primera jornada. */
@@ -32,7 +34,7 @@ export function preReport(){
 }
 /** Al empezar la pretemporada: el informe llega a la bandeja. */
 export function preWelcome(){
- if(S.user==null||S.jobless||!S.pre)return;const R=preReport();
+ if(S.user==null||S.jobless||!S.pre)return;preSchedule(friendlyOpts);const R=preReport();
  const lvl=R.rank<=3?'de los más fuertes':R.rank<=Math.ceil(R.n/2)?'de la mitad alta':R.rank<=R.n-3?'de la mitad baja':'de los más flojos';
 {ptInvite(pick,unit,rnd);if(S.ptour)news(`Invitación: el ${S.ptour.n} te invita a jugarlo con ${S.ptour.teams.slice(1).map(id=>T(id).name).join(', ')}. Semifinal y final; el campeón cobra ${money(S.ptour.prize[0])}, el finalista ${money(S.ptour.prize[1])}.`,'',{cat:'com',subj:`Invitación: ${S.ptour.n}`,act:[{l:'Participar',a:'pt-join',v:'yes'},{l:'No, gracias',a:'pt-join',v:'no'}],once:'pt'});}
  news(`Empieza la pretemporada. Tu segundo ha repasado la plantilla: el once es ${lvl} de la liga (${R.rank}º de ${R.n} por nivel).${R.sign.length?` Recomienda fichar ${R.sign.map(sp=>(SPN[sp]||sp).toLowerCase()).join(' y ')}.`:''}${R.sell.length?` Sobran ${R.sell.length}.`:''} Tienes ${daysToLeague()} días y ${PRE_FR} amistosos para preparar la temporada.`,'',
@@ -107,7 +109,7 @@ export function internalMatch(eff,slotsOf,autoLineup,rnd,poisson,news2){
  S.chem=Math.min(100,(S.chem||60)+3);S.famil[t.formation]=Math.min(100,(S.famil[t.formation]??40)+4);
  xi.concat(res).forEach(id=>{const p=id&&S.players[id];if(p)p.energy=Math.max(40,(p.energy||100)-14);});
  ra.concat(rb).sort((x,y)=>y[2]-x[2]).slice(0,3).forEach(([id])=>{const p=S.players[id];if(p)p.form=Math.min(3,(p.form||0)+1);});
- S.pre.intN=(S.pre.intN||0)+1;S.pre.last=S.day??0;
+ S.pre.intN=(S.pre.intN||0)+1;S.pre.last=S.day??0;S.pre.fit=Math.min(100,(S.pre.fit||0)+6);
  const R={ga,gb,ra,rb,best:ra.concat(rb).sort((x,y)=>y[2]-x[2])[0]};S.pre.intLast=R;
  news2(`Partido interno: titulares ${ga}-${gb} suplentes. Destaca ${S.players[R.best[0]]?S.players[R.best[0]].name:''} (${R.best[2].toFixed(1)}). Sube la química del equipo.`,ga>=gb?'good':'');
  return R;

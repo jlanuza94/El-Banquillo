@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {tlHTML} from '../timeline';
 import {kitSVG,myKit} from '../kit';
 import {fiPlanHTML,heatHTML,percHTML} from './fiplus';
 import {PPROM,pressProms,splitOn} from '../pressplus';
@@ -382,7 +383,7 @@ ${valueBox(p)}`;
  else if(tb.cur==='tem')body=fiSeason(p);
  else if(tb.cur==='rel')body=relHTML(p);
  else if(tb.cur==='hab')body=`<h3 style="margin:0 0 4px">Hablar con ${esc(p.name.split(' ')[0])}</h3>${chatPanel(p,S.chatMsg&&S.chatMsg.id===p.id?S.chatMsg.msg:'',S.chatMsg&&S.chatMsg.id===p.id?S.chatMsg.kind:'')}`;
- else body=`${(p.aw||[]).length?`<h3 style="margin:0 0 4px">Premios</h3><div class="chips" style="margin-bottom:8px">${p.aw.slice().reverse().map(x=>`<span class="tag xi">🏅 ${esc(x)}</span>`).join('')}</div>`:''}
+ else body=`${tlHTML(p,esc)}${(p.aw||[]).length?`<h3 style="margin:0 0 4px">Premios</h3><div class="chips" style="margin-bottom:8px">${p.aw.slice().reverse().map(x=>`<span class="tag xi">🏅 ${esc(x)}</span>`).join('')}</div>`:''}
  ${(()=>{const pts=(p.ph||[]).map(x=>[x[0],x[1]]);if(!pts.length||pts[pts.length-1][1]!==p.ovr||pts[pts.length-1][0]!==seasonLabel())pts.push(['Ahora',p.ovr]);if(pts.length<2)return '';const W=300,H=80,vs=pts.map(x=>x[1]/10),mn=Math.floor(Math.min(...vs)-.5),mx=Math.ceil(Math.max(...vs)+.5),X=i=>14+i*(W-28)/(pts.length-1),Y=v=>H-16-(v-mn)/(mx-mn||1)*(H-30);
   return `<h3 style="margin:16px 0 4px">Evolución de la media</h3><svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto" role="img" aria-label="Evolución de ${esc(p.name)}"><polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="${vs.map((v,i)=>X(i)+','+Y(v)).join(' ')}"/>${vs.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="3.5" fill="var(--ink)"/><text x="${X(i)}" y="${Y(v)-7}" font-size="10" text-anchor="middle" fill="var(--ink)" font-family="Barlow Condensed,Arial">${v.toFixed(1)}</text><text x="${X(i)}" y="${H-3}" font-size="9" text-anchor="middle" fill="var(--muted)" font-family="Barlow Condensed,Arial">${esc(String(pts[i][0]).replace('20',''))}</text>`).join('')}</svg>`;})()}
  <h3 style="margin:14px 0 4px">Carrera</h3>

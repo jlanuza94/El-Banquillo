@@ -1,5 +1,9 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {strength} from '../players';
+import {preFit,preTodayOk} from '../presched';
+import {ptNext} from '../preseason';
+import {friendlyFee,friendlyTire} from '../season';
 import {faceSVG} from './pcard';
 import {interviewModal,rulesModal} from './careerv';
 import {wageBill} from '../clubplus';
@@ -117,6 +121,11 @@ export function modalView(){
  else if(md.type==='interview'){body=interviewModal(md);}
  else if(md.type==='rules'){body=rulesModal();}
  else if(md.type==='joboffer'){const o=md.o,t=T(o.team);body=`<div class="eyebrow">Candidatura aceptada</div><h2 style="margin-top:4px">${esc(t.name)} te quiere</h2><div class="kv"><span>Liga</span><b>${esc(lgName(t.lg))}</b><span>Salario</span><b>${money(o.sal)}/sem</b><span>Contrato</span><b>${o.yrs} temporadas</b><span>Presupuesto del club</span><b>${money(startBudget(t))}</b><span>Objetivo</span><b>${objectiveFor(t.id).txt}</b></div><p class="small muted">Si aceptas, dejas tu club actual de inmediato. Tu cantera, ojeadores y cuerpo técnico se quedan en el club que dejas.</p><div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn primary" data-a="joboffer-ok">Firmar</button></div>`;}
+ else if(md.type==='frday'){const x=preTodayOk();if(!x){S.modal=null;return '';}const P=S.ptour,oid=x.t==='fr'?x.opp:ptNext()[0],opp=T(oid),[tl]=friendlyTire(oid);
+  body=`<div class="eyebrow">${esc(dateTxt(S.day,true))} · Pretemporada</div><h2 style="margin:4px 0 6px">${x.t==='fr'?'Amistoso':esc(P.n)+' · '+x.ph}: ${esc(T(S.user).short)} - ${esc(opp.name)}</h2>
+  <div class="small muted">${esc(lgName(opp.lg,true))} · nivel ${Math.round(strength(oid))}${x.t==='fr'?` · taquilla ${money(friendlyFee(oid))} · cansancio ${tl}`:` · premio campeón ${money(P.prize[0])}`}</div>
+  <p class="small" style="margin:8px 0 0">Puesta a punto del equipo: <b>${preFit()}%</b>. Cada partido de pretemporada suma.</p>
+  <div class="stack" style="gap:8px;margin-top:14px"><button class="btn primary big" data-a="pre-play">Jugar el partido</button><button class="btn" data-a="pre-sim">Simular</button><button class="btn" data-a="view" data-v="tacticas">Revisar tácticas antes</button>${x.t==='fr'?'<button class="btn" data-a="pre-susp">Suspender este amistoso</button>':''}</div>`;}
  else if(md.type==='matchday'){const nm=nextMatch();if(!nm){S.modal=null;return '';}const home=nm.fx.h===S.user,opp=T(home?nm.fx.a:nm.fx.h),dv=isDerby(S.user,opp.id),iss=lineupIssues();
   body=`<div class="eyebrow">${esc(dateTxt(S.day,true))} · Día de partido</div><h2 style="margin:4px 0 6px">${home?'':'En '}${esc(home?T(S.user).name+' - '+opp.name:opp.name)}</h2>
   ${dv?`<div class="derbytag">🔥 ${derbyName(S.user,opp.id)}</div>`:''}<div class="small muted">${esc(nm.label)} · ${home?'en casa':'a domicilio'} · tu historial: ${esc(h2hTxt(opp.id))}</div>${(()=>{const w=nextWeather(),c=coachOf(opp.id),r=coachH2H(opp.id);return `<div class="small" style="margin-top:6px">${w?`${esc(wxTxt(w))} · ${esc(WX[w.k].d)}`:''}${c?`<br>Enfrente: ${esc(c.name)}${r?` (tú ${r.w}G ${r.d}E ${r.l}P contra él)`:''}${S.pique&&S.pique.opp===opp.id&&S.pique.resp==='r'?' · le respondiste en la prensa: el equipo sale motivado':''}`:''}${(()=>{const R=refFor(nm.ref,nm.fx.h);return `<br>Árbitro: ${esc(R.name)} (${REFS[R.k].n.toLowerCase()})`;})()}${spPrepFor(opp.id)?'<br>Has preparado la defensa a balón parado.':''}</div>`;})()}

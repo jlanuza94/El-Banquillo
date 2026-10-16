@@ -1,6 +1,7 @@
 /* El Banquillo · devplus.ts — Hacer crecer a los jugadores: plan de desarrollo (aprender un puesto o un rasgo),
  * informe mensual de los jóvenes y de los cedidos, cancelar cesiones y «lo descubrí yo». */
 // @ts-nocheck — usa el estado heredado S.
+import {tlAdd} from './timeline';
 import {clamp,money} from './core';
 import {SPN,TRAITS} from './data';
 import {PL,S,T,seasonLabel,setTeam,squad} from './state';
@@ -34,11 +35,11 @@ export function monthlyReports(){
 /** Cancelar una cesión: el jugador vuelve ya. */
 export function recallLoan(pid){
  const p=PL(pid);if(!p||!p.loan||p.loan.from!==S.user)return 'No está cedido.';if(squad(S.user).length>=30)return 'Tu plantilla ya tiene 30 jugadores.';
- const from=T(p.team);p.loan=null;setTeam(p,S.user);assignNum(p);p.lpj=0;p.lmt=0;p.hap=clamp((p.hap||70)-4,0,100);
+ const from=T(p.team);p.loan=null;setTeam(p,S.user);tlAdd(p,'↩️',`Vuelve antes de tiempo de su cesión en el ${from.name}`);assignNum(p);p.lpj=0;p.lmt=0;p.hap=clamp((p.hap||70)-4,0,100);
  news(`${p.name} vuelve antes de tiempo de su cesión en ${from.name}.`,'',{cat:'pla',subj:`Cesión cancelada: ${p.name}`});return '';
 }
 /** Al llegar a tu club (fichado o subido de la cantera) se apunta su nivel para «lo descubrí yo». */
-export function markArrival(p){if(p&&!p.h0)p.h0=[p.ovr,seasonLabel(),0,p.value];}
+export function markArrival(p){if(p&&!p.h0)p.h0=[p.ovr,seasonLabel(),0,p.value];if(p)tlAdd(p,p.home?'🌱':'✍️',p.home?`Sube al primer equipo desde la cantera con ${p.age} años`:`Llega al ${T(S.user).name} con ${p.age} años${p.paid?' por '+money(p.paid):p.loan?' cedido':' libre'}`,'arr');}
 /** Fin de temporada: si un jugador que llegó flojo ya es una estrella, es mérito tuyo. */
 export function discoveries(){
  squad(S.user).forEach(p=>{const h=p.h0;if(!h||h[2]||p.ovr<70||p.ovr<h[0]+15)return;h[2]=1;

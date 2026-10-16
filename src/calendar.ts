@@ -2,6 +2,7 @@
  *  · Semana 1: pretemporada (amistosos).
  *  · Liga en sábado; copa, competiciones continentales y Mundial de Clubes entre semana (miércoles y jueves). */
 // @ts-nocheck — usa el estado heredado S.
+import {fitAdd,fitStart,preDayPassed} from './presched';
 import {LG,S,uLg} from './state';
 import {COUNTRIES} from './data';
 import {nextMatch} from './competitions';
@@ -10,7 +11,7 @@ const DAYS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const DAYS_L=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const MONTHS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 export const MONTHS_L=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-export const FIRST_LG=33; // pretemporada de unas 4 semanas: la primera jornada de liga es el sábado de la quinta semana
+export const FIRST_LG=47; // pretemporada de unas 6 semanas y media: la primera jornada de liga es el sábado de la séptima semana
 const PRE_EXTRA=FIRST_LG-12; // días que se adelanta el inicio para que la primera jornada caiga en su fecha real
 
 /** Día (desde el inicio de la temporada) de cada evento del calendario de competiciones. */
@@ -75,7 +76,7 @@ export function agenda(){
 export function continueDay(){
  syncDay();
  if(isMatchDay())return 'match';
- S.day++;
+ S.day++;if(S.pre&&S.pre.sch){preDayPassed();if(S.day<FIRST_LG)fitAdd(.6);else fitStart();}
  return isMatchDay()?'match':'day';
 }
 /** Días que faltan para el próximo partido. */

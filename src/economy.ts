@@ -157,7 +157,7 @@ export function aiSummerPlan(t,all){
  // cubre huecos: fichando si hay dinero; si no, con jugadores modestos
  for(let k=0;k<6;k++){const n=needOf(t.id);if(n.miss<=0)break;if(!aiBuy(t,n.g,all)){const p=genPlayer(n.g,t.rep-4,t.id);assignNum(p);}}
  // con caja de sobra, refuerza sus líneas más flojas (los ricos gastan más)
- const u=lunit(t.lg),tries=(t.cash>u*8?3:t.cash>u*4?2:t.cash>u*2?1:0)+(gesOf(t)==='der'?2:0);
+ const u=lunit(t.lg),tries=(t.cash>u*9?3:t.cash>u*5?2:t.cash>u*3?1:0)+(gesOf(t)==='der'?2:0);
  for(let k=0;k<tries;k++){const n=needOf(t.id);if(n.weak<=1)break;const r=aiBuy(t,n.g,all);if(!r)break;
   const s2=squad(t.id);if(s2.length>25){const cnt=g=>s2.filter(x=>grp(x)===g).length,w=s2.filter(p=>p!==r.p&&cnt(grp(p))>(grp(p)==='POR'?2:TARGET[grp(p)]-2)).sort((a,b)=>(a.ovr-a.age*.3)-(b.ovr-b.age*.3))[0];if(w){setTeam(w,null);w.contract=0;}}}
 }

@@ -1,5 +1,9 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {fanWallHTML} from '../fans';
+import {goalsHTML} from '../boardgoals';
+import {reviewHTML} from '../review';
+import {preFit,preList,preNextEv,preSchedule} from '../presched';
 import {fLabel} from '../freeboard';
 import {winRounds} from '../calendar';
 import {INT_MAX,PRE_FR,PRE_GAP,daysToLeague,friendlyWait,inPre,preTasks,ptNext} from '../preseason';
@@ -50,7 +54,18 @@ function dashHTML(nm,tb){
  const ev=dayOfEvent(S.ci),home=fx.h===S.user,O=S.mgr?Math.round(S.mgr.conf):60,mk=inWindow();
  const tside=tm=>{const r=tb.find(x=>x.id===tm.id);return `<div class="hteam">${crest(tm,'lg')}<b>${esc(tm.name)}</b><span>${r&&S.week?`${posOf(tm.id)}º · `:''}${r&&r.form&&r.form.length?formDots(r.form.slice(-5)):`<span class="divtag">${lgName(tm.lg,true)}</span>`}</span></div>`;};
  const stat=(l,v,sub,a,vv,cls='')=>`<button class="hstat ${cls}" data-a="${a}" data-v="${vv}"><span>${l}</span><b>${v}</b><small>${sub}</small></button>`;
- const hero=`<section class="hero slim"><div class="hbg">${stadiumSVG()}</div><div class="hin">
+ const pe=inPre()?preNextEv():null,peO=pe?(pe.t==='fr'?pe.opp:pe.ph==='Semifinal'?(S.ptour&&S.ptour.sf[0][1]):(S.ptour&&S.ptour.final&&S.ptour.final[1])):null;
+ const hero=pe&&peO!=null&&T(peO)?(()=>{const dd=pe.d-(S.day??0);return `<section class="hero slim"><div class="hbg">${stadiumSVG()}</div><div class="hin">
+  <div class="hmain"><div class="hcomp">${pe.t==='fr'?'Amistoso de pretemporada':esc(S.ptour.n)+' · '+pe.ph} · ${dateTxt(pe.d)} · puesta a punto ${preFit()}%</div>
+  <div class="hvs">${tside(T(S.user))}<div class="hmid"><b>VS</b><span class="${dd===0?'today':''}">${dd===0?'¡Hoy!':dd===1?'Mañana':`en ${dd} días`}</span></div>${tside(T(peO))}</div>
+  </div><div class="hbtns"><button class="btn" data-a="view" data-v="tacticas">Tácticas</button><button class="btn primary" data-a="continue">${dd===0?'Jugar':'Continuar'}</button></div></div></section>
+  <div class="hstats">
+   ${stat('Liga · J1',`${daysToLeague()} d`,`vs ${esc(opp.short)}`,'view','calendario')}
+   ${stat('Puesta a punto',preFit()+'%',preFit()>=65?'Buen trabajo':'Faltan partidos','view','inicio',preFit()<45?'warn':'')}
+   ${stat('Enfermería',inj,`lesionado${inj===1?'':'s'}`,'view','plantilla',inj?'warn':'')}
+   ${stat('Mercado',mk?'Abierto':'Cerrado',mk?`${negs} negoc. · ${inc} ofertas`:'','view','mercado',mk?'ok':'')}
+   ${stat('Bandeja',un,'sin leer','view','buzon',un?'hot':'')}
+  </div>`;})():`<section class="hero slim"><div class="hbg">${stadiumSVG()}</div><div class="hin">
   <div class="hmain"><div class="hcomp">${esc(nm.label)} · ${dateTxt(ev)} · ${nm.ref.k==='cwc'?'campo neutral':home?'en casa':'a domicilio'}</div>
   <div class="hvs">${tside(T(fx.h))}<div class="hmid"><b>VS</b><span class="${dtm===0?'today':''}">${dtm===0?'¡Hoy!':dtm===1?'Mañana':`en ${dtm} días`}</span></div>${tside(T(fx.a))}</div>
   </div><div class="hbtns"><button class="btn" data-a="view" data-v="tacticas">Tácticas</button>${dtm===0?'<button class="btn" data-a="sim-menu">Simular</button><button class="btn primary" data-a="play">Jugar partido</button>':'<button class="btn primary" data-a="continue">Continuar</button>'}</div></div></section>
@@ -64,6 +79,7 @@ function dashHTML(nm,tb){
  return `${hero}${T_.length?`<div class="tasks"><span class="eyebrow">Pendiente</span>${T_.join('')}</div>`:''}`;
 }
 export function inicioView(){
+ if(inPre()&&S.pre)preSchedule(friendlyOpts);
  const nm=nextMatch(),lg=uLg(),tb=table(lg),t=T(S.user);if(!nm)return '<div class="empty">Cargando la siguiente fecha…</div>';
  const fx=nm.fx,home=fx.h===S.user,opp=T(home?fx.a:fx.h);
  const myP=teamPower(t.lineup,t.formation,null,null,chemMult(t.formation),userRoles()),opP=teamPower(autoLineup(opp.id,opp.formation),opp.formation);
@@ -82,19 +98,27 @@ export function inicioView(){
  const jobsP=(S.jobOffers||[]).length?`<section class="panel"><div class="panel-h"><h2>Ofertas de trabajo</h2><span class="eyebrow">Para ti como entrenador</span></div>${S.jobOffers.map((o,i)=>`<div class="offer">${crest(T(o.team),'sm')}<span class="t"><b>${esc(T(o.team).name)}</b> <span class="divtag">${lgName(T(o.team).lg,true)}</span> te ofrece ${money(o.sal)}/sem hasta junio de ${2025+S.seasonN+o.yrs}.${o.bud?`<br><span class="small muted">Presupuesto ~${money(o.bud)} · ${LG(T(o.team).lg).lv<LG(T(S.user).lg).lv?`subes ${LG(T(S.user).lg).lv-LG(T(o.team).lg).lv} categoría${LG(T(S.user).lg).lv-LG(T(o.team).lg).lv>1?'s':''}`:''}${o.obj?' · objetivo: '+esc(o.obj):''}</span>`:''}</span><button class="btn sm" data-a="job-no" data-i="${i}">Rechazar</button><button class="btn sm primary" data-a="job-yes" data-i="${i}">Aceptar</button></div>`).join('')}</section>`:'';
  const preP=inPre()?(()=>{const TK=preTasks(),dn=TK.filter(x=>x[2]).length,IC={rep:'📋',pl:'👕',tac:'🧠',mk:'🔁',fr:'🤝',int:'⚔️'},SH={rep:'Informe del segundo',pl:'Revisar la plantilla',tac:'Once y táctica',mk:'Buscar refuerzos',fr:`Amistosos ${PRE_FR-S.pre.left}/${PRE_FR}`,int:`Partido interno ${S.pre.intN||0}/${INT_MAX}`},fw=friendlyWait(),P=S.ptour;
   const tasks=`<div class="ptk">${TK.map(([k,l,done,a,v])=>`<button class="ptk1${done?' ok':''}" ${a?`data-a="${a}"${v?` data-v="${v}"`:''}`:'disabled'}><span class="pti">${done?'✔':IC[k]||'•'}</span><span>${esc(SH[k]||l)}</span></button>`).join('')}</div>`;
-  const fr=S.pre.left>0?`<div class="pcol"><h3>🤝 Amistosos <small>${PRE_FR-S.pre.left}/${PRE_FR}</small></h3>${fw?`<p class="small muted">El próximo, dentro de ${fw} día${fw>1?'s':''}.</p>`:''}${friendlyOpts().map(id=>{const o=T(id),[tl]=friendlyTire(id);return `<button class="prr" data-a="friendly" data-id="${id}" ${fw?'disabled':''}>${crest(o,'sm')}<span><b>${esc(o.name)}</b><small>${esc(lgName(o.lg,true))} · nivel ${Math.round(strength(id))} · 💶 ${money(friendlyFee(id))} · cansancio ${tl}</small></span><i>Jugar ▶</i></button>`;}).join('')}</div>`:'<div class="pcol"><h3>🤝 Amistosos</h3><p class="small">✔ Completados.</p></div>';
-  const pt=P&&P.st!=='no'?`<div class="pcol ptourc"><h3>🏆 ${esc(P.n)}</h3>${P.st==='inv'?`<p class="small">Torneo de 4 equipos. Campeón: <b>${money(P.prize[0])}</b>.</p><div class="row" style="gap:6px"><button class="btn sm primary" data-a="pt-join" data-v="yes">Participar</button><button class="btn sm" data-a="pt-join" data-v="no">No</button></div>`:ptNext()?`<button class="prr" data-a="pt-play" ${fw?'disabled':''}>${crest(T(ptNext()[0]),'sm')}<span><b>${esc(T(ptNext()[0]).name)}</b><small>${ptNext()[1]}</small></span><i>Jugar ▶</i></button><button class="btn sm" data-a="pt-view">Ver cuadro</button>`:`<p class="small">${P.champ===S.user?'🏆 ¡Campeones!':`Campeón: ${esc(T(P.champ).name)}`}</p><button class="btn sm" data-a="pt-view">Ver cuadro</button>`}</div>`:'';
+  const opts=friendlyOpts(),L=preList(),sres=d=>(S.fr||[]).find(f=>f.day===d&&f.played&&(f.h===S.user||f.a===S.user));
+  const fr=`<div class="pcol pcal"><h3>📅 Calendario de pretemporada</h3>${L.map((x,i)=>{const o=x.t==='fr'?x.opp:x.ph==='Semifinal'?(P&&P.sf[0][1]):(P&&P.final&&P.final[1]),f=sres(x.d),hm=f&&f.h===S.user,today=x.d===(S.day??0)&&!x.st;
+   const res=f?`<b class="num">${hm?f.hg:f.ag}-${hm?f.ag:f.hg}</b>`:x.st===2?'<span class="small muted">Suspendido</span>':today?'<span class="tag xi">Hoy</span>':'';
+   const who=x.t==='fr'&&!x.st&&x.d>(S.day??0)?`<select id="preOpp${i}" aria-label="Rival">${Array.from(new Set([x.opp,...opts])).map(id=>`<option value="${id}" ${id===x.opp?'selected':''}>${esc(T(id).name)} · ${esc(lgName(T(id).lg,true))}</option>`).join('')}</select>`:o!=null&&T(o)?`<b>${esc(T(o).name)}</b>`:'<span class="muted">Rival por decidir</span>';
+   return `<div class="pcr ${x.st?'done':''} ${today?'today':''}"><span class="pcd">${esc(dateTxt(x.d))}</span><span class="pci">${x.t==='fr'?'🤝':'🏆'}</span><span class="pco">${x.t==='pt'?`<small>${esc(x.ph)}</small> `:''}${who}${x.t==='fr'&&!x.st?`<small>${money(friendlyFee(x.opp))} · cansancio ${friendlyTire(x.opp)[0]}</small>`:''}</span>${res}${x.t==='fr'&&!x.st&&x.d>(S.day??0)?`<button class="btn sm" data-a="pre-cancel" data-i="${i}" aria-label="Suspender">✕</button>`:''}</div>`;}).join('')}
+   <p class="small muted" style="margin:6px 0 0">Pulsa <b>Continuar</b> y el juego se parará el día de cada partido. Puedes cambiar el rival de los próximos amistosos.</p></div>`;
+  const pt=P&&P.st!=='no'?`<div class="pcol ptourc"><h3>🏆 ${esc(P.n)}</h3>${P.st==='inv'?`<p class="small">Torneo de 4 equipos. Campeón: <b>${money(P.prize[0])}</b>.</p><div class="row" style="gap:6px"><button class="btn sm primary" data-a="pt-join" data-v="yes">Participar</button><button class="btn sm" data-a="pt-join" data-v="no">No</button></div>`:ptNext()?`<p class="small">Próximo: <b>${ptNext()[1].toLowerCase()}</b> contra ${esc(T(ptNext()[0]).name)}${(()=>{const x=preList().find(y=>y.t==='pt'&&!y.st);return x?` · ${esc(dateTxt(x.d))}`:'';})()}.</p><button class="btn sm" data-a="pt-view">Ver cuadro</button>`:`<p class="small">${P.champ===S.user?'🏆 ¡Campeones!':`Campeón: ${esc(T(P.champ).name)}`}</p><button class="btn sm" data-a="pt-view">Ver cuadro</button>`}</div>`:'';
   const inn=`<div class="pcol"><h3>⚔️ Partido interno <small>${S.pre.intN||0}/${INT_MAX}</small></h3><p class="small muted">Titulares contra suplentes: sube la química y ves quién está en forma.</p><button class="btn sm${(S.pre.intN||0)<INT_MAX&&!fw?' primary':''}" data-a="int-play" ${(S.pre.intN||0)>=INT_MAX||fw?'disabled':''}>Jugar</button></div>`;
   return `<section class="panel prep2"><div class="panel-h"><h2>Pretemporada</h2><span class="eyebrow">${daysToLeague()} días para la jornada 1</span></div>
+  <div class="pfit"><span>💪 Puesta a punto</span><span class="pfb"><i class="${preFit()>=65?'ok':preFit()>=45?'md':'lo'}" style="width:${preFit()}%"></i></span><b>${preFit()}%</b><small>Sube con cada amistoso y partido interno. Por debajo del 65% empezarás la liga con menos chispa y más lesiones.</small></div>
   <div class="pprog"><i style="width:${Math.round(dn/TK.length*100)}%"></i><span>${dn} de ${TK.length} tareas</span></div>${tasks}<div class="pcols">${fr}${pt}${inn}</div></section>`;})():'';
  const spP=!S.sponsor&&S.spOffers&&S.spOffers.length?`<section class="panel"><div class="panel-h"><h2>Elige patrocinador</h2><span class="eyebrow">Antes de la jornada 4</span></div>${S.spOffers.map((o,i)=>`<div class="offer"><span class="t"><b>${esc(o.name)}</b><br><span class="small muted">${spDesc(o)}</span></span><button class="btn sm primary" data-a="sponsor" data-i="${i}">Firmar</button></div>`).join('')}</section>`:'';
  const mp=S.meet&&PL(S.meet.id),meetP=mp?`<section class="panel"><div class="panel-h"><h2>Reunión pendiente</h2><span class="eyebrow">${esc(TOPICS[S.meet.topic].n)}</span></div><div class="offer">${posChip(mp)}<span class="t">${nameBtn(mp)} quiere hablar contigo.<br><span class="small muted">Si no le recibes en dos jornadas, se molestará.</span></span><button class="btn primary sm" data-a="meet">Reunirse</button></div></section>`:'';
  const pressP=S.press?`<section class="panel"><div class="panel-h"><h2>Rueda de prensa</h2><span class="eyebrow">Antes del próximo partido</span></div><p style="margin:0 0 10px"><b>«${esc(S.press.q)}»</b></p><div class="stack" style="gap:6px">${S.press.o.map((x,i)=>`<button class="btn" style="text-align:left;text-transform:none;letter-spacing:0;font-family:var(--f-body);font-weight:600" data-a="press" data-i="${i}">${esc(x[0])}</button>`).join('')}</div><p class="small muted" style="margin:8px 0 0">Lo que digas afecta al vestuario, a la afición y a la directiva. Si no vas a la rueda de prensa, a la directiva no le gusta.</p></section>`:'';
  let sugP='';if(inWindow()||quick()){const sg=suggestions(3);if(sg.list.length)sugP=`<section class="panel"><div class="panel-h"><h2>Tu segundo recomienda</h2><span class="eyebrow">Refuerzos para ${{POR:'la portería',DEF:'la defensa',MED:'el medio',DEL:'el ataque'}[sg.g]}</span></div>${sg.list.map(p=>`<div class="offer">${crest(T(p.team??S.user),'sm')}<span class="t">${nameBtn(p)} <span class="small muted">· ${p.age} años · ${p.team===null?'libre':esc(T(p.team).short)} · ${money(askPrice(p))}</span></span>${pBadgeS(p)}<button class="btn sm primary" data-a="neg" data-id="${p.id}">Ofertar</button></div>`).join('')}</section>`;}
- return dashHTML(nm,tb)+preP+`<div class="grid"><div class="stack">${jobsP}${meetP}${pressP}${spP}${offersPanel()}${next}${sugP}${reportHTML(opp.id,true)}
-  <section class="panel"><div class="panel-h"><h2>Últimos resultados</h2></div>${lastH}</section></div>
-  <div class="stack">${poHTML()}${galaHTML()}${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Competiciones</h2><button class="btn sm" data-a="view" data-v="copas">Ver copas</button></div><div class="kv" style="margin-top:0"><span>${userCup()?cupName(userCup().c):'Copa nacional'}</span><b>${cupStatus()}</b><span>${ctOf(S.user)>=0?CONTS[ctOf(S.user)].n:'Competición continental'}</span><b>${ctStatus()}</b><span>Mundial de Clubes</span><b>${cwcStatus()}</b></div></section><section class="panel"><div class="panel-h"><h2>${LV_NAMES[LG(lg).lv]}</h2><button class="btn sm" data-a="view" data-v="liga">Ver ligas</button></div>${tableHTML(tb,lg,true)}</section>
-  <section class="panel"><div class="panel-h"><h2>Noticias</h2><button class="btn sm" data-a="view" data-v="buzon">Bandeja de entrada${unread()?' ('+unread()+')':''}</button></div><ul class="news">${S.news.slice(0,8).map(n=>`<li class="${n.kind}"><span class="wk">J${n.wk}</span><span class="t">${esc(n.txt)}</span></li>`).join('')}</ul></section></div></div>`;
+ const pre=inPre(),urg=jobsP+meetP+pressP+spP+offersPanel();
+ const news6=`<section class="panel"><div class="panel-h"><h2>Noticias</h2><button class="btn sm" data-a="view" data-v="buzon">Bandeja${unread()?' ('+unread()+')':''}</button></div><ul class="news">${S.news.slice(0,6).map(n=>`<li class="${n.kind}"><span class="wk">J${n.wk}</span><span class="t">${esc(n.txt)}</span></li>`).join('')}</ul></section>`;
+ const comps=`<section class="panel"><div class="panel-h"><h2>Competiciones</h2><button class="btn sm" data-a="view" data-v="copas">Ver copas</button></div><div class="kv" style="margin-top:0"><span>${userCup()?cupName(userCup().c):'Copa nacional'}</span><b>${cupStatus()}</b><span>${ctOf(S.user)>=0?CONTS[ctOf(S.user)].n:'Competición continental'}</span><b>${ctStatus()}</b><span>Mundial de Clubes</span><b>${cwcStatus()}</b></div></section>`;
+ const tabla=`<section class="panel"><div class="panel-h"><h2>${LV_NAMES[LG(lg).lv]}</h2><button class="btn sm" data-a="view" data-v="liga">Ver ligas</button></div>${tableHTML(tb,lg,true)}</section>`;
+ return dashHTML(nm,tb)+(urg?`<div class="hsect">Te espera</div><div class="hurg">${urg}</div>`:'')+preP+`<div class="grid hgrid"><div class="stack">${poHTML()}${galaHTML()}${pre?'':next}${sugP}${S.week?`<section class="panel"><div class="panel-h"><h2>Últimos resultados</h2></div>${lastH}</section>`:''}${goalsHTML(esc)}${pre?'':reportHTML(opp.id,true)}</div>
+  <div class="stack">${tabla}${fanWallHTML(esc,5)}${comps}${contractsPanel()}${news6}</div></div>`;
 }
 export function reportHTML(oid,compact){
  const o=T(oid),lu=autoLineup(oid,o.formation),tp=teamPower(lu,o.formation),tac=Object.assign({},TAC0,o.tac||{});
@@ -114,7 +138,7 @@ function calNotes(){
  const N={},add=(d,t,c='')=>{(N[d]=N[d]||[]).push([t,c]);},W=winRounds(),C=cal(),evd=eventDays();
  add(0,'Empieza la pretemporada','pre');add(0,`Abre el mercado ${C.wn[0]}`,'mk');
  add(lgDay(W[0]),`Cierre del mercado ${C.wn[0]}`,'mk');add(lgDay(W[1]),`Abre el mercado ${C.wn[1]}`,'mk');add(lgDay(W[2]),`Cierre del mercado ${C.wn[1]}`,'mk');
- add(FIRST_LG,'Jornada 1 de liga','lg');
+ add(FIRST_LG,'Jornada 1 de liga','lg');preList().filter(x=>!x.st&&x.t==='pt'&&x.ph==='Final'&&!(S.ptour&&S.ptour.final)).forEach(x=>add(x.d,'Final del torneo de verano (si llegas)','pre'));
  if(C.brk)add(lgDay(C.brk[0])+3,C.brk[2],'brk');
  const nL=S.fixtures[uLg()].length;add(lgDay(nL-1),'Última jornada de liga','lg');
  const cup=userCup();S.cal.forEach((ev,i)=>{let ref=null;try{ref=userRefFor(ev);}catch(e){}if(ref)return;
@@ -130,7 +154,8 @@ function userDays(){
   if(fx)(byDay[evd[i]]=byDay[evd[i]]||[]).push({fx,lbl,k});});
  (S.fr||[]).forEach(f=>{if(f.day!=null&&me(f))(byDay[f.day]=byDay[f.day]||[]).push({fx:f,lbl:f.lbl||'Amistoso',k:'fr'});});
  const P=S.ptour;if(P&&P.st!=='no'&&P.st!=='inv'){(P.res||[]).forEach(r=>{if(r.d!=null&&(r.h===S.user||r.a===S.user))(byDay[r.d]=byDay[r.d]||[]).push({fx:{h:r.h,a:r.a,hg:r.sh,ag:r.sa,pen:r.pen,played:true},lbl:`${P.n} · ${r.f==='final'?'Final':'Semifinal'}`,k:'pt'});});
-  const nx=ptNext();if(nx&&inPre()){const d=(S.day||0)+friendlyWait();(byDay[d]=byDay[d]||[]).push({fx:{h:S.user,a:nx[0],played:false},lbl:`${P.n} · ${nx[1]}`,k:'pt'});}}
+}
+ preList().filter(x=>!x.st).forEach(x=>{const o=x.t==='fr'?x.opp:x.ph==='Semifinal'?(P&&P.sf[0][1]):(P&&P.final&&P.final[1]);if(o==null||!T(o))return;(byDay[x.d]=byDay[x.d]||[]).push({fx:{h:S.user,a:o,played:false},lbl:x.t==='fr'?'Amistoso':`${P.n} · ${x.ph}`,k:x.t});});
  return byDay;
 }
 /** Lista de partidos de la temporada, como «Partidos del club» del FM: fecha, rival, campo, resultado y competición. */
@@ -168,6 +193,7 @@ export function calendarioView(){
   if(ev.t==='cup'){const cup=userCup(),k=cup?cupSlotRound(cup,ev.s):null;if(cup&&k!=null&&cup.alive.includes(S.user)&&!cup.rounds[k])items.push({lbl:`${cupName(cup.c)} · ronda ${k+1}`,fx:null,txt:'Sorteo pendiente'});}
   if(ev.t==='ct'&&ctOf(S.user)>=0){const C=S.conts[ctOf(S.user)];if(!C.dates[ev.s]&&ctStatus().indexOf('Eliminado')<0&&ctStatus()!=='¡Campeón!')items.push({lbl:`${CONTS[ctOf(S.user)].n} · ${CT_STAGES[ev.s]}`,fx:null,txt:'Si pasas de ronda'});}
  }
+ preList().filter(x=>!x.st).reverse().forEach(x=>{const P=S.ptour,o=x.t==='fr'?x.opp:x.ph==='Semifinal'?(P&&P.sf[0][1]):(P&&P.final&&P.final[1]);items.unshift({lbl:`${dateTxt(x.d)} · ${x.t==='fr'?'Amistoso de pretemporada':(P?P.n:'Torneo')+' · '+x.ph}`,fx:o!=null&&T(o)?{h:S.user,a:o,hg:null,ag:null,played:false}:null,txt:'Rival por decidir'});});
  const past=[];S.fixtures[uLg()].slice(0,S.week).forEach((rd,r)=>{const f=rd.find(me);if(f)past.push([r,f]);});
  const tb=vtab('cal',[['mes','Calendario'],['fx','Partidos'],['lista','Próximas fechas']],'mes');if(tb.cur==='mes')return tb.bar+monthHTML();if(tb.cur==='fx')return tb.bar+fixturesHTML();
  return tb.bar+`<div class="grid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Próximas fechas</h2><span class="eyebrow">${windowTxt()}</span></div>
@@ -189,10 +215,10 @@ export function seasonEndView(){
  if(needsPO())setupPO(seasonSummary().tb,mkTie);const poPending=!!(S.po&&S.po.season===S.seasonN&&!S.po.done);
  const sm=seasonSummary(),champ=T(sm.tb[0].id),C=COUNTRIES[sm.L.c];
  const title=sm.L.lv===0&&sm.champ?'¡Campeones de liga!':sm.up?`¡Ascenso a ${LV_NAMES[sm.L.lv-1]}!`:sm.down?`Descenso a ${LV_NAMES[sm.L.lv+1]}`:sm.ok?'Objetivo cumplido':'Objetivo fallado';
- return `<div class="grid"><section class="panel"><div class="eyebrow">Fin de temporada ${seasonLabel()} · ${esc(C.n)} · ${LV_NAMES[sm.L.lv]}</div>
+ return `<div class="grid"><div class="stack"><section class="panel"><div class="eyebrow">Fin de temporada ${seasonLabel()} · ${esc(C.n)} · ${LV_NAMES[sm.L.lv]}</div>
  <div class="row" style="margin-block:10px 6px;gap:16px"><span class="big-num">${sm.pos}º</span><div><h2>${title}</h2><div class="muted">${sm.tb[sm.pos-1].pts} puntos · Campeón: ${esc(champ.name)}</div></div></div>
  <p>La directiva pedía: ${S.obj.txt.toLowerCase()}. ${sm.ok?'Están satisfechos con tu trabajo.':'Esperan una reacción la próxima temporada.'} Premio total: <b>${money(sm.prize)}</b>.</p>
  <p class="small muted">Al empezar la nueva temporada se aplican ascensos y descensos en los ${nC()} países, los jugadores cumplen un año (los jóvenes mejoran, los veteranos bajan y algunos se retiran) y suben dos canteranos. Los jugadores sin renovar se irán libres y los cedidos vuelven a su club.</p>
  ${poPending?`<div class="negmsg">Antes de empezar la nueva temporada se juega la ${esc(S.po.n)}.</div>`:`<button class="btn primary big" data-a="new-season">Empezar temporada ${seasonLabel(S.seasonN+1)}</button>`}</section>
- <div class="stack">${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Clasificación final</h2></div>${tableHTML(sm.tb,sm.lg,true)}</section></div></div>`;
+ ${reviewHTML(null,nameBtn)}</div><div class="stack">${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Clasificación final</h2></div>${tableHTML(sm.tb,sm.lg,true)}</section></div></div>`;
 }

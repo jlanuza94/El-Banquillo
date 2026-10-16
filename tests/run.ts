@@ -140,7 +140,7 @@ const app = document.getElementById('app')!;
     S.chem = keep.chem; S.famil[T(S.user).formation] = keep.fam; S.prepB = keep.prep; hp.forEach(([p, h, rf]) => { p.hap = h; p.rf = rf; }); }
   { const m = S.match; ok(fmtMin(93) === '90+3' && fmtMin(40) === '40', 'el descuento se ve como 90+3'); const gt = goalType(m, m.us, m.lu[m.us].filter(Boolean).pop()); ok(!!GOALT[gt], 'tipo de gol: ' + GOALT[gt].n); }
   simToEnd(); matchView(); finishRound();
-  ok(S.pre.left === 3, 'amistoso de pretemporada');
+  ok(S.pre.left === 4, 'amistoso de pretemporada');
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
   for (let i = 0; i < 3; i++) { playMatch(); matchView(); simToEnd(); finishRound(); modalView(); if (S.press) answerPress(0); }
@@ -343,7 +343,7 @@ const app = document.getElementById('app')!;
   { // Economía viva: valores, caja de los clubes y plantillas de la IA
     const p = squad(S.user).find(x => x.pos !== 'POR'), st0 = p.st; p.st = { ...st0, pj: 10, rs: 80, g: 2 }; const hi = targetValue(p); p.st = { ...st0, pj: 10, rs: 55, g: 0 }; const lo = targetValue(p); p.st = st0;
     ok(hi > lo * 1.3, `el valor depende del rendimiento (${hi.toFixed(2)} con notas de 8 frente a ${lo.toFixed(2)} con notas de 5.5)`);
-    p.st = { ...st0, pj: 10, rs: 85, g: 6 }; const pv = p.value; p.value = Math.round(targetValue(p) * 700) / 1000; const v0 = p.value; p.vt = v0; for (let i = 0; i < 6; i++) valueWeekly(); ok(p.value > v0 && trend(p) > 0, 'el valor sube poco a poco tras buenos partidos'); p.st = st0; p.value = pv;
+    p.st = { ...st0, pj: 10, rs: 85, g: 6 }; const pv = p.value; p.value = Math.round(targetValue(p) * 700) / 1000; const v0 = p.value; p.vt = v0; const wk0 = S.week; S.week = 1; for (let i = 0; i < 6; i++) valueWeekly(); ok(p.value > v0 && trend(p) > 0, 'el valor sube poco a poco tras buenos partidos'); S.week = wk0; p.st = st0; p.value = pv;
     initCash(); const lg = S.leagues.find(L => L.lv === 0), tb = lgTable(lg.id), tabs = S.leagues.map(L => L.id === lg.id ? tb : lgTable(L.id));
     const first = T(tb[0].id), last = T(tb[19].id), c1 = first.cash, c2 = last.cash; clubSeasonFinance(tabs);
     ok(first.cash - c1 > last.cash - c2, `el primero gana más dinero que el último (${(first.cash - c1).toFixed(2)} frente a ${(last.cash - c2).toFixed(2)})`);
@@ -656,6 +656,27 @@ const app = document.getElementById('app')!;
     t.subsNone = false; t.lineup = autoLineupF(S.user, t.formation);
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
+  }
+  { // ronda: pretemporada con calendario, puesta a punto, historia, afición, resumen, objetivos, comparativa y segundo
+    const PS = await import('../src/presched'); const CA = await import('../src/calendar');
+    ok(CA.FIRST_LG >= 45, 'pretemporada más larga (' + CA.FIRST_LG + ' días)');
+    const pre0 = JSON.stringify(S.pre), day0 = S.day, wk0 = S.week, ci0 = S.ci; S.week = 0; S.ci = 0; S.day = 0; S.pre = { left: 5, seen: {}, fit: 0 };
+    const SE = await import('../src/season'); PS.preSchedule(SE.friendlyOpts); ok(S.pre.sch.length === 5 && S.pre.sch.every(x => x.d < CA.FIRST_LG && T(x.opp)), 'amistosos programados con fecha');
+    S.ptour = S.ptour || { n: 'Trofeo', st: 'sf', sf: [[S.user, S.pre.sch[0].opp], [1, 2]], prize: [1, 1, 1], res: [] }; S.ptour.st = 'sf'; PS.preAddTour(); ok(S.pre.sch.filter(x => x.t === 'pt').length === 2, 'semifinal y final del torneo en el calendario');
+    S.day = S.pre.sch[0].d; ok(PS.preTodayOk() && PS.preTodayOk().t === 'fr', 'el día del amistoso se para Continuar');
+    S.view = 'inicio'; render(); ok(!!app.querySelector('.pcal') && !!app.querySelector('.pfit'), 'calendario de pretemporada y puesta a punto en Inicio');
+    S.day = 0; render(); ok(app.querySelector('.hero') && app.querySelector('.hero').textContent.includes('Amistoso'), 'la cabecera muestra el próximo amistoso');
+    S.view = 'calendario'; S.vt = { cal: 'lista' }; render(); ok(app.textContent.includes('Amistoso de pretemporada'), 'los amistosos salen en el calendario'); S.vt = {};
+    S.pre.fit = 30; S.pre.fitDone = 0; PS.fitStart(); ok(PS.fitMult() < 1 && PS.fitInj() > 1, 'poca pretemporada: peor arranque y más lesiones'); S.fitW = null;
+    S.pre = JSON.parse(pre0); S.day = day0; S.week = wk0; S.ci = ci0; S.view = 'inicio';
+    const TL = await import('../src/timeline'); const pp = squad(S.user)[2]; pp.tl = []; TL.tlMatch(pp, S.teams.find(t => t.id !== S.user).id, 1, 7.1); TL.tlMatch(pp, S.teams.find(t => t.id !== S.user).id, 1, 6.5);
+    ok(pp.tl.length === 2 && pp.tl[0][4] === 'deb' && pp.tl[1][4] === 'gol', 'historia del jugador: debut y primer gol, sin repetir');
+    S.vt = { fi: 'his' }; S.modal = { type: 'ficha', id: pp.id }; render(); ok(!!app.querySelector('.ptl'), 'la historia sale en la ficha'); S.modal = null; S.vt = {};
+    const P2 = await import('../src/persist'); const o = P2.unpack(P2.pack()); ok(o.players[pp.id].tl && o.players[pp.id].tl.length === 2, 'la historia (y premios, Sub-21…) se guarda al cerrar');
+    const FA = await import('../src/fans'); FA.fanSay('Prueba', 1); S.view = 'inicio'; render(); ok(!!app.querySelector('.fanw .fanm'), 'muro de la afición en Inicio');
+    const RV = await import('../src/review'); const R = RV.seasonReview(); ok(Array.isArray(R.xi) && R.xi.length === 11, 'resumen de temporada con su once');
+    const BGm = await import('../src/boardgoals'); BGm.newBoardGoals(); ok(S.bgoals.L.length === 3 && S.bgoals.L.every(x => BGm.BG[x.k]), 'tres objetivos de la directiva'); render(); ok(app.textContent.includes('Objetivos de la directiva'), 'objetivos en Inicio');
+    S.view = 'analisis'; S.anTab = 'cmp'; render(); ok(app.textContent.includes('frente a la liga') || app.textContent.includes('Juega unos partidos'), 'comparativa con la liga'); S.anTab = 'temp'; S.view = 'inicio';
   }
   { // arreglos: ordenar tablas, quién quiere venir, ficha compacta
     const ST = await import('../src/sorttable'); const td = (t: string) => { const e = document.createElement('td'); e.textContent = t; return e; };

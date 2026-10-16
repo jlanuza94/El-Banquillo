@@ -1,6 +1,8 @@
 /* El Banquillo · pressplus.ts — Promesas que importan: lo que prometes en la prensa (ascenso, minutos a la cantera,
  * un fichaje) se vigila y se cobra; y una promesa rota a un jugador influyente puede dividir el vestuario. */
 // @ts-nocheck — usa el estado heredado S.
+import {fansSign} from './fans';
+import {money} from './core';
 import {clamp} from './core';
 import {PL,S,T,squad} from './state';
 import {news} from './world';
@@ -19,7 +21,7 @@ function settle(x,ok){x.ok=ok;const sq=squad(S.user);
  if(ok){S.cred=clamp((S.cred??70)+4,0,100);if(S.club)S.club.mood=clamp(S.club.mood+5,0,100);S.mgr.conf=clamp(S.mgr.conf+4,0,100);news(`Cumples lo que prometiste en la prensa («${PPROM[x.k]}»): la afición y la directiva confían más en ti.`,'good',{cat:'pre',subj:'Promesa cumplida'});}
  else{S.cred=clamp((S.cred??70)-8,0,100);if(S.club)S.club.mood=clamp(S.club.mood-6,0,100);S.mgr.conf=clamp(S.mgr.conf-8,0,100);sq.forEach(p=>p.hap=clamp((p.hap??70)-2,0,100));news(`No has cumplido lo que prometiste en la prensa («${PPROM[x.k]}»). La afición te lo recuerda y la directiva toma nota.`,'bad',{cat:'pre',subj:'Promesa incumplida'});}}
 /** Fichajes que cuentan como refuerzo: llegan y son de los mejores de su línea. */
-export function noteSigning(p){S.signs=(S.signs||[]).concat([[S.seasonN,S.week,p.id]]).slice(-20);}
+export function noteSigning(p){fansSign(p,p.paid?money(p.paid):'');S.signs=(S.signs||[]).concat([[S.seasonN,S.week,p.id]]).slice(-20);}
 export function pressPromWeekly(){
  (S.pprom||[]).filter(x=>x.ok==null&&x.k==='fich').forEach(x=>{
   const xi=(T(S.user).lineup||[]).map(PL).filter(Boolean),avg=xi.reduce((a,p)=>a+p.ovr,0)/Math.max(1,xi.length);

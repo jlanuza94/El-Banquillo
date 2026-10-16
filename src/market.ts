@@ -1,5 +1,7 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {fansSell} from './fans';
+import {tlAdd} from './timeline';
 import {noteSigning} from './pressplus';
 import {noteSpend} from './surplus';
 import {hasTitle} from './mtitles';
@@ -113,7 +115,7 @@ export function makeTerms(id,mode,t,force){
  const cost=(mode==='buy'?firstPay(st.agreed,st.deal)+agentFee(p,st.agreed):0)+(t.bonus||0);if(cost>S.budget){st.msg=`No te llega el presupuesto (${money(S.budget)}) para pagar ${money(cost)}.`;st.kind='no';return;}
  {const w=wageCheck(t.w,mode==='renew'?p.wage:0);if(w){st.msg=w;st.kind='no';return;}}
  st.ttries=(st.ttries||0)+1;const ratio=evalTerms(p,mode,t);let ok=force||ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;st.counters=null;
- if(ok){if(mode==='buy'&&rivalWins(p,st,t,ROLES))return;applyTerms(p,t);if(mode==='buy'){completeBuy(p,st.agreed,t);}else{p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;S.budget=r3(S.budget-(t.bonus||0));p.hap=clamp(p.hap+6,0,100);if(p.prom&&p.prom.type==='ren'){p.prom=null;p.hap=clamp(p.hap+4,0,100);}delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)}: ${money(p.wage)}/sem, ${ROLES[p.role].n.toLowerCase()}, cláusula ${money(p.cl)}.`,'good');toast(`${p.name} ha renovado.`);}return;}
+ if(ok){if(mode==='buy'&&rivalWins(p,st,t,ROLES))return;applyTerms(p,t);if(mode==='buy'){completeBuy(p,st.agreed,t);}else{p.wage=t.w;p.contract=t.yrs;p.role=t.role;p.cl=t.cl;tlAdd(p,'📝',`Renueva hasta junio de ${2025+S.seasonN+t.yrs}`);S.budget=r3(S.budget-(t.bonus||0));p.hap=clamp(p.hap+6,0,100);if(p.prom&&p.prom.type==='ren'){p.prom=null;p.hap=clamp(p.hap+4,0,100);}delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)}: ${money(p.wage)}/sem, ${ROLES[p.role].n.toLowerCase()}, cláusula ${money(p.cl)}.`,'good');toast(`${p.name} ha renovado.`);}return;}
  if(st.ttries>=3){st.closed=true;st.msg=`${p.name} rompe las negociaciones hasta la próxima jornada.`;st.kind='no';return;}
  const D=termsDemand(p,mode);st.msg=`Rechaza tu propuesta${ratio<.85?' (está lejos de lo que pide)':''}. Pide unos ${money(D)}/sem siendo ${ROLES[expRole(p)].n.toLowerCase()}. Una prima de fichaje o un rol mejor ayudan. Te quedan ${3-st.ttries} intento${3-st.ttries>1?'s':''}.`;st.kind='no';st.counters=counters(p,t,ratio);if(st.counters)st.msg=`${p.name} no acepta, pero su agente propone otra cosa. ${st.msg}`;
 }
@@ -143,7 +145,7 @@ export function sell(id,son){
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');
  const wasLeader=leaders(3).some(([L])=>L===p);
  const idol=squad(S.user).sort((x,y)=>y.ovr-x.ovr).slice(0,2).includes(p)||p.goals>=10;
- if(!S.rec)S.rec={};if(!S.rec.sell||o.amount>S.rec.sell.fee)S.rec.sell={name:p.name,fee:o.amount,season:seasonLabel()};tlog({name:p.name,pid:p.id,from:S.user,to:o.team,fee:o.amount});if(p.h0){(S.jsold=S.jsold||[]).unshift({n:p.name,nat:p.nat,sp:p.sp,o0:p.h0[0],o1:p.ovr,s0:p.h0[1],paid:p.paid||0,fee:o.amount,home:!!p.home,caps:p.caps||0,u21:p.u21||0,s:seasonLabel()});S.jsold=S.jsold.slice(0,30);}
+ fansSell(p,money(o.amount));if(!S.rec)S.rec={};if(!S.rec.sell||o.amount>S.rec.sell.fee)S.rec.sell={name:p.name,fee:o.amount,season:seasonLabel()};tlog({name:p.name,pid:p.id,from:S.user,to:o.team,fee:o.amount});if(p.h0){(S.jsold=S.jsold||[]).unshift({n:p.name,nat:p.nat,sp:p.sp,o0:p.h0[0],o1:p.ovr,s0:p.h0[1],paid:p.paid||0,fee:o.amount,home:!!p.home,caps:p.caps||0,u21:p.u21||0,s:seasonLabel()});S.jsold=S.jsold.slice(0,30);}
  if(p.paid&&o.amount>=p.paid*5&&p.paid>=.01)unlock('gang');if(p.home&&o.amount>=2)unlock('neg');
  S.budget=r3(S.budget+o.amount);payFee(null,o.team,o.amount);sellOnOut(p,o.amount);if(son)p.son={team:S.user,pct:SON_PCT};setTeam(p,o.team);assignNum(p);p.req=0;p.prom=null;p.cl=r2(p.value*(2+rnd()*2));
  const t=T(S.user),i=t.lineup.indexOf(id);if(i>=0)t.lineup[i]=null;fixLineup();
