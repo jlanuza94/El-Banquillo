@@ -142,6 +142,7 @@ document.addEventListener('click',e=>{
   case'm-preok':if(S.match)S.match.preOk=true;break;
   case'sub-add':{const t=T(S.user),n=subsOf(t).length;if(n<MAX_SUBS)setSub(d.id,n);break;}
   case'sub-rem':removeFromTeam(d.id);break;
+  case'xi-rem':{const t=T(S.user),i=t.lineup.indexOf(d.id);if(i>=0)t.lineup[i]=null;S.sel=null;break;}
   case'mk-view':S.mk.view=d.v;break;
   case'm-w':S.mw=d.v;break;
   case'lmode':S.lmode=d.v;break;
@@ -250,7 +251,7 @@ document.addEventListener('click',e=>{
   case'offer-view':{const o=S.offers[d.id];if(o&&o.incoming&&PL(d.id)&&PL(d.id).team===S.user)S.modal={type:'sell',id:d.id};else toast('Esa oferta ya ha caducado.');break;}
   case'pl-open':S.view='plantilla';S.plTab=d.v;window.scrollTo(0,0);break;
   case'ment':T(S.user).ment=d.v;break;
-  case'xi-clear':{const t=T(S.user);t.lineup=t.lineup.map(()=>null);t.subs=[];t.subsNone=true;S.sel=null;toast('Once vacío: arrastra jugadores de la lista al campo, o toca un hueco y luego un jugador.');break;}
+  case'xi-clear':{const t=T(S.user);t.lineup=t.lineup.map(()=>null);t.subs=[];t.subsNone=true;S.sel=null;break;}
   case'auto':T(S.user).lineup=autoLineup(S.user,T(S.user).formation);S.sel=null;toast('Once con los mejores jugadores disponibles.');break;
   case'fixlu':{const k=fixLineup();toast(k?`Cubiertos ${k} hueco${k>1?'s':''}.`:'No quedan suplentes disponibles.');break;}
   case'play':S.modal=null;playMatch();return;

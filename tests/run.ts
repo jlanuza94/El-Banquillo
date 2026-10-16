@@ -657,6 +657,11 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // banquillo vacío a propósito: añadir un suplente no lo rellena con los 9 mejores
+    const TC = await import('../src/tactics'), { T: T_, squad: sq_ } = await import('../src/state'), t = T_(S.user), lu0 = t.lineup.slice(), s0 = t.subs, n0 = t.subsNone;
+    t.lineup = t.lineup.map(() => null); t.subs = []; t.subsNone = true; const p = sq_(S.user)[4]; TC.setSub(p.id, 0);
+    ok(TC.subsOf(t).length === 1 && TC.subsOf(t)[0] === p.id, 'banquillo: tras vaciar, añadir un suplente pone solo a ese jugador'); t.lineup = lu0; t.subs = s0; t.subsNone = n0;
+  }
   { // sin balón: arrastrar a un jugador a otra zona crea una forma sin balón libre sin tocar la de con balón
     const O = await import('../src/oop'), FB = await import('../src/freeboard'), { T: T_ } = await import('../src/state'), { slotsOf: so } = await import('../src/tactics');
     const t = T_(S.user), f0 = t.formation, o0 = t.oop, m0 = t.oopMap, k0 = t.oopKey, of0 = t.oopFree; t.oop = null;
@@ -785,7 +790,7 @@ const app = document.getElementById('app')!;
     ok(!!app.querySelector('.slotins select[data-role]') && !!app.querySelector('.slotins [data-a=duty]') && !!app.querySelector('.slotins select[data-ord]'), 'tocar a un jugador del campo: rol, cometido y orden'); S.sel = null;
     const K = await import('../src/kit'); const kp = S.kits, ks = S.kitS; S.kits = {}; S.kitS = null;
     ok(K.setKit({ c1: '#112233', pat: 'rayas' }) === '' && K.myKit().c1 === '#112233' && K.myKit().pat === 'rayas', 'diseñar la camiseta de la temporada');
-    render(); ok(app.innerHTML.includes('#112233'), 'la camiseta se ve en la alineación');
+    S.view = 'carrera'; S.vt = { car: 'cam' }; render(); ok(app.innerHTML.includes('#112233'), 'la camiseta se ve en Mi camino'); S.view = 'tacticas'; S.vt = { tac: 'ali' };
     S.kitS = S.seasonN; ok(K.setKit({ c1: '#000000' }) !== '' && K.myKit().c1 === '#112233', 'una vez presentada, queda fijada'); S.kits = kp; S.kitS = ks;
     S.view = 'club'; S.vt = { club: 'neg' }; render(); ok(!!app.querySelector('#kitC1') || app.textContent.includes('Ya presentada'), 'editor de la camiseta en Negocios');
     const Pl = await import('../src/players'); const n0 = Object.values(S.players).filter(p => p.team === null).length; Pl.pruneFree(800);
@@ -796,7 +801,7 @@ const app = document.getElementById('app')!;
     const E = await import('../src/events'); const O = await import('../src/oop'); const t = T(S.user), keepF = t.formation, keepO = t.oop, keepL = t.lineup.slice();
     t.formation = '4-4-2'; t.oop = '4-3-3'; t.oopMap = null; const m = O.oopMap(t), j = m[5]; ok(E.ipIdx(j) === 5, 'un hueco de sin balón corresponde a su puesto con balón');
     t.formation = keepF; t.oop = keepO; t.lineup = keepL;
-    S.view = 'tacticas'; S.vt = { tac: 'ali' }; S.lsort = 'ovr'; render(); ok(!!app.querySelector('#lsortSel') && !!app.querySelector('.vsh'), 'lista ordenable y fichas con camiseta'); S.lsort = 'pos';
+    S.view = 'tacticas'; S.vt = { tac: 'ali' }; S.lsort = 'ovr'; render(); ok(!!app.querySelector('#lsortSel') && !!app.querySelector('.vtile'), 'lista ordenable y placas de rol en el campo'); S.lsort = 'pos';
     S.view = 'plantilla'; S.plTab = 'jug'; S.plCols = 'eco'; render(); ok(app.textContent.includes('Sueldo/sem') && app.textContent.includes('Cláusula'), 'plantilla: columnas de valor y contrato'); S.plCols = 'at';
     S.view = 'mercado'; S.mk.tab = 'buy'; S.mk.page = 1; render(); ok(!!app.querySelector('.pager .pgb.on') && !app.querySelector('[data-a=mk-more]'), 'mercado por páginas');
     S.mk.adv = true; render(); ok(!!app.querySelector('#mkpos') && !!app.querySelector('#mkamin'), 'línea y edad desde/hasta en filtros'); S.mk.adv = false; S.mk.page = 0;
@@ -892,7 +897,7 @@ const app = document.getElementById('app')!;
     t.formation = f0; t.free = fr0;
     S.view = 'tacticas'; S.vt = { tac: 'best' }; render(); ok(app.textContent.includes('Mejores de tu plantilla por puesto') && !!app.querySelector('[data-a=pos-put]'), 'pestaña Por puesto');
     S.vt = { tac: 'jer' }; render(); ok(app.textContent.includes('Líderes del equipo') && !!app.querySelector('#t-cap'), 'pestaña Jerarquía');
-    S.vt = { tac: 'ali' }; render(); ok(!!app.querySelector('.vpitch.hp'), 'campo en horizontal');
+    S.vt = { tac: 'ali' }; render(); ok(!!app.querySelector('.vpitch.fmmp'), 'campo vertical estilo FMM');
     S.view = 'mercado'; S.mk.tab = 'buy'; S.mk.adv = true; render(); ok(!!app.querySelector('.mkfsheet #mkmin'), 'filtros del mercado en hoja aparte'); S.mk.adv = false; S.vt = {}; S.view = 'inicio';
   }
   { // cantera y sub-19 según la categoría: 1ª-3ª cantera + sub-19, 4ª-5ª solo sub-19; al ascender se recupera

@@ -47,7 +47,7 @@ export function subsOf(t){const xi=t.lineup;if(t.subsNone&&!(t.subs||[]).length)
  if(!(t.subs||[]).length){ids=squad(t.id).filter(p=>!p.loan&&available(p)&&!xi.includes(p.id)).sort((a,b)=>b.ovr-a.ovr).slice(0,MAX_SUBS).map(p=>p.id);}
  return ids.slice(0,MAX_SUBS);}
 /** Coloca a un jugador en el banquillo (posición k). Si venía del once, deja su hueco al que estuviera ahí. */
-export function setSub(pid,k){const t=T(S.user);t.subsNone=false;let subs=subsOf(t).filter(x=>x!==pid);const prev=subs[k],xi=t.lineup.indexOf(pid);
+export function setSub(pid,k){const t=T(S.user);let subs=subsOf(t).filter(x=>x!==pid);t.subsNone=false;const prev=subs[k],xi=t.lineup.indexOf(pid);
  if(xi>=0){t.lineup[xi]=prev&&available(PL(prev))?prev:null;if(t.lineup[xi])subs=subs.filter(x=>x!==prev);}
  subs.splice(Math.min(k,subs.length),0,pid);t.subs=subs.filter((id,i,a)=>a.indexOf(id)===i).slice(0,MAX_SUBS);}
 /** Quita a un jugador del once o del banquillo. */
