@@ -22,7 +22,7 @@ export function genAttrs(pos,tg){
 export function setValue(p){setValueNow(p);}
 /** Los sueldos siguen a la riqueza del país: en Bolivia o Gales se cobra mucho menos que en Inglaterra por el mismo nivel. */
 const wageLgF=p=>{const t=p.team!=null&&S.teams&&T(p.team);if(!t)return 1;const L=LG(t.lg);return L?Math.pow(cwF(L.c,L.lv),.65):1;};
-export const baseWage=p=>Math.max(.0002,Math.round(p.value*7*wageLgF(p))/2000);
+export const baseWage=p=>Math.max(.0005,Math.round(p.value*7*wageLgF(p))/2000);
 export const signWage=p=>r3(Math.max(p.wage,baseWage(p))*1.1);
 export const endYear=p=>2025+S.seasonN+p.contract;
 export function refresh(p){p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}

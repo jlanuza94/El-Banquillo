@@ -40,7 +40,7 @@ export const unit=rep=>.4*Math.pow(2.5,(rep-74.5)/10);
 /** Riqueza de cada país (como en el mundo real): la Premier tiene mucho más dinero; Portugal, Argentina o Escocia, mucho menos.
  * Sale de los ingresos reales por club de cada liga (LaLiga = 1; la Premier, 1,9 veces), algo suavizado para que las ligas modestas sigan siendo jugables.
  * Mismo orden que COUNTRIES. */
-export const CWEALTH=[1,1.65,.89,1.24,.9,.43,.92,.33,.48,.69,.43,.5,.45,1.08,.97,.21,.19,.19,.33,.4,.38,.4,.37,.34,.36,.23,.2,.36,1.07,.15,.16,.15,.15,.15,.15,.15,.27];
+export const CWEALTH=[1,1.92,0.89,1.24,0.9,0.43,0.92,0.33,0.48,0.69,0.43,0.5,0.45,1.08,0.97,0.21,0.21,0.21,0.33,0.4,0.38,0.4,0.37,0.34,0.36,0.23,0.21,0.36,1.07,0.21,0.21,0.21,0.21,0.21,0.21,0.21,0.27];
 /** La riqueza del país pesa sobre todo arriba: en las categorías bajas todos se parecen más. */
 export const cwF=(c,lv)=>1+((CWEALTH[c]??.5)-1)*(lv===0?1:lv===1?.7:lv===2?.45:.25);
 /** «Unidad» de dinero de una liga: su nivel y lo rico que es su país. */
