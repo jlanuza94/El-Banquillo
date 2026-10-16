@@ -1,5 +1,6 @@
 /* El Banquillo · scouting.ts — Conocimiento de jugadores: rangos de atributos, ojear jugadores e informes. */
 // @ts-nocheck — usa el estado heredado S.
+import {specLv} from './r11club';
 import {isAffiliate} from './clubplus';
 import {inContacts} from './connected';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
@@ -15,7 +16,7 @@ export function knowledge(p){
  let k;const mine=uLg();
  if(p.team===null)k=18;
  else{const L=LG(T(p.team).lg),U=LG(mine);k=L.id===mine?52:L.c===U.c?34:regionOf(L.c)===regionOf(U.c)?20:10;}
- k+=judge()*2+(S.short&&S.short.includes(p.id)?10:0)+(inContacts(p)?15:0)+((S.know&&S.know[p.id])||0);
+ k+=judge()*2+specLv('ojo')*6+(S.short&&S.short.includes(p.id)?10:0)+(inContacts(p)?15:0)+((S.know&&S.know[p.id])||0);
  return clamp(Math.round(k),0,100);
 }
 export const EXACT=80;

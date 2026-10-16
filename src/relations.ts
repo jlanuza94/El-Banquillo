@@ -1,6 +1,7 @@
 /* El Banquillo · relations.ts — Relaciones en el vestuario (como «Player Relationships» del FMM): influencia,
  * jerarquía, grupo social y con quién se lleva bien o mal, y por qué. Se calcula al vuelo con lo que ya sabe el juego. */
 // @ts-nocheck — usa el estado heredado S.
+import {feudPair} from './r11club';
 import {COUNTRIES,ROLES} from './data';
 import {S,squad} from './state';
 import {influence,langOf} from './tactics';
@@ -24,5 +25,6 @@ export function relations(p){
  sq.filter(x=>x!==p&&x.sp===p.sp&&RL(x.role)>RL(p.role)&&p.ovr>=x.ovr-3).sort((a,b)=>b.ovr-a.ovr).slice(0,2).forEach(x=>add(neg,x,`Cree que merece el puesto de ${x.name.split(' ').slice(-1)[0]}`));
  if(p.per==='tem')sq.filter(x=>x.per==='lid'&&x!==p).slice(0,1).forEach(x=>add(neg,x,'Choque de caracteres'));
  if(p.per==='amb')sq.filter(x=>x.ovr<p.ovr-10&&RL(x.role)>=RL(p.role)).slice(0,1).forEach(x=>add(neg,x,'No entiende que juegue por delante de él'));
+ {const f=feudPair();if(f&&f.includes(p.id)){const o=S.players[f[0]===p.id?f[1]:f[0]];if(o)neg.unshift({p:o,why:'Se pelearon en el entrenamiento'});}}
  return {inf,infL:inf>=70?'Muy alta':inf>=50?'Alta':inf>=30?'Media':'Baja',hier,group,lang:COUNTRIES[p.nat].lang,pos:pos.slice(0,4),neg:neg.slice(0,3)};
 }

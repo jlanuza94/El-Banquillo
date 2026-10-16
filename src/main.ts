@@ -16,9 +16,9 @@ import { render } from './views/common';
 import { startAnim2d } from './match2d';
 import './events';
 import { setupPWA, promptInstall } from './pwa';
-import { applyTheme } from './theme';
+import { applyA11y,applyTheme } from './theme';
 
-applyTheme();
+applyTheme();applyA11y();
 // En la app instalada se bloquea la pantalla en horizontal (en el navegador se pide girar el móvil).
 try { (screen.orientation as any)?.lock?.('landscape').catch(() => {}); } catch (e) { /* no disponible */ }
 

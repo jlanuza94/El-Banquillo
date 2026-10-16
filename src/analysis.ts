@@ -19,7 +19,7 @@ function share(n,ws,add){const tot=ws.reduce((a,x)=>a+x[1],0);if(!tot)return;for
  * Depende de sus atributos, su puesto y los minutos jugados.
  */
 export function matchDetail(m){
- const D={},get=id=>D[id]||(D[id]={xg:0,kp:0,tk:0,dr:0,du:0});
+ const D={},get=id=>D[id]||(D[id]={xg:0,kp:0,tk:0,dr:0,du:0,xa:0,pp:0});
  (m.sh||[]).forEach(x=>{if(x[1])get(x[1]).xg+=x[2];});
  const poss=clamp(m.possSum/Math.max(1,m.min),.2,.8);
  ['h','a'].forEach(s=>{
@@ -32,6 +32,10 @@ export function matchDetail(m){
   share(poisson(17*(1.3-my)),W((p,g)=>(p.at.def+(p.at.col??p.at.def))*({POR:0,DEF:1.3,MED:1,DEL:.3}[g])),id=>get(id).tk++);
   share(poisson(10*(.6+my*.8)),W((p,g,slot)=>(p.at.reg+(p.at.vel??p.at.reg))*({POR:0,DEF:.35,MED:.8,DEL:1.3}[g])*(WIDE.includes(slot)?1.4:1)),id=>get(id).dr++);
   share(poisson(42),W((p,g)=>((p.at.fis)+(p.at.cab??p.at.fis))*({POR:.15,DEF:1.2,MED:1,DEL:1}[g])),id=>get(id).du++);
+  share(poisson(30*(.5+my)),W((p,g)=>(p.at.pas+(p.at.vis??p.at.pas))*({POR:.15,DEF:.9,MED:1.5,DEL:.6}[g])),id=>get(id).pp++);
+  // asistencias esperadas: el xG de cada tiro se apunta al que dio el último pase (si lo hubo)
+  {const pw=W((p,g)=>(p.at.pas+(p.at.vis??p.at.pas))*({POR:0,DEF:.35,MED:1.4,DEL:1}[g])),side=s==='h'?0:1;
+   (m.sh||[]).forEach(x=>{if(x[0]!==side||!x[1]||x[2]>=70||rnd()>.72)return;const ws=pw.filter(w=>w[0]!==x[1]),tot=ws.reduce((a,w)=>a+w[1],0);if(!tot)return;let r=rnd()*tot;for(const [id,w] of ws){r-=w;if(r<=0){get(id).xa+=x[2];break;}}});}
  });
  return D;
 }

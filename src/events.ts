@@ -1,5 +1,8 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {parseChal,parseResult,chalCode,resultCode} from './r11chal';
+import {setA11y} from './theme';
+import {appeal,fightAct,negSponsor,pickSkill,pickSleeve} from './r11club';
 import {licUnlocked} from './profile';
 import {wcs} from './state';
 import {preAddTour,preCancel,preSchedule,preSetOpp,preTodayOk} from './presched';
@@ -109,6 +112,7 @@ document.addEventListener('click',e=>{
   if(a==='start-diff'){RT.diff=d.v;render();return;}
   if(a==='start-mode'){RT.mode=d.v;render();return;}
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
+  if(a==='chal-join'){const c=parseChal(document.getElementById('chalJoin')?.value);if(!c){toast('Ese código de reto no es válido (tiene que empezar por EB1-).');return;}RT.worldMode=c.w==='R'?'rand':'fix';RT.seed=c.seed;RT.diff=c.d;setS(null);render();const tt=S&&T(c.t);if(!tt){toast('No encuentro ese club en el mundo del reto.');return;}RT.startC=LG(tt.lg).c;RT.startLv=LG(tt.lg).lv;RT.pickT=c.t;RT.startScreen='new';RT.startStep='coach';RT.cstep=0;render();window.scrollTo(0,0);toast('Reto cargado: mismo mundo, misma semilla y mismo club que tu amigo.');return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
   if(a==='world-mode'){RT.worldMode=d.v==='rand'?'rand':'fix';try{localStorage.setItem('eb-world',RT.worldMode);}catch(e){}RT.seed=S?S.seed:null;setS(null);render();return;}
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
@@ -295,6 +299,15 @@ document.addEventListener('click',e=>{
   case'int-play':{if(!inPre()||(S.pre.intN||0)>=INT_MAX)break;if(fWait2()>0){toast(`Los jugadores necesitan descanso: dentro de ${fWait2()} día${fWait2()>1?'s':''}.`);break;}internalMatch(eff,slotsOf,autoLineup,rnd,poisson,news);markPre('int');S.modal={type:'intm'};break;}
   case'pre-buy':markPre('mk');S.modal=null;S.view='mercado';S.mk.tab='buy';S.mk.pos='ALL';S.mk.sp=d.v;S.mk.limit=40;break;
   case'pre-skip':if(S.pre){S.pre.left=0;(S.pre.sch||[]).forEach(x=>{if(!x.st)x.st=2;});}break;
+  case'chal-copy':{const t=d.v==='c'?chalCode():resultCode();try{navigator.clipboard.writeText(t);toast('Copiado. Pégalo en WhatsApp o donde quieras.');}catch(e){toast(t);}break;}
+  case'chal-cmp':{const v=document.getElementById('chalIn')?.value;const r=parseResult(v);RT.chalF=r||false;break;}
+  case'a11y-fs':setA11y('fs',+d.v);break;
+  case'a11y-cb':setA11y('cb',+d.v);break;
+  case'appeal':{toast(appeal(d.id));break;}
+  case'fight':{toast(fightAct(d.v));break;}
+  case'skill':{const r=pickSkill(d.v);if(r)toast(r);break;}
+  case'sp-neg':{toast(negSponsor(+d.i,d.v==='2'));break;}
+  case'sleeve':{pickSleeve(+d.i);break;}
   case'sponsor':{const o=S.spOffers[+d.i];if(o){S.sponsor=o;news(`Firmas con ${o.name}: ${spDesc(o)}`,'good');}break;}
   case'abo':S.club.abo=clamp(S.club.abo+(+d.d)*(S.club.abo>=300?20:S.club.abo>=100?10:5),20,6000);break;
   case'price':S.club.price=clamp(S.club.price+(+d.d)*(S.club.price>=30?2:1),2,250);break;
@@ -442,6 +455,8 @@ document.addEventListener('change',e=>{
  else if(id==='cupC'){S.cupC=+v;}
  else if(id==='hiC'){S.hiC=+v;}
  else if(id==='t-cap'||id==='t-pk'||id==='t-fk'||id==='t-ck'){T(S.user)[id.slice(2)]=v||null;}
+ else if(/^t-po\d$/.test(id)){const t=T(S.user);t.po=(t.po||[]).slice();t.po[+id[4]]=v||null;}
+ else if(id==='t-oiT'){T(S.user).oiT=v||null;}
  else if(e.target.dataset&&e.target.dataset.role!=null){userRoles()[+e.target.dataset.role]=v;}
  else if(e.target.dataset&&e.target.dataset.ord){const t=T(S.user);t.orders=t.orders||{};t.orders[e.target.dataset.ord]=v;}
  else if((id==='m-est'||id==='m-pre'||id==='m-per'||id==='m-rec')&&S.match){const k=id.slice(2);S.match.tac[S.match.us][k]=v;addEv(S.match,'sys',null,`Cambio táctico: ${TACS[k].n.toLowerCase()} · ${TACS[k].o[v].toLowerCase()}`);}

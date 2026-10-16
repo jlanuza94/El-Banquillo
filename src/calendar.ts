@@ -2,6 +2,7 @@
  *  · Semana 1: pretemporada (amistosos).
  *  · Liga en sábado; copa, competiciones continentales y Mundial de Clubes entre semana (miércoles y jueves). */
 // @ts-nocheck — usa el estado heredado S.
+import {aucDaily} from './r11club';
 import {fitAdd,fitStart,preDayPassed} from './presched';
 import {LG,S,uLg} from './state';
 import {COUNTRIES} from './data';
@@ -91,7 +92,7 @@ export function agenda(){
 export function continueDay(){
  syncDay();
  if(isMatchDay())return 'match';
- S.day++;if(S.pre&&S.pre.sch){preDayPassed();if(S.day<FIRST_LG)fitAdd(.6);else fitStart();}
+ S.day++;aucDaily();if(S.pre&&S.pre.sch){preDayPassed();if(S.day<FIRST_LG)fitAdd(.6);else fitStart();}
  return isMatchDay()?'match':'day';
 }
 /** Días que faltan para el próximo partido. */

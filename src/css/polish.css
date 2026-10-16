@@ -1353,3 +1353,19 @@ svg.heat{width:100%;max-width:360px;height:auto;border-radius:6px;display:block}
 .vs .vsh.vemp svg path{fill:rgba(255,255,255,.14);stroke:rgba(255,255,255,.9);stroke-dasharray:3 2.5}
 .vs .vsh.vemp b{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .slot.vs.empty{opacity:1}
+
+/* Accesibilidad */
+html[data-fs="1"] #app{zoom:1.12}
+html[data-fs="2"] #app{zoom:1.25}
+html:root[data-cb="1"][data-cb]{--q1:#d55e00;--q2:#e69f00;--q3:#c9b200;--q4:#56b4e9;--q5:#0072b2;--win:#0072b2;--loss:#d55e00}
+html[data-cb="1"] body.fmdrag .slot.fit1 .sh{box-shadow:0 0 0 4px #0072b2}
+html[data-cb="1"] body.fmdrag .slot.fit3 .sh{box-shadow:0 0 0 4px #e69f00}
+/* Árbol de habilidades */
+.skilltree{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.skbr{border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:5px;background:var(--surface2)}
+.skh{display:flex;align-items:center;gap:6px}.skh b{flex:1}
+.sknode{display:flex;gap:6px;align-items:flex-start;padding:4px 6px;border-radius:7px;border:1px dashed var(--line);opacity:.55}
+.sknode>span:first-child{font-weight:700;min-width:12px}
+.sknode.on{opacity:1;border-style:solid;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.sknode.next{opacity:.9;border-style:solid}
+.fanm .soc{display:block;margin-top:2px}

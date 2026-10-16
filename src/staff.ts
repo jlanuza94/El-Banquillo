@@ -1,5 +1,6 @@
 /* El Banquillo · staff.ts — Cuerpo técnico: segundo entrenador, entrenadores, fisioterapeutas y director deportivo. */
 // @ts-nocheck — usa el estado heredado S.
+import {specLv} from './r11club';
 import {mgrAt} from './extras2';
 import {takeExPlayers} from './living';
 import {genContacts} from './connected';
@@ -29,7 +30,7 @@ export const trainMult=()=>(.85+.065*slotAvg('ent','ent',1.5))*(1+.015*Math.max(
 /** Multiplicador de la mejora de la cantera. */
 export const youthMult=()=>.02*(mgrAt('can')-5)+.85+.065*slotAvg('ent','jov',1.5)+(crew('dca')[0]?(crew('dca')[0].at.jov-5)*.025:0);
 /** Nivel médico de 0 (sin fisios) a 10. */
-export const medLevel=()=>Math.min(10,slotAvg('fis','fis',0)+.35*Math.max(0,crew('fis').length-2)+(S.mgr&&(S.mgr.spec||[]).includes('fis')?.8:0));
+export const medLevel=()=>Math.min(10,slotAvg('fis','fis',0)+.35*Math.max(0,crew('fis').length-2)+(S.mgr?.6*specLv('fis'):0));
 // Con un solo fisio normal (nivel médico ≈2) no hay ni bonus ni penalización.
 export const recBonusStaff=()=>(medLevel()-2)*.012;
 export const injDaysMult=()=>clamp(1-.035*(medLevel()-2),.7,1.08);

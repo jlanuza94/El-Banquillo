@@ -1,6 +1,7 @@
 /* El Banquillo · biginterest.ts — Los grandes vienen a por tus joyas: cuando un chaval tuyo explota, un club de más arriba
  * pregunta por él. Tú decides: venderlo caro, renovarlo (con cláusula alta) o prometerle minutos para que no se le vaya la cabeza. */
 // @ts-nocheck — usa el estado heredado S.
+import {startAuction} from './r11club';
 import {clamp,money,pick,r2,rnd} from './core';
 import {LG,S,T,lgName,squad,uLg} from './state';
 import {inWindow} from './market';
@@ -21,7 +22,8 @@ export function bigInterestMonthly(force){
  p.big={team:t.id,w:S.week,s:S.seasonN};
  const head=!(p.gk===S.seasonN);if(head){p.hap=clamp((p.hap??70)-6,0,100);}
  const acts=[{l:'Renovar (con cláusula alta)',a:'renew',id:p.id},{l:'Prometerle minutos',a:'gem-keep',id:p.id},{l:'Ver ficha',a:'ficha',id:p.id}];
- if(inWindow()&&!S.offers[p.id]){const amount=r2(p.value*(1.4+rnd()*.6));S.offers[p.id]={team:t.id,amount,incoming:true,big:1};
+ if(inWindow()&&!S.offers[p.id]&&!S.auc&&cands.length>=2&&rnd()<.7){startAuction(p,t,cands);}
+ else if(inWindow()&&!S.offers[p.id]){const amount=r2(p.value*(1.4+rnd()*.6));S.offers[p.id]={team:t.id,amount,incoming:true,big:1};
   news(`¡${t.name} (${lgName(t.lg)}) va a por ${p.name}! Ofrece ${money(amount)}, bastante más de lo que vale. ${head?'Al chaval se le ha ido un poco la cabeza con el interés.':''} Puedes venderlo, renovarle con una cláusula alta o prometerle minutos para que se quede tranquilo.`,'good',{cat:'mer',from:t.name,subj:`💰 ${t.name} quiere a ${p.name}`,act:[{l:'Ver oferta',a:'offer-view',id:p.id},...acts]});}
  else news(`${t.name} (${lgName(t.lg)}) ha preguntado por ${p.name}: le siguen de cerca y pujarán cuando abra el mercado. ${head?'El jugador se ha enterado y está algo distraído.':''} Renuévalo con cláusula alta o prométele minutos para que no se le vaya la cabeza.`,'',{cat:'mer',from:t.name,subj:`👀 ${t.name} sigue a ${p.name}`,act:acts});
  return {p,t};

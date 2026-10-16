@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {aucBids} from '../r11club';
 import {strength} from '../players';
 import {preFit,preTodayOk} from '../presched';
 import {ptNext} from '../preseason';
@@ -100,7 +101,7 @@ export function modalView(){
  else if(md.type==='loanout'){const p=PL(md.id),o=S.lo[md.id],aff=affiliates();
   body=o.none&&!aff.length?`<div class="eyebrow">Ceder jugador</div><h2 style="margin-top:4px">${esc(p.name)}</h2><p>Ningún club está interesado en llevárselo cedido esta jornada. Prueba la próxima.</p><div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>`
   :`<div class="eyebrow">${o.none?'Ceder a un club afiliado':'Clubes interesados en la cesión'}</div><h2 style="margin-top:4px">Ceder a ${esc(p.name)}</h2>
-  <div class="kv">${o.none?'':`<span>Club</span><b>${esc(T(o.team).name)}</b><span>Liga</span><b>${esc(lgName(T(o.team).lg))}</b>`}<span>Duración</span><b>Hasta final de temporada</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>
+  <div class="kv">${o.none?'':`<span>Club</span><b>${esc(T(o.team).name)}</b><span>Liga</span><b>${esc(lgName(T(o.team).lg))}</b>`}<span>Duración</span><b>Hasta final de temporada</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>${(()=>{const B=aucBids(md.id);return B?`<div class="eyebrow" style="margin-top:10px">🔨 Pujas de la subasta</div>${B.map((b,i)=>`<div class="small" style="display:flex;justify-content:space-between;padding:2px 0;${i?'opacity:.7':''}"><span>${esc(T(b.t).name)}</span><b>${money(b.a)}</b></div>`).join('')}<p class="small muted" style="margin:4px 0 0">La subasta dura hasta el día ${S.auc.end-(S.day??0)>0?`+${S.auc.end-(S.day??0)}`:'de hoy'}: puedes esperar a que suban o aceptar ya.</p>`:'';})()}
   <div class="eyebrow" style="margin-top:12px">Elige destino según los minutos que tendría</div><div class="loanl">${[...(o.opts||[]),...aff.filter(id=>!(o.opts||[]).includes(id))].map((id,i)=>{const [pc,l]=loanMinutes(p,id),sel=(S.loanPick??(o.opts||aff)[0])===id;return `<button class="loanc${sel?' on':''}" data-a="loan-pick" data-v="${id}">${crest(T(id),'sm')}<span class="t"><b>${esc(T(id).name)}</b><small>${esc(lgName(T(id).lg))}${aff.includes(id)?' · afiliado':''}</small></span><span class="lm ${pc>=80?'q5':pc>=45?'q3':'q1'}">${l} · ~${pc}%</span></button>`;}).join('')}</div><input type="hidden" id="loanTo" value="${S.loanPick??(o.opts||aff)[0]??''}">
   <label class="f" style="margin-top:12px"><span class="eyebrow">Objetivo de minutos</span><select id="loanObj">${Object.entries(LOAN_OBJ).map(([k,[l]])=>`<option value="${k}">${l}</option>`).join('')}</select></label>
   <p class="small muted" style="margin:10px 0 0">Allí jugará más minutos, y los jóvenes que juegan progresan. Con un objetivo, el club se compromete a darle esos minutos: si lo cumple vuelve más hecho; si no, te paga una compensación. Vuelve a tu plantilla en junio.</p>

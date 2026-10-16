@@ -1,5 +1,7 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {appealOffer,feudMult} from './r11club';
+import {altMods,setTarget,tgtCards,tgtMult,varReview} from './r11match';
 import {tlAdd,tlMatch} from './timeline';
 import {fitMult} from './presched';
 import {liveChangeCheck} from './tacreport';
@@ -49,8 +51,8 @@ export function createMatch(ref){
  if(m.us){if(S.prepB&&S.prepB>1&&ref.k!=='fr'){m.mult[m.us]*=S.prepB;S.prepB=1;}m.refr=refFor(ref,m.h);m.mult[m.us]*=duoMult(m.lu[m.us].filter(Boolean))*(1+.004*(mgrAt('tac')-5));}
  if(m.us){const op=m[m.us==='h'?'a':'h'];m.wx=weatherFor(ref,m.h,dateOf(dayOfEvent(S.ci)).getUTCMonth());if(S.pique&&S.pique.opp===op&&S.pique.resp==='r')m.mult[m.us]*=1.02;m.mult[m.us]*=rivMult(op);if(spPrepFor(op))m.spd=spPrepMult();}
  {const ps=m.us?userPos(slotsOf(m.f[m.us])):null;m.du={h:m.us==='h'?ps.du.slice():null,a:m.us==='a'?ps.du.slice():null};m.pi={h:m.us==='h'?ps.pi.map(x=>x.slice()):null,a:m.us==='a'?ps.pi.map(x=>x.slice()):null};}
- if(m.us)m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});
- m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult()*(ref.k!=='fr'?fitMult():1);m.plan=T(m[m.us]).curPlan||null;}
+ if(m.us){m.oi[m.us]=Object.assign({},T(m[m.us]).oi||{});setTarget(m);}
+ m.sp={h:spOf(m.us==='h'?T(m.h):null),a:spOf(m.us==='a'?T(m.a):null)};if(m.us){m.mult[m.us]*=famMult(m.tac[m.us])*vestMult()*feudMult(m.lu[m.us])*(ref.k!=='fr'?fitMult():1);m.plan=T(m[m.us]).curPlan||null;}
  if(m.us)softCap(m);
  prepTactics(m);
  // regularidad (días buenos y malos) y partidos grandes
@@ -105,7 +107,7 @@ export function tacMods(m,s,log){
  if(OI.sal){const dq=avgAt(m,s,'DEF','pas');f('oiR',dq<5?.97:.99,1,1,-.03);}if(MY.sal)f('oi',1,1,1.06);
  if(OI.dur)f('oiR',m.refr?REFS[m.refr.k].dur:.975,1);
  {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);f('fase',ph.own,ph.opp,ph.drain,ph.poss);}
- {const w=weatherMods(m.wx,A);f('clima',w.own,w.opp,w.drain,w.poss);const mm=m.mm&&m.mm[s];if(mm)f('mom',mm.own,mm.opp);}
+ {const w=weatherMods(m.wx,A);f('clima',w.own,w.opp,w.drain,w.poss);const al=altMods(m,s);if(al.own<1)f('alt',al.own,1,al.drain);const mm=m.mm&&m.mm[s];if(mm)f('mom',mm.own,mm.opp);}
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)f('cap',1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4),1);
  {const tm=titleMods(m,s);if(tm)f('tit',tm.own,tm.opp,tm.dr,tm.ps);}
  return{own,opp,drain,poss};
@@ -144,13 +146,13 @@ export const scoreStr=m=>`${m.score.h}-${m.score.a}`;
 export function pickScorer(m,s){
  const sl=slotsOf(m.f[s]),w={POR:.02,DEF:.85,MED:2.3,DEL:4.6};const c=[];
  m.lu[s].forEach((id,i)=>{if(!id)return;const p=PL(id),g=GRP[sl[i]];let t=1;if(hasTr(p,'gol'))t*=1.35;if(hasTr(p,'lej')&&g==='MED')t*=1.3;if(hasTr(p,'cab'))t*=1.2;if(hasTr(p,'bal'))t*=1.1;
-  if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;if(m.marked&&m.marked[s]===id)t*=.6;t*=roleMult(sl[i],m.ro&&m.ro[s]&&m.ro[s][i],'sc');if(m.du&&m.du[s]&&m.du[s].length===sl.length)t*=posMult(sl[i],m.du[s][i],m.pi&&m.pi[s]&&m.pi[s][i],'sc');
+  if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;if(m.marked&&m.marked[s]===id)t*=.6;t*=tgtMult(m,s,id);t*=roleMult(sl[i],m.ro&&m.ro[s]&&m.ro[s][i],'sc');if(m.du&&m.du[s]&&m.du[s].length===sl.length)t*=posMult(sl[i],m.du[s][i],m.pi&&m.pi[s]&&m.pi[s][i],'sc');
   c.push([id,w[g]*t*Math.pow((p.at.tir*.6+p.at.reg*.4+2)/7,1.25)*(.88+.03*(p.wf||3))*(m.hurt[id]?.4:1)]);});
  let tot=c.reduce((a,x)=>a+x[1],0),r=rnd()*tot;for(const [id,wt] of c){r-=wt;if(r<=0)return id;}return c.length?c[0][0]:null;
 }
 export function pickAssist(m,s,scorer){
  if(rnd()<.17)return null;const sl=slotsOf(m.f[s]),w={POR:.05,DEF:1,MED:3,DEL:2.2};const c=[];
- m.lu[s].forEach((id,i)=>{if(!id||id===scorer)return;const p=PL(id);let t=1;if(hasTr(p,'pas'))t*=1.4;if(hasTr(p,'reg'))t*=1.15;if(hasTr(p,'vel'))t*=1.1;if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;t*=roleMult(sl[i],m.ro&&m.ro[s]&&m.ro[s][i],'as');if(m.du&&m.du[s]&&m.du[s].length===sl.length)t*=posMult(sl[i],m.du[s][i],m.pi&&m.pi[s]&&m.pi[s][i],'as');c.push([id,w[GRP[sl[i]]]*t*Math.pow((p.at.pas+p.at.reg*.5+2)/8,2)]);});
+ m.lu[s].forEach((id,i)=>{if(!id||id===scorer)return;const p=PL(id);let t=1;if(hasTr(p,'pas'))t*=1.4;if(hasTr(p,'reg'))t*=1.15;if(hasTr(p,'vel'))t*=1.1;if(m.ord[s]&&m.ord[s][id]==='libre')t*=1.3;t*=tgtMult(m,s,id);t*=roleMult(sl[i],m.ro&&m.ro[s]&&m.ro[s][i],'as');if(m.du&&m.du[s]&&m.du[s].length===sl.length)t*=posMult(sl[i],m.du[s][i],m.pi&&m.pi[s]&&m.pi[s][i],'as');c.push([id,w[GRP[sl[i]]]*t*Math.pow((p.at.pas+p.at.reg*.5+2)/8,2)]);});
  let tot=c.reduce((a,x)=>a+x[1],0),r=rnd()*tot;for(const [id,wt] of c){r-=wt;if(r<=0)return id;}return null;
 }
 export function calcRatings(m){
@@ -166,7 +168,7 @@ export function calcRatings(m){
   if(g==='POR')r+=(m.st[o].ot-conc[s])*.1;
   if(m.off.includes(id))r-=1.2;if(mins<20)r=6+(r-6)*.4;
   r=clamp(Math.round(r*10)/10,3,10);rat[id]=r;if(r>bv){bv=r;best=id;}
-  if(m.ref.k==='fr')return;const st=p.st||(p.st=newSt());st.pj++;st.mi+=mins;st.g+=gl[id]||0;st.a+=as[id]||0;st.rs+=r;if((g==='POR'||g==='DEF')&&conc[s]===0&&mins>=60)st.cs++;st.xg=(st.xg||0)+(dt.xg||0);st.kp=(st.kp||0)+dt.kp;st.tk=(st.tk||0)+dt.tk;st.dr=(st.dr||0)+dt.dr;st.du=(st.du||0)+(dt.du||0);
+  if(m.ref.k==='fr')return;const st=p.st||(p.st=newSt());st.pj++;st.mi+=mins;st.g+=gl[id]||0;st.a+=as[id]||0;st.rs+=r;if((g==='POR'||g==='DEF')&&conc[s]===0&&mins>=60)st.cs++;st.xg=(st.xg||0)+(dt.xg||0);st.kp=(st.kp||0)+dt.kp;st.tk=(st.tk||0)+dt.tk;st.dr=(st.dr||0)+dt.dr;st.du=(st.du||0)+(dt.du||0);st.xa=(st.xa||0)+(dt.xa||0);st.pp=(st.pp||0)+(dt.pp||0);
   p.car=p.car||[0,0,0];p.car[0]++;p.car[1]+=gl[id]||0;p.car[2]+=as[id]||0;if(p.team===S.user)tlMatch(p,m[o],gl[id]||0,r);});
  if(best&&m.ref.k!=='fr')PL(best).st.mv++;m.rat=rat;m.mvp=best;
 }
@@ -305,7 +307,7 @@ export function step(m){
  ['h','a'].forEach(s=>{
   const o=s==='h'?'a':'h',x=xs[s],r=rnd();
   const S_=m.st[s];S_.xg=S_.xg||0;
-  if(r<x){const id=pickScorer(m,s);if(!id)return;const ast=pickAssist(m,s,id);m.score[s]++;m.st[s].sh++;m.st[s].ot++;shotLog(m,s,id,.18+rnd()*.5,'g');if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;
+  if(r<x){const id=pickScorer(m,s);if(!id)return;{const vr=live?varReview(m,id):null;if(vr){m.st[s].sh++;shotLog(m,s,id,.2,'m');addEv(m,'sys',null,vr);return;}}const ast=pickAssist(m,s,id);m.score[s]++;m.st[s].sh++;m.st[s].ot++;shotLog(m,s,id,.18+rnd()*.5,'g');if(m.ref.k==='lg')PL(id).goals++;m.flash=m.min;
    const gt=goalType(m,s,id);m._gt=gt;addEv(m,'goal',s,live?fill(pick(GOALT[gt].tx),{p:PL(id).name})+(ast&&gt!=='ind'&&gt!=='lej'?` Asistencia de ${PL(ast).name}.`:'')+` (${scoreStr(m)})`:'',id);m.ev[m.ev.length-1].ast=ast;}
   else if(r<x*8.5){m.st[s].sh++;const xv=.02+rnd()*.09;if(!live){const id=pickScorer(m,s),on=rnd()<.38;if(on)m.st[s].ot++;shotLog(m,s,id,xv,on?'s':'m');return;}const id=pickScorer(m,s);if(!id){S_.xg+=xv;return;}const g=m.lu[o][0];
    if(rnd()<.38&&g){m.st[s].ot++;shotLog(m,s,id,xv,'s');addEv(m,'shot',s,fill(pick(TX.save),{p:PL(id).name,g:PL(g).name}),id);}
@@ -317,7 +319,7 @@ export function step(m){
  if(live)phaseLog(m,clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8));
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
  if(live&&m.us){const v=liveChangeCheck(m);if(v)addEv(m,'sys',null,v.tx);}
- {const ec=x=>x&&x.ent==='dur'?1.35:x&&x.ent==='pru'?.7:1,dh=(m.oi&&m.oi.h&&m.oi.h.dur?1.6:1)*ec(m.tac.h),da=(m.oi&&m.oi.a&&m.oi.a.dur?1.6:1)*ec(m.tac.a),ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
+ {const ec=x=>x&&x.ent==='dur'?1.35:x&&x.ent==='pru'?.7:1,dh=(m.oi&&m.oi.h&&m.oi.h.dur?1.6:1)*ec(m.tac.h)*tgtCards(m,'h'),da=(m.oi&&m.oi.a&&m.oi.a.dur?1.6:1)*ec(m.tac.a)*tgtCards(m,'a'),ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
   if(rnd()<.034*(ph+pa)*(m.derby?1.3:1)*(m.refr?REFS[m.refr.k].c:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
  if(rnd()<.0032*(1+.1*[...m.lu.h,...m.lu.a].filter(id=>id&&!m.hurt[id]&&m.en[id]<55).length)){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
@@ -359,7 +361,7 @@ export function playerTick(full){
  Object.values(S.players).forEach(p=>{
   if(p.inj>0){p.inj--;if(!p.inj){onRecovered(p);p.injT=0;}}else if(p.recov>0&&full)p.recov--;if(p.susp>0)p.susp--;
   if(p.pInj){if(p.team===S.user&&S.club&&S.club.fac&&S.club.fac.med>1)p.pInj=Math.max(1,Math.round(p.pInj*(1-.08*(S.club.fac.med-1))));p.pInj=Math.round(p.pInj*relapseMult(p));p.rplan=null;p.inj+=p.pInj;p.injT=p.pInjT||'Lesión';if(p.team===S.user&&p.inj>=4)tlAdd(p,'🩹',`${p.injT}: ${p.inj} partidos de baja`);if(p.team===S.user)news(`${p.name}: ${String(p.injT).toLowerCase()}. Estará ${p.inj} partido${p.inj>1?'s':''} de baja.${p.recov>0?' Es una recaída.':''}`,'bad',{cat:'med',subj:`Lesión: ${p.name} (${p.inj} partido${p.inj>1?'s':''})`,act:[{l:'Plan conservador',a:'rplan',id:p.id,v:'c'},{l:'Plan acelerado',a:'rplan',id:p.id,v:'a'},{l:'Ver ficha',a:'ficha',id:p.id}]});p.pInjT=0;}
-  if(p.pSusp){p.susp+=p.pSusp;if(p.team===S.user)news(`${p.name} cumplirá ${p.susp} partido${p.susp>1?'s':''} de sanción.`,'bad');}
+  if(p.pSusp){p.susp+=p.pSusp;if(p.team===S.user){news(`${p.name} cumplirá ${p.susp} partido${p.susp>1?'s':''} de sanción.`,'bad');appealOffer(p);}}
   p.pInj=0;p.pSusp=0;
   const mine=p.team===S.user;
   p.energy=Math.round(Math.min(100,p.energy+(100-p.energy)*((full?.45:.25)+(mine?recBonus():0))+(full?4:2)));

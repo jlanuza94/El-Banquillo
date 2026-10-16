@@ -657,6 +657,25 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // ronda 11: VAR, altitud, recurso, subasta, peleas, patrocinios, récords, habilidades, reto, penaltis
+    const M = await import('../src/r11match'), C = await import('../src/r11club'), CH = await import('../src/r11chal'), { LG: LG_, T: T_, squad: sq_, uLg: uL } = await import('../src/state'), { COUNTRIES: CO } = await import('../src/data');
+    const lv = LG_(uL()).lv; ok(M.hasVarFor({ k: 'ct' }) && !M.hasVarFor({ k: 'fr' }) && M.hasVarFor({ k: 'lg' }) === (lv <= 1), 'VAR: solo en las dos primeras categorías y en competiciones grandes, nunca en amistosos');
+    const bol = S.teams.filter(t => CO[LG_(t.lg).c].code === 'BOL'), hi = bol.find(t => M.altOf(t.id) >= 2400), esp = S.teams.find(t => CO[LG_(t.lg).c].code === 'ESP' && t.id !== S.user);
+    ok(bol.length > 0 && !!hi && M.altOf(esp.id) === 0, 'altitud: hay estadios bolivianos en altura y los españoles están a nivel del mar');
+    if (hi) { const am = M.altMods({ h: hi.id, a: esp.id }, 'a'), hm = M.altMods({ h: hi.id, a: esp.id }, 'h'); ok(am.own < 1 && am.drain > 1 && hm.own === 1, 'altitud: el visitante de nivel del mar rinde menos y se cansa más; el local no'); }
+    const me = sq_(S.user), p = me[3], b0 = S.budget; p.susp = 2; S.apl = {}; const r1 = C.appeal(p.id), r2 = C.appeal(p.id);
+    ok((p.susp === 1 || p.susp === 2) && S.budget < b0 && /ya recurriste/i.test(r2) && !!r1, 'recurso: cuesta dinero, puede rebajar un partido y solo se recurre una vez'); p.susp = 0;
+    const g = me[5], others = S.teams.filter(t => t.id !== S.user).slice(0, 6), of0 = S.offers[g.id], au0 = S.auc, d0 = S.day; S.day = 100;
+    C.startAuction(g, others[0], others); const base = S.offers[g.id].amount; for (let i = 0; i < 6; i++) { S.day++; C.aucDaily(); }
+    ok(!S.auc && S.offers[g.id] && S.offers[g.id].amount >= base && S.offers[g.id].incoming, 'subasta: varios clubes pujan unos días y queda la mejor oferta'); delete S.offers[g.id]; if (of0) S.offers[g.id] = of0; S.auc = au0; S.day = d0;
+    const f0 = S.fight; S.fight = null; const fr = C.fightWeekly(true); if (fr) { const t1 = C.fightAct('talk'), t2 = C.fightAct('fine'); ok(!!t1 && /resuelto/.test(t2), 'peleas: dos que se llevan mal se pelean y tu decisión se aplica una sola vez'); } S.fight = f0;
+    const sp0 = JSON.stringify(S.spOffers); const n1 = C.negSponsor(0), n2 = C.negSponsor(0); ok(!!n1 && (/última palabra|ya no está/.test(n2) || S.spOffers.length < JSON.parse(sp0).length), 'patrocinio: se negocia una vez por oferta'); S.spOffers = JSON.parse(sp0);
+    ok(Array.isArray(S.sp2Offers) && S.sp2Offers.length === 2, 'patrocinio de manga: hay ofertas además del principal');
+    const lr0 = S.lrec; S.lrec = null; C.leagueRecords(S.leagues.map(L => table(L.id))); const R = S.lrec[uL()]; ok(R && R.pts && R.gf && Object.keys(R.t).length === 1, 'récords: cada liga apunta puntos, goles y campeones'); S.lrec = lr0;
+    const sp1 = (S.mgr.spec || []).slice(); S.mgr.spec = []; const free = C.skillFree(); if (free > 0) { C.pickSkill('ojo'); ok(C.specLv('ojo') === 1, 'habilidades: subes una rama con tus puntos'); } S.mgr.spec = sp1;
+    const code = CH.chalCode(), pc = CH.parseChal(code); ok(pc && pc.seed === S.seed && pc.t === S.user, 'reto: el código lleva la semilla y el club'); const rc = CH.parseResult(CH.resultCode()); ok(rc && rc.seed === S.seed && typeof rc.score === 'number', 'reto: el resultado se puede leer y comparar');
+    const t = T_(S.user), po0 = t.po, onp = me.slice(0, 11); t.po = [onp[10].id, onp[9].id]; const ord = M.myPenOrder(onp); ok(ord[0] === onp[10] && ord[1] === onp[9] && ord.length === 11, 'penaltis: se respeta tu orden y luego tiran los de mejor tiro'); t.po = po0;
+  }
   { // seguimiento: avisa también si baja de precio poco a poco
     const SP2 = await import('../src/scoutplus'); const q = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && !p.inj); const sh0 = S.short.slice(), sn0 = S.shortSnap, v0 = q.value;
     S.short.push(q.id); S.shortSnap = {}; SP2.shortlistWeekly(); const n0 = S.news.length; let hit = false;

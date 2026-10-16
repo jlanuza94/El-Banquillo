@@ -3,6 +3,8 @@
  * jugadores que hablan en la prensa, proyecto a 3 años, estadio nuevo, pujas por fichajes, atributos del entrenador
  * y ofertas de grandes clubes. */
 // @ts-nocheck — usa el estado heredado S.
+import {specLv} from './r11club';
+import {myPenOrder} from './r11match';
 import {bumpAt,legacyAt} from './coach';
 import {clamp,money,pick,r2,r3,rnd} from './core';
 import {COUNTRIES,GRP,NAMES} from './data';
@@ -38,12 +40,12 @@ export function refFor(ref,home){const r=h01('ref'+JSON.stringify(ref)+S.seasonN
  return {k:r<.3?'est':r<.75?'nor':'dej',name:nm};}
 
 /* ---------- 4. Tanda de penaltis jugada ---------- */
-export function momentShootout(m){m.mom={k:'so',txt:'¡Penaltis! Elige el orden de tus lanzadores.',opts:[['best','Los mejores primero'],['last','El mejor tira el quinto'],['brave','Los de más carácter (partidos grandes)']]};m.paused=true;}
+export function momentShootout(m){m.mom={k:'so',txt:'¡Penaltis! Elige el orden de tus lanzadores.',opts:[...((T(S.user).po||[]).some(Boolean)?[['mine','Mi orden (Balón parado)']]:[]),['best','Los mejores primero'],['last','El mejor tira el quinto'],['brave','Los de más carácter (partidos grandes)']]};m.paused=true;}
 /** Tanda penalti a penalti: cada lanzamiento sale en el acta. */
 export function playShootout(m,order,addEv){
  const us=m.us,o=us==='h'?'a':'h',live=m.lu,on=s=>live[s].filter(Boolean).map(PL).filter(p=>p.sp!=='POR'||live[s].filter(Boolean).length<6);
  const by=(L,k)=>L.slice().sort((a,b)=>(b.at[k]??5)-(a.at[k]??5));let mine=by(on(us),'tir');
- if(order==='last'&&mine.length>=5){const b=mine.shift();mine.splice(4,0,b);}else if(order==='brave')mine=by(on(us),'gra');
+ if(order==='last'&&mine.length>=5){const b=mine.shift();mine.splice(4,0,b);}else if(order==='brave')mine=by(on(us),'gra');else if(order==='mine')mine=myPenOrder(on(us));
  const theirs=by(on(o),'tir'),gk={h:PL(live.h[0]),a:PL(live.a[0])},sc={h:0,a:0};
  const kick=(s,p,i)=>{const g=gk[s==='h'?'a':'h'],ok=Math.random()<clamp(.76+.02*(p.at.tir-6)+.015*((p.at.gra??5)-5)-(g?.02*(g.at.por-5):0),.5,.92);if(ok)sc[s]++;addEv(m,'sys',null,`Penalti ${i+1} · ${T(m[s]).short}: ${p.name} ${ok?'✓ gol':'✗ fallo'} (${sc.h}-${sc.a})`);};
  const seq=s=>s===us?mine:theirs;let i=0;
@@ -159,7 +161,7 @@ export function rivalWins(p,n,t,ROLES){
 
 /* ---------- 11. Atributos del entrenador ---------- */
 export const MGR_AT={tac:'Táctica',mot:'Motivación',can:'Cantera',neg:'Negociación'};
-export const mgrAt=k=>Math.min(11,(legacyAt(k)??((S&&S.mgr&&S.mgr.at&&S.mgr.at[k])??5))+(S&&S.mgr&&(S.mgr.spec||[]).includes(k)?1:0));
+export const mgrAt=k=>Math.min(11,(legacyAt(k)??((S&&S.mgr&&S.mgr.at&&S.mgr.at[k])??5))+(S&&S.mgr?specLv(k):0));
 export function mgrInit(){if(S.mgr&&!S.mgr.at)S.mgr.at={tac:5,mot:5,can:5,neg:5};}
 /** Al terminar la temporada mejoras en lo que más has trabajado. */
 export function mgrGrow(sm){mgrInit();const A=S.mgr.at,up=[],G={tac:['ofe','dfn','est','eva'],mot:['mot','ves','com'],can:['dvi','tec'],neg:['gpe','dir','pla']},add=(k,v)=>{if(S.mgr.at20){G[k].forEach(x=>bumpAt(x,v*2));up.push(MGR_AT[k]);return;}if(A[k]>=10)return;A[k]=Math.min(10,r2(A[k]+v));up.push(MGR_AT[k]);};

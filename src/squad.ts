@@ -1,5 +1,6 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {fightWeekly,fightWeeklyTidy,sleeveIncome,socialWeekly} from './r11club';
 import {yclWeekly} from './youthcl';
 import {goalsWeekly} from './boardgoals';
 import {tlOvr} from './timeline';
@@ -134,12 +135,12 @@ export function processWeek(){
  const my=home?fx.hg:fx.ag,op=home?fx.ag:fx.hg;
  if(home){S.club.lastAtt=Math.min(S.club.cap,Math.round(attendance()*(derbyH?1.25:1)));if(S.club.lastAtt>=S.club.cap)S.fullHomes=(S.fullHomes||0)+1;if(!S.rec)S.rec={};if(!S.rec.att||S.club.lastAtt>S.rec.att.v)S.rec.att={v:S.club.lastAtt,season:seasonLabel()};}
  if(!S.sponsor&&S.week>=3&&S.spOffers&&S.spOffers.length){S.sponsor=S.spOffers[0];news(`La directiva firma con ${S.sponsor.name} como patrocinador al no elegir tú.`);}
- const spo=S.sponsor?r3(S.sponsor.weekly+(my>op?S.sponsor.win:0)):0;
+ const spo=r3((S.sponsor?S.sponsor.weekly+(my>op?S.sponsor.win:0):0)+sleeveIncome());
  S.budget=r3(S.budget+tv+tix+spo+shop+biz-wages);if(S.budget>=50)unlock('millo');
  {const bon=weeklyBonuses();S.fin.push({wk:wk+1,tv,tix,spo,shop,biz,wages:r3(wages+bon)});finMonthly(nRounds());}
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- progressMonthly();if(S.week%4===3)pruneFree();bigInterestMonthly();gemKeepCheck();scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();u19Weekly(growYouth);crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();pressPromWeekly();goalsWeekly();yclWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ progressMonthly();if(S.week%4===3)pruneFree();bigInterestMonthly();gemKeepCheck();fightWeeklyTidy();fightWeekly();socialWeekly();scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();u19Weekly(growYouth);crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();pressPromWeekly();goalsWeekly();yclWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(isDeadline()?70:28);
  if(isDeadline())news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0&&S.week%6===0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');

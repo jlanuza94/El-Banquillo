@@ -1,5 +1,6 @@
 /* El Banquillo · views/competitions.js — Ligas, copas y competiciones continentales. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {leagueRecHTML} from '../r11club';
 import {wcs} from '../state';
 import {ecoTable} from './economy';
 import {flag} from '../flags';
@@ -44,7 +45,7 @@ export function copasView(){
 }
 export function ligaView(world){
  const lg=world?S.ligaLg:uLg(),L=LG(lg),C=COUNTRIES[L.c],tb=table(lg),r=clamp(S.ligaRound,0,nRounds()-1),pl=squadsInLeague(lg);
- const T_=vtab('liga',[['tab','Clasificación'],['jor','Jornadas'],['gol','Goleadores'],['jug','Jugadores'],['mes','Premios del mes'],['camp','Campeones'],['eco','Dinero']],'tab');
+ const T_=vtab('liga',[['tab','Clasificación'],['jor','Jornadas'],['gol','Goleadores'],['jug','Jugadores'],['mes','Premios del mes'],['camp','Campeones y récords'],['eco','Dinero']],'tab');
  const pickRow=world?`<div class="wcountries">${wcs().map(i=>[i,COUNTRIES[i]]).map(([i,c])=>`<button class="wc${i===L.c?' on':''}" data-a="w-country" data-v="${i}">${flag(c.code,'sm')}<span>${esc(c.n)}</span></button>`).join('')}</div>
  <div class="row" style="margin:0 0 10px;align-items:center;gap:8px"><div class="seg" style="max-width:100%;overflow-x:auto">${Array.from({length:C.lv},(_,i)=>`<button data-a="liga-lv" data-v="${i}" aria-pressed="${L.lv===i}">${LV_NAMES[i]}</button>`).join('')}</div>${lg!==uLg()?`<button class="btn sm" data-a="liga-mine">Ir a mi liga</button>`:''}</div>`:'';
  const head=(h,e)=>`<div class="panel-h"><h2>${h}</h2><span class="eyebrow">${e||`${esc(C.n)} · ${LV_NAMES[L.lv]}`}</span></div>`;
@@ -72,7 +73,7 @@ export function ligaView(world){
   <div class="mpos">${[['POR','Portero'],['DEF','Defensa'],['MED','Centrocampista'],['DEL','Delantero']].map(([g,n])=>`<div><div class="eyebrow">${n}</div>${who(A.pos[g])}</div>`).join('')}</div></section>`).join('')}</div>`
   :`<section class="panel"><div class="empty">Los premios del mes se entregan tras la última jornada de cada mes en las ligas de tu país: jugador del mes, entrenador del mes, mejor joven y el mejor de cada línea.</div></section>`;}
  else if(T_.cur==='camp'){const E=(S.ency||[]).slice().reverse().map(e=>({s:e.season,c:(e.champs||[]).find(x=>x.c===L.c&&x.lv===L.lv),cup:L.lv===0?((e.cups||[]).find(x=>x.c===L.c)||{}).w:null,boot:L.lv===0&&e.boot?e.boot:null})).filter(x=>x.c);
-  body=`<section class="panel">${head('Campeones')}${E.length?`<div class="tbl"><table><thead><tr><th>Temporada</th><th>Campeón</th><th>Subcampeón</th><th class="r">Pts</th>${L.lv===0?'<th>Copa</th>':''}</tr></thead><tbody>${E.map(x=>`<tr><td class="num">${x.s}</td><td><b>🏆 ${esc(x.c.champ)}</b></td><td>${esc(x.c.runner)}</td><td class="n">${x.c.pts}</td>${L.lv===0?`<td>${esc(x.cup||'—')}</td>`:''}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">Al acabar la primera temporada aparecerán aquí los campeones de esta liga.</div>'}</section>`;}
+  body=`<section class="panel">${head('Campeones')}${E.length?`<div class="tbl"><table><thead><tr><th>Temporada</th><th>Campeón</th><th>Subcampeón</th><th class="r">Pts</th>${L.lv===0?'<th>Copa</th>':''}</tr></thead><tbody>${E.map(x=>`<tr><td class="num">${x.s}</td><td><b>🏆 ${esc(x.c.champ)}</b></td><td>${esc(x.c.runner)}</td><td class="n">${x.c.pts}</td>${L.lv===0?`<td>${esc(x.cup||'—')}</td>`:''}</tr>`).join('')}</tbody></table></div>`:'<div class="empty">Al acabar la primera temporada aparecerán aquí los campeones de esta liga.</div>'}</section>${leagueRecHTML(lg,esc)}`;}
  else body=`<section class="panel">${head('Dinero de los clubes')}${ecoTable(lg)}</section>`;
  return T_.bar+pickRow+body;
 }

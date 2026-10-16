@@ -1,6 +1,7 @@
 /* El Banquillo · fans.ts — La grada opina: mensajes de aficionados y de la prensa local que reaccionan a tus
  * resultados, fichajes, ventas, alineaciones y canteranos. Así sabes si la grada está contigo. */
 // @ts-nocheck — usa el estado heredado S.
+import {socLikes} from './r11club';
 import {pick,rnd} from './core';
 import {PL,S,T,squad} from './state';
 
@@ -41,6 +42,6 @@ export function fansSell(p,fee){
 export const fanMood=()=>{const L=(S.fanwall||[]).slice(0,8);return L.length?Math.round(L.reduce((a,x)=>a+x[2],0)/L.length*100):0;};
 export function fanWallHTML(esc,n=6){
  const L=(S.fanwall||[]).slice(0,n),md=fanMood(),C=S.club?Math.round(S.club.mood):60;
- return `<section class="panel fanw"><div class="panel-h"><h2>📣 La grada opina</h2><span class="eyebrow">Ánimo de la afición ${C}/100 ${md>25?'😀':md<-25?'😠':'😐'}</span></div>
- ${L.length?L.map(([w,t,m])=>`<div class="fanm ${m>0?'up':m<0?'dn':''}"><b>${esc(w)}</b><span>${esc(t)}</span></div>`).join(''):'<div class="empty small">La grada aún no ha dicho nada: juega tu primer partido.</div>'}</section>`;
+ return `<section class="panel fanw"><div class="panel-h"><h2>📱 Redes · la grada opina</h2><span class="eyebrow">Ánimo de la afición ${C}/100 ${md>25?'😀':md<-25?'😠':'😐'}</span></div>
+ ${L.length?L.map(([w,t,m],i)=>{const [lk,rt]=socLikes(i,w+t);return `<div class="fanm ${m>0?'up':m<0?'dn':''}"><b>${esc(w)}</b><span>${esc(t)}</span><span class="soc small muted">♥ ${lk.toLocaleString('es')} · 🔁 ${rt.toLocaleString('es')}</span></div>`;}).join(''):'<div class="empty small">La grada aún no ha dicho nada: juega tu primer partido.</div>'}</section>`;
 }

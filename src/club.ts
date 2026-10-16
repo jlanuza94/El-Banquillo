@@ -1,5 +1,6 @@
 /* El Banquillo · club.js — Negocio del club, directiva, prensa y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {genSleeve} from './r11club';
 import {nsAttMult} from './extras2';
 import {mail,markKey} from './inbox';
 import {clamp,money,r2,r3,rnd,shuffle} from './core';
@@ -13,7 +14,7 @@ export const SPONSORS=['Banco Meridiano','Seguros Atalaya','Telecom Brisa','Auto
 export const priceBase=lg=>Math.round(8+unit(LG(lg).rep)*50);
 export function initClub(t){const L=LG(t.lg),cap=Math.round(clamp(1500+(L.rep-40)*360+(t.rep-L.rep)*250,800,90000)/100)*100;
  S.club={cap,price:priceBase(t.lg),fans:Math.round(cap*(.8+rnd()*.15)),mood:60,fac:{ent:1,can:1,med:1},build:null,lastAtt:0};S.club.abo=aboBase(t.lg);S.sponsor=null;genSponsors();sellAbonos(true);}
-export function genSponsors(){const u=lunit(uLg())*(.7+.3*clubWF(T(S.user))),n=shuffle(SPONSORS.slice());S.spOffers=[{name:n[0],type:'fijo',weekly:r3(u*.25),win:0,obj:0},{name:n[1],type:'var',weekly:r3(u*.12),win:r3(u*.28),obj:0},{name:n[2],type:'obj',weekly:r3(u*.16),win:0,obj:r2(u*10)}];}
+export function genSponsors(){const u=lunit(uLg())*(.7+.3*clubWF(T(S.user))),n=shuffle(SPONSORS.slice());S.spOffers=[{name:n[0],type:'fijo',weekly:r3(u*.25),win:0,obj:0},{name:n[1],type:'var',weekly:r3(u*.12),win:r3(u*.28),obj:0},{name:n[2],type:'obj',weekly:r3(u*.16),win:0,obj:r2(u*10)}];genSleeve();}
 export const spDesc=o=>o.type==='fijo'?`${money(o.weekly)}/sem fijos, pase lo que pase.`:o.type==='var'?`${money(o.weekly)}/sem + ${money(o.win)} por cada victoria de liga.`:`${money(o.weekly)}/sem + ${money(o.obj)} si cumples el objetivo de la directiva.`;
 export function attendance(){const C=S.club,p0=priceBase(uLg()),d=nsAttMult()*C.fans*(1+(C.mood-50)/150)*clamp(1.45-.45*C.price/p0,.15,1.4);return Math.round(Math.min(C.cap,Math.max(C.socios||0,d)));}
 /* ---------- Abonos, tienda y afición ---------- */
