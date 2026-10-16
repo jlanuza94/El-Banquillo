@@ -6,7 +6,7 @@
 import {bumpAt,legacyAt} from './coach';
 import {clamp,money,pick,r2,r3,rnd} from './core';
 import {COUNTRIES,GRP,NAMES} from './data';
-import {LG,PL,S,T,lgName,seasonLabel,setTeam,squad,uLg} from './state';
+import {LG,PL,S,T,lgName,lunit,seasonLabel,setTeam,squad,uLg} from './state';
 import {news} from './world';
 import {langOf} from './tactics';
 
@@ -125,7 +125,7 @@ export function projSeasonEnd(sm){
  if(last){M.conf=clamp(M.conf-15,0,100);news(`El plazo del proyecto «${P.n}» ha terminado sin cumplirlo. La directiva está decepcionada.`,'bad',{cat:'dir',subj:'Proyecto fallido'});close(0);return;}
  // revisión anual: ¿vas bien encaminado?
  const yr=S.seasonN-P.start+1,good=st.done||(P.k==='asc'&&P.lv-st.lvNow>=Math.ceil(P.need*yr/P.yrs))||((P.k==='eur'||P.k==='liga')&&sm&&sm.pos<=Math.max(P.need+3,4))||(P.k==='eco'&&S.budget>=P.budget)||(P.k==='can'&&squad(S.user).filter(p=>p.home&&p.st&&p.st.pj>=5).length>=Math.ceil(P.need/2))||P.k==='perm'||P.k==='tit';
- M.conf=clamp(M.conf+(good?4:-4),0,100);
+ M.conf=clamp(M.conf+(good?4:-4),0,100);if(good){const bb=r3(lunit(uLg())*4);S.budget=r3(S.budget+bb);news(`Como el proyecto va bien, la directiva amplía tu presupuesto de fichajes en ${money(bb)}.`,'good',{cat:'dir',subj:'Más presupuesto por el proyecto'});}
  news(`Revisión del proyecto «${P.n}» (año ${yr} de ${P.yrs}): ${good?'vas bien encaminado, la directiva sigue confiando.':'la directiva ve el proyecto en peligro: quiere una reacción.'}`,good?'good':'bad',{cat:'dir',subj:`Proyecto: año ${yr} de ${P.yrs}`});
 }
 

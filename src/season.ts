@@ -32,7 +32,7 @@ import {scoutingSeasonEnd} from './scouting';
 import {crewSeasonEnd} from './staff';
 import {clamp,gauss,money,pick,r2,r3,ri,rnd} from './core';
 import {COUNTRIES,SPEEDS,newSt} from './data';
-import {RT,LG,PL,S,T,dirty,econ,findLg,lgName,lowest,rt,seasonLabel,setS,squad,uLg,unit} from './state';
+import {RT,LG,PL,S,T,dirty,econ,findLg,lgName,lowest,rt,seasonLabel,setS,squad,uLg,unit,lunit,clubWF} from './state';
 import {assignNum,baseWage,decline,devSeason,ensureSquad,genFreeAgents,genPlayer,improve,setValue,strength} from './players';
 import {trainMult} from './staff';
 import {news,setupSeason} from './world';
@@ -73,8 +73,8 @@ export function finishCore(){
 export function finishRound(){
  const m=S.match;
  if(m.ref.k==='fr'&&m.pt){applyResult(m);playerTick(false);S.match=null;const tx=ptAfter(m,simAI,shootout,money);news(tx,/Campeones|final!/.test(tx)?'good':'',{cat:'com',subj:S.ptour.n});S.view='inicio';S.modal={type:'ptour'};saveNow();render();return;}
- if(m.ref.k==='fr'){applyResult(m);playerTick(false);S.match=null;S.pre.left--;const inc=r3(unit(LG(uLg()).rep)*.3);S.budget=r3(S.budget+inc);const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'];
-  news(`Amistoso: ${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}. Taquilla ${money(inc)}. Química ${Math.round(S.chem)}.`,my>op?'good':my<op?'bad':'');S.view='inicio';saveNow();render();return;}
+ if(m.ref.k==='fr'){applyResult(m);playerTick(false);S.match=null;S.pre.left--;const oppF=m.h===S.user?m.a:m.h,inc=friendlyFee(oppF),[tl,tx]=friendlyTire(oppF);if(tx)m.lu[m.us].forEach(id=>{const q=PL(id);if(q)q.energy=Math.max(40,q.energy-tx);});S.budget=r3(S.budget+inc);const my=m.score[m.us],op=m.score[m.us==='h'?'a':'h'];
+  news(`Amistoso: ${T(m.h).name} ${m.score.h}-${m.score.a} ${T(m.a).name}. Taquilla ${money(inc)}${tx?` · cansancio ${tl}`:''}. Química ${Math.round(S.chem)}.`,my>op?'good':my<op?'bad':'');S.view='inicio';saveNow();render();return;}
  if(m.ref.k==='po'){applyResult(m);playerTick(false);S.match=null;poAdvance(quickMatch,applyResult,mkTie);S.view='inicio';saveNow();render();return;}
  const {ev}=finishCore();S.view='inicio';
  S.modal=ev.t==='lg'?{type:'round',round:ev.r}:ev.t==='cup'?{type:'cupres',c:m.ref.c,r:m.ref.r}:ev.t==='ct'?{type:'ctres',ct:m.ref.ct,s:ev.s}:{type:'cwcres',s:ev.s};
@@ -92,10 +92,17 @@ export function playTour(){
 }
 const simAI=(h,a)=>{S.fr.push(mkTie(h,a));const q=quickMatch({k:'fr',i:S.fr.length-1});S.fr.pop();return [q.score.h,q.score.a];};
 export function friendlyOpts(){
- if(S.pre.opts)return S.pre.opts;const me=strength(S.user),cs=S.teams.filter(t=>t.id!==S.user);
+ if(S.pre.opts&&S.pre.opts.length>=4)return S.pre.opts;const me=strength(S.user),cs=S.teams.filter(t=>t.id!==S.user&&!t.parent),c=LG(uLg()).c;
  const near=d=>cs.filter(t=>Math.abs(t.rep-(me+d))<3);
- return S.pre.opts=[-8,-3,3,8].map(d=>{const l=near(d);return l.length?pick(l).id:pick(cs).id;});
+ const giants=cs.filter(t=>LG(t.lg).lv===0&&clubWF(t)>=1.4),home=giants.filter(t=>LG(t.lg).c===c),away=giants.filter(t=>LG(t.lg).c!==c);
+ const o=[-6,4].map(d=>{const l=near(d);return l.length?pick(l).id:pick(cs).id;});
+ o.push((home.length?pick(home):pick(cs)).id,(away.length?pick(away):pick(cs)).id);
+ return S.pre.opts=o;
 }
+/** Taquilla de un amistoso: contra un grande se llena el campo (y cobras más); contra uno de tu nivel, poco. */
+export function friendlyFee(tid){const t=T(tid),me=T(S.user);return r3(lunit(uLg())*.3*(1+Math.max(0,t.rep-me.rep)/12+(clubWF(t)-1)*.8));}
+/** Cansancio extra: un rival muy superior te hace correr mucho más. */
+export const friendlyTire=tid=>{const d=T(tid).rep-T(S.user).rep;return d>=12?['alto',8]:d>=3?['medio',3]:['bajo',0];};
 export let simState=null;
 /**
  * Bucle de simulación de varias fechas. Funciona igual en el hilo principal y en el Web Worker:

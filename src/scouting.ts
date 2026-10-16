@@ -4,7 +4,7 @@ import {isAffiliate} from './clubplus';
 import {inContacts} from './connected';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
 import {ATTRS,COUNTRIES,GRP,POS_NAME,SPN} from './data';
-import {LG,PL,S,T,lgName,squad,uLg} from './state';
+import {LG,PL,S,T,lgName,setTeam,squad,uLg} from './state';
 import {news} from './world';
 import {REGIONS,regionOf} from './academy';
 import {crew,judge} from './staff';
@@ -76,7 +76,7 @@ export function scoutingWeekly(){
  S.scoutQ=S.scoutQ.filter(x=>{const p=PL(x.pid);if(!p)return false;if(S.week<x.until)return true;S.know[p.id]=100;scoutReport(p,by);return false;});
  S.short.forEach(id=>{if(PL(id))S.know[id]=Math.min(100,(S.know[id]||0)+2);});
  const all=Object.values(S.players);
- chollosMonthly();
+ if(chollosMonthly().length)gemRaceStart();gemRaceWeekly();
  sen.forEach(sc=>{
   const R=REGIONS[sc.reg],pool=all.filter(p=>p.team!==null&&p.team!==S.user&&R.c.includes(LG(T(p.team).lg).c));
   shuffle(pool).slice(0,10+2*(sc.jui||5)).forEach(p=>S.know[p.id]=Math.min(100,(S.know[p.id]||0)+8+(sc.jui||5)*2));
@@ -99,6 +99,25 @@ export function chollosMonthly(force){
  const line=p=>{const r=seen(p).pot;return `${p.name} (${SPN[p.sp].toLowerCase()}, ${p.age} años, ${T(p.team).name} · ${lgName(T(p.team).lg)}): ahora ${Math.round(p.ovr)}, puede llegar a ${r?Math.round(r[0]*10)+'–'+Math.round(r[1]*10):'?'}. Costaría unos ${money(p.value*1.2)}.`;};
  news(`Chollos del mes de ${by}: ${C.length} chaval${C.length>1?'es':''} que nadie mira y que pueden crecer mucho. ${C.map(line).join(' ')}`,'good',{cat:'oje',from:by,subj:`💎 Chollos del mes (${C.length})`,act:[...C.map(p=>({l:p.name.split(' ').slice(-1)[0],a:'ficha',id:p.id})),{l:'Ver en el mercado',a:'view',v:'mrec'}]});
  return C;
+}
+/* ---------- Carrera por una joya: otro club va detrás del mismo chaval ---------- */
+/** De vez en cuando, otro club se fija en uno de tus chollos o en un joven que sigues: tienes unas jornadas para adelantarte. */
+export function gemRaceStart(force){
+ if(S.race&&PL(S.race.pid)&&S.race.until>=S.week)return null;
+ const pool=[...(S.chollos||[]).map(x=>x.id),...(S.short||[])].map(PL).filter(p=>p&&p.team!==S.user&&p.team!==null&&p.age<=21&&p.pot*10>=p.ovr+8);
+ if(!pool.length||(!force&&rnd()>.45))return null;const p=pick(pool);
+ const rivals=S.teams.filter(t=>t.id!==S.user&&t.id!==p.team&&!t.parent&&LG(t.lg).c===LG(T(p.team).lg).c&&(t.cash??1)>p.value*1.3&&Math.abs(t.rep-p.ovr)<20);if(!rivals.length)return null;
+ const r=pick(rivals),wk=2+Math.floor(rnd()*2);S.race={pid:p.id,team:r.id,until:S.week+wk};
+ news(`⚠️ ${r.name} también va a por ${p.name} (${p.age} años, ${T(p.team).name}). Han mandado a su ojeador y preparan una oferta: si no cierras su fichaje en ${wk} jornadas, se lo llevan ellos.`,'bad',{cat:'oje',subj:`Carrera por ${p.name}`,act:[{l:'Hacer oferta',a:'neg',id:p.id},{l:'Ver ficha',a:'ficha',id:p.id}]});
+ return S.race;
+}
+export function gemRaceWeekly(){
+ const R=S.race;if(!R)return null;const p=PL(R.pid);if(!p){S.race=null;return null;}
+ if(p.team===S.user){news(`¡Te adelantaste! ${p.name} es tuyo antes de que ${T(R.team).name} moviera ficha.`,'good',{cat:'oje'});S.race=null;return 'tuyo';}
+ if(S.week<R.until)return null;
+ const from=p.team,fee=Math.round(p.value*1.1*100)/100;if(from!=null&&T(R.team)){setTeam(p,R.team);T(R.team).cash=Math.round(((T(R.team).cash||0)-fee)*100)/100;if(T(from))T(from).cash=Math.round(((T(from).cash||0)+fee)*100)/100;p.contract=4;S.short=(S.short||[]).filter(x=>x!==p.id);
+  news(`Llegaste tarde: ${p.name} ficha por ${T(R.team).name} por ${money(fee)}. Otra vez será.`,'bad',{cat:'oje',subj:`${p.name} se va a ${T(R.team).name}`});}
+ S.race=null;return 'perdido';
 }
 /** Al empezar temporada el conocimiento se queda viejo: baja un poco y se borra el de jugadores que ya no existen. */
 export function scoutingSeasonEnd(){const K=S.know||{},o={};Object.keys(K).forEach(id=>{if(S.players[id]){const v=Math.round(K[id]*.7);if(v>=5)o[id]=v;}});S.know=o;S.scoutQ=(S.scoutQ||[]).filter(x=>S.players[x.pid]);}

@@ -36,7 +36,7 @@ export function mkCard(p,mini){
 let HL={k:'',v:null};
 /** Los chollos que te mandó el ojeador este mes (jóvenes baratos con mucho potencial). */
 function cholP(row){const L=(S.chollos||[]).map(x=>PL(x.id)).filter(p=>p&&p.team!==S.user);
- return `<div class="mkhl-c chol" style="margin-top:8px"><div class="mkhl-h"><span>💎</span><b>Chollos del ojeador</b><span class="small muted" style="margin-left:auto">cada mes, jóvenes baratos de los que nadie habla</span></div>${L.length?L.map(p=>{const r=seen(p).pot;return row(p).replace('</small>',` · puede llegar a <b>${r?Math.round(r[0]*10)+'–'+Math.round(r[1]*10):'?'}</b></small>`);}).join(''):'<div class="empty small">Tu ojeador te mandará los primeros chollos a principios del mes que viene.</div>'}</div>`;}
+ return `<div class="mkhl-c chol" style="margin-top:8px"><div class="mkhl-h"><span>💎</span><b>Chollos del ojeador</b><span class="small muted" style="margin-left:auto">cada mes, jóvenes baratos de los que nadie habla</span></div>${L.length?L.map(p=>{const r=seen(p).pot;return row(p).replace('</small>',`${S.race&&S.race.pid===p.id?` · <b style="color:var(--loss)">⏳ ${esc(T(S.race.team).short)} va a por él (${Math.max(0,S.race.until-S.week)} j.)</b>`:''} · puede llegar a <b>${r?Math.round(r[0]*10)+'–'+Math.round(r[1]*10):'?'}</b></small>`);}).join(''):'<div class="empty small">Tu ojeador te mandará los primeros chollos a principios del mes que viene.</div>'}</div>`;}
 function highlights(){
  const key=[S.day,S.week,Math.round(S.budget*100),S.user].join('|');
  if(HL.k!==key){const est=p=>{const sn=seen(p);return sn.exact?p.ovr:(sn.ovr[0]+sn.ovr[1])/2;},myAvg=squad(S.user).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11).reduce((a,b,_,A)=>a+b/A.length,0);

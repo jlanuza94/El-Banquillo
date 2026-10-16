@@ -43,12 +43,26 @@ export function mgrWeekly(my,op){
  news(`Despedido: la directiva de ${T(S.user).name} prescinde de ti.`,'bad');M.rep=clamp(M.rep-6,0,100);loseJob('despido');return;}
  S.jobOffers=(S.jobOffers||[]).filter(o=>o.until>S.week);
  bigOfferWeekly(pos,clubReq,jobCandidates,makeJobOffer);
+ perfOffer(pos,false);
  if(rnd()<.07){const cur=clubReq(T(S.user)),c=jobCandidates(M.rep+6,cur+4,1)[0];if(c&&!S.jobOffers.some(o=>o.team===c.id)){const o=makeJobOffer(c);o.until=S.week+3;S.jobOffers.push(o);news(`${c.name} (${lgName(c.lg)}) quiere ficharte como entrenador. Tienes la oferta en Inicio.`,'good',{cat:'dir',from:c.name,subj:'Oferta de trabajo',act:[{l:'Ver oferta',a:'view',v:'inicio'}]});}}
+}
+/** Si lo estás haciendo bien en una categoría baja, te llama un club de una o dos categorías más arriba de tu país.
+ * Durante la temporada (yendo entre los 3 primeros) o en verano (tras ascender o quedar arriba). */
+export function perfOffer(pos,summer){
+ const L=LG(T(S.user).lg);if(L.lv===0||S.jobless)return null;
+ if(!summer&&(S.week<10||pos>3||S.perfOff===S.seasonN||rnd()>.06))return null;
+ if(summer&&rnd()>.75)return null;
+ const up=pos===1&&rnd()<.35?2:1,lv=Math.max(0,L.lv-up),M=S.mgr;
+ const c=shuffle(S.teams.filter(t=>t.id!==S.user&&!t.parent&&LG(t.lg).c===L.c&&LG(t.lg).lv===lv&&clubReq(t)<=M.rep+25)).sort((a,b)=>a.rep-b.rep)[0];if(!c||(S.jobOffers||[]).some(o=>o.team===c.id))return null;
+ S.perfOff=S.seasonN;const o=makeJobOffer(c);o.until=S.week+(summer?5:3);o.perf=1;o.bud=startBudget(c);o.obj=objectiveFor(c.id).txt||'';S.jobOffers=(S.jobOffers||[]).concat([o]);
+ news(`${c.name} (${lgName(c.lg)}) se ha fijado en tu trabajo${summer?' de esta temporada':` (vas ${pos}º)`} y te ofrece el banquillo: ${money(o.sal)}/sem y un presupuesto de unos ${money(o.bud)}. ¿Das el salto${up===2?' de dos categorías':''} o sigues con tu proyecto?`,'good',{cat:'dir',from:c.name,subj:`📞 ${c.name} te quiere de entrenador`,act:[{l:'Ver oferta',a:'view',v:'inicio'}]});
+ return o;
 }
 export function mgrSeasonEnd(sm){
  const M=S.mgr,lbl=seasonLabel();let d=sm.ok?4:-4;if(sm.up)d+=8;if(sm.champ)d+=sm.L.lv===0?12:6;if(sm.down)d-=8;d+=S.titles.filter(x=>x.season===lbl&&!x.name.startsWith('Liga')).length*6;
  M.rep=clamp(M.rep+d,0,100);M.conf=clamp(M.conf+(sm.ok?15:-15)+(sm.up?15:0),0,100);if(sm.ok||sm.up)M.conf=Math.max(M.conf,55);M.grace=sm.up?diff().grace:null;M.yrs--;M.tc=M.tc||{};M.tc.seas=Math.max(M.tc.seas||0,S.seasonN-(M.joinN??S.seasonN)+1);tInc('seas',0);
  news(`Tu reputación como entrenador: ${Math.round(M.rep)}/100 (${d>=0?'+':''}${d} esta temporada).`,d>=0?'good':'bad');
+ if(sm.up||sm.pos<=3){S.perfOff=null;perfOffer(sm.pos,true);}
  if(M.yrs<=0){if(M.conf>=45){M.yrs=ri(2,3);M.sal=r3(M.sal*1.1);news(`La directiva te renueva ${M.yrs} temporadas más, con un 10% más de salario.`,'good');return false;}
   news(`Se acaba tu contrato y ${T(S.user).name} no te renueva.`,'bad');return true;}
  return false;

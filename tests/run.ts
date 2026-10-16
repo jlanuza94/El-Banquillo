@@ -657,6 +657,17 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // ofertas por rendimiento, proyecto, carrera por joyas, amistosos con taquilla y premios de tu liga
+    const Ca = await import('../src/career'); const jo = S.jobOffers.length; S.perfOff = null; const o = Ca.perfOffer(1, true) || Ca.perfOffer(1, true) || Ca.perfOffer(1, true) || Ca.perfOffer(1, true);
+    ok(o && LG(T(o.team).lg).lv < LG(uLg()).lv && LG(T(o.team).lg).c === LG(uLg()).c && o.bud > 0, 'te llama un club de más arriba de tu país' + (o ? ': ' + T(o.team).name : ''));
+    S.view = 'inicio'; render(); ok(app.textContent.includes('Presupuesto ~'), 'la oferta muestra presupuesto y categoría'); S.jobOffers = S.jobOffers.slice(0, jo);
+    const Sc = await import('../src/scouting'); S.race = null; S.cholSeen = []; const b0 = S.budget; S.budget = 5; Sc.chollosMonthly(true); S.budget = b0; const R = Sc.gemRaceStart(true);
+    ok(R && PL(R.pid) && T(R.team), 'otro club va a por tu joya' + (R ? ': ' + T(R.team).name + ' por ' + PL(R.pid).name : ''));
+    if (R) { const p = PL(R.pid), w0 = S.week; S.week = R.until; Sc.gemRaceWeekly(); S.week = w0; ok(p.team === R.team && !S.race, 'si no te adelantas, se lo lleva'); }
+    const Se = await import('../src/season'); S.pre.opts = null; const fo = Se.friendlyOpts(); const fees = fo.map(Se.friendlyFee);
+    ok(fo.length === 4 && Math.max(...fees) > Math.min(...fees) * 1.5, 'amistosos: contra un grande se cobra más (' + fees.map(f => Math.round(f * 1000) + 'k').join(', ') + ')');
+    const Aw = await import('../src/awards'); const nAw = (S.awards || []).length; const A = Aw.seasonAwards(); ok(A.lga && 'young' in A.lga && 'boot' in A.lga && 'gk' in A.lga, 'premios de tu liga (mejor jugador, joven, pichichi, portero)'); S.awards = S.awards.slice(0, nAw);
+  }
   { // economía por país y por club: Inglaterra más rica, gigantes en cada liga y en Quinta se puede fichar
     const W = await import('../src/world'); const St = await import('../src/state'); const { askPrice } = await import('../src/market'); const CP = await import('../src/clubplus');
     const top = c => S.leagues.find(L => L.c === c && L.lv === 0), byB = L => S.teams.filter(t => t.lg === L.id).map(t => [t, W.startBudget(t)]).sort((a, b) => b[1] - a[1]);
