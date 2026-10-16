@@ -6,13 +6,14 @@ import {nC,wcs} from './state';
 import {retosNT} from './retos';
 import {unlock} from './club';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
-import {ALLN,COUNTRIES,GRP,NATIONS} from './data';
+import {ALLN,COUNTRIES,GRP,NATIONS,OLD_NAT_CODES} from './data';
 import {PL,S,T,seasonLabel,squad} from './state';
 import {news} from './world';
 import {poisson} from './engine';
 
 /* ---------- Torneos ---------- */
-export const EUROPE=[0,1,2,3,4,5,8,10,11,12],AMERICA=[6,7,9,13,15];
+/** Países con liga en cada confederación (según los que tiene tu mundo). */
+export const EUROPE_=()=>wcs().filter(c=>COUNTRIES[c].conf==='eu'),AMERICA_=()=>wcs().filter(c=>COUNTRIES[c].conf==='sa'||COUNTRIES[c].conf==='na');
 export const TOURN={wc:{n:'Mundial',sh:'MUN'},eu:{n:'Eurocopa',sh:'EUR'},ca:{n:'Copa América',sh:'CAM'}};
 /** Año del verano en que acaba la temporada actual (la 2026/27 acaba en el verano de 2027). */
 export const summerYear=(n=S.seasonN)=>2026+n;
@@ -22,12 +23,14 @@ export function tournamentsIn(n=S.seasonN){const y=summerYear(n);return y%4===2?
 export function nextTournaments(){for(let n=S.seasonN;n<S.seasonN+4;n++){const t=tournamentsIn(n);if(t.length)return[n,t];}return[S.seasonN,[]];}
 const NN=COUNTRIES.length,NX=NN+NATIONS.length;
 /** Selección sin liga ni jugadores en el juego (solo nivel). */
-export const isV=c=>c>=NN;
+export const isV=c=>c>=NN||c>=nC();
 export const natName=c=>(ALLN[c]||{n:'?'}).n;
-const vStr=c=>NATIONS[c-NN].top;
+const confOf=c=>c<NN?COUNTRIES[c].conf:(NATIONS[c-NN]||{}).conf;
+const vStr=c=>c<NN?(COUNTRIES[c].nt||COUNTRIES[c].top):NATIONS[c-NN].top;
 /** Participantes: las selecciones con liga y, hasta completar el cupo, las mejores del ranking de cada confederación. */
-export function members(k){initIntl();const base=(k==='wc'?wcs():k==='eu'?EUROPE:AMERICA).filter(c=>c<nC()),conf=k==='eu'?['eu']:k==='ca'?['sa','na']:null,size=k==='wc'?32:16;
- const extra=NATIONS.map((x,i)=>NN+i).filter(c=>!conf||conf.includes(NATIONS[c-NN].conf)).sort((a,b)=>(S.intl.elo[b]??0)-(S.intl.elo[a]??0));
+export function members(k){initIntl();const conf=k==='eu'?['eu']:k==='ca'?['sa','na']:null,size=k==='wc'?32:16;
+ const base=wcs().filter(c=>!conf||conf.includes(confOf(c))).sort((a,b)=>(S.intl.elo[b]??0)-(S.intl.elo[a]??0)).slice(0,size);
+ const extra=Array.from({length:NX},(_,i)=>i).filter(c=>isV(c)&&(!conf||conf.includes(confOf(c)))).sort((a,b)=>(S.intl.elo[b]??0)-(S.intl.elo[a]??0));
  return base.concat(extra.slice(0,Math.max(0,size-base.length)));}
 
 /* ---------- Jugadores y convocatorias ---------- */
@@ -51,9 +54,9 @@ export function xiOf(ids){const ps=ids.map(PL).filter(p=>p&&!p.inj).sort((a,b)=>
 export const strengthOf=ids=>{const xi=xiOf(ids);return xi.length?xi.reduce((a,p)=>a+p.ovr,0)/xi.length:40;};
 
 /* ---------- Ranking (tipo Elo) ---------- */
-export function initIntl(){if(!S.intl)S.intl={elo:COUNTRIES.map((_,c)=>Math.round(1300+strengthOf(autoCall(c))*6)),hist:[],last:null,titles:COUNTRIES.map(()=>({wc:0,eu:0,ca:0}))};
+export function initIntl(){natMigrate();if(!S.intl)S.intl={v:2,elo:COUNTRIES.map((_,c)=>Math.round(1300+(isV(c)?vStr(c):strengthOf(autoCall(c)))*6)),hist:[],last:null,titles:COUNTRIES.map(()=>({wc:0,eu:0,ca:0}))};
  // selecciones sin liga (también en partidas antiguas)
- for(let c=NN;c<NX;c++){if(S.intl.elo[c]==null)S.intl.elo[c]=Math.round(1300+vStr(c)*6);if(!S.intl.titles[c])S.intl.titles[c]={wc:0,eu:0,ca:0};}}
+ for(let c=0;c<NX;c++){if(c<NN&&!isV(c))continue;if(S.intl.elo[c]==null)S.intl.elo[c]=Math.round(1300+vStr(c)*6);if(!S.intl.titles[c])S.intl.titles[c]={wc:0,eu:0,ca:0};}}
 /** Ranking de todas las selecciones (con y sin liga). */
 export const rankAll=()=>{initIntl();return Array.from({length:NX},(_,i)=>i).filter(c=>c<nC()||isV(c)).sort((a,b)=>(S.intl.elo[b]??0)-(S.intl.elo[a]??0));};
 export const vLevel=c=>isV(c)?NATIONS[c-NN].top:null;
@@ -119,7 +122,7 @@ export function summerTournaments(){
   // los campeones se revalorizan; los de tu club vuelven contentos
   (isV(T0.champ)?[]:callOf(T0.champ)).map(PL).forEach(p=>{if(!p)return;p.value=r2(p.value*1.06);if(p.team===S.user)p.hap=clamp((p.hap??70)+6,0,100);});
   const mine=squad(S.user).filter(p=>MK.has(p.nat)&&callOf(p.nat).includes(p.id));
-  news(`${T0.n} ${summerYear(S.seasonN-1)}: ¡${natName(T0.champ)} campeona! Final ante ${natName(T0.runner)}.${T0.top?` Máximo goleador: ${T0.top.name} (${T0.top.g}).`:''}${mine.length?` De tu club fueron ${mine.length}: ${mine.map(p=>p.name).join(', ')}.`:''}`,'',{cat:'com',subj:`${T0.n}: campeona ${COUNTRIES[T0.champ].n}`,act:[{l:'Ver selecciones',a:'view',v:'selecciones'}]});
+  news(`${T0.n} ${summerYear(S.seasonN-1)}: ¡${natName(T0.champ)} campeona! Final ante ${natName(T0.runner)}.${T0.top?` Máximo goleador: ${T0.top.name} (${T0.top.g}).`:''}${mine.length?` De tu club fueron ${mine.length}: ${mine.map(p=>p.name).join(', ')}.`:''}`,'',{cat:'com',subj:`${T0.n}: campeona ${natName(T0.champ)}`,act:[{l:'Ver selecciones',a:'view',v:'selecciones'}]});
   if(S.nt&&members(k).includes(S.nt.c))ntJudge(T0);
  });
 }
@@ -132,7 +135,7 @@ function ntJudge(T0){
  if(place===1){retosNT();unlock('ntcamp');S.mgr.titles=(S.mgr.titles||0)+1;S.ntTitles=(S.ntTitles||[]);S.ntTitles.push({n:T0.n,c,season:T0.season});}
  const txt=place===1?`¡Campeón con ${COUNTRIES[c].n}! Tu reputación se dispara.`:place===2?`Finalista con ${COUNTRIES[c].n}.`:place===3?`Semifinalista con ${COUNTRIES[c].n}.`:`${COUNTRIES[c].n} cae en la fase de grupos.`;
  if(diff<=-1.5){news(`${txt} La federación esperaba mucho más y te destituye como seleccionador.`,'bad',{cat:'dir',subj:'Destituido como seleccionador'});S.nt=null;return;}
- news(`${txt} ${diff>=0?'La federación está satisfecha.':'La federación esperaba algo más, pero sigues en el cargo.'}`,diff>=0?'good':'',{cat:'dir',subj:`${T0.n} con ${COUNTRIES[c].n}`});
+ news(`${txt} ${diff>=0?'La federación está satisfecha.':'La federación esperaba algo más, pero sigues en el cargo.'}`,diff>=0?'good':'',{cat:'dir',subj:`${T0.n} con ${natName(c)}`});
 }
 
 /* ---------- Parones FIFA durante la temporada ---------- */
@@ -180,3 +183,15 @@ export function toggleCall(id){
  const i=S.nt.call.indexOf(id);if(i>=0){S.nt.call.splice(i,1);return '';}if(S.nt.call.length>=23)return 'Ya tienes 23 convocados: quita a alguno primero.';S.nt.call.push(id);return '';
 }
 export const ntSalary=()=>S.nt?NT_SAL(S.nt.c):0;
+
+/** Partidas de antes de los 30 países: las selecciones cambiaron de número. Se convierten una sola vez al abrirlas. */
+export function natMigrate(){
+ if(!S||S.natV===2)return;S.natV=2;
+ const oldNN=16,map=k=>{if(k==null||k<oldNN)return k;const code=OLD_NAT_CODES[k];if(!code)return k;const i=COUNTRIES.findIndex(x=>x.code===code);if(i>=0)return i;const j=NATIONS.findIndex(x=>x.code===code);return j>=0?NN+j:k;};
+ if(S.mgr&&S.mgr.nat!=null)S.mgr.nat=map(S.mgr.nat);
+ if(S.nt&&S.nt.c!=null)S.nt.c=map(S.nt.c);if(S.ntOffer!=null)S.ntOffer=map(S.ntOffer);(S.ntTitles||[]).forEach(x=>x.c=map(x.c));
+ const I=S.intl;if(!I||I.v===2)return;I.v=2;
+ const re=A=>{if(!A)return A;const out=Array.isArray(A)?[]:{};Object.keys(A).forEach(k=>{out[map(+k)]=A[k];});return out;};
+ I.elo=re(I.elo);I.titles=re(I.titles);
+ (I.hist||[]).forEach(T0=>{T0.champ=map(T0.champ);T0.runner=map(T0.runner);T0.semi=(T0.semi||[]).map(map);T0.teams=(T0.teams||[]).map(map);(T0.groups||[]).forEach(g=>(g.tb||[]).forEach(r=>r.c=map(r.c)));});
+}

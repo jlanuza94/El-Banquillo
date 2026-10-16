@@ -124,7 +124,7 @@ export function ensureSquad(tid){
  return made;
 }
 /** Que la partida no crezca sin fin: plantillas de la IA recortadas y, como mucho, 1.200 libres (se van los peores y más mayores). */
-export function pruneFree(CAP=1200){trimSquads();const FA=Object.values(S.players).filter(p=>p.team===null&&!(S.short||[]).includes(p.id));
+export function pruneFree(CAP=Math.max(1200,Math.round(S.teams.length*1.1))){trimSquads();const FA=Object.values(S.players).filter(p=>p.team===null&&!(S.short||[]).includes(p.id));
  if(FA.length>CAP){FA.sort((a,b)=>(a.ovr-a.age*1.5+(a.pot*10-a.ovr)*.3)-(b.ovr-b.age*1.5+(b.pot*10-b.ovr)*.3)).slice(0,FA.length-CAP).forEach(p=>{delete S.players[p.id];});RT.SQ=null;RT.keyCache=null;}}
 /** Plantillas de la IA de 27 como mucho: se dejan libres a los que sobran (los peores). */
 export function trimSquads(){S.teams.forEach(t=>{if(t.id===S.user)return;const sq=squad(t.id).filter(p=>!p.loan);if(sq.length<=27)return;

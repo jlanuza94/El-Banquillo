@@ -58,6 +58,7 @@ const noop = { stopped: () => false, progress: () => {}, yield: async () => {} }
     if (homeW < .33 || homeW > .58) warn(code, `ventaja local rara: ${(homeW * 100).toFixed(0)}%`);
     if (small) warn(code, `${small} clubes de la IA con menos de 16 jugadores`);
     if (noGK) warn(code, `${noGK} clubes sin portero`);
+    ai.filter(t => !squad(t.id).some(p => p.pos === 'POR')).forEach(t => console.log('      sin portero:', t.name, LG(t.lg).c, LG(t.lg).lv, squad(t.id).length, t.parent != null ? 'filial' : '', squad(t.id).map(p => p.pos + (p.loan ? 'L' : '')).join(' ')));
     if (perWk > 9) warn(code, `demasiados mensajes en la bandeja: ${perWk.toFixed(1)} por jornada`);
     if (vals[0] > 400) warn(code, `precio disparado: €${vals[0].toFixed(0)}M`);
     if (!isFinite(S.budget)) warn(code, 'presupuesto no válido');

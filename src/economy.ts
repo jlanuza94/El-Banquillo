@@ -7,7 +7,7 @@ import {clamp,money,pick,r2,r3,ri,rnd} from './core';
 import {GRP} from './data';
 import {LG,PL,RT,S,T,clubWF,lgName,lgTeams,lunit,seasonLabel,setTeam,squad,uLg,unit} from './state';
 import {news} from './world';
-import {assignNum,baseWage,genPlayer} from './players';
+import {assignNum,baseWage,ensureSquad,genPlayer} from './players';
 
 /* ======================= Valor de mercado ======================= */
 /** Valor «de catálogo»: solo media y edad (la base de todo). */
@@ -101,7 +101,7 @@ export function crisisSales(poor){
  poor.forEach(t=>{if(t.broke)bankrupt(t);});
  poor.forEach(t=>{const sq=squad(t.id).sort((a,b)=>b.value-a.value),p=sq[0];if(!p||sq.length<=18)return;
   const buyers=S.teams.filter(b=>b.id!==t.id&&b.id!==S.user&&(b.cash||0)>p.value*1.2&&LG(b.lg).rep>=LG(t.lg).rep-5);if(!buyers.length)return;
-  const b=buyers.sort((x,y)=>y.cash-x.cash)[0],fee=r2(p.value*(.85+rnd()*.2));setTeam(p,b.id);assignNum(p);p.contract=ri(2,4);p.wage=Math.max(p.wage,baseWage(p));payFee(t.id,b.id,fee);
+  const b=buyers.sort((x,y)=>y.cash-x.cash)[0],fee=r2(p.value*(.85+rnd()*.2));setTeam(p,b.id);assignNum(p);p.contract=ri(2,4);p.wage=Math.max(p.wage,baseWage(p));payFee(t.id,b.id,fee);ensureSquad(t.id);
   if(LG(t.lg).c===LG(uLg()).c||LG(b.lg).c===LG(uLg()).c)news(`Crisis en ${t.name}: con las cuentas en rojo, vende a ${p.name} a ${b.name} por ${money(fee)}.`,'bad',{cat:'mer',subj:`Venta forzosa: ${p.name}`});});
 }
 
@@ -145,7 +145,7 @@ export function aiBuy(t,g,all){
  if(!best)return null;
  const from=best.team,fee=from===null?0:r2(best.value*(best.contract<=1?.7:1.1)*(.95+rnd()*.2));
  setTeam(best,t.id);assignNum(best);best.contract=ri(2,4);best.cl=r2(best.value*(2+rnd()*3));best.wage=Math.max(best.wage,baseWage(best));
- payFee(from,t.id,fee);return{p:best,from,fee};
+ payFee(from,t.id,fee);if(from!=null&&from!==S.user)ensureSquad(from);return{p:best,from,fee};
 }
 /** Verano: cada club de la IA ajusta su plantilla (24 jugadores: 3 porteros, 8 defensas, 8 medios y 5 delanteros). */
 export function aiSummerPlan(t,all){
@@ -166,7 +166,7 @@ export function aiSummerPlan(t,all){
 export function midSeasonReleases(){
  let n=0;const mine=[];
  S.teams.forEach(t=>{if(t.id===S.user||t.parent)return;const sq=squad(t.id).filter(p=>!p.loan);if(sq.length<=23)return;
-  const p=sq.sort((a,b)=>(a.ovr-a.age*.3+(a.age<=21?(a.pot*10-a.ovr)*.4:0))-(b.ovr-b.age*.3+(b.age<=21?(b.pot*10-b.ovr)*.4:0)))[0];if(!p)return;
+  const gk=sq.filter(x=>x.pos==='POR').length,p=sq.filter(x=>x.pos!=='POR'||gk>2).sort((a,b)=>(a.ovr-a.age*.3+(a.age<=21?(a.pot*10-a.ovr)*.4:0))-(b.ovr-b.age*.3+(b.age<=21?(b.pot*10-b.ovr)*.4:0)))[0];if(!p)return;
   setTeam(p,null);p.contract=0;n++;if(LG(t.lg).c===LG(uLg()).c&&p.ovr>=40)mine.push(`${p.name} (${t.short})`);});
  if(n)news(`Rescisiones de invierno: ${n} jugadores quedan libres en todo el mundo${mine.length?`. En tu país: ${mine.slice(0,5).join(', ')}${mine.length>5?'…':''}`:''}. Se pueden fichar sin traspaso.`,'',{cat:'mer',subj:'Nuevos agentes libres',act:[{l:'Ver libres',a:'mk-fa'}]});
  return n;

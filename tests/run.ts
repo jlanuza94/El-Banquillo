@@ -117,11 +117,11 @@ const app = document.getElementById('app')!;
 (async () => {
   const t0 = Date.now();
   setS(null); dirty(); render();
-  ok(S.teams.length === 1100 && S.leagues.length === 55, 'se crean 1100 clubes en 55 ligas de 16 países');
+  ok(S.teams.length === 1600 && S.leagues.length === 80, `se crean 1600 clubes en 80 ligas de 30 países (${S.teams.length}, ${S.leagues.length})`);
   ok(app.querySelector('.title [data-a="start-go"][data-v="new"]') && app.textContent!.includes('El Banquillo'), 'portada con el estadio y «Nueva partida»');
   RT.startScreen = 'new'; render();
-  ok(app.querySelector('.sbar') && app.querySelectorAll('.ccard').length === 16, 'pantalla de inicio');
-  ok(app.querySelectorAll('.ccard svg.flag').length === 16, 'países con bandera');
+  ok(app.querySelector('.sbar') && app.querySelectorAll('.ccard').length === 30, 'pantalla de inicio');
+  ok(app.querySelectorAll('.ccard svg.flag').length === 30, 'países con bandera');
   for (const st of ['d', 'club', 'c']) { RT.startStep = st; render(); }
   ok(app.querySelector('.ccard'), 'pasos de inicio: país, división y club');
   { const tid = S.teams.find(t => S.leagues[t.lg].c === 0).id; RT.pickT = tid; RT.startStep = 'coach'; render(); ok(app.querySelector('.csign [data-a=start-sign]') && app.querySelector('#cName'), 'tras elegir club: pantalla del entrenador'); RT.startStep = 'c'; RT.pickT = null; render(); }
@@ -312,7 +312,7 @@ const app = document.getElementById('app')!;
     ok(shopWeekly() > 0, 'la tienda da dinero cada jornada');
     S.view = 'club'; S.vt = { club: 'est' }; render(); ok(app.textContent.includes('Centro médico') && app.textContent.includes('Abono de temporada'), 'estadio con abonos y centro médico'); S.budget = b0; }
   { // Selecciones nacionales
-    initIntl(); ok(ranking().length === 16, 'ranking de selecciones (16)');
+    initIntl(); ok(ranking().length === 30, 'ranking de selecciones (30 con liga)');
     ok(callOf(0).length === 23, 'convocatoria automática de 23');
     const yrs = [1, 2, 3, 4].map(n => [summerYear(n), tournamentsIn(n).join('+')]); ok(yrs.some(x => x[1] === 'wc') && yrs.some(x => x[1] === 'eu+ca'), 'calendario de torneos: ' + yrs.map(x => x.join(':')).join(' '));
     const wc = playTournament('wc'); ok(wc.champ != null && wc.runner != null && wc.champ !== wc.runner && wc.groups.length === 8 && wc.ko.length === 4, `Mundial: campeona ${wc.champ}`);
@@ -657,6 +657,17 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // 30 países: selecciones con jugadores reales y conversión de partidas antiguas
+    const D = await import('../src/data'); const N = await import('../src/nations');
+    ok(D.COUNTRIES.length === 30 && D.ALLN.length === D.OLD_NAT_CODES.length + (D.ALLN.length - D.OLD_NAT_CODES.length), '30 países con liga');
+    const cro = D.COUNTRIES.findIndex(x => x.code === 'CRO'), mar = D.COUNTRIES.findIndex(x => x.code === 'MAR'), sen = 30 + D.NATIONS.findIndex(x => x.code === 'SEN');
+    ok(N.pool(cro, 30).length >= 20 && !N.isV(cro), 'Croacia tiene jugadores reales para su selección');
+    ok(N.members('eu').length === 16 && N.members('ca').length === 16 && N.members('wc').length === 32, 'Eurocopa, Copa América y Mundial completos');
+    const I0 = S.intl, v0 = S.natV, mn = S.mgr.nat;
+    S.intl = { elo: { 0: 1700, 18: 1555, 21: 1444 }, titles: { 18: { wc: 1, eu: 0, ca: 0 } }, hist: [{ champ: 18, runner: 21, semi: [18, 21], teams: [0, 18, 21], groups: [{ tb: [{ c: 18 }, { c: 21 }] }] }] }; S.natV = 0; S.mgr.nat = 18; N.natMigrate();
+    ok(S.intl.elo[mar] === 1555 && S.intl.elo[sen] === 1444 && S.intl.elo[0] === 1700 && S.intl.titles[mar].wc === 1 && S.intl.hist[0].champ === mar && S.intl.hist[0].groups[0].tb[1].c === sen && S.mgr.nat === mar, 'partida antigua: las selecciones se convierten bien');
+    S.intl = I0; S.natV = v0; S.mgr.nat = mn;
+  }
   { // ronda: pretemporada con calendario, puesta a punto, historia, afición, resumen, objetivos, comparativa y segundo
     const PS = await import('../src/presched'); const CA = await import('../src/calendar');
     ok(CA.FIRST_LG >= 45, 'pretemporada más larga (' + CA.FIRST_LG + ' días)');
@@ -874,7 +885,7 @@ const app = document.getElementById('app')!;
   const code = exportCode();
   ok(importCode(code) === true, 'copia de seguridad: exportar e importar');
   const kb = Math.round(pack().length / 1024);
-  ok(kb < 8500, `tamaño del guardado: ${kb} KB`);
+  ok(kb < 13000, `tamaño del guardado: ${kb} KB`);
   console.log(`Terminado en ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

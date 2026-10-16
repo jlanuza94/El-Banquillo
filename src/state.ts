@@ -39,7 +39,7 @@ export const atCell=v=>`<span class="at ${qc(v)}">${Math.round(v*10)}</span>`;
 export const unit=rep=>.4*Math.pow(2.5,(rep-74.5)/10);
 /** Riqueza de cada país (como en el mundo real): la Premier tiene mucho más dinero; Portugal, Argentina o Escocia, mucho menos.
  * Orden de COUNTRIES: España, Inglaterra, Italia, Alemania, Francia, Portugal, Brasil, Argentina, Países Bajos, México, Bélgica, Turquía, Escocia, EE. UU., Japón, Colombia. */
-export const CWEALTH=[1,2.4,1,1.25,.95,.45,.5,.3,.6,.7,.5,.55,.35,.9,.7,.3];
+export const CWEALTH=[1,2.4,1,1.25,.95,.45,.5,.3,.6,.7,.5,.55,.35,.9,.7,.3,.35,.3,.6,.7,.55,.6,.55,.4,.35,.3,.25,.6,1.2,.3];
 /** La riqueza del país pesa sobre todo arriba: en las categorías bajas todos se parecen más. */
 export const cwF=(c,lv)=>1+((CWEALTH[c]??.5)-1)*(lv===0?1:lv===1?.7:lv===2?.45:.25);
 /** «Unidad» de dinero de una liga: su nivel y lo rico que es su país. */
