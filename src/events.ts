@@ -17,7 +17,7 @@ import {TITLES,hasTitle,setTitle,tInc} from './mtitles';
 const TITLES_CAT=k=>TITLES[k]?TITLES[k][0]:'peo';
 import {askMentor,interviewChance,interviewQs,pickSpec} from './mgrcareer';
 import {convalidate,eligibility,enroll} from './coach';
-import {oopMap,oopSwap} from './oop';
+import {oopMap,oopMoveTo,oopSwap} from './oop';
 import {offerStaffRole} from './mgrcareer';
 import {INT_MAX,friendlyWait as fWait2,inPre,internalMatch} from './preseason';
 import {playTour} from './season';
@@ -533,8 +533,9 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
  DG_T=Date.now();if(e.type==='pointercancel')return;
  const t=dropAt(e.clientX,e.clientY);if(!t)return;
- if(d.src==='oop'){if(t.matches('.slot[data-i]')&&+t.dataset.i!==+d.el.dataset.i){if(oopMap(T(S.user)))oopSwap(T(S.user),+d.el.dataset.i,+t.dataset.i);else placeInSlot(d.pid,+t.dataset.i);}else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);else if(t.matches('.fmlist'))removeFromTeam(d.pid);S.oopSel=null;}
- else if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);toast('Formación libre: puedes seguir moviendo jugadores o volver a una fija en el selector.');}}
+ if(d.src==='oop'&&t.matches('.vcell')){if(oopMoveTo(T(S.user),+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy))S.oopSel=null;}
+ else if(d.src==='oop'){if(t.matches('.slot[data-i]')&&+t.dataset.i!==+d.el.dataset.i){if(oopMap(T(S.user)))oopSwap(T(S.user),+d.el.dataset.i,+t.dataset.i);else placeInSlot(d.pid,+t.dataset.i);}else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);else if(t.matches('.fmlist'))removeFromTeam(d.pid);S.oopSel=null;}
+ else if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);}}
  else if(t.matches('.slot[data-i]'))placeInSlot(d.pid,t.matches('.oopm')?ipIdx(+t.dataset.i):+t.dataset.i);
  else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);
  else if(d.src!=='list')removeFromTeam(d.pid);

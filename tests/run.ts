@@ -657,6 +657,12 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // sin balón: arrastrar a un jugador a otra zona crea una forma sin balón libre sin tocar la de con balón
+    const O = await import('../src/oop'), FB = await import('../src/freeboard'), { T: T_ } = await import('../src/state'), { slotsOf: so } = await import('../src/tactics');
+    const t = T_(S.user), f0 = t.formation, o0 = t.oop, m0 = t.oopMap, k0 = t.oopKey, of0 = t.oopFree; t.oop = null;
+    ok(O.oopMoveTo(t, 5, 50, 18) && O.oopForm(t) === FB.OFREE && t.formation === f0 && so(FB.OFREE).length === 11 && so(FB.OFREE)[5] === 'DC' && O.oopMap(t).length === 11, 'sin balón: mover a un jugador a otra zona crea tu forma libre para defender y no toca la de con balón');
+    t.oop = o0; t.oopMap = m0; t.oopKey = k0; t.oopFree = of0;
+  }
   { // ronda 11: VAR, altitud, recurso, subasta, peleas, patrocinios, récords, habilidades, reto, penaltis
     const M = await import('../src/r11match'), C = await import('../src/r11club'), CH = await import('../src/r11chal'), { LG: LG_, T: T_, squad: sq_, uLg: uL } = await import('../src/state'), { COUNTRIES: CO } = await import('../src/data');
     const lv = LG_(uL()).lv; ok(M.hasVarFor({ k: 'ct' }) && !M.hasVarFor({ k: 'fr' }) && M.hasVarFor({ k: 'lg' }) === (lv <= 1), 'VAR: solo en las dos primeras categorías y en competiciones grandes, nunca en amistosos');

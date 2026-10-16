@@ -5,6 +5,8 @@ import {FORMS,GRP} from './data';
 import {S,T} from './state';
 
 export const FREE='Libre';
+/** Formación libre sin balón (la que tú colocas para defender). */
+export const OFREE='Libre sin balón';
 /** Puesto según la zona: y es la profundidad (0 = portería rival, 100 = la tuya) y x el ancho (0 = izquierda). */
 export function spAt(x,y){
  const w=x<28?'L':x>72?'R':'C';
@@ -23,7 +25,9 @@ export function coordsOf(f){
 /** Posiciones libres del equipo (siempre 10 jugadores de campo). */
 export function freeOf(t){t=t||T(S.user);if(!t.free||t.free.length!==10)t.free=coordsOf(t.formation&&t.formation!==FREE?t.formation:'4-4-2');return t.free;}
 /** Filas de la formación: las fijas de siempre o, para «Libre», una fila por jugador con su puesto según la zona. */
-export function formRows(f){if(f!==FREE)return FORMS[f]||FORMS['4-4-2'];return freeOf(T(S.user)).map(c=>[[spAt(c.x,c.y)],c.y]);}
+export function formRows(f){if(f===OFREE)return oFreeOf(T(S.user)).map(c=>[[spAt(c.x,c.y)],c.y]);if(f!==FREE)return FORMS[f]||FORMS['4-4-2'];return freeOf(T(S.user)).map(c=>[[spAt(c.x,c.y)],c.y]);}
+/** Posiciones sin balón libres (10 jugadores de campo, en el orden de los puestos sin balón). */
+export function oFreeOf(t){t=t||T(S.user);if(!t.oopFree||t.oopFree.length!==10)t.oopFree=coordsOf(t.formation&&t.formation!==FREE?t.formation:'4-4-2');return t.oopFree;}
 /** Coordenadas de cada hueco (portero incluido) para dibujar el campo. */
 export const freeCoords=()=>[{x:50,y:89}].concat(freeOf(T(S.user)));
 /** Mueve a un jugador de la pizarra (índice 0-9 sin contar al portero). */
@@ -45,7 +49,7 @@ export function freeWarn(){
 }
 /** Coordenadas (en %) de cada puesto de una formación, con el campo de pie: x de banda a banda, y de arriba (ataque) a abajo (portería). */
 export function slotCoords(f){
- const rows=[[['POR'],89]].concat(formRows(f)),fc=f===FREE?freeCoords():null,out=[];let si=0;
+ const rows=[[['POR'],89]].concat(formRows(f)),fc=f===FREE?freeCoords():f===OFREE?[{x:50,y:89}].concat(oFreeOf(T(S.user))):null,out=[];let si=0;
  rows.forEach(([list,y0])=>list.forEach((s,k)=>{
   const sx=si++,n=list.length;let x=(k+1)/(n+1)*100,y=y0;
   if(n===5&&GRP[s]==='DEF'&&(k===0||k===4))y-=8;
@@ -63,4 +67,5 @@ export function shapeOf(t){
  return rows.map(r=>r.n).join('-');
 }
 /** Nombre que se enseña de una formación: la libre, con su numeración. */
-export const fLabel=(f,t)=>f===FREE?shapeOf(t):f;
+export const fLabel=(f,t)=>f===FREE?shapeOf(t):f===OFREE?shapeOfC(oFreeOf(t||T(S.user))):f;
+function shapeOfC(F){const ys=F.map(c=>c.y).sort((a,b)=>b-a),rows=[];ys.forEach(y=>{const r=rows[rows.length-1];if(r&&r.y-y<6){r.n++;r.y=y;}else rows.push({y,n:1});});return rows.map(r=>r.n).join('-');}
