@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {liveChangeCheck} from './tacreport';
 import {rivMult} from './tcenter';
 import {REFS,aiInMatch,duoMult,mgrAt,momentShootout,refFor} from './extras2';
 import {forcedAfter,momentInj,momentPen,momentRed,momentsTick,recordCoach,spPrepFor,spPrepMult,weatherFor,weatherMods} from './extras';
@@ -23,7 +24,7 @@ import {AT_NAME,GRP,MENT,TAC0,TX,W,WIDE,newSt} from './data';
 import {condTick} from './plans';
 import {synergies,synergyMods} from './synergy';
 import {LG,PL,S,T,available,seasonLabel,shortNm,squad,uLg} from './state';
-import {rateA,refresh,rollInjury,wpick} from './players';
+import {gainAt,rateA,refresh,rollInjury,wpick} from './players';
 import {news} from './world';
 import {titleMods} from './mtitles';
 import {autoLineup,chemMult,eff,famOf,hapMult,hasTr,slotsOf,subsOf,teamPower,userRoles,xg} from './tactics';
@@ -310,6 +311,7 @@ export function step(m){
  if(live)momentsTick(m);
  if(live)phaseLog(m,clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8));
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
+ if(live&&m.us){const v=liveChangeCheck(m);if(v)addEv(m,'sys',null,v.tx);}
  {const ec=x=>x&&x.ent==='dur'?1.35:x&&x.ent==='pru'?.7:1,dh=(m.oi&&m.oi.h&&m.oi.h.dur?1.6:1)*ec(m.tac.h),da=(m.oi&&m.oi.a&&m.oi.a.dur?1.6:1)*ec(m.tac.a),ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
   if(rnd()<.034*(ph+pa)*(m.derby?1.3:1)*(m.refr?REFS[m.refr.k].c:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
@@ -357,7 +359,7 @@ export function playerTick(full){
   p.energy=Math.round(Math.min(100,p.energy+(100-p.energy)*((full?.45:.25)+(mine?recBonus():0))+(full?4:2)));
   if(!full)return;
   if(mine){trainPlayer(p);if(!p.playedWk)p.form=Math.trunc(p.form*.7);p.playedWk=false;return;}
-  if(p.team!==null&&rateA(p.at,p.pos)<p.pot&&rnd()<(p.age<=21?.075:p.age<=24?.05:p.age<=28?.025:p.age<=31?.01:0)*(p.playedWk?1.15:.85)*(p.ph&&p.ph.length&&p.ovr-p.ph[p.ph.length-1][1]>=7?0:1)){const k=wpick(W[p.pos]);if(p.at[k]<10){p.at[k]++;refresh(p);if(p.team===S.user)news(`${p.name} progresa: su ${AT_NAME[k].toLowerCase()} sube a ${p.at[k]}.`,'good');}}
+  if(p.team!==null&&rateA(p.at,p.pos)<p.pot&&rnd()<(p.age<=21?.075:p.age<=24?.05:p.age<=28?.025:p.age<=31?.01:0)*(p.playedWk?1.15:.85)*(p.ph&&p.ph.length&&p.ovr-p.ph[p.ph.length-1][1]>=7?0:1)){const k=wpick(W[p.pos]);if(p.at[k]<10){gainAt(p,k);refresh(p);if(p.team===S.user)news(`${p.name} progresa: su ${AT_NAME[k].toLowerCase()} sube a ${Math.round(p.at[k]*10)}.`,'good');}}
   if(!p.playedWk)p.form=Math.trunc(p.form*.7);
   p.playedWk=false;
  });

@@ -3,11 +3,12 @@
 import {wcs} from '../state';
 import {flag} from '../flags';
 import {esc,money} from '../core';
-import {ATTRS,AT_NAME,COUNTRIES,GRP,LV_NAMES,newSt,posChip} from '../data';
+import {ATTRS,AT_NAME,COUNTRIES,GRP,LV_NAMES,SPN,newSt,posChip} from '../data';
+import {slotRate} from '../tactics';
 import {LG,PL,S,T,crest,lgName,qBadge,qc,uLg} from '../state';
 import {bestXI,minPJ,playersOf,ranking} from '../awards';
 import {seen} from '../scouting';
-import {atCellS,nameBtn,pBadgeS} from './common';
+import {atCellS,nameBtn,pBadgeS,potTxt,vtab} from './common';
 
 const avgR=p=>p.st&&p.st.pj?p.st.rs/p.st.pj:0;
 const who=c=>c?`${PL(c.pid)?nameBtn(PL(c.pid)):esc(c.name)} <span class="small muted">· ${esc(c.club)}</span>`:'—';
@@ -50,12 +51,19 @@ export function premiosView(){
 /** Comparador de dos jugadores (respeta lo que sabes de cada uno). */
 export function compareHTML(a,b){
  const sa=seen(a),sb=seen(b),sta=a.st||newSt(),stb=b.st||newSt();
- const bar=(r,right)=>{const v=(r[0]+r[1])/2;return `<span class="abar" style="direction:${right?'rtl':'ltr'}"><i class="${qc(v)}" style="width:${v*10}%"></i></span>`;};
+ const bar=(r,right,win)=>{const v=(r[0]+r[1])/2;return `<span class="abar${win?' win':''}" style="direction:${right?'rtl':'ltr'}"><i class="${qc(v)}" style="width:${v*10}%"></i></span>`;};
  const keys=ATTRS.filter(k=>k!=='por'||a.pos==='POR'||b.pos==='POR');
  const head=p=>`<div style="text-align:center;min-width:0"><div class="small muted">${p.team===null?'Libre':esc(T(p.team).short)}</div><b>${esc(p.name)}</b><div class="row" style="justify-content:center;margin-top:4px">${posChip(p)}${pBadgeS(p)}</div><div class="small muted">${p.age} años · ${money(p.value)}</div></div>`;
- const rowS=(l,x,y)=>`<div class="cmp2"><span class="num">${x}</span><span class="small muted">${l}</span><span class="num">${y}</span></div>`;
+ const rowS=(l,x,y,hi)=>{const nx=parseFloat(String(x).replace(/[^\d.-]/g,'')),ny=parseFloat(String(y).replace(/[^\d.-]/g,''));const wa=hi!=null&&!isNaN(nx)&&!isNaN(ny)&&nx!==ny&&((nx>ny)===hi),wb=hi!=null&&!isNaN(nx)&&!isNaN(ny)&&nx!==ny&&!wa;return `<div class="cmp2"><span class="num${wa?' cw':''}">${x}</span><span class="small muted">${l}</span><span class="num${wb?' cw':''}">${y}</span></div>`;};
+ const av=(sn,k)=>(sn.at[k][0]+sn.at[k][1])/2;let wA=0,wB=0;keys.forEach(k=>{const x=av(sa,k),y=av(sb,k);if(x>y)wA++;else if(y>x)wB++;});
+ const tb=vtab('cm',[['at','Atributos'],['st','Estadísticas'],['po','Posiciones'],['co','Contrato']],'at'),ks=['at','st','po','co'];
+ let body='';
+ if(tb.cur==='at')body=`<p class="small muted" style="margin:0 0 6px;text-align:center">Mejor en ${wA} atributo${wA===1?'':'s'} · ${wB} para ${esc(b.name.split(' ').slice(-1)[0])}</p>${keys.map(k=>{const x=av(sa,k),y=av(sb,k);return `<div class="cmp2"><span class="row" style="gap:6px;justify-content:flex-end">${bar(sa.at[k],true,x>y)}${atCellS(a,k,sa)}</span><span class="small muted">${AT_NAME[k]}</span><span class="row" style="gap:6px">${atCellS(b,k,sb)}${bar(sb.at[k],false,y>x)}</span></div>`;}).join('')}`;
+ else if(tb.cur==='st'){const n=s=>s.pj?(s.rs/s.pj).toFixed(2):'—',g90=s=>s.mi?(s.g/s.mi*90).toFixed(2):'—';body=`${rowS('Partidos',sta.pj,stb.pj,true)}${rowS('Minutos',sta.mi||0,stb.mi||0,true)}${rowS('Goles',sta.g,stb.g,true)}${rowS('Asistencias',sta.a,stb.a,true)}${rowS('Goles/90',g90(sta),g90(stb),true)}${rowS('Nota media',n(sta),n(stb),true)}${rowS('MVP',sta.mv||0,stb.mv||0,true)}${rowS('Tarjetas',sta.yc||0,stb.yc||0,false)}<h3 style="margin:10px 0 4px">Carrera</h3>${rowS('Partidos',a.car?a.car[0]:0,b.car?b.car[0]:0,true)}${rowS('Goles',a.car?a.car[1]:0,b.car?b.car[1]:0,true)}${rowS('Internacional',a.caps||0,b.caps||0,true)}`;}
+ else if(tb.cur==='po'){const SP=['POR','LI','DFC','LD','MCD','MI','MC','MD','MCO','EI','DC','ED'];body=SP.map(sp=>rowS(SPN[sp],Math.round(slotRate(a,sp)),Math.round(slotRate(b,sp)),true)).join('');}
+ else body=`${rowS('Valor',money(a.value),money(b.value),null)}${rowS('Sueldo/sem',money(a.wage),money(b.wage),null)}${rowS('Contrato',a.contract+' año'+(a.contract===1?'':'s'),b.contract+' año'+(b.contract===1?'':'s'),true)}${rowS('Edad',a.age,b.age,false)}${rowS('Potencial',a.age<=23?potTxt(a):'—',b.age<=23?potTxt(b):'—',null)}`;
+ const ix=ks.indexOf(tb.cur);
  return `<div class="eyebrow">Comparar jugadores</div><div class="cmpgrid">${head(a)}<span class="vs">VS</span>${head(b)}</div>
- <div style="margin-top:12px">${keys.map(k=>`<div class="cmp2"><span class="row" style="gap:6px;justify-content:flex-end">${bar(sa.at[k],true)}${atCellS(a,k,sa)}</span><span class="small muted">${AT_NAME[k]}</span><span class="row" style="gap:6px">${atCellS(b,k,sb)}${bar(sb.at[k],false)}</span></div>`).join('')}</div>
- <h3 style="margin:14px 0 4px">Temporada</h3>${rowS('Partidos',sta.pj,stb.pj)}${rowS('Goles',sta.g,stb.g)}${rowS('Asistencias',sta.a,stb.a)}${rowS('Nota media',sta.pj?(sta.rs/sta.pj).toFixed(2):'—',stb.pj?(stb.rs/stb.pj).toFixed(2):'—')}${rowS('Sueldo/sem',money(a.wage),money(b.wage))}
+ <div class="fitabs" style="margin-top:8px">${tb.bar}</div><div class="fisw" data-swipe="cm" data-tabs="${ks.join(',')}"><div class="fibody" style="margin-top:8px">${body}</div></div><div class="fidots">${ks.map((k,i)=>`<i class="${i===ix?'on':''}"></i>`).join('')}</div>
  <div class="acts"><button class="btn" data-a="ficha" data-id="${a.id}">Ficha de ${esc(a.name.split(' ')[0])}</button><button class="btn" data-a="ficha" data-id="${b.id}">Ficha de ${esc(b.name.split(' ')[0])}</button><button class="btn primary" data-a="modal-close">Cerrar</button></div>`;
 }

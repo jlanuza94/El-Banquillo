@@ -1,5 +1,8 @@
 /* El Banquillo · squad.js — Felicidad, vestuario, agentes, cláusulas y entrenamiento. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {bizMult,bizWeekly,finMonthly,kitMult,shirtsWeekly} from './business';
+import {bigInterestMonthly,gemKeepCheck} from './biginterest';
+import {progressMonthly} from './progress';
 import {pickAt,tcCountUp,tcGrowMult,tcTacLearn,tcWeekly} from './tcenter';
 import {hasTitle} from './mtitles';
 import {careerWeekly} from './mgrcareer';
@@ -33,7 +36,7 @@ import {crewWages,crewWeekly,recBonusStaff,trainInjMult,trainMult} from './staff
 import {clamp,money,pick,r2,r3,ri,rnd} from './core';
 import {AT_NAME,FORMS,ROLES,W} from './data';
 import {LG,PL,S,T,econ,lgName,rt,seasonLabel,setTeam,squad,uLg,unit} from './state';
-import {assignNum,baseWage,rateA,refresh,wpick} from './players';
+import {assignNum,baseWage,gainAt,rateA,refresh,wpick} from './players';
 import {news} from './world';
 import {famOf,fixLineup,langOf,leaders,nRounds,nextFixture} from './tactics';
 import {playerTick} from './engine';
@@ -108,8 +111,8 @@ export function trainPlayer(p){
  const base=p.ph&&p.ph.length?p.ph[p.ph.length-1][1]:null;
  if((base==null||p.ovr-base<7)&&rnd()<growChance(p)){
   const k=pickAt(p,W)||(F.at?pick(F.at):wpick(W[p.pos]));
-  if(p.at[k]<10){const before=p.ovr;p.at[k]++;refresh(p);p.sg=(p.sg||0)+1;tcCountUp();
-   if(p.age<=21&&p.boomS!==S.seasonN){const base=p.ph&&p.ph.length?p.ph[p.ph.length-1][1]:before;if(p.ovr-base>=6){p.boomS=S.seasonN;news(`¡${p.name} está explotando! Ya tiene ${rt(p)} de media con ${p.age} años.`,'good');}}S.trainLog.unshift({wk:S.week+1,txt:`${p.name}: ${AT_NAME[k].toLowerCase()} sube a ${p.at[k]}${p.ovr>before?' · media '+rt(p):''}.`});}
+  if(p.at[k]<10){const before=p.ovr;gainAt(p,k);refresh(p);p.sg=(p.sg||0)+1;tcCountUp();
+   if(p.age<=21&&p.boomS!==S.seasonN){const base=p.ph&&p.ph.length?p.ph[p.ph.length-1][1]:before;if(p.ovr-base>=6){p.boomS=S.seasonN;news(`¡${p.name} está explotando! Ya tiene ${rt(p)} de media con ${p.age} años.`,'good');}}S.trainLog.unshift({wk:S.week+1,txt:`${p.name}: ${AT_NAME[k].toLowerCase()} sube a ${Math.round(p.at[k]*10)}${p.ovr>before?' · media '+rt(p):''}.`});}
  }
  S.trainLog=S.trainLog.slice(0,30);
 }
@@ -123,16 +126,16 @@ export function weeklyTeamTraining(){
 export function processWeek(){
  const wk=S.week,fx=nextFixture();
  delegWeekly();if(S.week===Math.floor(nRounds()/2))midSeasonReleases();playerTick(true);weeklyTeamTraining();
- const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,derbyH=home&&isDerby(fx.h,fx.a),tix=home?r3(ticket()*(derbyH?1.25:1)):0,shop=shopWeekly();
+ const home=fx.h===S.user,wages=wageBill()+bankWeekly()+staffTotal()+scoutWages()+S.mgr.sal+facMaint(),e=econ(uLg()),tv=e.tv,derbyH=home&&isDerby(fx.h,fx.a),tix=home?r3(ticket()*(derbyH?1.25:1)*bizMult('tix')):0,shop=r3(shopWeekly()*bizMult('shop')*kitMult()),biz=bizWeekly();shirtsWeekly(shop);
  const my=home?fx.hg:fx.ag,op=home?fx.ag:fx.hg;
  if(home){S.club.lastAtt=Math.min(S.club.cap,Math.round(attendance()*(derbyH?1.25:1)));if(S.club.lastAtt>=S.club.cap)S.fullHomes=(S.fullHomes||0)+1;if(!S.rec)S.rec={};if(!S.rec.att||S.club.lastAtt>S.rec.att.v)S.rec.att={v:S.club.lastAtt,season:seasonLabel()};}
  if(!S.sponsor&&S.week>=3&&S.spOffers&&S.spOffers.length){S.sponsor=S.spOffers[0];news(`La directiva firma con ${S.sponsor.name} como patrocinador al no elegir tú.`);}
  const spo=S.sponsor?r3(S.sponsor.weekly+(my>op?S.sponsor.win:0)):0;
- S.budget=r3(S.budget+tv+tix+spo+shop-wages);if(S.budget>=50)unlock('millo');
- {const bon=weeklyBonuses();S.fin.push({wk:wk+1,tv,tix,spo,shop,wages:r3(wages+bon)});}
+ S.budget=r3(S.budget+tv+tix+spo+shop+biz-wages);if(S.budget>=50)unlock('millo');
+ {const bon=weeklyBonuses();S.fin.push({wk:wk+1,tv,tix,spo,shop,biz,wages:r3(wages+bon)});finMonthly(nRounds());}
  clubWeekly(my>op,my<op);
  news(`Jornada ${wk+1}: ${T(fx.h).name} ${fx.hg}-${fx.ag} ${T(fx.a).name}. ${my>op?'Victoria.':my<op?'Derrota.':'Empate.'}`,my>op?'good':my<op?'bad':'');
- scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();u19Weekly(growYouth);crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
+ progressMonthly();bigInterestMonthly();gemKeepCheck();scoutsWeekly();scoutingWeekly();processBids(true);loanRequests();missionsWeekly();shortlistWeekly();gemsWeekly();devWeekly();objectivesWeekly();captainWeekly();publicWeekly();stadiumWeekly();if(wk%2===1)youthRound();academyWeekly();u19Weekly(growYouth);crewWeekly();mentorWeekly();contactsWeekly();vestWeekly();coachesWeekly();quickWeekly();hapWeekly(Math.sign(my-op));meetWeekly();fifaWeek();youthTournament();retosWeekly(home);valueWeekly();agentsWeekly();clauseWeekly();mgrWeekly(my,op);
  if(inWindow())aiTransfers(isDeadline()?70:28);
  if(isDeadline())news('Último día de mercado: después de esta jornada se cierra el mercado de fichajes.','bad');
  if(S.budget<0&&S.week%6===0)news('Estás en números rojos. La directiva te pide vender o rebajar sueldos: no podrás fichar hasta recuperar presupuesto.','bad');

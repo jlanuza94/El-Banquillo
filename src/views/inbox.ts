@@ -5,7 +5,7 @@ import {ptMailState} from '../preseason';
 import {S} from '../state';
 import {CATS} from '../inbox';
 
-const actBtn=(x,primary)=>`<button class="btn sm ${primary?'primary':''}" data-a="${esc(x.a)}"${x.id!=null?` data-id="${esc(x.id)}"`:''}${x.v!=null?` data-v="${esc(x.v)}"`:''}${x.i!=null?` data-i="${esc(x.i)}"`:''}>${esc(x.l)}</button>`;
+const actBtn=(x,primary)=>`<button class="btn sm ${primary?'primary':''}" data-a="${esc(x.a)}"${x.id!=null?` data-id="${esc(x.id)}"`:''}${x.v!=null?` data-v="${esc(x.v)}"`:''}${x.i!=null?` data-i="${esc(x.i)}"`:''}${x.k!=null?` data-k="${esc(x.k)}"`:''}${x.go!=null?` data-go="${esc(x.go)}"`:''}>${esc(x.l)}</button>`;
 
 export function buzonView(){
  const all=S.inbox||[],cat=S.mailCat||'all',list=cat==='all'?all:all.filter(m=>m.cat===cat);

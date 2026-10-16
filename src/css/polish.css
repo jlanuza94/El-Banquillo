@@ -1142,3 +1142,22 @@ details.yclub summary{cursor:pointer}
 .fipl{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .fipitch{max-width:430px}
 @media (hover:none){.fiarr{display:none}}
+.atar{font-style:normal;font-size:9px;margin-left:2px}.atar.up{color:#3fb950}.atar.dn{color:#e5534b}
+/* Mi camino */
+.jladder{display:flex;gap:4px;margin:0 0 12px}
+.jst{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.jst i{display:block;width:100%;height:8px;border-radius:4px;background:rgba(127,127,127,.25)}
+.jst.done i{background:#2b8a4b}.jst.me i{background:var(--accent);box-shadow:0 0 0 2px rgba(201,162,39,.35)}.jst.me span{color:inherit;font-weight:800}
+.jtls{display:flex;flex-direction:column;gap:6px;border-left:2px solid var(--line);margin-left:6px;padding-left:10px}
+.jtl{display:grid;grid-template-columns:58px 24px minmax(0,1fr);gap:6px;align-items:center}
+.jtl-s{font-family:var(--f-num);font-weight:800;font-size:13px}.jtl-i{font-size:16px;text-align:center}
+.jtl-t{display:flex;flex-direction:column;min-width:0}.jtl-t small{color:var(--muted);font-size:11px}
+.jtl.up .jtl-t b{color:var(--win,#2b8a4b)}.jtl.dn .jtl-t b{color:var(--loss,#c23a2e)}
+.loanl{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.loanc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:rgba(127,127,127,.05);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.loanc.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}.loanc .t{display:flex;flex-direction:column;min-width:0}.loanc small{color:var(--muted);font-size:11px}
+.lm{font-size:11px;font-weight:800;padding:2px 6px;border-radius:5px}.lm.q5{background:#1f9d55;color:#fff}.lm.q3{background:#d6a32b;color:#111}.lm.q1{background:#c8352e;color:#fff}
+.cmp2 .cw{color:var(--win,#2b8a4b);font-weight:800}.abar.win i{box-shadow:0 0 0 1px #fff inset}
+.bizr{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.bzi{font-size:22px;text-align:center}.bzl{color:var(--accent);letter-spacing:1px;font-size:12px}
+.fchart{width:100%;height:auto;max-height:120px}

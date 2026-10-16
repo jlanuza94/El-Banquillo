@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {bizSeason} from './business';
 import {canteraAfterMoves,hasCantera} from './youthclubs';
 import {u19SeasonEnd} from './u19';
 import {careerSeasonEnd,retireToStaff} from './mgrcareer';
@@ -221,7 +222,7 @@ export function newSeason(){u19SeasonEnd();
  crewSeasonEnd();livingSeasonEnd(tabs);scoutingSeasonEnd();seedGems(10);discoveries();const youth=academyIntake(3);maybeGolden(makeYouth);setupYouth();genScoutPool();aiTransfers(160);
  genFreeAgents();crisisSales(poorClubs);
  S.short=S.short.filter(id=>PL(id));
- S.seasonN++;setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();preWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
+ S.seasonN++;bizSeason();setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();preWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
  devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${Math.round(p.ovr)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
  if(retired.length)news(`Se retiran: ${retired.join(', ')}.`);
  if(freed.length)news(`Acaban contrato y se van libres: ${freed.join(', ')}.`,'bad');
@@ -231,7 +232,7 @@ export function newSeason(){u19SeasonEnd();
  if(gone.length)news(`Terminan su cesión y vuelven a sus clubes: ${gone.join(', ')}.`);
  if(leftAc.length)news(`Dejan la cantera por edad: ${leftAc.join(', ')}.`);
  if(youth.length)news(`Nuevos juveniles en la ${hasCantera(S.user)?'cantera':'sub-19'}: ${youth.join(', ')}.`,'good');
- if(sm.up)news(`¡Ascenso! ${T(S.user).name} jugará en ${lgName(uLg())}. Prima de ascenso incluida en el premio de ${money(sm.prize)}.`,'good');
+ if(sm.up)news(`¡Ascenso! ${T(S.user).name} jugará en ${lgName(uLg())}. Prima de ascenso incluida en el premio de ${money(sm.prize)}.`,'good');if(sm.up&&S.club){const C=S.club,add=Math.round(Math.max(500,C.cap*.2)/100)*100;C.cap+=add;C.fans=Math.round(C.fans*1.08);news(`Con el ascenso, el ayuntamiento y la directiva amplían el estadio: ${add.toLocaleString('es')} asientos más (ahora ${C.cap.toLocaleString('es')}). Más socios, más taquilla.`,'good',{cat:'dir',subj:'El estadio crece con el ascenso'});}
  else if(sm.down)news(`Descenso a ${lgName(uLg())}. Toca reconstruir.`,'bad');
  else news(`Premio por terminar ${sm.pos}º: ${money(sm.prize)}.`,'good');
  news(`Arranca la temporada ${seasonLabel()} en ${lgName(uLg())}. Objetivo: ${S.obj.txt.toLowerCase()}.`,'good');

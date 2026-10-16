@@ -32,7 +32,7 @@ import {news,objectiveFor,startBudget} from '../world';
 import {step} from '../engine';
 import {CONTS,CT_STAGES,CWC_NAMES,cupName,cupRoundName} from '../competitions';
 import {askPrice,inWindow,negState,sell,termsForm} from '../market';
-import {contractLabel,loanFee,loansIn,optPrice,renState} from '../contracts';
+import {contractLabel,loanFee,loanMinutes,loansIn,optPrice,renState} from '../contracts';
 import {hapReasons,hapTag} from '../squad';
 import {atCellS,keyAttrs,nameBtn,pBadgeS,resRow} from './common';
 import {fichaHTML} from './squad';
@@ -93,9 +93,9 @@ export function modalView(){
   <div class="acts"><button class="btn" data-a="modal-close">${st.closed?'Cerrar':'Cancelar'}</button>${st.closed?'':`<button class="btn" data-a="loan-ok" data-id="${p.id}" data-o="1">Con opción de compra · ${money(r2(loanFee(p)*1.5))} + ${money(optPrice(p))} si la ejecutas</button><button class="btn primary" data-a="loan-ok" data-id="${p.id}">Cesión simple · ${money(loanFee(p))}</button>`}</div>`;}
  else if(md.type==='loanout'){const p=PL(md.id),o=S.lo[md.id],aff=affiliates();
   body=o.none&&!aff.length?`<div class="eyebrow">Ceder jugador</div><h2 style="margin-top:4px">${esc(p.name)}</h2><p>Ningún club está interesado en llevárselo cedido esta jornada. Prueba la próxima.</p><div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>`
-  :`<div class="eyebrow">${o.none?'Ceder a un club afiliado':'Interés por una cesión'}</div><h2 style="margin-top:4px">${o.none?esc(p.name):esc(T(o.team).name)+' quiere a '+esc(p.name)+' cedido'}</h2>
+  :`<div class="eyebrow">${o.none?'Ceder a un club afiliado':'Clubes interesados en la cesión'}</div><h2 style="margin-top:4px">Ceder a ${esc(p.name)}</h2>
   <div class="kv">${o.none?'':`<span>Club</span><b>${esc(T(o.team).name)}</b><span>Liga</span><b>${esc(lgName(T(o.team).lg))}</b>`}<span>Duración</span><b>Hasta final de temporada</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>
-  <label class="f" style="margin-top:12px"><span class="eyebrow">Destino</span><select id="loanTo">${o.none?'':`<option value="">${esc(T(o.team).name)} (le interesa)</option>`}${aff.map(id=>`<option value="${id}">${esc(T(id).name)} (afiliado)</option>`).join('')}</select></label>
+  <div class="eyebrow" style="margin-top:12px">Elige destino según los minutos que tendría</div><div class="loanl">${[...(o.opts||[]),...aff.filter(id=>!(o.opts||[]).includes(id))].map((id,i)=>{const [pc,l]=loanMinutes(p,id),sel=(S.loanPick??(o.opts||aff)[0])===id;return `<button class="loanc${sel?' on':''}" data-a="loan-pick" data-v="${id}">${crest(T(id),'sm')}<span class="t"><b>${esc(T(id).name)}</b><small>${esc(lgName(T(id).lg))}${aff.includes(id)?' · afiliado':''}</small></span><span class="lm ${pc>=80?'q5':pc>=45?'q3':'q1'}">${l} · ~${pc}%</span></button>`;}).join('')}</div><input type="hidden" id="loanTo" value="${S.loanPick??(o.opts||aff)[0]??''}">
   <label class="f" style="margin-top:12px"><span class="eyebrow">Objetivo de minutos</span><select id="loanObj">${Object.entries(LOAN_OBJ).map(([k,[l]])=>`<option value="${k}">${l}</option>`).join('')}</select></label>
   <p class="small muted" style="margin:10px 0 0">Allí jugará más minutos, y los jóvenes que juegan progresan. Con un objetivo, el club se compromete a darle esos minutos: si lo cumple vuelve más hecho; si no, te paga una compensación. Vuelve a tu plantilla en junio.</p>
   <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn primary" data-a="loanout-ok" data-id="${p.id}">Aceptar cesión</button></div>`;}

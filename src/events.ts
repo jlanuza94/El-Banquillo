@@ -1,5 +1,7 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {buyBiz,launchKit,namingAnswer} from './business';
+import {gemKeep} from './biginterest';
 import {callUp,makePermanent,sendDown,toU19} from './u19';
 import {setDrill,setLead,setPLoad,tcPreset} from './tcenter';
 import {TITLES,hasTitle,setTitle,tInc} from './mtitles';
@@ -154,6 +156,13 @@ document.addEventListener('click',e=>{
   case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v);const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
    toast(`Sistema cargado: ${PRESETS[d.v].n}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
   case'st-g':S.stG=d.v;break;
+  case'loan-pick':S.loanPick=+d.v;break;
+  case'biz-buy':toast(buyBiz(d.v));break;
+  case'kit-p':S.kitP=d.v;break;
+  case'kit-launch':toast(launchKit());break;
+  case'naming-ok':toast(namingAnswer(true));break;
+  case'naming-no':toast(namingAnswer(false));break;
+  case'gem-keep':{const r=gemKeep(d.id);if(r)toast(r);break;}
   case'force-p':{const p=PL(d.id);if(p){p.forceW=p.forceW===S.week?null:S.week;if(p.forceW)toast(`${p.name} jugará aunque esté cansado (${Math.round(p.energy)}%). Ojo: más riesgo de lesión.`);}break;}
   case'rest-p':{const t=T(S.user),i=t.lineup.indexOf(d.id),p=PL(d.id);if(i<0||!p)break;p.forceW=null;const s=slotsOf(t.formation)[i],ro=userRoles();
    const c=squad(S.user).filter(q=>available(q)&&!t.lineup.includes(q.id)&&q.energy>=70).map(q=>[q,eff(q,s,null,ro[i])]).sort((a,b)=>b[1]-a[1])[0];
@@ -365,7 +374,7 @@ document.addEventListener('click',e=>{
   case'loan':S.modal={type:'loan',id:d.id};break;
   case'loan-ok':requestLoan(d.id,d.o==='1');break;
   case'buy-opt':buyOption(d.id);break;
-  case'loanout':if(PL(d.id).loan)break;makeLoanOut(d.id);S.modal={type:'loanout',id:d.id};break;
+  case'loanout':if(PL(d.id).loan)break;S.loanPick=null;makeLoanOut(d.id);S.modal={type:'loanout',id:d.id};break;
   case'loanout-ok':acceptLoanOut(d.id,document.getElementById('loanObj')?.value||'',document.getElementById('loanTo')?.value||'');break;
   case'sell':if(!inWindow()){toast('El mercado está cerrado.');break;}makeOffer(d.id);S.modal={type:'sell',id:d.id};break;
   case'sell-ok':sell(d.id);return;

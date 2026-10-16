@@ -1,5 +1,6 @@
 /* El Banquillo · views/club.js — Club y finanzas, historia, récords y logros. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {finChart,negociosHTML} from './business';
 import {MGR_AT,PROJ,mgrAt,nsCost,projOptions,projState} from '../extras2';
 import {wcs} from '../state';
 import {enciclopediaHTML,fameHTML} from './worldhist';
@@ -43,7 +44,7 @@ export function historiaView(){
 }
 export function clubView(){
  const sq=squad(S.user),wages=sq.reduce((a,p)=>a+p.wage,0),fin=S.fin.slice(-8).reverse(),lg=uLg(),e=econ(lg),L=LG(lg),C=S.club,p0=priceBase(lg),att=attendance();
- const totIn=S.fin.reduce((a,f)=>a+f.tv+f.tix+(f.spo||0)+(f.shop||0),0),totOut=S.fin.reduce((a,f)=>a+f.wages,0);
+ const totIn=S.fin.reduce((a,f)=>a+f.tv+f.tix+(f.spo||0)+(f.shop||0)+(f.biz||0),0),totOut=S.fin.reduce((a,f)=>a+f.wages,0);
  const M=S.mgr,cands=S.teams.filter(t=>t.id!==S.user&&clubReq(t)<=M.rep+12&&clubReq(t)>=M.rep-25).sort((a,b)=>clubReq(b)-clubReq(a)).slice(0,8);
  const bar=v=>`<span class="abar" style="display:block"><i class="${qc(v/10)}" style="width:${v}%"></i></span>`;
  const add10=Math.round(C.cap*.1/50)*50,add25=Math.round(C.cap*.25/50)*50;
@@ -65,7 +66,7 @@ export function clubView(){
  ${S.showJobs?`<h3 style="margin:16px 0 6px">Clubes a tu alcance</h3>${cands.map(t=>{const req=clubReq(t),ch=Math.round(clamp(.3+(M.rep-req)/30,.05,.9)*100),done=S.applied[t.id]===S.seasonN;return `<div class="offer">${crest(t,'sm')}<span class="t"><b>${esc(t.name)}</b> <span class="divtag">${lgName(t.lg,true)}</span> <span class="small muted">· prestigio ${Math.round(req)} · posibilidades ${ch}%</span></span><button class="btn sm" data-a="job-apply" data-id="${t.id}" ${done?'disabled':''}>${done?'Rechazado':'Presentar candidatura'}</button></div>`;}).join('')||'<div class="empty">No hay clubes a tu alcance ahora mismo.</div>'}`:''}</section>`;
  const finP=`<section class="panel"><div class="panel-h"><h2>Finanzas</h2><span class="eyebrow">Temporada ${seasonLabel()}</span></div>
  <div class="kv" style="margin-top:0"><span>Presupuesto</span><b>${money(S.budget)}</b><span>Sueldos de jugadores</span><b>${money(wages)}/sem</b><span>Tu salario + ojeadores + técnicos + instalaciones</span><b>${money(M.sal+scoutWages()+staffTotal()+facMaint())}/sem</b>${debtTotal()?`<span>Plazos de traspasos pendientes</span><b>${money(debtTotal())}</b>`:''}<span>TV por jornada</span><b>${money(e.tv)}</b><span>Ingresos de la temporada</span><b>${money(totIn)}</b><span>Gastos de la temporada</span><b>${money(totOut)}</b></div>
- ${fin.length?`<h3 style="margin-top:16px">Últimas jornadas</h3><div class="tbl"><table><thead><tr><th>J</th><th class="r">TV</th><th class="r">Taquilla</th><th class="r">Patroc.</th><th class="r">Tienda</th><th class="r">Gastos</th><th class="r">Balance</th></tr></thead><tbody>${fin.map(f=>{const b=f.tv+f.tix+(f.spo||0)+(f.shop||0)-f.wages;return `<tr><td class="num">${f.wk}</td><td class="n">${money(f.tv)}</td><td class="n">${f.tix?money(f.tix):'—'}</td><td class="n">${f.spo?money(f.spo):'—'}</td><td class="n">${f.shop?money(f.shop):'—'}</td><td class="n">${money(f.wages)}</td><td class="n" style="color:var(${b>=0?'--win':'--loss'})">${b>=0?'+':''}${money(b)}</td></tr>`;}).join('')}</tbody></table></div>`:''}
+ ${fin.length?`<h3 style="margin-top:16px">Últimas jornadas</h3><div class="tbl"><table><thead><tr><th>J</th><th class="r">TV</th><th class="r">Taquilla</th><th class="r">Patroc.</th><th class="r">Tienda</th><th class="r">Negocios</th><th class="r">Gastos</th><th class="r">Balance</th></tr></thead><tbody>${fin.map(f=>{const b=f.tv+f.tix+(f.spo||0)+(f.shop||0)+(f.biz||0)-f.wages;return `<tr><td class="num">${f.wk}</td><td class="n">${money(f.tv)}</td><td class="n">${f.tix?money(f.tix):'—'}</td><td class="n">${f.spo?money(f.spo):'—'}</td><td class="n">${f.shop?money(f.shop):'—'}</td><td class="n">${f.biz?money(f.biz):'—'}</td><td class="n">${money(f.wages)}</td><td class="n" style="color:var(${b>=0?'--win':'--loss'})">${b>=0?'+':''}${money(b)}</td></tr>`;}).join('')}</tbody></table></div>`:''}
  <p class="small muted" style="margin:10px 0 0">Premio al acabar: ${money(e.prize*.5)} por puesto por encima del 21º${L.lv>0?` y ${money(e.promo)} si asciendes`:` y ${money(e.champ)} al campeón`}.</p></section>`;
  const save=`<section class="panel"><div class="panel-h"><h2>Partida</h2><span class="eyebrow">Semilla ${S.seed??'—'}</span></div>
  <div class="eyebrow" style="margin-bottom:6px">Dificultad</div><div class="seg" style="margin-bottom:6px">${Object.entries(DIFF).map(([k,v])=>`<button data-a="set-diff" data-v="${k}" aria-pressed="${(S.diff||'normal')===k}">${v.n}</button>`).join('')}</div><p class="small muted" style="margin:0 0 12px">${DIFF[S.diff||'normal'].d}</p>
@@ -107,10 +108,11 @@ export function clubView(){
  const atP=`<section class="panel"><div class="panel-h"><h2>Tus atributos de entrenador</h2><span class="eyebrow">Mejoran con la experiencia</span></div>
  ${Object.entries(MGR_AT).map(([k,n])=>`<div class="arow" style="grid-template-columns:110px minmax(0,1fr) 34px"><span>${n}</span>${bar(mgrAt(k)*10)}<b class="num">${Math.round(mgrAt(k)*10)}</b></div>`).join('')}
  <p class="small muted" style="margin:8px 0 0">Táctica: tu equipo rinde algo más. Motivación: mejor vestuario. Cantera: los jóvenes crecen antes. Negociación: fichajes más baratos. Al final de cada temporada mejoras en lo que más has trabajado (resultados, canteranos que juegan, fichajes y ventas, vestuario contento).</p></section>`;
- const tb=vtab('club',[['dir','Directiva'],['fin','Finanzas'],['est','Estadio'],['fil','Filial y afiliados'],['ent','Mi carrera'],['par','Partida']],'dir');
+ const tb=vtab('club',[['dir','Directiva'],['fin','Finanzas'],['neg','Negocios'],['est','Estadio'],['fil','Filial y afiliados'],['ent','Mi carrera'],['par','Partida']],'dir');
  const two=(a,b)=>`${tb.bar}<div class="grid"><div class="stack">${a}</div><div class="stack">${b}</div></div>`;
  switch(tb.cur){
-  case'fin':return two(finP+budP,spo+bankP);
+  case'fin':return two(finChart()+finP+budP,spo+bankP);
+  case'neg':return tb.bar+negociosHTML();
   case'est':return two(stadium,fac+nsP);
   case'fil':return two(filP,affP);
   case'ent':return two(mgrP,atP+`<section class="panel"><p style="margin:0">Licencias, formación, empleo, trayectoria e insignias: <button class="btn sm primary" data-a="view" data-v="carrera">Ir a Mi carrera</button></p></section>`);

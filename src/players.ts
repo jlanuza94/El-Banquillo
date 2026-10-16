@@ -51,9 +51,18 @@ export function decorate(p,sp,tilt){
  return p;
 }
 export function genTraits(p){const c=[],a=p.at,g=GRP[p.sp];if(a.tir>=7&&g==='DEL')c.push('gol');if(a.tir>=6&&g==='MED')c.push('lej');if((a.cab>=8||p.h>=188)&&g!=='POR')c.push('cab');if(a.reg>=7&&g!=='POR')c.push('reg');if(a.pas>=7&&a.vis>=7&&g!=='POR')c.push('pas');if(a.pas>=6&&a.tir>=6&&g!=='POR')c.push('bal');if(a.def>=7&&g==='DEF')c.push('mur');if(a.vel>=8&&g!=='POR')c.push('vel');if(g==='POR'&&a.por>=7)c.push('par');return shuffle(c).slice(0,rnd()<.4?0:rnd()<.75?1:2);}
-export function improve(p,n){for(let i=0;i<n;i++){if(rateA(p.at,p.pos)>=p.pot)break;const k=wpick(W[p.pos]);if(p.at[k]<10)p.at[k]++;}refresh(p);}
+/** Jugadores tuyos (y tus canteranos y cedidos): sus atributos llevan decimales y suben poco a poco (71, 72, 74…). Los del resto del mundo, de 10 en 10. */
+export const finePl=p=>!!p&&(p.team===S.user||(p.loan&&p.loan.from===S.user)||p.u19===1||(p.id&&p.id[0]==='y'));
+const r1=x=>Math.round(x*10)/10;
+/** Sube un punto de atributo: entero para la IA; para los tuyos, repartido en pasitos entre ese atributo y otros dos de su puesto. Devuelve el atributo principal. */
+export function gainAt(p,k,sign=1){
+ const lim=v=>Math.max(1,Math.min(10,v));
+ if(!finePl(p)){if(sign>0?p.at[k]<10:p.at[k]>1)p.at[k]+=sign;return k;}
+ const parts=[[k,.4],[wpick(W[p.pos]),.3],[wpick(W[p.pos]),.3]];parts.forEach(([a,v])=>{p.at[a]=r1(lim((p.at[a]??5)+sign*v));});return k;
+}
+export function improve(p,n){for(let i=0;i<n;i++){if(rateA(p.at,p.pos)>=p.pot)break;const k=wpick(W[p.pos]);if(p.at[k]<10)gainAt(p,k);}refresh(p);}
 /** Bajada por edad: primero lo físico; la técnica aguanta más. */
-export function decline(p,n,physShare=.65){for(let i=0;i<n;i++){const k=rnd()<physShare?pick(AT_PHYS):wpick(W[p.pos]);if(p.at[k]>1)p.at[k]--;}refresh(p);}
+export function decline(p,n,physShare=.65){for(let i=0;i<n;i++){const k=rnd()<physShare?pick(AT_PHYS):wpick(W[p.pos]);if(p.at[k]>1){if(finePl(p)){p.at[k]=r1(Math.max(1,p.at[k]-.6));const o=pick(AT_PHYS);p.at[o]=r1(Math.max(1,p.at[o]-.4));}else p.at[k]--;}}refresh(p);}
 const PERS_DEV={pro:1.25,amb:1.12,lid:1.05,tra:1.05,lea:1,nor:1,tem:.85};
 /**
  * Desarrollo de una temporada. Depende de la edad, de lo lejos que esté de su potencial, de los minutos
@@ -76,7 +85,7 @@ export function devSeason(p,ctx={}){
  else if(p.age<=33)decline(p,ri(1,3),.6);
  else decline(p,ri(2,4),.55);
  // lo mental sigue mejorando con la experiencia
- if(p.age>=24&&p.age<=31&&rnd()<.35){const k=pick(['vis','col','dec','dec','col','lid']);if(p.at[k]<10){p.at[k]++;refresh(p);}}
+ if(p.age>=24&&p.age<=31&&rnd()<.35){const k=pick(['vis','col','dec','dec','col','lid']);if(p.at[k]<10){finePl(p)?(p.at[k]=Math.round(Math.min(10,p.at[k]+.5)*10)/10):p.at[k]++;refresh(p);}}
  return ev;
 }
 /** Partidas antiguas (6 atributos): crea los nuevos a partir de los que había, sin cambiar la media del jugador. */

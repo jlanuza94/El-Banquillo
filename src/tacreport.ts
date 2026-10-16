@@ -45,6 +45,15 @@ export function tacReport(m){
  const my=m.score[us],op=m.score[o],xf=r2(m.st[us].xg||bF),xa=r2(m.st[o].xg||bA);
  return {r:[my,op],xg:[xf,xa],f:F.slice(0,8),gt,ln,fb,ch:ch.slice(0,5),tired,live,opp:m[o],rt:Object.assign({},m.tac[o]),rm:m.ment[o],um:m.ment[us],ut:Object.assign({},tE),dr:Math.round((Math.exp(((tl.u.pre||[0,0,0])[2]+(tl.u.rit||[0,0,0])[2]+(tl.u.fase||[0,0,0])[2])/n)-1)*100)};
 }
+/** En directo: 10 minutos después de cada cambio tuyo, tu ayudante te dice si está funcionando (ocasiones antes y después). */
+export function liveChangeCheck(m){
+ const tl=m.tl;if(!m.us||!tl||!tl.x||!tl.ch||!tl.ch.length)return null;const c=tl.ch[tl.ch.length-1];if(c.ev||m.min-c.min<10)return null;c.ev=1;
+ const win=(a,b)=>{const L=tl.x.slice(Math.max(0,a-1),Math.max(0,b-1));return L.length?[L.reduce((s,x)=>s+x[0],0)/1e4/L.length*10,L.reduce((s,x)=>s+x[1],0)/1e4/L.length*10]:null;};
+ const be=win(Math.max(1,c.min-15),c.min),af=win(c.min,m.min);if(!be||!af)return null;
+ const g=(af[0]-be[0])-(af[1]-be[1]),d=diffTxt(c.a,c.b)||'tu cambio',who=((S.crew||[]).find(x=>x.role==='seg')||{name:'Tu ayudante'}).name.split(' ')[0];
+ const tx=g>.03?`«Desde ${d.toLowerCase()} (${c.min}') estamos mejor: llegamos más${af[1]<be[1]?' y ellos menos':''}. Está funcionando.»`:g<-.03?`«Desde ${d.toLowerCase()} (${c.min}') estamos peor${af[1]>be[1]?': ellos llegan más':': creamos menos'}. Yo lo revisaría.»`:`«${d} (${c.min}') no ha cambiado mucho el partido todavía.»`;
+ m.adv={min:m.min,tx:`${who}: ${tx}`,ok:g>.03?1:g<-.03?-1:0};return m.adv;
+}
 function diffTxt(a,b){
  if(!a||!b)return '';const P=[];
  if(a.me!==b.me)P.push(`mentalidad ${MENT[b.me].label.toLowerCase()}`);

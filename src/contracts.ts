@@ -4,8 +4,8 @@ import {onLoanedOut} from './talks';
 import {isAffiliate,wageCheck} from './clubplus';
 import {LOAN_OBJ} from './connected';
 import {agentOf} from './connected';
-import {clamp,money,pick,r2,r3,rnd} from './core';
-import {posChip} from './data';
+import {clamp,money,pick,r2,r3,rnd,shuffle} from './core';
+import {GRP,posChip} from './data';
 import {LG,PL,S,T,lgName,pBadge,rt,seasonLabel,setTeam,squad,uLg} from './state';
 import {assignNum,baseWage,endYear,ensureSquad} from './players';
 import {news} from './world';
@@ -34,7 +34,7 @@ export function makeRenew(id,w,n){
  {const wc=wageCheck(w,p.wage);if(wc){st.msg=wc;st.kind='no';return;}}
  st.tries++;
  const ratio=w/st.demand;let ok=ratio>=1;if(!ok&&ratio>=.85)ok=rnd()<(ratio-.85)/.15*.7;
- if(ok){p.wage=r3(w);p.contract=n;delete S.ren[id];S.modal=null;news(`${p.name} renueva hasta junio de ${endYear(p)} por ${money(p.wage)}/semana.`,'good');toast(`${p.name} ha renovado.`);return;}
+ if(ok){p.wage=r3(w);p.contract=n;delete S.ren[id];S.modal=null;const hot=p.big&&p.big.s===S.seasonN;p.cl=Math.max(p.cl||0,Math.round(p.value*(hot?5:3)*100)/100);if(hot)p.hap=Math.min(100,(p.hap??70)+6);news(`${p.name} renueva hasta junio de ${endYear(p)} por ${money(p.wage)}/semana. Cláusula: ${money(p.cl)}.${hot?' Con este contrato, el club que le seguía tendrá que pagar mucho más.':''}`,'good');toast(`${p.name} ha renovado.`);return;}
  if(st.tries>=3){st.closed=true;st.msg=`${p.name} rompe las negociaciones hasta la próxima jornada.`;st.kind='no';return;}
  st.msg=`Rechaza la propuesta. Quiere al menos ${money(st.demand)} a la semana. Te quedan ${3-st.tries} intento${3-st.tries>1?'s':''}.`;st.kind='no';
 }
@@ -65,13 +65,16 @@ export function buyOption(id){
  if(!S.rec)S.rec={};if(!S.rec.buy||price>S.rec.buy.fee)S.rec.buy={name:p.name,fee:price,season:seasonLabel()};tlog({name:p.name,pid:p.id,from,to:S.user,fee:price});
  news(`Ejecutas la opción de compra: ${p.name} es tuyo en propiedad por ${money(price)}. Contrato hasta junio de ${endYear(p)}.`,'good');S.modal=null;toast(`${p.name} ya es tuyo.`);
 }
+/** Minutos que tendría cedido en un club: depende de cuántos de su línea son mejores que él allí. */
+export function loanMinutes(p,tid){const g=GRP[p.sp]||p.pos,need={POR:1,DEF:4,MED:4,DEL:2}[g]||3,better=squad(tid).filter(x=>(GRP[x.sp]||x.pos)===g&&x.ovr>p.ovr).length;
+ return better<need?[85,'Titular']:better<need+2?[50,'Rotación']:[15,'Suplente'];}
 export function makeLoanOut(id){
- if(S.lo[id])return S.lo[id];const p=PL(id),my=LG(uLg()).rep;
- const c=S.teams.filter(t=>t.id!==S.user&&t.rep<=p.ovr+4&&t.rep>=p.ovr-10&&Math.abs(LG(t.lg).rep-my)<=18);
- return S.lo[id]=c.length?{team:pick(c).id}:{none:true};
+ if(S.lo[id]&&S.lo[id].opts)return S.lo[id];const p=PL(id),my=LG(uLg()).rep;
+ const c=shuffle(S.teams.filter(t=>t.id!==S.user&&!t.parent&&t.rep<=p.ovr+4&&t.rep>=p.ovr-12&&Math.abs(LG(t.lg).rep-my)<=22)).slice(0,6).map(t=>t.id);
+ return S.lo[id]=c.length?{team:c[0],opts:c}:{none:true};
 }
 export function acceptLoanOut(id,obj,to){
- const p=PL(id),sq=squad(S.user);let o=S.lo[id];if(to&&isAffiliate(+to))o={team:+to};else if(!o||o.none)return toast('Ningún club lo quiere cedido ahora mismo.');
+ const p=PL(id),sq=squad(S.user);let o=S.lo[id];if(to&&(isAffiliate(+to)||(o&&o.opts&&o.opts.includes(+to))))o={team:+to};else if(!o||o.none)return toast('Ningún club lo quiere cedido ahora mismo.');
  if(!inWindow())return toast('El mercado está cerrado.');
  if(sq.length<=16)return toast('Necesitas al menos 16 jugadores en plantilla.');
  if(p.pos==='POR'&&sq.filter(x=>x.pos==='POR').length<=1)return toast('No puedes quedarte sin porteros.');

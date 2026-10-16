@@ -53,7 +53,7 @@ export function status(p,xi){if(p.inj)return `<span class="tag bad" title="${esc
 export const nameBtn=p=>`${nf(p.nat)}<button class="linkname" data-a="ficha" data-id="${p.id}">${esc(p.name)}</button>`;
 export const keyAttrs=p=>({POR:['por','col','dec','pas'],DEF:['def','col','cab','vel','fis'],MED:['pas','vis','dec','res','reg'],DEL:['tir','col','vel','reg','cab']})[GRP[p.sp]||p.pos];
 /** Celda de atributo tal como la conoces: exacta o como rango «6-8». */
-export function atCellS(p,k,sn){if(!scouted(p))return '<span class="at unk" title="Sin ojear">?</span>';sn=sn||seen(p);if(sn.exact)return atCell(p.at[k]);const [a,b]=sn.at[k];return `<span class="at rng ${qc((a+b)/2)}" title="Aún no lo conoces bien">${a*10}-${b*10}</span>`;}
+export function atCellS(p,k,sn){if(!scouted(p))return '<span class="at unk" title="Sin ojear">?</span>';sn=sn||seen(p);if(sn.exact)return atCell(p.at[k]);const [a,b]=sn.at[k];return `<span class="at rng ${qc((a+b)/2)}" title="Aún no lo conoces bien">${Math.round(a*10)}-${Math.round(b*10)}</span>`;}
 export const attrCells=p=>{const sn=seen(p);return AT_COLS.map(k=>`<td class="r">${p.pos!=='POR'&&k==='por'?'<span class="muted">–</span>':atCellS(p,k,sn)}</td>`).join('');};
 /** Media tal como la conoces. */
 export function pBadgeS(p,cls=''){if(!scouted(p))return `<span class="q unk ${cls}" title="Sin ojear: mándale un ojeador para conocer su nivel">?</span>`;const sn=seen(p);if(sn.exact)return pBadge(p).replace('class="q ','class="q '+cls+' ');const [a,b]=sn.ovr;return `<span class="q rng ${cls} ${qc((a+b)/20)}" title="Media estimada: aún no lo conoces bien">${Math.round(a)}–${Math.round(b)}</span>`;}

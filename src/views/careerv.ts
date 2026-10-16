@@ -1,6 +1,7 @@
 /* El Banquillo · views/careerv.ts — Mi carrera: Perfil, Formación, Empleo, Trayectoria e Insignias,
  * la normativa por federación y la entrevista de trabajo. Todo se lee de S.mgr (una sola fuente de verdad). */
 // @ts-nocheck — usa el estado heredado S.
+import {caminoHTML} from './journey';
 import {esc,money} from '../core';
 import {ALLN,COUNTRIES} from '../data';
 import {LG,S,T,crest,lgName,qc,seasonLabel} from '../state';
@@ -67,8 +68,8 @@ function titlesP(){const M=S.mgr,my=myTitles(),cat=(S.vt&&S.vt.ttc)||'peo',lvl=m
   <div class="tgrid">${L.map(([k,T])=>{const on=tUnlocked(k),sel=my[cat]===k,r=T[5];return `<button class="ttile${on?'':' lock'}${sel?' sel':''}" ${on?`data-a="car-title" data-v="${k}"`:'disabled'}><span class="tico">${on?T[1]:'🔒'}</span><span class="tt"><b>${esc(T[2])}</b>${on?`<small>${esc(T[4])}</small>`:`<small>${esc(r[2])} · ${Math.min(tCount(r[0]),r[1])}/${r[1]}</small><i class="tprog"><i style="width:${Math.min(100,tCount(r[0])/r[1]*100)}%"></i></i>`}</span></button>`;}).join('')}</div>
   <div class="tdesc">${cur?`<h3>${cur[1]} ${esc(cur[2])}</h3><p>${esc(cur[3])} <b>${esc(cur[4])}</b></p>`:`<h3>Aún no tienes título en ${esc(TCATS.find(x=>x[0]===cat)[1].toLowerCase())}</h3><p>Cumple uno de los retos de arriba para ganarlo: se te pondrá solo y podrás cambiarlo cuando consigas otros.</p>`}</div>
   <p class="small muted" style="margin:6px 0 0">Los títulos se ganan jugando: ninguno viene de regalo. Cuando consigues uno, toca su tarjeta para lucirlo (uno por categoría).</p></div></div>`;}
-export function carreraView(){const tb=vtab('car',[['per','Perfil'],['tit','Títulos'],['for','Formación'],['emp','Empleo'],['tra','Trayectoria'],['ins','Insignias']],'per');
- return tb.bar+(tb.cur==='for'?trainingP():tb.cur==='emp'?jobsP():tb.cur==='tra'?historyP():tb.cur==='ins'?badgesP():tb.cur==='tit'?titlesP():`<div class="grid">${profileP()}</div>`);}
+export function carreraView(){const tb=vtab('car',[['per','Perfil'],['cam','Mi camino'],['tit','Títulos'],['for','Formación'],['emp','Empleo'],['tra','Trayectoria'],['ins','Insignias']],'per');
+ return tb.bar+(tb.cur==='cam'?caminoHTML():tb.cur==='for'?trainingP():tb.cur==='emp'?jobsP():tb.cur==='tra'?historyP():tb.cur==='ins'?badgesP():tb.cur==='tit'?titlesP():`<div class="grid">${profileP()}</div>`);}
 /** Normativa: requisitos por competición, con fuente, revisión y estado de verificación. */
 export function rulesModal(){const jur=myJur();return `<div class="eyebrow">Reglas y reconocimiento · ${esc(JURS[jur])}</div><h2 style="margin:4px 0 10px">Normativa de licencias</h2>
  <div class="tbl"><table><thead><tr><th>Competición</th><th>Cargo</th><th>Licencia mínima</th><th>Fuente</th><th>Revisión</th><th>Estado</th></tr></thead><tbody>${RULES.map(r=>`<tr><td>${esc(r.comp)}</td><td>${esc(r.role)}</td><td><b>${esc(COURSES[MAIN[r.need]].n)}</b></td><td class="small">${esc(r.src)}</td><td class="n">${esc(r.rev)}</td><td><span class="tag">${esc(r.st)}</span></td></tr>`).join('')}</tbody></table></div>

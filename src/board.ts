@@ -63,7 +63,7 @@ const GR=s=>s>=85?['A','Excelente','good']:s>=70?['B','Bien','good']:s>=55?['C',
 export function evaluation(){
  const M=S.mgr,O=S.obj||{txt:'Mitad de tabla',max:12},Lg=lgState(),cup=cupState(),st=styleScore(),sq=squad(S.user);
  const lg=Lg.pj?Math.round(clamp(72+(O.max-Lg.pos)*(Lg.pos<=O.max?4:7)*Math.min(1,.4+Lg.pj/20),5,100)):60;
- const cap=S.wageCap??wageBill(),wb=wageBill(),bal=(S.fin||[]).reduce((a,f)=>a+f.tv+f.tix+(f.spo||0)+(f.shop||0)-f.wages,0);
+ const cap=S.wageCap??wageBill(),wb=wageBill(),bal=(S.fin||[]).reduce((a,f)=>a+f.tv+f.tix+(f.spo||0)+(f.shop||0)+(f.biz||0)-f.wages,0);
  const fin=Math.round(clamp(72+(wb<=cap?8:-25)+(S.budget<0?-30:0)-(S.bank||[]).length*8+(bal>0?10:bal<0?-8:0),0,100));
  const fans=Math.round(clamp(S.club?S.club.mood:60,0,100)),hap=sq.length?Math.round(sq.reduce((a,p)=>a+(p.hap??70),0)/sq.length):70;
  const ys=youthShare(),yo=Math.round(clamp(35+ys*200,0,100));

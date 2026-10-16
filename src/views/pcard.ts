@@ -1,6 +1,7 @@
 /* El Banquillo · views/pcard.ts — Cabecera de la ficha del jugador al estilo FM Mobile: tarjeta con cara,
  * estrellas, datos del contrato, mapa de posiciones, pies y atributos en tres columnas con colores. */
 // @ts-nocheck — usa el estado heredado S.
+import {atArrow} from '../progress';
 import {clamp,esc,money} from '../core';
 import {AT_GROUPS,AT_NAME,COUNTRIES,ROLES,SPN,SPXY} from '../data';
 import {S,T,crestStyle,lgName,qc,squad} from '../state';
@@ -36,7 +37,7 @@ export function cardHTML(p){
  const sn=seen(p),t=p.team!=null?T(p.team):null,s=p.st||{},ex=sn.exact,v=ex?p.ovr:(sn.ovr[0]+sn.ovr[1])/2,st=starsOf(v),pot=p.age<=23?starsOf(Math.max(v,((seen(p).pot[0]+seen(p).pot[1])/2)*10)):null;
  const sc=scouted(p),tier=!sc?'bronze':st>=4?'gold':st>=2.5?'silver':'bronze',mine=p.team===S.user,hap=p.hap==null?70:p.hap;
  const dots=Object.keys(SPXY).map(sp=>{const pr=prof(p,sp),[x,y]=SPXY[sp],c=sp===p.sp?'n':pr>=.95?'c':pr>=.86?'u':'';return c?`<span class="pd ${c}" style="left:${x}%;top:${y}%" title="${SPN[sp]}">${sp}</span>`:'';}).join('');
- const col=ks=>ks.map(k=>{const r=sn.at[k],v=sn.exact?p.at[k]:(r[0]+r[1])/2;return `<div class="fa"><span>${AT_NAME[k]}</span><i class="fab"><b class="${qc(v)}" style="width:${sc?v*10:0}%"></b></i>${atCellS(p,k,sn)}</div>`;}).join('');
+ const col=ks=>ks.map(k=>{const r=sn.at[k],v=sn.exact?p.at[k]:(r[0]+r[1])/2;return `<div class="fa"><span>${AT_NAME[k]}</span><i class="fab"><b class="${qc(v)}" style="width:${sc?v*10:0}%"></b></i>${atCellS(p,k,sn)}${mine?atArrow(p,k):''}</div>`;}).join('');
  const G=AT_GROUPS.filter(([n])=>n!=='Portero'||p.sp==='POR');
  const extra=`<div class="fa"><span>Energía</span><b class="${p.energy>=75?'ok':p.energy>=55?'mid':'low'}">${Math.round(p.energy)}%</b></div><div class="fa"><span>Moral</span><b>${hap>=75?'Excelente':hap>=55?'Buena':hap>=40?'Normal':hap>=25?'Baja':'Muy baja'}</b></div><div class="fa"><span>Forma</span><b>${formRow(p)}</b></div><div class="fa"><span>Nota media</span><b>${s.pj?(s.rs/s.pj).toFixed(2):'—'}</b></div>`;
  return `<div class="pfc">

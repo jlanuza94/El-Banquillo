@@ -657,6 +657,27 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // ronda: atributos finos, progreso mensual, cambios en directo, mi camino, joyas codiciadas, cesiones, comparar y negocios
+    const Pl = await import('../src/players'); const mine = squad(S.user).find(p => !p.loan && p.age <= 30), ai = Object.values(S.players).find(p => p.team !== null && p.team !== S.user && p.age <= 22);
+    const k = Object.keys(mine.at).find(x => mine.at[x] < 9 && x !== 'por'); const a0 = mine.at[k]; Pl.gainAt(mine, k); ok(Math.abs(mine.at[k] - a0 - .4) < .05 || mine.at[k] - a0 > .3, `atributos finos en tu equipo (${a0} → ${mine.at[k]})`);
+    const k2 = Object.keys(ai.at).find(x => ai.at[x] < 9); const b0 = ai.at[k2]; Pl.gainAt(ai, k2); ok(ai.at[k2] === b0 + 1, 'los de la IA siguen de 1 en 1 (10 puntos)');
+    const Pr = await import('../src/progress'); mine.atm = { ...mine.at }; mine.atm[k] = mine.at[k] - 1; mine.ovm = mine.ovr - 3; const w0 = S.week; S.progW = null; const rows = Pr.progressMonthly(true); S.week = w0;
+    ok(rows && rows.some(r => r.p === mine) && mine.atd[k] === 10 && Pr.atArrow(mine, k).includes('▲'), 'informe mensual de progreso con flechas');
+    const TR = await import('../src/tacreport'); const sn = { me: 'bal', t: { pre: 'med' }, lu: [], pl: null, oi: {} }, sn2 = { me: 'att', t: { pre: 'alt' }, lu: [], pl: null, oi: {} };
+    const fm = { us: 'h', min: 42, tl: { x: Array.from({ length: 41 }, (_, i) => i < 30 ? [50, 150] : [300, 60]), ch: [{ min: 30, a: sn, b: sn2 }] } }; const v = TR.liveChangeCheck(fm);
+    ok(v && v.ok === 1 && /funcionando/.test(v.tx), 'en directo te dice si tu cambio funciona: ' + (v && v.tx));
+    const J = await import('../src/views/journey'); ok(J.caminoHTML().includes('Mi camino') && J.caminoHTML().includes('Salón de la fama'), 'Mi camino y salón de la fama');
+    const B = await import('../src/biginterest'); const g = squad(S.user).filter(p => !p.loan).sort((a, b) => a.age - b.age)[0], gk = { h0: g.h0, age: g.age, big: g.big }; g.age = 20; g.h0 = [g.ovr - 12, '2025/26', 0, g.value]; g.big = null;
+    const r = B.bigInterestMonthly(true); ok(B.isHotGem(g) && r && r.p && T(r.t.id) && LG(r.t.lg).lv < LG(uLg()).lv, 'un club de más arriba va a por tu joya' + (r ? ': ' + r.t.name + ' por ' + r.p.name : ''));
+    B.gemKeep(g.id); ok(g.gk === S.seasonN, 'prometerle minutos'); Object.assign(g, gk);
+    const Ct = await import('../src/contracts'); const lp = squad(S.user).sort((a, b) => a.ovr - b.ovr)[0]; delete S.lo[lp.id]; const lo = Ct.makeLoanOut(lp.id);
+    ok(lo.none || (lo.opts.length >= 1 && Ct.loanMinutes(lp, lo.opts[0])[1].length > 0), 'cesión: varios clubes con minutos esperados'); if (!lo.none) { S.modal = { type: 'loanout', id: lp.id }; render(); ok(app.querySelectorAll('.loanc').length >= 1, 'elegir club de cesión'); S.modal = null; }
+    const sq2 = squad(S.user); S.modal = { type: 'cmp', a: sq2[0].id, b: sq2[1].id }; S.vt = {}; render(); ok(app.querySelectorAll('[data-a=vtab][data-k=cm]').length === 4 && !!app.querySelector('[data-swipe=cm]'), 'comparar con pestañas deslizables'); S.modal = null;
+    const Bz = await import('../src/business'); const bud = S.budget; S.budget = 50; S.biz = {}; const sm0 = Bz.bizMult('shop'); Bz.buyBiz('tienda'); Bz.buyBiz('online'); ok(Bz.bizLv('tienda') === 1 && Bz.bizMult('shop') > sm0 && S.budget < 50, 'abrir negocios del club');
+    S.kitS = null; Bz.launchKit(); ok(Bz.kitActive() && Bz.kitMult() > 1.3, 'nueva equipación'); Bz.namingOffer(); Bz.namingAnswer(true); ok(S.naming && Bz.bizWeekly() > 0, 'nombre del estadio vendido');
+    Bz.shirtsWeekly(.02); ok(Bz.topShirts(3).length >= 1, 'camisetas más vendidas'); S.view = 'club'; S.vt = { club: 'neg' }; render(); ok(app.textContent.includes('Negocios del club') && app.textContent.includes('Camisetas más vendidas'), 'pestaña Negocios');
+    S.vt = { club: 'fin' }; render(); S.budget = bud; S.biz = {}; S.naming = null; S.kitS = null; S.vt = {}; S.view = 'inicio';
+  }
   { // ficha con pestañas (como el FMM) y datos de 0 a 100
     const pp = squad(S.user)[2]; S.vt = {}; S.modal = { type: 'ficha', id: pp.id }; render();
     const tabs = [...app.querySelectorAll('[data-a=vtab][data-k=fi]')].map(b => b.dataset.v); ok(['per', 'est', 'pos', 'con', 'tem', 'rel', 'his'].every(k => tabs.includes(k)), 'ficha con 7 pestañas: ' + tabs.join(','));

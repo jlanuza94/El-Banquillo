@@ -7,7 +7,7 @@ import {scoutAttrs,youthMult} from './staff';
 import {clamp,gauss,money,pick,r2,r3,ri,rnd} from './core';
 import {COUNTRIES,NAMES,POS_NAME,W} from './data';
 import {LG,S,dirty,seasonLabel,squad,uLg,unit} from './state';
-import {assignNum,baseWage,decorate,genAttrs,rateA,setValue,strength,wpick} from './players';
+import {assignNum,baseWage,decorate,genAttrs,gainAt,rateA,setValue,strength,wpick} from './players';
 import {news} from './world';
 import {takeExPlayers} from './living';
 import {T} from './state';
@@ -38,7 +38,7 @@ export function scoutsWeekly(){
   news(`Tu ojeador ${sc.name} recomienda a ${y.name} (${COUNTRIES[nat].n}, ${y.age} años, ${POS_NAME[y.pos].toLowerCase()}).`,'good',{cat:'oje',from:sc.name,subj:`Talento juvenil: ${y.name}`,act:[{l:'Ver informes',a:'view',v:'cantera'}]});});
 }
 /** Una semana de entrenamiento de un juvenil (cantera o sub-19). */
-export function growYouth(p){const pl=p.ypw;p.ypw=0;if(rnd()<.2*youthMult()*(pl?1.3:.9)&&rateA(p.at,p.pos)<p.pot){const k=wpick(W[p.pos]);if(p.at[k]<10){p.at[k]++;p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}}}
+export function growYouth(p){const pl=p.ypw;p.ypw=0;if(rnd()<.2*youthMult()*(pl?1.3:.9)&&rateA(p.at,p.pos)<p.pot){const k=wpick(W[p.pos]);if(p.at[k]<10){gainAt(p,k);p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}}}
 export function academyWeekly(){S.academy.forEach(growYouth);
  if(S.week===30){const old=S.academy.filter(p=>p.age>=18);if(old.length)news(`Cantera: ${old.map(p=>p.name).join(', ')} cumple${old.length>1?'n':''} 19 la próxima temporada. Súbelos al primer equipo o se marcharán.`,'bad');}}
 export function promoteYouth(id){
