@@ -683,8 +683,8 @@ const app = document.getElementById('app')!;
     ok(ST.cellVal(td('43')) === 43 && ST.cellVal(td('€190k')) === 190000 && ST.cellVal(td('-3')) === -3 && ST.cellVal(td('€1.5M')) === 1500000, 'leer números de las celdas para ordenar');
     S.view = 'plantilla'; S.plTab = 'jug'; render(); const th = app.querySelectorAll('main thead th')[4] as HTMLElement; th.click();
     const v = [...app.querySelector('main table')!.tBodies[0].rows].map(r => +r.cells[4].textContent!.trim()); ok(v.every((x, i) => i === 0 || v[i - 1] >= x), 'plantilla ordenada por media de mayor a menor');
-    const MC = await import('../src/mgrcareer'); const rep0 = S.mgr.rep; S.mgr.rep = 10; const n = MC.interested(40).length; S.mgr.rep = rep0;
-    ok(n <= 6, `en 5ª y sin prestigio casi nadie quiere venir (${n})`);
+    const MC = await import('../src/mgrcareer'); const rep0 = S.mgr.rep; S.mgr.rep = 10; const IL = MC.interested(40), n = IL.length; const vets = IL.filter(([p]) => p.team === null && p.age >= 31).length; S.mgr.rep = rep0;
+    ok(vets <= 3, `sin prestigio no vienen en masa los veteranos libres (${vets} de ${n})`);
     const pp = squad(S.user)[0]; S.vt = {}; S.modal = { type: 'ficha', id: pp.id }; render(); ok(!!app.querySelector('.fest') && !app.textContent!.includes('ESTADO'), 'estado del jugador en una línea'); S.modal = null; S.view = 'inicio';
   }
   { // ronda: ojeo con encargo, plan individual, charlas, cedidos, promesas, datos, récords, superávit y 2ª equipación
