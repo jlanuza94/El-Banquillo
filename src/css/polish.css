@@ -1330,3 +1330,15 @@ svg.heat{width:100%;max-width:360px;height:auto;border-radius:6px;display:block}
 .pcr.done{opacity:.65}.pcr.today{background:rgba(240,190,40,.12);border-radius:6px}
 .pcr .pcd{color:var(--muted);font-size:11.5px}.pcr .pco{display:flex;flex-direction:column;min-width:0}.pcr .pco small{color:var(--muted);font-size:11px}
 .pcr select{max-width:100%;font-size:12px;padding:2px 4px}
+/* crear entrenador: tarjetas */
+.cccards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.cccard{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:10px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:inherit;cursor:pointer;transition:transform .12s,border-color .12s}
+.cccard b{font-size:14px;line-height:1.15}.cccard small{font-size:11.5px;opacity:.78;line-height:1.25}
+.cccard .ccic{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);font-size:24px}
+.cccard svg{width:52px;height:52px}
+.cccard[aria-pressed=true]{border-color:#f3c64a;background:rgba(243,198,74,.14);box-shadow:0 0 0 2px rgba(243,198,74,.35) inset}
+.cccard[aria-pressed=true] .ccic{background:#f3c64a;color:#1b1504}
+.cccard:hover{transform:translateY(-1px)}
+.cccard.lock{opacity:.5;filter:grayscale(.8);cursor:not-allowed}
+.ccbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ccbadges svg{width:30px;height:30px}
+@media (orientation:landscape) and (max-height:540px){.cccards{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}.cccard{padding:6px}.cccard .ccic{width:36px;height:36px;font-size:19px}.cccard svg{width:40px;height:40px}}

@@ -12,6 +12,7 @@
  * Las horas y niveles son referencias de la Convención de Entrenadores de la UEFA (2020) y equivalentes de otras
  * confederaciones: van marcadas como «pendientes de verificación» con cada federación. */
 // @ts-nocheck — usa el estado heredado S.
+import {profileSync} from './profile';
 import {clamp,money,r3,rnd} from './core';
 import {COUNTRIES} from './data';
 import {LG,S,T,seasonLabel,uLg,unit} from './state';
@@ -85,7 +86,7 @@ export function courseWeekly(onPass){const M=S.mgr;if(!M||!M.course)return;const
  if(c.conv){const l=diplomas().find(x=>x.k===c.k);if(l){l.conv=l.conv||[];if(!l.conv.includes(c.jur))l.conv.push(c.jur);}news(`${c.jur} reconoce tu ${COURSES[c.k].n}.`,'good',{cat:'dir'});return;}
  const score=clamp(5+(attrAvg()-10)*.35+(M.seasons||0)*.3+(c.renew?3:0)+rnd()*3,0,10);
  if(score<4.5&&!c.renew){news(`Suspendes el examen de la ${COURSES[c.k].n} (${score.toFixed(1)}). Puedes volver a matricularte.`,'bad',{cat:'dir',subj:'Examen suspendido'});return;}
- grant(c.k,c.jur);if(!c.renew){(COURSES[c.k].at||['est','tco']).forEach(a=>bumpAt(a,1));}
+ {const g=grant(c.k,c.jur);if(g&&!c.renew)g.earned=1;profileSync();}if(!c.renew){(COURSES[c.k].at||['est','tco']).forEach(a=>bumpAt(a,1));}
  news(c.renew?`Renuevas la ${COURSES[c.k].n}: vigente hasta ${seasonLabel(S.seasonN+VALID)}.`:`¡Aprobado con un ${score.toFixed(1)}! Ya tienes la ${licLabel(c.k,c.jur)}.`,'good',{cat:'dir',subj:`Diploma: ${COURSES[c.k].n}`});
  if(onPass)onPass(c.k);}
 /** Aviso de caducidad al empezar la temporada en que vence. */

@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {licUnlocked} from './profile';
 import {wcs} from './state';
 import {preAddTour,preCancel,preSchedule,preSetOpp,preTodayOk} from './presched';
 import {friendlyOpts} from './season';
@@ -109,10 +110,11 @@ document.addEventListener('click',e=>{
   if(a==='start-mode'){RT.mode=d.v;render();return;}
   if(a==='seed-go'){const v=parseInt(document.getElementById('seedIn')?.value||'',10);if(v>=0){RT.seed=v;setS(null);render();}return;}
   if(a==='seed-new'){RT.seed=null;setS(null);render();return;}
+  if(a==='world-mode'){RT.worldMode=d.v==='rand'?'rand':'fix';try{localStorage.setItem('eb-world',RT.worldMode);}catch(e){}RT.seed=S?S.seed:null;setS(null);render();return;}
   if(a==='mod-clear'){RT.mod=null;RT.modMsg=null;setS(null);render();return;}
   const rdC=()=>{const g=id=>document.getElementById(id),c=RT.coach=RT.coach||{};if(g('cName')){c.first=g('cName').value.trim();c.sur=g('cSur')?g('cSur').value.trim():'';c.name=[c.first,c.sur].filter(Boolean).join(' ')||undefined;}if(g('cNat'))c.nat=+g('cNat').value;if(g('cAge'))c.age=+g('cAge').value;};
   if(a==='cc-step'){rdC();RT.cstep=+d.v;render();return;}
-  if(a==='start-lic'){rdC();RT.coach.lic=d.v;render();return;}
+  if(a==='start-lic'){rdC();if(!licUnlocked(d.v)){toast('Esta licencia aún no la tienes: sácala en una partida (Carrera › Formación) y podrás empezar con ella.');return;}RT.coach.lic=d.v;render();return;}
   if(a==='start-bg'||a==='start-lead'){rdC();RT.coach[a==='start-bg'?'bg':'lead']=d.v;render();return;}
   if(a==='pick-team'){RT.pickT=+d.i;RT.startStep='coach';RT.cstep=0;render();window.scrollTo(0,0);return;}
   if(a==='start-sign'){rdC();pickTeam(RT.pickT);RT.pickT=null;return;}

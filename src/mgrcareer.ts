@@ -2,6 +2,7 @@
  * a temporada, insignias por lo conseguido, y cómo eso cambia las ganas de los jugadores de venir a tu club.
  * También: ofrecer un puesto de técnico a los jugadores que se van a retirar (como en FM Mobile). */
 // @ts-nocheck — usa el estado heredado S.
+import {profileSync} from './profile';
 import {titlesMatch} from './mtitles';
 import {clamp,money,pick,rnd} from './core';
 import {unit} from './state';
@@ -19,7 +20,7 @@ export const licName=lv=>lv<0?'Sin licencia':COURSES[MAIN[lv]].n;
 /** Insignias: lo que has logrado en tu carrera. */
 export const BADGES={debut:['🎬','Debut','Dirige tu primer partido oficial'],win1:['✅','Primera victoria','Gana tu primer partido oficial'],racha:['🔥','En racha','Gana 5 partidos oficiales seguidos'],goleada:['💥','Goleada','Gana por 5 goles o más'],derbi:['⚔️','Rey del derbi','Gana un derbi'],remontada:['↩️','Remontada','Gana un partido que ibas perdiendo por 2'],cero:['🧱','Muralla','Termina 5 partidos seguidos sin encajar'],lic_C:['C','Licencia C','Consigue la Licencia C','basic'],lic_B:['B','Licencia B','Consigue la Licencia B','basic'],lic_A:['A','Licencia A','Consigue la Licencia A','adv'],lic_PRO:['PRO','Licencia Pro','Consigue la Licencia Pro','pro'],lic_YB:['🌱','Youth B','Especialista en desarrollo juvenil','spec'],lic_EYA:['🌳','Elite Youth A','Especialista en jóvenes de élite','spec'],lic_GKB:['🧤','Goalkeeper B','Entrenador de porteros','spec'],lic_GKA:['🥅','Goalkeeper A','Porteros de alto nivel','spec'],lic_FUT:['⚽','Futsal B','Entrenador de fútbol sala','spec'],cien:['💯','Centenario','100 partidos oficiales dirigidos'],invicto:['🛡️','Invicto','10 partidos seguidos sin perder'],mentor:['👨‍🏫','Aprendiz','Has tenido un mentor'],sel:['🌍','Seleccionador','Has dirigido a una selección'],asc:['⬆️','Ascenso','Has subido de categoría'],liga:['🏆','Campeón de liga','Has ganado una liga'],copa:['🥇','Copa','Has ganado una copa'],cant:['🌱','Cantera','Has hecho debutar a 5 canteranos'],obj:['🎯','Cumplidor','3 objetivos de la directiva cumplidos'],ojo:['🔎','Buen ojo','Has vendido un jugador por el triple de lo que costó'],fiel:['🤝','Fiel','5 temporadas en el mismo club'],mes:['🏅','Entrenador del mes','Has sido entrenador del mes']};
 export function badges(){const B=S.mgr&&S.mgr.badges||{};return Object.keys(BADGES).filter(k=>B[k]);}
-export function giveBadge(k){S.mgr.badges=S.mgr.badges||{};if(S.mgr.badges[k]||!BADGES[k])return;S.mgr.badges[k]={s:seasonLabel(),club:T(S.user).name};const b=BADGES[k];news(`Nueva insignia de entrenador: ${b[0]} ${b[1]}. ${b[2]}.`,'good',{cat:'dir',subj:`Insignia: ${b[1]}`});}
+export function giveBadge(k){S.mgr.badges=S.mgr.badges||{};if(S.mgr.badges[k]||!BADGES[k])return;S.mgr.badges[k]={s:seasonLabel(),club:T(S.user).name};profileSync();const b=BADGES[k];news(`Nueva insignia de entrenador: ${b[0]} ${b[1]}. ${b[2]}.`,'good',{cat:'dir',subj:`Insignia: ${b[1]}`});}
 /** Al acabar la temporada: cuenta la temporada, revisa la licencia y las insignias. */
 export function careerSeasonEnd(sm){
  const M=S.mgr;if(!M)return;const l0=licence();M.seasons=(M.seasons||0)+1;M.objOk=(M.objOk||0)+(sm.ok?1:0);M.sameClub=M.lastClub===S.user?(M.sameClub||1)+1:1;M.lastClub=S.user;

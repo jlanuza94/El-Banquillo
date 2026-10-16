@@ -8,7 +8,7 @@ export const wcs=()=>Array.from({length:nC()},(_,i)=>i);
 export let S=null;
 export function setS(v){S=v;if(v&&v.rng)setRngState(v.rng);}
 /** Variables de ejecución compartidas entre módulos (temporizadores y cachés). */
-export const RT={timer:null,toastT:null,saveT:null,SQ:null,keyCache:null,startC:0,startLv:4};
+export const RT={timer:null,toastT:null,saveT:null,SQ:null,keyCache:null,startC:0,startLv:4,worldMode:(()=>{try{return localStorage.getItem('eb-world')||'fix';}catch(e){return 'fix';}})()};
 export const T=id=>S.teams[id];
 export const PL=id=>S.players[id];
 export const LG=id=>S.leagues[id];

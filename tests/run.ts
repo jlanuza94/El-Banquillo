@@ -657,6 +657,18 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // mundo fijo (mismos clubes y jugadores) y licencias que se desbloquean jugando
+    const ST = await import('../src/state'); const W = await import('../src/world'); const keep = ST.S, rt0 = ST.RT.worldMode;
+    const snap = () => [ST.S.teams.slice(0, 40).map(t => t.name).join('|'), Object.values(ST.S.players).slice(0, 300).map(p => p.name + p.ovr).join('|'), Object.values(ST.S.players).filter(p => p.team === null).length];
+    ST.RT.worldMode = 'fix'; W.buildWorld(111); const a = snap(); W.buildWorld(999); const b = snap();
+    ST.RT.worldMode = 'rand'; W.buildWorld(111); const c = snap(); W.buildWorld(999); const d2 = snap();
+    ok(a[0] === b[0] && a[1] === b[1] && a[2] === b[2], 'mundo fijo: mismos clubes, jugadores y libres con cualquier semilla');
+    ok(c[0] !== d2[0], 'mundo aleatorio: cada semilla, un mundo distinto');
+    ST.RT.worldMode = rt0; ST.setS(keep); ST.dirty && ST.dirty();
+    const PR = await import('../src/profile'); localStorage.removeItem('eb-profile');
+    ok(PR.licUnlocked('C') && !PR.licUnlocked('PRO'), 'al principio solo la C (las demás, jugando)');
+    const lics0 = S.mgr.lics; S.mgr.lics = [{ k: 'B', earned: 1 }, { k: 'A' }]; PR.profileSync(); ok(PR.licUnlocked('B') && !PR.licUnlocked('A'), 'la licencia sacada en una partida queda desbloqueada para las siguientes'); S.mgr.lics = lics0; localStorage.removeItem('eb-profile');
+  }
   { // 30 países: selecciones con jugadores reales y conversión de partidas antiguas
     const D = await import('../src/data'); const N = await import('../src/nations');
     ok(D.COUNTRIES.length === 37 && D.COUNTRIES.filter(c => c.lv >= 3).length >= 14, '37 países con liga y más con tres divisiones');
