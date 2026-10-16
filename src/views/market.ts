@@ -34,6 +34,9 @@ export function mkCard(p,mini){
 }
 /** Destacados arriba del buscador: lo que recomienda tu segundo, gangas y agentes libres. */
 let HL={k:'',v:null};
+/** Los chollos que te mandó el ojeador este mes (jóvenes baratos con mucho potencial). */
+function cholP(row){const L=(S.chollos||[]).map(x=>PL(x.id)).filter(p=>p&&p.team!==S.user);
+ return `<div class="mkhl-c chol" style="margin-top:8px"><div class="mkhl-h"><span>💎</span><b>Chollos del ojeador</b><span class="small muted" style="margin-left:auto">cada mes, jóvenes baratos de los que nadie habla</span></div>${L.length?L.map(p=>{const r=seen(p).pot;return row(p).replace('</small>',` · puede llegar a <b>${r?r[0].toFixed(1)+'–'+r[1].toFixed(1):'?'}</b></small>`);}).join(''):'<div class="empty small">Tu ojeador te mandará los primeros chollos a principios del mes que viene.</div>'}</div>`;}
 function highlights(){
  const key=[S.day,S.week,Math.round(S.budget*100),S.user].join('|');
  if(HL.k!==key){const est=p=>{const sn=seen(p);return sn.exact?p.ovr:(sn.ovr[0]+sn.ovr[1])/2;},myAvg=squad(S.user).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11).reduce((a,b,_,A)=>a+b/A.length,0);
@@ -45,7 +48,7 @@ function highlights(){
   HL={k:key,v:{sg,gang,fa}};}
  const H=HL.v,IN=interested(3).map(x=>x[0]),row=p=>{const pr=askPrice(p),t=p.team!=null?T(p.team):null;return `<div class="mkhr">${posChip(p)}<span class="t"><button class="linkname" data-a="ficha" data-id="${p.id}">${esc(p.name)}</button><small>${p.age} años · ${t?esc(t.short):'Libre'} · ${pBadgeS(p)}</small></span><b>${p.team===null?'Libre':money(pr)}</b><button class="btn sm" data-a="neg" data-id="${p.id}">${p.team===null?'Fichar':'Ofertar'}</button></div>`;},
   col=(ic,t,L,e,a)=>`<div class="mkhl-c"><div class="mkhl-h"><span>${ic}</span><b>${t}</b>${a||''}</div>${L.length?L.map(row).join(''):`<div class="empty small">${e}</div>`}</div>`;
- return `<div class="mkhl">${col('🧠','Tu segundo recomienda',H.sg,'La plantilla está bien cubierta.')}${col('🤝','Quieren venir',IN,'Aún nadie destacado. Gana prestigio y vendrán.','<button class="linkname small" data-a="mk-tab" data-v="int" style="margin-left:auto">Ver todos</button>')}${col('💰','Gangas a tu alcance',H.gang,'Nada interesante con tu presupuesto.')}${col('🆓','Agentes libres',H.fa,'No hay libres de tu nivel.')}</div>`;
+ return `<div class="mkhl">${col('🧠','Tu segundo recomienda',H.sg,'La plantilla está bien cubierta.')}${col('🤝','Quieren venir',IN,'Aún nadie destacado. Gana prestigio y vendrán.','<button class="linkname small" data-a="mk-tab" data-v="int" style="margin-left:auto">Ver todos</button>')}${col('💰','Gangas a tu alcance',H.gang,'Nada interesante con tu presupuesto.')}${col('🆓','Agentes libres',H.fa,'No hay libres de tu nivel.')}</div>${cholP(row)}`;
 }
 export function mkList(){
  RT.keyCache=null;const mk=S.mk;

@@ -200,7 +200,7 @@ const app = document.getElementById('app')!;
     ok(queueScout(far.id) === '', 'se pide un informe');
     const before = S.inbox.length; for (let i = 0; i < 4; i++) { S.week++; scoutingWeekly(); } S.week -= 4;
     ok(seen(far).exact && S.inbox.slice(0, S.inbox.length - before).some(m => m.subj.startsWith('Informe: ' + far.name)), 'llega el informe y el jugador pasa a conocerse');
-    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); S.view = 'mrec'; S.mk.tab = 'rec'; render(); const nHl = app.querySelectorAll('.mkhl-c').length; S.view = 'mercado'; S.mk.tab = 'buy'; render(); ok(nHl === 4 && app.querySelectorAll('#mklist tbody tr').length > 5 && app.querySelector('.will'), 'mercado en lista con destacados y ganas de venir');
+    S.mk.tab = 'buy'; S.mk.c = 'ALL'; S.view = 'mercado'; render(); S.view = 'mrec'; S.mk.tab = 'rec'; render(); const nHl = app.querySelectorAll('.mkhl-c').length; S.view = 'mercado'; S.mk.tab = 'buy'; render(); ok(nHl === 5 && app.querySelectorAll('#mklist tbody tr').length > 5 && app.querySelector('.will'), 'mercado en lista con destacados y ganas de venir');
     { const w = joinWillF(Object.values(S.players).find(p => p.team === null)); ok(w.v >= 0 && w.v <= 100, `ganas de venir de un libre: ${w.v}%`); S.mk.tab = 'int'; render(); ok(app.textContent.includes('Licencia'), 'pestaña de interesados'); S.mk.tab = 'buy'; render(); }
     S.mk.attr = true; render(); ok(app.querySelector('.at.rng'), 'el mercado muestra rangos'); S.mk.attr = false;
     S.modal = { type: 'ficha', id: far.id }; render(); S.modal = null;
@@ -361,7 +361,7 @@ const app = document.getElementById('app')!;
       oopSwap(t, mp[1], mp[2]); ok(oopMap(t)[1] === mp[2], 'intercambiar puestos sin balón');
       S.lph = 'oop'; render(); ok(app.querySelectorAll('.vpitch .oopm').length === 11 && app.querySelector('#oopSel'), 'alineación sin balón en pantalla');
       const m = createMatchF(nextMatchF().ref); const lg = {}; tacModsF(m, m.us, lg); ok(m.oop && lg.oop, 'la forma sin balón cuenta en el partido'); S.lph = 'ip'; t.oop = null; t.oopMap = null; }
-    ok(app.querySelectorAll('[data-a="vtab"]').length === 9, 'nueve pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 9, 'nueve pestañas en la plantilla');
+    ok(app.querySelectorAll('[data-a="vtab"]').length === 10, 'diez pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 9, 'nueve pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
     setSub(out.id, 0); ok(subsOf(t)[0] === out.id && subsOf(t).length <= MAX_SUBS, 'poner a un suplente en el banquillo');
@@ -393,7 +393,7 @@ const app = document.getElementById('app')!;
     ok(cp.opp < 1 && cp.drain > 1 && ct.own > 1.04, 'contrapresión y contraataque contra línea alta');
     const t = T(S.user), f0 = t.formation, tac0 = Object.assign({}, t.tac), m0 = t.ment, r0 = (t.roles || []).slice();
     applyPreset('cate'); ok(t.formation === '5-3-2' && t.tac.per === 'rep' && t.ment === 'def', 'cargar el catenaccio');
-    S.view = 'tacticas'; S.vt = { tac: 'plan' }; render(); ok(app.textContent.includes('Gegenpress'), 'sistemas famosos en tácticas');
+    S.view = 'tacticas'; S.vt = { tac: 'est' }; render(); ok(app.textContent.includes('Gegenpress'), 'sistemas famosos en tácticas');
     const opp = S.teams.find(x => x.id !== S.user).id; ok(Array.isArray(rivalAdvice(opp)), 'consejos contra el rival');
     S.vt = { tac: 'rival' }; render();
     setFormation(f0); t.tac = tac0; t.ment = m0; if (r0.length) t.roles = r0; S.vt = {};
@@ -656,6 +656,20 @@ const app = document.getElementById('app')!;
     t.subsNone = false; t.lineup = autoLineupF(S.user, t.formation);
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
+  }
+  { // estilos de juego, cansancio a decisión del técnico y ojeador de chollos
+    const T2 = await import('../src/tactics2'); ok(Object.keys(T2.PRESETS).length >= 18, `muchos estilos (${Object.keys(T2.PRESETS).length})`);
+    const t = T(S.user), keep = { f: t.formation, lu: t.lineup.slice(), tac: t.tac, ment: t.ment, roles: t.roles, duty: t.duty, pi: t.pi, style: t.style };
+    for (const k of Object.keys(T2.PRESETS)) { T2.applyPreset(k); const f = T2.presetFit(k); if (!(t.formation === T2.PRESETS[k].f && f.avg > 0)) ok(false, 'estilo ' + k); }
+    ok(true, 'todos los estilos se cargan y se puntúan');
+    S.view = 'tacticas'; S.vt = { tac: 'est' }; render(); ok(app.querySelectorAll('.stc').length >= 18 && !!app.querySelector('.stc.on'), 'pestaña Estilos con el estilo en uso');
+    Object.assign(t, { formation: keep.f, lineup: keep.lu, tac: keep.tac, ment: keep.ment, roles: keep.roles, duty: keep.duty, pi: keep.pi, style: keep.style });
+    const M = await import('../src/medical'); const p = PL(t.lineup[3]), e0 = p.energy; p.energy = 40; ok(M.injRisk(p).lv === 'alto' && M.injWeight(p, 40) > M.injWeight(p, 90) + 2, 'agotado: riesgo de lesión alto');
+    const { rotateLineup } = await import('../src/tactics'); p.forceW = S.week; t.base = null; t.lastRot = null; rotateLineup(); ok(t.lineup.includes(p.id), 'si el técnico dice que juegue, juega aunque esté cansado');
+    p.forceW = null; t.base = null; t.lastRot = null; rotateLineup(); ok(!t.lineup.includes(p.id), 'si no, la rotación lo sienta'); p.energy = e0; t.lineup = keep.lu.slice();
+    const Sc = await import('../src/scouting'); S.cholSeen = []; const b0 = S.budget; S.budget = 5; const C = Sc.chollosMonthly(true); S.budget = b0;
+    ok(C.length >= 1 && C.every(x => x.age <= 21 && x.team !== S.user && Sc.knowledge(x) >= 60), `ojeador de chollos (${C.map(x => x.name).join(', ')})`);
+    S.view = 'mrec'; render(); ok(app.textContent.includes('Chollos del ojeador') && app.textContent.includes('puede llegar a'), 'chollos en Recomendaciones'); S.vt = {}; S.view = 'inicio';
   }
   { // de abajo arriba: Sub-21 por potencial y rendimiento, «Mis joyas» y cansancio en el campo
     const N = await import('../src/nations'); const c = LG(uLg()).c, ids = N.u21Call(c);

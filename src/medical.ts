@@ -6,14 +6,14 @@ import {S} from './state';
 export function injRisk(p){
  const why=[];let r=8;
  if(p.prone){r+=p.prone*30;why.push('propenso a lesionarse');}
- const e=p.energy??100;if(e<55){r+=28;why.push('muy cansado');}else if(e<70){r+=12;why.push('algo cansado');}
+ const e=p.energy??100;if(e<50){r+=40;why.push('agotado');}else if(e<60){r+=28;why.push('muy cansado');}else if(e<72){r+=12;why.push('algo cansado');}
  if(p.recov>0){r+=26;why.push('recién recuperado (riesgo de recaída)');}
  if(p.age>=32){r+=10;why.push('veterano');}else if(p.age>=30)r+=5;
  if(p.team===S.user&&S.train&&S.train.int==='i'){r+=8;why.push('entrenamiento intenso');}
  r=Math.min(100,Math.round(r));return{r,lv:r>=45?'alto':r>=25?'medio':'bajo',why};
 }
 /** Peso en el sorteo de lesiones del partido (más riesgo, más papeletas). */
-export const injWeight=(p,en)=>1+(p.prone||0)*1.5+(en<55?1:en<70?.35:0)+(p.recov>0?1.5:0)+(p.age>=32?.35:0);
+export const injWeight=(p,en)=>1+(p.prone||0)*1.5+(en<45?2.5:en<55?1.4:en<70?.4:0)+(p.recov>0?1.5:0)+(p.age>=32?.35:0);
 /** Etiqueta para la plantilla. */
 export function riskTag(p){if(p.inj)return '';const k=injRisk(p);return k.lv==='alto'?`<span class="tag bad" title="Riesgo de lesión alto: ${k.why.join(', ')}">Riesgo alto</span>`:'';}
 

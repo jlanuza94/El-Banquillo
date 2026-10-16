@@ -153,6 +153,11 @@ document.addEventListener('click',e=>{
   case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
   case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v);const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
    toast(`Sistema cargado: ${PRESETS[d.v].n}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
+  case'st-g':S.stG=d.v;break;
+  case'force-p':{const p=PL(d.id);if(p){p.forceW=p.forceW===S.week?null:S.week;if(p.forceW)toast(`${p.name} jugará aunque esté cansado (${Math.round(p.energy)}%). Ojo: más riesgo de lesión.`);}break;}
+  case'rest-p':{const t=T(S.user),i=t.lineup.indexOf(d.id),p=PL(d.id);if(i<0||!p)break;p.forceW=null;const s=slotsOf(t.formation)[i],ro=userRoles();
+   const c=squad(S.user).filter(q=>available(q)&&!t.lineup.includes(q.id)&&q.energy>=70).map(q=>[q,eff(q,s,null,ro[i])]).sort((a,b)=>b[1]-a[1])[0];
+   if(!c){toast('No tienes a nadie fresco para ese puesto.');break;}placeInSlot(c[0].id,i);t.base=null;toast(`${p.name} descansa: entra ${c[0].name}.`);break;}
   case'pos-sel':S.posSel=+d.i;break;
   case'duty':{const t=T(S.user);userPos(slotsOf(t.formation));t.duty[+d.i]=d.v;break;}
   case'pi-tog':{const t=T(S.user),sl=slotsOf(t.formation);userPos(sl);const L=t.pi[+d.i]=t.pi[+d.i]||[],k=L.indexOf(d.v);if(k>=0)L.splice(k,1);else{if(L.length>=3){toast('Máximo 3 instrucciones por puesto.');break;}L.push(d.v);}break;}

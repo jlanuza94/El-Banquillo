@@ -76,6 +76,7 @@ export function scoutingWeekly(){
  S.scoutQ=S.scoutQ.filter(x=>{const p=PL(x.pid);if(!p)return false;if(S.week<x.until)return true;S.know[p.id]=100;scoutReport(p,by);return false;});
  S.short.forEach(id=>{if(PL(id))S.know[id]=Math.min(100,(S.know[id]||0)+2);});
  const all=Object.values(S.players);
+ chollosMonthly();
  sen.forEach(sc=>{
   const R=REGIONS[sc.reg],pool=all.filter(p=>p.team!==null&&p.team!==S.user&&R.c.includes(LG(T(p.team).lg).c));
   shuffle(pool).slice(0,10+2*(sc.jui||5)).forEach(p=>S.know[p.id]=Math.min(100,(S.know[p.id]||0)+8+(sc.jui||5)*2));
@@ -83,6 +84,21 @@ export function scoutingWeekly(){
   if(rnd()<.18+.02*(sc.jui||5)){const budget=Math.max(S.budget,0)*1.3,cands=pool.filter(p=>knowledge(p)>=60&&p.value*1.2<=budget&&p.age<=30&&grade(p).g<='B'&&!S.short.includes(p.id));
    if(cands.length){const p=cands.sort((a,b)=>b.ovr/Math.sqrt(b.value+.05)-a.ovr/Math.sqrt(a.value+.05))[0];S.know[p.id]=100;scoutReport(p,sc.name);}}
  });
+}
+/* ---------- El ojeador de chollos: cada mes, 2-3 jóvenes desconocidos y baratos con mucho margen ---------- */
+/** Nivel de referencia de tu equipo (media de los 11 mejores). */
+const myLvl=()=>{const o=squad(S.user).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11);return o.reduce((a,b)=>a+b,0)/Math.max(1,o.length);};
+export function chollosMonthly(force){
+ if(S.user==null||(!force&&(S.week%4!==2||S.cholW===S.week)))return [];S.cholW=S.week;S.know=S.know||{};
+ const lvl=myLvl(),budget=Math.max(S.budget*.6,.03),seenB=new Set(S.cholSeen||[]),sen=(S.scouts||[]).filter(sc=>sc.job!=='sen'),by=sen.length?pick(sen).name:crew('dd')[0]?crew('dd')[0].name:'Tu ojeador';
+ const C=Object.values(S.players).filter(p=>p.team!==null&&p.team!==S.user&&!p.loan&&p.age<=21&&!seenB.has(p.id)&&p.pot*10>=Math.max(lvl+8,p.ovr+12)&&p.value*1.2<=budget&&!(S.short||[]).includes(p.id))
+  .map(p=>[p,p.pot*10-p.ovr+(p.pot*10-lvl)*.6-p.value*20+rnd()*6]).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]);
+ if(!C.length)return [];
+ C.forEach(p=>{S.know[p.id]=Math.max(S.know[p.id]||0,62);seenB.add(p.id);});
+ S.cholSeen=[...seenB].slice(-120);S.chollos=C.map(p=>({id:p.id,w:S.week}));
+ const line=p=>{const r=seen(p).pot;return `${p.name} (${SPN[p.sp].toLowerCase()}, ${p.age} años, ${T(p.team).name} · ${lgName(T(p.team).lg)}): ahora ${(p.ovr/10).toFixed(1)}, puede llegar a ${r?r[0].toFixed(1)+'–'+r[1].toFixed(1):'?'}. Costaría unos ${money(p.value*1.2)}.`;};
+ news(`Chollos del mes de ${by}: ${C.length} chaval${C.length>1?'es':''} que nadie mira y que pueden crecer mucho. ${C.map(line).join(' ')}`,'good',{cat:'oje',from:by,subj:`💎 Chollos del mes (${C.length})`,act:[...C.map(p=>({l:p.name.split(' ').slice(-1)[0],a:'ficha',id:p.id})),{l:'Ver en el mercado',a:'view',v:'mrec'}]});
+ return C;
 }
 /** Al empezar temporada el conocimiento se queda viejo: baja un poco y se borra el de jugadores que ya no existen. */
 export function scoutingSeasonEnd(){const K=S.know||{},o={};Object.keys(K).forEach(id=>{if(S.players[id]){const v=Math.round(K[id]*.7);if(v>=5)o[id]=v;}});S.know=o;S.scoutQ=(S.scoutQ||[]).filter(x=>S.players[x.pid]);}

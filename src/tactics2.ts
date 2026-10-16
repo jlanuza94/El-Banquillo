@@ -3,7 +3,8 @@
 // @ts-nocheck — usa el estado heredado S.
 import {GRP,SPN,TAC0} from './data';
 import {PL,S,T,squad} from './state';
-import {autoLineup,setFormation,slotsOf,teamPower,userRoles} from './tactics';
+import {autoLineup,eff,setFormation,slotsOf,teamPower,userRoles} from './tactics';
+import {available} from './state';
 import {roleList} from './roles';
 import {DEF_DUTY,userPos} from './positions';
 
@@ -19,15 +20,37 @@ export function phaseMods(A,B,velDel,ment){
 }
 /* ---------- Sistemas famosos listos para cargar ---------- */
 export const PRESETS={
- gegen:{n:'Gegenpress',d:'Presión altísima y contrapresión al perder: robar arriba y atacar rápido. Cansa mucho.',f:'4-3-3',ment:'att',tac:{pre:'alt',lin:'alt',rit:'rap',anc:'nor',est:'dir',per:'cpr',rec:'cont'},roles:{DC:'dpr',MC:'box',MCD:'piv'},du:{MC:'ata'}},
- tiki:{n:'Tiki-taka',d:'Posesión paciente, pases cortos y presión tras pérdida. Necesita buenos pasadores.',f:'4-3-3',ment:'bal',tac:{pre:'alt',lin:'alt',rit:'len',anc:'anc',est:'pos',per:'cpr',rec:'pau'},roles:{DC:'f9',MC:'org',MCD:'ore',DFC:'csa'},du:{}},
- cate:{n:'Catenaccio',d:'Bloque bajo, línea de cinco y salir a la contra. Ideal para defender un resultado.',f:'5-3-2',ment:'def',tac:{pre:'baj',lin:'baj',rit:'nor',anc:'est',est:'con',per:'rep',rec:'cont'},roles:{DFC:'sto',MC:'mcc',DC:'dob'},du:{MC:'def'}},
- contra:{n:'Contraataque',d:'Esperar atrás y salir como un rayo con extremos y delanteros rápidos.',f:'4-4-2',ment:'bal',tac:{pre:'med',lin:'baj',rit:'rap',anc:'anc',est:'con',per:'rep',rec:'cont'},roles:{MD:'eba',MI:'eba',DC:'dar'},du:{}},
- directo:{n:'Juego directo',d:'Balón largo a un delantero fuerte y a pelear las segundas jugadas.',f:'4-4-2',ment:'bal',tac:{pre:'med',lin:'med',rit:'rap',anc:'anc',est:'dir',per:'nor',rec:'cont'},roles:{DC:'dob'},du:{}},
+ gegen:{g:'Presión',n:'Gegenpress',d:'Presión altísima y contrapresión al perder: robar arriba y atacar rápido. Cansa mucho.',f:'4-3-3',ment:'att',tac:{pre:'alt',lin:'alt',rit:'rap',anc:'nor',est:'dir',per:'cpr',rec:'cont'},roles:{DC:'dpr',MC:'box',MCD:'piv'},du:{MC:'ata'}},
+ tiki:{g:'Posesión',n:'Tiki-taka',d:'Posesión paciente, pases cortos y presión tras pérdida. Necesita buenos pasadores.',f:'4-3-3',ment:'bal',tac:{pre:'alt',lin:'alt',rit:'len',anc:'anc',est:'pos',per:'cpr',rec:'pau'},roles:{DC:'f9',MC:'org',MCD:'ore',DFC:'csa'},du:{}},
+ cate:{g:'Defensivo',n:'Catenaccio',d:'Bloque bajo, línea de cinco y salir a la contra. Ideal para defender un resultado.',f:'5-3-2',ment:'def',tac:{pre:'baj',lin:'baj',rit:'nor',anc:'est',est:'con',per:'rep',rec:'cont'},roles:{DFC:'sto',MC:'mcc',DC:'dob'},du:{MC:'def'}},
+ contra:{g:'Contra',n:'Contraataque',d:'Esperar atrás y salir como un rayo con extremos y delanteros rápidos.',f:'4-4-2',ment:'bal',tac:{pre:'med',lin:'baj',rit:'rap',anc:'anc',est:'con',per:'rep',rec:'cont'},roles:{MD:'eba',MI:'eba',DC:'dar'},du:{}},
+ directo:{g:'Directo',n:'Juego directo',d:'Balón largo a un delantero fuerte y a pelear las segundas jugadas.',f:'4-4-2',ment:'bal',tac:{pre:'med',lin:'med',rit:'rap',anc:'anc',est:'dir',per:'nor',rec:'cont'},roles:{DC:'dob'},du:{}},
+ autobus:{n:'El autobús',g:'Defensivo',d:'Diez detrás del balón, líneas juntas y a esperar un error o un balón parado. Para sacar puntos en campos difíciles.',f:'5-4-1',ment:'def',tac:{pre:'baj',lin:'baj',rit:'len',anc:'est',est:'con',per:'rep',rec:'nor',ent:'dur',tie:'si'},roles:{DFC:'sto',MI:'cdb',MD:'cdb',MC:'mcc',DC:'dob'},du:{MI:'def',MD:'def'}},
+ cholo:{n:'Bloque y contra (cholismo)',g:'Defensivo',d:'Dos líneas de cuatro muy juntas, entradas duras y salida rápida al robar. Sufrir, competir y matar a la contra.',f:'4-4-2',ment:'def',tac:{pre:'med',lin:'baj',rit:'nor',anc:'est',est:'con',per:'rep',rec:'cont',ent:'dur',tie:'si'},roles:{MI:'cdb',MD:'cdb',MC:'mcc',DC:'dpr'},du:{}},
+ muro:{n:'Muro y transición',g:'Contra',d:'Doble pivote que protege a la defensa y tres por delante que salen disparados. Sólido y peligroso al espacio.',f:'4-2-3-1',ment:'bal',tac:{pre:'med',lin:'baj',rit:'rap',anc:'nor',est:'con',per:'rep',rec:'cont'},roles:{MCD:'piv',MCO:'lle',EI:'ext',ED:'ext',DC:'dar'},du:{MCO:'ata'}},
+ presion:{n:'Presión total',g:'Presión',d:'Asfixiar al rival en su campo durante 90 minutos: entradas duras, línea alta y robar cerca de su portería. Exige un físico enorme.',f:'4-2-3-1',ment:'att',tac:{pre:'alt',lin:'alt',rit:'rap',anc:'nor',est:'dir',per:'cpr',rec:'cont',ent:'dur'},roles:{DC:'dpr',MCO:'lle',MCD:'piv',EI:'ede',ED:'ede'},du:{MCO:'ata'}},
+ jposi:{n:'Juego de posición',g:'Posesión',d:'Salida de balón desde el portero, superioridad por dentro y extremos a pierna cambiada. El balón es tuyo y el rival corre.',f:'4-3-3',ment:'bal',tac:{pre:'alt',lin:'alt',rit:'nor',anc:'anc',est:'pos',per:'cpr',rec:'pau',off:'si'},roles:{POR:'pol',DFC:'csa',MCD:'ore',MC:'org',EI:'epc',ED:'epc',DC:'f9',LD:'lof',LI:'lof'},du:{}},
+ rombo:{n:'Rombo',g:'Posesión',d:'Cuatro medios en rombo y dos puntas: dominio total del centro. Las bandas quedan para los laterales.',f:'4-3-1-2',ment:'bal',tac:{pre:'med',lin:'med',rit:'nor',anc:'est',est:'pos',per:'nor',rec:'nor'},roles:{MCO:'eng',MC:'box',MCD:'piv',DC:'dar',LD:'lof',LI:'lof'},du:{LD:'ata',LI:'ata'}},
+ mpunta:{n:'Mediapunta libre',g:'Posesión',d:'Todo pasa por tu 10: un enganche con libertad entre líneas, rodeado de trabajadores. Ideal si tienes un creativo.',f:'4-2-3-1',ment:'bal',tac:{pre:'med',lin:'med',rit:'nor',anc:'nor',est:'pos',per:'nor',rec:'pau'},roles:{MCO:'eng',MCD:'ore',EI:'int',ED:'int',DC:'dar'},du:{}},
+ bandas:{n:'Juego por bandas',g:'Directo',d:'Extremos pegados a la cal, laterales que doblan y centros al área para un nueve rematador.',f:'4-4-2',ment:'bal',tac:{pre:'med',lin:'med',rit:'nor',anc:'anc',est:'dir',per:'nor',rec:'nor'},roles:{MI:'eba',MD:'eba',LD:'lof',LI:'lof',DC:'dob'},du:{LD:'ata',LI:'ata'}},
+ kick:{n:'Fútbol británico',g:'Directo',d:'Balón largo, segunda jugada, entradas fuertes y mucho ritmo. Funciona en campos malos y con jugadores físicos.',f:'4-4-2',ment:'bal',tac:{pre:'med',lin:'med',rit:'rap',anc:'anc',est:'dir',per:'nor',rec:'cont',ent:'dur'},roles:{DC:'dob',MC:'box',MI:'eba',MD:'eba',DFC:'sto'},du:{}},
+ carril:{n:'Tres centrales y carrileros',g:'Ofensivo',d:'Tres centrales cubren atrás para que las bandas suban sin miedo. Mucha gente en ataque y dos puntas.',f:'3-5-2',ment:'bal',tac:{pre:'med',lin:'med',rit:'nor',anc:'anc',est:'equ',per:'nor',rec:'cont'},roles:{DFC:'csa',MI:'eba',MD:'eba',MCD:'ore',DC:'dar'},du:{MI:'ata',MD:'ata'}},
+ total:{n:'Fútbol total',g:'Ofensivo',d:'Todos atacan y todos defienden: rotaciones, presión arriba y posesión. Precioso cuando sale; muy arriesgado cuando no.',f:'3-4-3',ment:'att',tac:{pre:'alt',lin:'alt',rit:'rap',anc:'anc',est:'pos',per:'cpr',rec:'nor',off:'si'},roles:{DFC:'csa',MC:'box',DC:'f9',EI:'ext',ED:'ext'},du:{}},
+ ataque:{n:'Ataque total',g:'Ofensivo',d:'Mentalidad ofensiva, ritmo alto y todo el mundo arriba. Para remontar o pasar por encima de rivales débiles.',f:'4-3-3',ment:'att',tac:{pre:'alt',lin:'alt',rit:'rap',anc:'anc',est:'dir',per:'cpr',rec:'cont'},roles:{LD:'lof',LI:'lof',MC:'box',EI:'ext',ED:'ext',DC:'dar'},du:{LD:'ata',LI:'ata',MC:'ata'}},
+ control:{n:'Control y pausa',g:'Posesión',d:'Tener el balón para no sufrir: ritmo lento, pases seguros y perder tiempo cuando vas ganando. Ideal para guardar ventajas.',f:'4-1-4-1',ment:'bal',tac:{pre:'med',lin:'med',rit:'len',anc:'nor',est:'pos',per:'nor',rec:'pau',tie:'si'},roles:{MCD:'ore',MC:'org',MI:'int',MD:'int',DC:'f9'},du:{}},
+ sombra:{n:'Delantero sombra',g:'Contra',d:'Un 4-4-1-1 donde el mediapunta llega desde atrás al área. Equilibrado, difícil de marcar y muy útil en categorías bajas.',f:'4-5-1',ment:'bal',tac:{pre:'med',lin:'med',rit:'nor',anc:'nor',est:'equ',per:'nor',rec:'cont'},roles:{DC:'dar',MC:'box',MCD:'piv',MI:'eba',MD:'eba'},du:{}},
 };
+/** Cuánto encaja tu plantilla en un sistema: el mejor once posible con sus roles (media de 0 a 100) y los puestos flojos. */
+export function presetFit(k){
+ const P=PRESETS[k],sl=slotsOf(P.f),pool=squad(S.user).filter(p=>!p.loan&&available(p)),used=new Set(),rl=s=>{const r=P.roles[s];return r&&roleList(s).some(x=>x[0]===r)?r:roleList(s)[0][0];};
+ const order=sl.map((s,i)=>i).sort((a,b)=>(sl[a]==='POR'?-1:0)-(sl[b]==='POR'?-1:0));const v=[];
+ order.forEach(i=>{const s=sl[i],r=rl(s);let best=null,bv=-1;pool.forEach(p=>{if(used.has(p.id))return;const e=eff(p,s,100,r);if(e>bv){bv=e;best=p;}});if(best){used.add(best.id);v[i]=[s,bv];}else v[i]=[s,0];});
+ const avg=v.reduce((a,x)=>a+x[1],0)/sl.length,weak=v.filter(x=>x[1]<avg-6).map(x=>x[0]);
+ return{avg,weak:[...new Set(weak)]};
+}
 /** Carga un sistema famoso en tu equipo (formación, mentalidad, instrucciones, roles y cometidos). */
 export function applyPreset(k){
- const P=PRESETS[k];if(!P)return;const t=T(S.user);
+ const P=PRESETS[k];if(!P)return;const t=T(S.user);t.style=k;
  if(t.formation!==P.f)setFormation(P.f);
  t.ment=P.ment;t.tac=Object.assign({},TAC0,P.tac);
  const sl=slotsOf(t.formation);t.roles=sl.map(s=>{const r=P.roles[s];return r&&roleList(s).some(x=>x[0]===r)?r:roleList(s)[0][0];});

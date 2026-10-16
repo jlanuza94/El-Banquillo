@@ -313,7 +313,7 @@ export function step(m){
  {const ec=x=>x&&x.ent==='dur'?1.35:x&&x.ent==='pru'?.7:1,dh=(m.oi&&m.oi.h&&m.oi.h.dur?1.6:1)*ec(m.tac.h),da=(m.oi&&m.oi.a&&m.oi.a.dur?1.6:1)*ec(m.tac.a),ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
   if(rnd()<.034*(ph+pa)*(m.derby?1.3:1)*(m.refr?REFS[m.refr.k].c:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
- if(rnd()<.0032){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
+ if(rnd()<.0032*(1+.1*[...m.lu.h,...m.lu.a].filter(id=>id&&!m.hurt[id]&&m.en[id]<55).length)){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}
   if(live)addEv(m,'inj',s,`${PL(id).name} se duele de la rodilla y no puede seguir al mismo nivel.`,id);
   if(m.us===s&&!m.auto){if(!m.mom)momentInj(m,id);else{m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}}
  if(m.min>=58||Object.keys(m.hurt).length)['h','a'].forEach(s=>{if(m.us!==s||m.auto)aiManage(m,s);});

@@ -87,7 +87,8 @@ export function rotateLineup(th){
  const t=T(S.user),sl=slotsOf(t.formation),ro=userRoles();
  if(!t.base||t.base.length!==sl.length||!t.lastRot||t.lineup.join()!==t.lastRot.join())t.base=t.lineup.slice();
  const ok=id=>{const p=PL(id);return p&&p.team===S.user&&available(p);};
- const lu=t.base.map(id=>ok(id)&&PL(id).energy>=th?id:null);
+ const forced=id=>PL(id).forceW===S.week;
+ const lu=t.base.map(id=>ok(id)&&(PL(id).energy>=th||forced(id))?id:null);
  let changes=0;
  sl.forEach((s,i)=>{if(lu[i])return;const cur=t.base[i]&&ok(t.base[i])?PL(t.base[i]):null;
   const c=squad(S.user).filter(q=>available(q)&&!lu.includes(q.id)&&q.energy>=th-15&&(!cur||q.id!==cur.id)).map(q=>[q,eff(q,s,null,ro[i])]).sort((a,b)=>b[1]-a[1])[0];
