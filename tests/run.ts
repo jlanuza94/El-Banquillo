@@ -657,6 +657,18 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // ronda: instrucciones desde el campo, camiseta por temporada y partida que no crece sin fin
+    const t = T(S.user); S.view = 'tacticas'; S.vt = { tac: 'ali' }; S.lph = 'ip'; S.sel = { type: 'slot', i: 5 }; render();
+    ok(!!app.querySelector('.slotins select[data-role]') && !!app.querySelector('.slotins [data-a=duty]') && !!app.querySelector('.slotins select[data-ord]'), 'tocar a un jugador del campo: rol, cometido y orden'); S.sel = null;
+    const K = await import('../src/kit'); const kp = S.kits, ks = S.kitS; S.kits = {}; S.kitS = null;
+    ok(K.setKit({ c1: '#112233', pat: 'rayas' }) === '' && K.myKit().c1 === '#112233' && K.myKit().pat === 'rayas', 'diseñar la camiseta de la temporada');
+    render(); ok(app.innerHTML.includes('#112233'), 'la camiseta se ve en la alineación');
+    S.kitS = S.seasonN; ok(K.setKit({ c1: '#000000' }) !== '' && K.myKit().c1 === '#112233', 'una vez presentada, queda fijada'); S.kits = kp; S.kitS = ks;
+    S.view = 'club'; S.vt = { club: 'neg' }; render(); ok(!!app.querySelector('#kitC1') || app.textContent.includes('Ya presentada'), 'editor de la camiseta en Negocios');
+    const Pl = await import('../src/players'); const n0 = Object.values(S.players).filter(p => p.team === null).length; Pl.pruneFree(800);
+    const n1 = Object.values(S.players).filter(p => p.team === null).length; ok(n1 <= Math.max(800, (S.short || []).length + 800) && S.teams.every(x => x.id === S.user || squad(x.id).filter(p => !p.loan).length <= 27), `la partida no crece sin fin (libres ${n0} → ${n1})`);
+    S.vt = {}; S.view = 'inicio';
+  }
   { // ronda: sin balón coloca en su sitio, lista ordenable, columnas de plantilla, páginas del mercado y ficha compacta con Hablar
     const E = await import('../src/events'); const O = await import('../src/oop'); const t = T(S.user), keepF = t.formation, keepO = t.oop, keepL = t.lineup.slice();
     t.formation = '4-4-2'; t.oop = '4-3-3'; t.oopMap = null; const m = O.oopMap(t), j = m[5]; ok(E.ipIdx(j) === 5, 'un hueco de sin balón corresponde a su puesto con balón');

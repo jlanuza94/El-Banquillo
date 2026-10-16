@@ -3,7 +3,8 @@
 // @ts-nocheck — usa el estado heredado S.
 import {esc,money} from '../core';
 import {LV_NAMES,posChip} from '../data';
-import {LG,S,T,squad,uLg} from '../state';
+import {LG,S,T,seasonLabel,squad,uLg} from '../state';
+import {kitSVG} from '../kit';
 import {nameBtn,nf} from './common';
 
 const ICON={Campeón:'🏆','Campeón y ascenso':'🏆',Ascenso:'⬆️',Descenso:'⬇️'};
@@ -20,6 +21,7 @@ export function caminoHTML(){
  const sold=(S.jsold||[]).slice().sort((a,b)=>(b.fee-(b.paid||0))-(a.fee-(a.paid||0))).slice(0,3);
  return `<div class="grid"><div class="stack"><section class="panel"><div class="panel-h"><h2>Mi camino con ${esc(t.name)}</h2><span class="eyebrow">${H.length} temporada${H.length===1?'':'s'} completada${H.length===1?'':'s'}</span></div>
  <div class="jladder">${steps}</div>
+ ${Object.keys(S.kits||{}).length?`<div class="eyebrow" style="margin:6px 0 2px">Tus camisetas</div><div class="kith">${Object.entries(S.kits).sort((a,b)=>a[0]-b[0]).map(([n,k])=>`<span title="${seasonLabel(+n)}">${kitSVG(k,'sm')}<small>${seasonLabel(+n).slice(2)}</small></span>`).join('')}</div>`:''}
  <div class="jtls">${tl}</div></section>
  <section class="panel"><div class="panel-h"><h2>Salón de la fama</h2><span class="eyebrow">Los que más han jugado contigo</span></div>
  ${hof.length?hof.map((x,i)=>`<div class="offer"><b class="num" style="width:22px">${i+1}</b>${posChip(x.p)}<span class="t">${nameBtn(x.p)}<br><span class="small muted">${x.pj} partidos · ${x.g} goles${x.p.team!==S.user?` · ahora en ${x.p.team!=null?esc(T(x.p.team).name):'sin equipo'}`:''}</span></span>${sc&&sc.p===x.p&&x.g?'<span class="tag xi">Máximo goleador</span>':''}</div>`).join(''):'<div class="empty">Juega partidos y aquí aparecerán tus leyendas.</div>'}</section></div>

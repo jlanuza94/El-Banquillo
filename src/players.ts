@@ -4,7 +4,7 @@ import {setValueNow} from './economy';
 import {injDaysMult} from './staff';
 import {clamp,gauss,pick,r2,r3,ri,rnd,shuffle} from './core';
 import {AT_PHYS,ATTRS,COUNTRIES,GRP,NAMES,PERS_W,SP_ALT,W,W_OLD,WIDE,newSt,spRandom} from './data';
-import {RT,LG,S,T,rt,squad} from './state';
+import {RT,LG,S,T,rt,setTeam,squad} from './state';
 export const rateA=(a,pos)=>{const w=W[pos];let s=0;for(const k in w)s+=w[k]*a[k];return s;};
 export function wpick(o){const ks=Object.keys(o);let t=ks.reduce((s,k)=>s+o[k],0),r=rnd()*t;for(const k of ks){r-=o[k];if(r<=0)return k;}return ks[0];}
 export function genAttrs(pos,tg){
@@ -110,17 +110,30 @@ export function assignNum(p){
  for(const n of pref){if(!used.has(n)){p.num=n;return;}}
  for(let n=2;n<99;n++){if(!used.has(n)){p.num=n;return;}}
 }
+/** Bolsa de agentes libres por posición (se rehace una vez por jornada): los clubes que necesitan gente fichan de aquí antes de inventarse jugadores. */
+let FAP=null;
+function faPool(){const k=S.seasonN+'|'+S.week;if(FAP&&FAP.k===k)return FAP;FAP={k,by:{POR:[],DEF:[],MED:[],DEL:[]}};Object.values(S.players).forEach(p=>{if(p.team===null&&!p.ret&&p.age<=33&&FAP.by[p.pos])FAP.by[p.pos].push(p);});return FAP;}
 export function ensureSquad(tid){
  const mins={POR:2,DEF:6,MED:6,DEL:4};const t=T(tid);const made=[];
- for(const pos in mins){let c=squad(tid).filter(p=>p.pos===pos).length;while(c<mins[pos]){const p=genPlayer(pos,t.rep-6,tid,[17,21]);assignNum(p);made.push(p);c++;}}
+ for(const pos in mins){let c=squad(tid).filter(p=>p.pos===pos).length;
+  while(c<mins[pos]){
+   // primero un libre de su nivel (los que no renovaron); si no hay, un chaval nuevo
+   const L=tid!==S.user?faPool().by[pos]:[],lo=t.rep-16,hi=t.rep+4;let bi=-1,bv=-1;for(let i=0;i<L.length;i++){const q=L[i];if(q.team!==null||q.ovr<lo||q.ovr>hi)continue;const v=q.ovr-Math.max(0,q.age-29)*2;if(v>bv){bv=v;bi=i;}}
+   let p;if(bi>=0){p=L.splice(bi,1)[0];setTeam(p,tid);p.contract=ri(1,3);p.wage=Math.max(p.wage||0,baseWage(p));}else p=genPlayer(pos,t.rep-6,tid,[17,21]);
+   assignNum(p);made.push(p);c++;}}
  return made;
 }
+/** Que la partida no crezca sin fin: plantillas de la IA recortadas y, como mucho, 1.200 libres (se van los peores y más mayores). */
+export function pruneFree(CAP=1200){trimSquads();const FA=Object.values(S.players).filter(p=>p.team===null&&!(S.short||[]).includes(p.id));
+ if(FA.length>CAP){FA.sort((a,b)=>(a.ovr-a.age*1.5+(a.pot*10-a.ovr)*.3)-(b.ovr-b.age*1.5+(b.pot*10-b.ovr)*.3)).slice(0,FA.length-CAP).forEach(p=>{delete S.players[p.id];});RT.SQ=null;RT.keyCache=null;}}
+/** Plantillas de la IA de 27 como mucho: se dejan libres a los que sobran (los peores). */
+export function trimSquads(){S.teams.forEach(t=>{if(t.id===S.user)return;const sq=squad(t.id).filter(p=>!p.loan);if(sq.length<=27)return;
+ sq.sort((a,b)=>a.ovr-b.ovr).slice(0,sq.length-27).forEach(p=>{if(T(t.id).lineup)T(t.id).lineup=T(t.id).lineup.map(x=>x===p.id?null:x);setTeam(p,null);});});}
 export function genFreeAgents(n=120){
  // unos pocos nuevos (jóvenes sin club y veteranos de ligas menores); el resto de la bolsa son los que no renovaron
  for(let k=0;k<n;k++)genPlayer(pick(['POR','DEF','DEF','MED','MED','DEL','DEL']),ri(36,66),null);
  // tope para que la partida no crezca sin fin: se van los peores y más mayores
- const FA=Object.values(S.players).filter(p=>p.team===null);const CAP=3500;
- if(FA.length>CAP)FA.sort((a,b)=>(a.ovr-a.age*1.5+(a.pot*10-a.ovr)*.3)-(b.ovr-b.age*1.5+(b.pot*10-b.ovr)*.3)).slice(0,FA.length-CAP).forEach(p=>{delete S.players[p.id];});
+ pruneFree();
  RT.SQ=null;RT.keyCache=null;
 }
 export function strength(tid){const o=squad(tid).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,14);return o.reduce((a,b)=>a+b,0)/Math.max(1,o.length);}

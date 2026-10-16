@@ -1,6 +1,7 @@
 /* El Banquillo · business.ts — Negocios del club: tienda, tienda online, bares, palcos VIP, museo y campus de verano;
  * el precio de la camiseta y la nueva equipación, las camisetas más vendidas, el nombre del estadio y el informe mensual. */
 // @ts-nocheck — usa el estado heredado S.
+import {myKit} from './kit';
 import {clamp,money,pick,r3,rnd} from './core';
 import {LG,S,T,squad,uLg,unit} from './state';
 import {shopWeekly} from './club';
@@ -35,8 +36,8 @@ export const kitPrice=()=>S.kitP||'nor';
 export const kitActive=()=>S.kitW!=null&&S.week<=S.kitW&&S.kitS===S.seasonN;
 export const kitCost=()=>r3(Math.max(U()*.25,shopWeekly()*.35*8*.6));
 export function launchKit(){if(S.kitS===S.seasonN)return 'Ya has presentado la equipación de esta temporada.';const c=kitCost();if(S.budget<c)return `No tienes presupuesto: cuesta ${money(c)}.`;
- S.budget=r3(S.budget-c);S.kitS=S.seasonN;S.kitW=S.week+8;if(S.club)S.club.mood=clamp(S.club.mood+3,0,100);news(`Presentas la nueva equipación: la afición hace cola en la tienda. Ventas +35% durante 8 jornadas.`,'good',{cat:'dir',subj:'Nueva equipación'});return 'Equipación presentada.';}
-export const kitMult=()=>KIT_P[kitPrice()].m*(kitActive()?1.35:1);
+ S.budget=r3(S.budget-c);S.kitS=S.seasonN;S.kitW=S.week+8;S.kits=S.kits||{};if(!S.kits[S.seasonN])S.kits[S.seasonN]=myKit();{const a=S.kits[S.seasonN],b=S.kits[S.seasonN-1];S.kitNew=!b||a.c1!==b.c1||a.c2!==b.c2||a.pat!==b.pat;}if(S.club)S.club.mood=clamp(S.club.mood+3,0,100);news(`Presentas la nueva equipación: la afición hace cola en la tienda. Ventas +35% durante 8 jornadas.`,'good',{cat:'dir',subj:'Nueva equipación'});return 'Equipación presentada.';}
+export const kitMult=()=>KIT_P[kitPrice()].m*(kitActive()?1.35:1)*(S.kitS===S.seasonN&&S.kitNew?1.08:1);
 /** Lo que tira de las ventas de un jugador: nivel, goles, ser internacional y ser joven y de moda. */
 export function shirtPop(p){const s=p.st||{};return Math.max(1,p.ovr+(s.g||0)*3+(s.a||0)+(p.caps||0)*2+(p.u21?4:0)+(p.age<=22?5:0)+(p.home?4:0));}
 /** Reparte las camisetas vendidas esta semana entre tus jugadores. */

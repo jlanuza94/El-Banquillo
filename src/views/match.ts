@@ -105,6 +105,14 @@ function preMatchView(m){
  <p class="small muted" style="margin:6px 0 0">Motivar funciona mejor si eres el débil; tranquilizar, si eres favorito o en copa. Exigir es arriesgado si el equipo viene mal.</p></section></div>`;
 }
 const qcv=v=>v>=8?'q5':v>=7?'q4':v>=6?'q3':v>=5?'q2':'q1';
+/** Franja en directo bajo el campo 2D: posesión, tiros, goles esperados y quién manda en los últimos 10 minutos. */
+function liveStrip(m){const H=T(m.h),A=T(m.a),pos=Math.round((m.min?m.possSum/m.min:.5)*100),sh=m.sh||[],from=Math.max(0,m.min-10);
+ const xr=s=>sh.filter(x=>x[0]===(s==='h'?0:1)&&(x[4]??0)>=from).reduce((a,x)=>a+x[2],0),xh=xr('h'),xa=xr('a'),dom=xh+xa>0?Math.round(xh/(xh+xa)*100):pos;
+ const xg=s=>((m.st[s].xg)||0).toFixed(1);
+ return `<div class="m2s"><span class="m2t">${esc(H.short)}</span><span class="m2bar" title="Posesión"><i style="width:${pos}%;background:${H.c1}"></i><i style="width:${100-pos}%;background:${A.c1}"></i></span><span class="m2t">${esc(A.short)}</span>
+ <span class="m2k"><b>${pos}%</b> pos.</span><span class="m2k"><b>${m.st.h.sh}-${m.st.a.sh}</b> tiros</span><span class="m2k"><b>${xg('h')}-${xg('a')}</b> xG</span>
+ <span class="m2k m2dom ${dom>=60?'h':dom<=40?'a':''}" title="Quién llega más en los últimos 10 minutos">${dom>=60?'▲ '+esc(H.short)+' aprieta':dom<=40?'▲ '+esc(A.short)+' aprieta':'Igualado'}</span>
+ <button class="btn sm m2n" data-a="n2d" aria-pressed="${!!S.n2d}">Nombres</button></div>`;}
 export function matchView(){
  if(S.match&&S.match.us&&S.match.min===0&&!S.match.done&&!S.match.talks.pre&&!S.match.preOk)return preMatchView(S.match);
  const m=S.match,H=T(m.h),A=T(m.a),us=m.us,ut=T(m[us]);
@@ -140,7 +148,7 @@ export function matchView(){
  return `<div class="mtopb"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button>${m.label?`<span class="eyebrow mlbl">${m.derby?`<span class="derbytag sm">${derbyName(m.h,m.a)}</span> `:''}${esc(m.label)}${m.agg?` · vuelta: ida ${m.agg[1]}-${m.agg[0]}`:m.ko?' · eliminatoria':''}</span>`:''}<span class="spacer"></span><button class="btn sm" data-a="sound" aria-pressed="${soundOn()}" title="Sonido y vibración">${soundOn()?'🔊':'🔇'}</button><div class="seg"><button data-a="v2d" data-v="1" aria-pressed="${S.v2d!==false}">2D</button><button data-a="v2d" data-v="0" aria-pressed="${S.v2d===false}">Texto</button></div></div>
  <div class="mfm mw-${mw}"><div class="mlL"><div class="mscore ${flash?'flash':''}"><span class="mtime">${label}</span><span class="mtm" style="${crestStyle(H)}">${esc(H.short)}</span><b class="msc h">${m.score.h}</b>${crest(m.us?T(m[m.us]):H,'sm')}<b class="msc a">${m.score.a}</b><span class="mtm" style="${crestStyle(A)}">${esc(A.short)}</span></div>
  <div class="mscr"><span>${esc(scorers('h'))}</span><span class="mag">${m.agg?`global ${m.score.h+m.agg[0]}-${m.score.a+m.agg[1]}`:''}${m.pen?` pen. ${m.pen[0]}-${m.pen[1]}`:''}</span><span>${esc(scorers('a'))}</span></div><div class="mprog"><i style="width:${Math.min(100,m.min/m.end*100)}%"></i></div>
- ${S.v2d!==false?`<div class="p2d"><canvas id="pitch2d" width="800" height="512" aria-label="Vista del partido en 2D"></canvas><div class="mcom" id="mcom" aria-live="polite">${esc(RT.com2d||'')}</div></div>`:''}
+ ${S.v2d!==false?`<div class="p2d"><canvas id="pitch2d" width="800" height="512" aria-label="Vista del partido en 2D"></canvas><div class="mcom" id="mcom" aria-live="polite">${esc(RT.com2d||'')}</div>${liveStrip(m)}</div>`:''}
  ${RT.replay?`<div class="row" style="justify-content:center;margin-top:8px"><span class="small muted">Viendo la repetición</span><button class="btn sm dark" data-a="replay-stop">Cerrar repetición</button></div>`:''}
  </div><div class="mlR"><div class="seg mwsel">${[['par','Partido'],['est','Estadísticas'],['eve','Eventos'],['for','Formaciones'],['res','Resultados']].map(([k,l])=>`<button data-a="m-w" data-v="${k}" aria-pressed="${mw===k}">${l}</button>`).join('')}</div><div class="wpar">
  <div class="mbar">${m.done?`<button class="btn primary" data-a="m-finish">Ver resultados de la jornada</button>${m.us?`<button class="btn" data-a="trep" data-v="live">📋 Informe táctico</button>`:''}`:`${m.paused?`<button class="btn primary" data-a="m-play">${resumeL}</button>`:`<button class="btn dark" data-a="m-pause">Pausar</button>`}

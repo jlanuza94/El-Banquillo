@@ -1,5 +1,6 @@
 /* El Banquillo · match2d.js — Animación del partido en 2D (canvas). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {kitOf} from './kit';
 import {FREE,formRows,freeCoords} from './freeboard';
 import {fmtMin,pick,rnd} from './core';
 import {FORMS,SPEEDS,W} from './data';
@@ -15,7 +16,7 @@ const DUR=2700;
 const rgb=h=>{const n=parseInt(String(h||'#888').slice(1),16);return [n>>16,n>>8&255,n&255];};
 const cdist=(a,b)=>{const A=rgb(a),B=rgb(b);return Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2]);};
 /** Equipación de cada equipo en la 2D: si se parecen, el visitante sale con la segunda (o de blanco/negro). */
-function kits(m){const h=T(m.h),a=T(m.a),H={f:h.c1,e:h.c2};let A={f:a.c1,e:a.c2};
+function kits(m){const kh=kitOf(m.h),ka=kitOf(m.a),h={c1:kh.c1,c2:kh.c2},a={c1:ka.c1,c2:ka.c2},H={f:h.c1,e:h.c2};let A={f:a.c1,e:a.c2};
  if(cdist(h.c1,a.c1)<110){A=cdist(h.c1,a.c2)>=110?{f:a.c2,e:a.c1}:lum(h.c1)>.5?{f:'#1b1b1b',e:'#e9e9e9'}:{f:'#f4f4f4',e:'#1b1b1b'};}
  return {h:H,a:A};}
 const GKX=s=>s==='h'?5:95;
@@ -193,6 +194,7 @@ export function a2Frame(ts){
   if(id===A2.holder){c.strokeStyle='rgba(255,236,140,.9)';c.lineWidth=2;c.beginPath();c.arc(px,py,r*1.55,0,Math.PI*2);c.stroke();}
   c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fillStyle=i===0?(s==='h'?'#f2c230':'#7fd1ff'):t.f;c.fill();c.lineWidth=2;c.strokeStyle=i===0?'#111':t.e;c.stroke();
   if(r>=7){c.fillStyle=i===0?'#111':(lum(t.f)>.55?'#111':'#fff');c.fillText(pl?pl.num:'',px,py+.5);}
+  if(S.n2d&&id!==A2.holder&&pl&&W>300){c.font=`600 ${Math.round(r*.85)}px "Barlow Condensed",Arial,sans-serif`;const nn=pl.name.split(' ').slice(-1)[0];c.fillStyle='rgba(0,0,0,.45)';const tw=c.measureText(nn).width+4;c.fillRect(px-tw/2,py+r*1.15,tw,r*1.1);c.fillStyle='#fff';c.fillText(nn,px,py+r*1.72);c.font=`700 ${Math.round(r*1.05)}px "Barlow Condensed",Arial,sans-serif`;}
   if(id===A2.holder&&pl&&W>380){c.font=`700 ${Math.round(r*1.05)}px "Barlow Condensed",Arial,sans-serif`;const nm=pl.name.split(' ').slice(1).join(' ');const tw=c.measureText(nm).width+8;c.fillStyle='rgba(0,0,0,.6)';c.fillRect(px-tw/2,py-r*2.9,tw,r*1.45);c.fillStyle='#fff';c.fillText(nm,px,py-r*2.15);}});});
  // balón (con sombra y altura en los centros y pases largos)
  const br=Math.max(3,W*.0075),z=A2.ball.z||0;

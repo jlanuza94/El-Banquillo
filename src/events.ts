@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {setKit} from './kit';
 import {buyBiz,launchKit,namingAnswer} from './business';
 import {gemKeep} from './biginterest';
 import {callUp,makePermanent,sendDown,toU19} from './u19';
@@ -158,6 +159,8 @@ document.addEventListener('click',e=>{
   case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v);const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
    toast(`Sistema cargado: ${PRESETS[d.v].n}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
   case'st-g':S.stG=d.v;break;
+  case'n2d':S.n2d=!S.n2d;break;
+  case'kit-pat':{const e=setKit({pat:d.v});if(e)toast(e);break;}
   case'pl-cols':S.plCols=d.v;break;
   case'loan-pick':S.loanPick=+d.v;break;
   case'biz-buy':toast(buyBiz(d.v));break;
@@ -368,7 +371,13 @@ document.addEventListener('click',e=>{
   case'cal-m':S.calM=d.v==='0'?0:(S.calM||0)+(+d.v);break;
   case'continue':{if(S.match){S.view='partido';break;}if(S.week>=nRounds()){S.view='inicio';break;}
    if(dlActive(isDeadline,lgDay)){dlStep(aiTransfers,incomingOffer);break;}
-   const r=continueDay();processBids(false);if(r==='match'){S.modal={type:'matchday'};}else{S.modal=null;}break;}
+   // salta los días tranquilos: para en el día de partido, si llega una noticia, en el cierre de mercado o cuando ya puedes jugar un amistoso
+   let r=continueDay(),n=1;processBids(false);
+   const quiet=()=>r!=='match'&&!(S.week===0&&inPre()&&S.pre&&S.pre.left>0&&fWait2()===0&&S.frStop!==S.pre.left)&&!dlActive(isDeadline,lgDay);
+   const n0=S.news.length?S.news[0]:null;
+   while(n<14&&quiet()&&(S.news.length?S.news[0]:null)===n0&&!S.modal){r=continueDay();processBids(false);n++;}
+   if(S.week===0&&inPre()&&S.pre&&fWait2()===0)S.frStop=S.pre.left;
+   if(r==='match'){S.modal={type:'matchday'};}else{S.modal=null;if(n>1)toast(`Avanzas ${n} días hasta ${(S.news.length?S.news[0]:null)!==n0?'una novedad':'el siguiente evento'}.`);}break;}
   case'meet':S.modal=S.meet?{type:'meet'}:null;if(!S.meet)toast('Esa reunión ya no está pendiente.');break;
   case'meet-ans':{const id=S.meet&&S.meet.id,r=meetAnswer(d.v);if(r[2]==='renew'&&id){renState(id);S.modal={type:'renew',id};}else S.modal={type:'meet',done:r,id};break;}
   case'chat-opt':{const r=chatOpt(PL(d.id),d.v);if(S.modal&&S.modal.type==='ficha'){S.chatMsg={id:d.id,msg:r[0],kind:r[1]};}else S.modal={type:'chat',id:d.id,msg:r[0],kind:r[1]};break;}
@@ -407,6 +416,7 @@ document.addEventListener('change',e=>{
  if(e.target.dataset&&e.target.dataset.cond!=null){const t=T(S.user),r=(t.cond||[])[+e.target.dataset.cond],k=e.target.dataset.k;if(r){r[k]=k==='min'?+v:(v||null);}save();render();return;}
  if(id==='lmodeSel'){S.lmode=v;}
  else if(id==='lsortSel'){S.lsort=v;}
+ else if(id==='kitC1'||id==='kitC2'){const e=setKit(id==='kitC1'?{c1:v}:{c2:v});if(e)toast(e);}
  else if(id==='smSort'){S.smF=S.smF||{};S.smF.sort=v;}
  else if(id==='smFree'){S.smF=S.smF||{};S.smF.free=e.target.checked;}
  else if(id==='smQ'||id==='smMin'||id==='smAge'||id==='smWage'){S.smF=S.smF||{};S.smF[{smQ:'q',smMin:'min',smAge:'age',smWage:'wage'}[id]]=v;}
