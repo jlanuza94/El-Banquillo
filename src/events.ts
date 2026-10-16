@@ -496,17 +496,23 @@ document.addEventListener('pointerdown',e=>{if(!S||S.user==null||e.button>0)retu
  if(el.dataset.drag==='list'&&e.target.closest('.grip'))e.preventDefault();
  DG={el,pid:el.dataset.pid,src:el.dataset.drag,x0:e.clientX,y0:e.clientY,moved:false,over:null};if(el.dataset.drag!=='list'){try{el.setPointerCapture(e.pointerId);}catch(err){}}});
 let LP={t:0,x:0,y:0};
+// en Android, mantener pulsado abre el menú del sistema y cancela el arrastre: en la alineación no se abre
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('.fmgrid'))e.preventDefault();});
 document.addEventListener('pointermove',e=>{if(LP.t&&!DG&&Math.hypot(e.clientX-LP.x,e.clientY-LP.y)>8){clearTimeout(LP.t);LP.t=0;}},{passive:true});
 document.addEventListener('pointerup',()=>{clearTimeout(LP.t);LP.t=0;document.querySelectorAll('.lpick').forEach(x=>x.classList.remove('lpick'));},true);
 document.addEventListener('pointercancel',()=>{clearTimeout(LP.t);LP.t=0;},true);
 /* En algunos móviles (WebView de Android) el navegador intenta desplazar la página a mitad del arrastre y lo corta: mientras arrastras, se bloquea el desplazamiento. */
 document.addEventListener('touchmove',e=>{if(DG)e.preventDefault();},{passive:false});
-document.addEventListener('pointermove',e=>{if(!DG)return;if(!DG.moved){if(Math.hypot(e.clientX-DG.x0,e.clientY-DG.y0)<7)return;DG.moved=true;
+const dgMove=e=>{if(!DG)return;if(!DG.moved){if(Math.hypot(e.clientX-DG.x0,e.clientY-DG.y0)<7)return;DG.moved=true;
   const p=PL(DG.pid);const g=document.createElement('div');if(DG.src==='slot'){g.className='dragghost vs dgchip';g.innerHTML=DG.el.innerHTML;DG.el.classList.add('dragging');}else{g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';}document.body.appendChild(g);DG.g=g;
   document.body.classList.add('fmdrag');const fit=fitOf(DG.pid);document.querySelectorAll('.fmgrid .slot[data-i]').forEach(s=>s.classList.add('fit'+(fit[+s.dataset.i]||4)));
   try{DG.el.setPointerCapture(e.pointerId);}catch(err){}}
  e.preventDefault();DG.g.style.transform=DG.src==='slot'?`translate(${e.clientX}px,${e.clientY}px) translate(-50%,-60%)`:`translate(${e.clientX+10}px,${e.clientY-28}px)`;
- const t=dropAt(e.clientX,e.clientY);if(t!==DG.over){DG.over&&DG.over.classList.remove('over');DG.over=t;t&&t.classList.add('over');}},{passive:false});
+ const t=dropAt(e.clientX,e.clientY);if(t!==DG.over){DG.over&&DG.over.classList.remove('over');DG.over=t;t&&t.classList.add('over');}};
+document.addEventListener('pointermove',e=>{if(DG&&DG.lp&&DG.tch)return;dgMove(e);},{passive:false});
+// mantener pulsado en la lista: el arrastre sigue al dedo con los eventos táctiles (el navegador cancela los de puntero al intentar desplazar la lista)
+document.addEventListener('touchmove',e=>{if(!DG||!DG.lp||!e.touches[0])return;DG.tch=1;const t=e.touches[0];if(e.cancelable)e.preventDefault();dgMove({clientX:t.clientX,clientY:t.clientY,pointerId:-1,preventDefault(){}});},{passive:false});
+document.addEventListener('touchend',e=>{if(!DG||!DG.lp)return;const t=e.changedTouches[0];if(t)endDrag({type:'touchend',clientX:t.clientX,clientY:t.clientY});},true);
 const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  d.g&&d.g.remove();d.el&&d.el.classList.remove('dragging');document.body.classList.remove('fmdrag');d.over&&d.over.classList.remove('over');
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
@@ -518,7 +524,7 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);
  else if(d.src!=='list')removeFromTeam(d.pid);
  S.sel=null;save();render();};
-document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
+document.addEventListener('pointerup',e=>{if(DG&&DG.lp&&DG.tch)return;endDrag(e);});document.addEventListener('pointercancel',e=>{if(DG&&DG.lp)return;endDrag(e);});
 document.addEventListener('click',e=>{if(Date.now()-DG_T<350&&e.target.closest&&e.target.closest('.fmgrid')){e.stopPropagation();e.preventDefault();}},true);
 /* Deslizar entre pestañas (ficha del jugador, como en el FMM): dedo a la izquierda, siguiente; a la derecha, anterior. */
 let SW=null;

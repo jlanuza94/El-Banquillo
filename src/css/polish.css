@@ -1342,3 +1342,14 @@ svg.heat{width:100%;max-width:360px;height:auto;border-radius:6px;display:block}
 .cccard.lock{opacity:.5;filter:grayscale(.8);cursor:not-allowed}
 .ccbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ccbadges svg{width:30px;height:30px}
 @media (orientation:landscape) and (max-height:540px){.cccards{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}.cccard{padding:6px}.cccard .ccic{width:36px;height:36px;font-size:19px}.cccard svg{width:40px;height:40px}}
+/* lista de la alineación: Ordenar y Ver siempre legibles; el botón extra baja a otra línea */
+.lmtool{flex-wrap:wrap!important;gap:6px}
+.lmtool .lmsel{flex:1 1 0!important;min-width:0;justify-content:space-between;overflow:hidden}
+.lmtool .lmsel select{flex:1 1 auto;min-width:0;max-width:none!important;text-align:right;text-overflow:ellipsis}
+.lmtool .btn{flex:1 0 100%!important;order:3;padding:4px 8px}
+.vtop select#formSel,.vtop select{min-width:92px}
+.vtop{flex-wrap:wrap}
+/* huecos vacíos del campo, más visibles */
+.vs .vsh.vemp svg path{fill:rgba(255,255,255,.14);stroke:rgba(255,255,255,.9);stroke-dasharray:3 2.5}
+.vs .vsh.vemp b{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.slot.vs.empty{opacity:1}
