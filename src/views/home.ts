@@ -1,5 +1,6 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {fLabel} from '../freeboard';
 import {winRounds} from '../calendar';
 import {INT_MAX,PRE_FR,PRE_GAP,daysToLeague,friendlyWait,inPre,preTasks,ptNext} from '../preseason';
 import {needsPO,poRound,setupPO,userTie} from '../playoffs';
@@ -74,7 +75,7 @@ export function inicioView(){
   <div class="pvs"><span>${esc(T(fx.h).short)}</span><span class="small muted">vs</span><span>${esc(T(fx.a).short)}</span></div>
   ${cmpRow('Ataque',L.atk,R.atk)}${cmpRow('Medio',L.mid,R.mid)}${cmpRow('Defensa',L.def,R.def)}
   ${issues.length?`<div class="warnbox" style="margin-top:14px"><span>Tu once tiene ${issues.length} hueco${issues.length>1?'s':''} sin cubrir o con jugadores no disponibles.</span><button class="btn sm" data-a="fixlu">Completar con suplentes</button></div>`:''}
-  <div class="row" style="margin-top:16px"><span class="muted small">${t.formation} · Mentalidad ${MENT[t.ment].label.toLowerCase()} · Química ${Math.round(S.chem)} · Entreno: ${FOCUS[S.train.focus].n.toLowerCase()}</span><span class="spacer"></span>
+  <div class="row" style="margin-top:16px"><span class="muted small">${fLabel(t.formation)} · Mentalidad ${MENT[t.ment].label.toLowerCase()} · Química ${Math.round(S.chem)} · Entreno: ${FOCUS[S.train.focus].n.toLowerCase()}</span><span class="spacer"></span>
   <button class="btn" data-a="view" data-v="plantilla">Alineación</button><button class="btn" data-a="view" data-v="tacticas">Tácticas</button><button class="btn" data-a="sim-menu">Simular</button><button class="btn primary big" data-a="play">Jugar partido</button></div></section>`;
  const last=[];for(let r=S.week-1;r>=0&&last.length<5;r--){last.push([r,S.fixtures[lg][r].find(f=>f.h===S.user||f.a===S.user)]);}
  const lastH=last.length?last.map(([r,f])=>resRow(f,r)).join(''):`<div class="empty">Aún no has jugado. Tu primer partido es contra ${esc(opp.name)}.</div>`;

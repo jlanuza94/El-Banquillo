@@ -160,6 +160,7 @@ document.addEventListener('click',e=>{
   case'subs-auto':T(S.user).subs=[];T(S.user).subsNone=false;toast('Banquillo automático: entran los mejores disponibles.');break;
   case'row':{if(S.view==='plantilla'){S.sel=null;S.modal={type:'ficha',id:d.id};break;}if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'mk-adv':S.mk.adv=!S.mk.adv;break;
+  case'mk-clear':Object.assign(S.mk,{c:'ALL',lv:'',age:'',ok:false,nat:'',wage:'',pot:'',atk:'',atv:'',last:false,rep:false,gem:false,sp:'',min:'',max:''});break;
   case'ficha':S.modal={type:'ficha',id:d.id};break;
   case'scout':{const err=queueScout(d.id);toast(err||`${PL(d.id).name} queda en la lista de ojeo. Tendrás el informe en ${scoutWeeks()} jornada${scoutWeeks()>1?'s':''}.`);break;}
   case'aw-tab':S.awTab=d.v;break;

@@ -55,3 +55,12 @@ export function slotCoords(f){
   out.push({s,x,y});}));
  return out;
 }
+/** Numeración de la pizarra libre («4-2-3-1»): si coincide con una formación fija, su nombre; si no, agrupa por líneas de fondo. */
+export function shapeOf(t){
+ const F=freeOf(t||T(S.user)),same=Object.keys(FORMS).find(f=>{const c=coordsOf(f);return c.every((p,i)=>Math.abs(p.x-F[i].x)<=3&&Math.abs(p.y-F[i].y)<=3);});
+ if(same)return same;
+ const ys=F.map(c=>c.y).sort((a,b)=>b-a),rows=[];ys.forEach(y=>{const r=rows[rows.length-1];if(r&&r.y-y<6){r.n++;r.y=y;}else rows.push({y,n:1});});
+ return rows.map(r=>r.n).join('-');
+}
+/** Nombre que se enseña de una formación: la libre, con su numeración. */
+export const fLabel=(f,t)=>f===FREE?shapeOf(t):f;

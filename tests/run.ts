@@ -361,7 +361,7 @@ const app = document.getElementById('app')!;
       oopSwap(t, mp[1], mp[2]); ok(oopMap(t)[1] === mp[2], 'intercambiar puestos sin balón');
       S.lph = 'oop'; render(); ok(app.querySelectorAll('.vpitch .oopm').length === 11 && app.querySelector('#oopSel'), 'alineación sin balón en pantalla');
       const m = createMatchF(nextMatchF().ref); const lg = {}; tacModsF(m, m.us, lg); ok(m.oop && lg.oop, 'la forma sin balón cuenta en el partido'); S.lph = 'ip'; t.oop = null; t.oopMap = null; }
-    ok(app.querySelectorAll('[data-a="vtab"]').length === 7, 'siete pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho pestañas en la plantilla');
+    ok(app.querySelectorAll('[data-a="vtab"]').length === 9, 'nueve pestañas en tácticas'); S.view = 'plantilla'; render(); ok(app.querySelectorAll('[data-a="pl-tab"]').length === 8, 'ocho pestañas en la plantilla');
     const auto = subsOf(t), free = squad(S.user).filter(p => !p.loan && !p.inj && !p.susp && !t.lineup.includes(p.id)).length; ok(auto.length === Math.min(MAX_SUBS, free) && auto.every(id => !t.lineup.includes(id)), 'banquillo automático sin titulares');
     const out = squad(S.user).filter(p => !p.loan && !t.lineup.includes(p.id) && !auto.includes(p.id))[0] || PL(auto[auto.length - 1]);
     setSub(out.id, 0); ok(subsOf(t)[0] === out.id && subsOf(t).length <= MAX_SUBS, 'poner a un suplente en el banquillo');
@@ -383,7 +383,7 @@ const app = document.getElementById('app')!;
     const i = sl.indexOf('DC'), d0 = ps.du[i]; t.duty[i] = 'def'; t.pi[i] = ['esp'];
     const e = posTeam(sl, t.duty, t.pi); ok(e.own < 1 && e.opp < 1, 'delantero con cometido defender: menos ataque y más seguridad');
     ok(posMult('DC', 'def', ['esp'], 'sc') < 1 && posMult('DC', 'ata', ['esp'], 'sc') > 1.1, 'goles del jugador según cometido e instrucciones');
-    S.view = 'tacticas'; S.vt = { tac: 'ord' }; S.posSel = i; render(); ok(app.querySelectorAll('.tchip').length === sl.length && app.querySelector('[data-a="pi-tog"]') && app.textContent.includes('Mejores de tu plantilla'), 'pantalla de posiciones');
+    S.view = 'tacticas'; S.vt = { tac: 'ord' }; S.posSel = i; render(); ok(app.querySelectorAll('.tchip').length === sl.length && app.querySelector('[data-a="pi-tog"]') && app.textContent.includes('para cada puesto'), 'pantalla de posiciones');
     const f0 = t.formation, other = Object.keys(FORMS).find(f => f !== f0 && slotsOf(f).includes('DC')); setFormation(other);
     const j = slotsOf(other).indexOf('DC'); ok(t.duty.length === slotsOf(other).length && t.duty[j] === 'def' && t.pi[j].includes('esp'), 'al cambiar de formación se conserva lo del puesto');
     setFormation(f0); t.duty[i] = d0; t.pi[i] = []; S.vt = {}; S.view = 'inicio'; }
@@ -657,6 +657,16 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // pestañas Por puesto y Jerarquía, numeración de la pizarra libre y filtros del mercado en hoja aparte
+    const FB = await import('../src/freeboard'); const t = T(S.user), f0 = t.formation, fr0 = t.free;
+    t.formation = '4-2-3-1'; FB.moveSlotTo(1, 50, 72); ok(t.formation === FB.FREE && /^\d(-\d)+$/.test(FB.fLabel(t.formation)), 'la pizarra libre se llama por su numeración: ' + FB.fLabel(t.formation));
+    t.free = FB.coordsOf('4-3-3'); ok(FB.shapeOf(t) === '4-3-3', 'si coincide con una formación, se llama como ella');
+    t.formation = f0; t.free = fr0;
+    S.view = 'tacticas'; S.vt = { tac: 'best' }; render(); ok(app.textContent.includes('Mejores de tu plantilla por puesto') && !!app.querySelector('[data-a=pos-put]'), 'pestaña Por puesto');
+    S.vt = { tac: 'jer' }; render(); ok(app.textContent.includes('Líderes del equipo') && !!app.querySelector('#t-cap'), 'pestaña Jerarquía');
+    S.vt = { tac: 'ali' }; render(); ok(!!app.querySelector('.vpitch.hp'), 'campo en horizontal');
+    S.view = 'mercado'; S.mk.tab = 'buy'; S.mk.adv = true; render(); ok(!!app.querySelector('.mkfsheet #mkmin'), 'filtros del mercado en hoja aparte'); S.mk.adv = false; S.vt = {}; S.view = 'inicio';
+  }
   { // cantera y sub-19 según la categoría: 1ª-3ª cantera + sub-19, 4ª-5ª solo sub-19; al ascender se recupera
     const Y = await import('../src/youthclubs'); const { clubModal } = await import('../src/views/clubinfo');
     const lo = S.teams.find(t => LG(t.lg).lv === 4 && t.id !== S.user), hi = S.teams.find(t => LG(t.lg).lv === 0 && t.id !== S.user);
@@ -673,7 +683,7 @@ const app = document.getElementById('app')!;
     const { academyIntake } = await import('../src/academy'); const nu = S.u19.length; academyIntake(2);
     ok(S.academy.length === 0 && S.u19.length > nu, 'sin cantera los juveniles nuevos llegan a la sub-19');
     S.vt = { can: 'can' }; ok((await import('../src/views/squad')).canteraView().includes('recuperas la cantera'), 'aviso de cantera bloqueada');
-    ut.lg = lg0; ms.length = 0; Y.canteraAfterMoves(false, (m: string) => ms.push(m)); ok(ms[0].includes('recupera la cantera'), 'al ascender recupera la cantera');
+    ut.lg = hi.lg; ms.length = 0; Y.canteraAfterMoves(false, (m: string) => ms.push(m)); ut.lg = lg0; ok(!!ms[0] && ms[0].includes('recupera la cantera'), 'al ascender recupera la cantera');
     S.academy = ac0; S.u19 = u0; S.vt = {}; S.view = 'inicio';
   }
   { // más selecciones: Mundial de 32, Eurocopa y Copa América de 16, con grupos de 4 y eliminatorias

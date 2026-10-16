@@ -1021,3 +1021,63 @@ details.yclub{border:1px solid var(--line,rgba(127,127,127,.25));border-radius:8
 details.yclub summary{cursor:pointer}
 .ystar{color:var(--accent);letter-spacing:1px;font-size:12px}
 .ycl-no{padding:6px 10px}
+/* Campo en horizontal (ataque a la derecha) para alineación y táctica */
+.vpitch.hp{background:repeating-linear-gradient(90deg,#2c9a48 0 9.09%,#279043 9.09% 18.18%)}
+.vpitch.hp .half{left:50%;right:auto;top:3%;bottom:3%;width:0;border-width:0 0 0 2px}
+.vpitch.hp .circ{width:auto;height:26%}
+.vpitch.hp .b1,.vpitch.hp .b2{top:22%;bottom:22%;height:auto;width:14%;border:2px solid rgba(255,255,255,.7)}
+.vpitch.hp .b1{left:auto;right:3%;border-right:0}.vpitch.hp .b2{left:3%;right:auto;border-left:0}
+.vpitch.hp .g1,.vpitch.hp .g2{top:38%;bottom:38%;height:auto;width:5%;border:2px solid rgba(255,255,255,.7)}
+.vpitch.hp .g1{left:auto;right:3%;border-right:0}.vpitch.hp .g2{left:3%;right:auto;border-left:0}
+.vpitch.hp .atk{left:auto;right:4%;top:auto;bottom:4%}
+.vpitch.hp .vcell{width:12.5%;height:14%}
+/* fichas compactas tipo FMM: placa con el puesto, nombre debajo y nota en la esquina */
+.hp .slot.vs{min-width:0;width:62px}
+.hp .vs .vpos{min-width:0;width:40px;padding:2px 0;font-size:10.5px;border-radius:5px}
+.hp .vs .vnm{max-width:62px;font-size:10.5px;line-height:12px;background:rgba(0,0,0,.42);padding:0 4px;border-radius:3px;text-shadow:none;margin-top:2px}
+.hp .vs .vv{top:-8px;left:calc(50% + 12px);min-width:20px;font-size:9.5px;line-height:13px}
+.hp .tchip{min-width:0;width:64px}
+.hp .tchip .tpos{min-width:0;width:44px;padding:2px 0;font-size:10.5px}
+.hp .tchip b{max-width:64px;font-size:10.5px;line-height:12px;background:rgba(0,0,0,.42);padding:0 4px;border-radius:3px;text-shadow:none;margin-top:2px}
+.hp .tchip .du{display:none}
+.hp .tchip .tpos.du-def::after{content:' ·D'}.hp .tchip .tpos.du-apo::after{content:' ·Ap'}.hp .tchip .tpos.du-ata::after{content:' ·At'}
+/* lista de jugadores: el nombre se corta con «…» en lugar de desaparecer */
+.fnm{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:5px;align-items:center}
+.fnm .nflag{grid-row:1}
+.fnm .linkname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;text-decoration:none}
+.fnm small{grid-column:1/-1;overflow:hidden;text-overflow:ellipsis}
+.frow{min-height:34px;margin:2px 0;background:rgba(127,127,127,.05);border-bottom:0}
+.frow .q{border-radius:6px;font-weight:800}
+.fgh{position:sticky;top:0;z-index:2;background:var(--panel,#16241c)}
+.vpitch.hp{aspect-ratio:100/60;max-width:min(100%,calc((100dvh - 120px)*100/60))}
+@media (orientation:landscape) and (max-height:540px){.vpitch.hp{max-width:min(100%,calc((100dvh - 118px)*100/60))}}
+/* Por puesto */
+.bpg{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.bpc{border:1px solid var(--line);border-radius:10px;padding:8px;background:rgba(127,127,127,.04)}
+.bph{display:flex;align-items:center;gap:6px;margin-bottom:6px;min-width:0}.bph b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.bpr{display:grid;grid-template-columns:16px minmax(0,1fr) auto auto;gap:6px;align-items:center;padding:3px 0;border-top:1px solid var(--line)}
+.bpr .linkname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bpr.on{background:rgba(43,138,75,.12)}.bpr.dim{opacity:.55}
+.bpn{font-family:var(--f-num);font-weight:800;color:var(--muted);text-align:center}
+/* Jerarquía */
+.jgrid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+.jtier{margin-bottom:10px;border-left:4px solid var(--line);padding-left:8px}
+.jt-lid{border-color:#c9a227}.jt-muy{border-color:#2b8a4b}.jt-inf{border-color:#2f6fd0}
+.jth{display:flex;flex-direction:column;margin-bottom:6px}.jth b{font-size:14px}
+.jrow{display:flex;flex-wrap:wrap;gap:6px}
+.jcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;width:112px;padding:6px 4px;border:1px solid var(--line);border-radius:10px;background:var(--panel2,rgba(127,127,127,.06));color:inherit;font:inherit;cursor:pointer}
+.jcard svg.face,.jcard .face{width:40px;height:40px}
+.jcard b{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.jcard small{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2}
+.jinf{display:block;width:80%;height:5px;border-radius:3px;background:rgba(127,127,127,.25);overflow:hidden}.jinf i{display:block;height:100%;background:#c9a227}
+.jtag{position:absolute;top:4px;left:4px;font-size:10px;font-weight:900;padding:1px 5px;border-radius:4px;background:#2f6fd0;color:#fff}.jtag.cap{background:#c9a227;color:#111}
+.bpnm{min-width:0;display:flex;align-items:center;gap:4px;overflow:hidden}.bpnm .linkname{min-width:0}.jcard .face,.jcard svg{width:38px!important;height:38px!important}
+/* Filtros del mercado en una hoja aparte */
+.mkfsheet{position:fixed;inset:0;z-index:60;display:flex;justify-content:flex-end}
+.mkfback{position:absolute;inset:0;background:rgba(0,0,0,.55);border:0;cursor:pointer}
+.mkfbox{position:relative;width:min(560px,92vw);height:100%;overflow:auto;background:var(--panel,#16241c);border-left:1px solid var(--line);padding:12px 14px 16px;box-shadow:-10px 0 30px rgba(0,0,0,.4);animation:mkfin .18s ease-out}
+@keyframes mkfin{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
+.mkfhead{display:flex;align-items:center;gap:8px;position:sticky;top:-12px;background:inherit;padding:4px 0 8px;z-index:1;border-bottom:1px solid var(--line);margin-bottom:10px}
+.mkfhead h2{margin:0;flex:1;font-family:var(--f-display);text-transform:uppercase;font-size:20px}
+.mkfbox .advfil{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px}
+.mkfbox .advfil .chk{grid-column:1/-1}
+.mkfbox .advfil select{width:100%}
+.mkffoot{margin-top:12px;display:flex;justify-content:flex-end}

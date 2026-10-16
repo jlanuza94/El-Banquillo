@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {jerarquiaHTML} from './hierarchy';
 import {hasCantera,lvName} from '../youthclubs';
 import {FIRST_MAX,U19_MAX,u19List} from '../u19';
 import {tcCalHTML,tcIndHTML,tcInfHTML,tcSesHTML,tcStaffHTML} from './tcenterv';
@@ -12,17 +13,17 @@ import {coachOf} from '../living';
 import {knowledge} from '../scouting';
 import {learnablePos,learnableTr} from '../devplus';
 import {PRESETS,rivalAdvice} from '../tactics2';
-import {posicionesHTML} from './positions';
+import {bestHTML,posicionesHTML} from './positions';
 import {medHTML} from './staff';
 import {MAX_SUBS,subsOf} from '../tactics';
 import {footF,removeFromTeam,setSub} from '../tactics';
 import {boardHTML} from './freeboard';
-import {CELLS,FREE} from '../freeboard';
+import {CELLS,FREE,fLabel} from '../freeboard';
 import {YT_WEEK,goldenChance} from '../youthplus';
 import {crew} from '../staff';
 import {trendTag,valueWhy} from '../economy';
 import {PROM_N,activeProms,cred} from '../talks';
-import {nf,VLINES,vCoords} from './common';
+import {hpos,nf,VLINES,vCoords} from './common';
 import {agentName,agentOf,loanShare,vestMult} from '../connected';
 import {SLOTS,SP,planFam,spOf,tfam} from '../plans';
 import {MAX_PAIRS,canLearn,canMentor,pairs} from '../mentor';
@@ -142,7 +143,7 @@ export function tacticasView(){
  const t=T(S.user),tac=Object.assign({},TAC0,t.tac||{}),xi=t.lineup.filter(id=>id&&PL(id)).map(PL),sq=squad(S.user).filter(p=>!p.inj);
  const nm=nextMatch(),opp=nm?(nm.fx.h===S.user?nm.fx.a:nm.fx.h):null;
  const IG={def:['lin','pre','ent','off','tie','per'],atk:['est','rit','anc','rec']},it=vtab('ins',[['def','Defensa'],['atk','Ataque']],'def');
- const inst=`<section class="panel insp"><div class="panel-h"><h2>Instrucciones de equipo</h2><div class="row" style="gap:8px"><span class="eyebrow">${t.formation} · ${MENT[t.ment].label}</span>${it.bar.replace('seg pltabs','seg insseg')}</div></div>
+ const inst=`<section class="panel insp"><div class="panel-h"><h2>Instrucciones de equipo</h2><div class="row" style="gap:8px"><span class="eyebrow">${fLabel(t.formation)} · ${MENT[t.ment].label}</span>${it.bar.replace('seg pltabs','seg insseg')}</div></div>
  <div class="insg">${insPitch(tac,it.cur)}<div class="insr"><div class="insrow"><div class="insl">Mentalidad</div><div class="inso" style="--n:3">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>${IG[it.cur].map(k=>{const v=TACS[k];return `<div class="insrow"><div class="insl">${v.n}</div><div class="inso" style="--n:${Object.keys(v.o).length}">${Object.entries(v.o).map(([ok,ol])=>`<button data-a="tac" data-k="${k}" data-v="${ok}" aria-pressed="${tac[k]===ok}">${ol}</button>`).join('')}</div></div>`;}).join('')}
  <p class="small muted insd">${IG[it.cur].map(k=>`<b>${TACS[k].n}:</b> ${TACS[k].d}`).join(' ')}</p></div></div></section>`;
  const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
@@ -172,9 +173,9 @@ export function tacticasView(){
  const spT=spOf(t),spP=`<section class="panel"><div class="panel-h"><h2>Jugadas ensayadas</h2><span class="eyebrow">Ensayo ${Math.round(S.spFam??40)}%</span></div>
  ${Object.entries(SP).map(([k,v])=>`<div style="margin-bottom:10px"><div class="eyebrow" style="margin-bottom:4px">${v.n}</div><div class="seg">${Object.entries(v.o).map(([o,[l]])=>`<button data-a="sp" data-k="${k}" data-v="${o}" aria-pressed="${spT[k]===o}">${l}</button>`).join('')}</div><p class="small muted" style="margin:4px 0 0">${esc(v.o[spT[k]][1])}</p></div>`).join('')}
  <p class="small muted" style="margin:0">Las jugadas se ensayan con el entrenamiento «Táctica y química» y jugando: cuanto más ensayadas, más goles a balón parado.</p></section>`;
- const tb=vtab('tac',[['ali','Alineación'],['ord','Táctica'],['tac','Instrucciones'],['rival','Rival'],['bp','Balón parado'],['plan','Guardadas'],['piz','Mi formación']],'ali');
+ const tb=vtab('tac',[['ali','Alineación'],['ord','Táctica'],['best','Por puesto'],['tac','Instrucciones'],['jer','Jerarquía'],['rival','Rival'],['bp','Balón parado'],['plan','Guardadas'],['piz','Mi formación']],'ali');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
- const body=tb.cur==='ali'?alineacionHTML():tb.cur==='tac'?inst+famP+`<section class="panel">${rotHTML()}</section>`:tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
+ const body=tb.cur==='ali'?alineacionHTML():tb.cur==='best'?bestHTML():tb.cur==='jer'?jerarquiaHTML():tb.cur==='tac'?inst+famP+`<section class="panel">${rotHTML()}</section>`:tb.cur==='ord'?posicionesHTML():tb.cur==='bp'?two(sp,spP):tb.cur==='rival'?two((opp!=null?reportHTML(opp,false)+adviceHTML(opp,tac)+previaHTML(opp):'<section class="panel"><div class="empty">No hay próximo rival.</div></section>'),oiP):tb.cur==='piz'?boardHTML():two(planP+condHTML(t),presetsHTML());
  return tb.bar+body;
 }
 /* ---------- Desarrollo: aprender puestos y rasgos, y cedidos ---------- */
@@ -255,15 +256,15 @@ function alineacionHTML(){
  const ro=userRoles(),pw=teamPower(t.lineup,t.formation,null,null,1,ro),slots=slotsOf(t.formation);
  const shirt=(n)=>`<span class="shirt"><svg viewBox="0 0 40 36" aria-hidden="true"><path d="M13 2 4 6.5 1 15l6.5 2.2L8 34h24l.5-16.8L39 15l-3-8.5L27 2c-1.6 2.6-4 4-7 4s-5.4-1.4-7-4z"/></svg><b>${n}</b></span>`;
  const ph=S.lph==='oop'?'oop':'ip',of=oopForm(t),om=oopMap(t),fShow=ph==='oop'&&of?of:t.formation,luShow=ph==='oop'&&of?oopLineup(t.lineup,om):t.lineup;
- const fsel=`<select id="formSel" aria-label="Sistema">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?'Libre (pizarra)':f} · ${Math.round(famOf(f))}%</option>`).join('')}</select>`;
+ const fsel=`<select id="formSel" aria-label="Sistema">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?(t.formation===FREE?fLabel(FREE)+' (a tu gusto)':'A tu gusto (arrastra)'):f} · ${Math.round(famOf(f))}%</option>`).join('')}</select>`;
  const marks=vCoords(fShow).map(({s,x,y},i)=>{const p=PL(luShow[i]);let cls='';if(ph==='oop'){if(S.oopSel===i)cls+=' sel';const r=p?eff(p,s)/10:0;
-  return `<button class="slot vs oopm${cls}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%" data-a="oop-slot" data-i="${i}"${p&&i>0?` data-pid="${p.id}" data-drag="oop"`:''} aria-label="${SPN[s]} sin balón${p?': '+esc(p.name):''}"><span class="vpos su${p?suitOf(p,s):0}">${s}</span><span class="vnm">${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'—'}</span>${p?`<span class="vv ${qc(r)}">${r.toFixed(1)}</span>`:''}</button>`;}
+  return `<button class="slot vs oopm${cls}" style="${hpos(x,y)}" data-a="oop-slot" data-i="${i}"${p&&i>0?` data-pid="${p.id}" data-drag="oop"`:''} aria-label="${SPN[s]} sin balón${p?': '+esc(p.name):''}"><span class="vpos su${p?suitOf(p,s):0}">${s}</span><span class="vnm">${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'—'}</span>${p?`<span class="vv ${qc(r)}">${r.toFixed(1)}</span>`:''}</button>`;}
   if(!p)cls='empty';else if(!available(p))cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';if(selSlot===i)cls+=' sel';
   const v=p?lval(p,s,ro[i]):null,su=p?suitOf(p,s):0;
-  return `<button class="slot vs ${cls}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%" data-a="slot" data-i="${i}"${p?` data-pid="${p.id}" data-drag="slot"`:''} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}">
+  return `<button class="slot vs ${cls}" style="${hpos(x,y)}" data-a="slot" data-i="${i}"${p?` data-pid="${p.id}" data-drag="slot"`:''} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}">
   <span class="vpos su${su||0}">${s}</span><span class="vnm">${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'Vacío'}</span>${p?`<span class="vv ${v[1]}">${v[0]}</span>`:''}${p&&p.energy<75?`<span class="ven ${p.energy>=55?'mid':'low'}" title="Energía ${Math.round(p.energy)}%"></span>`:''}</button>`;}).join('');
- const cells=ph==='oop'?'':CELLS.map(c=>`<span class="vcell" data-cx="${c.x}" data-cy="${c.y}" style="left:${c.x}%;top:${c.y}%"><i>${c.s}</i></span>`).join('');
- const pitch=`<div class="vpitch">${VLINES}${cells}<span class="atk">${ph==='oop'?'🛡 Sin balón':'▲ Ataque'}</span>${marks}</div>`;
+ const cells=ph==='oop'?'':CELLS.map(c=>`<span class="vcell" data-cx="${c.x}" data-cy="${c.y}" style="${hpos(c.x,c.y)}"><i>${c.s}</i></span>`).join('');
+ const pitch=`<div class="vpitch hp">${VLINES}${cells}<span class="atk">${ph==='oop'?'🛡 Sin balón ▶':'Ataque ▶'}</span>${marks}</div>`;
  const subs=subsOf(t),chosen=(t.subs||[]).length>0;
  const bench=`<div class="fbench"><div class="fbh"><span class="eyebrow">Banquillo ${subs.length}/${MAX_SUBS}${chosen?'':' · automático'}</span>${chosen?'<button class="btn sm" data-a="subs-auto">Automático</button>':''}</div><div class="bslots">${Array.from({length:MAX_SUBS},(_,k)=>{const p=PL(subs[k]);return `<div class="bslot${p?'':' empty'}${p&&selPid===p.id?' sel':''}" data-a="bslot" data-k="${k}" ${p?`data-drag="bench" data-pid="${p.id}"`:''}>${p?`${posChip(p)}<span class="nm">${esc(p.name.split(' ').slice(1).join(' ')||p.name)}</span>${pBadge(p)}`:'<span class="small muted">+</span>'}</div>`;}).join('')}</div></div>`;
  const vtop=`<div class="vtop"><div class="seg fph"><button data-a="lph" data-v="ip" aria-pressed="${ph==='ip'}">⚽ Con balón</button><button data-a="lph" data-v="oop" aria-pressed="${ph==='oop'}">🛡 Sin balón</button></div>${ph==='oop'?`<select id="oopSel" aria-label="Formación sin balón"><option value="">Igual que con balón</option>${Object.keys(FORMS).filter(f=>f!==t.formation).map(f=>`<option value="${f}" ${f===of?'selected':''}>${f} · ${Math.round(famOf(f))}%</option>`).join('')}</select>`:fsel}<button class="btn sm primary" data-a="auto" title="Alinear a los mejores">Mejor once</button><button class="btn sm" data-a="xi-clear" title="Quitar a todos y montar el once a mano">Vaciar</button></div>`;

@@ -134,8 +134,8 @@ function mercadoViewPl(ksw){
   <div class="chips">${['ALL','POR','DEF','MED','DEL'].map(p=>`<button class="btn sm ${mk.pos===p?'dark':''}" data-a="mk-pos" data-v="${p}">${p==='ALL'?'Todos':p}</button>`).join('')}</div>
   <input type="search" id="mkq" class="mkq" placeholder="🔎 Buscar por nombre o club" value="${esc(mk.q)}" aria-label="Buscar">
   <label class="f mksortl"><span class="eyebrow">Ordenar</span>${sel('mksort',mk.sort,[['ovr','Media'],['pot','Potencial'],['ganga','Mejor calidad-precio'],['price','Precio'],['age','Edad'],...ATTRS.map(k=>[k,AT_NAME[k]])])}</label>
-  <button class="btn sm advbtn" data-a="mk-adv" aria-pressed="${!!mk.adv}">⚙ ${mk.adv?'Ocultar filtros':'Filtros'}${(n=>n?` (${n})`:'')([mk.c!=='ALL'?mk.c:'',mk.lv,mk.age,mk.ok,mk.nat,mk.wage,mk.pot,mk.atk,mk.last,mk.rep,mk.gem].filter(x=>x!==''&&x!=null&&x!==false).length)}</button>
-  ${mk.adv?`<div class="advfil">
+  <button class="btn sm advbtn" data-a="mk-adv" aria-pressed="${!!mk.adv}">⚙ Filtros${(n=>n?` (${n})`:'')([mk.c!=='ALL'?mk.c:'',mk.lv,mk.age,mk.ok,mk.nat,mk.wage,mk.pot,mk.atk,mk.last,mk.rep,mk.gem].filter(x=>x!==''&&x!=null&&x!==false).length)}</button>
+  ${mk.adv?`<div class="mkfsheet" role="dialog" aria-label="Filtros del mercado"><button class="mkfback" data-a="mk-adv" aria-label="Cerrar filtros"></button><div class="mkfbox"><div class="mkfhead"><h2>Filtros</h2><button class="btn sm" data-a="mk-clear">Limpiar</button><button class="btn sm primary" data-a="mk-adv">Ver resultados ›</button></div><div class="advfil">
   <label class="f"><span class="eyebrow">Posición exacta</span>${sel('mksp',mk.sp||'',[['','Cualquiera'],...Object.entries(SPN).map(([k,v])=>[k,v])])}</label>
   <label class="f"><span class="eyebrow">Media mín.</span>${sel('mkmin',mk.min,[['','Cualquiera'],['4','4+'],['5','5+'],['6','6+'],['6.5','6.5+'],['7','7+'],['8','8+']])}</label>
   <label class="f"><span class="eyebrow">Precio máx.</span>${sel('mkmax',mk.max,[['','Sin límite'],['0.05','€50k'],['0.1','€100k'],['0.25','€250k'],['0.5','€500k'],['1','€1M'],['2','€2M'],['5','€5M']])}</label>
@@ -151,7 +151,7 @@ function mercadoViewPl(ksw){
   <label class="chk"><input type="checkbox" id="mklast" ${mk.last?'checked':''}> Último año de contrato (más baratos)</label>
   <label class="chk"><input type="checkbox" id="mkrep" ${mk.rep?'checked':''}> Solo con informe completo</label>
   <label class="chk"><input type="checkbox" id="mkgem" ${mk.gem?'checked':''}> Solo posibles joyas 💎</label>
-  </div>`:''}</div>
-  <div class="chips mksaved" style="margin:6px 0 10px">${mk.adv?'<button class="btn sm" data-a="mk-save">Guardar esta búsqueda</button>':''}${(S.mkSaved||[]).map((x,i)=>`<span class="savedq"><button class="btn sm dark" data-a="mk-load" data-i="${i}">${esc(x.n)}</button><button class="btn sm" data-a="mk-del" data-i="${i}" aria-label="Borrar búsqueda">×</button></span>`).join('')}</div>`:mk.tab==='sell'?'<p class="small muted" style="margin:0 0 10px">Pide una oferta, cede a un jugador hasta final de temporada (el otro club paga su sueldo) o renueva su contrato. Cada club responde una vez por jornada.</p>':''}
+  </div><div class="mkffoot"><button class="btn sm" data-a="mk-save">Guardar esta búsqueda</button></div></div></div>`:''}</div>
+  <div class="chips mksaved" style="margin:6px 0 10px">${(S.mkSaved||[]).map((x,i)=>`<span class="savedq"><button class="btn sm dark" data-a="mk-load" data-i="${i}">${esc(x.n)}</button><button class="btn sm" data-a="mk-del" data-i="${i}" aria-label="Borrar búsqueda">×</button></span>`).join('')}</div>`:mk.tab==='sell'?'<p class="small muted" style="margin:0 0 10px">Pide una oferta, cede a un jugador hasta final de temporada (el otro club paga su sueldo) o renueva su contrato. Cada club responde una vez por jornada.</p>':''}
  <div id="mklist">${mkList()}</div></section>`;
 }
