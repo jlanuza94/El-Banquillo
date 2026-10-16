@@ -525,7 +525,7 @@ const app = document.getElementById('app')!;
     S.budget = 10; doBuyback(q); ok(q.team === S.user && !q.bb, 'recompra ejecutada'); S.budget = b0; p.bon = null; p.rel = 0; }
   { // Cantera con más vida
     ok(!!ST_ROLES.dca && goldenChance() > 0, 'director de cantera y generación dorada posibles');
-    const wk = S.week, t0 = S.titles.length, ac = S.academy.length; while (S.academy.length < 8) S.academy.push({ ...S.academy[0], id: 'yx' + S.academy.length, at: { ...S.academy[0].at } });
+    const wk = S.week, t0 = S.titles.length, ac = S.academy.length; const y0 = S.academy[0] || S.u19[0]; while (S.academy.length < 8) S.academy.push({ ...y0, id: 'yx' + S.academy.length, at: { ...y0.at } });
     S.week = YT_WEEK; youthTournament(); S.week = wk; ok((S.ytHist || []).length >= 1, 'se juega el Torneo Internacional Sub-19: campeón ' + S.ytHist[S.ytHist.length - 1].champ);
     S.academy = S.academy.slice(0, Math.max(ac, 0)); S.view = 'cantera'; S.vt = { can: 'vida' }; render(); ok(app.textContent.includes('Vida de la cantera'), 'panel de vida de la cantera'); }
   { // Historia del mundo
@@ -656,6 +656,25 @@ const app = document.getElementById('app')!;
     t.subsNone = false; t.lineup = autoLineupF(S.user, t.formation);
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
+  }
+  { // cantera y sub-19 según la categoría: 1ª-3ª cantera + sub-19, 4ª-5ª solo sub-19; al ascender se recupera
+    const Y = await import('../src/youthclubs'); const { clubModal } = await import('../src/views/clubinfo');
+    const lo = S.teams.find(t => LG(t.lg).lv === 4 && t.id !== S.user), hi = S.teams.find(t => LG(t.lg).lv === 0 && t.id !== S.user);
+    ok(lo && hi && !Y.hasCantera(lo.id) && Y.hasCantera(hi.id), 'Cuarta/Quinta sin cantera, Primera con cantera');
+    const a = Y.aiYouth(hi.id), b = Y.aiYouth(lo.id); RT.yc = {}; const a2 = Y.aiYouth(hi.id);
+    ok(a.u19.length >= 25 && a.cant.length >= 12 && b.u19.length >= 25 && b.cant.length === 0 && a2.u19.map(p => p.name).join() === a.u19.map(p => p.name).join(), 'canteras de la IA: sub-19 ≥25, deterministas');
+    ok(Y.aiYouthStr(hi.id) > Y.aiYouthStr(lo.id), 'la sub-19 de un club de Primera es más fuerte que una de Quinta');
+    ok(clubModal(lo.id).includes('Sin cantera') && clubModal(hi.id).includes('Cantera'), 'ficha de club con cantera y sub-19');
+    const ut = T(S.user), lg0 = ut.lg, ac0 = S.academy.slice(), u0 = S.u19.slice(), ms: string[] = [];
+    if (!S.academy.length) S.academy.push({ ...u0[0], id: 'yz1', age: 15, at: { ...u0[0].at } });
+    const nAc = S.academy.length; while (S.u19.length > 25) S.u19.pop();
+    ut.lg = lo.lg; Y.canteraAfterMoves(true, (m: string) => ms.push(m));
+    ok(S.academy.length === 0 && S.u19.length >= 25 + Math.min(nAc, 5) && ms[0].includes('pierde la cantera'), 'al bajar a Cuarta la cantera pasa a la sub-19');
+    const { academyIntake } = await import('../src/academy'); const nu = S.u19.length; academyIntake(2);
+    ok(S.academy.length === 0 && S.u19.length > nu, 'sin cantera los juveniles nuevos llegan a la sub-19');
+    S.vt = { can: 'can' }; ok((await import('../src/views/squad')).canteraView().includes('recuperas la cantera'), 'aviso de cantera bloqueada');
+    ut.lg = lg0; ms.length = 0; Y.canteraAfterMoves(false, (m: string) => ms.push(m)); ok(ms[0].includes('recupera la cantera'), 'al ascender recupera la cantera');
+    S.academy = ac0; S.u19 = u0; S.vt = {}; S.view = 'inicio';
   }
   { // más selecciones: Mundial de 32, Eurocopa y Copa América de 16, con grupos de 4 y eliminatorias
     const NA = await import('../src/nations'), D = await import('../src/data');

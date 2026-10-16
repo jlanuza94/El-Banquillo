@@ -1,5 +1,6 @@
 /* El Banquillo · youth.ts — Liga sub-19: tu cantera juega contra las de otros nueve clubes de tu país. */
 // @ts-nocheck — usa el estado heredado S.
+import {aiYouthStr} from './youthclubs';
 import {u19List} from './u19';
 import {clamp,gauss,pick,rnd,shuffle} from './core';
 import {GRP} from './data';
@@ -15,7 +16,7 @@ export function userYouthStr(){const o=u19List().map(p=>p.ovr).sort((a,b)=>b-a).
 export function setupYouth(){
  const c=LG(uLg()).c,pool=shuffle(S.teams.filter(t=>t.id!==S.user&&LG(t.lg).c===c)).slice(0,9);
  const base=userYouthStr();
- const teams=[{id:USER,tid:S.user},...pool.map(t=>({id:'t'+t.id,tid:t.id,str:clamp(base+(t.rep-T(S.user).rep)*.35+gauss()*3,25,75)}))];
+ const teams=[{id:USER,tid:S.user},...pool.map(t=>({id:'t'+t.id,tid:t.id,str:clamp(aiYouthStr(t.id)+gauss()*1.5,25,75)}))];
  const ids=teams.map(t=>t.id),fx=makeFixtures(ids).map(rd=>rd.map(f=>({h:f.h,a:f.a,hg:null,ag:null})));
  S.yl={season:seasonLabel(),teams,fx,round:0};
  u19List().forEach(p=>{p.yst={pj:0,g:0,a:0,rs:0};});

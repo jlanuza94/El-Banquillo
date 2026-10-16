@@ -54,7 +54,7 @@ export function boardAsk(k){
  if(k==='money'){const g=r2(u*12*M.conf/100);S.budget=r3(S.budget+g);news(`La directiva aporta ${money(g)} extra para fichajes.`,'good');return[`Aprobado: ${money(g)} más para fichajes.`,'ok'];}
  if(k==='stad'){if(C.build)return['Ya hay obras en marcha.','no'];if(C.lastAtt<C.cap*.9){delete S.breq.used[k];return['El estadio no se llena: la directiva no ve necesaria la ampliación.','no'];}const add=Math.round(C.cap*.15/50)*50;C.build={type:'cap',add,until:S.week+10};news(`La directiva paga la ampliación del estadio: ${add.toLocaleString('es')} asientos más.`,'good');return['Aprobado: empiezan las obras, pagadas por el club.','ok'];}
  if(k==='fac'){if(C.build)return['Ya hay obras en marcha.','no'];const t=['ent','can','med'].sort((a,b)=>(C.fac[a]||1)-(C.fac[b]||1))[0];if(C.fac[t]>=5)return['Las instalaciones ya están al máximo.','no'];C.build={type:t,add:0,until:S.week+8};return[`Aprobado: la directiva paga la mejora: ${FAC_N[t].toLowerCase()}.`,'ok'];}
- if(k==='youth'){const g=academyIntake(2);return[g.length?`Llegan a la cantera: ${g.join(', ')}.`:'La cantera está llena.',g.length?'ok':'no'];}
+ if(k==='youth'){const g=academyIntake(2);return[g.length?`Llegan juveniles: ${g.join(', ')}.`:'No hay sitio para más juveniles.',g.length?'ok':'no'];}
 }
 export function makePress(m){
  if(rnd()>.55||m.ref.k==='fr')return;const us=m.us,o=us==='h'?'a':'h',my=m.score[us],op=m.score[o],opp=T(m[o]);

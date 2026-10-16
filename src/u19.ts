@@ -9,12 +9,14 @@ import {makeYouth} from './academy';
 import {available} from './state';
 import {news} from './world';
 import {toast} from './views/common';
+import {hasCantera} from './youthclubs';
 
 export const U19_MIN=25,U19_MAX=30,FIRST_MAX=30;
 /** Crea la sub-19 (o la completa hasta 25) con juveniles de 17 a 19 años del nivel de tu club. */
 export function ensureU19(){
  if(S.user==null)return;S.u19=S.u19||[];
  if(!S.u19v){S.u19v=1;const old=(S.academy||[]).filter(p=>p.age>=17);S.academy=(S.academy||[]).filter(p=>p.age<17);S.u19.push(...old);}
+ if(!hasCantera(S.user)&&(S.academy||[]).length){S.academy.forEach(p=>{if(S.u19.length<U19_MAX){p.age=Math.max(p.age,16);p.u19=1;S.u19.push(p);}});S.academy=[];}
  const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=S.club&&S.club.fac?S.club.fac.can:1;
  while(S.u19.length<U19_MIN){const y=makeYouth(c,lvl-.4+.12*(fl-1)+gauss()*.9);y.age=ri(17,19);y.u19=1;S.u19.push(y);}
 }

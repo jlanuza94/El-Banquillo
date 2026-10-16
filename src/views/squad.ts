@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {hasCantera,lvName} from '../youthclubs';
 import {FIRST_MAX,U19_MAX,u19List} from '../u19';
 import {tcCalHTML,tcIndHTML,tcInfHTML,tcSesHTML,tcStaffHTML} from './tcenterv';
 import {COND_MAX,COND_W,condsOf} from '../plans';
@@ -107,13 +108,16 @@ export function canteraView(){
  const academy=`<section class="panel"><div class="panel-h"><h2>Cantera</h2><span class="eyebrow">${ac.length} de 14 juveniles (15-17 años)</span></div>
  ${ac.length?`<div class="tbl"><table><thead><tr><th>Pos</th><th>Nombre</th><th class="r">Edad</th><th class="r">Media</th><th class="r">Pot.</th>${attrHead()}<th class="r" title="Partidos sub-19">PJ</th><th class="r">G</th><th class="r">A</th><th class="r">Nota</th><th></th></tr></thead><tbody>${ac.map(p=>{const y=p.yst||{pj:0,g:0,a:0,rs:0};return `<tr><td>${posChip(p)}</td><td>${esc(p.name)}${p.gold?' <span class="tag xi" title="Generación dorada">★ Dorada</span>':''} <span class="divtag">${COUNTRIES[p.nat].code}</span></td><td class="n">${p.age}</td><td class="r">${pBadge(p)}</td><td class="n">~${(Math.round(p.pot*2)/2).toFixed(1)}</td>${attrCells(p)}<td class="n">${y.pj}</td><td class="n">${y.g}</td><td class="n">${y.a}</td><td class="r">${y.pj?qBadge(y.rs/y.pj):'<span class="muted">—</span>'}</td><td class="r"><span class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:6px"><button class="btn sm primary" data-a="u19-up" data-id="${p.id}">A la sub-19</button><button class="btn sm" data-a="ac-up" data-id="${p.id}">Primer equipo</button><button class="btn sm" data-a="ac-free" data-id="${p.id}">Liberar</button></span></td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">La cantera está vacía. Cada verano entran juveniles de tu país y tus ojeadores pueden traer más.</div>'}
  <p class="small muted" style="margin:10px 0 0">Los juveniles entrenan cada semana (más rápido con buenos preparadores) y no cobran. A los 19 años tienen que subir al primer equipo o se marchan.</p></section>`;
+ const ulv=LG(T(S.user).lg).lv,noCan=`<section class="panel"><div class="panel-h"><h2>Cantera</h2><span class="eyebrow">${esc(lvName(ulv))} · sin cantera</span></div>
+ <div class="ycl">${[0,1,2,3,4].map(l=>`<div class="ycl-r ${l===ulv?'me':''} ${l<=2?'on':''}"><b>${esc(lvName(l))}</b><span>${l<=2?'Cantera + Sub-19':'Solo Sub-19'}</span></div>`).join('')}</div>
+ <p class="small" style="margin:10px 0 0">En Cuarta y Quinta División los clubes solo tienen <b>sub-19</b>: los juveniles nuevos (ojeados, de la región o de una generación dorada) llegan directamente a la sub-19 con 17 años. <b>Si asciendes a Tercera recuperas la cantera</b> (chavales de 15 a 17 años); si un club baja a Cuarta, la pierde y sus canteranos pasan a la sub-19.</p></section>`;
  let yl='';
  if(S.yl){const tb=ylTable(),L=S.yl.last;yl=`<section class="panel"><div class="panel-h"><h2>Liga sub-19</h2><span class="eyebrow">Jornada ${S.yl.round} de ${S.yl.fx.length}</span></div>
   ${L?`<div class="res me"><div class="h"><span>${esc(ylName(L.h))}</span></div><div class="s">${L.hg} - ${L.ag}</div><div class="a"><span>${esc(ylName(L.a))}</span></div><div class="sc">Último partido · jornada ${L.round+1}</div></div>`:'<p class="small muted" style="margin:0 0 8px">La liga juvenil se juega cada dos jornadas de liga.</p>'}
   <div class="tbl"><table><thead><tr><th>#</th><th>Equipo</th><th class="r">PJ</th><th class="r">DG</th><th class="r">Pts</th></tr></thead><tbody>${tb.map((r,i)=>`<tr class="${r.id===YOUTH_USER?'me':''}"><td class="n">${i+1}</td><td>${esc(ylName(r.id))}</td><td class="n">${r.pj}</td><td class="n">${r.gf-r.gc>0?'+':''}${r.gf-r.gc}</td><td class="pts">${r.pts}</td></tr>`).join('')}</tbody></table></div>
   <p class="small muted" style="margin:8px 0 0">Juegan tus 11 mejores canteranos y algún suplente; si no llegas a 11, completan el equipo chavales sin ficha de nivel bajo. Los que juegan mejoran más rápido. Tu fuerza: ${(userYouthStr()/10).toFixed(1)}.</p></section>`;}
- const tb=vtab('can',[['u19','Sub-19'],['can','Cantera'],['vida','Vida de la cantera'],['ojeo','Ojeadores'],['inf','Informes'],...(yl?[['sub19','Liga sub-19']]:[])],'u19');
- return tb.bar+(tb.cur==='u19'?u19P:tb.cur==='can'?academy:tb.cur==='vida'?life:tb.cur==='ojeo'?scouts:tb.cur==='inf'?reports:yl||academy);
+ const tb=vtab('can',[['u19','Sub-19'],['can',hasCantera(S.user)?'Cantera':'Cantera 🔒'],['vida','Vida de la cantera'],['ojeo','Ojeadores'],['inf','Informes'],...(yl?[['sub19','Liga sub-19']]:[])],'u19');
+ return tb.bar+(tb.cur==='u19'?u19P:tb.cur==='can'?(hasCantera(S.user)?academy:noCan):tb.cur==='vida'?life:tb.cur==='ojeo'?scouts:tb.cur==='inf'?reports:yl||academy);
 }
 /** Campo de las instrucciones (como el FMM): en defensa, la altura de la línea, hasta dónde presionas y la dureza;
  * en ataque, la anchura, el ritmo y el estilo con flechas. */

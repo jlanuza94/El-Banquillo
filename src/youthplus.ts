@@ -1,5 +1,6 @@
 /* El Banquillo · youthplus.ts — Cantera con más vida: director de cantera, Torneo Internacional Sub-19 y generaciones doradas. */
 // @ts-nocheck — usa el estado heredado S.
+import {addYouthToClub,hasCantera} from './youthclubs';
 import {u19List} from './u19';
 import {clamp,gauss,pick,r2,rnd,shuffle} from './core';
 import {COUNTRIES,W} from './data';
@@ -20,8 +21,8 @@ export const goldenChance=()=>clamp(.04+.015*(dcaLevel()-5)+.01*((S.club&&S.club
 /** Al llegar los juveniles del verano: a veces, una generación dorada con varios talentos de golpe. */
 export function maybeGolden(makeYouth){
  if(rnd()>goldenChance())return [];const c=LG(uLg()).c,base=Math.max(5.6,LG(uLg()).rep/10+.8),got=[];
- for(let i=0;i<4&&S.academy.length<16;i++){const y=makeYouth(c,base+1+rnd()*1.2);y.gold=1;S.academy.push(y);got.push(y.name);}
- if(got.length){(S.golden=S.golden||[]).push(seasonLabel());news(`¡Generación dorada! Llegan a la cantera ${got.length} chavales con un talento fuera de lo normal: ${got.join(', ')}. Tu director de cantera no recuerda nada igual.`,'good',{cat:'oje',subj:'¡Generación dorada en la cantera!',act:[{l:'Ver la cantera',a:'view',v:'cantera'}]});}
+ for(let i=0;i<4;i++){const y=makeYouth(c,base+1+rnd()*1.2);y.gold=1;if(!addYouthToClub(y,16))break;got.push(y.name);}
+ if(got.length){(S.golden=S.golden||[]).push(seasonLabel());news(`¡Generación dorada! Llegan a la ${hasCantera(S.user)?'cantera':'sub-19'} ${got.length} chavales con un talento fuera de lo normal: ${got.join(', ')}. Tu director de cantera no recuerda nada igual.`,'good',{cat:'oje',subj:'¡Generación dorada en la cantera!',act:[{l:'Ver la cantera',a:'view',v:'cantera'}]});}
  return got;
 }
 

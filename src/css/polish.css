@@ -1012,3 +1012,12 @@ body.fmdrag .vcell{border-color:rgba(255,255,255,.55);background:rgba(255,255,25
 .lmsel{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:3px 4px 3px 10px;border-radius:8px;border:1px solid var(--accent);color:var(--accent)}
 .lmsel select{border:0;background:transparent;color:inherit;font-weight:800;font-size:13px;padding:2px 4px}
 .slot.vs,.vpitch,.frow .grip,.bslot{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* Cantera / sub-19 por categoría */
+.ycl{display:grid;gap:4px;margin-top:4px}
+.ycl-r{display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;background:var(--panel2,rgba(127,127,127,.08));opacity:.7;font-size:13px}
+.ycl-r.on span{color:var(--good,#3fb950)}
+.ycl-r.me{opacity:1;outline:2px solid var(--accent);font-weight:600}
+details.yclub{border:1px solid var(--line,rgba(127,127,127,.25));border-radius:8px;padding:6px 10px;margin:6px 0}
+details.yclub summary{cursor:pointer}
+.ystar{color:var(--accent);letter-spacing:1px;font-size:12px}
+.ycl-no{padding:6px 10px}

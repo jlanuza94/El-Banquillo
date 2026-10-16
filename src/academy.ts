@@ -1,5 +1,6 @@
 /* El Banquillo · academy.js — Cantera y ojeadores. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {addYouthToClub,hasCantera} from './youthclubs';
 import {dcaPotBonus} from './youthplus';
 import {wageCheck} from './clubplus';
 import {scoutAttrs,youthMult} from './staff';
@@ -19,7 +20,7 @@ export function makeYouth(nat,potT){
  const p={id:'y'+(S.nextId++),name:pick(F)+' '+pick(L),nat,pos,age,at:genAttrs(pos,cur),pot,team:null,num:0,energy:100,form:0,goals:0,apps:0,yc:0,inj:0,susp:0,pInj:0,pSusp:0,playedWk:false,contract:3,loan:null,sg:0,tf:'auto'};
  decorate(p,null,true);p.wage=baseWage(p);p.role='jo';return p;
 }
-export function academyIntake(n){const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=S.club?S.club.fac.can:1;n+=Math.floor((fl-1)/2);const got=[];for(let i=0;i<n&&S.academy.length<14;i++){const y=makeYouth(c,lvl+.3+.15*(fl-1)+dcaPotBonus()+gauss()*.9);S.academy.push(y);got.push(y.name);}return got;}
+export function academyIntake(n){const c=LG(uLg()).c,lvl=strength(S.user)/10,fl=S.club?S.club.fac.can:1;n+=Math.floor((fl-1)/2);const got=[];for(let i=0;i<n;i++){const y=makeYouth(c,lvl+.3+.15*(fl-1)+dcaPotBonus()+gauss()*.9);if(!addYouthToClub(y))break;got.push(y.name);}return got;}
 export function genScoutPool(){const [F,L]=NAMES[COUNTRIES[LG(uLg()).c].lang],u=unit(LG(uLg()).rep),wg=q=>r3(Math.max(.0005,u*.012*q));
  S.scoutPool=[0,1,2,3].map(()=>{const q=clamp(Math.round(1+rnd()*4.4),1,5);return scoutAttrs({id:'s'+(S.nextId++),name:pick(F)+' '+pick(L),q,wage:wg(q)});});
  // exjugadores retirados que empiezan a ojear: buen ojo para la calidad
@@ -48,8 +49,9 @@ export function promoteYouth(id){
 }
 export function signProspect(id){
  const i=S.prospects.findIndex(x=>x.p.id===id);if(i<0)return;const x=S.prospects[i];
- if(S.academy.length>=14)return toast('La cantera está llena (14). Sube o libera a alguien antes.');
+ const can=hasCantera(S.user),dest=can?'cantera':'sub-19';
+ if(can?S.academy.length>=14:(S.u19||[]).length>=30)return toast(can?'La cantera está llena (14). Sube o libera a alguien antes.':'La sub-19 está llena (30). Sube o libera a alguien antes.');
  if(S.budget<x.fee)return toast('No tienes presupuesto para pagar su incorporación.');
- S.budget=r3(S.budget-x.fee);S.academy.push(x.p);S.prospects.splice(i,1);news(`${x.p.name} se incorpora a tu cantera por ${money(x.fee)}.`,'good');toast(`${x.p.name} se une a la cantera.`);
+ S.budget=r3(S.budget-x.fee);addYouthToClub(x.p,99);S.prospects.splice(i,1);news(`${x.p.name} se incorpora a tu ${dest} por ${money(x.fee)}.`,'good');toast(`${x.p.name} se une a la ${dest}.`);
 }
 export const scoutWages=()=>S.scouts.reduce((a,x)=>a+x.wage,0);

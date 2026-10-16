@@ -1,5 +1,6 @@
 /* El Banquillo · season.js — Flujo de jornadas, simulación múltiple, pretemporada y cambio de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {canteraAfterMoves,hasCantera} from './youthclubs';
 import {u19SeasonEnd} from './u19';
 import {careerSeasonEnd,retireToStaff} from './mgrcareer';
 import {friendlyWait,preWelcome,ptAfter,ptNext} from './preseason';
@@ -181,7 +182,7 @@ export function newSeason(){u19SeasonEnd();
  S.leagues.forEach((L,i)=>{const tb=tabs[i];
   if(L.lv>0){const up=findLg(L.c,L.lv-1);tb.slice(0,3).forEach(r=>moves.push([r.id,up.id]));}
   if(!lowest(L)){const dn=findLg(L.c,L.lv+1);tb.slice(17).forEach(r=>moves.push([r.id,dn.id]));}});
- fixFilialMoves(tabs,moves).forEach(([id,lg])=>{T(id).lg=lg;});
+ const hadC=hasCantera(S.user);fixFilialMoves(tabs,moves).forEach(([id,lg])=>{T(id).lg=lg;});canteraAfterMoves(hadC,news);
  // aging, development, retirements
  const retired=[],devNews=[];
  Object.values(S.players).forEach(p=>{
@@ -229,7 +230,7 @@ export function newSeason(){u19SeasonEnd();
  if(back.length)news(`Vuelven de su cesión: ${back.join(', ')}.`);
  if(gone.length)news(`Terminan su cesión y vuelven a sus clubes: ${gone.join(', ')}.`);
  if(leftAc.length)news(`Dejan la cantera por edad: ${leftAc.join(', ')}.`);
- if(youth.length)news(`Nuevos juveniles en la cantera: ${youth.join(', ')}.`,'good');
+ if(youth.length)news(`Nuevos juveniles en la ${hasCantera(S.user)?'cantera':'sub-19'}: ${youth.join(', ')}.`,'good');
  if(sm.up)news(`¡Ascenso! ${T(S.user).name} jugará en ${lgName(uLg())}. Prima de ascenso incluida en el premio de ${money(sm.prize)}.`,'good');
  else if(sm.down)news(`Descenso a ${lgName(uLg())}. Toca reconstruir.`,'bad');
  else news(`Premio por terminar ${sm.pos}º: ${money(sm.prize)}.`,'good');
