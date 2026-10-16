@@ -73,12 +73,12 @@ export function rivalAdvice(oid){
  const o=T(oid),lu=autoLineup(oid,o.formation),sl=slotsOf(o.formation),tp=teamPower(lu,o.formation),tac=Object.assign({},TAC0,o.tac||{}),out=[];
  const at=(i,k)=>{const p=PL(lu[i]);return p?p.at[k]:5;};
  sl.forEach((s,i)=>{const p=PL(lu[i]);if(!p)return;
-  if((s==='LD'||s==='LI')&&p.at.vel<=4)out.push({t:`Su ${SPN[s].toLowerCase()} (${p.name}) es lento (velocidad ${p.at.vel}): ataca su banda con un extremo rápido y juega ancho.`,k:'anc',v:'anc',l:'Jugar ancho'});
-  if(s==='DFC'&&p.at.cab<=4)out.push({t:`${p.name} sufre por arriba (cabeza ${p.at.cab}): centros al área y un delantero objetivo.`,k:'est',v:'dir',l:'Juego directo'});
-  if(s==='POR'&&p.at.por<=4)out.push({t:`Su portero es flojo (${p.at.por}): chuta mucho, también de lejos.`,k:'rit',v:'rap',l:'Ritmo rápido'});
+  if((s==='LD'||s==='LI')&&p.at.vel<=4)out.push({t:`Su ${SPN[s].toLowerCase()} (${p.name}) es lento (velocidad ${p.at.vel*10}): ataca su banda con un extremo rápido y juega ancho.`,k:'anc',v:'anc',l:'Jugar ancho'});
+  if(s==='DFC'&&p.at.cab<=4)out.push({t:`${p.name} sufre por arriba (cabeza ${p.at.cab*10}): centros al área y un delantero objetivo.`,k:'est',v:'dir',l:'Juego directo'});
+  if(s==='POR'&&p.at.por<=4)out.push({t:`Su portero es flojo (${p.at.por*10}): chuta mucho, también de lejos.`,k:'rit',v:'rap',l:'Ritmo rápido'});
   if(s==='DFC'&&p.at.vel<=4&&tac.lin!=='baj')out.push({t:`${p.name} es lento y juegan con la línea ${tac.lin==='alt'?'alta':'media'}: balones a la espalda.`,k:'rec',v:'cont',l:'Contraataque al recuperar'});});
  const pas=sl.map((s,i)=>GRP[s]==='DEF'?at(i,'pas'):null).filter(x=>x!=null),pa=pas.reduce((a,b)=>a+b,0)/Math.max(1,pas.length);
- if(pa<=4.5)out.push({t:`Sus defensas sacan mal el balón (pase ${pa.toFixed(1)}): presiona arriba.`,k:'pre',v:'alt',l:'Presión alta'});
+ if(pa<=4.5)out.push({t:`Sus defensas sacan mal el balón (pase ${Math.round(pa*10)}): presiona arriba.`,k:'pre',v:'alt',l:'Presión alta'});
  if(tac.pre==='alt')out.push({t:'Presionan muy arriba: pausa el juego al recuperar o busca la espalda con juego directo.',k:'rec',v:'pau',l:'Pausar al recuperar'});
  if(tac.est==='con'||tac.rec==='cont')out.push({t:'Les encanta la contra: repliega al perder el balón y no adelantes la línea.',k:'per',v:'rep',l:'Replegar al perder'});
  if(tp.mid<tp.def&&tp.mid<tp.atk)out.push({t:'Su centro del campo es lo más flojo: domina el balón.',k:'est',v:'pos',l:'Posesión'});

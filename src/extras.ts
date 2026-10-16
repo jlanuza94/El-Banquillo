@@ -38,7 +38,7 @@ export function objectivesSeasonEnd(){
 /* ---------- 2 y 5. Momentos de partido y lesiones con decisión ---------- */
 /** Penalti a favor en tu partido: eliges quién lo tira. */
 export function momentPen(m,s){const c=m.lu[s].filter(Boolean).map(PL).filter(p=>p.sp!=='POR').sort((a,b)=>b.at.tir-a.at.tir).slice(0,3);
- m.mom={k:'pen',s,txt:'¡Penalti a favor! ¿Quién lo tira?',opts:c.map(p=>[p.id,`${p.name.split(' ').slice(1).join(' ')||p.name} · remate ${p.at.tir} · partidos grandes ${p.at.gra??5}${m.pk[s]===p.id?' (lanzador)':''}`])};m.paused=true;}
+ m.mom={k:'pen',s,txt:'¡Penalti a favor! ¿Quién lo tira?',opts:c.map(p=>[p.id,`${p.name.split(' ').slice(1).join(' ')||p.name} · remate ${p.at.tir*10} · partidos grandes ${(p.at.gra??5)*10}${m.pk[s]===p.id?' (lanzador)':''}`])};m.paused=true;}
 export function momentRed(m){m.mom={k:'red',txt:`¡${T(m[m.us==='h'?'a':'h']).short} se queda con diez! ¿Qué haces?`,opts:[['ata','Arriesgar: a por ellos (más ataque, más riesgo)'],['man','Mantener el plan y mover el balón'],['cie','Cerrar el partido (si vas ganando)']]};m.paused=true;}
 export function momentInj(m,id){const p=PL(id);m.mom={k:'inj',pid:id,txt:`${p.name} se ha hecho daño. El médico dice que puede seguir, pero hay riesgo.`,opts:[['sub','Cambiarlo ahora'],['agu','Que aguante (puede agravarse)']]};m.paused=true;}
 export function momentGk(m){m.mom={k:'gk',txt:'Último minuto, perdéis por uno y hay córner. ¿Subes al portero?',opts:[['gk','¡Sí, todos arriba!'],['no','No, que se quede']]};m.paused=true;}
@@ -86,7 +86,7 @@ export function galaAwards(){
  add('jov','Mejor joven',best(reg.filter(p=>p.age<=21),avg),p=>`${p.age} años · nota ${avg(p).toFixed(2)}`);
  add('gol','Máximo goleador',best(sq.filter(p=>p.st.g>0),p=>p.st.g),p=>`${p.st.g} goles`);
  add('asi','Rey de las asistencias',best(sq.filter(p=>p.st.a>0),p=>p.st.a),p=>`${p.st.a} asistencias`);
- add('rev','Revelación',best(sq.filter(p=>grow(p)>0),grow),p=>`ha subido ${(grow(p)/10).toFixed(1)} de media`);
+ add('rev','Revelación',best(sq.filter(p=>grow(p)>0),grow),p=>`ha subido ${Math.round(grow(p))} de media`);
  return out.map(x=>Object.assign(x,{t:typeof x.t==='function'?x.t(PL(x.id)):x.t}));
 }
 /** Al empezar la temporada nueva: la gala queda en la historia y los premiados se alegran. */

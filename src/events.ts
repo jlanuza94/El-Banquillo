@@ -166,7 +166,7 @@ document.addEventListener('click',e=>{
   case'row':{if(S.view==='plantilla'){S.sel=null;S.modal={type:'ficha',id:d.id};break;}if(S.sel&&S.sel.type==='slot')placeInSlot(d.id,S.sel.i);else if(S.sel&&S.sel.id===d.id)S.sel=null;else S.sel={type:'player',id:d.id};break;}
   case'mk-adv':S.mk.adv=!S.mk.adv;break;
   case'mk-clear':Object.assign(S.mk,{c:'ALL',lv:'',age:'',ok:false,nat:'',wage:'',pot:'',atk:'',atv:'',last:false,rep:false,gem:false,sp:'',min:'',max:''});break;
-  case'ficha':S.modal={type:'ficha',id:d.id};break;
+  case'ficha':if(!S.modal||S.modal.type!=='ficha'||S.modal.id!==d.id){S.vt=S.vt||{};S.vt.fi='per';}S.modal={type:'ficha',id:d.id};break;
   case'scout':{const err=queueScout(d.id);toast(err||`${PL(d.id).name} queda en la lista de ojeo. Tendrás el informe en ${scoutWeeks()} jornada${scoutWeeks()>1?'s':''}.`);break;}
   case'aw-tab':S.awTab=d.v;break;
   case'aw-stat':S.awStat=d.v;break;
@@ -472,3 +472,10 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  S.sel=null;save();render();};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('click',e=>{if(Date.now()-DG_T<350&&e.target.closest&&e.target.closest('.fmgrid')){e.stopPropagation();e.preventDefault();}},true);
+/* Deslizar entre pestañas (ficha del jugador, como en el FMM): dedo a la izquierda, siguiente; a la derecha, anterior. */
+let SW=null;
+document.addEventListener('touchstart',e=>{const el=e.target.closest&&e.target.closest('[data-swipe]');if(!el||DG||e.touches.length!==1){SW=null;return;}const t=e.touches[0];SW={el,x:t.clientX,y:t.clientY,t:Date.now()};},{passive:true});
+document.addEventListener('touchend',e=>{if(!SW)return;const t=e.changedTouches[0],dx=t.clientX-SW.x,dy=t.clientY-SW.y,el=SW.el;SW=null;
+ if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx)*.7)return;
+ const k=el.dataset.swipe,ks=el.dataset.tabs.split(','),cur=(S.vt&&S.vt[k])||ks[0],i=ks.indexOf(cur),n=ks[(i+(dx<0?1:-1)+ks.length)%ks.length];
+ S.vt=S.vt||{};S.vt[k]=n;render();const b=document.querySelector('.fibody');if(b){b.classList.add(dx<0?'inR':'inL');}},{passive:true});

@@ -657,6 +657,16 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // ficha con pestañas (como el FMM) y datos de 0 a 100
+    const pp = squad(S.user)[2]; S.vt = {}; S.modal = { type: 'ficha', id: pp.id }; render();
+    const tabs = [...app.querySelectorAll('[data-a=vtab][data-k=fi]')].map(b => b.dataset.v); ok(['per', 'est', 'pos', 'con', 'tem', 'rel', 'his'].every(k => tabs.includes(k)), 'ficha con 7 pestañas: ' + tabs.join(','));
+    let bad = ''; for (const k of tabs) { S.vt.fi = k; render(); if (!app.querySelector('.fibody') || app.querySelector('.fibody').textContent.trim().length < 10) bad += k + ' '; }
+    ok(!bad, 'todas las pestañas de la ficha tienen contenido ' + bad);
+    S.vt.fi = 'pos'; render(); ok(app.querySelectorAll('.fpd').length >= 10 && !!app.querySelector('.fisw[data-swipe=fi]'), 'posiciones en el campo y zona para deslizar');
+    S.vt.fi = 'per'; render(); const q = app.querySelector('.fihead .q'); ok(q && /^\d{1,3}$/.test(q.textContent.trim()) && +q.textContent >= 10, 'media de 0 a 100 (' + (q && q.textContent) + ')');
+    const at = app.querySelector('.fattrs .at'); ok(at && /^\d{2,3}$/.test(at.textContent.trim()), 'atributos de 0 a 100 (' + (at && at.textContent) + ')');
+    S.modal = null; S.vt = {};
+  }
   { // estilos de juego, cansancio a decisión del técnico y ojeador de chollos
     const T2 = await import('../src/tactics2'); ok(Object.keys(T2.PRESETS).length >= 18, `muchos estilos (${Object.keys(T2.PRESETS).length})`);
     const t = T(S.user), keep = { f: t.formation, lu: t.lineup.slice(), tac: t.tac, ment: t.ment, roles: t.roles, duty: t.duty, pi: t.pi, style: t.style };

@@ -36,7 +36,7 @@ export function mkCard(p,mini){
 let HL={k:'',v:null};
 /** Los chollos que te mandó el ojeador este mes (jóvenes baratos con mucho potencial). */
 function cholP(row){const L=(S.chollos||[]).map(x=>PL(x.id)).filter(p=>p&&p.team!==S.user);
- return `<div class="mkhl-c chol" style="margin-top:8px"><div class="mkhl-h"><span>💎</span><b>Chollos del ojeador</b><span class="small muted" style="margin-left:auto">cada mes, jóvenes baratos de los que nadie habla</span></div>${L.length?L.map(p=>{const r=seen(p).pot;return row(p).replace('</small>',` · puede llegar a <b>${r?r[0].toFixed(1)+'–'+r[1].toFixed(1):'?'}</b></small>`);}).join(''):'<div class="empty small">Tu ojeador te mandará los primeros chollos a principios del mes que viene.</div>'}</div>`;}
+ return `<div class="mkhl-c chol" style="margin-top:8px"><div class="mkhl-h"><span>💎</span><b>Chollos del ojeador</b><span class="small muted" style="margin-left:auto">cada mes, jóvenes baratos de los que nadie habla</span></div>${L.length?L.map(p=>{const r=seen(p).pot;return row(p).replace('</small>',` · puede llegar a <b>${r?Math.round(r[0]*10)+'–'+Math.round(r[1]*10):'?'}</b></small>`);}).join(''):'<div class="empty small">Tu ojeador te mandará los primeros chollos a principios del mes que viene.</div>'}</div>`;}
 function highlights(){
  const key=[S.day,S.week,Math.round(S.budget*100),S.user].join('|');
  if(HL.k!==key){const est=p=>{const sn=seen(p);return sn.exact?p.ovr:(sn.ovr[0]+sn.ovr[1])/2;},myAvg=squad(S.user).map(p=>p.ovr).sort((a,b)=>b-a).slice(0,11).reduce((a,b,_,A)=>a+b/A.length,0);
@@ -140,7 +140,7 @@ function mercadoViewPl(ksw){
   <button class="btn sm advbtn" data-a="mk-adv" aria-pressed="${!!mk.adv}">⚙ Filtros${(n=>n?` (${n})`:'')([mk.c!=='ALL'?mk.c:'',mk.lv,mk.age,mk.ok,mk.nat,mk.wage,mk.pot,mk.atk,mk.last,mk.rep,mk.gem].filter(x=>x!==''&&x!=null&&x!==false).length)}</button>
   ${mk.adv?`<div class="mkfsheet" role="dialog" aria-label="Filtros del mercado"><button class="mkfback" data-a="mk-adv" aria-label="Cerrar filtros"></button><div class="mkfbox"><div class="mkfhead"><h2>Filtros</h2><button class="btn sm" data-a="mk-clear">Limpiar</button><button class="btn sm primary" data-a="mk-adv">Ver resultados ›</button></div><div class="advfil">
   <label class="f"><span class="eyebrow">Posición exacta</span>${sel('mksp',mk.sp||'',[['','Cualquiera'],...Object.entries(SPN).map(([k,v])=>[k,v])])}</label>
-  <label class="f"><span class="eyebrow">Media mín.</span>${sel('mkmin',mk.min,[['','Cualquiera'],['4','4+'],['5','5+'],['6','6+'],['6.5','6.5+'],['7','7+'],['8','8+']])}</label>
+  <label class="f"><span class="eyebrow">Media mín.</span>${sel('mkmin',mk.min,[['','Cualquiera'],['4','40+'],['5','50+'],['6','60+'],['6.5','65+'],['7','70+'],['8','80+']])}</label>
   <label class="f"><span class="eyebrow">Precio máx.</span>${sel('mkmax',mk.max,[['','Sin límite'],['0.05','€50k'],['0.1','€100k'],['0.25','€250k'],['0.5','€500k'],['1','€1M'],['2','€2M'],['5','€5M']])}</label>
   <label class="f"><span class="eyebrow">País</span>${sel('mkc',mk.c,[['ALL','Todos'],...wcs().map(i=>[String(i),COUNTRIES[i].n]),['FA','Agentes libres']])}</label>
   <label class="f"><span class="eyebrow">División</span>${sel('mklv',mk.lv,[['','Todas'],...LV_NAMES.map((n,i)=>[String(i),n])])}</label>
@@ -148,9 +148,9 @@ function mercadoViewPl(ksw){
   <label class="chk"><input type="checkbox" id="mkok" ${mk.ok?'checked':''}> Solo los que vendrían</label>
   <label class="f"><span class="eyebrow">Nacionalidad</span>${sel('mknat',mk.nat??'',[['','Cualquiera'],...COUNTRIES.map((c,i)=>[String(i),c.n])])}</label>
   <label class="f"><span class="eyebrow">Sueldo máx.</span>${sel('mkwage',mk.wage||'',[['','Sin límite'],['0.002','€2k/sem'],['0.005','€5k/sem'],['0.01','€10k/sem'],['0.025','€25k/sem'],['0.05','€50k/sem']])}</label>
-  <label class="f"><span class="eyebrow">Potencial mín.</span>${sel('mkpot',mk.pot||'',[['','Cualquiera'],['6','6+'],['7','7+'],['7.5','7.5+'],['8','8+'],['8.5','8.5+']])}</label>
+  <label class="f"><span class="eyebrow">Potencial mín.</span>${sel('mkpot',mk.pot||'',[['','Cualquiera'],['6','60+'],['7','70+'],['7.5','75+'],['8','80+'],['8.5','85+']])}</label>
   <label class="f"><span class="eyebrow">Atributo</span>${sel('mkatk',mk.atk||'',[['','Ninguno'],...ATTRS.map(k=>[k,AT_NAME[k]])])}</label>
-  <label class="f"><span class="eyebrow">Mínimo</span>${sel('mkatv',mk.atv||'',[['','—'],...[5,6,7,8,9].map(v=>[String(v),v+'+'])])}</label>
+  <label class="f"><span class="eyebrow">Mínimo</span>${sel('mkatv',mk.atv||'',[['','—'],...[5,6,7,8,9].map(v=>[String(v),v*10+'+'])])}</label>
   <label class="chk"><input type="checkbox" id="mklast" ${mk.last?'checked':''}> Último año de contrato (más baratos)</label>
   <label class="chk"><input type="checkbox" id="mkrep" ${mk.rep?'checked':''}> Solo con informe completo</label>
   <label class="chk"><input type="checkbox" id="mkgem" ${mk.gem?'checked':''}> Solo posibles joyas 💎</label>

@@ -19,7 +19,7 @@ export function jerarquiaHTML(){
  const tag=p=>t.cap===p.id?'<span class="jtag cap">C</span>':vc.includes(p.id)?'<span class="jtag">VC</span>':'';
  const card=([p,v])=>`<button class="jcard" data-a="ficha" data-id="${p.id}">${tag(p)}${faceSVG(p)}<b>${esc(p.name.split(' ').slice(-1)[0])}</b><small>${posChip(p)} ${p.age} años</small><span class="jinf"><i style="width:${Math.min(100,v)}%"></i></span><small>${PERS[p.per||'nor'].n} · ${(ROLES[p.role||'ro']||ROLES.ro).n} ${mood(p)}</small></button>`;
  let k=0;const tiers=TIERS.map(([id,n,c,d])=>{const L=R.slice(k,k+c);k+=L.length;return L.length?`<div class="jtier jt-${id}"><div class="jth"><b>${n}</b><span class="small muted">${esc(d)}</span></div><div class="jrow">${L.map(card).join('')}</div></div>`:'';}).join('');
- const opt=(id,cur)=>`<select id="${id}"><option value="">${id==='t-cap'?'Automático':'—'}</option>${sq.map(p=>`<option value="${p.id}" ${cur===p.id?'selected':''}>${esc(p.name)} · liderazgo ${p.at.lid??5}</option>`).join('')}</select>`;
+ const opt=(id,cur)=>`<select id="${id}"><option value="">${id==='t-cap'?'Automático':'—'}</option>${sq.map(p=>`<option value="${p.id}" ${cur===p.id?'selected':''}>${esc(p.name)} · liderazgo ${(p.at.lid??5)*10}</option>`).join('')}</select>`;
  const groups={};sq.forEach(p=>{const l=langOf(p);(groups[l]=groups[l]||[]).push(p);});const G=Object.entries(groups).sort((a,b)=>b[1].length-a[1].length);
  const avg=sq.length?Math.round(sq.reduce((a,p)=>a+(p.hap||70),0)/sq.length):70,unhappyLead=R.slice(0,8).filter(([p])=>(p.hap||70)<40);
  return `<div class="grid jgrid"><section class="panel"><div class="panel-h"><h2>Jerarquía del vestuario</h2><span class="eyebrow">Ambiente ${avg}/100</span></div>

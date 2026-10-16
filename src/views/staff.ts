@@ -16,7 +16,7 @@ const pct=x=>`${x>=1?'+':''}${Math.round((x-1)*100)}%`;
 
 const medal=t=>`<span class="smedal ${t[0]}" title="Nivel ${t[1]}">${'★'.repeat(t[2])}<b>${t[1]}</b></span>`;
 const pl=(n,a,b)=>`${n} ${n===1?a:b}`;
-const atBars=(m,keys)=>keys.map(k=>`<div class="sab"><span>${ST_AT[k]}</span><i><b class="${qc(m.at[k])}" style="width:${m.at[k]*10}%"></b></i><em>${m.at[k]}</em></div>`).join('');
+const atBars=(m,keys)=>keys.map(k=>`<div class="sab"><span>${ST_AT[k]}</span><i><b class="${qc(m.at[k])}" style="width:${m.at[k]*10}%"></b></i><em>${m.at[k]*10}</em></div>`).join('');
 function memberRow(m){
  const R=ST_ROLES[m.role],t=tierOf(m),cc=courseCost(m);
  return `<div class="stc ${t[0]}"><div class="stc-h"><span class="stc-av">${esc(m.name.split(' ').map(x=>x[0]).slice(0,2).join(''))}</span><div style="min-width:0;flex:1"><b class="stc-n">${esc(m.name)}</b><small>${m.age} años · ${nf(m.nat)} ${esc(COUNTRIES[m.nat].code)}${m.ex?' · ex jugador':''}</small></div>${medal(t)}</div>
@@ -46,7 +46,7 @@ function staffMarketTable(){
  const will=x=>{if(x.club==null)return [80,'😊','Libre: firmaría ya'];const cr=T(x.club)?T(x.club).rep:50,d=(my.rep||50)-cr+(rep-40)*.3;return d>=0?[70,'😊','Le atrae tu proyecto']:d>-12?[45,'😐','Se lo pensaría']:[20,'🙁','Prefiere quedarse en su club'];};
  const so={lvl:(a,b)=>lvl(b)-lvl(a),wage:(a,b)=>a.m.wage-b.m.wage,cost:(a,b)=>(a.m.fee||0)-(b.m.fee||0),role:(a,b)=>a.k.localeCompare(b.k)}[F.sort]||((a,b)=>lvl(b)-lvl(a));rows.sort(so);if(F.min){const mn=+F.min;for(let i=rows.length-1;i>=0;i--)if(lvl(rows[i])<mn)rows.splice(i,1);}
  const RN=k=>k==='sc'?'Ojeador':ST_ROLES[k].n,full=k=>k==='sc'?(S.scouts||[]).length>=staffMax('sc'):crew(k).length>=staffMax(k);
- const atS=x=>x.k==='sc'?`Juzgar capacidad <b>${x.m.jui||x.m.q*2}</b> · potencial <b>${x.m.jpo||x.m.q*2}</b>`:ST_ROLES[x.k].at.map(k=>`${ST_AT[k]} <b>${x.m.at[k]}</b>`).join(' · ');
+ const atS=x=>x.k==='sc'?`Juzgar capacidad <b>${(x.m.jui||x.m.q*2)*10}</b> · potencial <b>${(x.m.jpo||x.m.q*2)*10}</b>`:ST_ROLES[x.k].at.map(k=>`${ST_AT[k]} <b>${x.m.at[k]*10}</b>`).join(' · ');
  const act=x=>full(x.k)?'<span class="tag">Puesto completo</span>':x.k==='sc'?`<button class="btn sm primary" data-a="scout-hire" data-id="${x.m.id}">Contratar</button>`:x.club!=null?`<button class="btn sm ${S.budget>=(x.m.fee||0)?'primary':''}" data-a="staff-club" data-id="${x.m.id}">Fichar</button>`:`<button class="btn sm primary" data-a="st-hire" data-id="${x.m.id}">Contratar</button>`;
  return `<section class="panel"><div class="filters smfil"><div class="seg" style="max-width:100%;overflow-x:auto"><button data-a="sm-role" data-v="" aria-pressed="${!F.role}">Todos</button>${Object.entries(ST_ROLES).map(([k,R])=>`<button data-a="sm-role" data-v="${k}" aria-pressed="${F.role===k}">${R.n}</button>`).join('')}<button data-a="sm-role" data-v="sc" aria-pressed="${F.role==='sc'}">Ojeador</button></div>
  <input type="search" id="smQ" class="mkq" placeholder="🔎 Buscar por nombre" value="${esc(F.q||'')}" aria-label="Buscar técnico">

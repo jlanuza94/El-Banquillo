@@ -42,12 +42,12 @@ export function preWelcome(){
 export function preReportHTML(esc,nameBtn,PL){
  const R=preReport(),li=a=>a.length?a.join(''):'<li class="muted">Nada que destacar.</li>';
  return `<div class="eyebrow">Informe de pretemporada · tu segundo entrenador</div><h2 style="margin:4px 0 6px">Así está tu plantilla</h2>
- <p style="margin:0 0 8px">Tu once tiene una media de <b>${R.avg.toFixed(1)}</b>: es el <b>${R.rank}º de ${R.n}</b> de la liga por nivel. ${R.size} jugadores en la plantilla.</p>
- <h3>Puntos débiles</h3><ul class="ttips">${li(R.weak.slice(0,4).map(x=>`<li><b>${SPN[x.sp]||x.sp}</b>: tu mejor ahí rinde ${x.best.toFixed(1)}, por debajo del resto del once.</li>`))}</ul>
+ <p style="margin:0 0 8px">Tu once tiene una media de <b>${Math.round(R.avg*10)}</b>: es el <b>${R.rank}º de ${R.n}</b> de la liga por nivel. ${R.size} jugadores en la plantilla.</p>
+ <h3>Puntos débiles</h3><ul class="ttips">${li(R.weak.slice(0,4).map(x=>`<li><b>${SPN[x.sp]||x.sp}</b>: tu mejor ahí rinde ${Math.round(x.best*10)}, por debajo del resto del once.</li>`))}</ul>
  ${R.thin.length?`<h3>Poca profundidad</h3><ul class="ttips">${R.thin.slice(0,4).map(x=>`<li><b>${SPN[x.sp]||x.sp}</b>: solo ${x.nat} jugador${x.nat===1?'':'es'} natural${x.nat===1?'':'es'}; una lesión te deja sin recambio.</li>`).join('')}</ul>`:''}
  <h3>Qué fichar</h3>${R.sign.length?`<div class="chips">${R.sign.map(sp=>`<button class="btn sm primary" data-a="pre-buy" data-v="${sp}">Buscar ${(SPN[sp]||sp).toLowerCase()}</button>`).join('')}</div>`:'<p class="small muted">La plantilla está completa: ficha solo si llega una ganga.</p>'}
- <h3>Sobran o conviene ceder</h3><ul class="ttips">${li(R.sell.map(p=>`<li>${nameBtn(p)} (${p.age} años, ${(p.ovr/10).toFixed(1)}): no va a contar; véndelo o cédelo para liberar sueldo.</li>`).concat(R.loan.map(p=>`<li>${nameBtn(p)} (${p.age} años): necesita minutos; una cesión le haría crecer.</li>`)))}</ul>
- <h3>Contratos que acaban</h3><ul class="ttips">${li(R.exp.slice(0,6).map(p=>`<li>${nameBtn(p)} (${p.age} años, ${(p.ovr/10).toFixed(1)}): renuévalo o véndelo antes de que se vaya libre.</li>`))}</ul>`;
+ <h3>Sobran o conviene ceder</h3><ul class="ttips">${li(R.sell.map(p=>`<li>${nameBtn(p)} (${p.age} años, ${Math.round(p.ovr)}): no va a contar; véndelo o cédelo para liberar sueldo.</li>`).concat(R.loan.map(p=>`<li>${nameBtn(p)} (${p.age} años): necesita minutos; una cesión le haría crecer.</li>`)))}</ul>
+ <h3>Contratos que acaban</h3><ul class="ttips">${li(R.exp.slice(0,6).map(p=>`<li>${nameBtn(p)} (${p.age} años, ${Math.round(p.ovr)}): renuévalo o véndelo antes de que se vaya libre.</li>`))}</ul>`;
 }
 /** Lista de tareas de la pretemporada (para Inicio). */
 export function preTasks(){

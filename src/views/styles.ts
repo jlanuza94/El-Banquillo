@@ -17,7 +17,7 @@ export function estilosHTML(){
   <b class="stn">${esc(P.n)}</b><div class="small muted">${P.f} · ${MENT[P.ment].label}</div>
   <p class="std">${esc(P.d)}</p>
   <div class="stt">${KEYS.map(x=>`<span>${esc(TACS[x].n)}: <b>${esc(TACS[x].o[tac[x]])}</b></span>`).join('')}</div>
-  <div class="stfit"><span class="small">Tu plantilla</span><span class="stbar"><i class="${lab[1]}" style="width:${Math.round(Math.min(1,fit.avg/100)*100)}%"></i></span><b class="${lab[1]} q">${(fit.avg/10).toFixed(1)}</b></div>
+  <div class="stfit"><span class="small">Tu plantilla</span><span class="stbar"><i class="${lab[1]}" style="width:${Math.round(Math.min(1,fit.avg/100)*100)}%"></i></span><b class="${lab[1]} q">${Math.round(fit.avg)}</b></div>
   <div class="small ${lab[1]==='q2'||lab[1]==='q3'?'':'muted'}">${lab[0]}${fit.weak.length?` · flojo en ${fit.weak.join(', ')}`:''}</div>
   <button class="btn sm ${use(k)?'':'primary'}" data-a="preset" data-v="${k}">${use(k)?'Volver a cargar':'Usar este estilo'}</button></div>`;};
  return `<section class="panel"><div class="panel-h"><h2>Estilos de juego</h2><span class="eyebrow">${Object.keys(PRESETS).length} estilos · cárgalo y retócalo a tu gusto</span></div>

@@ -222,11 +222,11 @@ export function newSeason(){u19SeasonEnd();
  genFreeAgents();crisisSales(poorClubs);
  S.short=S.short.filter(id=>PL(id));
  S.seasonN++;setupSeason();summerTournaments();ntOffers();retosNewSeason();setWageCap();fixLineup();cwcWelcome();ctWelcome();preWelcome();S.sponsor=null;genSponsors();if(S.club&&S.user!=null&&!S.jobless)sellAbonos();if(mgrOut)loseJob('fin de contrato');else advance();
- devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${(p.ovr/10).toFixed(1)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
+ devNews.forEach(([p,ev])=>{if(!S.players[p.id])return;news(ev==='boom'?`¡${p.name} ha dado un salto enorme este verano! Su media sube a ${Math.round(p.ovr)} y su techo ahora parece más alto.`:`${p.name} se ha estancado: no progresa como se esperaba. Darle minutos y un buen tutor puede ayudarle.`,ev==='boom'?'good':'bad',{cat:'pla',subj:ev==='boom'?`${p.name} explota`:`${p.name} se estanca`,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});});
  if(retired.length)news(`Se retiran: ${retired.join(', ')}.`);
  if(freed.length)news(`Acaban contrato y se van libres: ${freed.join(', ')}.`,'bad');
  {const FA=Object.values(S.players).filter(p=>p.team===null&&p.age<=33).sort((a,b)=>b.ovr-a.ovr),top=FA.slice(0,4);
-  if(top.length)news(`Mercado de agentes libres: ${FA.length} jugadores sin equipo este verano. Los mejores: ${top.map(p=>`${p.name} (${p.sp}, ${p.age} años, ${(p.ovr/10).toFixed(1)})`).join(', ')}. Se pueden fichar sin pagar traspaso, incluso con el mercado cerrado.`,'',{cat:'mer',subj:'Agentes libres del verano',act:[{l:'Ver libres',a:'mk-fa'}]});}
+  if(top.length)news(`Mercado de agentes libres: ${FA.length} jugadores sin equipo este verano. Los mejores: ${top.map(p=>`${p.name} (${p.sp}, ${p.age} años, ${Math.round(p.ovr)})`).join(', ')}. Se pueden fichar sin pagar traspaso, incluso con el mercado cerrado.`,'',{cat:'mer',subj:'Agentes libres del verano',act:[{l:'Ver libres',a:'mk-fa'}]});}
  if(back.length)news(`Vuelven de su cesión: ${back.join(', ')}.`);
  if(gone.length)news(`Terminan su cesión y vuelven a sus clubes: ${gone.join(', ')}.`);
  if(leftAc.length)news(`Dejan la cantera por edad: ${leftAc.join(', ')}.`);

@@ -27,9 +27,9 @@ export function posicionesHTML(){
  const field=`<div class="vpitch tacp hp">${VLINES}<span class="atk">Ataque ▶</span>${R.map(r=>r.it.map(card).join('')).join('')}</div>`;
  // detalle del puesto elegido
  const s=sl[sel],p=PL(t.lineup[sel]),rk=ro[sel],myPi=pi[sel]||[];
- const det=`<section class="panel pdet"><div class="panel-h"><h2>${esc(SPN[s]||s)}</h2><span class="eyebrow">${p?esc(p.name)+' · '+(eff(p,s,null,rk)/10).toFixed(1):'Sin jugador'}</span></div>
+ const det=`<section class="panel pdet"><div class="panel-h"><h2>${esc(SPN[s]||s)}</h2><span class="eyebrow">${p?esc(p.name)+' · '+Math.round(eff(p,s,null,rk)):'Sin jugador'}</span></div>
  <div class="eyebrow" style="margin:2px 0 4px">Rol</div>
- <select data-role="${sel}" aria-label="Rol del puesto ${s}" style="max-width:100%">${roleList(s).map(r=>`<option value="${r[0]}" ${rk===r[0]?'selected':''}>${esc(r[1])}${p?' · '+(eff(p,s,null,r[0])/10).toFixed(1):''}</option>`).join('')}</select>
+ <select data-role="${sel}" aria-label="Rol del puesto ${s}" style="max-width:100%">${roleList(s).map(r=>`<option value="${r[0]}" ${rk===r[0]?'selected':''}>${esc(r[1])}${p?' · '+Math.round(eff(p,s,null,r[0])):''}</option>`).join('')}</select>
  <p class="small muted" style="margin:4px 0 10px">${esc(roleDef(s,rk)[4])}${p?` <b>Dominio del rol: ${Math.round(roleFam(p,rk))}%</b> (sube jugando en él; más alto, mejor rinde).`:''}</p>
  ${s!=='POR'?`<div class="eyebrow" style="margin:0 0 4px">Cometido</div><div class="seg">${Object.entries(DUTIES).map(([k,v])=>`<button data-a="duty" data-i="${sel}" data-v="${k}" aria-pressed="${du[sel]===k}">${v.n}</button>`).join('')}</div>
  <p class="small muted" style="margin:4px 0 10px">${esc((DUTIES[du[sel]]||DUTIES.apo).d)}</p>`:''}
