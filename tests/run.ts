@@ -315,9 +315,9 @@ const app = document.getElementById('app')!;
     initIntl(); ok(ranking().length === 16, 'ranking de selecciones (16)');
     ok(callOf(0).length === 23, 'convocatoria automática de 23');
     const yrs = [1, 2, 3, 4].map(n => [summerYear(n), tournamentsIn(n).join('+')]); ok(yrs.some(x => x[1] === 'wc') && yrs.some(x => x[1] === 'eu+ca'), 'calendario de torneos: ' + yrs.map(x => x.join(':')).join(' '));
-    const wc = playTournament('wc'); ok(wc.champ != null && wc.runner != null && wc.champ !== wc.runner && wc.groups.length === 2, `Mundial: campeona ${wc.champ}`);
-    const ca = playTournament('ca'); ok(ca.groups[0].tb.length === 5 && ca.ko.length === 2, 'Copa América con liguilla, semifinales y final');
-    const eu = playTournament('eu'); ok(eu.groups.length === 2 && eu.groups[0].tb.length === 5 && eu.ko.length === 2, 'Eurocopa con dos grupos, semifinales y final');
+    const wc = playTournament('wc'); ok(wc.champ != null && wc.runner != null && wc.champ !== wc.runner && wc.groups.length === 8 && wc.ko.length === 4, `Mundial: campeona ${wc.champ}`);
+    const ca = playTournament('ca'); ok(ca.groups.length === 4 && ca.groups[0].tb.length === 4 && ca.ko.length === 3, 'Copa América con 4 grupos, cuartos, semifinales y final');
+    const eu = playTournament('eu'); ok(eu.groups.length === 4 && eu.groups[0].tb.length === 4 && eu.ko.length === 3, 'Eurocopa con 4 grupos, cuartos, semifinales y final');
     const wk = S.week, caps0 = squad(S.user).reduce((a, p) => a + (p.caps || 0), 0); S.week = 9; fifaWeek(); S.week = wk; ok(true, 'parón de selecciones');
     const c = squad(S.user)[0].nat; takeNT(c); ok(S.nt && S.nt.c === c, 'eres seleccionador');
     const first = callOf(c)[0]; toggleCall(first); ok(!S.nt.call.includes(first) && S.nt.call.length === 22, 'quitar un convocado');
@@ -656,6 +656,13 @@ const app = document.getElementById('app')!;
     t.subsNone = false; t.lineup = autoLineupF(S.user, t.formation);
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
+  }
+  { // más selecciones: Mundial de 32, Eurocopa y Copa América de 16, con grupos de 4 y eliminatorias
+    const NA = await import('../src/nations'), D = await import('../src/data');
+    NA.initIntl(); ok(NA.members('wc').length === 32 && NA.members('eu').length === 16 && NA.members('ca').length === 16, 'Mundial con 32 selecciones y Eurocopa/Copa América con 16');
+    const T0 = NA.playTournament('wc'); ok(T0.groups.length === 8 && T0.ko.length === 4 && T0.champ != null && D.ALLN[T0.champ], `Mundial jugado: campeona ${D.ALLN[T0.champ].n}`);
+    ok(D.ALLN.length > 120 && D.ALLN[0] === D.COUNTRIES[0], 'nacionalidades: todos los países del mundo para el entrenador');
+    S.view = 'selecciones'; S.ntTab = 'rk'; render(); ok(app.textContent.includes('Croacia'), 'ranking con las selecciones nuevas'); S.view = 'inicio'; S.ntTab = null;
   }
   ok(MAX_SLOTS === 5, 'hasta 5 partidas');
 

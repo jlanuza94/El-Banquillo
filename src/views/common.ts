@@ -13,7 +13,7 @@ import {riskTag} from '../medical';
 import {tutCard,tutView} from '../tutorial';
 import {seleccionesView} from './nations';
 import {natFlag,flag} from '../flags';
-export const nf=nat=>natFlag(nat,COUNTRIES);
+export const nf=nat=>natFlag(nat,ALLN);
 import {themeBtn} from '../theme';
 import {DEEP_ONLY,quick} from '../quick';
 import {importData} from '../mods';
@@ -24,7 +24,7 @@ import {EXACT,knowledge,seen,scouted} from '../scouting';
 import {staffView} from './staff';
 import morphdom from 'morphdom';
 import {$app,esc,fmtMin,money,r2} from '../core';
-import {COUNTRIES,AT_COLS,AT_NAME,AT_SH,ATTRS,FORMS,GRP,SPN} from '../data';
+import {COUNTRIES,AT_COLS,AT_NAME,AT_SH,ATTRS,FORMS,GRP,SPN,ALLN} from '../data';
 /** Cabecera de las columnas de atributos de las tablas. */
 export const attrHead=()=>AT_COLS.map(k=>`<th class="r" title="${AT_NAME[k]}">${AT_SH[k]}</th>`).join('');
 import {RT,LG,PL,S,T,atCell,available,crest,crestStyle,lgName,lowest,pBadge,qc,rt,seasonLabel} from '../state';

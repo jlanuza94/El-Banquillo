@@ -49,6 +49,25 @@ export const COUNTRIES=[
  {n:'Bélgica',code:'BEL',lang:'nl',tw:'BE',lv:2,top:67},{n:'Turquía',code:'TUR',lang:'tr',tw:'TR',lv:2,top:67},{n:'Escocia',code:'SCO',lang:'en',tw:'SC',lv:2,top:63.5},
  {n:'Estados Unidos',code:'USA',lang:'en',tw:'US',lv:2,top:65},{n:'Japón',code:'JPN',lang:'ja',tw:'JP',lv:2,top:64},{n:'Colombia',code:'COL',lang:'es',tw:'CO',lv:2,top:64},
 ];
+/** Selecciones sin liga en el juego: juegan Mundial, Eurocopa y Copa América con su propio nivel (no tienen jugadores en el mundo). conf: eu, sa, na, af, as. */
+export const NATIONS=[
+ {n:'Croacia',code:'CRO',lang:'de',conf:'eu',top:70},{n:'Uruguay',code:'URU',lang:'es',conf:'sa',top:69},{n:'Marruecos',code:'MAR',lang:'fr',conf:'af',top:69},{n:'Dinamarca',code:'DEN',lang:'de',conf:'eu',top:68},
+ {n:'Suiza',code:'SUI',lang:'de',conf:'eu',top:68},{n:'Senegal',code:'SEN',lang:'fr',conf:'af',top:67},{n:'Suecia',code:'SWE',lang:'de',conf:'eu',top:66},{n:'Noruega',code:'NOR',lang:'de',conf:'eu',top:66},
+ {n:'Austria',code:'AUT',lang:'de',conf:'eu',top:66},{n:'Nigeria',code:'NGA',lang:'en',conf:'af',top:66},{n:'Polonia',code:'POL',lang:'de',conf:'eu',top:65},{n:'Serbia',code:'SRB',lang:'de',conf:'eu',top:65},
+ {n:'Ucrania',code:'UKR',lang:'de',conf:'eu',top:65},{n:'Ecuador',code:'ECU',lang:'es',conf:'sa',top:65},{n:'Corea del Sur',code:'KOR',lang:'ja',conf:'as',top:65},{n:'Costa de Marfil',code:'CIV',lang:'fr',conf:'af',top:65},
+ {n:'Canadá',code:'CAN',lang:'en',conf:'na',top:64},{n:'Egipto',code:'EGY',lang:'en',conf:'af',top:64},{n:'Irán',code:'IRN',lang:'en',conf:'as',top:64},{n:'Chequia',code:'CZE',lang:'de',conf:'eu',top:64},
+ {n:'Perú',code:'PER',lang:'es',conf:'sa',top:63},{n:'Chile',code:'CHI',lang:'es',conf:'sa',top:63},{n:'Paraguay',code:'PAR',lang:'es',conf:'sa',top:63},{n:'Gales',code:'GAL',lang:'en',conf:'eu',top:63},
+ {n:'Hungría',code:'HUN',lang:'de',conf:'eu',top:63},{n:'Camerún',code:'CMR',lang:'fr',conf:'af',top:63},{n:'Argelia',code:'ALG',lang:'fr',conf:'af',top:63},{n:'Ghana',code:'GHA',lang:'en',conf:'af',top:63},
+ {n:'Australia',code:'AUS',lang:'en',conf:'as',top:63},{n:'Irlanda',code:'IRL',lang:'en',conf:'eu',top:62},{n:'Grecia',code:'GRE',lang:'de',conf:'eu',top:62},{n:'Rumanía',code:'ROU',lang:'it',conf:'eu',top:62},
+ {n:'Túnez',code:'TUN',lang:'fr',conf:'af',top:62},{n:'Eslovaquia',code:'SVK',lang:'de',conf:'eu',top:61},{n:'Eslovenia',code:'SVN',lang:'de',conf:'eu',top:61},{n:'Venezuela',code:'VEN',lang:'es',conf:'sa',top:61},
+ {n:'Costa Rica',code:'CRC',lang:'es',conf:'na',top:61},{n:'Mali',code:'MLI',lang:'fr',conf:'af',top:61},{n:'Arabia Saudí',code:'KSA',lang:'en',conf:'as',top:61},{n:'Georgia',code:'GEO',lang:'de',conf:'eu',top:60},
+ {n:'Islandia',code:'ISL',lang:'de',conf:'eu',top:60},{n:'Panamá',code:'PAN',lang:'es',conf:'na',top:60},{n:'Sudáfrica',code:'RSA',lang:'en',conf:'af',top:60},{n:'Catar',code:'QAT',lang:'en',conf:'as',top:60},
+ {n:'Uzbekistán',code:'UZB',lang:'en',conf:'as',top:60},{n:'Albania',code:'ALB',lang:'it',conf:'eu',top:59},{n:'Finlandia',code:'FIN',lang:'de',conf:'eu',top:59},{n:'Irak',code:'IRQ',lang:'en',conf:'as',top:59},
+ {n:'Bolivia',code:'BOL',lang:'es',conf:'sa',top:58},{n:'Jamaica',code:'JAM',lang:'en',conf:'na',top:58},{n:'Honduras',code:'HON',lang:'es',conf:'na',top:58},{n:'Nueva Zelanda',code:'NZL',lang:'en',conf:'as',top:57},{n:'China',code:'CHN',lang:'en',conf:'as',top:57}];
+/** Resto de países del mundo (solo para elegir la nacionalidad del entrenador). */
+export const OTHER_NAT=['Afganistán','Andorra','Angola','Armenia','Azerbaiyán','Bahréin','Bangladés','Bielorrusia','Bosnia y Herzegovina','Bulgaria','Burkina Faso','Cabo Verde','Chipre','Congo','Cuba','Curazao','El Salvador','Emiratos Árabes Unidos','Estonia','Etiopía','Filipinas','Gabón','Guatemala','Guinea','Guinea Ecuatorial','Haití','India','Indonesia','Israel','Jordania','Kazajistán','Kenia','Kosovo','Kuwait','Letonia','Líbano','Libia','Liechtenstein','Lituania','Luxemburgo','Macedonia del Norte','Madagascar','Malasia','Malta','Moldavia','Mónaco','Montenegro','Mozambique','Nicaragua','Omán','Palestina','Puerto Rico','República Dominicana','RD Congo','San Marino','Siria','Sudán','Tailandia','Tanzania','Trinidad y Tobago','Uganda','Vietnam','Zambia','Zimbabue'].map(n=>({n,code:'---',lang:'en'}));
+/** Todas las nacionalidades: primero los países con liga (mismos índices que COUNTRIES), luego las selecciones y el resto. */
+export const ALLN=[...COUNTRIES,...NATIONS,...OTHER_NAT];
 export const LV_NAMES=['Primera División','Segunda División','Tercera División','Cuarta División','Quinta División'];
 export const LV_SH=['1ª','2ª','3ª','4ª','5ª'];
 export const LV_STEP=8.5;

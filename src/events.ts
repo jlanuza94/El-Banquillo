@@ -389,8 +389,9 @@ document.addEventListener('change',e=>{
  if(id==='lmodeSel'){S.lmode=v;}
  else if(id==='smSort'){S.smF=S.smF||{};S.smF.sort=v;}
  else if(id==='smFree'){S.smF=S.smF||{};S.smF.free=e.target.checked;}
+ else if(id==='smQ'||id==='smMin'||id==='smAge'||id==='smWage'){S.smF=S.smF||{};S.smF[{smQ:'q',smMin:'min',smAge:'age',smWage:'wage'}[id]]=v;}
  else if(id==='formSel'){setFormation(v);S.sel=null;}
- if(id==='oopSel'){const t=T(S.user);t.oop=v||null;t.oopMap=null;S.oopSel=null;}
+ else if(id==='oopSel'){const t=T(S.user);t.oop=v||null;t.oopMap=null;S.oopSel=null;}
  else if(id==='cupC'){S.cupC=+v;}
  else if(id==='hiC'){S.hiC=+v;}
  else if(id==='t-cap'||id==='t-pk'||id==='t-fk'||id==='t-ck'){T(S.user)[id.slice(2)]=v||null;}

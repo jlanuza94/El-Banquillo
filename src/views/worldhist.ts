@@ -1,14 +1,14 @@
 /* El Banquillo · views/worldhist.ts — Enciclopedia de temporadas, salón de la fama y récords del mundo. */
 // @ts-nocheck — usa el estado heredado S.
 import {esc,money} from '../core';
-import {COUNTRIES,LV_SH,SPN} from '../data';
+import {ALLN,COUNTRIES,LV_SH,SPN} from '../data';
 import {S} from '../state';
 import {CONTS,cupName} from '../competitions';
 import {TOURN} from '../nations';
 import {flag} from '../flags';
 import {clubRecords} from '../worldhist';
 
-const fl=c=>flag(COUNTRIES[c].code,'xs');
+const fl=c=>flag((ALLN[c]||COUNTRIES[c]||{code:'---'}).code,'xs');
 /** Historia → Enciclopedia: cada temporada con sus campeones, premios y el gran fichaje. */
 export function enciclopediaHTML(){
  const E=(S.ency||[]).slice().reverse();if(!E.length)return `<section class="panel"><div class="empty">La enciclopedia se escribe al terminar cada temporada.</div></section>`;
@@ -21,7 +21,7 @@ export function enciclopediaHTML(){
  ${P.conts.map(x=>`<span>${esc(CONTS[x.i]?CONTS[x.i].n:'Continental')}</span><b>${esc(x.w)}</b>`).join('')}${P.cwc?`<span>Mundial de Clubes</span><b>${esc(P.cwc)}</b>`:''}
  ${P.ballon?`<span>Balón de Oro</span><b>${esc(P.ballon.name)} · ${esc(P.ballon.club)}</b>`:''}${P.boot?`<span>Bota de Oro</span><b>${esc(P.boot.name)} · ${P.boot.g} goles</b>`:''}${P.young?`<span>Mejor joven</span><b>${esc(P.young.name)}</b>`:''}
  ${P.transfer?`<span>Fichaje del año</span><b>${esc(P.transfer.name)}: ${esc(P.transfer.from)} → ${esc(P.transfer.to)} · ${money(P.transfer.fee)}</b>`:''}
- ${intl.map(t=>`<span>${esc(t.n)} ${t.year}</span><b>${fl(t.champ)} ${esc(COUNTRIES[t.champ].n)}</b>`).join('')}</div></section>
+ ${intl.map(t=>`<span>${esc(t.n)} ${t.year}</span><b>${fl(t.champ)} ${esc((ALLN[t.champ]||{n:'?'}).n)}</b>`).join('')}</div></section>
  <section class="panel"><div class="panel-h"><h2>Copas nacionales</h2></div><div class="kv" style="margin-top:0">${P.cups.map(x=>`<span>${fl(x.c)} ${esc(cupName(x.c))}</span><b>${esc(x.w)}</b>`).join('')}</div></section>
  <section class="panel"><div class="panel-h"><h2>Tu temporada</h2></div><p style="margin:0">${esc(P.me.club)}: ${P.me.pos}º en ${esc(P.me.lg)}${P.me.champ?' · <b>¡campeón!</b>':P.me.up?' · <b>ascenso</b>':P.me.down?' · descenso':''}.</p></section></div></div>`;
 }

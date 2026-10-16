@@ -5,7 +5,7 @@ import {nC,wcs} from './state';
 import {retosNT} from './retos';
 import {unlock} from './club';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
-import {COUNTRIES,GRP} from './data';
+import {ALLN,COUNTRIES,GRP,NATIONS} from './data';
 import {PL,S,T,seasonLabel,squad} from './state';
 import {news} from './world';
 import {poisson} from './engine';
@@ -19,7 +19,15 @@ export const summerYear=(n=S.seasonN)=>2026+n;
 export function tournamentsIn(n=S.seasonN){const y=summerYear(n);return y%4===2?['wc']:y%4===0?['eu','ca']:[];}
 /** Próximo verano con torneos: [n, lista]. */
 export function nextTournaments(){for(let n=S.seasonN;n<S.seasonN+4;n++){const t=tournamentsIn(n);if(t.length)return[n,t];}return[S.seasonN,[]];}
-const members=k=>(k==='wc'?wcs():k==='eu'?EUROPE:AMERICA).filter(c=>c<nC());
+const NN=COUNTRIES.length,NX=NN+NATIONS.length;
+/** Selección sin liga ni jugadores en el juego (solo nivel). */
+export const isV=c=>c>=NN;
+export const natName=c=>(ALLN[c]||{n:'?'}).n;
+const vStr=c=>NATIONS[c-NN].top;
+/** Participantes: las selecciones con liga y, hasta completar el cupo, las mejores del ranking de cada confederación. */
+export function members(k){initIntl();const base=(k==='wc'?wcs():k==='eu'?EUROPE:AMERICA).filter(c=>c<nC()),conf=k==='eu'?['eu']:k==='ca'?['sa','na']:null,size=k==='wc'?32:16;
+ const extra=NATIONS.map((x,i)=>NN+i).filter(c=>!conf||conf.includes(NATIONS[c-NN].conf)).sort((a,b)=>(S.intl.elo[b]??0)-(S.intl.elo[a]??0));
+ return base.concat(extra.slice(0,Math.max(0,size-base.length)));}
 
 /* ---------- Jugadores y convocatorias ---------- */
 const NEED={POR:3,DEF:8,MED:7,DEL:5};
@@ -37,37 +45,54 @@ export function xiOf(ids){const ps=ids.map(PL).filter(p=>p&&!p.inj).sort((a,b)=>
 export const strengthOf=ids=>{const xi=xiOf(ids);return xi.length?xi.reduce((a,p)=>a+p.ovr,0)/xi.length:40;};
 
 /* ---------- Ranking (tipo Elo) ---------- */
-export function initIntl(){if(S.intl)return;S.intl={elo:COUNTRIES.map((_,c)=>Math.round(1300+strengthOf(autoCall(c))*6)),hist:[],last:null,titles:COUNTRIES.map(()=>({wc:0,eu:0,ca:0}))};}
+export function initIntl(){if(!S.intl)S.intl={elo:COUNTRIES.map((_,c)=>Math.round(1300+strengthOf(autoCall(c))*6)),hist:[],last:null,titles:COUNTRIES.map(()=>({wc:0,eu:0,ca:0}))};
+ // selecciones sin liga (también en partidas antiguas)
+ for(let c=NN;c<NX;c++){if(S.intl.elo[c]==null)S.intl.elo[c]=Math.round(1300+vStr(c)*6);if(!S.intl.titles[c])S.intl.titles[c]={wc:0,eu:0,ca:0};}}
+/** Ranking de todas las selecciones (con y sin liga). */
+export const rankAll=()=>{initIntl();return Array.from({length:NX},(_,i)=>i).filter(c=>c<nC()||isV(c)).sort((a,b)=>(S.intl.elo[b]??0)-(S.intl.elo[a]??0));};
+export const vLevel=c=>isV(c)?NATIONS[c-NN].top:null;
 export const ranking=()=>wcs().sort((a,b)=>(S.intl.elo[b]??1500)-(S.intl.elo[a]??1500));
 const eloUpd=(a,b,ga,gb,k=30)=>{const E=1/(1+10**((S.intl.elo[b]-S.intl.elo[a])/400)),Sa=ga>gb?1:ga<gb?0:.5,d=Math.round(k*(Sa-E));S.intl.elo[a]+=d;S.intl.elo[b]-=d;};
 
 /* ---------- Partido entre selecciones ---------- */
 /** Simula un partido. Si ko, hay penaltis. Suma internacionalidades y goles a los jugadores. */
 export function ntMatch(a,b,ko,k=30){
- const ca=callOf(a),cb=callOf(b),sa=strengthOf(ca),sb=strengthOf(cb),d=(sa-sb)/9+(S.intl.elo[a]-S.intl.elo[b])/900;
+ const ca=isV(a)?[]:callOf(a),cb=isV(b)?[]:callOf(b),sa=isV(a)?vStr(a):strengthOf(ca),sb=isV(b)?vStr(b):strengthOf(cb),d=(sa-sb)/9+(S.intl.elo[a]-S.intl.elo[b])/900;
  const ga=poisson(1.25*Math.exp(d/2)),gb=poisson(1.25*Math.exp(-d/2));
- [[ca,ga],[cb,gb]].forEach(([ids,g])=>{const xi=xiOf(ids);const subs=shuffle(ids.filter(id=>!xi.some(p=>p.id===id))).slice(0,4).map(PL);
+ [[ca,ga],[cb,gb]].forEach(([ids,g])=>{if(!ids.length)return;const xi=xiOf(ids);const subs=shuffle(ids.filter(id=>!xi.some(p=>p.id===id))).slice(0,4).map(PL);
   [...xi,...subs].forEach(p=>{p.caps=(p.caps||0)+1;});
   for(let i=0;i<g;i++){const w=xi.flatMap(p=>Array(grp(p)==='DEL'?6:grp(p)==='MED'?3:grp(p)==='DEF'?1:0).fill(p));if(w.length){const s=pick(w);s.ig=(s.ig||0)+1;}}});
  let pen=null;if(ko&&ga===gb){const pa=.5+clamp((sa-sb)/80,-.15,.15);pen=rnd()<pa?[5,4]:[4,5];}
  eloUpd(a,b,ga+(pen?(pen[0]>pen[1]?.1:-.1):0),gb,k);
  return{a,b,ga,gb,pen,w:ga>gb||(pen&&pen[0]>pen[1])?a:b};
 }
-const fmt=r=>`${COUNTRIES[r.a].n} ${r.ga}-${r.gb} ${COUNTRIES[r.b].n}${r.pen?` (pen. ${r.pen[0]}-${r.pen[1]})`:''}`;
+const fmt=r=>`${natName(r.a)} ${r.ga}-${r.gb} ${natName(r.b)}${r.pen?` (pen. ${r.pen[0]}-${r.pen[1]})`:''}`;
 
 /** Juega un torneo completo: grupos y eliminatorias. Devuelve el resumen. */
 export function playTournament(k){
- const tm=shuffle(members(k).slice()),T0={k,n:TOURN[k].n,season:seasonLabel(),groups:[],ko:[],champ:null,runner:null,top:null};
- const nG=tm.length>=8?2:1,groups=Array.from({length:nG},(_,g)=>tm.filter((_,i)=>i%nG===g));
- const gTables=groups.map(gs=>{const tb=gs.map(c=>({c,pts:0,gf:0,ga:0}));const ms=[];
+ const tm=shuffle(members(k).slice()),T0={k,n:TOURN[k].n,season:seasonLabel(),groups:[],ko:[],champ:null,runner:null,top:null,teams:tm.slice()};
+ const groupStage=gs=>{const tb=gs.map(c=>({c,pts:0,gf:0,ga:0}));const ms=[];
   for(let i=0;i<gs.length;i++)for(let j=i+1;j<gs.length;j++){const r=ntMatch(gs[i],gs[j],false);ms.push(r);
    const A=tb.find(x=>x.c===r.a),B=tb.find(x=>x.c===r.b);A.gf+=r.ga;A.ga+=r.gb;B.gf+=r.gb;B.ga+=r.ga;if(r.ga>r.gb)A.pts+=3;else if(r.ga<r.gb)B.pts+=3;else{A.pts++;B.pts++;}}
-  tb.sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||S.intl.elo[y.c]-S.intl.elo[x.c]);return{tb,ms};});
- T0.groups=gTables.map(g=>({tb:g.tb,ms:g.ms.map(fmt)}));
+  tb.sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||S.intl.elo[y.c]-S.intl.elo[x.c]);return{tb,ms};};
  let fin;
+ if(tm.length>=12){
+  // grupos de 4 (los cabezas de serie, repartidos), pasan dos y eliminatorias hasta la final
+  const nG=Math.floor(tm.length/4),seed=tm.slice().sort((a,b)=>S.intl.elo[b]-S.intl.elo[a]).slice(0,nG*4),groups=Array.from({length:nG},()=>[]);
+  for(let pot=0;pot<4;pot++){const P=shuffle(seed.slice(pot*nG,pot*nG+nG));P.forEach((c,g)=>groups[g].push(c));}
+  const G=groups.map(groupStage);T0.groups=G.map(g=>({tb:g.tb,ms:g.ms.map(fmt)}));
+  let round=[];for(let g=0;g<nG;g+=2){const a=G[g],b=G[g+1]||G[0];round.push([a.tb[0].c,b.tb[1].c],[b.tb[0].c,a.tb[1].c]);}
+  const RN={8:'Octavos de final',4:'Cuartos de final',2:'Semifinales'};
+  while(round.length>1){const rs=round.map(([a,b])=>ntMatch(a,b,true,40));T0.ko.push({rd:RN[round.length]||`Ronda de ${round.length*2}`,ms:rs.map(fmt)});if(round.length===2)T0.semi=rs.flatMap(r=>[r.a,r.b]);
+   const w=rs.map(r=>r.w);round=[];for(let i=0;i<w.length;i+=2)round.push([w[i],w[i+1]]);}
+  fin=round[0];
+ }else{
+ const nG=tm.length>=8?2:1,groups=Array.from({length:nG},(_,g)=>tm.filter((_,i)=>i%nG===g));
+ const gTables=groups.map(groupStage);
+ T0.groups=gTables.map(g=>({tb:g.tb,ms:g.ms.map(fmt)}));
  if(tm.length===3){fin=[gTables[0].tb[0].c,gTables[0].tb[1].c];}
  else{const semis=nG===2?[[gTables[0].tb[0].c,gTables[1].tb[1].c],[gTables[1].tb[0].c,gTables[0].tb[1].c]]:[[gTables[0].tb[0].c,gTables[0].tb[3].c],[gTables[0].tb[1].c,gTables[0].tb[2].c]];
-  const sr=semis.map(([a,b])=>ntMatch(a,b,true,40));T0.ko.push({rd:'Semifinales',ms:sr.map(fmt)});T0.semi=sr.flatMap(r=>[r.a,r.b]);fin=sr.map(r=>r.w);}
+  const sr=semis.map(([a,b])=>ntMatch(a,b,true,40));T0.ko.push({rd:'Semifinales',ms:sr.map(fmt)});T0.semi=sr.flatMap(r=>[r.a,r.b]);fin=sr.map(r=>r.w);}}
  const f=ntMatch(fin[0],fin[1],true,50);T0.ko.push({rd:'Final',ms:[fmt(f)]});T0.champ=f.w;T0.runner=f.w===f.a?f.b:f.a;
  S.intl.titles[T0.champ][k]++;
  // máximo goleador del torneo: el que más goles internacionales sumó en este torneo
@@ -81,20 +106,20 @@ export function placeOf(T0,c){return T0.champ===c?1:T0.runner===c?2:(T0.semi||[]
 export function summerTournaments(){
  initIntl();const ks=tournamentsIn(S.seasonN-1);if(!ks.length)return;
  const before=Object.fromEntries(Object.values(S.players).map(p=>[p.id,p.ig||0]));
- ks.forEach(k=>{const T0=playTournament(k);T0.year=summerYear(S.seasonN-1);
-  const sc=Object.values(S.players).filter(p=>members(k).includes(p.nat)).map(p=>[p,(p.ig||0)-(before[p.id]||0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1])[0];
+ ks.forEach(k=>{const T0=playTournament(k);T0.year=summerYear(S.seasonN-1);const MK=new Set(T0.teams);
+  const sc=Object.values(S.players).filter(p=>MK.has(p.nat)).map(p=>[p,(p.ig||0)-(before[p.id]||0)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1])[0];
   if(sc)T0.top={name:sc[0].name,g:sc[1],c:sc[0].nat};
   S.intl.hist.unshift(T0);S.intl.hist=S.intl.hist.slice(0,12);
   // los campeones se revalorizan; los de tu club vuelven contentos
-  callOf(T0.champ).map(PL).forEach(p=>{if(!p)return;p.value=r2(p.value*1.06);if(p.team===S.user)p.hap=clamp((p.hap??70)+6,0,100);});
-  const mine=squad(S.user).filter(p=>callOf(p.nat).includes(p.id)&&members(k).includes(p.nat));
-  news(`${T0.n} ${summerYear(S.seasonN-1)}: ¡${COUNTRIES[T0.champ].n} campeona! Final ante ${COUNTRIES[T0.runner].n}.${T0.top?` Máximo goleador: ${T0.top.name} (${T0.top.g}).`:''}${mine.length?` De tu club fueron ${mine.length}: ${mine.map(p=>p.name).join(', ')}.`:''}`,'',{cat:'com',subj:`${T0.n}: campeona ${COUNTRIES[T0.champ].n}`,act:[{l:'Ver selecciones',a:'view',v:'selecciones'}]});
+  (isV(T0.champ)?[]:callOf(T0.champ)).map(PL).forEach(p=>{if(!p)return;p.value=r2(p.value*1.06);if(p.team===S.user)p.hap=clamp((p.hap??70)+6,0,100);});
+  const mine=squad(S.user).filter(p=>MK.has(p.nat)&&callOf(p.nat).includes(p.id));
+  news(`${T0.n} ${summerYear(S.seasonN-1)}: ¡${natName(T0.champ)} campeona! Final ante ${natName(T0.runner)}.${T0.top?` Máximo goleador: ${T0.top.name} (${T0.top.g}).`:''}${mine.length?` De tu club fueron ${mine.length}: ${mine.map(p=>p.name).join(', ')}.`:''}`,'',{cat:'com',subj:`${T0.n}: campeona ${COUNTRIES[T0.champ].n}`,act:[{l:'Ver selecciones',a:'view',v:'selecciones'}]});
   if(S.nt&&members(k).includes(S.nt.c))ntJudge(T0);
  });
 }
 /** La federación juzga al seleccionador según lo esperado por el ranking. */
 function ntJudge(T0){
- const c=S.nt.c,place=placeOf(T0,c),field=members(T0.k),rk=ranking().filter(x=>field.includes(x)).indexOf(c)+1;
+ const c=S.nt.c,place=placeOf(T0,c),field=T0.teams||members(T0.k),rk=ranking().filter(x=>field.includes(x)).indexOf(c)+1;
  const exp=rk<=1?1.6:rk<=2?2.2:rk<=4?3:4,diff=exp-place;
  S.nt.res=S.nt.res||[];S.nt.res.unshift({season:String(T0.year),n:T0.n,place});
  S.mgr.rep=clamp(S.mgr.rep+diff*3+(place===1?6:0),0,100);
