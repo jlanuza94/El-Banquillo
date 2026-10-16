@@ -4,7 +4,7 @@ import {setValueNow} from './economy';
 import {injDaysMult} from './staff';
 import {clamp,gauss,pick,r2,r3,ri,rnd,shuffle} from './core';
 import {AT_PHYS,ATTRS,COUNTRIES,GRP,NAMES,PERS_W,SP_ALT,W,W_OLD,WIDE,newSt,spRandom} from './data';
-import {RT,LG,S,T,rt,setTeam,squad} from './state';
+import {RT,LG,S,T,cwF,rt,setTeam,squad} from './state';
 export const rateA=(a,pos)=>{const w=W[pos];let s=0;for(const k in w)s+=w[k]*a[k];return s;};
 export function wpick(o){const ks=Object.keys(o);let t=ks.reduce((s,k)=>s+o[k],0),r=rnd()*t;for(const k of ks){r-=o[k];if(r<=0)return k;}return ks[0];}
 export function genAttrs(pos,tg){
@@ -20,7 +20,9 @@ export function genAttrs(pos,tg){
 }
 /** Valor de mercado: media, edad, potencial, forma, liga, contrato… (ver economy.ts). */
 export function setValue(p){setValueNow(p);}
-export const baseWage=p=>Math.max(.0005,Math.round(p.value*7)/2000);
+/** Los sueldos siguen a la riqueza del país: en Bolivia o Gales se cobra mucho menos que en Inglaterra por el mismo nivel. */
+const wageLgF=p=>{const t=p.team!=null&&S.teams&&T(p.team);if(!t)return 1;const L=LG(t.lg);return L?Math.pow(cwF(L.c,L.lv),.65):1;};
+export const baseWage=p=>Math.max(.0002,Math.round(p.value*7*wageLgF(p))/2000);
 export const signWage=p=>r3(Math.max(p.wage,baseWage(p))*1.1);
 export const endYear=p=>2025+S.seasonN+p.contract;
 export function refresh(p){p.ovr=Math.round(rateA(p.at,p.pos)*10);setValue(p);}

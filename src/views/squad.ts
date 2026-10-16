@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {yclHTML} from '../youthcl';
 import {tlHTML} from '../timeline';
 import {kitSVG,myKit} from '../kit';
 import {fiPlanHTML,heatHTML,percHTML} from './fiplus';
@@ -126,8 +127,8 @@ export function canteraView(){
   ${L?`<div class="res me"><div class="h"><span>${esc(ylName(L.h))}</span></div><div class="s">${L.hg} - ${L.ag}</div><div class="a"><span>${esc(ylName(L.a))}</span></div><div class="sc">Último partido · jornada ${L.round+1}</div></div>`:'<p class="small muted" style="margin:0 0 8px">La liga juvenil se juega cada dos jornadas de liga.</p>'}
   <div class="tbl"><table><thead><tr><th>#</th><th>Equipo</th><th class="r">PJ</th><th class="r">DG</th><th class="r">Pts</th></tr></thead><tbody>${tb.map((r,i)=>`<tr class="${r.id===YOUTH_USER?'me':''}"><td class="n">${i+1}</td><td>${esc(ylName(r.id))}</td><td class="n">${r.pj}</td><td class="n">${r.gf-r.gc>0?'+':''}${r.gf-r.gc}</td><td class="pts">${r.pts}</td></tr>`).join('')}</tbody></table></div>
   <p class="small muted" style="margin:8px 0 0">Juegan tus 11 mejores canteranos y algún suplente; si no llegas a 11, completan el equipo chavales sin ficha de nivel bajo. Los que juegan mejoran más rápido. Tu fuerza: ${Math.round(userYouthStr())}.</p></section>`;}
- const tb=vtab('can',[['u19','Sub-19'],['can',hasCantera(S.user)?'Cantera':'Cantera 🔒'],['vida','Vida de la cantera'],['ojeo','Ojeadores'],['inf','Informes'],...(yl?[['sub19','Liga sub-19']]:[])],'u19');
- return tb.bar+(tb.cur==='u19'?u19P:tb.cur==='can'?(hasCantera(S.user)?academy:noCan):tb.cur==='vida'?life:tb.cur==='ojeo'?scouts:tb.cur==='inf'?reports:yl||academy);
+ const tb=vtab('can',[['u19','Sub-19'],['can',hasCantera(S.user)?'Cantera':'Cantera 🔒'],['vida','Vida de la cantera'],['ojeo','Ojeadores'],['inf','Informes'],...(yl?[['sub19','Liga sub-19']]:[]),['ycl',S.ycl&&S.ycl.ci===1?'Libertadores Sub-20':'Champions Sub-19']],'u19');
+ return tb.bar+(tb.cur==='u19'?u19P:tb.cur==='can'?(hasCantera(S.user)?academy:noCan):tb.cur==='vida'?life:tb.cur==='ojeo'?scouts:tb.cur==='inf'?reports:tb.cur==='ycl'?yclHTML(esc):yl||academy);
 }
 /** Campo de las instrucciones (como el FMM): en defensa, la altura de la línea, hasta dónde presionas y la dureza;
  * en ataque, la anchura, el ritmo y el estilo con flechas. */

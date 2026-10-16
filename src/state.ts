@@ -38,17 +38,20 @@ export const atCell=v=>`<span class="at ${qc(v)}">${Math.round(v*10)}</span>`;
 /* economy scales with league level */
 export const unit=rep=>.4*Math.pow(2.5,(rep-74.5)/10);
 /** Riqueza de cada país (como en el mundo real): la Premier tiene mucho más dinero; Portugal, Argentina o Escocia, mucho menos.
- * Orden de COUNTRIES: España, Inglaterra, Italia, Alemania, Francia, Portugal, Brasil, Argentina, Países Bajos, México, Bélgica, Turquía, Escocia, EE. UU., Japón, Colombia. */
-export const CWEALTH=[1,2.4,1,1.25,.95,.45,.5,.3,.6,.7,.5,.55,.35,.9,.7,.3,.35,.3,.6,.7,.55,.6,.55,.4,.35,.3,.25,.6,1.2,.3,.25,.22,.15,.15,.4,.3,.3];
+ * Sale de los ingresos reales por club de cada liga (LaLiga = 1; la Premier, 1,9 veces), algo suavizado para que las ligas modestas sigan siendo jugables.
+ * Mismo orden que COUNTRIES. */
+export const CWEALTH=[1,1.65,.89,1.24,.9,.43,.92,.33,.48,.69,.43,.5,.45,1.08,.97,.21,.19,.19,.33,.4,.38,.4,.37,.34,.36,.23,.2,.36,1.07,.15,.16,.15,.15,.15,.15,.15,.27];
 /** La riqueza del país pesa sobre todo arriba: en las categorías bajas todos se parecen más. */
 export const cwF=(c,lv)=>1+((CWEALTH[c]??.5)-1)*(lv===0?1:lv===1?.7:lv===2?.45:.25);
 /** «Unidad» de dinero de una liga: su nivel y lo rico que es su país. */
 export const lunit=id=>{const L=LG(id);return unit(L.rep)*cwF(L.c,L.lv);};
 /** Los gigantes de cada liga (como Madrid, Barça y Atlético en España, o PSG en Francia) tienen muchísimo más dinero que el resto. */
-const GIANTS={0:[3.2,3,2],1:[2,1.9,1.8,1.7,1.5,1.4],2:[2.2,1.9,1.7,1.4],3:[3.2,1.7,1.4],4:[3.6,1.4,1.2],5:[2.4,2.2,1.8],6:[1.8,1.7,1.6,1.5],7:[2.2,2],8:[2,1.8,1.6]};
+const GIANTS={ESP:[3.2,3,2],ING:[2,1.9,1.8,1.7,1.5,1.4],ITA:[2.2,1.9,1.7,1.4],ALE:[3.2,1.7,1.4],FRA:[3.6,1.4,1.2],PRT:[2.4,2.2,1.8],BRA:[1.8,1.7,1.6,1.5],ARG:[2.2,2],NED:[2,1.8,1.6],
+ MEX:[1.8,1.7,1.6,1.5],BEL:[1.9,1.7,1.5],TUR:[2,1.9,1.8,1.4],SCO:[3.2,3],USA:[1.5,1.4,1.3],JPN:[1.4,1.3],COL:[1.8,1.7],CRO:[2.6,2],URU:[2.4,2.3],DEN:[2,1.7],SUI:[2,1.8],SWE:[1.7,1.5,1.4],
+ NOR:[2,1.6],AUT:[3,1.6],POL:[1.8,1.6],GRE:[2.2,2,1.8,1.6],CHI:[2,1.8],ECU:[2,1.8],KOR:[1.6,1.5],KSA:[3,2.8,2.4,2.2],MAR:[2,1.9],PER:[2,1.9,1.5],PAR:[2,1.9],BOL:[1.8,1.7],VEN:[1.5,1.4],IRL:[1.8,1.6],GAL:[2.5],HUN:[3,1.4]};
 /** Factor de riqueza de un club: los grandes de Primera según su reputación; en las categorías bajas, 1. */
 export function clubWF(t){const L=LG(t.lg);if(!L||L.lv>0)return 1;RT.cwf=RT.cwf&&RT.cwf.s===S.seasonN?RT.cwf:{s:S.seasonN,m:{}};
- let r=RT.cwf.m[L.id];if(!r){r=RT.cwf.m[L.id]={};lgTeams(L.id).slice().sort((a,b)=>b.rep-a.rep).forEach((x,i)=>{const G=GIANTS[L.c]||[2,1.5,1.3];r[x.id]=i<G.length?G[i]:i>=14?.85:1;});}
+ let r=RT.cwf.m[L.id];if(!r){r=RT.cwf.m[L.id]={};lgTeams(L.id).slice().sort((a,b)=>b.rep-a.rep).forEach((x,i)=>{const G=GIANTS[(COUNTRIES[L.c]||{}).code]||[2,1.5,1.3];r[x.id]=i<G.length?G[i]:i>=14?.85:1;});}
  return r[t.id]??1;}
 /** Parte de la tele que se lleva cada club: los grandes cobran más. */
 export const tvShare=t=>.7+.3*clubWF(t);

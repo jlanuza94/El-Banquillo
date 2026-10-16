@@ -657,6 +657,17 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // Champions Sub-19 / Libertadores Sub-20 y economía por país
+    const YC = await import('../src/youthcl'); const { u19List } = await import('../src/u19'); const wk0 = S.week, ycl0 = S.ycl, ch0 = S.ylChampS; S.ycl = null; S.ylChampS = S.seasonN - 1;
+    const pj0 = u19List().reduce((a, p) => a + (p.yst ? p.yst.pj : 0), 0);
+    for (let w = 0; w <= 34; w++) { S.week = w; YC.yclWeekly(); }
+    const Y = S.ycl; ok(Y && !Y.none && Y.me && Y.champ != null && Y.ko.length >= 3, `competición juvenil completa: ${Y && Y.n} (campeón ${Y && Y.champ != null ? YC.yclName(Y.champ) : '—'})`);
+    ok(u19List().reduce((a, p) => a + (p.yst ? p.yst.pj : 0), 0) > pj0, 'tus canteranos juegan la competición');
+    S.view = 'cantera'; S.vt = { can: 'ycl' }; render(); ok(app.textContent.includes(Y.n), 'pestaña de la competición juvenil en la cantera'); S.vt = {}; S.view = 'inicio';
+    S.week = wk0; S.ycl = ycl0; S.ylChampS = ch0;
+    const ST = await import('../src/state'); const D = await import('../src/data'); const ix = c => D.COUNTRIES.findIndex(x => x.code === c);
+    const top = c => ST.lunit(ST.findLg(ix(c), 0).id); ok(top('ING') > top('ESP') && top('ESP') > top('ITA') && top('ITA') > top('PRT') && top('PRT') > top('CRO') && top('CRO') > top('BOL'), 'la Premier es la más rica y las ligas modestas, mucho menos');
+  }
   { // mundo fijo (mismos clubes y jugadores) y licencias que se desbloquean jugando
     const ST = await import('../src/state'); const W = await import('../src/world'); const keep = ST.S, rt0 = ST.RT.worldMode;
     const snap = () => [ST.S.teams.slice(0, 40).map(t => t.name).join('|'), Object.values(ST.S.players).slice(0, 300).map(p => p.name + p.ovr).join('|'), Object.values(ST.S.players).filter(p => p.team === null).length];
