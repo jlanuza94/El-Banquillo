@@ -657,6 +657,17 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // ronda: sin balón coloca en su sitio, lista ordenable, columnas de plantilla, páginas del mercado y ficha compacta con Hablar
+    const E = await import('../src/events'); const O = await import('../src/oop'); const t = T(S.user), keepF = t.formation, keepO = t.oop, keepL = t.lineup.slice();
+    t.formation = '4-4-2'; t.oop = '4-3-3'; t.oopMap = null; const m = O.oopMap(t), j = m[5]; ok(E.ipIdx(j) === 5, 'un hueco de sin balón corresponde a su puesto con balón');
+    t.formation = keepF; t.oop = keepO; t.lineup = keepL;
+    S.view = 'tacticas'; S.vt = { tac: 'ali' }; S.lsort = 'ovr'; render(); ok(!!app.querySelector('#lsortSel') && !!app.querySelector('.vsh'), 'lista ordenable y fichas con camiseta'); S.lsort = 'pos';
+    S.view = 'plantilla'; S.plTab = 'jug'; S.plCols = 'eco'; render(); ok(app.textContent.includes('Sueldo/sem') && app.textContent.includes('Cláusula'), 'plantilla: columnas de valor y contrato'); S.plCols = 'at';
+    S.view = 'mercado'; S.mk.tab = 'buy'; S.mk.page = 1; render(); ok(!!app.querySelector('.pager .pgb.on') && !app.querySelector('[data-a=mk-more]'), 'mercado por páginas');
+    S.mk.adv = true; render(); ok(!!app.querySelector('#mkpos') && !!app.querySelector('#mkamin'), 'línea y edad desde/hasta en filtros'); S.mk.adv = false; S.mk.page = 0;
+    const pp = squad(S.user)[1]; S.modal = { type: 'ficha', id: pp.id }; S.vt = {}; render(); ok(!!app.querySelector('.pinfo2 .pit.mon') && app.querySelector('.pinfo2').textContent.includes('Sueldo'), 'ficha: valor y sueldo arriba');
+    S.vt.fi = 'hab'; render(); ok(!!app.querySelector('.fibody [data-a=chat-opt]') || app.textContent.includes('Ya has hablado'), 'pestaña Hablar en la ficha'); S.modal = null; S.vt = {}; S.view = 'inicio';
+  }
   { // ofertas por rendimiento, proyecto, carrera por joyas, amistosos con taquilla y premios de tu liga
     const Ca = await import('../src/career'); const jo = S.jobOffers.length; S.perfOff = null; const o = Ca.perfOffer(1, true) || Ca.perfOffer(1, true) || Ca.perfOffer(1, true) || Ca.perfOffer(1, true);
     ok(o && LG(T(o.team).lg).lv < LG(uLg()).lv && LG(T(o.team).lg).c === LG(uLg()).c && o.bud > 0, 'te llama un club de más arriba de tu país' + (o ? ': ' + T(o.team).name : ''));
@@ -737,7 +748,7 @@ const app = document.getElementById('app')!;
     const { markArrival } = await import('../src/devplus'); const q = squad(S.user)[0], h = q.h0; q.h0 = null; markArrival(q); ok(q.h0[3] === q.value, 'al llegar se apunta su valor'); q.ovr += 20;
     S.view = 'plantilla'; S.plTab = 'joy'; render(); ok(app.textContent.includes('Revalorización') && app.textContent.includes('Tu mejor apuesta'), 'pestaña Mis joyas'); q.ovr -= 20; q.h0 = h; S.plTab = 'jug';
     const t = T(S.user), p0 = PL(t.lineup[1]), e0 = p0.energy; p0.energy = 50; S.view = 'tacticas'; S.vt = { tac: 'ali' }; render();
-    ok(!!app.querySelector('.vcond') && app.textContent.includes('Rotar cansados'), 'condición en el campo y aviso para rotar'); p0.energy = e0; S.vt = {}; S.view = 'inicio';
+    ok(!!app.querySelector('.vcb') && app.textContent.includes('Rotar cansados'), 'condición en el campo y aviso para rotar'); p0.energy = e0; S.vt = {}; S.view = 'inicio';
   }
   { // pestañas Por puesto y Jerarquía, numeración de la pizarra libre y filtros del mercado en hoja aparte
     const FB = await import('../src/freeboard'); const t = T(S.user), f0 = t.formation, fr0 = t.free;

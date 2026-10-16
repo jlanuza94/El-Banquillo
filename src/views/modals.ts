@@ -38,6 +38,12 @@ import {atCellS,keyAttrs,nameBtn,pBadgeS,resRow} from './common';
 import {fichaHTML} from './squad';
 import {reportHTML,tacReport} from '../tacreport';
 import {helpHTML} from '../help';
+/** Charla con un jugador tuyo (en su ficha o en una ventana): por qué está como está y qué le puedes decir. */
+export function chatPanel(p,msg,kind){const done=p.tw===S.week;
+ return `<div class="row small muted" style="margin-top:6px">${posChip(p)}<span>${hapTag(p)} · ${ROLES[p.role||'ro'].n} · ${PERS[p.per||'nor'].n}</span></div>
+  <ul class="news" style="margin-top:10px">${hapReasons(p).map(x=>`<li class="${x[1]}"><span class="wk"></span><span class="t">${esc(x[0])}</span></li>`).join('')}</ul>
+  ${msg?`<div class="negmsg ${kind||''}">${esc(msg)}</div>`:''}
+  ${done?'<p class="small muted">Ya has hablado con él esta jornada.</p>':`<div class="chips" style="margin-top:12px">${p.role!=='cl'?'<button class="btn sm" data-a="chat-opt" data-v="min" data-id="'+p.id+'">Prometer más minutos</button>':''}<button class="btn sm" data-a="chat-opt" data-v="elo" data-id="${p.id}">Elogiar su rendimiento</button>${p.contract<=1&&!p.loan?'<button class="btn sm" data-a="chat-opt" data-v="ren" data-id="'+p.id+'">Prometer una renovación</button>':''}${p.req?'<button class="btn sm" data-a="chat-opt" data-v="pac" data-id="'+p.id+'">Pedirle paciencia</button>':''}</div>`}`;}
 export function modalView(){
  const md=S.modal;if(!md)return '';let body='';
  if(md.type==='ficha'){const p=PL(md.id);if(!p){S.modal=null;return '';}body=fichaHTML(p);}
@@ -77,12 +83,8 @@ export function modalView(){
   <p class="small muted" style="margin:10px 0 0">Tu credibilidad en el vestuario: <b>${Math.round(cred())}</b>/100. Si prometes algo y no lo cumples, baja y las promesas valen menos.</p>`
   :md.done?`<div class="negmsg ${md.done[1]||''}">${esc(md.done[0])}</div>`:''}
   <div class="acts">${m?'<button class="btn" data-a="modal-close">Luego</button>':'<button class="btn primary" data-a="modal-close">Cerrar</button>'}</div>`;}}
- else if(md.type==='chat'){const p=PL(md.id),done=p.tw===S.week;
-  body=`<div class="eyebrow">Hablar con el jugador</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
-  <div class="row small muted" style="margin-top:6px">${posChip(p)}<span>${hapTag(p)} · ${ROLES[p.role||'ro'].n} · ${PERS[p.per].n}</span></div>
-  <ul class="news" style="margin-top:10px">${hapReasons(p).map(x=>`<li class="${x[1]}"><span class="wk"></span><span class="t">${esc(x[0])}</span></li>`).join('')}</ul>
-  ${md.msg?`<div class="negmsg ${md.kind||''}">${esc(md.msg)}</div>`:''}
-  ${done?'<p class="small muted">Ya has hablado con él esta jornada.</p>':`<div class="chips" style="margin-top:12px">${p.role!=='cl'?'<button class="btn sm" data-a="chat-opt" data-v="min" data-id="'+p.id+'">Prometer más minutos</button>':''}<button class="btn sm" data-a="chat-opt" data-v="elo" data-id="${p.id}">Elogiar su rendimiento</button>${p.contract<=1&&!p.loan?'<button class="btn sm" data-a="chat-opt" data-v="ren" data-id="'+p.id+'">Prometer una renovación</button>':''}${p.req?'<button class="btn sm" data-a="chat-opt" data-v="pac" data-id="'+p.id+'">Pedirle paciencia</button>':''}</div>`}
+ else if(md.type==='chat'){const p=PL(md.id);
+  body=`<div class="eyebrow">Hablar con el jugador</div><h2 style="margin-top:4px">${esc(p.name)}</h2>${chatPanel(p,md.msg,md.kind)}
   <div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='loan'){const p=PL(md.id),st=S.loanTry[md.id]||{};
   body=`<div class="eyebrow">Cesión desde ${esc(T(p.team).name)}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>

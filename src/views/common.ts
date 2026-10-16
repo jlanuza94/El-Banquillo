@@ -139,7 +139,7 @@ export function tableHTML(tb,lg,compact){
 export {slotCoords} from '../freeboard';
 /** Coordenadas para el campo vertical: las líneas (defensa, medio, ataque…) repartidas a la misma distancia, del 13% al 72% de alto, y el portero abajo. La formación libre se respeta tal cual. */
 /** Campo en horizontal (el ataque hacia la derecha): pasa x (banda) e y (fondo, 13 = ataque, 88 = portería) a left/top en %. */
-export const hxy=(x,y)=>({l:7+(88-y)/75*84,t:5+x*.9});
+export const hxy=(x,y)=>({l:7+(88-y)/75*84,t:3+x*.94});
 export const hpos=(x,y)=>{const h=hxy(x,y);return `left:${h.l.toFixed(1)}%;top:${h.t.toFixed(1)}%`;};
 export function vCoords(f){const C=slotCoords(f);if(f===FREE)return C;const out=C.map(c=>({...c})),idx=out.map((c,i)=>i).filter(i=>i>0).sort((a,b)=>out[a].y-out[b].y),rows=[];
  idx.forEach(i=>{const r=rows[rows.length-1];if(r&&Math.abs(out[i].y-r.y0)<6)r.i.push(i);else rows.push({y0:out[i].y,i:[i]});});
