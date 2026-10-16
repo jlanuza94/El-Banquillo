@@ -42,6 +42,12 @@ export const CALS={
  ECU:{st:[1,20],brk:[16,3,'Parón entre etapas'],w:[3,17,20],wn:['de verano','de invierno'],tor:1},
  AUT:{st:[6,24],brk:[16,6,'Parón invernal'],w:[3,17,20],wn:['de verano','de invierno']},
  SUI:{st:[6,20],brk:[17,5,'Parón invernal'],w:[3,18,21],wn:['de verano','de invierno']},
+ PER:{st:[1,10],brk:[17,3,'Parón entre torneos'],w:[3,17,20],wn:['de verano','de invierno'],tor:1},
+ PAR:{st:[0,25],brk:[17,3,'Parón entre torneos'],w:[3,17,20],wn:['de verano','de invierno'],tor:1},
+ BOL:{st:[1,5],brk:[17,3,'Parón entre torneos'],w:[3,17,20],wn:['de verano','de invierno'],tor:1},
+ VEN:{st:[1,1],brk:[17,3,'Parón entre torneos'],w:[3,17,20],wn:['de verano','de invierno'],tor:1},
+ IRL:{st:[1,14],brk:[18,2,'Parón de verano'],w:[4,18,21],wn:['de invierno','de verano']},
+ HUN:{st:[6,25],brk:[17,5,'Parón invernal'],w:[3,17,20],wn:['de verano','de invierno']},
  COL:{st:[0,20],brk:[18,3,'Parón entre torneos'],w:[3,19,22],wn:['de pretemporada','de mitad de año'],tor:1},
 };
 const DEF_CAL=CALS.ESP;

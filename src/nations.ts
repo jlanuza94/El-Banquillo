@@ -6,7 +6,7 @@ import {nC,wcs} from './state';
 import {retosNT} from './retos';
 import {unlock} from './club';
 import {clamp,money,pick,r2,rnd,shuffle} from './core';
-import {ALLN,COUNTRIES,GRP,NATIONS,OLD_NAT_CODES} from './data';
+import {ALLN,COUNTRIES,GRP,NATIONS,NAT_CODES_V2,OLD_NAT_CODES} from './data';
 import {PL,S,T,seasonLabel,squad} from './state';
 import {news} from './world';
 import {poisson} from './engine';
@@ -186,11 +186,11 @@ export const ntSalary=()=>S.nt?NT_SAL(S.nt.c):0;
 
 /** Partidas de antes de los 30 países: las selecciones cambiaron de número. Se convierten una sola vez al abrirlas. */
 export function natMigrate(){
- if(!S||S.natV===2)return;S.natV=2;
- const oldNN=16,map=k=>{if(k==null||k<oldNN)return k;const code=OLD_NAT_CODES[k];if(!code)return k;const i=COUNTRIES.findIndex(x=>x.code===code);if(i>=0)return i;const j=NATIONS.findIndex(x=>x.code===code);return j>=0?NN+j:k;};
+ if(!S||S.natV===3)return;const from=S.natV===2?NAT_CODES_V2:OLD_NAT_CODES,oldNN=S.natV===2?30:16;S.natV=3;
+ const map=k=>{if(k==null||k<oldNN)return k;const code=from[k];if(!code)return k;const i=COUNTRIES.findIndex(x=>x.code===code);if(i>=0)return i;const j=NATIONS.findIndex(x=>x.code===code);return j>=0?NN+j:k;};
  if(S.mgr&&S.mgr.nat!=null)S.mgr.nat=map(S.mgr.nat);
  if(S.nt&&S.nt.c!=null)S.nt.c=map(S.nt.c);if(S.ntOffer!=null)S.ntOffer=map(S.ntOffer);(S.ntTitles||[]).forEach(x=>x.c=map(x.c));
- const I=S.intl;if(!I||I.v===2)return;I.v=2;
+ const I=S.intl;if(!I)return;I.v=3;
  const re=A=>{if(!A)return A;const out=Array.isArray(A)?[]:{};Object.keys(A).forEach(k=>{out[map(+k)]=A[k];});return out;};
  I.elo=re(I.elo);I.titles=re(I.titles);
  (I.hist||[]).forEach(T0=>{T0.champ=map(T0.champ);T0.runner=map(T0.runner);T0.semi=(T0.semi||[]).map(map);T0.teams=(T0.teams||[]).map(map);(T0.groups||[]).forEach(g=>(g.tb||[]).forEach(r=>r.c=map(r.c)));});

@@ -32,7 +32,7 @@ import {render,toast} from './views/common';
 export function townName(tw){const d=TOWNS[tw];const a=pick(d.A),b=pick(d.B);if(a.endsWith('-'))return a+b[0].toUpperCase()+b.slice(1);return (a+d.J+b).replace(/(.)\1\1/g,'$1$1');}
 export function buildWorld(seed){
  seed=seed==null?newSeed():seed>>>0;seedRng(seed);
- setS({v:4,natV:2,seed,diff:'normal',train:{focus:'eq',int:'n'},chem:60,famil:{},lastXI:[],trainLog:[],conts:null,scouts:[],scoutPool:[],academy:[],prospects:[],mgr:null,jobOffers:[],jobless:null,applied:{},nextId:1,seasonN:1,user:null,view:'inicio',leagues:[],teams:[],players:{},fixtures:[],news:[],fin:[],history:[],match:null,modal:null,sel:null,ligaRound:0,ligaLg:0,
+ setS({v:4,natV:3,seed,diff:'normal',train:{focus:'eq',int:'n'},chem:60,famil:{},lastXI:[],trainLog:[],conts:null,scouts:[],scoutPool:[],academy:[],prospects:[],mgr:null,jobOffers:[],jobless:null,applied:{},nextId:1,seasonN:1,user:null,view:'inicio',leagues:[],teams:[],players:{},fixtures:[],news:[],fin:[],history:[],match:null,modal:null,sel:null,ligaRound:0,ligaLg:0,
   mk:{tab:'buy',pos:'ALL',sort:'ovr',max:'',q:'',c:'ALL',lv:'',age:'',min:'',ok:true,last:false,limit:40},offers:{},neg:{},ren:{},lo:{},loanTry:{},short:[]});
  dirty();
  const used=new Set();

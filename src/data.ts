@@ -3,6 +3,8 @@
 import {pick} from './core';
 import {save} from './persist';
 export const NAMES={
+ hu:[['Bence','Dominik','Ádám','Levente','Máté','Balázs','Dániel','Gergő','Zsolt','Péter','Roland','Attila','Krisztián','Milos','Barnabás','Botond','Kristóf','Norbert','Tamás','Zoltán','Ákos','Márton','Benedek','Loïc','Endre'],
+  ['Nagy','Kovács','Tóth','Szabó','Horváth','Varga','Kiss','Molnár','Németh','Farkas','Balogh','Papp','Takács','Juhász','Lakatos','Mészáros','Oláh','Simon','Rácz','Fekete','Szalai','Szoboszlai','Gulácsi','Sallai','Kerkez']],
  hr:[['Luka','Ivan','Marko','Josip','Mateo','Ante','Petar','Filip','Domagoj','Mario','Dario','Nikola','Tomislav','Bruno','Karlo','Marin','Lovro','Dino','Toni','Stipe','Duje','Borna','Martin','Andrej','Igor'],
   ['Horvat','Kovačević','Babić','Marić','Jurić','Novak','Kovačić','Knežević','Vuković','Marković','Petrović','Matić','Perić','Pavlović','Blažević','Grgić','Božić','Radić','Šimić','Brkić','Lovren','Modrić','Perišić','Vida','Livaja']],
  sc:[['Lars','Erik','Anders','Mikkel','Jonas','Oskar','Emil','Magnus','Henrik','Viktor','Kasper','Rasmus','Mathias','Sander','Tobias','Nils','Johan','Filip','Frederik','Elias','Hugo','Isak','Sebastian','Martin','Kristian'],
@@ -36,6 +38,13 @@ export const NAMES={
 };
 export const PT_A=['Vila','São','Porto','Monte','Torre','Vale','Ponte','Santa','Castelo','Rio','Serra','Campo'],PT_B=['Verde','Nova','Alta','do Mar','do Sol','Real','Branca','Longa','Clara','Formosa','Velha','Grande','Bonita','Serena'];
 export const TOWNS={
+ PE:{A:['San','Santa','Villa','Puerto','Valle','Nueva','Ciudad','Alto','Cerro','Río'],B:['del Sol','Inca','de Lima','Andino','Real','del Mar','Grande','Hermosa','Dorada','Verde'],J:' ',P:['Club {t}','Sporting {t}','Universitario de {t}','Alianza {t}','Deportivo {t}','Atlético {t}','Cienciano de {t}','Melgar de {t}']},
+ PY:{A:['San','Santa','Villa','Puerto','Valle','Nueva','Capitán','Colonia','Cerro','Itá'],B:['Hayes','del Este','Rica','Alegre','Grande','Florida','Mora','Real','Verde','Porá'],J:' ',P:['Club {t}','Sportivo {t}','Libertad {t}','Olimpia {t}','Guaraní {t}','Nacional {t}','General {t}','Sol de {t}']},
+ BO:{A:['San','Santa','Villa','Puerto','Valle','Nueva','Ciudad','Alto','Cerro','Río'],B:['del Altiplano','Andina','Real','Verde','Grande','Hermosa','de la Paz','del Sur','Dorada','Blanca'],J:' ',P:['Club {t}','The Strongest {t}','Bolívar {t}','Always Ready {t}','Real {t}','Aurora {t}','Oriente {t}','Wilstermann {t}']},
+ VE:{A:['San','Santa','Villa','Puerto','Valle','Nueva','Ciudad','Barra','Cerro','Río'],B:['del Mar','Caribe','Real','Bolívar','Grande','Hermosa','Dorada','Verde','del Llano','Azul'],J:' ',P:['Deportivo {t}','Caracas {t}','Atlético {t}','Monagas {t}','Estudiantes de {t}','Zamora {t}','Carabobo {t}','Metropolitanos de {t}']},
+ IE:{A:['Bally','Kil','Dun','Carrick','Clon','Kin','Rath','Ard','Glen','Bun','Tulla','Ennis'],B:['more','dare','gal','beg','mel','ross','keel','duff','cork','ford'],J:'',P:['{t} FC','{t} Rovers','{t} United','{t} Celtic','{t} Harps','{t} City','St. {t}']},
+ WA:{A:['Llan','Aber','Pen','Caer','Bryn','Pont','Cwm','Tre','Rhos','Port','New','Mer'],B:['gollen','ystwyth','dyfed','narfon','mawr','tydfil','gelli','fach','wen','dare'],J:'',P:['{t} FC','{t} Town','{t} Athletic','The New Saints {t}','{t} City','{t} Nomads']},
+ HU:{A:['Szent','Nagy','Kis','Új','Ó','Fehér','Fekete','Vörös','Arany','Felső','Alsó','Duna'],B:['vár','falva','háza','szeg','egyháza','hegy','kút','föld','halom','vásár'],J:'',P:['{t} FC','{t} TE','{t} SE','Ferencvárosi {t}','Újpest {t}','Honvéd {t}','{t} ETO','MTK {t}']},
  HR:{A:['Novi','Stari','Gornji','Donji','Veliki','Mali','Sveti','Zlatni','Bijelo','Crni','Rijeka','Slavonski'],B:['grad','polje','brod','selo','vrh','dol','gora','vec','ina','ovac'],J:'',P:['NK {t}','HNK {t}','GNK {t}','{t} FC','Dinamo {t}','Hajduk {t}','Lokomotiva {t}','Slaven {t}']},
  UY:{A:['San','Santa','Villa','Paso','Colonia','Puerto','Barra','Cerro','Nueva','Bella'],B:['Rosario','del Este','Unión','Esperanza','Vista','Grande','del Plata','Florida','Verde','Real'],J:' ',P:['Club Atlético {t}','Defensor {t}','Liverpool {t}','Wanderers {t}','Racing {t}','Danubio {t}','Rampla {t}','Fénix {t}']},
  DK:{A:['Nord','Syd','Øster','Vester','Sko','Hol','Kongs','Ros','Hel','Næst','Ring','Vi'],B:['bæk','strup','borg','by','lund','sted','rup','havn','holm','skov'],J:'',P:['{t} BK','{t} IF','FC {t}','{t} Boldklub','AGF {t}','{t} FF','B93 {t}']},
@@ -74,11 +83,14 @@ export const COUNTRIES=[
  {n:'Países Bajos',code:'NED',conf:'eu',lang:'nl',tw:'NL',lv:3,top:67.5},{n:'México',code:'MEX',conf:'na',lang:'es',tw:'MX',lv:3,top:64},
  {n:'Bélgica',code:'BEL',conf:'eu',lang:'nl',tw:'BE',lv:2,top:67},{n:'Turquía',code:'TUR',conf:'eu',lang:'tr',tw:'TR',lv:2,top:67},{n:'Escocia',code:'SCO',conf:'eu',lang:'en',tw:'SC',lv:2,top:63.5},
  {n:'Estados Unidos',code:'USA',conf:'na',lang:'en',tw:'US',lv:2,top:65},{n:'Japón',code:'JPN',conf:'as',lang:'ja',tw:'JP',lv:2,top:64},{n:'Colombia',code:'COL',conf:'sa',lang:'es',tw:'CO',lv:2,top:64},
- {n:'Croacia',code:'CRO',conf:'eu',lang:'hr',tw:'HR',lv:2,top:64,nt:70},{n:'Uruguay',code:'URU',conf:'sa',lang:'es',tw:'UY',lv:2,top:63,nt:69},{n:'Dinamarca',code:'DEN',conf:'eu',lang:'sc',tw:'DK',lv:2,top:65,nt:68},
- {n:'Suiza',code:'SUI',conf:'eu',lang:'de',tw:'CH',lv:2,top:65,nt:68},{n:'Suecia',code:'SWE',conf:'eu',lang:'sc',tw:'SE',lv:2,top:63.5,nt:66},{n:'Noruega',code:'NOR',conf:'eu',lang:'sc',tw:'NO',lv:2,top:63.5,nt:66},
- {n:'Austria',code:'AUT',conf:'eu',lang:'de',tw:'AT',lv:2,top:65,nt:66},{n:'Polonia',code:'POL',conf:'eu',lang:'pl',tw:'PL',lv:2,top:63.5,nt:65},{n:'Grecia',code:'GRE',conf:'eu',lang:'el',tw:'GR',lv:2,top:64,nt:62},
- {n:'Chile',code:'CHI',conf:'sa',lang:'es',tw:'CL',lv:2,top:62,nt:63},{n:'Ecuador',code:'ECU',conf:'sa',lang:'es',tw:'EC',lv:1,top:62,nt:65},{n:'Corea del Sur',code:'KOR',conf:'as',lang:'ko',tw:'KR',lv:2,top:63,nt:65},
+ {n:'Croacia',code:'CRO',conf:'eu',lang:'hr',tw:'HR',lv:2,top:64,nt:70},{n:'Uruguay',code:'URU',conf:'sa',lang:'es',tw:'UY',lv:2,top:63,nt:69},{n:'Dinamarca',code:'DEN',conf:'eu',lang:'sc',tw:'DK',lv:3,top:65,nt:68},
+ {n:'Suiza',code:'SUI',conf:'eu',lang:'de',tw:'CH',lv:2,top:65,nt:68},{n:'Suecia',code:'SWE',conf:'eu',lang:'sc',tw:'SE',lv:3,top:63.5,nt:66},{n:'Noruega',code:'NOR',conf:'eu',lang:'sc',tw:'NO',lv:3,top:63.5,nt:66},
+ {n:'Austria',code:'AUT',conf:'eu',lang:'de',tw:'AT',lv:2,top:65,nt:66},{n:'Polonia',code:'POL',conf:'eu',lang:'pl',tw:'PL',lv:3,top:63.5,nt:65},{n:'Grecia',code:'GRE',conf:'eu',lang:'el',tw:'GR',lv:2,top:64,nt:62},
+ {n:'Chile',code:'CHI',conf:'sa',lang:'es',tw:'CL',lv:3,top:62,nt:63},{n:'Ecuador',code:'ECU',conf:'sa',lang:'es',tw:'EC',lv:1,top:62,nt:65},{n:'Corea del Sur',code:'KOR',conf:'as',lang:'ko',tw:'KR',lv:3,top:63,nt:65},
  {n:'Arabia Saudí',code:'KSA',conf:'as',lang:'ar',tw:'SA',lv:1,top:65,nt:61},{n:'Marruecos',code:'MAR',conf:'af',lang:'ar',tw:'MA',lv:1,top:62,nt:69},
+ {n:'Perú',code:'PER',conf:'sa',lang:'es',tw:'PE',lv:2,top:61.5,nt:63},{n:'Paraguay',code:'PAR',conf:'sa',lang:'es',tw:'PY',lv:2,top:61.5,nt:63},{n:'Bolivia',code:'BOL',conf:'sa',lang:'es',tw:'BO',lv:1,top:60,nt:58},
+ {n:'Venezuela',code:'VEN',conf:'sa',lang:'es',tw:'VE',lv:1,top:60,nt:61},{n:'Irlanda',code:'IRL',conf:'eu',lang:'en',tw:'IE',lv:2,top:60.5,nt:62},{n:'Gales',code:'GAL',conf:'eu',lang:'en',tw:'WA',lv:1,top:58.5,nt:63},
+ {n:'Hungría',code:'HUN',conf:'eu',lang:'hu',tw:'HU',lv:2,top:62.5,nt:63},
 ];
 /** Selecciones sin liga en el juego: juegan Mundial, Eurocopa y Copa América con su propio nivel (no tienen jugadores en el mundo). conf: eu, sa, na, af, as. */
 export const NATIONS=[
@@ -87,18 +99,20 @@ export const NATIONS=[
  {n:'Nigeria',code:'NGA',lang:'en',conf:'af',top:66},{n:'Serbia',code:'SRB',lang:'de',conf:'eu',top:65},
  {n:'Ucrania',code:'UKR',lang:'de',conf:'eu',top:65},{n:'Costa de Marfil',code:'CIV',lang:'fr',conf:'af',top:65},
  {n:'Canadá',code:'CAN',lang:'en',conf:'na',top:64},{n:'Egipto',code:'EGY',lang:'en',conf:'af',top:64},{n:'Irán',code:'IRN',lang:'en',conf:'as',top:64},{n:'Chequia',code:'CZE',lang:'de',conf:'eu',top:64},
- {n:'Perú',code:'PER',lang:'es',conf:'sa',top:63},{n:'Paraguay',code:'PAR',lang:'es',conf:'sa',top:63},{n:'Gales',code:'GAL',lang:'en',conf:'eu',top:63},
- {n:'Hungría',code:'HUN',lang:'de',conf:'eu',top:63},{n:'Camerún',code:'CMR',lang:'fr',conf:'af',top:63},{n:'Argelia',code:'ALG',lang:'fr',conf:'af',top:63},{n:'Ghana',code:'GHA',lang:'en',conf:'af',top:63},
- {n:'Australia',code:'AUS',lang:'en',conf:'as',top:63},{n:'Irlanda',code:'IRL',lang:'en',conf:'eu',top:62},{n:'Rumanía',code:'ROU',lang:'it',conf:'eu',top:62},
- {n:'Túnez',code:'TUN',lang:'fr',conf:'af',top:62},{n:'Eslovaquia',code:'SVK',lang:'de',conf:'eu',top:61},{n:'Eslovenia',code:'SVN',lang:'de',conf:'eu',top:61},{n:'Venezuela',code:'VEN',lang:'es',conf:'sa',top:61},
+ 
+ {n:'Camerún',code:'CMR',lang:'fr',conf:'af',top:63},{n:'Argelia',code:'ALG',lang:'fr',conf:'af',top:63},{n:'Ghana',code:'GHA',lang:'en',conf:'af',top:63},
+ {n:'Australia',code:'AUS',lang:'en',conf:'as',top:63},{n:'Rumanía',code:'ROU',lang:'it',conf:'eu',top:62},
+ {n:'Túnez',code:'TUN',lang:'fr',conf:'af',top:62},{n:'Eslovaquia',code:'SVK',lang:'de',conf:'eu',top:61},{n:'Eslovenia',code:'SVN',lang:'de',conf:'eu',top:61},
  {n:'Costa Rica',code:'CRC',lang:'es',conf:'na',top:61},{n:'Mali',code:'MLI',lang:'fr',conf:'af',top:61},{n:'Georgia',code:'GEO',lang:'de',conf:'eu',top:60},
  {n:'Islandia',code:'ISL',lang:'de',conf:'eu',top:60},{n:'Panamá',code:'PAN',lang:'es',conf:'na',top:60},{n:'Sudáfrica',code:'RSA',lang:'en',conf:'af',top:60},{n:'Catar',code:'QAT',lang:'en',conf:'as',top:60},
  {n:'Uzbekistán',code:'UZB',lang:'en',conf:'as',top:60},{n:'Albania',code:'ALB',lang:'it',conf:'eu',top:59},{n:'Finlandia',code:'FIN',lang:'de',conf:'eu',top:59},{n:'Irak',code:'IRQ',lang:'en',conf:'as',top:59},
- {n:'Bolivia',code:'BOL',lang:'es',conf:'sa',top:58},{n:'Jamaica',code:'JAM',lang:'en',conf:'na',top:58},{n:'Honduras',code:'HON',lang:'es',conf:'na',top:58},{n:'Nueva Zelanda',code:'NZL',lang:'en',conf:'as',top:57},{n:'China',code:'CHN',lang:'en',conf:'as',top:57}];
+ {n:'Jamaica',code:'JAM',lang:'en',conf:'na',top:58},{n:'Honduras',code:'HON',lang:'es',conf:'na',top:58},{n:'Nueva Zelanda',code:'NZL',lang:'en',conf:'as',top:57},{n:'China',code:'CHN',lang:'en',conf:'as',top:57}];
 /** Resto de países del mundo (solo para elegir la nacionalidad del entrenador). */
 export const OTHER_NAT=['Afganistán','Andorra','Angola','Armenia','Azerbaiyán','Bahréin','Bangladés','Bielorrusia','Bosnia y Herzegovina','Bulgaria','Burkina Faso','Cabo Verde','Chipre','Congo','Cuba','Curazao','El Salvador','Emiratos Árabes Unidos','Estonia','Etiopía','Filipinas','Gabón','Guatemala','Guinea','Guinea Ecuatorial','Haití','India','Indonesia','Israel','Jordania','Kazajistán','Kenia','Kosovo','Kuwait','Letonia','Líbano','Libia','Liechtenstein','Lituania','Luxemburgo','Macedonia del Norte','Madagascar','Malasia','Malta','Moldavia','Mónaco','Montenegro','Mozambique','Nicaragua','Omán','Palestina','Puerto Rico','República Dominicana','RD Congo','San Marino','Siria','Sudán','Tailandia','Tanzania','Trinidad y Tobago','Uganda','Vietnam','Zambia','Zimbabue'].map(n=>({n,code:'---',lang:'en'}));
 /** Todas las nacionalidades: primero los países con liga (mismos índices que COUNTRIES), luego las selecciones y el resto. */
 export const ALLN=[...COUNTRIES,...NATIONS,...OTHER_NAT];
+/** Orden de las selecciones en partidas de 30 países (versión 2), para convertirlas al abrirlas. */
+export const NAT_CODES_V2=['ESP','ING','ITA','ALE','FRA','PRT','BRA','ARG','NED','MEX','BEL','TUR','SCO','USA','JPN','COL','CRO','URU','DEN','SUI','SWE','NOR','AUT','POL','GRE','CHI','ECU','KOR','KSA','MAR','SEN','NGA','SRB','UKR','CIV','CAN','EGY','IRN','CZE','PER','PAR','GAL','HUN','CMR','ALG','GHA','AUS','IRL','ROU','TUN','SVK','SVN','VEN','CRC','MLI','GEO','ISL','PAN','RSA','QAT','UZB','ALB','FIN','IRQ','BOL','JAM','HON','NZL','CHN'];
 /** Orden de las selecciones en partidas anteriores a los 30 países (para convertirlas al abrirlas). */
 export const OLD_NAT_CODES=['ESP','ING','ITA','ALE','FRA','PRT','BRA','ARG','NED','MEX','BEL','TUR','SCO','USA','JPN','COL','CRO','URU','MAR','DEN','SUI','SEN','SWE','NOR','AUT','NGA','POL','SRB','UKR','ECU','KOR','CIV','CAN','EGY','IRN','CZE','PER','CHI','PAR','GAL','HUN','CMR','ALG','GHA','AUS','IRL','GRE','ROU','TUN','SVK','SVN','VEN','CRC','MLI','KSA','GEO','ISL','PAN','RSA','QAT','UZB','ALB','FIN','IRQ','BOL','JAM','HON','NZL','CHN'];
 export const LV_NAMES=['Primera División','Segunda División','Tercera División','Cuarta División','Quinta División'];

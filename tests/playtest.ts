@@ -62,7 +62,7 @@ const noop = { stopped: () => false, progress: () => {}, yield: async () => {} }
     if (perWk > 9) warn(code, `demasiados mensajes en la bandeja: ${perWk.toFixed(1)} por jornada`);
     if (vals[0] > 400) warn(code, `precio disparado: €${vals[0].toFixed(0)}M`);
     if (!isFinite(S.budget)) warn(code, 'presupuesto no válido');
-    if (size > 14000) warn(code, `partida guardada muy grande: ${size.toFixed(0)} KB`);
+    if (size > 18000) warn(code, `partida guardada muy grande: ${size.toFixed(0)} KB`);
     newSeason();
     const st = seasonStart();
     if (!(st instanceof Date) || isNaN(+st)) warn(code, 'fecha de inicio no válida');

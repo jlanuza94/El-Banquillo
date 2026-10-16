@@ -112,9 +112,9 @@ export function resolveCwc(s){
 }
 export const CT_AFTER=[1,4,7,9,12,16,19,21,24,26,29,31,34];
 export const CT_STAGES=['Grupos · J1','Grupos · J2','Grupos · J3','Grupos · J4','Grupos · J5','Grupos · J6','Octavos · ida','Octavos · vuelta','Cuartos · ida','Cuartos · vuelta','Semifinal · ida','Semifinal · vuelta','Final'];
-export const CONTS=[{n:'Liga de Campeones',reg:'Europa',q:{1:5,0:5,2:5,3:5,4:5,5:4,8:3},q16:{1:5,0:5,2:4,3:4,4:4,5:3,8:3,10:2,11:1,12:1},q30:{0:4,1:4,2:3,3:3,4:3,5:2,8:2,10:1,11:1,12:1,16:1,18:1,19:1,20:1,21:1,22:1,23:1,24:1},G:8,top:76},{n:'Copa Libertad',reg:'América',q:{6:6,7:6,9:4},q16:{6:5,7:5,9:2,15:2,13:2},q30:{6:4,7:4,9:1,13:1,15:2,17:2,25:1,26:1},G:4,top:69}];
+export const CONTS=[{n:'Liga de Campeones',reg:'Europa',q:{1:5,0:5,2:5,3:5,4:5,5:4,8:3},q16:{1:5,0:5,2:4,3:4,4:4,5:3,8:3,10:2,11:1,12:1},q30:{0:4,1:4,2:3,3:3,4:3,5:2,8:2,10:1,11:1,12:1,16:1,18:1,19:1,20:1,21:1,22:1,23:1,24:1},G:8,top:76},{n:'Copa Libertad',reg:'América',q:{6:6,7:6,9:4},q16:{6:5,7:5,9:2,15:2,13:2},q30:{6:4,7:4,9:1,13:1,15:2,17:2,25:1,26:1},q37:{6:4,7:4,9:1,15:2,17:1,25:1,26:1,30:1,31:1},G:4,top:69}];
 /** Plazas por país (con los países nuevos se reparten de otra forma; siempre 32 y 16 equipos). */
-export const quotas=C=>nC()>16&&C.q30?C.q30:nC()>10&&C.q16?C.q16:C.q;
+export const quotas=C=>nC()>30&&C.q37?C.q37:nC()>16&&C.q30?C.q30:nC()>10&&C.q16?C.q16:C.q;
 export const GL='ABCDEFGH';
 export function ctQualify(tabFor){return CONTS.map(C=>Object.entries(quotas(C)).flatMap(([c,n])=>tabFor(+c).slice(0,n)));}
 export function setupConts(){
