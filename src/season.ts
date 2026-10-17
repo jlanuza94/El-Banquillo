@@ -206,7 +206,7 @@ try{S.history[0].rev=reviewShort(seasonReview());}catch(e){}
   const mine=p.team===S.user,ev=devSeason(p,{train:(mine?trainMult()*(S.club?1+.06*(S.club.fac.ent-1):1):1)*(p.loanOk?1.15:1),mentor:mine&&(S.mentors||[]).some(x=>x.y===p.id)});
   p.loanOk=0;p.lpj=0;p.lmt=0;
   if(ev&&(mine||p.home))devNews.push([p,ev]);
-  if(p.st&&p.st.pj&&p.team!==null&&(p.team===S.user||T(p.team).lg===uLg()||(p.hist&&p.hist.length))){p.hist=(p.hist||[]).concat([[seasonLabel(),T(p.team).short,p.st.pj,p.st.g,p.st.a,Math.round(p.st.rs/p.st.pj*10)/10]]).slice(-8);}
+  if(p.st&&p.st.pj&&p.team!==null&&(p.team===S.user||T(p.team).lg===uLg()||(p.hist&&p.hist.length))){{const tf=(S.tlog||[]).find(x=>x.pid===p.id&&x.season===seasonLabel()&&x.to===p.team);p.hist=(p.hist||[]).concat([[seasonLabel(),T(p.team).short,p.st.pj,p.st.g,p.st.a,Math.round(p.st.rs/p.st.pj*10)/10,p.st.yc||0,p.st.rc||0,tf?(tf.fee||-1):0]]).slice(-12);}}
   p.lf=p.st&&p.st.pj>=10?Math.round(p.st.rs/p.st.pj*100)/100:0;p.st=newSt();
   if(p.team!==null)p.contract--;
   setValue(p);

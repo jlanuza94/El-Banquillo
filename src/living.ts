@@ -80,7 +80,7 @@ export function onRetire(p){
 /** Fichajes bomba del mundo: llegan a la bandeja como noticia destacada. */
 export function bigTransfer(p,from,to,fee){
  const top=.4*20;if(fee<top)return false;
- news(`¡Bombazo! ${T(to).name} paga ${money(fee)} a ${from!=null?T(from).name:'nadie'} por ${p.name} (${Math.round(p.ovr)}, ${p.age} años).`,'',{cat:'not',from:'Prensa deportiva',subj:`Fichaje bomba: ${p.name} por ${money(fee)}`,quiet:false,act:[{l:'Ver ficha',a:'ficha',id:p.id}]});
+ news(`¡Bombazo! ${T(to).name} paga ${money(fee)} a ${from!=null?T(from).name:'nadie'} por ${p.name} (${Math.round(p.ovr)}, ${p.age} años).`,'',{cat:'not',from:'Prensa deportiva',subj:`Fichaje bomba: ${p.name} por ${money(fee)}`,quiet:false,tr:{pid:p.id,from,to,fee},act:[{l:'Ver ficha',a:'ficha',id:p.id}]});
  return true;
 }
 

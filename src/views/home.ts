@@ -1,5 +1,6 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {certHTML,winnersHTML} from './fmmcards';
 import {fanWallHTML} from '../fans';
 import {goalsHTML} from '../boardgoals';
 import {reviewHTML} from '../review';
@@ -160,12 +161,12 @@ function userDays(){
 }
 /** Lista de partidos de la temporada, como «Partidos del club» del FM: fecha, rival, campo, resultado y competición. */
 function fixturesHTML(){
- syncDay();const byDay=userDays(),days=Object.keys(byDay).map(Number).sort((a,b)=>a-b);
- const rows=days.flatMap(d=>byDay[d].map(x=>{const f=x.fx,home=f.h===S.user,opp=T(home?f.a:f.h),r=f.played?((home?f.hg>f.ag:f.ag>f.hg)?'G':(f.hg===f.ag?'E':'P')):'';
-  return `<tr class="${d===S.day?'today':''}${d<S.day&&!f.played?' dim':''}"><td class="fxd">${esc(dateTxt(d))}</td><td class="fxo">${crest(opp,'sm')}<button class="linkname" data-a="club-open" data-id="${opp.id}">${esc(opp.name)}</button></td><td class="c"><span class="fxha ${home?'h':'a'}">${home?'C':'F'}</span></td><td class="c">${f.played?`<span class="fxr ${r}">${r}</span><b class="num">${home?f.hg:f.ag}-${home?f.ag:f.hg}</b>${f.pen?` <small>(${home?f.pen[0]:f.pen[1]}-${home?f.pen[1]:f.pen[0]} p.)</small>`:''}`:'<span class="muted">—</span>'}</td><td class="fxc k-${x.k}">${esc(x.lbl)}</td></tr>`;})).join('');
+ syncDay();const byDay=userDays(),days=Object.keys(byDay).map(Number).sort((a,b)=>a-b),posOf={};(()=>{const seen={};days.forEach(d=>byDay[d].forEach(x=>{const o=x.fx.h===S.user?x.fx.a:x.fx.h,t=T(o);if(!t||t.lg==null||seen[t.lg])return;seen[t.lg]=1;try{const tb=table(t.lg);tb.forEach((r,i)=>posOf[r.id]=[i+1,tb.length]);}catch(e){}}));})();
+ const rows=days.flatMap(d=>byDay[d].map(x=>{const f=x.fx,home=f.h===S.user,opp=T(home?f.a:f.h),r=f.played?((home?f.hg>f.ag:f.ag>f.hg)?'G':(f.hg===f.ag?'E':'P')):'',ps=posOf[opp.id],pc=ps?(ps[0]<=ps[1]*.25?'p1':ps[0]<=ps[1]*.6?'p2':'p3'):'';
+  return `<tr class="${d===S.day?'today':''}${d<S.day&&!f.played?' dim':''}"><td class="fxd">${esc(dateTxt(d))}</td><td class="c">${f.played?`<span class="fxs ${r}">${home?f.hg:f.ag} - ${home?f.ag:f.hg}</span>${f.pen?` <small>(${home?f.pen[0]:f.pen[1]}-${home?f.pen[1]:f.pen[0]} p.)</small>`:''}`:'<span class="muted">—</span>'}</td><td class="fxo">${crest(opp,'sm')}<button class="linkname" data-a="club-open" data-id="${opp.id}">${esc(opp.name)}</button></td><td class="c"><span class="fxha ${home?'h':'a'}">${home?'C':'F'}</span></td><td class="c">${ps?`<span class="fxp ${pc}" title="Puesto del rival en su liga">${ps[0]}</span>`:''}</td><td class="fxc k-${x.k}">${esc(x.lbl)}</td></tr>`;})).join('');
  const P=days.flatMap(d=>byDay[d]).filter(x=>x.fx.played),w=P.filter(x=>{const f=x.fx,h=f.h===S.user;return h?f.hg>f.ag:f.ag>f.hg;}).length,dr=P.filter(x=>x.fx.hg===x.fx.ag).length;
  return `<section class="panel"><div class="panel-h"><h2>Partidos · temporada ${seasonLabel()}</h2><span class="eyebrow">${P.length} jugados · ${w}G ${dr}E ${P.length-w-dr}P</span></div>
- <div class="tbl fxtbl"><table><thead><tr><th>Fecha</th><th>Rival</th><th class="c">C/F</th><th class="c">Resultado</th><th>Competición</th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="muted">Sin partidos.</td></tr>'}</tbody></table></div></section>`;
+ <div class="tbl fxtbl"><table><thead><tr><th>Fecha</th><th class="c">Resultado</th><th>Rival</th><th class="c">C/F</th><th class="c" title="Puesto del rival">Pos.</th><th>Competición</th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="muted">Sin partidos.</td></tr>'}</tbody></table></div></section>`;
 }
 function monthHTML(){
  syncDay();const me=f=>f.h===S.user||f.a===S.user,evd=eventDays(),byDay=userDays(),notes=calNotes();
@@ -220,5 +221,5 @@ export function seasonEndView(){
  <p>La directiva pedía: ${S.obj.txt.toLowerCase()}. ${sm.ok?'Están satisfechos con tu trabajo.':'Esperan una reacción la próxima temporada.'} Premio total: <b>${money(sm.prize)}</b>.</p>
  <p class="small muted">Al empezar la nueva temporada se aplican ascensos y descensos en los ${nC()} países, los jugadores cumplen un año (los jóvenes mejoran, los veteranos bajan y algunos se retiran) y suben dos canteranos. Los jugadores sin renovar se irán libres y los cedidos vuelven a su club.</p>
  ${poPending?`<div class="negmsg">Antes de empezar la nueva temporada se juega la ${esc(S.po.n)}.</div>`:`<button class="btn primary big" data-a="new-season">Empezar temporada ${seasonLabel(S.seasonN+1)}</button>`}</section>
- ${reviewHTML(null,nameBtn)}</div><div class="stack">${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Clasificación final</h2></div>${tableHTML(sm.tb,sm.lg,true)}</section></div></div>`;
+ ${(sm.champ?(()=>{const M=S.mgr||{},lb=seasonLabel();M.moty=M.moty||[];if(!M.moty.some(x=>x.s===lb))M.moty.push({s:lb,lg:sm.lg,club:T(S.user).name});return certHTML(lgName(sm.lg),'Mayo de '+(2026+S.seasonN),M.name,T(S.user).name);})():'')}${reviewHTML(null,nameBtn)}</div><div class="stack">${winnersHTML(sm.tb,lgName(sm.lg))}${contractsPanel()}<section class="panel"><div class="panel-h"><h2>Clasificación final</h2></div>${tableHTML(sm.tb,sm.lg,true)}</section></div></div>`;
 }

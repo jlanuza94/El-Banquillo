@@ -59,7 +59,7 @@ export function recordMatch(m){
  teamForm(m);
  if(m.us){S.mlog=S.mlog||[];const rec=matchRecord(m);S.mlogN=(S.mlogN||0)+1;rec.n=S.mlogN;S.mlog.unshift(rec);if(S.mlog.length>40)S.mlog.length=40;
   pressStory(m);careerMatch(m);fansMatch(m,isDerby(m.h,m.a));
-  if(rec.tr)news(`Informe táctico: ${reportHeadline(rec.tr)}`,'',{cat:'sta',subj:`Informe táctico: ${T(m.h).short} ${m.score.h}-${m.score.a} ${T(m.a).short}`,quiet:true,act:[{l:'Ver informe',a:'trep',v:rec.n}]});}
+  if(rec.tr)news(`Informe táctico: ${reportHeadline(rec.tr)}`,'',{cat:'sta',subj:`Informe táctico: ${T(m.h).short} ${m.score.h}-${m.score.a} ${T(m.a).short}`,quiet:true,act:[{l:'Resumen del partido',a:'post',v:rec.n},{l:'Informe táctico',a:'trep',v:rec.n}]});}
 }
 /** Evolución de tu temporada en liga: puntos, puesto y xG jornada a jornada. */
 export function recordRound(m,r){

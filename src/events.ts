@@ -238,6 +238,7 @@ document.addEventListener('click',e=>{
   case'cond-del':{const t=T(S.user);(t.cond||[]).splice(+d.i,1);break;}
   case'help':S.modal={type:'help',v:d.v};break;
   case'an-match':S.modal={type:'mrep',i:+d.i};break;
+  case'post':S.modal=d.v==='live'?{type:'post',live:1}:{type:'post',n:+d.v};break;
   case'trep':S.modal=d.v==='live'?{type:'trep',live:1}:{type:'trep',n:+d.v};break;
   case'plan-save':savePlan(d.v);toast(`Táctica ${d.v} guardada.`);break;
   case'plan-load':loadPlan(d.v);S.sel=null;toast(`Usas la táctica ${d.v}.`);break;
@@ -304,6 +305,8 @@ document.addEventListener('click',e=>{
   case'chal-cmp':{const v=document.getElementById('chalIn')?.value;const r=parseResult(v);RT.chalF=r||false;break;}
   case'a11y-fs':setA11y('fs',+d.v);break;
   case'a11y-cb':setA11y('cb',+d.v);break;
+  case'mv-mine':S.mvMine=d.v==='1';break;
+  case'aw-k':S.awK=d.v;break;
   case'appeal':{toast(appeal(d.id));break;}
   case'fight':{toast(fightAct(d.v));break;}
   case'skill':{const r=pickSkill(d.v);if(r)toast(r);break;}

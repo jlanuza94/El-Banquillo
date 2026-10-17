@@ -1,5 +1,7 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {postHubHTML} from './posthub';
+import {matchRecord} from '../analysis';
 import {aucBids} from '../r11club';
 import {strength} from '../players';
 import {preFit,preTodayOk} from '../presched';
@@ -165,10 +167,11 @@ export function modalView(){
   body=`<div class="eyebrow">Partido interno · 90 minutos</div><h2 style="margin:4px 0 8px">Titulares ${R.ga}-${R.gb} Suplentes</h2><p class="small muted" style="margin:0 0 6px">Sube la química y el dominio de la formación. Los tres mejores ganan confianza. Cansa: deja descansar a los jugadores unos días.</p><div class="grid">${tb(R.ra,'Titulares')}${tb(R.rb,'Suplentes')}</div><div class="acts"><button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='prerep'){body=preReportHTML(esc,nameBtn,PL)+`<div class="acts"><button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='help'){body=helpHTML(md.v)+`<div class="acts"><button class="btn primary" data-a="modal-close">Entendido</button></div>`;}
+ else if(md.type==='post'){const r=md.live?(S.match&&matchRecord(S.match)):(S.mlog||[]).find(x=>x.n===md.n);if(!r){S.modal=null;return '';}body=`<div class="row" style="margin-bottom:8px"><span class="eyebrow">Resumen del partido</span><span class="spacer"></span><button class="btn sm" data-a="modal-close">Cerrar</button></div>${postHubHTML(r)}`;}
  else if(md.type==='trep'){const r=md.live?null:(S.mlog||[]).find(x=>x.n===md.n),R=md.live?(S.match&&tacReport(S.match)):r&&r.tr;if(!R){S.modal=null;return '';}const h=md.live?S.match:r;
   body=`<div class="eyebrow">Informe táctico de tu segundo entrenador</div><h2 style="margin:4px 0 10px">${esc(T(h.h).name)} ${md.live?h.score.h:h.hg}-${md.live?h.score.a:h.ag} ${esc(T(h.a).name)}</h2>${reportHTML(R)}<div class="acts">${md.live?'':`<button class="btn" data-a="an-match" data-i="${(S.mlog||[]).indexOf(r)}">Estadísticas del partido</button>`}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='cmp'){const a=PL(md.a),b=PL(md.b);if(!a||!b){S.modal=null;return '';}body=compareHTML(a,b);}
  else if(md.type==='stfire'){const m=(S.crew||[]).find(x=>x.id===md.id);if(!m){S.modal=null;return '';}body=fireModal(m);}
  else if(md.type==='newgame'){body=`<h2>¿Empezar de cero?</h2><p>Perderás esta partida con ${esc(T(S.user).name)}, incluido el historial de temporadas.</p><div class="acts"><button class="btn" data-a="modal-close">Seguir con esta partida</button><button class="btn danger" data-a="new-game-ok">Borrar y empezar</button></div>`;}
- return `<div class="ov" data-a="ov"><div class="modal ${md.type==='mrep'||md.type==='trep'?'wide':''}" role="dialog" aria-modal="true">${body}</div></div>`;
+ return `<div class="ov" data-a="ov"><div class="modal ${md.type==='mrep'||md.type==='trep'||md.type==='post'?'wide':''}" role="dialog" aria-modal="true">${body}</div></div>`;
 }

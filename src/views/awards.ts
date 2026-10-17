@@ -5,9 +5,10 @@ import {flag} from '../flags';
 import {esc,money} from '../core';
 import {ATTRS,AT_NAME,COUNTRIES,GRP,LV_NAMES,SPN,newSt,posChip} from '../data';
 import {slotRate} from '../tactics';
-import {LG,PL,S,T,crest,lgName,qBadge,qc,uLg} from '../state';
+import {LG,PL,S,T,crest,crestStyle,lgName,qBadge,qc,uLg} from '../state';
 import {bestXI,minPJ,playersOf,ranking} from '../awards';
 import {seen} from '../scouting';
+import {faceSVG} from './pcard';
 import {atCellS,nameBtn,pBadgeS,potTxt,vtab} from './common';
 
 const avgR=p=>p.st&&p.st.pj?p.st.rs/p.st.pj:0;
@@ -41,11 +42,16 @@ export function premiosView(){
   ${lines.map(([n,sl])=>`<h3 style="margin:12px 0 4px">${n}</h3>${xi.filter(([s])=>sl.includes(s)).map(([s,p])=>`<div class="offer"><span class="pos ${GRP[s]}">${s}</span><span class="t">${p?`${nameBtn(p)} <span class="small muted">· ${esc(T(p.team).name)} · ${p.st.pj} PJ · ${p.st.g} G · ${p.st.a} A</span>`:'<span class="muted">Nadie con partidos suficientes</span>'}</span>${p?qBadge(avgR(p)):''}</div>`).join('')}`).join('')}
   <p class="small muted" style="margin:8px 0 0">Mínimo ${minPJ()} partidos. Al final de cada temporada se guarda el once ideal de tu liga en el palmarés.</p></section>`;
  }
- const A=(S.awards||[]).slice().reverse();
- return seg+`<section class="panel"><div class="panel-h"><h2>Palmarés de premios</h2><span class="eyebrow">${A.length} temporada${A.length===1?'':'s'}</span></div>
- ${A.length?A.map(a=>`<h3 style="margin:14px 0 4px">${a.season}</h3><div class="kv" style="margin-top:0"><span>Balón de Oro</span><b>${who(a.ballon[0])}</b><span>Bota de Oro</span><b>${who(a.boot)}${a.boot?' · '+a.boot.g+' goles':''}</b><span>Mejor joven</span><b>${who(a.young)}</b><span>Mejor portero</span><b>${who(a.gk)}</b>${a.leagues[a.xiLg]?`<span>Mejor de ${esc(lgName(a.xiLg))}</span><b>${who(a.leagues[a.xiLg])}</b>`:''}${a.lga?`<span>Mejor joven de ${esc(lgName(a.xiLg))}</span><b>${who(a.lga.young)}</b><span>Pichichi de ${esc(lgName(a.xiLg))}</span><b>${who(a.lga.boot)}${a.lga.boot?' · '+a.lga.boot.g+' goles':''}</b><span>Mejor portero de ${esc(lgName(a.xiLg))}</span><b>${who(a.lga.gk)}</b>`:''}</div>
-  <details style="margin-top:6px"><summary class="small">Mejores de cada Primera y once ideal</summary><div class="kv">${Object.entries(a.leagues).filter(([l])=>+l!==a.xiLg).map(([l,c])=>`<span>${esc(lgName(+l))}</span><b>${who(c)}</b>`).join('')}</div>
-  <p class="small" style="margin:8px 0 0"><b>Once ideal de ${esc(lgName(a.xiLg))}:</b> ${a.xi.filter(([,c])=>c).map(([s,c])=>`${s} ${esc(c.name)}${c.c===S.user?' ★':''}`).join(' · ')}</p></details>`).join(''):'<div class="empty">Los premios se entregan al terminar cada temporada.</div>'}</section>`;
+ const A=(S.awards||[]).slice().reverse(),K=S.awK||'ballon',lgA=a=>a.xiLg;
+ const KS={ballon:['Balón de Oro',a=>a.ballon.slice(0,3),c=>`${c.g} G · ${c.a} A`],boot:['Bota de Oro',a=>[a.boot],c=>`${c.g} goles`],young:['Mejor joven',a=>[a.young],c=>`${c.age} años`],gk:['Mejor portero',a=>[a.gk],c=>c.r?`nota ${(+c.r).toFixed(2)}`:''],
+  lg:['Mejor de mi liga',a=>[a.leagues[a.xiLg]],c=>`${c.g} G · ${c.a} A`],lgboot:['Pichichi de mi liga',a=>[a.lga&&a.lga.boot],c=>`${c.g} goles`],lgyoung:['Joven de mi liga',a=>[a.lga&&a.lga.young],c=>`${c.age} años`]};
+ const D=KS[K]||KS.ballon,last=A[0],pod=last?D[1](last).filter(Boolean):[];
+ const face=c=>{const p=PL(c.pid)||{id:String(c.pid),name:c.name,age:c.age||25,team:c.c};return faceSVG(p);};
+ const card=(c,i)=>{const t=c.c!=null?T(c.c):null;return `<div class="podc p${i+1}"><div class="podh"><span class="medal m${i+1}"></span><b>${['1º','2º','3º'][i]}</b>${t?`<span class="crest" style="${crestStyle(t)}">${esc(t.short)}</span>`:''}</div><div class="podf">${face(c)}</div><div class="podn">${PL(c.pid)?`<button class="linkname" data-a="ficha" data-id="${c.pid}">${esc(c.name)}</button>`:esc(c.name)}</div><div class="podcl">${esc(c.club)}</div><div class="small muted">${esc(D[2](c)||'')}</div></div>`;};
+ return seg+`<section class="panel"><div class="panel-h"><h2>Palmarés de premios</h2><span class="eyebrow">${last?esc(D[0])+' · '+esc(last.season):''}</span></div>
+ <div class="chips" style="margin-bottom:10px">${Object.entries(KS).map(([k,[n]])=>`<button class="btn sm ${K===k?'dark':''}" data-a="aw-k" data-v="${k}">${n}</button>`).join('')}</div>
+ ${A.length?`<div class="podium n${pod.length}">${pod.map(card).join('')}</div>
+ <div class="tbl"><table class="awtbl"><thead><tr><th>Temporada</th><th>Ganador</th><th>Equipo</th><th class="r">Datos</th></tr></thead><tbody>${A.map((a,ix)=>{const c=D[1](a)[0];return `<tr class="${ix===0?'awcur':''} ${c&&c.c===S.user?'me':''}"><td class="num">${esc(a.season)}</td><td>${c?(PL(c.pid)?`<button class="linkname" data-a="ficha" data-id="${c.pid}">${esc(c.name)}</button>`:esc(c.name)):'—'}</td><td>${c&&c.c!=null&&T(c.c)?`<span class="teamcell">${crest(T(c.c),'sm')}<b class="awclub">${esc(c.club)}</b></span>`:c?esc(c.club):''}</td><td class="r small">${c?esc(D[2](c)||''):''}</td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">Los premios se entregan al terminar cada temporada.</div>'}</section>`;
 }
 
 /** Comparador de dos jugadores (respeta lo que sabes de cada uno). */

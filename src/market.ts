@@ -87,7 +87,7 @@ export function completeBuy(p,price,t){
  if(from!==null)ensureSquad(from);setAdapt(p);if(!p.ph||!p.ph.length)p.ph=[[seasonLabel(),p.ovr]];markArrival(p);
  S.short=S.short.filter(x=>x!==p.id);delete S.neg[p.id];
  if(!S.rec)S.rec={};if(price>0&&(!S.rec.buy||price>S.rec.buy.fee))S.rec.buy={name:p.name,fee:price,season:seasonLabel()};tlog({name:p.name,pid:p.id,from,to:S.user,fee:price});
- news(`Fichaje: ${p.name} (${SPN[p.sp].toLowerCase()}, ${rt(p)}) llega por ${money(price)}${from!==null?' desde '+T(from).name:' como agente libre'}. Contrato hasta junio de ${endYear(p)}, rol: ${ROLES[t.role].n.toLowerCase()}.`,'good');
+ news(`Fichaje: ${p.name} (${SPN[p.sp].toLowerCase()}, ${rt(p)}) llega por ${money(price)}${from!==null?' desde '+T(from).name:' como agente libre'}. Contrato hasta junio de ${endYear(p)}, rol: ${ROLES[t.role].n.toLowerCase()}.`,'good',{cat:'mer',subj:`Fichaje: ${p.name}`,tr:{pid:p.id,from,to:S.user,fee:price}});
  S.modal=null;toast(`${p.name} ya es jugador tuyo.`);
 }
 export function expRole(p){
