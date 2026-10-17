@@ -109,7 +109,7 @@ import { meetAnswer, checkProm, onOfferRejected, cred } from '../src/talks';
 
 const seasons = +(process.argv[2] || 1);
 let fails = 0;
-const ok = (cond: unknown, msg: string) => { if (!cond) { console.error('FALLO:', msg); fails++; } else console.log('ok  ', msg); };
+const ok = (cond: unknown, msg: string) => { if (!cond) { console.error('FALLO:', msg); if (process.env.CI) console.log('::error::FALLO: ' + msg); fails++; } else console.log('ok  ', msg); };
 const until = (fn: () => boolean) => new Promise<void>(r => { const iv = setInterval(() => { if (fn()) { clearInterval(iv); r(); } }, 10); });
 const flush = () => new Promise(r => setTimeout(r, 50));
 const app = document.getElementById('app')!;
@@ -1004,4 +1004,4 @@ const app = document.getElementById('app')!;
   ok(kb < 16500, `tamaño del guardado: ${kb} KB`);
   console.log(`Terminado en ${((Date.now() - t0) / 1000).toFixed(1)} s`);
   process.exit(fails ? 1 : 0);
-})().catch(e => { console.error(e); process.exit(1); });
+})().catch(e => { console.error(e); if (process.env.CI) console.log('::error::ERROR: ' + String(e && e.stack || e).split('\n').slice(0, 3).join(' | ')); process.exit(1); });
