@@ -30,6 +30,7 @@
 html, body { height: 100%; overflow: hidden; }
 body { background: var(--noche); color: var(--acero); font-family: var(--f-cuerpo); font-size: 15px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
+input { font: inherit; -webkit-user-select: text; user-select: text; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 #juego { position: fixed; inset: 0; overflow: hidden; }
@@ -142,6 +143,15 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .zonas-parte { display: grid; gap: 6px; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 12px; }
 .cita { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
 .cita b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); display: block; }
+.empresa { display: grid; grid-template-columns: minmax(0, 190px) 1fr; gap: 12px; align-items: center; }
+.furgo { width: 100%; height: auto; display: block; }
+.empresa .rotulo { font-size: clamp(22px, 6vw, 32px); overflow-wrap: anywhere; }
+.campo { display: grid; gap: 6px; }
+.campo span { font-family: var(--f-cond); font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
+.campo input { box-sizing: border-box; background: var(--panel-solido); color: var(--acero); border: 1px solid var(--linea); border-radius: 6px; padding: 11px 12px; font-size: 18px; width: 100%; }
+.campo input:focus { outline: 2px solid var(--hivis); outline-offset: 1px; }
+.color { width: 42px; height: 42px; border-radius: 50%; border: 3px solid var(--linea); }
+.color[aria-pressed="true"] { border-color: var(--acero); box-shadow: 0 0 0 2px var(--hivis); }
 .rango { background: var(--panel); border: 1px dashed var(--linea); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
 .ajuste { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; text-align: left; width: 100%; }
 .ajuste small { display: block; color: var(--tenue); font-size: 13px; }
@@ -216,12 +226,17 @@ const hora = min => { const m = 22 * 60 + Math.floor(min); return `${String(Math
 
 // ------------------------------------------------------------------ datos
 
-const RANGOS = [
-  { n: 'El Nuevo', parte: .15, txt: 'Don Rigo elige el trabajo y el compañero.' },
-  { n: 'Ayudante', parte: .25, req: s => s.aprobados >= 3, falta: s => `${Math.max(0, 3 - s.aprobados)} turnos aprobados más`, txt: 'Eliges entre varios trabajos y buscas clientes. Te prestan la hidrolavadora.' },
-  { n: 'Jefe de cuadrilla', parte: .35, req: s => s.rep >= 40, falta: s => `reputación 40 (tienes ${s.rep})`, txt: 'Eliges compañero, contratas ayudantes y llegan los trabajos grandes.' },
-  { n: 'Socio', parte: .6, compra: 3000, req: s => s.rep >= 60, falta: s => `reputación 60 (tienes ${s.rep}) y ${dinero(3000)} para comprar la mitad`, txt: 'Compras la mitad de Grasa Brava. Cobras el 60 % y pagas tus gastos.' },
-  { n: 'Dueño', parte: 1, req: s => s.rep >= 80, falta: s => `reputación 80 (tienes ${s.rep})`, txt: 'Don Rigo se jubila. La empresa es tuya.' },
+const APRENDIZ = 4;            // noches trabajando para Don Rigo antes del despido
+const SUELDO_APRENDIZ = 110;
+const GASOLINA = 35;
+const RIVAL = 'Limpiezas El Cuñado';
+// Las etapas de tu empresa: se pasa a la siguiente con reputación y pagando el salto.
+const ETAPAS = [
+  { n: 'Camioneta vieja', txt: 'Tú, Beto y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías.' },
+  { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe se pasa a tu empresa, puedes contratar ayudantes y anunciarte en redes.' },
+  { n: 'Oficina con fax', rep: 40, compra: 4000, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy se une (despierto, casi siempre).' },
+  { n: 'Contratista de confianza', rep: 60, compra: 8000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
+  { n: 'Leyenda de la grasa', rep: 85, compra: 15000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
 ];
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
 const fama = r => FAMA.filter(f => r >= f[0]).pop()[1];
@@ -230,21 +245,21 @@ const multPago = () => .85 + S.rep / 100 * .6;   // la reputación sube lo que p
 // Frecuencias de limpieza de la norma NFPA 96, en noches de juego.
 const FREC = { mensual: 3, trimestral: 5, semestral: 7, anual: 9 };
 const COCINAS = {
-  cafe: { n: 'Cafetería', frec: 'anual', micras: [900, 1300], pago: [380, 480], filtros: [2, 3], rango: 0, linea: 'cafe',
+  cafe: { n: 'Cafetería', frec: 'anual', micras: [900, 1300], pago: [380, 480], filtros: [2, 3], etapa: 0, linea: 'cafe',
     nombres: ['Café La Esquina', 'Desayunos Lupita', 'Cafetería El Andén', 'Panadería San Juan'], eventos: [] },
-  pizza: { n: 'Pizzería de leña', frec: 'mensual', micras: [1500, 2100], pago: [520, 680], filtros: [2, 4], rango: 0, linea: 'horno',
+  pizza: { n: 'Pizzería de leña', frec: 'mensual', micras: [1500, 2100], pago: [520, 680], filtros: [2, 4], etapa: 0, linea: 'horno',
     nombres: ['Pizzería Napoli', 'Horno Bella Vista', 'La Leña de Mario'], eventos: ['mapache', 'gerente'] },
-  burger: { n: 'Hamburguesería', frec: 'trimestral', micras: [1800, 2500], pago: [560, 760], filtros: [3, 4], rango: 0, linea: 'plancha',
+  burger: { n: 'Hamburguesería', frec: 'trimestral', micras: [1800, 2500], pago: [560, 760], filtros: [3, 4], etapa: 0, linea: 'plancha',
     nombres: ['Burger Barrio', 'Hamburguesas El Gordo', 'Freidora Feliz'], eventos: ['gerente', 'techo'] },
-  wok: { n: 'Cocina de wok', frec: 'trimestral', micras: [2200, 2900], pago: [640, 880], filtros: [3, 5], rango: 1, linea: 'wok',
+  wok: { n: 'Cocina de wok', frec: 'trimestral', micras: [2200, 2900], pago: [640, 880], filtros: [3, 5], etapa: 1, linea: 'wok',
     nombres: ['Wok Dragón Dorado', 'Jardín de Jade', 'Fideos Hermanos Li'], eventos: ['gerente', 'mapache'] },
-  asador: { n: 'Asador al carbón', frec: 'mensual', micras: [2600, 3400], pago: [760, 1050], filtros: [3, 5], rango: 1, linea: 'carbon',
+  asador: { n: 'Asador al carbón', frec: 'mensual', micras: [2600, 3400], pago: [760, 1050], filtros: [3, 5], etapa: 1, linea: 'carbon',
     nombres: ['Tacos El Güero', 'Asadero Los Compadres', 'Pollos Doña Rosa'], eventos: ['techo', 'gerente', 'mapache'] },
-  hotel: { n: 'Cocina de hotel', frec: 'semestral', micras: [2000, 2700], pago: [1500, 2100], filtros: [5, 6], rango: 2, linea: 'plancha',
+  hotel: { n: 'Cocina de hotel', frec: 'semestral', micras: [2000, 2700], pago: [1500, 2100], filtros: [5, 6], etapa: 2, linea: 'plancha',
     nombres: ['Hotel Miramar', 'Gran Hotel Sol', 'Hotel Costa Azul'], eventos: ['alarma', 'techo', 'gerente'] },
-  comedor: { n: 'Comedor industrial', frec: 'trimestral', micras: [2200, 2900], pago: [2300, 2900], filtros: [6, 8], rango: 2, linea: 'plancha', campanas: 2, ayud: 1,
+  comedor: { n: 'Comedor industrial', frec: 'trimestral', micras: [2200, 2900], pago: [2300, 2900], filtros: [6, 8], etapa: 2, linea: 'plancha', campanas: 2, ayud: 1,
     nombres: ['Comedor Textil La Hilandera', 'Comedor Universitario', 'Cocina del Hospital San José'], eventos: ['gerente', 'alarma', 'techo'] },
-  estadio: { n: 'Cocina de estadio', frec: 'semestral', micras: [2500, 3300], pago: [3800, 4800], filtros: [8, 10], rango: 3, linea: 'carbon', campanas: 2, ayud: 2,
+  estadio: { n: 'Cocina de estadio', frec: 'semestral', micras: [2500, 3300], pago: [3800, 4800], filtros: [8, 10], etapa: 3, linea: 'carbon', campanas: 2, ayud: 2,
     nombres: ['Estadio Municipal', 'Arena Los Pumas'], eventos: ['mapache', 'techo', 'gerente', 'alarma'] },
 };
 const LINEAS = {
@@ -264,13 +279,13 @@ const TIPO_CAMPANA = { caja: 'Campana de caja', inclinada: 'Campana inclinada', 
 const FORMA_DUCTO = { cuadrado: 'ducto cuadrado', redondo: 'ducto redondo', ancho: 'ducto ancho y bajo' };
 
 const COMPANEROS = {
-  beto: { n: 'Beto', apodo: 'el Primo', color: '#ffd23f', rango: 0, fuerza: 1.25, rasgo: 'Rápido. Rompe cosas con total seguridad.',
+  beto: { n: 'Beto', apodo: 'el Primo', color: '#ffd23f', etapa: 0, fuerza: 1.25, sueldo: 90, rasgo: 'Rápido. Rompe cosas con total seguridad.',
     frases: ['Tranquilo, sé lo que hago.', '¿Esto se desenchufa o se jala?', 'Yo una vez limpié un ducto con una escoba. Bueno, la mitad.', 'Esa mancha tiene forma de mi ex.', 'Si algo truena, yo no estaba.'],
     bien: 'Quedó tan limpio que me da miedo tocarlo. Y eso que yo toco todo.', mal: 'El inspector no entiende el arte moderno.', desastre: 'Esa tubería ya venía rota. Yo solo la terminé.' },
-  lupe: { n: 'Lupe', apodo: 'la veterana', color: '#7fd3e6', rango: 1, fuerza: 1.0, rasgo: 'Trabajo perfecto. No confía en nadie.',
+  lupe: { n: 'Lupe', apodo: 'la veterana', color: '#7fd3e6', etapa: 1, fuerza: 1.0, sueldo: 120, rasgo: 'Trabajo perfecto. No confía en nadie.',
     frases: ['Diez años en esto y nunca vi una campana tan triste.', 'Te faltó una esquina. No, la otra.', 'No me mires, yo no fui. Nunca soy yo.', 'Esta grasa tiene más antigüedad que yo en la empresa.'],
     bien: 'Aceptable. No se lo digas a nadie, pero aceptable.', mal: 'Te lo dije. Bueno, no te lo dije. Pero lo pensé fuerte.', desastre: 'Voy a anotar esto en mi libreta de cosas que no fueron culpa mía.' },
-  chuy: { n: 'Chuy', apodo: 'el Grande', color: '#69c97a', rango: 2, fuerza: 1.55, rasgo: 'Fuerza bruta. Se duerme en cualquier superficie plana.',
+  chuy: { n: 'Chuy', apodo: 'el Grande', color: '#69c97a', etapa: 2, fuerza: 1.55, sueldo: 140, rasgo: 'Fuerza bruta. Se duerme en cualquier superficie plana.',
     frases: ['Esto pesa poquito. Lo cargo yo.', '¿Ya es de día? ¿No? Ah.', 'Yo de niño quería ser almohada.', 'Qué buena siesta haría en ese ducto.'],
     bien: 'Buen turno. Me voy a dormir en la camioneta, despiértame en el próximo semáforo.', mal: 'Yo vi todo limpio. Bueno, vi con los ojos cerrados.', desastre: 'Me perdí lo mejor. Estaba descansando la vista.' },
 };
@@ -289,6 +304,7 @@ const CANDIDATOS = [
 ];
 const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
 const GERENTE = ['¿Ya casi?', '¿Cuánto falta? Es que mañana abrimos.', 'Yo lo habría hecho con un trapito.', '¿Eso es grasa o es el diseño?', '¿Y eso brilla así siempre o es la luz?'];
+const RIGO_CONSEJOS = ['Consejo de Don Rigo: si el cliente no paga, límpiale solo la mitad. No, espera, no hagas eso.', 'Desde el lago: pesqué una bota. Igual que mi primer cliente. ¿Cómo va la empresa?', 'Consejo de Don Rigo: nunca le prestes la camioneta a Beto. Nunca.', 'Consejo de Don Rigo: los mapaches respetan a quien les habla de usted.', `Desde el lago: ${RIVAL} me ofreció trabajo. Les dije que estoy jubilado. Y que sus campanas dan pena.`, 'Consejo de Don Rigo: cobra antes de raspar. O después. Pero cobra.'];
 const RIGO = ['Hoy te toca una fácil. Mentira, ninguna es fácil.', 'Si te preguntan, la camioneta siempre hizo ese ruido.', 'El seguro no cubre mapaches. Lo pregunté.', 'Si algo explota, tú no estabas.', 'Recuerda: el cliente siempre tiene razón, hasta que paga.', 'Los clientes no se consiguen solos. Bueno, a veces sí, pero no cuentes con eso.'];
 const CLIENTE_BIEN = ['El dueño se mira en la campana y se peina.', 'El chef pasa el dedo por el ducto y no dice nada. Es lo más cerca de un elogio que vas a recibir.', 'El gerente le saca una foto a la campana. «Para mi mamá», dice.', 'El dueño te ofrece un café. Está frío, pero es un gesto.'];
 const CLIENTE_MAL = ['El gerente te enseña una mancha con la linterna del móvil. Durante cuatro minutos.', 'El chef suspira tan fuerte que se apaga un piloto.', 'El dueño dice que la próxima vez llama a su cuñado.', '«¿Esto es lo limpio?», pregunta el dueño. Nadie contesta.'];
@@ -325,35 +341,37 @@ const TIENDA = [
   { id: 'conc', n: 'Desengrasante concentrado', d: 'La espuma ablanda 4× en vez de 3×.', p: 400, ok: s => !s.eq.conc, f: s => { s.eq.conc = true; } },
   { id: 'orb', n: 'Pulidor orbital', d: 'El acabado espejo en la mitad de pasadas.', p: 300, ok: s => !s.eq.orbital, f: s => { s.eq.orbital = true; } },
   { id: 'bolsa', n: 'Bolsas de contención nuevas', d: 'Las viejas tienen más parches que bolsa.', p: 120, ok: s => !s.eq.bolsa, f: s => { s.eq.bolsa = true; } },
-  { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro mucho más fuerte que la prestada, y la tienes desde ya.', p: 1200, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
-  { id: 'cam2', n: 'Camioneta con baca', d: 'Caben 2 ayudantes además del compañero.', p: 500, ok: s => s.eq.camioneta === 1 && s.rango >= 2, f: s => { s.eq.camioneta = 2; } },
-  { id: 'cam3', n: 'Camión de la empresa', d: 'Caben 4 ayudantes. Y tiene radio que funciona.', p: 2200, ok: s => s.eq.camioneta === 2, f: s => { s.eq.camioneta = 3; } },
+  { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro ancho y fuerte. Esta es tuya y nadie la vende para comprarse un karaoke.', p: 900, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
+  { id: 'cam2', n: 'Camioneta con baca', d: 'Caben 2 ayudantes además del compañero.', p: 500, ok: s => s.eq.camioneta === 1 && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.camioneta = 2; } },
+  { id: 'cam3', n: 'Camión de la empresa', d: 'Caben 4 ayudantes. Y tiene radio que funciona.', p: 2200, ok: s => s.eq.camioneta === 2 && s.etapa >= 2, f: s => { s.eq.camioneta = 3; } },
 ];
 const PLAZAS = [0, 1, 2, 4];
 
 // Buscar clientes: cada noche hay dos llamadas.
 const MARKETING = [
-  { id: 'volantes', n: 'Repartir volantes en el barrio', d: 'Una orden más esta noche, de las sencillas.', p: 40, rango: 1,
-    hacer: () => { const o = genOrden(uno(cocinasHasta(Math.min(S.rango, 1)))); o.origen = 'Volante'; return [o, 'Beto repartió la mitad. La otra mitad sigue en su chaqueta, pero llamó alguien.']; } },
-  { id: 'donas', n: 'Visitar restaurantes con donas', d: 'A veces sale una orden mejor pagada. A veces solo se comen las donas.', p: 25, rango: 1,
-    hacer: () => { if (azar(.4)) return [null, 'Se comieron las donas, dijeron «ya te llamamos» y no te llamaron.']; const o = genOrden(uno(cocinasHasta(S.rango))); o.pago = Math.round(o.pago * 1.15 / 10) * 10; o.origen = 'Donas'; return [o, 'Las donas abrieron puertas. Literalmente: el chef te abrió la cocina para enseñarte el desastre.']; } },
-  { id: 'redes', n: 'Anuncio en redes', d: 'Dos órdenes más. Puede llegar un cliente raro que paga el doble.', p: 150, rango: 2,
-    hacer: () => { const a = genOrden(uno(cocinasHasta(S.rango))), b = genOrden(uno(cocinasHasta(S.rango))); a.origen = b.origen = 'Redes'; if (azar(.45)) { b.raro = true; b.pago = Math.round(b.pago * 1.9 / 10) * 10; b.eventos = ['gerente', 'mapache', 'techo']; b.nombre = uno(['El Restaurante del Influencer', 'Sushi y Karaoke 24 h', 'Cocina Embrujada de Don Ramiro']); } return [[a, b], 'El anuncio tuvo tres «me gusta» y dos llamadas. Una de ellas suena rara.']; } },
-  { id: 'licitacion', n: 'Presentarse a una licitación', d: 'Un trabajo grande de dos campanas. Ganarla depende de tu reputación.', p: 300, rango: 2,
-    hacer: () => { if (!azar(S.rep / 100 + .1)) return [null, 'Ganó la empresa del cuñado del alcalde. Qué sorpresa.']; const o = genOrden(S.rango >= 3 && azar(.5) ? 'estadio' : 'comedor'); o.origen = 'Licitación'; return [o, '¡Ganaste la licitación! Ahora hay que cumplir.']; } },
+  { id: 'volantes', n: 'Repartir volantes en el barrio', d: 'Una orden más esta noche, de las sencillas.', p: 40, etapa: 0,
+    hacer: () => { const o = genOrden(uno(cocinasHasta(Math.min(S.etapa, 1)))); o.origen = 'Volante'; return [o, 'Beto repartió la mitad. La otra mitad sigue en su chaqueta, pero llamó alguien.']; } },
+  { id: 'donas', n: 'Visitar restaurantes con donas', d: 'A veces sale una orden mejor pagada. A veces solo se comen las donas.', p: 25, etapa: 0,
+    hacer: () => { if (azar(.4)) return [null, 'Se comieron las donas, dijeron «ya te llamamos» y no te llamaron.']; const o = genOrden(uno(cocinasHasta(S.etapa))); o.pago = Math.round(o.pago * 1.15 / 10) * 10; o.origen = 'Donas'; return [o, 'Las donas abrieron puertas. Literalmente: el chef te abrió la cocina para enseñarte el desastre.']; } },
+  { id: 'redes', n: 'Anuncio en redes', d: 'Dos órdenes más. Puede llegar un cliente raro que paga el doble.', p: 150, etapa: 1,
+    hacer: () => { const a = genOrden(uno(cocinasHasta(S.etapa))), b = genOrden(uno(cocinasHasta(S.etapa))); a.origen = b.origen = 'Redes'; if (azar(.45)) { b.raro = true; b.pago = Math.round(b.pago * 1.9 / 10) * 10; b.eventos = ['gerente', 'mapache', 'techo']; b.nombre = uno(['El Restaurante del Influencer', 'Sushi y Karaoke 24 h', 'Cocina Embrujada de Don Ramiro']); } return [[a, b], 'El anuncio tuvo tres «me gusta» y dos llamadas. Una de ellas suena rara.']; } },
+  { id: 'licitacion', n: 'Presentarse a una licitación', d: 'Un trabajo grande de dos campanas. Ganarla depende de tu reputación.', p: 300, etapa: 2,
+    hacer: () => { if (!azar(S.rep / 100 + .1)) return [null, `Ganó ${RIVAL}, la empresa del cuñado del alcalde. Qué sorpresa.`]; const o = genOrden(S.etapa >= 3 && azar(.5) ? 'estadio' : 'comedor'); o.origen = 'Licitación'; return [o, '¡Ganaste la licitación! Ahora hay que cumplir.']; } },
 ];
 
 // ------------------------------------------------------------------ partida
 
 let S;
 function nueva() {
-  S = { v: 3, noche: 1, dinero: 60, rep: 10, rango: 0, aprobados: 0, mejor: 0, nivel: 1, xp: 0, perks: {},
+  S = { v: 4, fase: 'aprendiz', etapa: 0, empresa: null, abierta: 0, compPref: 'beto', noche: 1, dinero: 0, rep: 25, aprobados: 0, mejor: 0, nivel: 1, xp: 0, perks: {},
     eq: { rasqueta: 1, conc: false, hidro: false, orbital: false, bolsa: false, xl: false, camioneta: 1 },
     aj: { asist: true, resaltar: false, comodo: false, sonido: true }, album: [], clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 1 };
 }
 function migrar(s) {
   if (s.v === 2) Object.assign(s, { v: 3, nivel: 1, xp: 0, perks: {}, clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 1 }, { eq: Object.assign({ xl: false, camioneta: 1 }, s.eq) });
-  return s.v === 3 ? s : null;
+  // Las partidas de antes pasan por el aprendizaje: si ya llevaban más de 4 noches, toca el despido.
+  if (s.v === 3) { Object.assign(s, { v: 4, fase: 'aprendiz', etapa: 0, empresa: null, abierta: 0, compPref: 'beto', hoy: null }); delete s.rango; }
+  return s.v === 4 ? s : null;
 }
 function guardar() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
 function cargar() { try { const t = localStorage.getItem(KEY); if (t) { const s = migrar(JSON.parse(t)); if (s) { S = s; return true; } } } catch (e) { /* nueva */ } return false; }
@@ -627,7 +645,7 @@ function construirNoche(orden) {
   for (const x of [-1.8, 1.8]) add(new T.BoxGeometry(1.2, .04, .12), new T.MeshBasicMaterial({ color: 0xf4fbff }), x, 2.98, 1.4);
 
   // Letrero del restaurante
-  const nombre = orden ? orden.nombre : 'Grasa Brava Servicios';
+  const nombre = orden ? orden.nombre : S.empresa ? S.empresa.nombre : 'Grasa Brava Servicios';
   const letrero = texCanvas(lienzo(512, 128, (g, w, h) => {
     g.fillStyle = '#1b2a33'; g.fillRect(0, 0, w, h); g.strokeStyle = '#ff8a1f'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12);
     g.fillStyle = '#ffe3b8'; g.font = '700 46px "Barlow Condensed", "Arial Narrow", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nombre.toUpperCase(), w / 2, h / 2 + 2, w - 40);
@@ -839,7 +857,7 @@ const ultZona = () => Z.length - 1;
 
 function herramientas() {
   const h = ['rasqueta', 'espuma', 'pulidor'];
-  if (S.eq.hidro || S.rango >= 1) h.splice(2, 0, 'hidro');
+  if (S.eq.hidro || (S.fase === 'aprendiz' && S.noche >= 2)) h.splice(2, 0, 'hidro');   // la de Don Rigo, hasta que Beto la vende
   return h;
 }
 
@@ -1329,7 +1347,8 @@ function terminarTurno() {
 
 // ------------------------------------------------------------------ órdenes, clientes y cuadrilla
 
-const cocinasHasta = r => Object.keys(COCINAS).filter(k => COCINAS[k].rango <= r && !COCINAS[k].campanas);
+const etapa = () => S.fase === 'aprendiz' ? 0 : S.etapa;
+const cocinasHasta = e => Object.keys(COCINAS).filter(k => COCINAS[k].etapa <= e && !COCINAS[k].campanas);
 function genOrden(k, cliente) {
   const C = COCINAS[k], campanas = C.campanas || 1;
   const tipos = campanas > 1 ? ['caja', 'inclinada'] : ['caja', 'inclinada', 'caja', 'larga'];
@@ -1348,17 +1367,18 @@ function genOrden(k, cliente) {
     pagoBase: base, pago: Math.round(base * multPago() * (cliente ? 1.1 : 1) / 10) * 10, clienteId: cliente ? cliente.id : null, diseno };
 }
 function generarOrdenes() {
+  if (S.fase === 'aprendiz') return [genOrden(uno(cocinasHasta(0)))];   // Don Rigo elige
   const out = [];
   for (const c of S.clientes) if (c.proxima <= S.noche) out.push(genOrden(c.cocina, c));
-  const n = S.rango === 0 ? 1 : S.rango === 1 ? 2 : 3;
-  const permitidas = cocinasHasta(S.rango);
+  const fijos = out.length, n = Math.min(4, 1 + S.etapa + (S.rep >= 15 ? 1 : 0));
+  const permitidas = cocinasHasta(S.etapa);
   let intentos = 0;
-  while (out.length < n + S.clientes.filter(c => c.proxima <= S.noche).length && intentos++ < 50) {
+  while (out.length < fijos + n && intentos++ < 50) {
     const k = uno(permitidas);
     if (out.some(o => o.cocina === k && !o.clienteId)) continue;
     out.push(genOrden(k));
   }
-  if (S.rango >= 2 && azar(.3)) out.push(genOrden(S.rango >= 3 && azar(.4) ? 'estadio' : 'comedor'));
+  if (S.etapa >= 2 && azar(.3)) out.push(genOrden(S.etapa >= 3 && azar(.4) ? 'estadio' : 'comedor'));
   return out;
 }
 function genCandidatos() {
@@ -1368,18 +1388,37 @@ function genCandidatos() {
     return { id: S.sigId++, n, rasgo, frase, fuerza, sueldo: Math.round((50 + fuerza * 80) / 5) * 5, color: uno(COLORES), noches: 0 };
   });
 }
+// La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
+function rival(ordenes, avisos) {
+  if (S.fase !== 'empresa' || S.noche < S.abierta + 2 || !azar(.25)) return;
+  const libres = ordenes.filter(o => !o.clienteId);
+  if (libres.length >= 2 && azar(.6)) {
+    const o = uno(libres); ordenes.splice(ordenes.indexOf(o), 1);
+    avisos.push(`${RIVAL} se quedó con ${o.nombre}: les cobró la mitad. Y les dejó la mitad de la grasa.`);
+  } else {
+    for (const o of ordenes) if (!o.clienteId) o.pago = Math.round(o.pago * .9 / 10) * 10;
+    avisos.push(`${RIVAL} bajó sus precios. Esta noche los clientes nuevos pagan un 10 % menos.`);
+  }
+}
 // Una noche nueva: órdenes, clientes que se van, candidatos, llamadas.
 function prepararNoche() {
   const avisos = [];
   S.clientes = S.clientes.filter(c => {
-    if (S.noche > c.proxima + 2) { S.rep = clamp(S.rep - 4, 0, 100); avisos.push(`${c.nombre} se fue con la competencia: no fuimos a tiempo. −4 de reputación.`); return false; }
+    // Un cliente fiel (3 visitas o más) espera; uno nuevo se deja tentar por el rival en cuanto te retrasas.
+    if (S.noche > c.proxima + 2 || (S.noche > c.proxima && c.visitas < 3 && azar(.3))) {
+      S.rep = clamp(S.rep - 4, 0, 100); avisos.push(`${c.nombre} se fue con ${RIVAL}: no llegamos a tiempo. −4 de reputación.`); return false;
+    }
     return true;
   });
-  if (!S.candidatos.length || S.noche % 3 === 0) S.candidatos = genCandidatos();
+  if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos();
   const ordenes = generarOrdenes();
-  S.hoy = { noche: S.noche, ordenes, sel: 0, comp: S.rango === 1 ? uno(['beto', 'lupe']) : S.rango >= 2 ? 'lupe' : 'beto',
-    ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2, avisos,
-    frase: S.noche === 1 ? 'Bienvenido a Grasa Brava. Toma la camioneta, toma la rasqueta y no toques mi radio.' : uno(RIGO), resultado: '' };
+  rival(ordenes, avisos);
+  const disponibles = Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= etapa());
+  const comp = S.fase === 'aprendiz' ? (S.noche <= 2 ? 'beto' : 'lupe') : disponibles.includes(S.compPref) ? S.compPref : 'beto';
+  const frase = S.fase === 'aprendiz'
+    ? (S.noche === 1 ? 'Bienvenido a Grasa Brava. Toma la rasqueta, súbete a la camioneta y no toques mi radio.' : uno(RIGO))
+    : (S.noche === S.abierta ? `Primera noche de ${S.empresa.nombre}. Yo estaré pescando. No me llames. Bueno, llámame si hay mapache.` : uno(RIGO_CONSEJOS));
+  S.hoy = { noche: S.noche, ordenes, sel: 0, comp, ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2, avisos, frase, resultado: '' };
   guardar();
 }
 
@@ -1390,26 +1429,46 @@ function pantalla(html) { P.innerHTML = `<div class="hoja">${html}</div>`; P.hid
 const cara = (col, letra) => `<div class="cara" style="background:${col}">${esc(letra)}</div>`;
 let tab = 'noche';
 
+// La camioneta de tu empresa, con tu nombre y tu pintura. Mejora con cada etapa.
+function furgo(nombre, color, et) {
+  const largo = nombre.length > 13;
+  return `<svg class="furgo" viewBox="0 0 230 110" role="img" aria-label="La camioneta de ${esc(nombre)}">
+    <path d="M12 76V36q0-11 11-11h118l34 22h33q10 0 10 10v19z" fill="${color}" stroke="#0b1117" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M144 30l26 17h-26z" fill="#9fd3ea" stroke="#0b1117" stroke-width="2" stroke-linejoin="round"/>
+    ${et >= 2 ? '<rect x="12" y="62" width="206" height="6" fill="#ff8a1f"/>' : ''}
+    ${et === 0 ? '<circle cx="30" cy="66" r="4" fill="#7a4a1e" opacity=".8"/><circle cx="118" cy="40" r="3" fill="#7a4a1e" opacity=".7"/><circle cx="196" cy="68" r="3.5" fill="#7a4a1e" opacity=".8"/>' : ''}
+    ${et >= 3 ? '<rect x="40" y="18" width="70" height="8" rx="3" fill="#d3dae0" stroke="#0b1117" stroke-width="2"/>' : ''}
+    ${et >= 4 ? '<path d="M200 22l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.5"/>' : ''}
+    <rect x="10" y="74" width="212" height="8" rx="3" fill="#2b3238"/>
+    <circle cx="52" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/><circle cx="182" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/>
+    <text x="77" y="53" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="17" fill="#fff" stroke="#0b1117" stroke-width="3" paint-order="stroke"${largo ? ' textLength="122" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(nombre.toUpperCase())}</text>
+  </svg>`;
+}
+
 function cabecera() {
-  const rg = RANGOS[S.rango], need = xpNivel(S.nivel);
-  return `<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>
+  const need = xpNivel(S.nivel), aprendiz = S.fase === 'aprendiz';
+  return `${aprendiz ? '<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>'
+      : `<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(S.empresa.nombre)}<span>${ETAPAS[S.etapa].n}</span></div></div>`}
     <div class="datos">
-      <div class="dato"><i>Noche</i><b>${S.noche}</b></div>
+      <div class="dato"><i>Noche</i><b>${S.noche}</b>${aprendiz ? `<small>Aprendiz: ${Math.min(S.noche, APRENDIZ)} de ${APRENDIZ}</small>` : ''}</div>
       <div class="dato"><i>Tu dinero</i><b>${dinero(S.dinero)}</b></div>
-      <div class="dato"><i>Reputación</i><b>${S.rep}</b><small>${fama(S.rep)} · pagos ×${multPago().toFixed(2)}</small></div>
-      <div class="dato"><i>Nivel ${S.nivel}</i><b>${rg.n}</b><div class="barra" title="Experiencia"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></div>
+      <div class="dato"><i>Reputación${aprendiz ? ' de Grasa Brava' : ''}</i><b>${S.rep}</b><small>${fama(S.rep)} · pagos ×${multPago().toFixed(2)}</small></div>
+      <div class="dato"><i>Nivel</i><b>${S.nivel}</b><div class="barra" title="Experiencia"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></div>
     </div>`;
 }
 
 function pantallaCamioneta() {
   M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true;
+  if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
   else if (!mundo) construirNoche(null);
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
-  const tabs = [['noche', 'Esta noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller']];
+  const tabs = S.fase === 'aprendiz' ? [['noche', 'Esta noche'], ['taller', 'Taller']] : [['noche', 'Esta noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller']];
+  if (!tabs.some(t => t[0] === tab)) tab = 'noche';
   pantalla(`${cabecera()}
-    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo, por la radio</b>${esc(H.avisos.length ? H.avisos.join(' ') : H.frase)}</div></div>
+    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? 'Don Rigo, por la radio' : 'Don Rigo, desde el lago'}</b>${esc(H.frase)}</div></div>
+    ${H.avisos.length ? `<div class="cita"><b>Noticias del barrio</b>${esc(H.avisos.join(' '))}</div>` : ''}
     <nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
     ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller })[tab]()}
     <div class="acciones"><button class="btn" id="ajustes">Ajustes</button></div>`);
@@ -1430,55 +1489,69 @@ function tarjetaOrden(o, i) {
   </button>`;
 }
 
+function tarjetaEtapa(sig) {
+  const listo = S.rep >= sig.rep, falta = sig.compra - S.dinero;
+  return `<div class="rango"><div class="fila"><b>Siguiente etapa: ${sig.n}</b><span class="pago">${dinero(sig.compra)}</span></div>
+    <span class="nota">${esc(sig.txt)}</span>
+    ${listo ? `<div class="acciones"><button class="btn prim" id="saltar" ${falta > 0 ? 'disabled' : ''}>Dar el salto</button></div>${falta > 0 ? `<span class="nota">Te faltan ${dinero(falta)}.</span>` : ''}`
+      : `<span class="aviso">Necesitas reputación ${sig.rep} (tienes ${S.rep}).</span>`}</div>`;
+}
+
 function vNoche() {
-  const H = S.hoy, eligeComp = S.rango >= 2, plazas = PLAZAS[S.eq.camioneta];
+  const H = S.hoy, aprendiz = S.fase === 'aprendiz', plazas = PLAZAS[S.eq.camioneta];
   const o = H.ordenes[H.sel], bloqueada = o && o.ayud > H.ayud.length;
-  return `<h2 class="sec">${S.rango === 0 ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
-    ${H.ordenes.map(tarjetaOrden).join('') || '<p class="nota">No hay órdenes. Busca clientes.</p>'}
-    <h2 class="sec">${eligeComp ? 'Elige compañero' : 'Tu compañero esta noche'}</h2>
-    <div class="companeros">${Object.entries(COMPANEROS).map(([id, c]) => `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${S.rango < c.rango || (!eligeComp && id !== H.comp) ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${c.n}</b><span>${S.rango < c.rango ? 'Llega con el rango ' + RANGOS[c.rango].n : esc(c.rasgo)}</span></div></button>`).join('')}</div>
+  const sig = !aprendiz && ETAPAS[S.etapa + 1];
+  return `${sig ? tarjetaEtapa(sig) : ''}
+    <h2 class="sec">${aprendiz ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
+    ${H.ordenes.map(tarjetaOrden).join('') || '<p class="nota">No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.</p>'}
+    <h2 class="sec">${aprendiz ? 'Tu compañero esta noche' : 'Elige compañero'}</h2>
+    <div class="companeros">${Object.entries(COMPANEROS).map(([id, c]) => {
+      const falta = !aprendiz && etapa() < c.etapa;
+      return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${c.n}</b><span>${falta ? 'Se une con la etapa ' + ETAPAS[c.etapa].n : esc(c.rasgo) + (aprendiz ? '' : ` ${dinero(c.sueldo)} por noche.`)}</span></div></button>`;
+    }).join('')}</div>
     ${S.cuadrilla.length ? `<h2 class="sec">Ayudantes en la camioneta · ${H.ayud.length} de ${plazas}</h2>
       <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     <div class="acciones"><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
-    <p class="nota">Cobras el ${Math.round(RANGOS[S.rango].parte * 100)} % del trabajo más toda la propina.${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}${S.album.length ? ` Álbum: ${esc(S.album.join(', '))}.` : ''}</p>`;
+    <p class="nota">${aprendiz ? `Don Rigo te paga ${dinero(SUELDO_APRENDIZ)} por noche, ${dinero(40)} más si apruebas, y la propina es tuya. Los daños los paga él (y te los recuerda).` : 'Cobras el trabajo entero, pero pagas gasolina, sueldos y daños.'}${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}${S.album.length ? ` Álbum: ${esc(S.album.join(', '))}.` : ''}</p>`;
 }
 
 function vClientes() {
   const H = S.hoy;
   const acciones = MARKETING.map(m => {
-    const bloq = S.rango < m.rango ? `Desde el rango ${RANGOS[m.rango].n}` : m.id === 'licitacion' && S.rep < 50 ? 'Necesitas reputación 50' : '';
+    const bloq = etapa() < m.etapa ? `Desde la etapa ${ETAPAS[m.etapa].n}` : m.id === 'licitacion' && S.rep < 50 ? 'Necesitas reputación 50' : '';
     return `<div class="orden"><div class="fila"><h3>${esc(m.n)}</h3><span class="pago">${dinero(m.p)}</span></div><span class="nota">${esc(m.d)}</span>
       ${bloq ? `<span class="aviso">${bloq}</span>` : `<div class="acciones"><button class="btn prim" data-m="${m.id}" ${H.llamadas <= 0 || S.dinero < m.p ? 'disabled' : ''}>Hacerlo</button></div>`}</div>`;
   }).join('');
-  const lista = S.clientes.length ? S.clientes.map(c => { const C = COCINAS[c.cocina], hoy = c.proxima <= S.noche; return `<div class="persona">${cara(hoy ? '#69c97a' : '#5d7180', c.nombre[0])}<div><b>${esc(c.nombre)}</b><span>${C.n} · NFPA 96 ${C.frec} · ${c.visitas} ${c.visitas === 1 ? 'visita' : 'visitas'}</span></div><span class="chip ${hoy ? 'ok' : ''}">${hoy ? (S.noche > c.proxima ? 'Atrasado' : 'Le toca hoy') : 'Noche ' + c.proxima}</span></div>`; }).join('')
+  const lista = S.clientes.length ? S.clientes.map(c => { const C = COCINAS[c.cocina], hoy = c.proxima <= S.noche; return `<div class="persona">${cara(hoy ? '#69c97a' : '#5d7180', c.nombre[0])}<div><b>${esc(c.nombre)}</b><span>${C.n} · NFPA 96 ${C.frec} · ${c.visitas} ${c.visitas === 1 ? 'visita' : 'visitas'}${c.visitas >= 3 ? ' · fiel' : ''}</span></div><span class="chip ${hoy ? 'ok' : ''}">${hoy ? (S.noche > c.proxima ? 'Atrasado' : 'Le toca hoy') : 'Noche ' + c.proxima}</span></div>`; }).join('')
     : '<p class="nota">Todavía no hay clientes fijos. Aprueba la inspección y a veces te ofrecen contrato: vuelven solos cada pocas noches y pagan un 10 % más.</p>';
   return `<h2 class="sec">Buscar clientes · te quedan ${H.llamadas} ${H.llamadas === 1 ? 'llamada' : 'llamadas'} esta noche</h2>
     ${H.resultado ? `<div class="cita"><b>Resultado</b>${esc(H.resultado)}</div>` : ''}
     ${acciones}
-    <h2 class="sec">Clientes fijos</h2>${lista}`;
+    <h2 class="sec">Clientes fijos</h2>${lista}
+    <p class="nota">Ojo con ${RIVAL}: si te retrasas con un cliente que aún no es fiel (3 visitas), se lo lleva.</p>`;
 }
 
 function vCuadrilla() {
   const plazas = PLAZAS[S.eq.camioneta];
-  if (S.rango < 2) return `<div class="cita"><b>Don Rigo</b>Tú todavía no contratas a nadie. Cuando seas jefe de cuadrilla, hablamos.</div>`;
+  if (S.etapa < 1) return `<div class="cita"><b>Beto</b>¿Contratar? Si apenas cabemos tú y yo en la camioneta. Y el karaoke. Cuando tengamos taller, hablamos.</div>`;
   const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} por noche · ${c.noches} noches</span></div><button class="btn peq" data-despedir="${c.id}">Despedir</button></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · pide ${dinero(c.sueldo)} por noche</span></div><button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
   return `<h2 class="sec">Tu cuadrilla · caben ${plazas} en la camioneta</h2>${mios}
-    <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Mientras no seas socio, Don Rigo paga la mitad de su sueldo. Los trabajos grandes piden ayudantes.</p>
+    <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes.</p>
     <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}`;
 }
 
 function vTaller() {
   const items = TIENDA.filter(t => t.ok(S));
-  return `<p class="nota">Las herramientas se pagan con tu dinero. Tienes ${dinero(S.dinero)}.</p>
-    ${items.map(t => `<div class="orden"><h3>${esc(t.n)}</h3><span class="nota">${esc(t.d)}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>Comprar</button></div></div>`).join('') || '<p class="nota">Ya tienes todo. Don Rigo está orgulloso, aunque no lo diga.</p>'}
-    ${S.eq.camioneta === 1 && S.rango < 2 ? '<p class="nota">Las camionetas más grandes llegan con el rango Jefe de cuadrilla.</p>' : ''}`;
+  return `<p class="nota">Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas. Tienes ${dinero(S.dinero)}.</p>
+    ${items.map(t => `<div class="orden"><h3>${esc(t.n)}</h3><span class="nota">${esc(t.d)}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>Comprar</button></div></div>`).join('') || '<p class="nota">Ya tienes todo el equipo.</p>'}
+    ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}`;
 }
 
 function enlazar() {
   const H = S.hoy;
   P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; guardar(); pantallaCamioneta(); });
-  P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { H.comp = b.dataset.c; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { H.comp = S.compPref = b.dataset.c; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
     const id = +b.dataset.a;
     if (H.ayud.includes(id)) H.ayud = H.ayud.filter(x => x !== id);
@@ -1488,9 +1561,10 @@ function enlazar() {
   const sal = $('#salir'); if (sal) sal.onclick = () => {
     audio();
     const o = H.ordenes[H.sel], c = COMPANEROS[H.comp];
-    const equipo = [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza }, ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.sueldo }))];
+    const equipo = [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }, ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.sueldo }))];
     empezarTurno({ ...o, comp: H.comp, equipo });
   };
+  const sj = $('#saltar'); if (sj) sj.onclick = () => { const sig = ETAPAS[S.etapa + 1]; S.dinero -= sig.compra; S.etapa++; guardar(); cola = [subirEtapa]; siguiente(); };
   P.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
     const m = MARKETING.find(x => x.id === b.dataset.m);
     S.dinero -= m.p; H.llamadas--;
@@ -1521,32 +1595,28 @@ function pantallaAjustes(enTurno) {
     ['comodo', 'Modo cómodo', 'El reloj corre a la mitad de velocidad.'],
     ['sonido', 'Sonido', 'Raspados, chorros y alarmas.'],
   ];
-  const sig = RANGOS[S.rango + 1];
   pantalla(`<div class="rotulo">${enTurno ? 'Pausa' : 'Ajustes'}</div>
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
-    ${!enTurno && sig ? `<div class="rango"><b>Siguiente rango: ${sig.n}</b><span class="nota">Falta: ${esc(sig.falta(S))}. ${esc(sig.txt)}</span>
-      ${sig.compra && sig.req(S) ? `<button class="btn prim" id="comprar" ${S.dinero < sig.compra ? 'disabled' : ''}>Comprar la mitad de la empresa · ${dinero(sig.compra)}</button>` : ''}</div>` : ''}
     ${Object.keys(S.perks).length ? `<div class="cita"><b>Tus mejoras</b>${Object.entries(S.perks).map(([k, n]) => `${PERKS[k].n}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
     <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, usa las flechas de los lados. En ordenador, teclas 1 a 4.</div>
     <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="borrar">Empezar de cero</button>'}</div>`);
   P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.aj[b.dataset.k] = !S.aj[b.dataset.k]; b.setAttribute('aria-pressed', S.aj[b.dataset.k]); U.hl.value = S.aj.resaltar ? 1 : 0; guardar(); });
   $('#volver').onclick = () => { if (enTurno) { P.hidden = true; M.pausa = false; } else pantallaCamioneta(); };
-  const cb = $('#comprar'); if (cb) cb.onclick = () => { S.dinero -= sig.compra; S.rango++; guardar(); cola = [subirRango]; siguiente(); };
   const ab = $('#abandonar'); if (ab) ab.onclick = () => { P.hidden = true; terminarTurno(); };
   const br = $('#borrar'); if (br) br.onclick = () => {
-    pantalla(`<div class="rotulo">¿Empezar de cero?</div><p>Se borran tu dinero, tu rango, tus clientes y tu cuadrilla. Don Rigo no se acordará de ti. Bueno, nunca se acordó.</p>
+    pantalla(`<div class="rotulo">¿Empezar de cero?</div><p>Se borran tu dinero, tu empresa, tus clientes y tu cuadrilla. Vuelves a ser el nuevo de Grasa Brava. Don Rigo no se acordará de ti. Bueno, nunca se acordó.</p>
       <div class="acciones"><button class="btn" id="no">Cancelar</button><button class="btn prim" id="si">Empezar de cero</button></div>`);
     $('#no').onclick = () => pantallaAjustes(false);
     $('#si').onclick = () => { nueva(); tab = 'noche'; guardar(); pantallaCamioneta(); };
   };
 }
 
-// Después del parte: ofertas de contrato, subidas de nivel y de rango, en cola.
+// Después del parte: contrato, nivel y despido, en cola.
 let cola = [];
 function siguiente() { const f = cola.shift(); if (f) f(); else pantallaCamioneta(); }
 
 function pantallaParte() {
-  const o = M.orden, rg = RANGOS[S.rango];
+  const o = M.orden, aprendiz = S.fase === 'aprendiz';
   const zonas = Z.map(z => ({ n: z.n, m: micras(z), pct: pctZona(z) }));
   const aprobado = zonas.every(z => z.m <= LIMITE), espejo = zonas.every(z => z.m <= 50);
   let celdas = 0, pulidas = 0;
@@ -1558,32 +1628,32 @@ function pantallaParte() {
   const limpio = zonas.reduce((a, z) => a + z.pct, 0) / zonas.length;
   const cobro = aprobado ? o.pago : Math.round(o.pago * .5 * limpio / 10) * 10;
   const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 : 0) + .05 * perk('labia') + M.propinaMod, 0, .3) / 5) * 5);
-  const tuParte = Math.round(cobro * rg.parte);
-  const cuota = S.rango >= 3 ? 1 : .5;   // de empleado, Don Rigo te descuenta la mitad de los daños
-  const ayudantes = M.equipo.filter(e => !e.principal);
-  const sueldos = Math.round(ayudantes.reduce((a, e) => a + e.sueldo, 0) * cuota);
-  const gastos = S.rango >= 3 ? Math.round(155 * rg.parte) : 0;
-  const neto = tuParte + propina - Math.round(M.danos.reduce((a, d) => a + d.dinero, 0) * cuota) - sueldos - gastos;
+  const danos = M.danos.reduce((a, d) => a + d.dinero, 0);
+  const sueldos = M.equipo.reduce((a, e) => a + (e.sueldo || 0), 0);
+  // De aprendiz cobras sueldo y Don Rigo paga los daños; con tu empresa cobras todo y lo pagas todo.
+  const lineas = aprendiz
+    ? [['Sueldo de la noche', SUELDO_APRENDIZ], ['Bono por aprobar', aprobado ? 40 : 0], ['Propina', propina], ...M.danos.map(d => [d.t + (d.dinero ? ' (lo paga Don Rigo)' : ''), null])]
+    : [[`${aprobado ? 'Pago del trabajo' : 'Pago parcial'}`, cobro], ['Propina', propina], ...M.danos.map(d => [d.t, d.dinero ? -d.dinero : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
+  const neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   const rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0);
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
   S.mejor = Math.max(S.mejor, neto); S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
-  for (const e of ayudantes) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) c.noches++; }
-  // Clientes fijos
+  for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) c.noches++; }
+  // Clientes fijos (solo con tu empresa: los de Don Rigo son suyos)
   let notaCliente = '';
   cola = [];
   const cli = o.clienteId ? S.clientes.find(c => c.id === o.clienteId) : null;
   if (cli) {
     if (aprobado) { cli.proxima = S.noche + FREC[COCINAS[cli.cocina].frec]; cli.visitas++; notaCliente = `${cli.nombre} te espera otra vez la noche ${cli.proxima}.`; }
     else { S.clientes = S.clientes.filter(c => c !== cli); notaCliente = `${cli.nombre} cancela el contrato.`; }
-  } else if (aprobado && azar(.35 + S.rep / 250 + .1 * perk('gentes'))) cola.push(() => ofertaContrato(o));
+  } else if (!aprendiz && aprobado && azar(.35 + S.rep / 250 + .1 * perk('gentes'))) cola.push(() => ofertaContrato(o));
   // Experiencia y nivel
   S.xp += xp; let subidas = 0;
   while (S.xp >= xpNivel(S.nivel)) { S.xp -= xpNivel(S.nivel); S.nivel++; subidas++; }
   for (let i = 0; i < subidas; i++) cola.push(elegirPerk);
-  const sig = RANGOS[S.rango + 1];
-  if (sig && !sig.compra && sig.req(S)) { S.rango++; cola.push(subirRango); }
+  if (aprendiz && S.noche > APRENDIZ) cola.push(despido);
   guardar();
   const desastre = M.danos.some(d => d.dinero >= 60);
   pantalla(`<div class="rotulo">${aprobado ? (espejo ? 'Metal desnudo' : 'Aprobado') : 'No pasa'}<span>Parte de ${esc(o.nombre)}</span></div>
@@ -1592,16 +1662,12 @@ function pantallaParte() {
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
     <div class="cuentas">
-      <span>${aprobado ? 'Pago del trabajo' : 'Pago parcial'} (${dinero(cobro)}), tu ${Math.round(rg.parte * 100)} %</span><span>${dinero(tuParte)}</span>
-      <span>Propina</span><span>${dinero(propina)}</span>
-      ${M.danos.map(d => `<span>${esc(d.t)}</span><span>${d.dinero ? dinero(-Math.round(d.dinero * cuota)) : '—'}</span>`).join('')}
-      ${sueldos ? `<span>Sueldos de ayudantes${cuota < 1 ? ' (tu mitad)' : ''}</span><span>${dinero(-sueldos)}</span>` : ''}
-      ${gastos ? `<span>Gasolina y sueldo del compañero (tu parte)</span><span>${dinero(-gastos)}</span>` : ''}
+      ${lineas.filter(l => l[1] !== 0).map(l => `<span>${esc(l[0])}</span><span>${l[1] === null ? '—' : dinero(l[1])}</span>`).join('')}
       <span class="total">Te llevas</span><span class="total">${dinero(neto)}</span>
-      <span>Reputación</span><span>${rep >= 0 ? '+' : ''}${rep}</span>
+      <span>Reputación${aprendiz ? ' de Grasa Brava' : ''}</span><span>${rep >= 0 ? '+' : ''}${rep}</span>
       <span>Experiencia</span><span>+${xp}</span>
     </div>
-    ${cuota < 1 && M.danos.some(d => d.dinero) ? '<p class="nota">Don Rigo te descuenta la mitad de los daños del sueldo. «Es pedagógico», dice.</p>' : ''}
+    ${aprendiz && danos ? '<p class="nota">Don Rigo paga los daños. Te los va a recordar en tu boda.</p>' : ''}
     ${M.album.length ? `<p class="nota">Nueva foto en el álbum: ${esc(M.album.join(', '))}.</p>` : ''}
     <div class="acciones"><button class="btn prim" id="seguir">Seguir</button></div>`);
   $('#seguir').onclick = siguiente;
@@ -1611,8 +1677,8 @@ function pantallaParte() {
 function ofertaContrato(o) {
   const C = COCINAS[o.cocina], cada = FREC[C.frec];
   pantalla(`<div class="rotulo">¿Contrato fijo?<span>${esc(o.nombre)}</span></div>
-    <div class="cita"><b>El dueño</b>${esc(uno(['Nunca vi mi campana así. ¿Me la limpian siempre ustedes?', 'Mi cuñado cobraba menos, pero mi cuñado no limpiaba. ¿Firmamos?', 'Quiero esto cada vez que toque. Y que venga el mismo chico, el que no rompe nada.']))}</div>
-    <p>Te llamará cada ${cada} noches (NFPA 96: ${C.frec}) y paga un 10 % más. Misma cocina, misma campana, misma grasa de vuelta. Si no vas a tiempo, se va y pierdes reputación.</p>
+    <div class="cita"><b>El dueño</b>${esc(uno(['Nunca vi mi campana así. ¿Me la limpian siempre ustedes?', `${RIVAL} cobraba menos, pero no limpiaba. ¿Firmamos?`, 'Quiero esto cada vez que toque. Y que venga el mismo chico, el que no rompe nada.']))}</div>
+    <p>Te llamará cada ${cada} noches (NFPA 96: ${C.frec}) y paga un 10 % más. Misma cocina, misma campana, misma grasa de vuelta. Si no vas a tiempo, se va con ${RIVAL} y pierdes reputación.</p>
     <div class="acciones"><button class="btn prim" id="firmar">Firmar</button><button class="btn" id="noFirmar">Mejor no</button></div>`);
   $('#firmar').onclick = () => { S.clientes.push({ id: S.sigId++, nombre: o.nombre, cocina: o.cocina, proxima: S.noche + cada - 1, visitas: 1, diseno: o.diseno, pagoBase: o.pagoBase }); guardar(); sCaja(); siguiente(); };
   $('#noFirmar').onclick = siguiente;
@@ -1627,12 +1693,62 @@ function elegirPerk() {
   P.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { S.perks[b.dataset.p] = perk(b.dataset.p) + 1; guardar(); siguiente(); });
 }
 
-function subirRango() {
-  const r = RANGOS[S.rango];
-  const frases = ['', 'Tres turnos y no has roto nada. Bueno, nada caro. Ya eres ayudante. Ahora sal a buscar clientes.', 'La gente pregunta por ti. Me molesta, pero te subo a jefe de cuadrilla. Contrata a alguien que no sea Beto.', 'Firmaste. Ahora la mitad de las deudas también son tuyas. Bienvenido, socio.', 'Me voy a pescar. La camioneta es tuya. El ruido también.'];
-  pantalla(`<div class="rotulo">Nuevo rango<span>${esc(r.n)}</span></div>
-    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>${esc(frases[S.rango])}</div></div>
-    <p>${esc(r.txt)} Ahora cobras el ${Math.round(r.parte * 100)} % de cada trabajo.</p>
+// ---- el despido y tu empresa desde cero
+
+function despido() {
+  pantalla(`<div class="rotulo">La última noche<span>de Grasa Brava</span></div>
+    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>Ven a la camioneta. Tenemos que hablar. Trae la rasqueta.</div></div>
+    <p>Don Rigo tiene la cara de cuando el mapache se comió su almuerzo. Beto silba mirando al techo.</p>
+    <div class="cita"><b>Don Rigo</b>Beto vendió la hidrolavadora para comprarse una máquina de karaoke. Dice que tú le diste permiso.</div>
+    <div class="acciones"><button class="btn prim" data-r="0">¡Yo no fui!</button><button class="btn" data-r="1">…¿Qué canciones tiene?</button></div>`);
+  sAlarma();
+  P.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+    const resp = b.dataset.r === '0' ? 'Ya sé que no fuiste tú. Pero alguien tiene que pagar el pato, y Beto es mi sobrino.' : 'Tiene «Rata de dos patas». Beto la cantó tres veces. Me duele el alma.';
+    pantalla(`<div class="rotulo">Estás despedido<span>(más o menos)</span></div>
+      <div class="cita"><b>Don Rigo</b>${esc(resp)} Total, que cierro Grasa Brava y me voy a pescar. Ya estoy viejo para mapaches.</div>
+      <div class="cita"><b>Don Rigo</b>Llévate la camioneta. No arranca en subida y la radio solo agarra rancheras. Aquí tienes ${dinero(300)} de finiquito. Y llévate a Beto, por favor. Te lo suplico.</div>
+      <div class="cita"><b>Beto</b>Jefe… digo, nuevo jefe. Yo me voy contigo. Traigo el karaoke.</div>
+      <p class="nota">Tus herramientas, tu nivel y tus mejoras se vienen contigo. La hidrolavadora de Don Rigo no (ya sabes por qué). Los clientes son suyos: tu reputación empieza en cero.</p>
+      <div class="acciones"><button class="btn prim" id="abrir">Abrir mi propia empresa</button></div>`);
+    tono(220, .6, .08, 'triangle', 110);
+    $('#abrir').onclick = nombrarEmpresa;
+  });
+}
+
+function nombrarEmpresa() {
+  const NOMBRES = ['Grasa Cero', 'Campanas Relucientes', 'Los Limpiadores de Hoods', 'Ductos Felices', 'Brillo Nocturno'];
+  const PINTURAS = [['#ff8a1f', 'naranja'], ['#2f6fd1', 'azul'], ['#d7382b', 'rojo'], ['#2e9e5b', 'verde'], ['#e8e3d6', 'blanco'], ['#7b4fd1', 'morado']];
+  let nombre = uno(NOMBRES), color = PINTURAS[0][0];
+  pantalla(`<div class="rotulo">Tu empresa<span>desde cero</span></div>
+    <div id="vistaFurgo"></div>
+    <label class="campo"><span>Nombre de la empresa</span><input id="nombreEmp" maxlength="26" autocomplete="off" spellcheck="false"></label>
+    <div class="chips">${NOMBRES.map(n => `<button class="btn peq" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+    <h2 class="sec">Pintura de la camioneta</h2>
+    <div class="chips">${PINTURAS.map(([c, n]) => `<button class="color" data-col="${c}" style="background:${c}" aria-label="Pintura ${n}" aria-pressed="${c === color}"></button>`).join('')}</div>
+    <p class="nota">Empiezas con ${dinero(300)} de finiquito más lo que ahorraste, la camioneta vieja, Beto y reputación cero. A buscar clientes.</p>
+    <div class="acciones"><button class="btn prim" id="fundar">Abrir la empresa</button></div>`);
+  const inp = $('#nombreEmp'), fundar = $('#fundar');
+  const pintar = () => { $('#vistaFurgo').innerHTML = furgo(nombre || 'Sin nombre', color, 0); fundar.disabled = !nombre; };
+  inp.value = nombre; pintar();
+  inp.oninput = () => { nombre = inp.value.trim(); pintar(); };
+  P.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { nombre = inp.value = b.dataset.n; pintar(); });
+  P.querySelectorAll('[data-col]').forEach(b => b.onclick = () => { color = b.dataset.col; P.querySelectorAll('[data-col]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintar(); });
+  fundar.onclick = () => {
+    if (!nombre) return;
+    Object.assign(S, { fase: 'empresa', etapa: 0, empresa: { nombre, color }, rep: 0, clientes: [], cuadrilla: [], candidatos: [], hoy: null, compPref: 'beto', abierta: S.noche });
+    S.dinero += 300;
+    guardar(); sCaja(); tab = 'clientes';
+    pantallaCamioneta();
+  };
+}
+
+function subirEtapa() {
+  const e = ETAPAS[S.etapa];
+  const frases = ['', ['Beto', 'Un taller propio. Con baño y todo. Lupe llamó: dice que se viene con nosotros si le dejas su propia taza.'], ['Lupe', 'Oficina con fax. Nadie sabe usar el fax. Chuy ya se durmió en el sofá de la entrada: está contratado.'], ['Beto', 'Nos llaman de un estadio. ¡De un estadio! El cuñado del alcalde pasó por delante y no nos saludó. Eso es que vamos bien.'], ['Don Rigo', 'Saliste en el noticiero de las seis. Siempre supe que valías. Mentira, pero se agradece. Ahora, ¿me das trabajo? Es broma. Bueno, medio broma.']][S.etapa];
+  pantalla(`<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(e.n)}<span>${esc(S.empresa.nombre)}</span></div></div>
+    <div class="cita"><b>${esc(frases[0])}</b>${esc(frases[1])}</div>
+    <p>${esc(e.txt)}</p>
+    ${S.etapa === ETAPAS.length - 1 ? '<p class="pista">Llegaste a lo más alto. Puedes seguir jugando: la grasa nunca se acaba.</p>' : ''}
     <div class="acciones"><button class="btn prim" id="ok">Seguir</button></div>`);
   sDing(); tono(1760, .5, .08, 'sine', null, .3);
   $('#ok').onclick = siguiente;
