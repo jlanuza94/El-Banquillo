@@ -8,6 +8,10 @@ Juego de mánager de fútbol para el navegador y el móvil: 10 países, 43 ligas
 
 Además: bandeja de entrada con mensajes de la directiva, el cuerpo técnico, los ojeadores y la prensa; cuerpo técnico con atributos; ojeo con conocimiento de jugadores (rangos de atributos e informes); roles por posición; instrucciones al rival, córners, xG y consejos del segundo en el partido; liga sub-19; mercado con plazos, % de futura venta, intercambios, rumores y gangas de cierre; estadísticas, once ideal, premios de temporada (Balón de Oro…) y comparador de jugadores.
 
+## Los Limpiadores de Hoods
+
+Otro juego del repositorio, en una sola página (`hoods/juego.html`): diriges una empresa de limpieza de campanas extractoras de restaurantes. De día eliges órdenes (con su frecuencia NFPA 96), contratas ayudantes y compras equipo; de noche haces el turno raspando grasa de filtros, campana y ducto antes de las 6:00, y el inspector mide con el peine de grasa. Meta: $20.000 en caja y reputación 80. `npm run build` lo deja en `dist/hoods/index.html` (en GitHub Pages, `/hoods/`).
+
 ## Cómo jugar
 
 - **En claude.ai:** el enlace del artifact (todo funciona salvo instalarlo como app).

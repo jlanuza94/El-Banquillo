@@ -1,0 +1,829 @@
+<title>Los Limpiadores de Hoods</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Turno de noche en una cocina cerrada: tablero de acero sobre azul pizarra, grasa ámbar, naranja de seguridad para lo que se toca. */
+:root {
+  --noche: #131d26;
+  --panel: #1c2a35;
+  --panel-2: #243542;
+  --linea: #344957;
+  --acero: #c3ccd3;
+  --tenue: #8597a5;
+  --grasa: #c98a22;
+  --hivis: #ff8a1f;
+  --hivis-tinta: #1a1004;
+  --espuma: #7fd3e6;
+  --ok: #69c97a;
+  --mal: #ff6a5c;
+  --f-display: "Bungee", "Impact", "Arial Black", sans-serif;
+  --f-cuerpo: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --f-cond: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--noche); color: var(--acero); font-family: var(--f-cuerpo); font-size: 15px; line-height: 1.45; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
+.app { max-width: 980px; margin: 0 auto; padding-block: 14px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; }
+
+/* Cabecera: rótulo de camión */
+.cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px; }
+.rotulo { font-family: var(--f-display); font-size: clamp(20px, 5vw, 30px); line-height: 1; color: var(--acero); letter-spacing: .01em; text-wrap: balance; }
+.rotulo span { color: var(--hivis); }
+.rotulo small { display: block; font-family: var(--f-cond); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); margin-top: 6px; }
+.datos { display: flex; flex-wrap: wrap; gap: 6px; }
+.dato { background: var(--panel); border: 1px solid var(--linea); border-radius: 4px; padding: 5px 10px; display: grid; min-width: 70px; }
+.dato b { font-family: var(--f-mono); font-size: 16px; font-variant-numeric: tabular-nums; color: var(--acero); font-weight: 600; }
+.dato i { font-style: normal; font-family: var(--f-cond); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--tenue); }
+.dato.neg b { color: var(--mal); }
+
+.meta { background: var(--panel); border: 1px dashed var(--linea); border-radius: 4px; padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 14px; }
+.meta .prog { flex: 1 1 160px; display: grid; gap: 3px; }
+.meta .barra { height: 8px; background: var(--noche); border-radius: 4px; overflow: hidden; }
+.meta .barra div { height: 100%; background: var(--hivis); }
+.evento { background: color-mix(in srgb, var(--grasa) 16%, var(--panel)); border-left: 3px solid var(--grasa); padding: 8px 12px; border-radius: 0 4px 4px 0; font-size: 14px; }
+
+.tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--linea); overflow-x: auto; }
+.tabs button { background: none; border: 0; padding: 10px 14px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); }
+
+.lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 12px; }
+.orden { background: var(--panel); border: 1px solid var(--linea); border-radius: 6px; padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.orden.fijo { border-color: color-mix(in srgb, var(--hivis) 55%, var(--linea)); }
+.orden h3 { margin: 0; font-family: var(--f-cond); font-size: 21px; line-height: 1.1; color: var(--acero); text-wrap: balance; }
+.orden .tipo { font-size: 13px; color: var(--tenue); }
+.chip { display: inline-block; font-family: var(--f-cond); font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; background: var(--panel-2); color: var(--acero); }
+.chip.naranja { background: var(--hivis); color: var(--hivis-tinta); }
+.chip.ok { background: color-mix(in srgb, var(--ok) 22%, var(--panel)); color: var(--ok); }
+.chip.num { text-transform: none; font-family: var(--f-mono); font-weight: 600; letter-spacing: 0; }
+.chip.mal { background: color-mix(in srgb, var(--mal) 22%, var(--panel)); color: var(--mal); }
+.ficha { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 14px; }
+.ficha dt { color: var(--tenue); }
+.ficha dd { margin: 0; font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.peine { height: 10px; border-radius: 2px; background: linear-gradient(90deg, var(--panel-2), var(--grasa)); position: relative; }
+.peine i { position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--acero); border-radius: 1px; }
+.pago { font-family: var(--f-mono); font-size: 22px; font-weight: 600; color: var(--acero); }
+.acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { border: 1px solid var(--linea); background: var(--panel-2); border-radius: 4px; padding: 9px 14px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .04em; text-transform: uppercase; }
+.btn:hover:not(:disabled) { border-color: var(--acero); }
+.btn.prim { background: var(--hivis); border-color: var(--hivis); color: var(--hivis-tinta); }
+.btn.prim:hover:not(:disabled) { filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.nota { font-size: 13px; color: var(--tenue); }
+.vacio { color: var(--tenue); padding: 20px 0; }
+.fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+
+.persona { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--linea); border-radius: 6px; padding: 10px 12px; }
+.casco { width: 44px; height: 44px; border-radius: 50% 50% 8px 8px; display: grid; place-items: center; font-family: var(--f-display); font-size: 18px; color: var(--hivis-tinta); }
+.persona h4 { margin: 0; font-family: var(--f-cond); font-size: 18px; color: var(--acero); }
+.estrellas { color: var(--hivis); letter-spacing: 2px; }
+.estrellas .apagadas { color: var(--linea); }
+.cansancio { height: 6px; background: var(--noche); border-radius: 3px; overflow: hidden; margin-top: 4px; max-width: 160px; }
+.cansancio div { height: 100%; background: var(--mal); }
+.grupo { display: grid; gap: 8px; }
+.grupo h2 { margin: 6px 0 0; font-family: var(--f-cond); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); }
+
+.libreta { font-family: var(--f-mono); font-size: 13px; display: grid; gap: 2px; }
+.libreta div { display: grid; grid-template-columns: 54px 1fr auto; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--linea); }
+.libreta span:last-child { font-variant-numeric: tabular-nums; text-align: right; }
+.libreta .mas { color: var(--ok); } .libreta .menos { color: var(--mal); }
+
+/* Turno */
+.turno { position: fixed; inset: 0; z-index: 20; background: var(--noche); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+.turno-in { width: 100%; max-width: 860px; margin: 0 auto; display: grid; gap: 8px; }
+.hud { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; }
+.hud h3 { margin: 0; font-family: var(--f-cond); font-size: 19px; color: var(--acero); }
+.reloj { font-family: var(--f-mono); font-size: 24px; font-weight: 600; color: var(--hivis); font-variant-numeric: tabular-nums; }
+.tiempo { height: 5px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+.tiempo div { height: 100%; background: var(--hivis); }
+.zonas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.zonas button { background: var(--panel); border: 1px solid var(--linea); border-radius: 4px; padding: 6px 8px; text-align: left; display: grid; }
+.zonas button[aria-pressed="true"] { border-color: var(--hivis); background: var(--panel-2); }
+.zonas b { font-family: var(--f-cond); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.zonas span { font-family: var(--f-mono); font-size: 13px; color: var(--tenue); font-variant-numeric: tabular-nums; }
+.zonas .listo span { color: var(--ok); }
+.lienzo { position: relative; width: 100%; max-width: 100%; aspect-ratio: 600 / 380; border-radius: 6px; overflow: hidden; border: 1px solid var(--linea); background: var(--panel); }
+.lienzo canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.herr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.herr button { background: var(--panel); border: 1px solid var(--linea); border-radius: 4px; padding: 8px; display: grid; gap: 1px; text-align: left; }
+.herr button[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inset 0 0 0 1px var(--hivis); }
+.herr b { font-family: var(--f-cond); font-size: 16px; text-transform: uppercase; letter-spacing: .04em; }
+.herr span { font-size: 12px; color: var(--tenue); }
+
+.velo { position: fixed; inset: 0; z-index: 30; background: color-mix(in srgb, var(--noche) 82%, transparent); display: grid; place-items: center; overflow-y: auto; padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.caja { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 18px; width: 100%; max-width: 480px; display: grid; gap: 12px; }
+.caja h2 { margin: 0; font-family: var(--f-display); font-size: 22px; line-height: 1.1; color: var(--acero); text-wrap: balance; }
+.caja p { margin: 0; }
+.check { display: grid; gap: 6px; }
+.check button { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: center; text-align: left; background: var(--panel-2); border: 1px solid var(--linea); border-radius: 4px; padding: 9px 10px; }
+.check .box { width: 22px; height: 22px; border: 2px solid var(--tenue); border-radius: 3px; display: grid; place-items: center; font-weight: 700; color: var(--hivis-tinta); }
+.check button[aria-pressed="true"] .box { background: var(--ok); border-color: var(--ok); }
+.check small { display: block; color: var(--tenue); font-size: 12px; }
+.cuentas { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 14px; }
+.cuentas span:nth-child(even) { font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+.cuentas .total { font-weight: 700; border-top: 1px solid var(--linea); padding-top: 6px; }
+.etiqueta { justify-self: start; border: 2px solid var(--ok); color: var(--ok); border-radius: 4px; padding: 6px 10px; font-family: var(--f-cond); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transform: rotate(-2deg); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="app" id="app"></div>
+<div class="turno" id="turno" hidden></div>
+<div class="velo" id="velo" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const KEY = 'limpiadores-hoods-v1';
+const W = 600, H = 380, CELDA = 20, GW = W / CELDA, GH = H / CELDA;
+const TURNO_S = 170;      // segundos reales que dura el turno de 22:00 a 06:00
+const LIMITE = 150;       // micras de grasa que deja pasar el inspector en cada zona
+const META = { caja: 20000, rep: 80 };
+const SEGURO = 40;        // seguro de responsabilidad civil, por día
+const GASOLINA = 35;
+
+// Frecuencias de limpieza según NFPA 96 (tabla 11.4), en días de juego.
+const FREC = { mensual: 5, trimestral: 10, semestral: 15, anual: 20 };
+const TIPOS = {
+  carbon: { n: 'Asador al carbón', frec: 'mensual', por: 'combustible sólido', g: [.85, 1.15], p: [750, 1150], rep: 20, fl: [3, 6], du: [5, 12],
+    nombres: ['Tacos El Güero', 'Asadero Los Compadres', 'Carnes Don Chuy', 'Pollos Doña Rosa', 'Parrilla La Brasa'] },
+  pizza: { n: 'Horno de leña', frec: 'mensual', por: 'combustible sólido', g: [.5, .8], p: [450, 700], rep: 0, fl: [2, 4], du: [3, 7],
+    nombres: ['Pizzería Napoli', 'Horno Bella Vista', 'Pizza Rústica', 'La Leña de Mario'] },
+  wok: { n: 'Cocina de wok', frec: 'trimestral', por: 'alto volumen', g: [.8, 1.1], p: [650, 1000], rep: 10, fl: [3, 6], du: [4, 10],
+    nombres: ['Wok Dragón Dorado', 'Cocina Shanghái', 'Jardín de Jade', 'Fideos Hermanos Li'] },
+  burger: { n: 'Plancha y freidora', frec: 'trimestral', por: 'alto volumen', g: [.65, .95], p: [500, 800], rep: 0, fl: [3, 5], du: [3, 8],
+    nombres: ['Burger Barrio', 'La Plancha de Toño', 'Hamburguesas El Gordo', 'Freidora Feliz'] },
+  hotel: { n: 'Cocina de hotel', frec: 'semestral', por: 'volumen moderado', g: [.6, .95], p: [1700, 2500], rep: 55, fl: [6, 8], du: [10, 16],
+    nombres: ['Hotel Miramar', 'Hotel Plaza Real', 'Gran Hotel Sol', 'Hotel Costa Azul'] },
+  cafe: { n: 'Cafetería', frec: 'anual', por: 'bajo volumen', g: [.35, .6], p: [280, 420], rep: 0, fl: [2, 3], du: [2, 5],
+    nombres: ['Café La Esquina', 'Desayunos Lupita', 'Cafetería El Andén', 'Panadería San Juan'] },
+};
+const NOMBRES = ['Lupe', 'Chuy', 'Mari', 'Toño', 'Yesenia', 'Rigo', 'Paty', 'Nacho', 'Karla', 'Memo', 'Rosa', 'Efraín', 'Dulce', 'Kevin', 'Brenda', 'Pancho', 'Sandra', 'Óscar'];
+const COLORES = ['#ffd23f', '#7fd3e6', '#69c97a', '#f497b5', '#c6a0ff', '#ffb36b'];
+const TIENDA = [
+  { id: 'r2', n: 'Rasqueta de acero templado', d: 'Raspa un 40 % más y abarca más.', precio: 350, ok: s => s.eq.rasqueta === 1, hacer: s => { s.eq.rasqueta = 2; } },
+  { id: 'r3', n: 'Rasqueta de carburo', d: 'La mejor hoja: aún más fuerte y ancha.', precio: 900, ok: s => s.eq.rasqueta === 2, hacer: s => { s.eq.rasqueta = 3; } },
+  { id: 'pro', n: 'Desengrasante cáustico concentrado', d: 'La espuma ablanda la grasa 3,5× en vez de 2,5×.', precio: 600, ok: s => !s.eq.pro, hacer: s => { s.eq.pro = true; } },
+  { id: 'hidro', n: 'Hidrolavadora de agua caliente', d: 'Nueva herramienta: chorro ancho a 80 °C.', precio: 2400, ok: s => !s.eq.hidro, hacer: s => { s.eq.hidro = true; } },
+  { id: 'andamio', n: 'Andamio plegable', d: 'Llegas antes al ducto: el turno rinde 20 s más.', precio: 450, ok: s => !s.eq.andamio, hacer: s => { s.eq.andamio = true; } },
+  { id: 'camion', n: 'Camión con caja grande', d: 'Caben 4 ayudantes en vez de 2.', precio: 3500, ok: s => !s.eq.camion, hacer: s => { s.eq.camion = true; } },
+];
+const PREP = [
+  { id: 'gas', n: 'Cerrar el gas y apagar los pilotos', d: 'Un piloto encendido quema la lona.' },
+  { id: 'luz', n: 'Cortar la corriente del extractor', d: 'Que el ventilador no arranque con alguien dentro.' },
+  { id: 'plastico', n: 'Cubrir la línea de cocina con plástico', d: 'Planchas, freidoras y mesas quedan limpias.' },
+  { id: 'bolsa', n: 'Colgar la bolsa de contención', d: 'Recoge el agua con grasa que baja del ducto.' },
+];
+const INCIDENTES = {
+  gas: { t: 'Un piloto quedó encendido y chamuscó la lona.', dinero: 150, rep: 3 },
+  luz: { t: 'El extractor arrancó con tu ayudante en el ducto. Susto y media noche perdida.', dinero: 100, rep: 2, fatiga: true },
+  plastico: { t: 'Cayó agua con grasa sobre la plancha. El chef se queja a primera hora.', dinero: 120, rep: 4 },
+  bolsa: { t: 'La grasa del ducto llegó al suelo del comedor. Toca pagar la limpieza.', dinero: 200, rep: 3 },
+};
+const ZONAS = [
+  { id: 'filtros', n: 'Filtros' },
+  { id: 'campana', n: 'Campana' },
+  { id: 'ducto', n: 'Ducto' },
+];
+
+let S, tab = 'trabajos', M = null;
+const $ = s => document.querySelector(s);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const dinero = n => (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('es-MX');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// Azar con semilla guardada en la partida.
+function rnd() {
+  S.seed = (S.seed + 0x6D2B79F5) | 0;
+  let t = S.seed;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const entre = (a, b) => a + (b - a) * rnd();
+const entero = (a, b) => Math.floor(entre(a, b + 1));
+const uno = arr => arr[Math.floor(rnd() * arr.length)];
+
+function nueva() {
+  S = {
+    v: 1, seed: (Date.now() % 2147483647) | 0, dia: 1, caja: 1500, rep: 30, quimico: 30,
+    eq: { rasqueta: 1, pro: false, hidro: false, andamio: false, camion: false },
+    cuadrilla: [{ id: 1, nombre: 'Beto', apodo: 'tu primo', skill: 2, fatiga: 0, sueldo: 110, turnos: 0, color: COLORES[0] }],
+    candidatos: [], ofertas: [], clientes: [], libreta: [], evento: null, hecho: false, ganado: false, perdido: false, sigId: 2,
+  };
+  S.candidatos = genCandidatos();
+  S.ofertas = genOfertas();
+  apuntar('Arranca la empresa con la camioneta, una rasqueta y 30 L de desengrasante', 0);
+}
+
+function guardar() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento: la partida dura lo que la pestaña */ } }
+function cargar() {
+  try { const t = localStorage.getItem(KEY); if (t) { const s = JSON.parse(t); if (s && s.v === 1) { S = s; return true; } } } catch (e) { /* partida nueva */ }
+  return false;
+}
+function apuntar(texto, importe) { S.libreta.unshift({ dia: S.dia, t: texto, m: Math.round(importe) }); S.libreta.length = Math.min(S.libreta.length, 120); }
+
+const capacidad = () => S.eq.camion ? 4 : 2;
+const estrellas = n => { n = clamp(Math.round(n), 0, 5); return `<span class="estrellas" aria-label="${n} de 5">${'★'.repeat(n)}<span class="apagadas">${'★'.repeat(5 - n)}</span></span>`; };
+const mod = k => (S.evento && S.evento.mod && S.evento.mod[k]) || 1;
+
+function genCandidatos() {
+  const usados = new Set(S.cuadrilla.map(c => c.nombre));
+  const out = [];
+  for (let i = 0; i < 3; i++) {
+    let nombre = uno(NOMBRES); while (usados.has(nombre)) nombre = uno(NOMBRES); usados.add(nombre);
+    const skill = clamp(Math.round(entre(1, 3.2 + S.rep / 40)), 1, 5);
+    out.push({ id: S.sigId++, nombre, skill, fatiga: 0, sueldo: 60 + skill * 30 + entero(0, 3) * 5, turnos: 0 });
+  }
+  return out;
+}
+
+function genOrden(tipoId, cliente) {
+  const T = TIPOS[tipoId];
+  const filtros = entero(T.fl[0], T.fl[1]);
+  const ducto = entero(T.du[0], T.du[1]);
+  const grasa = +entre(T.g[0], T.g[1]).toFixed(2);
+  const tam = (filtros - T.fl[0]) / Math.max(1, T.fl[1] - T.fl[0]);
+  return {
+    id: S.sigId++, tipo: tipoId, nombre: cliente ? cliente.nombre : uno(T.nombres), filtros, ducto, grasa,
+    micras: Math.round(grasa * 3000 / 50) * 50,
+    pago: Math.round((T.p[0] + (T.p[1] - T.p[0]) * (tam * .5 + grasa * .5)) * (cliente ? 1.15 : 1) / 10) * 10,
+    fijo: !!cliente,
+  };
+}
+
+function genOfertas() {
+  const out = [];
+  for (const c of S.clientes) if (c.proxima <= S.dia) out.push(genOrden(c.tipo, c));
+  const n = 2 + (S.rep >= 45 ? 1 : 0) + (S.rep >= 70 ? 1 : 0);
+  const ids = Object.keys(TIPOS);
+  for (let i = 0; i < n; i++) {
+    const o = genOrden(uno(ids), null);
+    if (S.clientes.some(c => c.nombre === o.nombre) || out.some(x => x.nombre === o.nombre)) continue;
+    out.push(o);
+  }
+  return out;
+}
+
+const EVENTOS = [
+  { t: 'Los bomberos están inspeccionando cocinas en la zona: hoy los clientes pagan un 10 % más.', mod: { pago: 1.1 } },
+  { t: 'Ola de calor: dentro de la campana se suda el doble y la cuadrilla se cansa más.', mod: { fatiga: 1.6 } },
+  { t: 'El proveedor liquida desengrasante: hoy el bidón de 20 L sale a mitad de precio.', mod: { quimico: .5 } },
+  { t: 'Una reseña en el periódico del barrio habla bien de tu trabajo. +3 de reputación.', rep: 3 },
+  { t: 'Multa de estacionamiento: el camión quedó en doble fila frente a un restaurante.', caja: -80 },
+];
+
+function siguienteDia() {
+  S.dia++;
+  S.hecho = false;
+  S.caja -= SEGURO; apuntar('Seguro de responsabilidad civil', -SEGURO);
+  S.evento = null;
+  if (rnd() < .35) {
+    const e = uno(EVENTOS);
+    S.evento = { t: e.t, mod: e.mod || null };
+    if (e.rep) S.rep = clamp(S.rep + e.rep, 0, 100);
+    if (e.caja) { S.caja += e.caja; apuntar('Multa de estacionamiento', e.caja); }
+  }
+  // Clientes fijos que llevan tres días esperando se van con la competencia.
+  S.clientes = S.clientes.filter(c => {
+    if (S.dia - c.proxima >= 3) {
+      S.rep = clamp(S.rep - 3, 0, 100);
+      apuntar(`${c.nombre} se fue con la competencia: no fuiste a tiempo`, 0);
+      return false;
+    }
+    return true;
+  });
+  if (S.dia % 4 === 0) S.candidatos = genCandidatos();
+  S.ofertas = genOfertas();
+  if (S.caja < -1500) S.perdido = true;
+  guardar();
+}
+
+function descansar() {
+  for (const c of S.cuadrilla) c.fatiga = clamp(c.fatiga - .5, 0, 1);
+  apuntar('Noche de descanso para la cuadrilla', 0);
+  siguienteDia();
+  pintar();
+}
+
+// ---------------------------------------------------------------- pantalla principal
+
+function pintar() {
+  if (S.perdido) return finPartida();
+  const el = $('#app');
+  const progC = clamp(S.caja / META.caja, 0, 1), progR = clamp(S.rep / META.rep, 0, 1);
+  el.innerHTML = `
+    <header class="cab">
+      <div class="rotulo">Los Limpiadores <span>de Hoods</span><small>Limpieza de campanas y ductos · servicio nocturno</small></div>
+      <div class="datos">
+        <div class="dato"><i>Día</i><b>${S.dia}</b></div>
+        <div class="dato ${S.caja < 0 ? 'neg' : ''}"><i>Caja</i><b>${dinero(S.caja)}</b></div>
+        <div class="dato"><i>Reputación</i><b title="${S.rep}/100">${estrellas(S.rep / 20)}</b></div>
+        <div class="dato"><i>Desengrasante</i><b>${S.quimico.toFixed(0)} L</b></div>
+      </div>
+    </header>
+    ${S.ganado ? '' : `<div class="meta"><b>Meta:</b> contrato con la cadena Hoteles Costa Azul. Necesitas ${dinero(META.caja)} en caja y reputación ${META.rep}.
+      <div class="prog"><span class="nota">Caja</span><div class="barra"><div style="width:${progC * 100}%"></div></div></div>
+      <div class="prog"><span class="nota">Reputación ${S.rep}</span><div class="barra"><div style="width:${progR * 100}%"></div></div></div></div>`}
+    ${S.evento ? `<div class="evento">${esc(S.evento.t)}</div>` : ''}
+    <nav class="tabs" role="tablist">
+      ${[['trabajos', 'Trabajos'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller'], ['libreta', 'Libreta']].map(([id, n]) =>
+        `<button role="tab" aria-selected="${tab === id}" data-tab="${id}">${n}</button>`).join('')}
+    </nav>
+    <section>${({ trabajos: vTrabajos, cuadrilla: vCuadrilla, taller: vTaller, libreta: vLibreta })[tab]()}</section>`;
+}
+
+function vTrabajos() {
+  if (S.hecho) return `<div class="orden"><h3>Turno terminado</h3><p class="nota">La cuadrilla ya trabajó esta noche.</p>
+    <div class="acciones"><button class="btn prim" data-act="dia">Ir al día ${S.dia + 1}</button></div></div>`;
+  const cap = capacidad();
+  const van = S.cuadrilla.slice(0, cap);
+  const cards = S.ofertas.map(o => {
+    const T = TIPOS[o.tipo];
+    const bloqueada = !o.fijo && S.rep < T.rep;
+    const pago = Math.round(o.pago * mod('pago'));
+    return `<article class="orden ${o.fijo ? 'fijo' : ''}">
+      <div class="fila"><span class="chip ${o.fijo ? 'naranja' : ''}">${o.fijo ? 'Cliente fijo' : 'Orden nueva'}</span><span class="chip">NFPA 96: ${T.frec}</span></div>
+      <div><h3>${esc(o.nombre)}</h3><div class="tipo">${T.n} · ${T.por}</div></div>
+      <dl class="ficha">
+        <dt>Filtros de bafles</dt><dd>${o.filtros}</dd>
+        <dt>Ducto</dt><dd>${o.ducto} m</dd>
+        <dt>Grasa (peine)</dt><dd>${o.micras.toLocaleString('es-MX')} µm</dd>
+      </dl>
+      <div class="peine" title="Acumulación de grasa"><i style="left:calc(${clamp(o.grasa / 1.2, 0, 1) * 100}% - 2px)"></i></div>
+      <div class="fila"><span class="pago">${dinero(pago)}</span>${mod('pago') > 1 ? '<span class="chip ok">+10 %</span>' : ''}</div>
+      ${bloqueada ? `<p class="nota">Solo trabajan con empresas de reputación ${T.rep} o más.</p>` : `
+      <div class="acciones">
+        <button class="btn prim" data-act="turno" data-id="${o.id}">Ir al turno</button>
+        <button class="btn" data-act="mandar" data-id="${o.id}" ${van.length ? '' : 'disabled'}>Mandar a la cuadrilla</button>
+      </div>`}
+    </article>`;
+  }).join('');
+  return `<div class="grupo">
+    <p class="nota">Una orden por noche. En el turno raspas tú y tu cuadrilla (${van.length} ${van.length === 1 ? 'ayudante' : 'ayudantes'}) te ayuda. Si los mandas solos, ahorras la noche pero sale peor. El inspector deja pasar hasta ${LIMITE} µm de grasa por zona.</p>
+    <div class="lista">${cards || '<p class="vacio">No hay órdenes hoy.</p>'}</div>
+    <div class="acciones"><button class="btn" data-act="descansar">Descansar esta noche</button></div>
+  </div>`;
+}
+
+function persona(c, extra) {
+  const col = c.color || COLORES[(c.id || 0) % COLORES.length];
+  return `<div class="persona">
+    <div class="casco" style="background:${col}" aria-hidden="true">${esc(c.nombre[0])}</div>
+    <div><h4>${esc(c.nombre)}${c.apodo ? ` <span class="nota">(${esc(c.apodo)})</span>` : ''}</h4>
+      <div class="nota">${estrellas(c.skill)} · ${dinero(c.sueldo)} por turno${c.turnos ? ` · ${c.turnos} ${c.turnos === 1 ? 'turno' : 'turnos'}` : ''}</div>
+      ${c.fatiga > .02 ? `<div class="cansancio" title="Cansancio"><div style="width:${c.fatiga * 100}%"></div></div>` : ''}
+    </div>
+    ${extra}</div>`;
+}
+
+function vCuadrilla() {
+  const cap = capacidad();
+  const mios = S.cuadrilla.map((c, i) => persona(c, `<div class="acciones">${i >= cap ? '<span class="chip">Se queda</span>' : ''}<button class="btn" data-act="despedir" data-id="${c.id}">Despedir</button></div>`)).join('');
+  const cand = S.candidatos.map(c => persona(c, `<button class="btn prim" data-act="contratar" data-id="${c.id}">Contratar</button>`)).join('');
+  return `<div class="grupo">
+    <h2>Tu cuadrilla · caben ${cap} en el camión</h2>
+    ${mios || '<p class="vacio">Trabajas solo.</p>'}
+    <p class="nota">Cada ayudante cobra por turno trabajado. Se cansan al trabajar y descansan las noches libres; cansados rinden menos. Con cada turno aprenden.</p>
+    <h2>Buscan trabajo · nuevos cada 4 días</h2>
+    ${cand || '<p class="vacio">Nadie por ahora.</p>'}
+  </div>`;
+}
+
+function vTaller() {
+  const precioQ = Math.round(220 * mod('quimico'));
+  const items = TIENDA.filter(t => t.ok(S)).map(t => `<article class="orden">
+    <h3>${t.n}</h3><p class="nota">${t.d}</p>
+    <div class="fila"><span class="pago">${dinero(t.precio)}</span><button class="btn prim" data-act="comprar" data-id="${t.id}" ${S.caja < t.precio ? 'disabled' : ''}>Comprar</button></div>
+  </article>`).join('');
+  return `<div class="grupo">
+    <h2>Consumibles</h2>
+    <div class="lista"><article class="orden"><h3>Bidón de desengrasante 20 L</h3><p class="nota">La espuma ablanda la grasa para rasparla más rápido. Tienes ${S.quimico.toFixed(1)} L.</p>
+      <div class="fila"><span class="pago">${dinero(precioQ)}</span><button class="btn prim" data-act="quimico" ${S.caja < precioQ ? 'disabled' : ''}>Comprar</button></div></article></div>
+    <h2>Equipo</h2>
+    <div class="lista">${items || '<p class="vacio">Ya tienes todo el equipo.</p>'}</div>
+    <h2>Partida</h2>
+    <div class="acciones"><button class="btn" data-act="reiniciar">Empezar de cero</button></div>
+  </div>`;
+}
+
+function vLibreta() {
+  if (!S.libreta.length) return '<p class="vacio">Sin apuntes.</p>';
+  return `<div class="grupo"><h2>Clientes fijos</h2>
+    ${S.clientes.length ? S.clientes.map(c => `<div class="fila"><span>${esc(c.nombre)} <span class="nota">· ${TIPOS[c.tipo].frec}</span></span><span class="chip ${c.proxima <= S.dia ? 'naranja' : ''}">${c.proxima <= S.dia ? 'Toca limpiar' : 'Día ' + c.proxima}</span></div>`).join('') : '<p class="nota">Aprueba la inspección y el restaurante te llamará cuando le toque otra vez.</p>'}
+    <h2>Libreta de cuentas</h2>
+    <div class="libreta">${S.libreta.map(a => `<div><span>Día ${a.dia}</span><span>${esc(a.t)}</span><span class="${a.m > 0 ? 'mas' : a.m < 0 ? 'menos' : ''}">${a.m ? dinero(a.m) : ''}</span></div>`).join('')}</div></div>`;
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-tab],[data-act]');
+  if (!b || b.disabled) return;
+  if (b.dataset.tab) { tab = b.dataset.tab; return pintar(); }
+  const id = +b.dataset.id;
+  switch (b.dataset.act) {
+    case 'turno': return abrirTurno(S.ofertas.find(o => o.id === id));
+    case 'mandar': return mandar(S.ofertas.find(o => o.id === id));
+    case 'descansar': return descansar();
+    case 'dia': siguienteDia(); cerrarVelo(); return pintar();
+    case 'contratar': {
+      const c = S.candidatos.find(x => x.id === id);
+      c.color = COLORES[S.cuadrilla.length % COLORES.length];
+      S.cuadrilla.push(c); S.candidatos = S.candidatos.filter(x => x !== c);
+      apuntar(`Contratas a ${c.nombre}`, 0); break;
+    }
+    case 'despedir': {
+      const c = S.cuadrilla.find(x => x.id === id);
+      S.cuadrilla = S.cuadrilla.filter(x => x !== c); apuntar(`${c.nombre} deja la cuadrilla`, 0); break;
+    }
+    case 'comprar': {
+      const t = TIENDA.find(x => x.id === b.dataset.id);
+      S.caja -= t.precio; t.hacer(S); apuntar(t.n, -t.precio); break;
+    }
+    case 'quimico': {
+      const p = Math.round(220 * mod('quimico'));
+      S.caja -= p; S.quimico += 20; apuntar('Bidón de desengrasante 20 L', -p); break;
+    }
+    case 'reiniciar': return confirmar('¿Empezar de cero?', 'Se borra esta empresa: caja, cuadrilla, clientes y equipo.', 'Empezar de cero', () => { nueva(); tab = 'trabajos'; guardar(); pintar(); });
+    case 'cerrar': cerrarVelo(); return;
+    case 'seguir': cerrarVelo(); return pintar();
+    default: return;
+  }
+  guardar(); pintar();
+});
+
+function velo(html) { const v = $('#velo'); v.innerHTML = `<div class="caja" role="dialog" aria-modal="true">${html}</div>`; v.hidden = false; const f = v.querySelector('button'); if (f) f.focus(); }
+function cerrarVelo() { $('#velo').hidden = true; $('#velo').innerHTML = ''; }
+function confirmar(titulo, texto, si, fn) {
+  velo(`<h2>${titulo}</h2><p>${texto}</p><div class="acciones"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn prim" id="si">${si}</button></div>`);
+  $('#si').onclick = () => { cerrarVelo(); fn(); };
+}
+
+function finPartida() {
+  $('#app').innerHTML = `<header class="cab"><div class="rotulo">Los Limpiadores <span>de Hoods</span></div></header>`;
+  velo(`<h2>Te embargan el camión</h2><p>La caja bajó de ${dinero(-1500)} el día ${S.dia}. El banco se lleva la camioneta y las rasquetas.</p>
+    <div class="acciones"><button class="btn prim" id="otra">Abrir otra empresa</button></div>`);
+  $('#otra').onclick = () => { cerrarVelo(); nueva(); guardar(); pintar(); };
+}
+
+// ---------------------------------------------------------------- liquidación del trabajo
+
+function liquidar(o, zonas, saltados, modo, equipo) {
+  const pagoBase = Math.round(o.pago * mod('pago'));
+  const pasa = zonas.every(z => z.micras <= LIMITE);
+  const limpio = zonas.reduce((a, z) => a + z.limpio, 0) / zonas.length;
+  const metal = zonas.every(z => z.micras <= 50);
+  let cobro = pasa ? pagoBase : Math.round(pagoBase * .5 * limpio / 10) * 10;
+  const lineas = [[pasa ? 'Pago del cliente' : 'Pago parcial (no pasó la inspección)', cobro]];
+  let rep = pasa ? (metal ? 6 : 4) : -6;
+  const incidentes = [];
+  for (const k of saltados) {
+    if (rnd() < .4) {
+      const inc = INCIDENTES[k];
+      incidentes.push(inc.t);
+      lineas.push(['Daños', -inc.dinero]); rep -= inc.rep;
+      if (inc.fatiga && equipo.length) equipo[0].fatiga = 1;
+    }
+  }
+  lineas.push(['Gasolina del camión', -GASOLINA]);
+  const fat = .28 * mod('fatiga');
+  for (const c of equipo) {
+    lineas.push([`Sueldo de ${c.nombre}`, -c.sueldo]);
+    c.fatiga = clamp(c.fatiga + fat, 0, 1); c.turnos++; c.skill = clamp(c.skill + .1, 1, 5);
+  }
+  for (const c of S.cuadrilla) if (!equipo.includes(c)) c.fatiga = clamp(c.fatiga - .3, 0, 1);
+  const neto = lineas.reduce((a, l) => a + l[1], 0);
+  S.caja += neto;
+  S.rep = clamp(S.rep + rep, 0, 100);
+  apuntar(`${o.nombre}: ${pasa ? 'aprobado' : 'no pasó la inspección'}${modo === 'solos' ? ' (cuadrilla sola)' : ''}`, neto);
+
+  const T = TIPOS[o.tipo];
+  const ci = S.clientes.findIndex(c => c.nombre === o.nombre);
+  let nota = '';
+  if (pasa) {
+    const prox = S.dia + FREC[T.frec];
+    if (ci >= 0) S.clientes[ci].proxima = prox;
+    else { S.clientes.push({ nombre: o.nombre, tipo: o.tipo, proxima: prox }); nota = `${o.nombre} queda como cliente fijo: te llamará el día ${prox}.`; }
+  } else if (ci >= 0) {
+    S.clientes.splice(ci, 1); nota = `${o.nombre} deja de ser cliente fijo.`;
+  }
+  S.ofertas = S.ofertas.filter(x => x.id !== o.id);
+  S.hecho = true;
+  const gana = !S.ganado && S.caja >= META.caja && S.rep >= META.rep;
+  if (gana) S.ganado = true;
+  guardar();
+
+  velo(`<h2>${pasa ? (metal ? 'Metal desnudo' : 'Inspección aprobada') : 'No pasa la inspección'}</h2>
+    <p class="nota">${esc(o.nombre)} · el inspector mide con el peine de grasa en cada zona.</p>
+    <div class="grupo">${zonas.map(z => `<div class="fila"><span>${z.n}</span><span><span class="nota">${Math.round(z.limpio * 100)} % limpio</span> <span class="chip num ${z.micras <= LIMITE ? 'ok' : 'mal'}">${z.micras.toLocaleString('es-MX')} µm</span></span></div>`).join('')}</div>
+    ${pasa ? `<span class="etiqueta">Certificado · ${S.dia}/${T.frec}</span>` : ''}
+    ${incidentes.map(t => `<p class="evento">${esc(t)}</p>`).join('')}
+    <div class="cuentas">${lineas.map(l => `<span>${esc(l[0])}</span><span>${dinero(l[1])}</span>`).join('')}
+      <span class="total">Neto de la noche</span><span class="total">${dinero(neto)}</span>
+      <span>Reputación</span><span>${rep >= 0 ? '+' : ''}${rep}</span></div>
+    ${nota ? `<p class="nota">${esc(nota)}</p>` : ''}
+    ${gana ? `<p class="evento"><b>¡Contrato conseguido!</b> Hoteles Costa Azul firma con Los Limpiadores de Hoods para todas sus cocinas. Puedes seguir jugando.</p>` : ''}
+    <div class="acciones"><button class="btn prim" data-act="dia">Ir al día ${S.dia + 1}</button><button class="btn" data-act="seguir">Ver la oficina</button></div>`);
+}
+
+function mandar(o) {
+  const equipo = S.cuadrilla.slice(0, capacidad());
+  if (!equipo.length) return;
+  const fuerza = equipo.reduce((a, c) => a + c.skill * (1 - .5 * c.fatiga), 0);
+  const gasto = Math.min(S.quimico, 4); S.quimico -= gasto;
+  const base = .6 + .055 * fuerza + .04 * (S.eq.rasqueta - 1) + (S.eq.hidro ? .07 : 0) + (S.eq.pro ? .03 : 0) + (gasto < 4 ? -.06 : 0) - (o.grasa - .6) * .3;
+  const zonas = ZONAS.map(z => {
+    const limpio = clamp(base + entre(-.06, .06) - (z.id === 'ducto' ? .02 : 0), .3, .995);
+    return { n: z.n, limpio, micras: Math.round(o.micras * (1 - limpio)) };
+  });
+  const saltados = rnd() < .12 ? [uno(PREP).id] : [];
+  liquidar(o, zonas, saltados, 'solos', equipo);
+  pintar();
+}
+
+// ---------------------------------------------------------------- el turno (minijuego)
+
+function zonaNueva(id, o) {
+  const mask = new Uint8Array(GW * GH), dirt = new Float32Array(GW * GH), soak = new Float32Array(GW * GH);
+  const rects = [];
+  if (id === 'filtros') {
+    const n = o.filtros, filas = n <= 4 ? 1 : 2, cols = Math.ceil(n / filas);
+    const fw = Math.min(118, (W - 40 - (cols - 1) * 14) / cols), fh = filas === 1 ? 230 : 150;
+    const x0 = (W - (cols * fw + (cols - 1) * 14)) / 2, y0 = (H - (filas * fh + (filas - 1) * 18)) / 2;
+    for (let i = 0; i < n; i++) {
+      const c = i % cols, f = Math.floor(i / cols);
+      rects.push({ x: x0 + c * (fw + 14), y: y0 + f * (fh + 18), w: fw, h: fh });
+    }
+  }
+  const dentro = (x, y) => {
+    if (id === 'filtros') return rects.some(r => x > r.x + 4 && x < r.x + r.w - 4 && y > r.y + 4 && y < r.y + r.h - 4);
+    if (id === 'campana') { if (y < 50 || y > 345) return false; const k = (y - 50) / 295; return x > 150 - 120 * k && x < 450 + 120 * k && !(y > 250 && y < 300 && ((x > 120 && x < 200) || (x > 400 && x < 480))); }
+    return (x > 200 && x < 380 && y > 60 && y < 365) || (x > 200 && x < 520 && y > 30 && y < 130);
+  };
+  const base = o.grasa * (id === 'ducto' ? 1.1 : id === 'filtros' ? 1 : .9) * (.9 + o.ducto / 60);
+  const idx = [];
+  for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) {
+    const i = gy * GW + gx;
+    if (dentro(gx * CELDA + CELDA / 2, gy * CELDA + CELDA / 2)) { mask[i] = 1; idx.push(i); dirt[i] = base * entre(.55, 1.4); }
+  }
+  // Suaviza: la grasa se acumula en manchas, no en celdas sueltas.
+  const sm = dirt.slice();
+  for (const i of idx) {
+    const gx = i % GW, gy = (i / GW) | 0; let s = 0, k = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const j = (gy + dy) * GW + gx + dx;
+      if (gx + dx >= 0 && gx + dx < GW && gy + dy >= 0 && gy + dy < GH && mask[j]) { s += dirt[j]; k++; }
+    }
+    sm[i] = s / k * entre(.85, 1.15);
+  }
+  let inicial = 0; for (const i of idx) { dirt[i] = sm[i]; inicial += sm[i]; }
+  return { id, n: ZONAS.find(z => z.id === id).n, mask, dirt, soak, idx, inicial, rects, fondo: fondo(id, rects) };
+}
+
+function fondo(id, rects) {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const acero = (x0, y0, x1, y1) => { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, '#d9dfe4'); gr.addColorStop(.5, '#a8b2ba'); gr.addColorStop(1, '#cdd4da'); return gr; };
+  if (id === 'filtros') {
+    g.fillStyle = '#2b3a45'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#34454f'; for (let x = 0; x < W; x += 40) g.fillRect(x, 0, 2, H);
+    for (const r of rects) {
+      g.fillStyle = acero(r.x, r.y, r.x + r.w, r.y + r.h); g.fillRect(r.x, r.y, r.w, r.h);
+      g.strokeStyle = '#6b7780'; g.lineWidth = 4; g.strokeRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+      g.strokeStyle = '#7e8a93'; g.lineWidth = 2;
+      for (let x = r.x + 12; x < r.x + r.w - 8; x += 12) { g.beginPath(); for (let y = r.y + 8; y < r.y + r.h - 8; y += 14) { g.lineTo(x - 4, y); g.lineTo(x + 2, y + 7); } g.stroke(); }
+      g.fillStyle = '#56636c'; g.fillRect(r.x + r.w / 2 - 14, r.y + 6, 28, 6);
+    }
+  } else if (id === 'campana') {
+    g.fillStyle = '#e8e4da'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#cfc9bb'; g.lineWidth = 1;
+    for (let y = 0; y < H; y += 24) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+    for (let x = 0; x < W; x += 24) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+    g.beginPath(); g.moveTo(150, 40); g.lineTo(450, 40); g.lineTo(580, 355); g.lineTo(20, 355); g.closePath();
+    g.fillStyle = acero(0, 0, W, 0); g.fill(); g.strokeStyle = '#6b7780'; g.lineWidth = 3; g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 1;
+    for (let y = 48; y < 350; y += 5) { const k = (y - 40) / 315; g.beginPath(); g.moveTo(150 - 130 * k + 4, y); g.lineTo(450 + 130 * k - 4, y); g.stroke(); }
+    g.fillStyle = '#56636c'; g.fillRect(150, 40, 300, 12);
+    for (const x of [120, 400]) { g.fillStyle = '#fff6d6'; g.fillRect(x, 252, 80, 46); g.strokeStyle = '#6b7780'; g.lineWidth = 3; g.strokeRect(x, 252, 80, 46); }
+    g.fillStyle = '#6b7780'; for (let x = 40; x < 570; x += 36) { g.beginPath(); g.arc(x, 350, 2.5, 0, 7); g.fill(); }
+  } else {
+    g.fillStyle = '#1e2830'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#2a353e'; for (let x = 0; x < W; x += 60) g.fillRect(x, 0, 30, H);
+    g.fillStyle = acero(200, 0, 380, 0); g.fillRect(200, 60, 180, 310); g.fillRect(200, 30, 320, 100);
+    g.strokeStyle = '#6b7780'; g.lineWidth = 3; g.strokeRect(200, 60, 180, 310); g.strokeRect(200, 30, 320, 100);
+    g.strokeStyle = 'rgba(70,82,92,.6)'; g.lineWidth = 2;
+    for (let y = 150; y < 370; y += 60) { g.beginPath(); g.moveTo(200, y); g.lineTo(380, y); g.stroke(); }
+    g.strokeStyle = '#3d4952'; g.lineWidth = 2; g.strokeRect(225, 250, 70, 50); g.fillStyle = '#3d4952'; g.fillText('REGISTRO', 233, 279);
+    g.beginPath(); g.arc(560, 80, 34, 0, 7); g.fillStyle = '#56636c'; g.fill();
+    g.fillStyle = '#8b979f'; for (let a = 0; a < 6; a++) { g.beginPath(); g.ellipse(560 + Math.cos(a) * 16, 80 + Math.sin(a) * 16, 14, 6, a, 0, 7); g.fill(); }
+  }
+  return c;
+}
+
+function abrirTurno(o) {
+  const equipo = S.cuadrilla.slice(0, capacidad());
+  M = {
+    o, equipo, zona: 0, t: 0, dur: TURNO_S + (S.eq.andamio ? 20 : 0), herr: 'rasqueta', fase: 'prep',
+    zonas: ZONAS.map(z => zonaNueva(z.id, o)), prep: {}, down: false, px: -99, py: -99, lx: -99, ly: -99,
+    ayud: equipo.map((c, i) => ({ c, x: 60 + i * 40, y: H - 30, tc: -1 })), parts: [], aviso: '', avisoT: 0, quim0: S.quimico, ult: 0, hudT: 0,
+  };
+  const t = $('#turno');
+  t.innerHTML = `<div class="turno-in">
+    <div class="hud"><h3>${esc(o.nombre)} <span class="nota">· ${TIPOS[o.tipo].n}</span></h3><span class="reloj" id="reloj">22:00</span></div>
+    <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
+    <div class="zonas" id="zonas"></div>
+    <div class="lienzo"><canvas id="cv" aria-label="Campana sucia: arrastra para raspar la grasa"></canvas></div>
+    <div class="herr" id="herr"></div>
+    <div class="fila"><span class="nota" id="aviso">Arrastra el dedo o el ratón sobre la grasa. Frotar rápido raspa más.</span>
+      <button class="btn prim" id="fin">Terminar turno</button></div>
+  </div>`;
+  t.hidden = false;
+  document.body.style.overflow = 'hidden';
+  const cv = $('#cv'), dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr;
+  M.g = cv.getContext('2d'); M.g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pos = e => { const r = cv.getBoundingClientRect(); M.px = (e.clientX - r.left) / r.width * W; M.py = (e.clientY - r.top) / r.height * H; };
+  cv.addEventListener('pointerdown', e => { if (M.fase !== 'juego') return; cv.setPointerCapture(e.pointerId); M.down = true; pos(e); M.lx = M.px; M.ly = M.py; e.preventDefault(); });
+  cv.addEventListener('pointermove', e => { pos(e); });
+  const up = () => { M && (M.down = false); };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('pointerleave', () => { if (M && !M.down) { M.px = -99; M.py = -99; } });
+  $('#fin').onclick = () => { if (M.fase === 'juego') terminarTurno(); };
+  $('#zonas').onclick = e => { const b = e.target.closest('[data-z]'); if (b) { M.zona = +b.dataset.z; hud(true); } };
+  $('#herr').onclick = e => { const b = e.target.closest('[data-h]'); if (b && !b.disabled) { M.herr = b.dataset.h; hud(true); } };
+  hud(true);
+  prep();
+  M.ult = performance.now();
+  requestAnimationFrame(tick);
+}
+
+function prep() {
+  velo(`<h2>Antes de abrir la campana</h2>
+    <p class="nota">Lo que te saltes puede salir caro. Toca cada paso al hacerlo.</p>
+    <div class="check" id="check">${PREP.map(p => `<button aria-pressed="false" data-p="${p.id}"><span class="box">✓</span><span>${p.n}<small>${p.d}</small></span></button>`).join('')}</div>
+    <div class="acciones"><button class="btn prim" id="empezar">Empezar a raspar</button></div>`);
+  $('#check').onclick = e => {
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    M.prep[b.dataset.p] = !M.prep[b.dataset.p]; b.setAttribute('aria-pressed', M.prep[b.dataset.p]);
+    const todo = PREP.every(p => M.prep[p.id]);
+    $('#empezar').textContent = todo ? 'Empezar a raspar' : `Empezar igual (faltan ${PREP.filter(p => !M.prep[p.id]).length})`;
+  };
+  $('#empezar').textContent = `Empezar igual (faltan ${PREP.length})`;
+  $('#empezar').onclick = () => { cerrarVelo(); M.fase = 'juego'; M.ult = performance.now(); };
+}
+
+function herramienta() {
+  const lv = S.eq.rasqueta;
+  if (M.herr === 'espuma') return { r: 44, pow: 0 };
+  if (M.herr === 'hidro') return { r: 50, pow: 1.5 };
+  return { r: 24 + 6 * (lv - 1), pow: .95 + .38 * (lv - 1) };
+}
+
+function limpiar(z, x, y, r, pow, dt) {
+  const mult = S.eq.pro ? 3.5 : 2.5;
+  const x0 = Math.max(0, Math.floor((x - r) / CELDA)), x1 = Math.min(GW - 1, Math.floor((x + r) / CELDA));
+  const y0 = Math.max(0, Math.floor((y - r) / CELDA)), y1 = Math.min(GH - 1, Math.floor((y + r) / CELDA));
+  let quitado = 0;
+  for (let gy = y0; gy <= y1; gy++) for (let gx = x0; gx <= x1; gx++) {
+    const i = gy * GW + gx; if (!z.mask[i] || z.dirt[i] <= 0) continue;
+    const d = Math.hypot(gx * CELDA + CELDA / 2 - x, gy * CELDA + CELDA / 2 - y); if (d > r) continue;
+    const q = Math.min(z.dirt[i], pow * dt * (1 - .5 * d / r) * (1 + z.soak[i] * (mult - 1)));
+    z.dirt[i] -= q; if (z.dirt[i] < .02) z.dirt[i] = 0; quitado += q;
+  }
+  return quitado;
+}
+
+function tick(now) {
+  if (!M) return;
+  const dt = Math.min(.05, (now - M.ult) / 1000); M.ult = now;
+  const z = M.zonas[M.zona];
+  if (M.fase === 'juego') {
+    M.t += dt;
+    if (M.down && M.px > -50) {
+      const h = herramienta();
+      if (M.herr === 'espuma') {
+        if (S.quimico <= 0) avisar('Sin desengrasante. Compra un bidón en el taller.');
+        else {
+          S.quimico = Math.max(0, S.quimico - .5 * dt);
+          for (const i of z.idx) { const gx = i % GW, gy = (i / GW) | 0; if (Math.hypot(gx * CELDA + 10 - M.px, gy * CELDA + 10 - M.py) < h.r) z.soak[i] = 1; }
+          if (rnd() < .6) M.parts.push({ x: M.px + entre(-20, 20), y: M.py + entre(-20, 20), vx: entre(-20, 20), vy: entre(-30, 10), v: .6, c: 'esp' });
+        }
+      } else {
+        const mov = Math.hypot(M.px - M.lx, M.py - M.ly);
+        const q = limpiar(z, M.px, M.py, h.r, h.pow * (mov > 1.5 ? 1.6 : 1), dt);
+        if (q > 0 && rnd() < .7) M.parts.push({ x: M.px + entre(-10, 10), y: M.py, vx: entre(-40, 40), vy: entre(-60, 0), v: .8, c: M.herr === 'hidro' ? 'agua' : 'grasa' });
+      }
+      M.lx = M.px; M.ly = M.py;
+    }
+    for (const a of M.ayud) {
+      const pow = (.14 + .08 * a.c.skill) * (1 - .5 * a.c.fatiga);
+      if (a.tc < 0 || z.dirt[a.tc] <= 0 || !z.mask[a.tc]) {
+        a.tc = -1; let best = 0;
+        for (let k = 0; k < 24; k++) { const i = z.idx[Math.floor(rnd() * z.idx.length)]; if (z.dirt[i] > best) { best = z.dirt[i]; a.tc = i; } }
+      }
+      if (a.tc >= 0) {
+        const tx = (a.tc % GW) * CELDA + 10, ty = ((a.tc / GW) | 0) * CELDA + 10, d = Math.hypot(tx - a.x, ty - a.y);
+        if (d > 6) { a.x += (tx - a.x) / d * Math.min(d, 150 * dt); a.y += (ty - a.y) / d * Math.min(d, 150 * dt); }
+        else limpiar(z, a.x, a.y, 24, pow, dt);
+      }
+    }
+    for (const zz of M.zonas) for (const i of zz.idx) if (zz.soak[i] > 0) zz.soak[i] = Math.max(0, zz.soak[i] - .045 * dt);
+    if (M.t >= M.dur) { M.t = M.dur; return terminarTurno(); }
+  }
+  for (const p of M.parts) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 220 * dt; p.v -= dt; }
+  M.parts = M.parts.filter(p => p.v > 0).slice(-140);
+  if (M.avisoT > 0) M.avisoT -= dt;
+  dibujar(z);
+  M.hudT -= dt; if (M.hudT <= 0) { hud(false); M.hudT = .12; }
+  if (M) requestAnimationFrame(tick);
+}
+
+function dibujar(z) {
+  const g = M.g;
+  g.drawImage(z.fondo, 0, 0, W, H);
+  for (const i of z.idx) {
+    const d = z.dirt[i]; if (d <= 0) continue;
+    const x = (i % GW) * CELDA + 10, y = ((i / GW) | 0) * CELDA + 10;
+    g.fillStyle = `rgba(${Math.round(150 - d * 60)},${Math.round(98 - d * 50)},${Math.round(22 - d * 10)},${Math.min(.96, .3 + d * .65)})`;
+    g.beginPath(); g.arc(x, y, 9 + Math.min(d, 1.2) * 5, 0, 7); g.fill();
+  }
+  for (const i of z.idx) {
+    const s = z.soak[i]; if (s <= .03) continue;
+    const x = (i % GW) * CELDA + 10, y = ((i / GW) | 0) * CELDA + 10;
+    g.fillStyle = `rgba(190,238,248,${s * .45})`; g.beginPath(); g.arc(x - 3, y - 2, 5, 0, 7); g.arc(x + 4, y + 3, 4, 0, 7); g.fill();
+  }
+  for (const p of M.parts) {
+    g.fillStyle = p.c === 'grasa' ? `rgba(120,78,16,${p.v})` : p.c === 'agua' ? `rgba(160,220,240,${p.v})` : `rgba(230,250,255,${p.v})`;
+    g.fillRect(p.x, p.y, 3, 3);
+  }
+  for (const a of M.ayud) {
+    g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(a.x, a.y + 12, 11, 4, 0, 0, 7); g.fill();
+    g.fillStyle = a.c.color || '#ffd23f'; g.beginPath(); g.arc(a.x, a.y, 11, Math.PI, 0); g.fill(); g.fillRect(a.x - 14, a.y - 1, 28, 4);
+    g.font = '700 12px Barlow, sans-serif'; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = '#131d26'; g.strokeText(a.c.nombre, a.x, a.y + 17);
+    g.fillStyle = '#ffffff'; g.fillText(a.c.nombre, a.x, a.y + 17);
+  }
+  if (M.px > -50 && M.fase === 'juego') {
+    const h = herramienta();
+    g.strokeStyle = M.herr === 'espuma' ? '#7fd3e6' : M.herr === 'hidro' ? '#bfe9f5' : '#ff8a1f';
+    g.lineWidth = 2; g.setLineDash([5, 4]); g.beginPath(); g.arc(M.px, M.py, h.r, 0, 7); g.stroke(); g.setLineDash([]);
+  }
+}
+
+const pct = z => 1 - z.dirt.reduce((a, b) => a + b, 0) / z.inicial;
+const micrasZona = z => Math.round(M.o.micras * (1 - pct(z)) / 5) * 5;
+
+function avisar(t) { M.aviso = t; M.avisoT = 2.5; }
+
+function hud(todo) {
+  const min = 22 * 60 + Math.floor(M.t / M.dur * 480), hh = Math.floor(min / 60) % 24, mm = min % 60;
+  $('#reloj').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  $('#tbar').style.width = `${(1 - M.t / M.dur) * 100}%`;
+  if (todo) $('#zonas').innerHTML = M.zonas.map((z, i) => `<button data-z="${i}"><b>${z.n}</b><span></span></button>`).join('');
+  M.zonas.forEach((z, i) => {
+    const m = micrasZona(z), b = $('#zonas').children[i];
+    b.setAttribute('aria-pressed', i === M.zona);
+    b.classList.toggle('listo', m <= LIMITE);
+    b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${m <= LIMITE ? ' ✓' : ''}`;
+  });
+  if (todo || M.herrQ !== Math.floor(S.quimico)) {
+    M.herrQ = Math.floor(S.quimico);
+    const lv = ['', 'básica', 'de acero', 'de carburo'][S.eq.rasqueta];
+    $('#herr').innerHTML = `
+      <button data-h="rasqueta" aria-pressed="${M.herr === 'rasqueta'}"><b>Rasqueta</b><span>${lv}</span></button>
+      <button data-h="espuma" aria-pressed="${M.herr === 'espuma'}"><b>Espuma</b><span>${S.quimico.toFixed(1)} L · ablanda</span></button>
+      <button data-h="hidro" aria-pressed="${M.herr === 'hidro'}" ${S.eq.hidro ? '' : 'disabled'}><b>Hidrolavadora</b><span>${S.eq.hidro ? 'chorro ancho' : 'cómprala en el taller'}</span></button>`;
+  }
+  const av = $('#aviso');
+  if (M.avisoT > 0) av.textContent = M.aviso;
+  else if (M.fase === 'juego') {
+    const z = M.zonas[M.zona], m = micrasZona(z);
+    av.textContent = m <= LIMITE ? `${z.n} pasa la inspección. Cambia de zona o déjala en metal desnudo (≤ 50 µm).` : 'Echa espuma, espera unos segundos y raspa: sale mucho más rápido.';
+  }
+}
+
+function terminarTurno() {
+  M.fase = 'fin';
+  const zonas = M.zonas.map(z => ({ n: z.n, limpio: clamp(pct(z), 0, 1), micras: micrasZona(z) }));
+  const saltados = PREP.filter(p => !M.prep[p.id]).map(p => p.id);
+  const o = M.o, equipo = M.equipo, gasto = M.quim0 - S.quimico;
+  M = null;
+  $('#turno').hidden = true; $('#turno').innerHTML = '';
+  document.body.style.overflow = '';
+  if (gasto > .05) apuntar(`Espuma gastada en ${o.nombre}: ${gasto.toFixed(1)} L`, 0);
+  liquidar(o, zonas, saltados, 'turno', equipo);
+  pintar();
+}
+
+function arrancar(datos) {
+  if (datos && datos.S && datos.S.v === 1) S = datos.S;
+  else if (!cargar()) nueva();
+  pintar();
+}
+window.claude?.hot?.snapshot?.(() => ({ S }));
+window.claude?.hot?.ready ? window.claude.hot.ready(arrancar) : arrancar(window.claude?.hot?.data ?? {});
+})();
+</script>
