@@ -10,7 +10,7 @@
 //   app.js          el juego (pantalla)
 //   worker.js       la simulación en segundo plano
 //   app.css, manifest.webmanifest, sw.js, icons/
-//   hoods/index.html  Los Limpiadores de Hoods (otro juego, una sola página)
+//   hoods/index.html  Hood Cleaners: The Night Shift (otro juego, una sola página)
 import * as esbuild from 'esbuild';
 import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -59,7 +59,7 @@ async function buildApp() {
   const body = `<div id="app"></div>\n<div class="rotate" aria-hidden="true"><div><svg viewBox="0 0 64 64" width="72" height="72" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="20" y="6" width="24" height="40" rx="4"/><path d="M8 52a24 24 0 0 0 40 4"/><path d="M48 50v6h-6"/></svg><b>Gira el móvil</b><span>El Banquillo se juega en horizontal</span></div></div>\n<script src="app.js?v=${v}" charset="utf-8"></script>`;
   writeFileSync(join(DIST, 'index.html'), read('public/index.html').replace('<!--HEAD-->', head).replace('<!--BODY-->', body));
   writeFileSync(join(DIST, 'artifact.html'), head + '\n\n' + body + '\n');
-  // Los Limpiadores de Hoods: juego aparte en una sola página (hoods/juego.html es el fragmento para claude.ai).
+  // Hood Cleaners: juego aparte en una sola página (hoods/juego.html es el fragmento para claude.ai).
   mkdirSync(join(DIST, 'hoods'), { recursive: true });
   writeFileSync(join(DIST, 'hoods', 'index.html'), '<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="theme-color" content="#131d26">\n</head>\n<body>\n' + read('hoods/juego.html') + '</body>\n</html>\n');
 

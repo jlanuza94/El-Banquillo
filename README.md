@@ -8,9 +8,9 @@ Juego de mánager de fútbol para el navegador y el móvil: 10 países, 43 ligas
 
 Además: bandeja de entrada con mensajes de la directiva, el cuerpo técnico, los ojeadores y la prensa; cuerpo técnico con atributos; ojeo con conocimiento de jugadores (rangos de atributos e informes); roles por posición; instrucciones al rival, córners, xG y consejos del segundo en el partido; liga sub-19; mercado con plazos, % de futura venta, intercambios, rumores y gangas de cierre; estadísticas, once ideal, premios de temporada (Balón de Oro…) y comparador de jugadores.
 
-## Los Limpiadores de Hoods
+## Hood Cleaners: The Night Shift
 
-Otro juego del repositorio, en una sola página (`hoods/juego.html`): diriges una empresa de limpieza de campanas extractoras de restaurantes. De día eliges órdenes (con su frecuencia NFPA 96), contratas ayudantes y compras equipo; de noche haces el turno raspando grasa de filtros, campana y ducto antes de las 6:00, y el inspector mide con el peine de grasa. Meta: $20.000 en caja y reputación 80. `npm run build` lo deja en `dist/hoods/index.html` (en GitHub Pages, `/hoods/`).
+Otro juego del repositorio, en una sola página (`hoods/juego.html`, 3D con three.js): comedia laboral sobre limpiar campanas extractoras de noche. Empiezas como el nuevo de Grasa Brava y subes de rango hasta dueño. Cada noche eliges la orden y el compañero, haces la preparación de seguridad (lo que te saltes se convierte en desastre), limpias filtros, campana y ducto con la rueda de herramientas (rasqueta, espuma, hidrolavadora, pulidor) y sobrevives a tuberías rotas, llaves perdidas, mapaches y gerentes que preguntan «¿ya casi?». `npm run build` lo deja en `dist/hoods/index.html` (en GitHub Pages, `/hoods/`).
 
 ## Cómo jugar
 
