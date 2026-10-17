@@ -1,0 +1,6 @@
+build/
+.gradle/
+*.keystore
+local.properties
+# Los genera tools/hoods-apk.mjs a partir de hoods/juego.html
+app/src/main/assets/
