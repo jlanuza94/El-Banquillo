@@ -64,7 +64,12 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .herr-btn small { font-family: var(--f-cond); font-weight: 700; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
 .info { display: grid; gap: 4px; justify-items: start; min-width: 0; }
 .ayuda { font-size: 13px; color: var(--acero); text-shadow: 0 1px 2px #000; min-height: 1.4em; }
-.botella { font-family: var(--f-mono); font-size: 12px; color: var(--espuma); }
+.barra-herr { display: flex; gap: 6px; pointer-events: auto; }
+.barra-herr button { width: 56px; height: 54px; border-radius: 8px; background: var(--panel); border: 2px solid var(--linea); display: grid; place-items: center; align-content: center; padding: 2px; }
+.barra-herr button[aria-pressed="true"] { border-color: var(--hivis); background: var(--panel-2); }
+.barra-herr svg { width: 24px; height: 24px; }
+.barra-herr small { font-family: var(--f-cond); font-weight: 700; font-size: 10.5px; text-transform: uppercase; line-height: 1.1; }
+.barra-herr .gasto { color: var(--espuma); font-family: var(--f-mono); font-size: 10px; }
 .combo { position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%); font-family: var(--f-display); font-size: 40px; color: var(--hivis); text-shadow: 0 3px 0 var(--hivis-tinta), 0 0 18px rgba(255,138,31,.5); pointer-events: none; opacity: 0; white-space: nowrap; }
 .combo.ve { animation: combo .7s ease-out; }
 @keyframes combo { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.7); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
@@ -192,7 +197,7 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
     <div class="combo" id="combo"></div>
     <div class="hud-abajo">
       <div class="mandos">
-        <div class="info"><span class="botella" id="botella"></span><span class="ayuda" id="ayuda">Pasadas cortas sobre la grasa. Mantén el botón redondo para cambiar de herramienta.</span>
+        <div class="info"><div class="barra-herr" id="barraHerr"></div><span class="ayuda" id="ayuda">Elige la herramienta abajo y haz pasadas cortas sobre la grasa.</span>
           <button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button></div>
         <button class="herr-btn" id="herrBtn" aria-label="Herramienta: mantén pulsado para la rueda"></button>
       </div>
@@ -502,7 +507,7 @@ function materialGrasa(base, dtex, lado) {
         vec2 celda = fract(vUv * 90.0) - 0.5; float rb = hh(floor(vUv * 90.0));
         float burb = smoothstep(0.22 + 0.2 * rb, 0.16 + 0.2 * rb, length(celda));
         float fo = dm.g * (0.6 + 0.4 * burb);
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.97, 1.0), fo * 0.9);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.97, 1.0), fo * 0.6);
         float hlv = uHl * tF * (0.55 + 0.45 * sin(uT * 6.0));`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = mix(mix(0.24, 0.05, dm.b), mix(0.42, 0.3, tC), tF);
@@ -547,7 +552,7 @@ function pintarSf(sf) {
   for (let i = 0; i < d.length; i++) {
     data[i * 4] = Math.min(255, d[i] / 1.4 * 255);
     const a = soak[i];
-    data[i * 4 + 1] = a < 0 ? 0 : Math.max(0, 255 * (1 - a / 30)) * Math.min(1, d[i] * 3 + .25);
+    data[i * 4 + 1] = a < 0 ? 0 : Math.max(0, 255 * (1 - a / 30)) * Math.min(1, d[i] * 4);
     data[i * 4 + 2] = Math.min(255, pol[i] * 255);
     data[i * 4 + 3] = 255;
   }
@@ -705,9 +710,9 @@ function construirNoche(orden) {
       piezas.faldas.push({ mesh: falda, a: base + k, b: base + k + 1 });
     }
     // La bolsa cuelga al fondo, donde el plástico hace embudo: no tapa la vista de la campana.
-    const bolsa = add(new T.ConeGeometry(.17, .32, 14, 1, true), new T.MeshStandardMaterial({ color: 0xe0e0e0, transparent: true, opacity: .8, side: T.DoubleSide }), cx, hY0 - .3, hZ0 + .25);
+    const bolsa = add(new T.ConeGeometry(.17, .32, 14, 1, true), new T.MeshStandardMaterial({ color: 0xe0e0e0, transparent: true, opacity: .8, side: T.DoubleSide }), cx + hW / 2 - .22, hY0 - .3, hZ0 + .22);
     bolsa.rotation.x = Math.PI; bolsa.visible = false;
-    piezas.bolsas.push({ mesh: bolsa, pos: new T.Vector3(cx, hY0 - .25, hZ0 + .3), hecho: false });
+    piezas.bolsas.push({ mesh: bolsa, pos: new T.Vector3(cx + hW / 2 - .22, hY0 - .25, hZ0 + .25), hecho: false });
     campanas.push({ cx, sfs });
   }
 
@@ -761,7 +766,7 @@ function construirNoche(orden) {
   VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
   Z = [{ id: 'filtros', n: 'Filtros', sfs: filtros, vista: vista(new T.Vector3(0, 0, lonaZ), new T.Vector3(0, 1.6, 1.0), lonaW + .2, 1.7, 3.2, 55) }];
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs,
-    vista: vista(new T.Vector3(c.cx, hY0 + hood.alto * .55, hZ0 + hood.fondo * .4), new T.Vector3(0, -.55, .83), hW + .3, 1.4, 2.3, 72) }));
+    vista: vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74) }));
   Z.push({ id: 'ducto', n: 'Ducto', sfs: ducto, vista: vista(new T.Vector3(0, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80) });
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
 }
@@ -1022,6 +1027,8 @@ function aplicarTramo(a, b) {
   let rc, cant;
   if (herr === 'espuma') {
     if (M.botella <= 0) { ayuda('Botella de espuma vacía. Te queda la rasqueta.'); return 0; }
+    if (!M.avisoEspuma) { M.avisoEspuma = true; ayuda('La espuma no limpia: ablanda la grasa. Espera 2 segundos y pásale la rasqueta.', 6); decir(M.comp, 'Ojo: la espuma no quita nada, solo ablanda. Luego toca la rasqueta.'); }
+    else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda('Esto ya está blando: cambia a la rasqueta y raspa.', 4); }
     rc = .15 / sf.celda; cant = 0; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (S.eq.xl ? 1.5 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = S.eq.orbital ? .5 : .28; }
   else { rc = radioRasqueta() / sf.celda; cant = fuerzaRasqueta() * ef * multCombo; }
@@ -1082,7 +1089,11 @@ function verCombo(t) { const c = $('#combo'); c.textContent = 'COMBO ' + t; c.cl
 
 const hb = $('#herrBtn');
 let ruedaT = null, ruedaAbierta = false, ruedaSel = null;
-function pintarHerrBtn() { hb.innerHTML = ICONOS[M.herr] + `<small>${HERR[M.herr].n}</small>`; }
+function pintarHerrBtn() {
+  hb.innerHTML = ICONOS[M.herr] + `<small>${HERR[M.herr].n}</small>`;
+  $('#barraHerr').innerHTML = herramientas().map(h => `<button data-hb="${h}" aria-pressed="${h === M.herr}" aria-label="${HERR[h].n}">${ICONOS[h]}${h === 'espuma' ? `<small class="gasto">${Math.round(M.botella * 100)} %</small>` : `<small>${HERR[h].n}</small>`}</button>`).join('');
+}
+$('#barraHerr').addEventListener('click', e => { const b = e.target.closest('[data-hb]'); if (b && M && M.fase === 'turno' && !(M.ev && M.ev.bloquea)) { audio(); cambiarHerr(b.dataset.hb); } });
 function cambiarHerr(h) { if (h === M.herr) return; M.prevHerr = M.herr; M.herr = h; pintarHerrBtn(); tono(660, .06, .06, 'triangle'); ayuda(HERR[h].d); }
 hb.addEventListener('pointerdown', e => {
   audio(); if (!M || M.fase !== 'turno' || (M.ev && M.ev.bloquea)) return;
@@ -1137,7 +1148,7 @@ function decir(quien, texto, resp) {
   tono(quien === 'gerente' ? 300 : 520, .05, .04, 'square');
   return b;
 }
-function ayuda(t) { $('#ayuda').textContent = t; if (M) M.ayudaT = 3.5; }
+function ayuda(t, seg = 3.5) { $('#ayuda').textContent = t; if (M) M.ayudaT = seg; }
 
 // ---- desastres
 
@@ -1321,7 +1332,7 @@ function pintarHud(todo) {
       if (i === M.zona) { ayuda(`${z.n} pasa la inspección. Pulir hasta espejo suma propina.`); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
     }
   });
-  $('#botella').textContent = `Espuma ${Math.round(M.botella * 100)} %`;
+  const g = $('#barraHerr .gasto'); if (g) g.textContent = `${Math.round(M.botella * 100)} %`;
   $('#siguiente').textContent = M.zona < ultZona() ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar turno';
 }
 $('#zonas').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b && M && M.fase === 'turno' && !M.ev) irZona(+b.dataset.z); });

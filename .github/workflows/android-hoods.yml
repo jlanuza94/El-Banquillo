@@ -34,16 +34,16 @@ jobs:
           KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
           KS_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          # La misma clave que el APK de El Banquillo si el repositorio tiene los secretos (así cada APK se instala
-          # encima del anterior). Si no, se crea una clave temporal para esta compilación.
+          # Con los secretos ANDROID_KEYSTORE_B64 y ANDROID_KEYSTORE_PASSWORD se firma con la clave de El Banquillo.
           if [ -n "$KS_B64" ] && [ -n "$KS_PW" ]; then
             echo "$KS_B64" | base64 -d > "$KEYSTORE_FILE"; PW="$KS_PW"
+            echo "::add-mask::$PW"
           else
-            PW=$(openssl rand -hex 16)
-            keytool -genkeypair -keystore "$KEYSTORE_FILE" -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass "$PW" -keypass "$PW" -dname "CN=Hood Cleaners, O=jlanuza94, C=ES"
+            # Sin secretos: la clave fija de Hood Cleaners que está en el repositorio. Es pública (cualquiera podría
+            # firmar con ella), pero garantiza que cada APK nuevo se instale encima del anterior sin perder la partida.
+            cp android-hoods/hood-cleaners.jks "$KEYSTORE_FILE"; PW=hoodcleaners
+            echo "KEY_ALIAS=hoodcleaners" >> "$GITHUB_ENV"
           fi
-          echo "::add-mask::$PW"
           echo "KEYSTORE_PASSWORD=$PW" >> "$GITHUB_ENV"; echo "KEY_PASSWORD=$PW" >> "$GITHUB_ENV"
       - name: Compilar
         run: |
