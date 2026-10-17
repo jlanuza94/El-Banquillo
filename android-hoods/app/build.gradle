@@ -16,6 +16,9 @@ android {
             storePassword System.getenv('KEYSTORE_PASSWORD') ?: 'android'
             keyAlias System.getenv('KEY_ALIAS') ?: 'androiddebugkey'
             keyPassword System.getenv('KEY_PASSWORD') ?: 'android'
+            // Firma antigua (v1) además de la moderna: algunos instaladores y gestores de archivos la necesitan.
+            enableV1Signing true
+            enableV2Signing true
         }
     }
     buildTypes {
