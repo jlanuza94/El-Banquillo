@@ -52,9 +52,9 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 
 .hud-abajo { position: absolute; left: 0; right: 0; bottom: 0; padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); padding-left: var(--lado-i); padding-right: var(--lado-d); padding-top: 24px; display: grid; gap: 8px; pointer-events: none; background: linear-gradient(rgba(10,16,22,0), rgba(10,16,22,.8)); }
 .zonas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.zonas button { pointer-events: auto; background: var(--panel); border: 1px solid var(--linea); border-radius: 6px; padding: 5px 8px; text-align: left; display: grid; }
+.zonas button { pointer-events: auto; background: var(--panel); border: 1px solid var(--linea); border-radius: 6px; padding: 5px 8px; text-align: left; display: grid; min-width: 0; }
 .zonas button[aria-pressed="true"] { border-color: var(--hivis); }
-.zonas b { font-family: var(--f-cond); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.zonas b { font-family: var(--f-cond); font-size: 14px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zonas span { font-family: var(--f-mono); font-size: 12px; color: var(--tenue); font-variant-numeric: tabular-nums; }
 .zonas .listo span { color: var(--ok); }
 .mandos { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
@@ -67,6 +67,9 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .combo { position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%); font-family: var(--f-display); font-size: 40px; color: var(--hivis); text-shadow: 0 3px 0 var(--hivis-tinta), 0 0 18px rgba(255,138,31,.5); pointer-events: none; opacity: 0; white-space: nowrap; }
 .combo.ve { animation: combo .7s ease-out; }
 @keyframes combo { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.7); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
+.pan { position: absolute; top: 46%; transform: translateY(-50%); width: 44px; height: 72px; border-radius: 8px; background: var(--panel); border: 1px solid var(--linea); font-size: 26px; font-weight: 700; touch-action: none; }
+#panI { left: max(6px, env(safe-area-inset-left, 0px)); }
+#panD { right: max(6px, env(safe-area-inset-right, 0px)); }
 
 /* Rueda de herramientas */
 .rueda { position: absolute; width: 250px; height: 250px; margin: -125px 0 0 -125px; pointer-events: none; }
@@ -77,9 +80,15 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .rueda .sector.off { opacity: .35; }
 .rueda .centro { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: var(--hivis); }
 
-/* Pantallas (camioneta, taller, preparación, parte) */
+/* Marcas sobre la escena 3D (preparación) */
+.marca { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); background: var(--hivis); color: var(--hivis-tinta); border: 2px solid rgba(255,255,255,.4); border-radius: 999px; padding: 6px 11px; font-family: var(--f-cond); font-weight: 700; font-size: 14px; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,.5); animation: marca .7s ease-in-out infinite alternate; }
+.marca.punto { width: 30px; height: 30px; padding: 0; }
+.marca.hecha { background: var(--ok); animation: none; }
+@keyframes marca { to { transform: translate(-50%, -50%) scale(1.1); } }
+
+/* Pantallas (camioneta, taller, parte…) */
 .pantalla { position: absolute; inset: 0; overflow-y: auto; background: linear-gradient(rgba(13,20,27,.5), rgba(13,20,27,.93) 38%); padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)); padding-left: var(--lado-i); padding-right: var(--lado-d); }
-.hoja { max-width: 560px; margin: 0 auto; display: grid; gap: 14px; }
+.hoja { max-width: 580px; margin: 0 auto; display: grid; gap: 14px; }
 .hoja p { margin: 0; }
 .rotulo { font-family: var(--f-display); font-size: clamp(26px, 7.5vw, 38px); line-height: .95; color: var(--acero); text-wrap: balance; }
 .rotulo span { color: var(--hivis); display: block; font-size: .6em; margin-top: 4px; }
@@ -87,37 +96,46 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .dato { background: var(--panel); border: 1px solid var(--linea); border-radius: 4px; padding: 4px 10px; display: grid; }
 .dato b { font-family: var(--f-mono); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .dato i { font-style: normal; font-family: var(--f-cond); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--tenue); }
+.dato small { font-size: 11px; color: var(--tenue); }
 .jefe { background: var(--panel); border-left: 3px solid var(--grasa); padding: 10px 12px; border-radius: 0 6px 6px 0; display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; }
-.jefe .cara, .comp .cara { width: 40px; height: 40px; border-radius: 50% 50% 8px 8px; display: grid; place-items: center; font-family: var(--f-display); color: var(--hivis-tinta); }
+.cara { width: 40px; height: 40px; border-radius: 50% 50% 8px 8px; display: grid; place-items: center; font-family: var(--f-display); color: var(--hivis-tinta); }
 .jefe b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); display: block; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 2px solid var(--linea); }
+.tabs button { background: none; border: 0; padding: 9px 12px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); }
+.tabs .cuenta { font-family: var(--f-mono); font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; margin-left: 4px; }
 h2.sec { margin: 4px 0 0; font-family: var(--f-cond); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); font-weight: 700; }
-.orden { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; text-align: left; width: 100%; }
+.orden { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 12px 14px; display: grid; gap: 7px; text-align: left; width: 100%; }
 button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inset 0 0 0 1px var(--hivis); }
 .orden h3 { margin: 0; font-family: var(--f-cond); font-size: 21px; line-height: 1.1; color: var(--acero); }
+.orden.fijo { border-left: 4px solid var(--ok); }
 .fila { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
 .nota { font-size: 13px; color: var(--tenue); }
 .pista { font-size: 14px; color: var(--grasa); }
+.aviso { font-size: 14px; color: var(--mal); }
 .pago { font-family: var(--f-mono); font-size: 20px; font-weight: 600; }
 .chip { display: inline-block; font-family: var(--f-cond); font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; background: var(--panel-2); }
 .chip.num { text-transform: none; font-family: var(--f-mono); font-weight: 600; letter-spacing: 0; }
 .chip.ok { background: rgba(105,201,122,.18); color: var(--ok); }
 .chip.mal { background: rgba(255,106,92,.18); color: var(--mal); }
-.companeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.comp { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px; display: grid; grid-template-columns: 40px 1fr; gap: 8px; text-align: left; align-items: start; }
+.chip.naranja { background: var(--hivis); color: var(--hivis-tinta); }
+.companeros { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.comp { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px; display: grid; grid-template-columns: 40px 1fr; gap: 8px; text-align: left; align-items: start; width: 100%; }
 .comp[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inset 0 0 0 1px var(--hivis); }
 .comp:disabled { opacity: .45; cursor: not-allowed; }
 .comp b { font-family: var(--f-cond); font-size: 17px; display: block; }
 .comp span { font-size: 12px; color: var(--tenue); display: block; }
+.persona { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; }
+.persona b { font-family: var(--f-cond); font-size: 17px; }
+.persona span { font-size: 13px; color: var(--tenue); display: block; }
 .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn { border: 1px solid var(--linea); background: var(--panel-2); border-radius: 6px; padding: 11px 16px; font-family: var(--f-cond); font-weight: 700; font-size: 17px; letter-spacing: .04em; text-transform: uppercase; }
 .btn.prim { background: var(--hivis); border-color: var(--hivis); color: var(--hivis-tinta); }
 .btn.peq { padding: 6px 10px; font-size: 14px; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-.check { display: grid; gap: 8px; }
-.check button { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; text-align: left; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 11px 12px; }
-.check .box { width: 26px; height: 26px; border: 2px solid var(--tenue); border-radius: 4px; display: grid; place-items: center; font-weight: 700; color: var(--hivis-tinta); }
-.check button[aria-pressed="true"] .box { background: var(--ok); border-color: var(--ok); }
-.check small { display: block; color: var(--tenue); font-size: 13px; }
+.barra { height: 6px; background: rgba(255,255,255,.1); border-radius: 3px; overflow: hidden; }
+.barra div { height: 100%; background: var(--hivis); }
 .cuentas { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 14px; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 12px; }
 .cuentas span:nth-child(even) { font-family: var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
 .cuentas .total { font-weight: 700; border-top: 1px solid var(--linea); padding-top: 6px; }
@@ -132,7 +150,7 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 [aria-pressed="true"] .interruptor { background: var(--ok); }
 [aria-pressed="true"] .interruptor::after { left: 21px; }
 
-/* Eventos */
+/* Eventos y panel de preparación */
 .evento { position: absolute; left: 0; right: 0; bottom: 0; padding-left: var(--lado-i); padding-right: var(--lado-d); padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); display: grid; justify-items: center; pointer-events: none; }
 .evento .carta { pointer-events: auto; width: 100%; max-width: 480px; background: var(--panel-solido); border: 2px solid var(--hivis); border-radius: 10px; padding: 14px; display: grid; gap: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.6); animation: entra .25s ease-out; }
 .evento h3 { margin: 0; font-family: var(--f-display); font-size: 20px; line-height: 1.1; color: var(--hivis); }
@@ -140,6 +158,8 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .evento .opciones { display: grid; gap: 6px; }
 .evento .opciones .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; touch-action: none; }
 .evento .opciones .btn small { display: block; font-weight: 400; font-size: 13px; opacity: .8; }
+.prep .carta { border-color: var(--linea); }
+.prep .fila .reloj { font-size: 20px; }
 .cuenta-atras { height: 6px; background: rgba(255,255,255,.1); border-radius: 3px; overflow: hidden; }
 .cuenta-atras div { height: 100%; background: var(--mal); }
 .blanco { position: absolute; width: 74px; height: 74px; margin: -37px 0 0 -37px; border-radius: 50%; background: #c9c9c9; border: 4px dashed #6f6f6f; display: grid; place-items: center; font-family: var(--f-cond); font-weight: 700; color: #222; font-size: 15px; text-transform: uppercase; animation: late .6s ease-in-out infinite alternate; }
@@ -150,6 +170,7 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 
 <div id="juego">
   <canvas id="gl" aria-label="Cocina en 3D: arrastra sobre la grasa para limpiar"></canvas>
+  <div id="marcas"></div>
   <div id="hud" hidden>
     <div class="hud-arriba">
       <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico" id="pausa" aria-label="Pausa y ajustes">❚❚</button></div>
@@ -166,8 +187,11 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
       <div class="zonas" id="zonas"></div>
     </div>
   </div>
+  <button class="pan" id="panI" aria-label="Mover la cámara a la izquierda" hidden>‹</button>
+  <button class="pan" id="panD" aria-label="Mover la cámara a la derecha" hidden>›</button>
   <div class="rueda" id="rueda" hidden></div>
   <div id="blancos"></div>
+  <div class="evento prep" id="prep" hidden></div>
   <div class="evento" id="evento" hidden></div>
   <div class="pantalla" id="pantalla"><div class="cargando"><div><div class="rotulo">Hood Cleaners<span>The Night Shift</span></div><p class="nota">Calentando la camioneta…</p></div></div></div>
 </div>
@@ -188,20 +212,26 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = (a, b) => a + Math.random() * (b - a);
 const uno = arr => arr[Math.floor(Math.random() * arr.length)];
 const azar = p => Math.random() < p;
+const hora = min => { const m = 22 * 60 + Math.floor(min); return `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
 
 // ------------------------------------------------------------------ datos
 
 const RANGOS = [
   { n: 'El Nuevo', parte: .15, txt: 'Don Rigo elige el trabajo y el compañero.' },
-  { n: 'Ayudante', parte: .25, req: s => s.aprobados >= 3, falta: s => `${Math.max(0, 3 - s.aprobados)} turnos aprobados más`, txt: 'Eliges entre dos trabajos. Te prestan la hidrolavadora.' },
-  { n: 'Jefe de cuadrilla', parte: .35, req: s => s.rep >= 40, falta: s => `reputación 40 (tienes ${s.rep})`, txt: 'Eliges trabajo y compañero. Llegan los hoteles.' },
-  { n: 'Socio', parte: .6, compra: 3000, req: s => s.rep >= 60, falta: s => `reputación 60 (tienes ${s.rep}) y ${dinero(3000)} para comprar la mitad`, txt: 'Compras la mitad de Grasa Brava. Cobras el 60 %.' },
+  { n: 'Ayudante', parte: .25, req: s => s.aprobados >= 3, falta: s => `${Math.max(0, 3 - s.aprobados)} turnos aprobados más`, txt: 'Eliges entre varios trabajos y buscas clientes. Te prestan la hidrolavadora.' },
+  { n: 'Jefe de cuadrilla', parte: .35, req: s => s.rep >= 40, falta: s => `reputación 40 (tienes ${s.rep})`, txt: 'Eliges compañero, contratas ayudantes y llegan los trabajos grandes.' },
+  { n: 'Socio', parte: .6, compra: 3000, req: s => s.rep >= 60, falta: s => `reputación 60 (tienes ${s.rep}) y ${dinero(3000)} para comprar la mitad`, txt: 'Compras la mitad de Grasa Brava. Cobras el 60 % y pagas tus gastos.' },
   { n: 'Dueño', parte: 1, req: s => s.rep >= 80, falta: s => `reputación 80 (tienes ${s.rep})`, txt: 'Don Rigo se jubila. La empresa es tuya.' },
 ];
+const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
+const fama = r => FAMA.filter(f => r >= f[0]).pop()[1];
+const multPago = () => .85 + S.rep / 100 * .6;   // la reputación sube lo que paga cada cliente
 
+// Frecuencias de limpieza de la norma NFPA 96, en noches de juego.
+const FREC = { mensual: 3, trimestral: 5, semestral: 7, anual: 9 };
 const COCINAS = {
   cafe: { n: 'Cafetería', frec: 'anual', micras: [900, 1300], pago: [380, 480], filtros: [2, 3], rango: 0, linea: 'cafe',
-    nombres: ['Café La Esquina', 'Desayunos Lupita', 'Cafetería El Andén'], eventos: [] },
+    nombres: ['Café La Esquina', 'Desayunos Lupita', 'Cafetería El Andén', 'Panadería San Juan'], eventos: [] },
   pizza: { n: 'Pizzería de leña', frec: 'mensual', micras: [1500, 2100], pago: [520, 680], filtros: [2, 4], rango: 0, linea: 'horno',
     nombres: ['Pizzería Napoli', 'Horno Bella Vista', 'La Leña de Mario'], eventos: ['mapache', 'gerente'] },
   burger: { n: 'Hamburguesería', frec: 'trimestral', micras: [1800, 2500], pago: [560, 760], filtros: [3, 4], rango: 0, linea: 'plancha',
@@ -212,6 +242,17 @@ const COCINAS = {
     nombres: ['Tacos El Güero', 'Asadero Los Compadres', 'Pollos Doña Rosa'], eventos: ['techo', 'gerente', 'mapache'] },
   hotel: { n: 'Cocina de hotel', frec: 'semestral', micras: [2000, 2700], pago: [1500, 2100], filtros: [5, 6], rango: 2, linea: 'plancha',
     nombres: ['Hotel Miramar', 'Gran Hotel Sol', 'Hotel Costa Azul'], eventos: ['alarma', 'techo', 'gerente'] },
+  comedor: { n: 'Comedor industrial', frec: 'trimestral', micras: [2200, 2900], pago: [2300, 2900], filtros: [6, 8], rango: 2, linea: 'plancha', campanas: 2, ayud: 1,
+    nombres: ['Comedor Textil La Hilandera', 'Comedor Universitario', 'Cocina del Hospital San José'], eventos: ['gerente', 'alarma', 'techo'] },
+  estadio: { n: 'Cocina de estadio', frec: 'semestral', micras: [2500, 3300], pago: [3800, 4800], filtros: [8, 10], rango: 3, linea: 'carbon', campanas: 2, ayud: 2,
+    nombres: ['Estadio Municipal', 'Arena Los Pumas'], eventos: ['mapache', 'techo', 'gerente', 'alarma'] },
+};
+const LINEAS = {
+  plancha: ['plancha', 'freidora', 'mesa', 'freidora', 'plancha', 'mesa'],
+  wok: ['wok', 'wok', 'mesa', 'wok'],
+  horno: ['horno', 'mesa', 'mesa'],
+  carbon: ['carbon', 'mesa', 'freidora', 'carbon'],
+  cafe: ['cafetera', 'plancha', 'mesa'],
 };
 const PISTAS = {
   gerente: 'El gerente dice que se queda «por si acaso».',
@@ -219,6 +260,8 @@ const PISTAS = {
   mapache: 'Local viejo. Dicen que el ducto «hace ruidos».',
   alarma: 'Detectores de humo muy sensibles. Ojo con el vapor.',
 };
+const TIPO_CAMPANA = { caja: 'Campana de caja', inclinada: 'Campana inclinada', larga: 'Campana larga' };
+const FORMA_DUCTO = { cuadrado: 'ducto cuadrado', redondo: 'ducto redondo', ancho: 'ducto ancho y bajo' };
 
 const COMPANEROS = {
   beto: { n: 'Beto', apodo: 'el Primo', color: '#ffd23f', rango: 0, fuerza: 1.25, rasgo: 'Rápido. Rompe cosas con total seguridad.',
@@ -231,10 +274,35 @@ const COMPANEROS = {
     frases: ['Esto pesa poquito. Lo cargo yo.', '¿Ya es de día? ¿No? Ah.', 'Yo de niño quería ser almohada.', 'Qué buena siesta haría en ese ducto.'],
     bien: 'Buen turno. Me voy a dormir en la camioneta, despiértame en el próximo semáforo.', mal: 'Yo vi todo limpio. Bueno, vi con los ojos cerrados.', desastre: 'Me perdí lo mejor. Estaba descansando la vista.' },
 };
+// Gente que busca trabajo: cada uno con su manía.
+const CANDIDATOS = [
+  ['Kevin', 'Graba todo para sus redes.', '¡Saluden a mis doce seguidores!'],
+  ['Doña Paty', 'Opina de la cocina ajena.', 'Con esta grasa yo hago tamales para un año.'],
+  ['El Flaco', 'Cabe en cualquier ducto.', 'Yo me meto. Siempre me meto.'],
+  ['Toño', 'Canta mientras raspa. Mal.', '♪ Grasa, grasa, dame tu grasa… ♪'],
+  ['Yesenia', 'Excampeona regional de limpiar ventanas.', 'Esto es como una ventana, pero con rencor.'],
+  ['Memo', 'Dice que es primo de Beto. Beto no lo conoce.', '¿Y Beto? Salúdenme a mi primo.'],
+  ['Brenda', 'Trae su propia rasqueta. Le puso nombre.', 'Vamos, Gertrudis. Tú puedes.'],
+  ['Nacho', 'Llega tarde, pero llega con tacos.', '¿Alguien quiere uno de pastor? Están fríos, pero con cariño.'],
+  ['Rosa', 'No habla. Limpia.', '…'],
+  ['Pancho', 'Les tiene miedo a los mapaches.', '¿Eso que se movió fue un mapache? Dime que no.'],
+];
+const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
 const GERENTE = ['¿Ya casi?', '¿Cuánto falta? Es que mañana abrimos.', 'Yo lo habría hecho con un trapito.', '¿Eso es grasa o es el diseño?', '¿Y eso brilla así siempre o es la luz?'];
-const RIGO = ['Hoy te toca una fácil. Mentira, ninguna es fácil.', 'Si te preguntan, la camioneta siempre hizo ese ruido.', 'El seguro no cubre mapaches. Lo pregunté.', 'Llévate a Beto. Alguien tiene que vigilarlo y no quiero ser yo.', 'Si algo explota, tú no estabas.', 'Recuerda: el cliente siempre tiene razón, hasta que paga.'];
+const RIGO = ['Hoy te toca una fácil. Mentira, ninguna es fácil.', 'Si te preguntan, la camioneta siempre hizo ese ruido.', 'El seguro no cubre mapaches. Lo pregunté.', 'Si algo explota, tú no estabas.', 'Recuerda: el cliente siempre tiene razón, hasta que paga.', 'Los clientes no se consiguen solos. Bueno, a veces sí, pero no cuentes con eso.'];
 const CLIENTE_BIEN = ['El dueño se mira en la campana y se peina.', 'El chef pasa el dedo por el ducto y no dice nada. Es lo más cerca de un elogio que vas a recibir.', 'El gerente le saca una foto a la campana. «Para mi mamá», dice.', 'El dueño te ofrece un café. Está frío, pero es un gesto.'];
 const CLIENTE_MAL = ['El gerente te enseña una mancha con la linterna del móvil. Durante cuatro minutos.', 'El chef suspira tan fuerte que se apaga un piloto.', 'El dueño dice que la próxima vez llama a su cuñado.', '«¿Esto es lo limpio?», pregunta el dueño. Nadie contesta.'];
+
+const PERKS = {
+  brazo: { n: 'Brazo de acero', d: 'La rasqueta quita un 15 % más.' },
+  pulmones: { n: 'Pulmones de buzo', d: 'Cada turno dura 15 segundos más.' },
+  labia: { n: 'Labia de vendedor', d: '+5 % de propina, y el gerente pregunta menos.' },
+  botella: { n: 'Mano para la espuma', d: 'La espuma rinde un 40 % más.' },
+  jefe: { n: 'Jefe nato', d: 'Tu cuadrilla limpia un 20 % más rápido.' },
+  gentes: { n: 'Don de gentes', d: 'Los clientes te ofrecen contrato fijo más a menudo.' },
+  ojo: { n: 'Ojo de inspector', d: 'La asistencia de apuntado llega el doble de lejos.' },
+};
+const xpNivel = n => Math.round(120 * Math.pow(n, 1.35));
 
 const HERR = {
   rasqueta: { n: 'Rasqueta', d: 'Pasadas cortas: quita la costra.' },
@@ -253,28 +321,43 @@ const RUEDA = ['rasqueta', 'espuma', 'hidro', 'pulidor'];
 const TIENDA = [
   { id: 'r2', n: 'Rasqueta de acero templado', d: 'Más ancha y un 30 % más fuerte.', p: 250, ok: s => s.eq.rasqueta === 1, f: s => { s.eq.rasqueta = 2; } },
   { id: 'r3', n: 'Rasqueta de carburo', d: 'La hoja definitiva. La costra le tiene miedo.', p: 700, ok: s => s.eq.rasqueta === 2, f: s => { s.eq.rasqueta = 3; } },
+  { id: 'xl', n: 'Botella de espuma XL', d: 'La espuma te dura un 50 % más por noche.', p: 180, ok: s => !s.eq.xl, f: s => { s.eq.xl = true; } },
   { id: 'conc', n: 'Desengrasante concentrado', d: 'La espuma ablanda 4× en vez de 3×.', p: 400, ok: s => !s.eq.conc, f: s => { s.eq.conc = true; } },
-  { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro mucho más fuerte que la prestada, y la tienes desde ya.', p: 1200, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
   { id: 'orb', n: 'Pulidor orbital', d: 'El acabado espejo en la mitad de pasadas.', p: 300, ok: s => !s.eq.orbital, f: s => { s.eq.orbital = true; } },
-  { id: 'bolsa', n: 'Bolsa de contención nueva', d: 'La vieja tiene más parches que bolsa.', p: 120, ok: s => !s.eq.bolsa, f: s => { s.eq.bolsa = true; } },
+  { id: 'bolsa', n: 'Bolsas de contención nuevas', d: 'Las viejas tienen más parches que bolsa.', p: 120, ok: s => !s.eq.bolsa, f: s => { s.eq.bolsa = true; } },
+  { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro mucho más fuerte que la prestada, y la tienes desde ya.', p: 1200, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
+  { id: 'cam2', n: 'Camioneta con baca', d: 'Caben 2 ayudantes además del compañero.', p: 500, ok: s => s.eq.camioneta === 1 && s.rango >= 2, f: s => { s.eq.camioneta = 2; } },
+  { id: 'cam3', n: 'Camión de la empresa', d: 'Caben 4 ayudantes. Y tiene radio que funciona.', p: 2200, ok: s => s.eq.camioneta === 2, f: s => { s.eq.camioneta = 3; } },
 ];
-const PREP = [
-  { id: 'gas', n: 'Cerrar el gas y apagar los pilotos', d: 'Un piloto encendido y la lona huele a barbacoa.' },
-  { id: 'luz', n: 'Cortar la corriente del extractor', d: 'Que el ventilador no arranque con alguien dentro.' },
-  { id: 'plastico', n: 'Cubrir la línea con plástico', d: 'Al chef no le gusta la espuma en su plancha sagrada.' },
-  { id: 'bolsa', n: 'Colgar la bolsa de contención', d: 'Recoge el agua con grasa que baja del ducto.' },
+const PLAZAS = [0, 1, 2, 4];
+
+// Buscar clientes: cada noche hay dos llamadas.
+const MARKETING = [
+  { id: 'volantes', n: 'Repartir volantes en el barrio', d: 'Una orden más esta noche, de las sencillas.', p: 40, rango: 1,
+    hacer: () => { const o = genOrden(uno(cocinasHasta(Math.min(S.rango, 1)))); o.origen = 'Volante'; return [o, 'Beto repartió la mitad. La otra mitad sigue en su chaqueta, pero llamó alguien.']; } },
+  { id: 'donas', n: 'Visitar restaurantes con donas', d: 'A veces sale una orden mejor pagada. A veces solo se comen las donas.', p: 25, rango: 1,
+    hacer: () => { if (azar(.4)) return [null, 'Se comieron las donas, dijeron «ya te llamamos» y no te llamaron.']; const o = genOrden(uno(cocinasHasta(S.rango))); o.pago = Math.round(o.pago * 1.15 / 10) * 10; o.origen = 'Donas'; return [o, 'Las donas abrieron puertas. Literalmente: el chef te abrió la cocina para enseñarte el desastre.']; } },
+  { id: 'redes', n: 'Anuncio en redes', d: 'Dos órdenes más. Puede llegar un cliente raro que paga el doble.', p: 150, rango: 2,
+    hacer: () => { const a = genOrden(uno(cocinasHasta(S.rango))), b = genOrden(uno(cocinasHasta(S.rango))); a.origen = b.origen = 'Redes'; if (azar(.45)) { b.raro = true; b.pago = Math.round(b.pago * 1.9 / 10) * 10; b.eventos = ['gerente', 'mapache', 'techo']; b.nombre = uno(['El Restaurante del Influencer', 'Sushi y Karaoke 24 h', 'Cocina Embrujada de Don Ramiro']); } return [[a, b], 'El anuncio tuvo tres «me gusta» y dos llamadas. Una de ellas suena rara.']; } },
+  { id: 'licitacion', n: 'Presentarse a una licitación', d: 'Un trabajo grande de dos campanas. Ganarla depende de tu reputación.', p: 300, rango: 2,
+    hacer: () => { if (!azar(S.rep / 100 + .1)) return [null, 'Ganó la empresa del cuñado del alcalde. Qué sorpresa.']; const o = genOrden(S.rango >= 3 && azar(.5) ? 'estadio' : 'comedor'); o.origen = 'Licitación'; return [o, '¡Ganaste la licitación! Ahora hay que cumplir.']; } },
 ];
 
 // ------------------------------------------------------------------ partida
 
 let S;
 function nueva() {
-  S = { v: 2, noche: 1, dinero: 60, rep: 10, rango: 0, aprobados: 0, mejor: 0,
-    eq: { rasqueta: 1, conc: false, hidro: false, orbital: false, bolsa: false },
-    aj: { asist: true, resaltar: false, comodo: false, sonido: true }, album: [] };
+  S = { v: 3, noche: 1, dinero: 60, rep: 10, rango: 0, aprobados: 0, mejor: 0, nivel: 1, xp: 0, perks: {},
+    eq: { rasqueta: 1, conc: false, hidro: false, orbital: false, bolsa: false, xl: false, camioneta: 1 },
+    aj: { asist: true, resaltar: false, comodo: false, sonido: true }, album: [], clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 1 };
+}
+function migrar(s) {
+  if (s.v === 2) Object.assign(s, { v: 3, nivel: 1, xp: 0, perks: {}, clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 1 }, { eq: Object.assign({ xl: false, camioneta: 1 }, s.eq) });
+  return s.v === 3 ? s : null;
 }
 function guardar() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
-function cargar() { try { const t = localStorage.getItem(KEY); if (t) { const s = JSON.parse(t); if (s && s.v === 2) { S = s; return true; } } } catch (e) { /* nueva */ } return false; }
+function cargar() { try { const t = localStorage.getItem(KEY); if (t) { const s = migrar(JSON.parse(t)); if (s) { S = s; return true; } } } catch (e) { /* nueva */ } return false; }
+const perk = k => S.perks[k] || 0;
 
 // ------------------------------------------------------------------ audio
 
@@ -316,6 +399,7 @@ function chorro(on) {
 const sDing = () => { tono(880, .25, .12); tono(1320, .4, .1, 'sine', null, .12); };
 const sAlarma = () => { tono(520, .35, .1, 'square', 300); tono(390, .45, .09, 'square', 220, .32); };
 const sCombo = n => tono(500 + n * 180, .18, .08, 'triangle');
+const sCaja = () => { tono(1046, .12, .1, 'triangle'); tono(1568, .3, .09, 'triangle', null, .1); };
 
 // ------------------------------------------------------------------ escena 3D
 
@@ -377,8 +461,8 @@ TX.lona = texCanvas(lienzo(128, 128, (g, w, h) => {
 // Material de grasa: una textura de datos por superficie (R grasa, G espuma, B pulido) decide color, brillo y metal.
 // Costra negra y brillante → película ámbar → acero que refleja la luz.
 const U = { hl: { value: 0 }, tiempo: { value: 0 } };
-function materialGrasa(base, dtex) {
-  const m = new T.MeshStandardMaterial({ map: base, color: 0xffffff, metalness: 1, roughness: .3 });
+function materialGrasa(base, dtex, lado) {
+  const m = new T.MeshStandardMaterial({ map: base, color: 0xffffff, metalness: 1, roughness: .3, side: lado || T.FrontSide });
   m.onBeforeCompile = sh => {
     sh.uniforms.mapaGrasa = { value: dtex }; sh.uniforms.uHl = U.hl; sh.uniforms.uT = U.tiempo;
     sh.fragmentShader = 'uniform sampler2D mapaGrasa;\nuniform float uHl;\nuniform float uT;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n' + sh.fragmentShader
@@ -409,10 +493,13 @@ function materialGrasa(base, dtex) {
   return m;
 }
 const matAcero = new T.MeshStandardMaterial({ map: TX.acero, color: 0xffffff, metalness: .95, roughness: .3 });
+const matPiel = new T.MeshStandardMaterial({ map: TX.acero, color: 0xffffff, metalness: .95, roughness: .25, side: T.BackSide });
 const matOscuro = new T.MeshStandardMaterial({ color: 0x2b3238, metalness: .6, roughness: .5 });
+const matPlastico = new T.MeshStandardMaterial({ color: 0xdfefff, transparent: true, opacity: .28, roughness: .1, side: T.DoubleSide, depthWrite: false });
+const matCubierta = new T.MeshStandardMaterial({ color: 0xbfdcff, transparent: true, opacity: .6, roughness: .15, depthWrite: false });
 
-// Una superficie limpiable: malla + rejilla de grasa (celdas de unos 3 cm).
-function superficie(w, h, base, micrasRel, celda = .03) {
+// Una superficie limpiable: malla + rejilla de grasa (celdas de unos 3 cm). geo opcional (ducto redondo).
+function superficie(w, h, base, micrasRel, celda = .03, geo, lado) {
   const nx = Math.max(8, Math.round(w / celda)), ny = Math.max(8, Math.round(h / celda));
   const n = nx * ny;
   const d = new Float32Array(n), soak = new Float32Array(n).fill(-1), pol = new Float32Array(n);
@@ -424,11 +511,11 @@ function superficie(w, h, base, micrasRel, celda = .03) {
   for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) {
     const u = x / nx, v = y / ny;
     let s = 0; for (const [a, b, f] of sem) s += Math.sin(u * f * 3 + a) * Math.cos(v * f * 2.4 + b);
-    const borde = Math.min(u, 1 - u, v, 1 - v) < .1 ? .25 : 0;
+    const borde = !geo && Math.min(u, 1 - u, v, 1 - v) < .1 ? .25 : 0;
     d[y * nx + x] = clamp(micrasRel * (.72 + s * .12 + borde + rnd(-.08, .08)), .08, 1.3);
   }
-  const mesh = new T.Mesh(new T.PlaneGeometry(w, h), materialGrasa(base, tex));
-  const sf = { mesh, nx, ny, d, soak, pol, data, tex, w, h, celda: w / nx, inicial: d.reduce((a, b) => a + b, 0), sucio: true };
+  const mesh = new T.Mesh(geo || new T.PlaneGeometry(w, h), materialGrasa(base, tex, lado));
+  const sf = { mesh, nx, ny, d, soak, pol, data, tex, w, h, celda: w / nx, inicial: d.reduce((a, b) => a + b, 0), sucio: true, interior: lado === T.BackSide };
   mesh.userData.sf = sf;
   pintarSf(sf);
   return sf;
@@ -444,12 +531,20 @@ function pintarSf(sf) {
   }
   sf.tex.needsUpdate = true; sf.sucio = false;
 }
+// Coloca una superficie plana mirando en la dirección de su normal.
+function colocar(sf, pos, normal) {
+  const m = sf.mesh; m.position.copy(pos);
+  if (Math.abs(normal.y) > .99) m.rotation.set(normal.y > 0 ? -Math.PI / 2 : Math.PI / 2, 0, 0);
+  else m.lookAt(pos.clone().add(normal));
+  sf.normal = normal.clone();
+}
 
 // ------------------------------------------------------------------ la cocina de esta noche
 
 let mundo = null;   // grupo con todo lo de la noche
 let Z = [];         // zonas con sus superficies y su cámara
 const piezas = {};
+const VISTAS = {};
 
 function persona(color, gerente) {
   const g = new T.Group();
@@ -486,22 +581,50 @@ function mapache() {
   return g;
 }
 
+// Un aparato de la línea de cocina, con su cubierta de plástico (oculta) y, si es de gas, su piloto.
+function aparato(tipo, x, ancho) {
+  const g = new T.Group(); g.position.set(x, .9, -.55); mundo.add(g);
+  const add = (geo, mat, px, py, pz) => { const m = new T.Mesh(geo, mat); m.position.set(px, py, pz); g.add(m); return m; };
+  let alto = .1, gas = null;
+  if (tipo === 'plancha') { add(new T.BoxGeometry(ancho, .06, .6), new T.MeshStandardMaterial({ color: 0x1c1c1c, metalness: .5, roughness: .4 }), 0, .03, 0); gas = 'Cerrar el piloto'; }
+  if (tipo === 'freidora') { add(new T.BoxGeometry(ancho, .28, .55), matOscuro, 0, .14, 0); add(new T.BoxGeometry(ancho * .8, .02, .4), new T.MeshStandardMaterial({ color: 0x8a5a14, roughness: .1, metalness: .2 }), 0, .29, 0); alto = .3; gas = 'Cerrar el piloto'; }
+  if (tipo === 'wok') { const w = add(new T.SphereGeometry(.22, 16, 8, 0, 6.3, Math.PI / 2, Math.PI / 2), new T.MeshStandardMaterial({ color: 0x222222, metalness: .7, roughness: .4, side: T.DoubleSide }), 0, .22, 0); w.rotation.x = Math.PI; alto = .24; gas = 'Cerrar el piloto'; }
+  if (tipo === 'horno') { add(new T.SphereGeometry(Math.min(.55, ancho / 2), 20, 10, 0, 6.3, 0, Math.PI / 2), new T.MeshStandardMaterial({ color: 0x9b4a2c, roughness: .9 }), 0, 0, 0); add(new T.PlaneGeometry(.3, .2), new T.MeshBasicMaterial({ color: 0x120804 }), 0, .12, .5); alto = .55; }
+  if (tipo === 'carbon') { add(new T.BoxGeometry(ancho, .05, .6), new T.MeshStandardMaterial({ color: 0x111111, roughness: .6 }), 0, .03, 0); for (let i = 0; i < 8; i++) add(new T.SphereGeometry(.05, 6, 4), new T.MeshStandardMaterial({ color: 0x220a02, emissive: 0xff5a10, emissiveIntensity: rnd(.4, 1.2) }), rnd(-ancho / 2.4, ancho / 2.4), .07, rnd(-.22, .22)); gas = 'Apagar las brasas'; }
+  if (tipo === 'cafetera') { add(new T.BoxGeometry(ancho * .8, .45, .4), new T.MeshStandardMaterial({ color: 0xa83a2a, metalness: .4, roughness: .3 }), 0, .225, -.05); alto = .46; }
+  if (tipo === 'mesa') { add(new T.BoxGeometry(ancho * .7, .03, .35), new T.MeshStandardMaterial({ color: 0xe8e2d0, roughness: .7 }), 0, .015, 0); for (let i = 0; i < 3; i++) add(new T.SphereGeometry(.04, 8, 6), new T.MeshStandardMaterial({ color: [0xd9442b, 0x5a9e3a, 0xf0c419][i] }), rnd(-.15, .15), .06, rnd(-.1, .1)); alto = .1; }
+  const cubierta = new T.Mesh(new T.BoxGeometry(ancho + .06, alto + .1, .7), matCubierta); cubierta.position.set(x, .9 + (alto + .1) / 2, -.55); cubierta.visible = false; mundo.add(cubierta);
+  const ap = { tipo, x, alto, cubierta, cubierto: false, pos: new T.Vector3(x, .95 + alto, -.4) };
+  if (gas) {
+    const llama = new T.Mesh(new T.ConeGeometry(.025, .08, 8), new T.MeshBasicMaterial({ color: tipo === 'carbon' ? 0xff7a20 : 0x5aa8ff, transparent: true, opacity: .85 }));
+    llama.position.set(x - ancho * .3, .99 + (tipo === 'freidora' ? .02 : 0), -.2); mundo.add(llama);
+    piezas.pilotos.push({ mesh: llama, pos: llama.position.clone(), off: false, txt: gas });
+  }
+  return ap;
+}
+
 function construirNoche(orden) {
-  if (mundo) { escena.remove(mundo); mundo.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  if (mundo) { escena.remove(mundo); mundo.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.userData.sf) o.userData.sf.tex.dispose(); }); }
   mundo = new T.Group(); escena.add(mundo);
   const add = (geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); mundo.add(m); return m; };
   const rel = orden ? orden.micras / 2400 : 1;
   const retrato = innerWidth / innerHeight < .9;
+  const hood = orden ? orden.hood : { tipo: 'caja', ancho: 2, fondo: 1.15, alto: .7 };
+  const nC = orden ? orden.campanas : 1;
+  const hW = hood.ancho, hY0 = 1.95, hY1 = hY0 + hood.alto, hZ0 = -.95, hZ1 = hZ0 + hood.fondo, hZ = (hZ0 + hZ1) / 2;
+  const sep = .5, span = nC * hW + (nC - 1) * sep, lineW = span + .2;
+  const xs = Array.from({ length: nC }, (_, i) => (i - (nC - 1) / 2) * (hW + sep));
+  piezas.pilotos = []; piezas.aparatos = []; piezas.cintas = []; piezas.faldas = []; piezas.bolsas = [];
 
   // Cuarto
-  const suelo = add(new T.PlaneGeometry(8, 8), new T.MeshStandardMaterial({ map: TX.suelo, roughness: .7 }), 0, 0, 1); suelo.rotation.x = -Math.PI / 2;
+  const suelo = add(new T.PlaneGeometry(9, 8), new T.MeshStandardMaterial({ map: TX.suelo, roughness: .7 }), 0, 0, 1); suelo.rotation.x = -Math.PI / 2;
   const matPared = new T.MeshStandardMaterial({ map: TX.azulejo, roughness: .5 });
-  add(new T.PlaneGeometry(8, 3), matPared, 0, 1.5, -1);
-  const iz = add(new T.PlaneGeometry(6, 3), matPared, -3.2, 1.5, 1.5); iz.rotation.y = Math.PI / 2;
-  const de = add(new T.PlaneGeometry(6, 3), matPared, 3.2, 1.5, 1.5); de.rotation.y = -Math.PI / 2;
-  const techo = add(new T.PlaneGeometry(8, 8), new T.MeshStandardMaterial({ color: 0x2c3237, roughness: .9 }), 0, 3, 1); techo.rotation.x = Math.PI / 2;
-  const puerta = add(new T.PlaneGeometry(1, 2.1), new T.MeshStandardMaterial({ color: 0x3b2a20, roughness: .8 }), 3.19, 1.05, 1.4); puerta.rotation.y = -Math.PI / 2;
-  for (const x of [-1.6, 1.6]) add(new T.BoxGeometry(1.2, .04, .12), new T.MeshBasicMaterial({ color: 0xf4fbff }), x, 2.98, 1.4);
+  add(new T.PlaneGeometry(9, 3), matPared, 0, 1.5, -1);
+  const iz = add(new T.PlaneGeometry(6, 3), matPared, -3.6, 1.5, 1.5); iz.rotation.y = Math.PI / 2;
+  const de = add(new T.PlaneGeometry(6, 3), matPared, 3.6, 1.5, 1.5); de.rotation.y = -Math.PI / 2;
+  const techo = add(new T.PlaneGeometry(9, 8), new T.MeshStandardMaterial({ color: 0x2c3237, roughness: .9 }), 0, 3, 1); techo.rotation.x = Math.PI / 2;
+  const puerta = add(new T.PlaneGeometry(1, 2.1), new T.MeshStandardMaterial({ color: 0x3b2a20, roughness: .8 }), 3.59, 1.05, 1.4); puerta.rotation.y = -Math.PI / 2;
+  for (const x of [-1.8, 1.8]) add(new T.BoxGeometry(1.2, .04, .12), new T.MeshBasicMaterial({ color: 0xf4fbff }), x, 2.98, 1.4);
 
   // Letrero del restaurante
   const nombre = orden ? orden.nombre : 'Grasa Brava Servicios';
@@ -509,99 +632,142 @@ function construirNoche(orden) {
     g.fillStyle = '#1b2a33'; g.fillRect(0, 0, w, h); g.strokeStyle = '#ff8a1f'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12);
     g.fillStyle = '#ffe3b8'; g.font = '700 46px "Barlow Condensed", "Arial Narrow", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nombre.toUpperCase(), w / 2, h / 2 + 2, w - 40);
   }));
-  add(new T.PlaneGeometry(1.4, .35), new T.MeshBasicMaterial({ map: letrero }), -2.2, 2.3, -.99);
+  add(new T.PlaneGeometry(1.4, .35), new T.MeshBasicMaterial({ map: letrero }), clamp(-lineW / 2 - .9, -2.8, -1.6), 2.5, -.99);
 
-  // Línea de cocina
-  add(new T.BoxGeometry(2.3, .9, .8), matAcero, 0, .45, -.55);
-  const linea = orden ? COCINAS[orden.cocina].linea : 'plancha';
-  if (linea === 'plancha' || linea === 'cafe') add(new T.BoxGeometry(1, .06, .6), new T.MeshStandardMaterial({ color: 0x1c1c1c, metalness: .5, roughness: .4 }), -.5, .93, -.55);
-  if (linea === 'plancha') { add(new T.BoxGeometry(.5, .25, .5), matOscuro, .6, 1.02, -.55); add(new T.BoxGeometry(.4, .02, .4), new T.MeshStandardMaterial({ color: 0x8a5a14, roughness: .1, metalness: .2 }), .6, 1.15, -.55); }
-  if (linea === 'wok') for (const x of [-.6, 0, .6]) { const w = add(new T.SphereGeometry(.22, 16, 8, 0, 6.3, Math.PI / 2, Math.PI / 2), new T.MeshStandardMaterial({ color: 0x222222, metalness: .7, roughness: .4, side: T.DoubleSide }), x, 1.12, -.55); w.rotation.x = Math.PI; }
-  if (linea === 'horno') { add(new T.SphereGeometry(.6, 20, 10, 0, 6.3, 0, Math.PI / 2), new T.MeshStandardMaterial({ color: 0x9b4a2c, roughness: .9 }), 0, .9, -.55); add(new T.PlaneGeometry(.4, .25), new T.MeshBasicMaterial({ color: 0x120804 }), 0, 1.02, .04); }
-  if (linea === 'carbon') { add(new T.BoxGeometry(1.6, .05, .6), new T.MeshStandardMaterial({ color: 0x111111, roughness: .6 }), 0, .93, -.55); for (let i = 0; i < 18; i++) add(new T.SphereGeometry(.05, 6, 4), new T.MeshStandardMaterial({ color: 0x220a02, emissive: 0xff5a10, emissiveIntensity: rnd(.4, 1.2) }), rnd(-.7, .7), .97, rnd(-.8, -.3)); }
-  if (linea === 'cafe') add(new T.BoxGeometry(.5, .5, .4), matOscuro, .65, 1.15, -.55);
-  piezas.pilotos = [];
-  for (const x of [-.8, -.2, .4]) piezas.pilotos.push(add(new T.ConeGeometry(.025, .08, 8), new T.MeshBasicMaterial({ color: 0x5aa8ff, transparent: true, opacity: .85 }), x, .99, -.2));
-  piezas.plastico = add(new T.PlaneGeometry(2.5, 1), new T.MeshStandardMaterial({ color: 0xdfefff, transparent: true, opacity: .35, roughness: .1, side: T.DoubleSide }), 0, 1.25, -.55);
-  piezas.plastico.rotation.x = -Math.PI / 2; piezas.plastico.visible = false;
+  // Línea de cocina con sus aparatos
+  add(new T.BoxGeometry(lineW, .9, .8), matAcero, 0, .45, -.55);
+  const lista = LINEAS[orden ? COCINAS[orden.cocina].linea : 'plancha'];
+  const nSlots = Math.max(2, Math.floor(lineW / .62)), slotW = lineW / nSlots;
+  for (let i = 0; i < nSlots; i++) piezas.aparatos.push(aparato(lista[i % lista.length], -lineW / 2 + slotW * (i + .5), slotW - .07));
+
+  // Caja de la luz (cortar la corriente del extractor)
+  const bx = clamp(-lineW / 2 - .45, -3.3, -1.2);
+  add(new T.BoxGeometry(.32, .42, .08), new T.MeshStandardMaterial({ color: 0x8c949b, metalness: .6, roughness: .4 }), bx, 1.45, -.96);
+  const palanca = add(new T.BoxGeometry(.05, .16, .05), new T.MeshStandardMaterial({ color: 0xd2382b }), bx, 1.5, -.9);
+  piezas.luz = { palanca, pos: new T.Vector3(bx, 1.45, -.9), off: false };
 
   // Tubería del agua en la pared
-  const tub = add(new T.CylinderGeometry(.04, .04, 1.8, 10), new T.MeshStandardMaterial({ color: 0xb87333, metalness: .8, roughness: .35 }), 2.1, 1.55, -.94); tub.rotation.z = Math.PI / 2;
-  piezas.fuga = new T.Vector3(1.7, 1.55, -.9);
+  const tub = add(new T.CylinderGeometry(.04, .04, 1.4, 10), new T.MeshStandardMaterial({ color: 0xb87333, metalness: .8, roughness: .35 }), clamp(lineW / 2 + .8, 1.8, 2.9), 1.55, -.94); tub.rotation.z = Math.PI / 2;
+  piezas.fuga = new T.Vector3(tub.position.x - .3, 1.55, -.9);
 
-  // Campana: cuatro superficies interiores sucias + piel exterior limpia (sin cara de abajo ni de delante)
-  const hY0 = 1.95, hY1 = 2.65, hZ0 = -.95, hZ1 = .2, hW = retrato ? 1.7 : 2.2, hY = (hY0 + hY1) / 2, hZ = (hZ0 + hZ1) / 2;
-  const campana = [];
-  const atras = superficie(hW, hY1 - hY0, TX.acero, rel); atras.mesh.position.set(0, hY, hZ0 + .01); campana.push(atras);
-  const izq = superficie(hZ1 - hZ0, hY1 - hY0, TX.acero, rel); izq.mesh.rotation.y = Math.PI / 2; izq.mesh.position.set(-hW / 2, hY, hZ); campana.push(izq);
-  const der = superficie(hZ1 - hZ0, hY1 - hY0, TX.acero, rel); der.mesh.rotation.y = -Math.PI / 2; der.mesh.position.set(hW / 2, hY, hZ); campana.push(der);
-  const arriba = superficie(hW, hZ1 - hZ0, TX.acero, rel * 1.1); arriba.mesh.rotation.x = Math.PI / 2; arriba.mesh.position.set(0, hY1, hZ); campana.push(arriba);
-  campana.forEach(s => mundo.add(s.mesh));
-  const piel = new T.MeshStandardMaterial({ map: TX.acero, metalness: .95, roughness: .25 }), nada = new T.MeshBasicMaterial({ visible: false });
-  add(new T.BoxGeometry(hW + .04, hY1 - hY0 + .04, hZ1 - hZ0 + .02), [piel, piel, piel, nada, nada, piel], 0, hY + .02, hZ);
-  add(new T.BoxGeometry(.7, .34, .7), matAcero, 0, 2.84, -.4);
-  piezas.bolsa = add(new T.ConeGeometry(.12, .3, 12, 1, true), new T.MeshStandardMaterial({ color: 0xd8d8d8, transparent: true, opacity: .8, side: T.DoubleSide }), hW / 2 - .15, 1.82, hZ0 + .15);
-  piezas.bolsa.rotation.x = Math.PI; piezas.bolsa.visible = false;
+  // Campanas: superficies interiores sucias + piel exterior limpia + plástico y bolsa de la preparación
+  const campanas = [];
+  for (const cx of xs) {
+    const sfs = [], piso = new T.Vector3();
+    const pon = (w, h, pos, normal, f = 1) => { const s = superficie(w, h, TX.acero, rel * f); colocar(s, pos, normal); mundo.add(s.mesh); sfs.push(s);
+      const p = new T.Mesh(s.mesh.geometry, matPiel); p.position.copy(s.mesh.position).addScaledVector(normal, -.012); p.quaternion.copy(s.mesh.quaternion); mundo.add(p); };
+    if (hood.tipo === 'inclinada') {
+      const topW = hW * .72, dx = (hW - topW) / 2, lado = Math.hypot(hood.alto, dx);
+      pon(hW, hood.alto, new T.Vector3(cx, (hY0 + hY1) / 2, hZ0 + .01), new T.Vector3(0, 0, 1));
+      pon(hood.fondo, lado, new T.Vector3(cx - hW / 2 + dx / 2, (hY0 + hY1) / 2, hZ), new T.Vector3(hood.alto, -dx, 0).normalize());
+      pon(hood.fondo, lado, new T.Vector3(cx + hW / 2 - dx / 2, (hY0 + hY1) / 2, hZ), new T.Vector3(-hood.alto, -dx, 0).normalize());
+      pon(topW, hood.fondo, new T.Vector3(cx, hY1, hZ), new T.Vector3(0, -1, 0), 1.1);
+    } else {
+      pon(hW, hood.alto, new T.Vector3(cx, (hY0 + hY1) / 2, hZ0 + .01), new T.Vector3(0, 0, 1));
+      pon(hood.fondo, hood.alto, new T.Vector3(cx - hW / 2, (hY0 + hY1) / 2, hZ), new T.Vector3(1, 0, 0));
+      pon(hood.fondo, hood.alto, new T.Vector3(cx + hW / 2, (hY0 + hY1) / 2, hZ), new T.Vector3(-1, 0, 0));
+      pon(hW, hood.fondo, new T.Vector3(cx, hY1, hZ), new T.Vector3(0, -1, 0), 1.1);
+    }
+    add(new T.BoxGeometry(.6, 3 - hY1, .6), matAcero, cx, (hY1 + 3) / 2 + .015, hZ0 + .45);
+    // Puntos de cinta para el plástico: lado izquierdo, frente y lado derecho del borde de abajo
+    const borde = [new T.Vector3(cx - hW / 2, hY0, hZ0 + .2)];
+    const nf = Math.max(3, Math.round(hW / .45));
+    for (let k = 0; k <= nf; k++) borde.push(new T.Vector3(cx - hW / 2 + hW * k / nf, hY0, hZ1));
+    borde.push(new T.Vector3(cx + hW / 2, hY0, hZ0 + .2));
+    const base = piezas.cintas.length;
+    borde.forEach(p => piezas.cintas.push({ pos: p, hecho: false }));
+    for (let k = 0; k < borde.length - 1; k++) {
+      const a = borde[k], b = borde[k + 1], l = a.distanceTo(b), mid = a.clone().add(b).multiplyScalar(.5);
+      const falda = new T.Mesh(new T.PlaneGeometry(l, .34), matPlastico); falda.position.set(mid.x, hY0 - .17, mid.z);
+      falda.rotation.y = Math.atan2(-(b.z - a.z), b.x - a.x); falda.visible = false; mundo.add(falda);
+      piezas.faldas.push({ mesh: falda, a: base + k, b: base + k + 1 });
+    }
+    // La bolsa cuelga al fondo, donde el plástico hace embudo: no tapa la vista de la campana.
+    const bolsa = add(new T.ConeGeometry(.17, .32, 14, 1, true), new T.MeshStandardMaterial({ color: 0xe0e0e0, transparent: true, opacity: .8, side: T.DoubleSide }), cx, hY0 - .3, hZ0 + .25);
+    bolsa.rotation.x = Math.PI; bolsa.visible = false;
+    piezas.bolsas.push({ mesh: bolsa, pos: new T.Vector3(cx, hY0 - .25, hZ0 + .3), hecho: false });
+    campanas.push({ cx, sfs });
+  }
 
   // Filtros sobre la lona, en el suelo
   const nf = orden ? orden.filtros : 3;
-  const cols = retrato ? 2 : Math.min(nf, 3), filas = Math.ceil(nf / cols);
-  const lonaW = cols * .62 + .3, lonaH = filas * .62 + .3;
-  const lona = add(new T.PlaneGeometry(lonaW, lonaH), new T.MeshStandardMaterial({ map: TX.lona, roughness: .8 }), 0, .01, 1.45); lona.rotation.x = -Math.PI / 2;
+  const cols = retrato ? 2 : Math.min(nf, 4), filas = Math.ceil(nf / cols);
+  const lonaW = cols * .62 + .3, lonaH = filas * .62 + .3, lonaZ = 1.3 + lonaH / 2;
+  const lona = add(new T.PlaneGeometry(lonaW, lonaH), new T.MeshStandardMaterial({ map: TX.lona, roughness: .8 }), 0, .01, lonaZ); lona.rotation.x = -Math.PI / 2;
   const filtros = [];
   for (let i = 0; i < nf; i++) {
     const c = i % cols, f = Math.floor(i / cols);
-    const x = (c - (cols - 1) / 2) * .62, z = 1.45 + (f - (filas - 1) / 2) * .62;
+    const x = (c - (cols - 1) / 2) * .62, z = lonaZ + (f - (filas - 1) / 2) * .62;
     add(new T.BoxGeometry(.52, .04, .52), matOscuro, x, .03, z);
-    const s = superficie(.5, .5, TX.bafles, rel * 1.05, .025); s.mesh.rotation.x = -Math.PI / 2; s.mesh.position.set(x, .055, z); mundo.add(s.mesh); filtros.push(s);
+    const s = superficie(.5, .5, TX.bafles, rel * 1.05, .025); colocar(s, new T.Vector3(x, .055, z), new T.Vector3(0, 1, 0)); mundo.add(s.mesh); filtros.push(s);
   }
 
-  // Ducto: túnel cuadrado sobre el techo; la cámara entra por el registro
-  const dY = 3.6, dL = 2.0, dA = .72, dZ0 = .5, dc = dZ0 - dL / 2;
+  // Ducto: túnel sobre el techo; la cámara entra por el registro
+  const duc = orden ? orden.ducto : { forma: 'cuadrado', largo: 2 };
+  const dY = 3.7, dL = duc.largo, dZ0 = .5, dc = dZ0 - dL / 2;
   const ducto = [];
-  const dSuelo = superficie(dA, dL, TX.acero, rel * 1.15, .045); dSuelo.mesh.rotation.x = -Math.PI / 2; dSuelo.mesh.position.set(0, dY - dA / 2, dc); ducto.push(dSuelo);
-  const dTecho = superficie(dA, dL, TX.acero, rel * .9, .045); dTecho.mesh.rotation.x = Math.PI / 2; dTecho.mesh.position.set(0, dY + dA / 2, dc); ducto.push(dTecho);
-  const dIzq = superficie(dL, dA, TX.acero, rel, .045); dIzq.mesh.rotation.y = Math.PI / 2; dIzq.mesh.position.set(-dA / 2, dY, dc); ducto.push(dIzq);
-  const dDer = superficie(dL, dA, TX.acero, rel, .045); dDer.mesh.rotation.y = -Math.PI / 2; dDer.mesh.position.set(dA / 2, dY, dc); ducto.push(dDer);
-  ducto.forEach(s => mundo.add(s.mesh));
+  let mitadAlto = .36, mitadAncho = .36;
+  if (duc.forma === 'redondo') {
+    const r = .38, geo = new T.CylinderGeometry(r, r, dL, 40, 1, true);
+    const s = superficie(2 * Math.PI * r, dL, TX.acero, rel * 1.1, .045, geo, T.BackSide);
+    s.mesh.rotation.x = Math.PI / 2; s.mesh.position.set(0, dY, dc); mundo.add(s.mesh); ducto.push(s);
+    mitadAlto = mitadAncho = r;
+  } else {
+    const an = duc.forma === 'ancho' ? 1.1 : .72, al = duc.forma === 'ancho' ? .5 : .72;
+    mitadAlto = al / 2; mitadAncho = an / 2;
+    const s1 = superficie(an, dL, TX.acero, rel * 1.15, .045); colocar(s1, new T.Vector3(0, dY - al / 2, dc), new T.Vector3(0, 1, 0)); ducto.push(s1);
+    const s2 = superficie(an, dL, TX.acero, rel * .9, .045); colocar(s2, new T.Vector3(0, dY + al / 2, dc), new T.Vector3(0, -1, 0)); ducto.push(s2);
+    const s3 = superficie(dL, al, TX.acero, rel, .045); colocar(s3, new T.Vector3(-an / 2, dY, dc), new T.Vector3(1, 0, 0)); ducto.push(s3);
+    const s4 = superficie(dL, al, TX.acero, rel, .045); colocar(s4, new T.Vector3(an / 2, dY, dc), new T.Vector3(-1, 0, 0)); ducto.push(s4);
+    ducto.forEach(s => mundo.add(s.mesh));
+  }
   const ventilador = new T.Group(); ventilador.position.set(0, dY, dZ0 - dL + .02); mundo.add(ventilador);
-  ventilador.add(new T.Mesh(new T.CircleGeometry(.33, 24), new T.MeshStandardMaterial({ color: 0x15191c })));
-  for (let i = 0; i < 5; i++) { const a = new T.Mesh(new T.BoxGeometry(.06, .3, .02), new T.MeshStandardMaterial({ color: 0x8c969e, metalness: .8, roughness: .3 })); a.position.set(Math.cos(i * 1.256) * .15, Math.sin(i * 1.256) * .15, .02); a.rotation.z = i * 1.256; ventilador.add(a); }
+  ventilador.add(new T.Mesh(new T.CircleGeometry(Math.min(mitadAlto, mitadAncho) * .9, 24), new T.MeshStandardMaterial({ color: 0x15191c })));
+  for (let i = 0; i < 5; i++) { const a = new T.Mesh(new T.BoxGeometry(.06, mitadAlto * .8, .02), new T.MeshStandardMaterial({ color: 0x8c969e, metalness: .8, roughness: .3 })); a.position.set(Math.cos(i * 1.256) * mitadAlto * .4, Math.sin(i * 1.256) * mitadAlto * .4, .02); a.rotation.z = i * 1.256; ventilador.add(a); }
   piezas.ventilador = ventilador;
-  piezas.mapache = mapache(); piezas.mapache.position.set(.1, dY - dA / 2 + .13, dZ0 - dL + .5); piezas.mapache.visible = false; mundo.add(piezas.mapache);
+  piezas.mapache = mapache(); piezas.mapache.position.set(.1, dY - mitadAlto + .13, dZ0 - dL + .5); piezas.mapache.visible = false; mundo.add(piezas.mapache);
 
-  // Gente
-  const comp = orden ? COMPANEROS[orden.comp] : COMPANEROS.beto;
-  piezas.comp = persona(comp.color, false); piezas.comp.position.set(-1.6, 0, .9); piezas.comp.rotation.y = .6; mundo.add(piezas.comp);
-  piezas.gerente = persona(0, true); piezas.gerente.position.set(2.5, 0, 1.2); piezas.gerente.rotation.y = -1; piezas.gerente.visible = !!(orden && orden.eventos.includes('gerente')); mundo.add(piezas.gerente);
+  // Gente: el compañero, los ayudantes y, si toca, el gerente
+  piezas.gente = [];
+  const equipo = orden ? orden.equipo : [{ color: COMPANEROS.beto.color }];
+  equipo.forEach((m, i) => { const p = persona(m.color, false); p.position.set(-lineW / 2 - .5 + (i % 2) * .5, 0, .5 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
+  piezas.gerente = persona(0, true); piezas.gerente.position.set(2.9, 0, 1.3); piezas.gerente.rotation.y = -1; piezas.gerente.visible = !!(orden && orden.eventos.includes('gerente')); mundo.add(piezas.gerente);
 
-  Z = [
-    { id: 'filtros', n: 'Filtros', sfs: filtros, pos: new T.Vector3(0, 2.0 + filas * .25, 2.5 + filas * .15), mira: new T.Vector3(0, 0, 1.45), ancho: lonaW + .2 },
-    { id: 'campana', n: 'Campana', sfs: campana, pos: retrato ? new T.Vector3(0, 1.5, .85) : new T.Vector3(0, 1.2, 1.45), mira: new T.Vector3(0, 2.35, -.55), ancho: hW + .3 },
-    { id: 'ducto', n: 'Ducto', sfs: ducto, pos: new T.Vector3(0, dY + .02, dZ0 + .45), mira: new T.Vector3(0, dY, dZ0 - dL), ancho: .9, cerca: .95 },
-  ];
+  // Vistas de cámara: lo que se ve en cada zona y en la preparación (con desplazamiento lateral si no cabe)
+  const vista = (mira, dir, ancho, dMin, dMax, fov) => ({ mira, dir: dir.normalize(), ancho, dMin, dMax, fov, pan: 0, maxPan: 0 });
+  VISTAS.linea = vista(new T.Vector3(-.3, 1.0, -.55), new T.Vector3(0, .5, 1.2), lineW + 1.2, 1.9, 3.2, 58);
+  VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
+  Z = [{ id: 'filtros', n: 'Filtros', sfs: filtros, vista: vista(new T.Vector3(0, 0, lonaZ), new T.Vector3(0, 1.6, 1.0), lonaW + .2, 1.7, 3.2, 55) }];
+  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs,
+    vista: vista(new T.Vector3(c.cx, hY0 + hood.alto * .55, hZ0 + hood.fondo * .4), new T.Vector3(0, -.55, .83), hW + .3, 1.4, 2.3, 72) }));
+  Z.push({ id: 'ducto', n: 'Ducto', sfs: ducto, vista: vista(new T.Vector3(0, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80) });
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
 }
 
 // ------------------------------------------------------------------ cámara
 
-const VISTA_GENERAL = { pos: new T.Vector3(2.4, 1.9, 3.4), mira: new T.Vector3(-.2, 1.4, -.4), ancho: 4.6 };
-const camT = { de: null, a: VISTA_GENERAL, t: 1, mira: new T.Vector3() };
-function irVista(v) { camT.de = { pos: cam.position.clone(), mira: camT.mira.clone() }; camT.a = v; camT.t = 0; }
+const VISTA_GENERAL = { mira: new T.Vector3(-.2, 1.4, -.4), dir: new T.Vector3(2.6, .5, 3.8).normalize(), ancho: 5, dMin: 3.4, dMax: 5.5, fov: 55, pan: 0 };
+const camT = { a: VISTA_GENERAL, mira: new T.Vector3(), objPos: new T.Vector3(), objMira: new T.Vector3() };
+function irVista(v) { camT.a = v; }
 function moverCamara(dt) {
-  const v = camT.a;
-  if (camT.t < 1) {
-    camT.t = Math.min(1, camT.t + dt / .8);
-    const e = camT.t < .5 ? 2 * camT.t * camT.t : 1 - Math.pow(-2 * camT.t + 2, 2) / 2;
-    cam.position.lerpVectors(camT.de.pos, v.pos, e);
-    camT.mira.lerpVectors(camT.de.mira, v.mira, e);
-  } else { cam.position.copy(v.pos); camT.mira.copy(v.mira); }
-  if (M && M.fase === 'turno' && camT.t >= 1) { const t = performance.now() / 1000; cam.position.x += Math.sin(t * .5) * .008; cam.position.y += Math.sin(t * .7) * .005; }
+  const v = camT.a, fov = v.fov || 55;
+  const hf = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * cam.aspect);
+  const dist = clamp(v.ancho / 2 / Math.tan(hf / 2), v.dMin, v.dMax);
+  v.maxPan = Math.max(0, (v.ancho - 2 * dist * Math.tan(hf / 2)) / 2);
+  v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
+  camT.objMira.copy(v.mira); camT.objMira.x += v.pan;
+  camT.objPos.copy(camT.objMira).addScaledVector(v.dir, dist);
+  const k = 1 - Math.exp(-dt * 7);
+  cam.position.lerp(camT.objPos, k); camT.mira.lerp(camT.objMira, k);
+  if (M && M.fase === 'turno') { const t = performance.now() / 1000; cam.position.x += Math.sin(t * .5) * .004; cam.position.y += Math.sin(t * .7) * .003; }
   cam.lookAt(camT.mira);
-  // El encuadre se ajusta al ancho de lo que hay que limpiar, en vertical y en horizontal.
-  const dist = v.cerca || cam.position.distanceTo(camT.mira);
-  cam.fov = clamp(2 * Math.atan(v.ancho / 2 / dist / cam.aspect) * 180 / Math.PI, 45, 92);
-  cam.updateProjectionMatrix();
+  cam.fov = fov; cam.updateProjectionMatrix();
+}
+let panDir = 0;
+for (const [id, d] of [['#panI', -1], ['#panD', 1]]) {
+  const b = $(id);
+  b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); panDir = d; });
+  for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, () => { panDir = 0; });
 }
 
 // ------------------------------------------------------------------ partículas
@@ -639,12 +805,37 @@ function moverParticulas(dt) {
   pGeo.attributes.position.needsUpdate = true; pGeo.attributes.color.needsUpdate = true;
 }
 
+// ------------------------------------------------------------------ marcas sobre la escena
+
+const marcasEl = $('#marcas');
+let MARCAS = [];
+const proy = new T.Vector3();
+function marca(pos, texto, alTocar, punto) {
+  const el = document.createElement('button'); el.className = 'marca' + (punto ? ' punto' : ''); el.textContent = texto;
+  const m = { pos, el, hecho: false, alTocar };
+  el.addEventListener('pointerdown', e => { e.stopPropagation(); audio(); tocarMarca(m); });
+  marcasEl.appendChild(el); MARCAS.push(m);
+  return m;
+}
+function tocarMarca(m) { if (m.hecho) return; m.hecho = true; m.el.classList.add('hecha'); if (!m.el.classList.contains('punto')) m.el.textContent = '✓'; m.alTocar(); }
+function limpiarMarcas() { MARCAS = []; marcasEl.innerHTML = ''; }
+function moverMarcas() {
+  for (const m of MARCAS) {
+    proy.copy(m.pos).project(cam);
+    const vis = proy.z < 1 && Math.abs(proy.x) < 1.1 && Math.abs(proy.y) < 1.1;
+    m.el.style.display = vis ? '' : 'none';
+    m.sx = (proy.x + 1) / 2 * innerWidth; m.sy = (1 - proy.y) / 2 * innerHeight;
+    m.el.style.left = m.sx + 'px'; m.el.style.top = m.sy + 'px';
+  }
+}
+
 // ------------------------------------------------------------------ el turno
 
 let M = null;   // estado del turno en curso
 const zonaAct = () => Z[M.zona];
 const pctZona = z => clamp(1 - z.sfs.reduce((a, s) => a + s.d.reduce((x, y) => x + y, 0), 0) / z.inicial, 0, 1);
 const micras = z => Math.round(M.orden.micras * (1 - pctZona(z)) / 5) * 5;
+const ultZona = () => Z.length - 1;
 
 function herramientas() {
   const h = ['rasqueta', 'espuma', 'pulidor'];
@@ -654,29 +845,96 @@ function herramientas() {
 
 function empezarTurno(orden) {
   construirNoche(orden);
-  M = { orden, comp: COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S, herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
-    trazo: null, combo: 0, ultSuelta: 0, ultDir: null, compT: 6, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28),
-    eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set() };
+  M = { orden, comp: COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60, herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
+    trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')),
+    eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: 0,
+    equipo: orden.equipo.map(e => ({ ...e, t: rnd(.2, .8) })) };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   if (orden.comp === 'beto' && azar(.75)) M.eventos.push({ tipo: 'tuberia', zona: 1, en: rnd(14, 26) });
-  if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: 2, en: rnd(8, 14) });
+  if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: ultZona(), en: rnd(8, 14) });
   if (orden.eventos.includes('alarma')) M.eventos.push({ tipo: 'alarma', zona: 1, en: rnd(25, 40) });
-  if (orden.eventos.includes('techo')) M.eventos.push({ tipo: 'techo', zona: 2, en: 1.2 });
-  irVista(VISTA_GENERAL);
-  pantallaPrep();
+  if (orden.eventos.includes('techo')) M.eventos.push({ tipo: 'techo', zona: ultZona(), en: 1.2 });
+  P.hidden = true;
+  escenaPrep(0);
 }
 
+// ---- preparación jugable: seguridad, cubrir la cocina y envolver la campana
+
+const prepEl = $('#prep');
+function panelPrep(titulo, texto, estado, boton) {
+  if (M.orden.campanas > 1 || innerWidth / innerHeight < .9) texto += ' Usa las flechas de los lados para recorrer la cocina.';
+  prepEl.innerHTML = `<div class="carta"><div class="fila"><h3>${esc(titulo)}</h3><span class="reloj">${hora(M.prepMin)}</span></div><p>${esc(texto)}</p><p class="nota">${esc(estado)}</p>
+    <div class="acciones"><button class="btn prim" id="prepSig">${esc(boton)}</button></div></div>`;
+  prepEl.hidden = false;
+  $('#prepSig').onclick = () => { audio(); escenaPrep(M.escena + 1); };
+}
+function gastar(min) { M.prepMin += min; const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(M.prepMin); }
+function escenaPrep(i) {
+  M.escena = i; limpiarMarcas(); matPlastico.opacity = .5;
+  if (i === 0) {
+    irVista(VISTAS.linea);
+    const pil = piezas.pilotos, luz = piezas.luz;
+    const estado = () => `Pilotos cerrados: ${pil.filter(p => p.off).length} de ${pil.length} · Luz del extractor: ${luz.off ? 'cortada' : 'encendida'}`;
+    const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = pil.every(p => p.off) && luz.off ? 'Siguiente: cubrir la cocina' : 'Seguir sin terminar'; };
+    pil.forEach(p => marca(p.pos, p.txt, () => { p.off = true; p.mesh.visible = false; gastar(2); tono(300, .15, .08, 'sawtooth', 120); actualizar(); }));
+    marca(luz.pos, 'Cortar la luz', () => { luz.off = true; luz.palanca.rotation.z = 2.6; gastar(2); tono(180, .1, .12, 'square'); actualizar(); });
+    panelPrep('Seguridad primero', pil.length ? 'Toca cada piloto para cerrar el gas y baja la palanca de la luz del extractor. Cada cosa cuesta un par de minutos.' : 'Esta cocina no tiene pilotos de gas. Solo falta bajar la palanca de la luz del extractor.', estado(), 'Seguir sin terminar');
+    actualizar();
+    decir(M.comp, uno(['Yo te ilumino. Bueno, mi casco te ilumina.', 'Primero el gas. Lo dice Don Rigo y lo dicen los bomberos.', '¿Cerramos el gas o vivimos peligrosamente?']));
+  } else if (i === 1) {
+    irVista(VISTAS.linea);
+    const ap = piezas.aparatos;
+    const estado = () => `Cubiertos: ${ap.filter(a => a.cubierto).length} de ${ap.length}`;
+    const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = ap.every(a => a.cubierto) ? 'Siguiente: el plástico de la campana' : 'Seguir sin terminar'; };
+    ap.forEach(a => marca(a.pos, 'Cubrir', () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
+    panelPrep('Cubrir la cocina', 'Toca cada aparato para taparlo con plástico. Lo que quede al aire se llena de agua con grasa y espuma.', estado(), 'Seguir sin terminar');
+    actualizar();
+  } else if (i === 2) {
+    irVista(VISTAS.frente);
+    const ci = piezas.cintas, bo = piezas.bolsas;
+    const estado = () => `Borde encintado: ${ci.filter(c => c.hecho).length} de ${ci.length} · Bolsas colgadas: ${bo.filter(b => b.hecho).length} de ${bo.length}`;
+    const actualizar = () => {
+      for (const f of piezas.faldas) f.mesh.visible = ci[f.a].hecho && ci[f.b].hecho;
+      const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado();
+      if (ci.every(c => c.hecho) && !bo.some(b => b.marca)) bo.forEach(b => { b.marca = marca(b.pos, 'Colgar la bolsa', () => { b.hecho = true; b.mesh.visible = true; gastar(2); tono(500, .1, .08, 'triangle'); actualizar(); }); });
+      const btn = $('#prepSig'); if (btn) btn.textContent = ci.every(c => c.hecho) && bo.every(b => b.hecho) ? 'Empezar a limpiar' : 'Empezar sin terminar';
+    };
+    ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(.6); tono(900 + Math.random() * 200, .05, .06, 'square'); actualizar(); }, true));
+    M.encintar = true;
+    panelPrep('Envolver la campana', 'Pasa el dedo por los puntos del borde para pegar el plástico con cinta: forma un embudo. Luego cuelga la bolsa donde cae el agua.', estado(), 'Empezar sin terminar');
+    actualizar();
+    decir(M.comp, uno(['Más cinta. Siempre más cinta.', 'El plástico es como un paraguas al revés. No preguntes.', 'Si queda un hueco, el agua lo encuentra. El agua siempre lo encuentra.']));
+  } else {
+    M.encintar = false; limpiarMarcas(); prepEl.hidden = true;
+    arrancarTurno();
+  }
+}
+// Arrastrar el dedo por los puntos de cinta los va pegando.
+let dedoAbajo = false;
+addEventListener('pointerdown', () => { dedoAbajo = true; }, true);
+addEventListener('pointerup', () => { dedoAbajo = false; });
+addEventListener('pointercancel', () => { dedoAbajo = false; });
+addEventListener('pointermove', e => {
+  if (!dedoAbajo || !M || !M.encintar) return;
+  for (const m of MARCAS) if (!m.hecho && m.sx !== undefined && Math.hypot(m.sx - e.clientX, m.sy - e.clientY) < 34) tocarMarca(m);
+});
+
 function arrancarTurno() {
-  const p = M.prep;
+  const ap = piezas.aparatos, ci = piezas.cintas;
+  const cub = ap.filter(a => a.cubierto).length / ap.length, env = ci.filter(c => c.hecho).length / ci.length;
+  const p = M.prep = { gas: piezas.pilotos.every(x => x.off), luz: piezas.luz.off, cubierto: cub, plastico: cub >= 1, envuelto: env, bolsa: env >= 1 && piezas.bolsas.every(b => b.hecho) };
   if (!p.gas && azar(.7)) M.eventos.push({ tipo: 'piloto', zona: 1, en: rnd(5, 10) });
-  if (!p.luz && azar(.8)) M.eventos.push({ tipo: 'extractor', zona: 2, en: rnd(4, 9) });
-  if (p.bolsa && !S.eq.bolsa && azar(.25)) M.eventos.push({ tipo: 'bolsa', zona: 2, en: rnd(14, 24) });
+  if (!p.luz && azar(.8)) M.eventos.push({ tipo: 'extractor', zona: ultZona(), en: rnd(4, 9) });
+  if (p.bolsa && !S.eq.bolsa && azar(.25)) M.eventos.push({ tipo: 'bolsa', zona: ultZona(), en: rnd(14, 24) });
+  M.t = M.prepMin / 480 * M.dur;
+  matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
   M.fase = 'turno'; M.enZona = 0;
-  P.hidden = true; $('#hud').hidden = false;
+  $('#hud').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
-  irVista(Z[0]);
+  irVista(Z[0].vista);
   pintarHud(true);
   decir(M.comp, uno(['Vamos. Tú los filtros, yo vigilo.', 'Empezamos por los filtros. Como dice Don Rigo: de abajo hacia arriba y sin preguntar.', 'Filtros primero. Si ves algo que se mueve, no es grasa.']));
+  for (const e of M.equipo) if (!e.principal && azar(.5)) setTimeout(() => M && M.fase === 'turno' && decir(e, e.frase), rnd(3000, 9000));
 }
 
 // ---- entrada: pasadas sobre la superficie
@@ -694,7 +952,7 @@ function apuntar(cx, cy) {
   if (S.aj.asist && M.herr !== 'pulidor') {
     const i0 = clamp(Math.floor(gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(gx), 0, sf.nx - 1);
     if (sf.d[i0] < .05) {
-      let mejor = null, md = 1e9; const R0 = 5;
+      let mejor = null, md = 1e9; const R0 = 5 * (1 + perk('ojo'));
       for (let y = Math.max(0, Math.floor(gy) - R0); y <= Math.min(sf.ny - 1, Math.floor(gy) + R0); y++)
         for (let x = Math.max(0, Math.floor(gx) - R0); x <= Math.min(sf.nx - 1, Math.floor(gx) + R0); x++) {
           if (sf.d[y * sf.nx + x] < .1) continue; const dd = (x - gx) ** 2 + (y - gy) ** 2; if (dd < md) { md = dd; mejor = [x + .5, y + .5]; }
@@ -702,7 +960,9 @@ function apuntar(cx, cy) {
       if (mejor) { gx += (mejor[0] - gx) * .7; gy += (mejor[1] - gy) * .7; }
     }
   }
-  return { sf, gx, gy, punto: hit.point, normal: hit.face ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld) : null };
+  let normal = hit.face ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld) : null;
+  if (normal && sf.interior) normal.negate();
+  return { sf, gx, gy, punto: hit.point, normal };
 }
 
 function multEspuma(a) { return a >= 1.5 && a < 30 ? (S.eq.conc ? 4 : 3) : 1; }
@@ -726,7 +986,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
   return quit;
 }
 const radioRasqueta = () => [0, .1, .12, .14][S.eq.rasqueta];
-const fuerzaRasqueta = () => [0, .26, .34, .44][S.eq.rasqueta];
+const fuerzaRasqueta = () => [0, .26, .34, .44][S.eq.rasqueta] * (1 + .15 * perk('brazo'));
 
 function aplicarTramo(a, b) {
   if (!a || !b || a.sf !== b.sf) return 0;
@@ -740,7 +1000,7 @@ function aplicarTramo(a, b) {
   let rc, cant;
   if (herr === 'espuma') {
     if (M.botella <= 0) { ayuda('Botella de espuma vacía. Te queda la rasqueta.'); return 0; }
-    rc = .15 / sf.celda; cant = 0; M.botella = Math.max(0, M.botella - dist * sf.celda * .03);
+    rc = .15 / sf.celda; cant = 0; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (S.eq.xl ? 1.5 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = S.eq.orbital ? .5 : .28; }
   else { rc = radioRasqueta() / sf.celda; cant = fuerzaRasqueta() * ef * multCombo; }
   const pasos = Math.ceil(dist / .4);
@@ -847,7 +1107,7 @@ function decir(quien, texto, resp) {
   const b = document.createElement('div'); b.className = 'burbuja';
   const col = quien === 'gerente' ? '#e9e9e9' : quien === 'rigo' ? '#b9a27a' : quien.color;
   const nom = quien === 'gerente' ? 'Gerente' : quien === 'rigo' ? 'Don Rigo' : quien.n;
-  b.innerHTML = `<div class="cara" style="background:${col}">${nom[0]}</div><div><b>${esc(nom)}</b>${esc(texto)}${resp ? `<div class="resp">${resp.map((r, i) => `<button class="btn peq" data-i="${i}">${esc(r.t)}</button>`).join('')}</div>` : ''}</div>`;
+  b.innerHTML = `<div class="cara" style="background:${col}">${esc(nom[0])}</div><div><b>${esc(nom)}</b>${esc(texto)}${resp ? `<div class="resp">${resp.map((r, i) => `<button class="btn peq" data-i="${i}">${esc(r.t)}</button>`).join('')}</div>` : ''}</div>`;
   if (resp) b.querySelectorAll('[data-i]').forEach(x => x.onclick = () => { b.remove(); resp[+x.dataset.i].f(); });
   chat.prepend(b);
   while (chat.children.length > 3) chat.lastChild.remove();
@@ -965,26 +1225,33 @@ function tickTurno(dt) {
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
       if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5)) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda('¡Salpica! Echa espuma antes en la costra.'); }
       const al = M.eventos.find(x => x.tipo === 'alarma' && !M.hechos.has(x));
-      if (q > 0 && al && M.zona === 1 && azar(dt * .3)) lanzarEvento(al);
+      if (q > 0 && al && z.id === 'campana' && azar(dt * .3)) lanzarEvento(al);
     } else if (!M.presionado) chorro(false);
     // Espuma: el tiempo corre para la grasa empapada.
     for (const s of z.sfs) { let hay = false; for (let i = 0; i < s.soak.length; i++) if (s.soak[i] >= 0) { s.soak[i] += dt; hay = true; if (s.soak[i] > 30 || s.d[i] <= 0) s.soak[i] = -1; } if (hay) s.sucio = true; }
     if (!M.ev) {
-      // El compañero limpia solo, a su ritmo (si está despierto).
+      // Chuy se duerme; hay que despertarlo.
       if (M.orden.comp === 'chuy' && !M.dormido && (M.dormirT -= dt) <= 0) { M.dormido = true; M.ronqT = 0; }
       if (M.dormido && (M.ronqT -= dt) <= 0) {
         M.ronqT = 7.5;
         decir(M.comp, uno(['Cinco minutitos… zzz', 'zzz… mmm… grasa… zzz', '(ronquido industrial)']), [{ t: '¡Chuy!', f: () => { if (!M) return; M.dormido = false; M.dormirT = rnd(35, 55); decir(M.comp, 'No estaba dormido, estaba escuchando el ducto.'); } }]);
       }
-      if (!M.dormido && (M.compT -= dt) <= 0) {
-        M.compT = .5;
+      // La cuadrilla limpia sola, cada uno a su ritmo.
+      for (const e of M.equipo) {
+        if (e.principal && M.dormido) continue;
+        if ((e.t -= dt) > 0) continue;
+        e.t = .5;
         const s = uno(z.sfs); let mejor = -1, md = 0;
         for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * s.d.length); if (s.d[i] > md) { md = s.d[i]; mejor = i; } }
-        if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * M.comp.fuerza, 'rasqueta');
+        if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * e.fuerza * (1 + .2 * perk('jefe')), 'rasqueta');
       }
-      if ((M.charlaT -= dt) <= 0) { M.charlaT = rnd(16, 26); if (!M.dormido) decir(M.comp, uno(M.comp.frases)); }
+      if ((M.charlaT -= dt) <= 0) {
+        M.charlaT = rnd(16, 26);
+        const quien = uno(M.equipo);
+        if (quien.principal) { if (!M.dormido) decir(M.comp, uno(M.comp.frases)); } else decir(quien, quien.frase);
+      }
       if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) {
-        M.gerenteT = rnd(24, 34);
+        M.gerenteT = rnd(24, 34) * (1 + .3 * perk('labia'));
         let resp = false;
         const b = decir('gerente', uno(GERENTE), [
           { t: 'Ya casi, jefe', f: () => { resp = true; } },
@@ -1004,24 +1271,25 @@ function tickTurno(dt) {
   // Efectos de los desastres
   if (M.chorroFuga > 0) { M.chorroFuga -= dt; emitir(piezas.fuga, 6, 'agua', new T.Vector3(-1.2, .4, 1.4), 1.6); }
   if (M.humo > 0) { M.humo -= dt; emitir(new T.Vector3(rnd(-.8, .4), 1.05, -.3), 3, 'humo', null, .3); }
-  piezas.pilotos.forEach(p => { p.visible = !M.prep.gas; p.scale.y = .8 + Math.random() * .4; });
+  piezas.pilotos.forEach(p => { if (!p.off) p.mesh.scale.y = .8 + Math.random() * .4; });
   const vRapido = (M.ventiladorRapido || 0) > 0; if (vRapido) M.ventiladorRapido -= dt;
   piezas.ventilador.rotation.z += dt * (vRapido ? 30 : M.prep.luz ? 0 : 1.5);
   const mp = piezas.mapache;
   if (mp.visible) { mp.rotation.y = Math.sin(performance.now() / 300) * .2; if (mp.userData.sale) { mp.position.x += dt * .6; if (mp.position.x > .5) mp.visible = false; } if (mp.userData.huye) { mp.position.z += dt * 3; if (mp.position.z > .6) mp.visible = false; } }
   if ((M.alarmaSuena || 0) > 0) { const antes = M.alarmaSuena; M.alarmaSuena -= dt; if (Math.floor(antes * 2) !== Math.floor(M.alarmaSuena * 2)) tono(980, .2, .05, 'square'); }
-  piezas.comp.position.y = M.dormido ? 0 : Math.abs(Math.sin(performance.now() / 260)) * .03;
-  piezas.comp.rotation.z = M.dormido ? .35 : 0;
+  piezas.gente.forEach((p, i) => { const dormido = i === 0 && M.dormido; p.position.y = dormido ? 0 : Math.abs(Math.sin(performance.now() / 260 + i)) * .03; p.rotation.z = dormido ? .35 : 0; });
   if (M.ayudaT > 0 && (M.ayudaT -= dt) <= 0) $('#ayuda').textContent = '';
   for (const s of z.sfs) if (s.sucio) pintarSf(s);
   if ((M.hudT = (M.hudT || 0) - dt) <= 0) { M.hudT = .2; pintarHud(false); }
 }
 
 function pintarHud(todo) {
-  const min = 22 * 60 + Math.floor(clamp(M.t / M.dur, 0, 1) * 480), hh = Math.floor(min / 60) % 24, mm = min % 60;
-  $('#reloj').textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  $('#reloj').textContent = hora(clamp(M.t / M.dur, 0, 1) * 480);
   $('#tbar').style.width = `${clamp(1 - M.t / M.dur, 0, 1) * 100}%`;
-  if (todo) { $('#zonas').innerHTML = Z.map((z, i) => `<button data-z="${i}"><b>${z.n}</b><span></span></button>`).join(''); pintarHerrBtn(); }
+  if (todo) {
+    const zs = $('#zonas'); zs.style.gridTemplateColumns = `repeat(${Z.length}, minmax(0, 1fr))`;
+    zs.innerHTML = Z.map((z, i) => `<button data-z="${i}"><b>${z.n}</b><span></span></button>`).join(''); pintarHerrBtn();
+  }
   Z.forEach((z, i) => {
     const b = $('#zonas').children[i], m = micras(z), ok = m <= LIMITE;
     b.setAttribute('aria-pressed', i === M.zona); b.classList.toggle('listo', ok);
@@ -1032,17 +1300,14 @@ function pintarHud(todo) {
     }
   });
   $('#botella').textContent = `Espuma ${Math.round(M.botella * 100)} %`;
-  $('#siguiente').textContent = M.zona < 2 ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar turno';
+  $('#siguiente').textContent = M.zona < ultZona() ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar turno';
 }
 $('#zonas').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b && M && M.fase === 'turno' && !M.ev) irZona(+b.dataset.z); });
-$('#siguiente').addEventListener('click', () => { if (!M || M.fase !== 'turno' || M.ev) return; if (M.zona < 2) irZona(M.zona + 1); else confirmarFin(); });
+$('#siguiente').addEventListener('click', () => { if (!M || M.fase !== 'turno' || M.ev) return; if (M.zona < ultZona()) irZona(M.zona + 1); else confirmarFin(); });
 function irZona(i) {
   if (i === M.zona) return;
-  M.zona = i; M.enZona = 0; M.combo = 0; M.trazo = null; irVista(Z[i]); pintarHud(false);
-  piezas.comp.visible = i !== 2;
-  if (i === 1) piezas.comp.position.set(-1.45, 0, .5);
-  if (i === 0) piezas.comp.position.set(-1.6, 0, .9);
-  if (i === 2 && !M.eventos.some(e => e.tipo === 'techo')) decir(M.comp, 'Yo subo al techo. Tú métete en el ducto. Si ves luz al final, no vayas hacia ella.');
+  M.zona = i; M.enZona = 0; M.combo = 0; M.trazo = null; irVista(Z[i].vista); pintarHud(false);
+  if (i === ultZona() && !M.eventos.some(e => e.tipo === 'techo')) decir(M.comp, 'Yo subo al techo. Tú métete en el ducto. Si ves luz al final, no vayas hacia ella.');
 }
 function confirmarFin() {
   const faltan = Z.filter(z => micras(z) > LIMITE).length;
@@ -1058,82 +1323,195 @@ $('#pausa').addEventListener('click', () => { if (M && M.fase === 'turno') { M.p
 function terminarTurno() {
   M.fase = 'parte'; M.pausa = false; chorro(false); cerrarCarta(); cerrarRueda();
   $('#hud').hidden = true; chat.innerHTML = '';
-  irVista(Z[1]);
+  irVista(Z[1].vista);
   setTimeout(pantallaParte, 500);
+}
+
+// ------------------------------------------------------------------ órdenes, clientes y cuadrilla
+
+const cocinasHasta = r => Object.keys(COCINAS).filter(k => COCINAS[k].rango <= r && !COCINAS[k].campanas);
+function genOrden(k, cliente) {
+  const C = COCINAS[k], campanas = C.campanas || 1;
+  const tipos = campanas > 1 ? ['caja', 'inclinada'] : ['caja', 'inclinada', 'caja', 'larga'];
+  const tipo = uno(tipos);
+  const diseno = cliente ? cliente.diseno : {
+    filtros: Math.round(rnd(C.filtros[0], C.filtros[1])), campanas, ayud: C.ayud || 0,
+    hood: { tipo, ancho: +(tipo === 'larga' ? rnd(2.6, 3.0) : campanas > 1 ? rnd(1.7, 2.2) : rnd(1.6, 2.3)).toFixed(2), fondo: +rnd(.95, 1.3).toFixed(2), alto: +rnd(.55, .8).toFixed(2) },
+    ducto: { forma: uno(['cuadrado', 'redondo', 'ancho']), largo: +rnd(1.5, campanas > 1 ? 2.6 : 2.3).toFixed(1) },
+    eventos: C.eventos.filter(() => azar(.5)),
+  };
+  const eventos = [...diseno.eventos];
+  if ((k === 'hotel' || k === 'comedor') && !eventos.includes('alarma')) eventos.push('alarma');
+  const base = cliente ? cliente.pagoBase : Math.round(rnd(C.pago[0], C.pago[1]) / 10) * 10;
+  return { id: S.sigId++, cocina: k, nombre: cliente ? cliente.nombre : uno(C.nombres), filtros: diseno.filtros, campanas: diseno.campanas, ayud: diseno.ayud,
+    hood: diseno.hood, ducto: diseno.ducto, eventos, micras: Math.round(rnd(C.micras[0], C.micras[1]) / 50) * 50,
+    pagoBase: base, pago: Math.round(base * multPago() * (cliente ? 1.1 : 1) / 10) * 10, clienteId: cliente ? cliente.id : null, diseno };
+}
+function generarOrdenes() {
+  const out = [];
+  for (const c of S.clientes) if (c.proxima <= S.noche) out.push(genOrden(c.cocina, c));
+  const n = S.rango === 0 ? 1 : S.rango === 1 ? 2 : 3;
+  const permitidas = cocinasHasta(S.rango);
+  let intentos = 0;
+  while (out.length < n + S.clientes.filter(c => c.proxima <= S.noche).length && intentos++ < 50) {
+    const k = uno(permitidas);
+    if (out.some(o => o.cocina === k && !o.clienteId)) continue;
+    out.push(genOrden(k));
+  }
+  if (S.rango >= 2 && azar(.3)) out.push(genOrden(S.rango >= 3 && azar(.4) ? 'estadio' : 'comedor'));
+  return out;
+}
+function genCandidatos() {
+  const usados = new Set(S.cuadrilla.map(c => c.n));
+  return CANDIDATOS.filter(c => !usados.has(c[0])).sort(() => Math.random() - .5).slice(0, 3).map(([n, rasgo, frase]) => {
+    const fuerza = +rnd(.6, 1.3).toFixed(2);
+    return { id: S.sigId++, n, rasgo, frase, fuerza, sueldo: Math.round((50 + fuerza * 80) / 5) * 5, color: uno(COLORES), noches: 0 };
+  });
+}
+// Una noche nueva: órdenes, clientes que se van, candidatos, llamadas.
+function prepararNoche() {
+  const avisos = [];
+  S.clientes = S.clientes.filter(c => {
+    if (S.noche > c.proxima + 2) { S.rep = clamp(S.rep - 4, 0, 100); avisos.push(`${c.nombre} se fue con la competencia: no fuimos a tiempo. −4 de reputación.`); return false; }
+    return true;
+  });
+  if (!S.candidatos.length || S.noche % 3 === 0) S.candidatos = genCandidatos();
+  const ordenes = generarOrdenes();
+  S.hoy = { noche: S.noche, ordenes, sel: 0, comp: S.rango === 1 ? uno(['beto', 'lupe']) : S.rango >= 2 ? 'lupe' : 'beto',
+    ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2, avisos,
+    frase: S.noche === 1 ? 'Bienvenido a Grasa Brava. Toma la camioneta, toma la rasqueta y no toques mi radio.' : uno(RIGO), resultado: '' };
+  guardar();
 }
 
 // ------------------------------------------------------------------ pantallas
 
 const P = $('#pantalla');
 function pantalla(html) { P.innerHTML = `<div class="hoja">${html}</div>`; P.hidden = false; P.scrollTop = 0; }
-const cara = (col, letra) => `<div class="cara" style="background:${col}">${letra}</div>`;
+const cara = (col, letra) => `<div class="cara" style="background:${col}">${esc(letra)}</div>`;
+let tab = 'noche';
 
-function generarOrdenes() {
-  const permitidas = Object.keys(COCINAS).filter(k => COCINAS[k].rango <= S.rango);
-  const n = S.rango === 0 ? 1 : S.rango === 1 ? 2 : 3;
-  const out = [];
-  let intentos = 0;
-  while (out.length < n && intentos++ < 50) {
-    const k = uno(permitidas), C = COCINAS[k];
-    if (out.some(o => o.cocina === k)) continue;
-    const eventos = C.eventos.filter(() => azar(.5));
-    if (k === 'hotel' && !eventos.includes('alarma')) eventos.push('alarma');
-    out.push({ cocina: k, nombre: uno(C.nombres), filtros: Math.round(rnd(C.filtros[0], C.filtros[1])), micras: Math.round(rnd(C.micras[0], C.micras[1]) / 50) * 50, pago: Math.round(rnd(C.pago[0], C.pago[1]) / 10) * 10, eventos });
-  }
-  return out;
-}
-
-let V = null; // la camioneta: órdenes de esta noche y elección
-function pantallaCamioneta() {
-  M = null;
-  if (!V || V.noche !== S.noche) {
-    V = { noche: S.noche, ordenes: generarOrdenes(), sel: 0, comp: S.rango === 1 ? uno(['beto', 'lupe']) : S.rango >= 2 ? 'lupe' : 'beto',
-      frase: S.noche === 1 ? 'Bienvenido a Grasa Brava. Toma la camioneta, toma la rasqueta y no toques mi radio.' : uno(RIGO) };
-    construirNoche(null);
-  }
-  irVista(VISTA_GENERAL);
-  $('#hud').hidden = true;
-  const rg = RANGOS[S.rango], sig = RANGOS[S.rango + 1], eligeComp = S.rango >= 2;
-  pantalla(`
-    <div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>
+function cabecera() {
+  const rg = RANGOS[S.rango], need = xpNivel(S.nivel);
+  return `<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>
     <div class="datos">
       <div class="dato"><i>Noche</i><b>${S.noche}</b></div>
       <div class="dato"><i>Tu dinero</i><b>${dinero(S.dinero)}</b></div>
-      <div class="dato"><i>Reputación</i><b>${S.rep}</b></div>
-      <div class="dato"><i>Rango</i><b>${rg.n}</b></div>
-    </div>
-    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo, por la radio</b>${esc(V.frase)}</div></div>
-    ${sig ? `<div class="rango"><div class="fila"><b>Siguiente rango: ${sig.n}</b><span class="nota">Falta: ${esc(sig.falta(S))}</span></div>
-      <span class="nota">${esc(sig.txt)}</span>
-      ${sig.compra && sig.req(S) ? `<button class="btn prim" id="comprar" ${S.dinero < sig.compra ? 'disabled' : ''}>Comprar la mitad de la empresa · ${dinero(sig.compra)}</button>` : ''}</div>`
-      : '<div class="rango"><b>Eres el dueño.</b><span class="nota">La camioneta, la cuadrilla y las deudas son tuyas.</span></div>'}
-    <h2 class="sec">${S.rango === 0 ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
-    ${V.ordenes.map((o, i) => { const C = COCINAS[o.cocina]; return `<button class="orden" data-o="${i}" aria-pressed="${i === V.sel}">
-      <div class="fila"><span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span></div>
-      <h3>${esc(o.nombre)}</h3>
-      <div class="fila"><span class="nota">${o.filtros} filtros · ${o.micras.toLocaleString('es-MX')} µm de grasa</span><span class="pago">${dinero(o.pago)}</span></div>
-      ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(PISTAS[e])}</span>`).join('') : '<span class="pista">Todo tranquilo. Sospechoso.</span>'}
-    </button>`; }).join('')}
-    <h2 class="sec">${eligeComp ? 'Elige compañero' : 'Tu compañero esta noche'}</h2>
-    <div class="companeros">${Object.entries(COMPANEROS).map(([id, c]) => `<button class="comp" data-c="${id}" aria-pressed="${V.comp === id}" ${S.rango < c.rango || (!eligeComp && id !== V.comp) ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${c.n}</b><span>${S.rango < c.rango ? 'Llega con el rango ' + RANGOS[c.rango].n : esc(c.rasgo)}</span></div></button>`).join('')}</div>
-    <div class="acciones"><button class="btn prim" id="salir">Salir a trabajar</button><button class="btn" id="taller">Taller</button><button class="btn" id="ajustes">Ajustes</button></div>
-    <p class="nota">Cobras el ${Math.round(rg.parte * 100)} % del trabajo más toda la propina.${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}${S.album.length ? ` Álbum: ${esc(S.album.join(', '))}.` : ''}</p>`);
-  P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { V.sel = +b.dataset.o; pantallaCamioneta(); });
-  P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { V.comp = b.dataset.c; pantallaCamioneta(); });
-  $('#salir').onclick = () => { audio(); empezarTurno({ ...V.ordenes[V.sel], comp: V.comp }); };
-  $('#taller').onclick = pantallaTaller;
-  $('#ajustes').onclick = () => pantallaAjustes(false);
-  const cb = $('#comprar'); if (cb) cb.onclick = () => { S.dinero -= sig.compra; S.rango++; guardar(); subirRango(); };
+      <div class="dato"><i>Reputación</i><b>${S.rep}</b><small>${fama(S.rep)} · pagos ×${multPago().toFixed(2)}</small></div>
+      <div class="dato"><i>Nivel ${S.nivel}</i><b>${rg.n}</b><div class="barra" title="Experiencia"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></div>
+    </div>`;
 }
 
-function pantallaTaller() {
+function pantallaCamioneta() {
+  M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true;
+  if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
+  else if (!mundo) construirNoche(null);
+  irVista(VISTA_GENERAL);
+  const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
+  const tabs = [['noche', 'Esta noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller']];
+  pantalla(`${cabecera()}
+    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo, por la radio</b>${esc(H.avisos.length ? H.avisos.join(' ') : H.frase)}</div></div>
+    <nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
+    ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller })[tab]()}
+    <div class="acciones"><button class="btn" id="ajustes">Ajustes</button></div>`);
+  P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
+  $('#ajustes').onclick = () => pantallaAjustes(false);
+  enlazar();
+}
+
+function tarjetaOrden(o, i) {
+  const C = COCINAS[o.cocina], H = S.hoy;
+  const faltanAyud = o.ayud - H.ayud.length;
+  return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
+    <div class="chips">${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span></div>
+    <h3>${esc(o.nombre)}</h3>
+    <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + ' campanas · ' : ''}${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
+    ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(PISTAS[e])}</span>`).join('') : '<span class="pista">Todo tranquilo. Sospechoso.</span>'}
+    ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}</span>` : ''}
+  </button>`;
+}
+
+function vNoche() {
+  const H = S.hoy, eligeComp = S.rango >= 2, plazas = PLAZAS[S.eq.camioneta];
+  const o = H.ordenes[H.sel], bloqueada = o && o.ayud > H.ayud.length;
+  return `<h2 class="sec">${S.rango === 0 ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
+    ${H.ordenes.map(tarjetaOrden).join('') || '<p class="nota">No hay órdenes. Busca clientes.</p>'}
+    <h2 class="sec">${eligeComp ? 'Elige compañero' : 'Tu compañero esta noche'}</h2>
+    <div class="companeros">${Object.entries(COMPANEROS).map(([id, c]) => `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${S.rango < c.rango || (!eligeComp && id !== H.comp) ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${c.n}</b><span>${S.rango < c.rango ? 'Llega con el rango ' + RANGOS[c.rango].n : esc(c.rasgo)}</span></div></button>`).join('')}</div>
+    ${S.cuadrilla.length ? `<h2 class="sec">Ayudantes en la camioneta · ${H.ayud.length} de ${plazas}</h2>
+      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
+    <div class="acciones"><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
+    <p class="nota">Cobras el ${Math.round(RANGOS[S.rango].parte * 100)} % del trabajo más toda la propina.${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}${S.album.length ? ` Álbum: ${esc(S.album.join(', '))}.` : ''}</p>`;
+}
+
+function vClientes() {
+  const H = S.hoy;
+  const acciones = MARKETING.map(m => {
+    const bloq = S.rango < m.rango ? `Desde el rango ${RANGOS[m.rango].n}` : m.id === 'licitacion' && S.rep < 50 ? 'Necesitas reputación 50' : '';
+    return `<div class="orden"><div class="fila"><h3>${esc(m.n)}</h3><span class="pago">${dinero(m.p)}</span></div><span class="nota">${esc(m.d)}</span>
+      ${bloq ? `<span class="aviso">${bloq}</span>` : `<div class="acciones"><button class="btn prim" data-m="${m.id}" ${H.llamadas <= 0 || S.dinero < m.p ? 'disabled' : ''}>Hacerlo</button></div>`}</div>`;
+  }).join('');
+  const lista = S.clientes.length ? S.clientes.map(c => { const C = COCINAS[c.cocina], hoy = c.proxima <= S.noche; return `<div class="persona">${cara(hoy ? '#69c97a' : '#5d7180', c.nombre[0])}<div><b>${esc(c.nombre)}</b><span>${C.n} · NFPA 96 ${C.frec} · ${c.visitas} ${c.visitas === 1 ? 'visita' : 'visitas'}</span></div><span class="chip ${hoy ? 'ok' : ''}">${hoy ? (S.noche > c.proxima ? 'Atrasado' : 'Le toca hoy') : 'Noche ' + c.proxima}</span></div>`; }).join('')
+    : '<p class="nota">Todavía no hay clientes fijos. Aprueba la inspección y a veces te ofrecen contrato: vuelven solos cada pocas noches y pagan un 10 % más.</p>';
+  return `<h2 class="sec">Buscar clientes · te quedan ${H.llamadas} ${H.llamadas === 1 ? 'llamada' : 'llamadas'} esta noche</h2>
+    ${H.resultado ? `<div class="cita"><b>Resultado</b>${esc(H.resultado)}</div>` : ''}
+    ${acciones}
+    <h2 class="sec">Clientes fijos</h2>${lista}`;
+}
+
+function vCuadrilla() {
+  const plazas = PLAZAS[S.eq.camioneta];
+  if (S.rango < 2) return `<div class="cita"><b>Don Rigo</b>Tú todavía no contratas a nadie. Cuando seas jefe de cuadrilla, hablamos.</div>`;
+  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} por noche · ${c.noches} noches</span></div><button class="btn peq" data-despedir="${c.id}">Despedir</button></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
+  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · pide ${dinero(c.sueldo)} por noche</span></div><button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
+  return `<h2 class="sec">Tu cuadrilla · caben ${plazas} en la camioneta</h2>${mios}
+    <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Mientras no seas socio, Don Rigo paga la mitad de su sueldo. Los trabajos grandes piden ayudantes.</p>
+    <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}`;
+}
+
+function vTaller() {
   const items = TIENDA.filter(t => t.ok(S));
-  pantalla(`<div class="rotulo">Taller</div>
-    <p class="nota">Las herramientas se pagan con tu dinero. Tienes ${dinero(S.dinero)}.</p>
+  return `<p class="nota">Las herramientas se pagan con tu dinero. Tienes ${dinero(S.dinero)}.</p>
     ${items.map(t => `<div class="orden"><h3>${esc(t.n)}</h3><span class="nota">${esc(t.d)}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>Comprar</button></div></div>`).join('') || '<p class="nota">Ya tienes todo. Don Rigo está orgulloso, aunque no lo diga.</p>'}
-    <div class="acciones"><button class="btn" id="volver">Volver a la camioneta</button></div>`);
-  P.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const t = TIENDA.find(x => x.id === b.dataset.t); S.dinero -= t.p; t.f(S); guardar(); tono(880, .1, .08); pantallaTaller(); });
-  $('#volver').onclick = pantallaCamioneta;
+    ${S.eq.camioneta === 1 && S.rango < 2 ? '<p class="nota">Las camionetas más grandes llegan con el rango Jefe de cuadrilla.</p>' : ''}`;
+}
+
+function enlazar() {
+  const H = S.hoy;
+  P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { H.comp = b.dataset.c; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+    const id = +b.dataset.a;
+    if (H.ayud.includes(id)) H.ayud = H.ayud.filter(x => x !== id);
+    else if (H.ayud.length < PLAZAS[S.eq.camioneta]) H.ayud.push(id);
+    guardar(); pantallaCamioneta();
+  });
+  const sal = $('#salir'); if (sal) sal.onclick = () => {
+    audio();
+    const o = H.ordenes[H.sel], c = COMPANEROS[H.comp];
+    const equipo = [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza }, ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.sueldo }))];
+    empezarTurno({ ...o, comp: H.comp, equipo });
+  };
+  P.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+    const m = MARKETING.find(x => x.id === b.dataset.m);
+    S.dinero -= m.p; H.llamadas--;
+    const [nuevas, txt] = m.hacer();
+    [].concat(nuevas || []).forEach(o => H.ordenes.push(o));
+    H.resultado = txt + (nuevas ? ' La orden ya está en «Esta noche».' : '');
+    if (nuevas) sCaja(); else tono(300, .3, .08, 'triangle', 200);
+    guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-contratar]').forEach(b => b.onclick = () => {
+    const c = S.candidatos.find(x => x.id === +b.dataset.contratar);
+    S.cuadrilla.push(c); S.candidatos = S.candidatos.filter(x => x !== c);
+    if (H.ayud.length < PLAZAS[S.eq.camioneta]) H.ayud.push(c.id);
+    tono(880, .1, .08); guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-despedir]').forEach(b => b.onclick = () => {
+    const id = +b.dataset.despedir;
+    S.cuadrilla = S.cuadrilla.filter(x => x.id !== id); H.ayud = H.ayud.filter(x => x !== id);
+    guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const t = TIENDA.find(x => x.id === b.dataset.t); S.dinero -= t.p; t.f(S); guardar(); tono(880, .1, .08); pantallaCamioneta(); });
 }
 
 function pantallaAjustes(enTurno) {
@@ -1143,38 +1521,29 @@ function pantallaAjustes(enTurno) {
     ['comodo', 'Modo cómodo', 'El reloj corre a la mitad de velocidad.'],
     ['sonido', 'Sonido', 'Raspados, chorros y alarmas.'],
   ];
+  const sig = RANGOS[S.rango + 1];
   pantalla(`<div class="rotulo">${enTurno ? 'Pausa' : 'Ajustes'}</div>
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
-    <div class="cita"><b>Cómo se juega</b>Pasadas cortas con la rasqueta: tocar, arrastrar y soltar. Varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas; un toque vuelve a la anterior. En ordenador, teclas 1 a 4.</div>
+    ${!enTurno && sig ? `<div class="rango"><b>Siguiente rango: ${sig.n}</b><span class="nota">Falta: ${esc(sig.falta(S))}. ${esc(sig.txt)}</span>
+      ${sig.compra && sig.req(S) ? `<button class="btn prim" id="comprar" ${S.dinero < sig.compra ? 'disabled' : ''}>Comprar la mitad de la empresa · ${dinero(sig.compra)}</button>` : ''}</div>` : ''}
+    ${Object.keys(S.perks).length ? `<div class="cita"><b>Tus mejoras</b>${Object.entries(S.perks).map(([k, n]) => `${PERKS[k].n}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
+    <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, usa las flechas de los lados. En ordenador, teclas 1 a 4.</div>
     <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="borrar">Empezar de cero</button>'}</div>`);
   P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.aj[b.dataset.k] = !S.aj[b.dataset.k]; b.setAttribute('aria-pressed', S.aj[b.dataset.k]); U.hl.value = S.aj.resaltar ? 1 : 0; guardar(); });
   $('#volver').onclick = () => { if (enTurno) { P.hidden = true; M.pausa = false; } else pantallaCamioneta(); };
+  const cb = $('#comprar'); if (cb) cb.onclick = () => { S.dinero -= sig.compra; S.rango++; guardar(); cola = [subirRango]; siguiente(); };
   const ab = $('#abandonar'); if (ab) ab.onclick = () => { P.hidden = true; terminarTurno(); };
   const br = $('#borrar'); if (br) br.onclick = () => {
-    pantalla(`<div class="rotulo">¿Empezar de cero?</div><p>Se borran tu dinero, tu rango y tus herramientas. Don Rigo no se acordará de ti. Bueno, nunca se acordó.</p>
+    pantalla(`<div class="rotulo">¿Empezar de cero?</div><p>Se borran tu dinero, tu rango, tus clientes y tu cuadrilla. Don Rigo no se acordará de ti. Bueno, nunca se acordó.</p>
       <div class="acciones"><button class="btn" id="no">Cancelar</button><button class="btn prim" id="si">Empezar de cero</button></div>`);
     $('#no').onclick = () => pantallaAjustes(false);
-    $('#si').onclick = () => { nueva(); V = null; guardar(); pantallaCamioneta(); };
+    $('#si').onclick = () => { nueva(); tab = 'noche'; guardar(); pantallaCamioneta(); };
   };
 }
 
-function pantallaPrep() {
-  const pintar = () => {
-    const faltan = PREP.filter(p => !M.prep[p.id]).length;
-    pantalla(`<div class="rotulo">Preparación<span>${esc(M.orden.nombre)}</span></div>
-      <p class="nota">Lo que te saltes ahorra tiempo… y abre la puerta al desastre. Toca cada paso al hacerlo.</p>
-      <div class="check">${PREP.map(p => `<button data-p="${p.id}" aria-pressed="${!!M.prep[p.id]}"><span class="box">✓</span><span>${p.n}<small>${p.d}</small></span></button>`).join('')}</div>
-      <div class="acciones"><button class="btn prim" id="empezar">${faltan ? `Empezar igual (faltan ${faltan})` : 'Empezar a limpiar'}</button></div>`);
-    P.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
-      const k = b.dataset.p; M.prep[k] = !M.prep[k];
-      piezas.plastico.visible = !!M.prep.plastico; piezas.bolsa.visible = !!M.prep.bolsa;
-      piezas.pilotos.forEach(f => { f.visible = !M.prep.gas; });
-      tono(M.prep[k] ? 760 : 380, .07, .06, 'triangle'); pintar();
-    });
-    $('#empezar').onclick = arrancarTurno;
-  };
-  pintar();
-}
+// Después del parte: ofertas de contrato, subidas de nivel y de rango, en cola.
+let cola = [];
+function siguiente() { const f = cola.shift(); if (f) f(); else pantallaCamioneta(); }
 
 function pantallaParte() {
   const o = M.orden, rg = RANGOS[S.rango];
@@ -1183,52 +1552,90 @@ function pantallaParte() {
   let celdas = 0, pulidas = 0;
   for (const z of Z) for (const s of z.sfs) for (let i = 0; i < s.pol.length; i++) { celdas++; if (s.pol[i] > .6) pulidas++; }
   const pulido = pulidas / celdas;
-  if (!M.prep.plastico && azar(.7)) dano('El chef encontró espuma en su plancha sagrada', 0, 4);
-  if (!M.prep.bolsa) dano('Agua con grasa en el suelo del comedor', 80, 2);
-  const limpio = zonas.reduce((a, z) => a + z.pct, 0) / 3;
+  const sinCubrir = piezas.aparatos.filter(a => !a.cubierto).length;
+  if (sinCubrir && azar(Math.min(1, sinCubrir / piezas.aparatos.length * 1.4))) dano(`Espuma y grasa en ${sinCubrir} ${sinCubrir === 1 ? 'aparato sin cubrir' : 'aparatos sin cubrir'}`, sinCubrir * 25, sinCubrir > 2 ? 4 : 2);
+  if (!M.prep.bolsa) dano('Agua con grasa en el suelo (plástico o bolsa incompletos)', Math.round(90 * (1 - M.prep.envuelto * .6)), 2);
+  const limpio = zonas.reduce((a, z) => a + z.pct, 0) / zonas.length;
   const cobro = aprobado ? o.pago : Math.round(o.pago * .5 * limpio / 10) * 10;
-  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 : 0) + M.propinaMod, 0, .25) / 5) * 5);
+  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 : 0) + .05 * perk('labia') + M.propinaMod, 0, .3) / 5) * 5);
   const tuParte = Math.round(cobro * rg.parte);
   const cuota = S.rango >= 3 ? 1 : .5;   // de empleado, Don Rigo te descuenta la mitad de los daños
+  const ayudantes = M.equipo.filter(e => !e.principal);
+  const sueldos = Math.round(ayudantes.reduce((a, e) => a + e.sueldo, 0) * cuota);
   const gastos = S.rango >= 3 ? Math.round(155 * rg.parte) : 0;
-  const neto = tuParte + propina - Math.round(M.danos.reduce((a, d) => a + d.dinero, 0) * cuota) - gastos;
-  const rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra;
+  const neto = tuParte + propina - Math.round(M.danos.reduce((a, d) => a + d.dinero, 0) * cuota) - sueldos - gastos;
+  const rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0);
+  const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0);
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
   S.mejor = Math.max(S.mejor, neto); S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
-  const sig = RANGOS[S.rango + 1], nuevoRango = !!(sig && !sig.compra && sig.req(S));
-  if (nuevoRango) S.rango++;
+  for (const e of ayudantes) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) c.noches++; }
+  // Clientes fijos
+  let notaCliente = '';
+  cola = [];
+  const cli = o.clienteId ? S.clientes.find(c => c.id === o.clienteId) : null;
+  if (cli) {
+    if (aprobado) { cli.proxima = S.noche + FREC[COCINAS[cli.cocina].frec]; cli.visitas++; notaCliente = `${cli.nombre} te espera otra vez la noche ${cli.proxima}.`; }
+    else { S.clientes = S.clientes.filter(c => c !== cli); notaCliente = `${cli.nombre} cancela el contrato.`; }
+  } else if (aprobado && azar(.35 + S.rep / 250 + .1 * perk('gentes'))) cola.push(() => ofertaContrato(o));
+  // Experiencia y nivel
+  S.xp += xp; let subidas = 0;
+  while (S.xp >= xpNivel(S.nivel)) { S.xp -= xpNivel(S.nivel); S.nivel++; subidas++; }
+  for (let i = 0; i < subidas; i++) cola.push(elegirPerk);
+  const sig = RANGOS[S.rango + 1];
+  if (sig && !sig.compra && sig.req(S)) { S.rango++; cola.push(subirRango); }
   guardar();
   const desastre = M.danos.some(d => d.dinero >= 60);
   pantalla(`<div class="rotulo">${aprobado ? (espejo ? 'Metal desnudo' : 'Aprobado') : 'No pasa'}<span>Parte de ${esc(o.nombre)}</span></div>
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % limpio</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
       <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Pulido espejo: ${Math.round(pulido * 100)} %.</span></div>
-    <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}</div>
+    <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
     <div class="cuentas">
       <span>${aprobado ? 'Pago del trabajo' : 'Pago parcial'} (${dinero(cobro)}), tu ${Math.round(rg.parte * 100)} %</span><span>${dinero(tuParte)}</span>
       <span>Propina</span><span>${dinero(propina)}</span>
       ${M.danos.map(d => `<span>${esc(d.t)}</span><span>${d.dinero ? dinero(-Math.round(d.dinero * cuota)) : '—'}</span>`).join('')}
+      ${sueldos ? `<span>Sueldos de ayudantes${cuota < 1 ? ' (tu mitad)' : ''}</span><span>${dinero(-sueldos)}</span>` : ''}
       ${gastos ? `<span>Gasolina y sueldo del compañero (tu parte)</span><span>${dinero(-gastos)}</span>` : ''}
       <span class="total">Te llevas</span><span class="total">${dinero(neto)}</span>
       <span>Reputación</span><span>${rep >= 0 ? '+' : ''}${rep}</span>
+      <span>Experiencia</span><span>+${xp}</span>
     </div>
     ${cuota < 1 && M.danos.some(d => d.dinero) ? '<p class="nota">Don Rigo te descuenta la mitad de los daños del sueldo. «Es pedagógico», dice.</p>' : ''}
     ${M.album.length ? `<p class="nota">Nueva foto en el álbum: ${esc(M.album.join(', '))}.</p>` : ''}
-    <div class="acciones"><button class="btn prim" id="seguir">Volver a la camioneta</button></div>`);
-  $('#seguir').onclick = () => { if (nuevoRango) subirRango(); else pantallaCamioneta(); };
+    <div class="acciones"><button class="btn prim" id="seguir">Seguir</button></div>`);
+  $('#seguir').onclick = siguiente;
   tono(aprobado ? 660 : 300, .3, .1, 'triangle', aprobado ? 990 : 200);
+}
+
+function ofertaContrato(o) {
+  const C = COCINAS[o.cocina], cada = FREC[C.frec];
+  pantalla(`<div class="rotulo">¿Contrato fijo?<span>${esc(o.nombre)}</span></div>
+    <div class="cita"><b>El dueño</b>${esc(uno(['Nunca vi mi campana así. ¿Me la limpian siempre ustedes?', 'Mi cuñado cobraba menos, pero mi cuñado no limpiaba. ¿Firmamos?', 'Quiero esto cada vez que toque. Y que venga el mismo chico, el que no rompe nada.']))}</div>
+    <p>Te llamará cada ${cada} noches (NFPA 96: ${C.frec}) y paga un 10 % más. Misma cocina, misma campana, misma grasa de vuelta. Si no vas a tiempo, se va y pierdes reputación.</p>
+    <div class="acciones"><button class="btn prim" id="firmar">Firmar</button><button class="btn" id="noFirmar">Mejor no</button></div>`);
+  $('#firmar').onclick = () => { S.clientes.push({ id: S.sigId++, nombre: o.nombre, cocina: o.cocina, proxima: S.noche + cada - 1, visitas: 1, diseno: o.diseno, pagoBase: o.pagoBase }); guardar(); sCaja(); siguiente(); };
+  $('#noFirmar').onclick = siguiente;
+}
+
+function elegirPerk() {
+  const libres = Object.keys(PERKS).filter(k => perk(k) < 3).sort(() => Math.random() - .5).slice(0, 3);
+  if (!libres.length) return siguiente();
+  pantalla(`<div class="rotulo">¡Nivel ${S.nivel}!<span>Elige una mejora</span></div>
+    ${libres.map(k => `<button class="orden" data-p="${k}"><h3>${PERKS[k].n}${perk(k) ? ' ' + 'I'.repeat(perk(k) + 1) : ''}</h3><span class="nota">${PERKS[k].d}</span></button>`).join('')}`);
+  sDing();
+  P.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { S.perks[b.dataset.p] = perk(b.dataset.p) + 1; guardar(); siguiente(); });
 }
 
 function subirRango() {
   const r = RANGOS[S.rango];
-  const frases = ['', 'Tres turnos y no has roto nada. Bueno, nada caro. Ya eres ayudante.', 'La gente pregunta por ti. Me molesta, pero te subo a jefe de cuadrilla.', 'Firmaste. Ahora la mitad de las deudas también son tuyas. Bienvenido, socio.', 'Me voy a pescar. La camioneta es tuya. El ruido también.'];
+  const frases = ['', 'Tres turnos y no has roto nada. Bueno, nada caro. Ya eres ayudante. Ahora sal a buscar clientes.', 'La gente pregunta por ti. Me molesta, pero te subo a jefe de cuadrilla. Contrata a alguien que no sea Beto.', 'Firmaste. Ahora la mitad de las deudas también son tuyas. Bienvenido, socio.', 'Me voy a pescar. La camioneta es tuya. El ruido también.'];
   pantalla(`<div class="rotulo">Nuevo rango<span>${esc(r.n)}</span></div>
     <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>${esc(frases[S.rango])}</div></div>
     <p>${esc(r.txt)} Ahora cobras el ${Math.round(r.parte * 100)} % de cada trabajo.</p>
-    <div class="acciones"><button class="btn prim" id="ok">A la camioneta</button></div>`);
+    <div class="acciones"><button class="btn prim" id="ok">Seguir</button></div>`);
   sDing(); tono(1760, .5, .08, 'sine', null, .3);
-  $('#ok').onclick = pantallaCamioneta;
+  $('#ok').onclick = siguiente;
 }
 
 // ------------------------------------------------------------------ bucle principal
@@ -1240,15 +1647,22 @@ function bucle(ahora) {
   const dt = Math.min(.05, (ahora - ult) / 1000); ult = ahora;
   U.tiempo.value = ahora / 1000;
   if (M && M.fase === 'turno') tickTurno(dt);
-  else if (!M) { const a = ahora / 9000; VISTA_GENERAL.pos.set(Math.sin(a) * 2.6 + .4, 1.9, 3.2 + Math.cos(a) * .3); }
+  else if (!M) { const a = ahora / 9000; VISTA_GENERAL.dir.set(Math.sin(a) * 2.6 + .4, .5, 3.6 + Math.cos(a) * .3).normalize(); }
+  // Cubiertas que caen sobre los aparatos
+  if (piezas.aparatos) for (const ap of piezas.aparatos) { const c = ap.cubierta, t = c.userData.caida; if (t > 0) { c.userData.caida = Math.max(0, t - dt); c.position.y = .9 + (ap.alto + .1) / 2 + c.userData.caida * 1.4; } }
+  const v = camT.a;
+  if (panDir) v.pan = (v.pan || 0) + panDir * dt * 1.4;
+  const conPan = M && (M.fase === 'turno' || M.fase === 'prep') && v.maxPan > .05;
+  $('#panI').hidden = !conPan; $('#panD').hidden = !conPan;
   moverCamara(dt);
   moverParticulas(dt);
+  if (MARCAS.length) moverMarcas();
   R.render(escena, cam);
   requestAnimationFrame(bucle);
 }
 
 function arrancar(datos) {
-  if (datos && datos.S && datos.S.v === 2) S = datos.S; else if (!cargar()) nueva();
+  if (datos && datos.S && migrar(datos.S)) S = datos.S; else if (!cargar()) nueva();
   U.hl.value = S.aj.resaltar ? 1 : 0;
   redimensionar();
   pantallaCamioneta();
