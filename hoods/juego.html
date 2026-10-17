@@ -2411,8 +2411,18 @@ function buscarNovedad() {
 }
 function pintarNovedad() {
   const el = $('#novedad'); if (!el || !novedad) return;
-  el.innerHTML = `<div class="novedad"><b>¡Hay una versión nueva del juego!</b><span class="nota">Descárgala e instálala encima de esta: tu partida se queda donde está.</span><div class="acciones"><a class="btn prim" href="${APK_URL}">Descargar la versión nueva</a></div></div>`;
+  const app = window.HoodApp && window.HoodApp.actualizar;   // el APK descarga e instala sin salir del juego
+  el.innerHTML = `<div class="novedad"><b>¡Hay una versión nueva del juego!</b><span class="nota" id="novedadTxt">${app ? 'Se instala encima de esta: tu partida se queda donde está. Android te pedirá confirmar.' : 'Descárgala e instálala encima de esta: tu partida se queda donde está.'}</span>
+    <div class="acciones">${app ? '<button class="btn prim" id="actualizar">Actualizar ahora</button>' : `<a class="btn prim" href="${APK_URL}">Descargar la versión nueva</a>`}</div></div>`;
+  const b = $('#actualizar'); if (b) b.onclick = () => { b.disabled = true; b.textContent = 'Descargando…'; window.HoodApp.actualizar(APK_URL); };
 }
+// La app avisa de cómo va: descargando (con %), instalando o error (entonces, por el navegador).
+window.hcActualizacion = (estado, pct) => {
+  const b = $('#actualizar'), t = $('#novedadTxt'); if (!b) return;
+  if (estado === 'descargando') b.textContent = pct >= 0 ? `Descargando… ${pct} %` : 'Descargando…';
+  else if (estado === 'instalando') { b.textContent = 'Instalando…'; if (t) t.textContent = 'Confirma en la pantalla de Android. Si te pide permiso para instalar apps de Hood Cleaners, actívalo y vuelve.'; }
+  else { b.disabled = false; b.textContent = 'Reintentar'; if (t) t.innerHTML = `No se pudo instalar desde aquí. <a href="${APK_URL}">Descárgala con el navegador</a> e instálala encima.`; }
+};
 
 // nueva = true empieza otra partida; false solo pone nombre a la que ya hay.
 function pantallaNombre(nueva_) {
