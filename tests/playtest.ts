@@ -28,11 +28,12 @@ const noop = { stopped: () => false, progress: () => {}, yield: async () => {} }
   for (const x of [...slots]) await deleteSlot(x.id);
   const seed = 4000 + c; seedRng(seed); buildWorld(seed);
   const lowest = Math.max(...S.leagues.filter(L => L.c === c).map(L => L.lv));
-  const cands = S.teams.filter(t => S.leagues[t.lg].c === c && S.leagues[t.lg].lv === Math.min(1, lowest));
+  const cands = S.teams.filter(t => S.leagues[t.lg].c === c && S.leagues[t.lg].lv === (process.env.LOW ? lowest : Math.min(1, lowest)));
   if (!cands.length) { warn(code, 'no hay clubes en ese país'); continue; }
   pickTeam(cands[3 % cands.length].id); S.pre.left = 0;
   console.log(`\n${COUNTRIES[c].n} · ${T(S.user).name} (${S.leagues[T(S.user).lg].lv + 1}ª) · empieza ${dateTxt(0, true)}`);
   for (let s = 0; s < NS; s++) {
+   const SRC={};if(process.env.DBG){let v=S.budget;Object.defineProperty(S,'budget',{configurable:true,enumerable:true,get:()=>v,set:n=>{const d=n-v;if(Math.abs(d)>.001){const fr=(new Error().stack.split('\n')[2]||'').trim().replace(/.*\//,'');SRC[fr]=(SRC[fr]||0)+d;}v=n;}});}
    const ts = Date.now(), inbox0 = (S.inbox || []).length, cash0 = S.budget;
    try {
     await simLoop('season', false, noop);
@@ -63,6 +64,8 @@ const noop = { stopped: () => false, progress: () => {}, yield: async () => {} }
     if (vals[0] > 400) warn(code, `precio disparado: €${vals[0].toFixed(0)}M`);
     if (!isFinite(S.budget)) warn(code, 'presupuesto no válido');
     if (size > 18000) warn(code, `partida guardada muy grande: ${size.toFixed(0)} KB`);
+    if(S.fin){const F=S.fin,sum=k=>F.reduce((a,f)=>a+(f[k]||0),0).toFixed(2);console.log(`      ingresos: tv ${sum('tv')} · taquilla ${sum('tix')} · patroc ${sum('spo')} · tienda ${sum('shop')} · negocio ${sum('biz')} · sueldos ${sum('wages')} · div ${S.leagues[T(S.user).lg].lv+1}ª`);}
+    if(process.env.DBG)console.log('      origen: '+Object.entries(SRC).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,10).map(([k,v])=>k+' '+v.toFixed(2)).join(' | '));
     newSeason();
     const st = seasonStart();
     if (!(st instanceof Date) || isNaN(+st)) warn(code, 'fecha de inicio no válida');
