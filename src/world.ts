@@ -68,6 +68,7 @@ export function makeFixtures(ids){
 }
 export function setupSeason(){
  S.fixtures=S.leagues.map(L=>makeFixtures(lgTeams(L.id).map(t=>t.id)));
+ if(S.fin&&S.fin.length&&S.user!=null){const F=S.fin,sum=k=>Math.round(F.reduce((a,f)=>a+(f[k]||0),0)*1000)/1000;S.finH=(S.finH||[]).concat([{s:seasonLabel(S.seasonN-1),tv:sum('tv'),tix:sum('tix'),spo:sum('spo'),shop:sum('shop'),biz:sum('biz'),wages:sum('wages'),b:Math.round(S.budget*1000)/1000}]).slice(-10);}
  S.week=0;if(S.user!=null&&S.leagues)S.calC=LG(uLg()).c;S.fin=[];S.offers={};S.neg={};S.ren={};S.lo={};S.loanTry={};S.ligaRound=0;S.ligaLg=uLg();
  S.obj=objectiveFor(S.user);
  if(S.coaches)S.teams.forEach(applyStyle);else S.teams.forEach(t=>{if(t.id!==S.user&&rnd()<.4)t.formation=pick(Object.keys(FORMS));});

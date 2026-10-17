@@ -3,7 +3,7 @@
 import {getA11y} from '../theme';
 import {h2hDots,h2hStreak,h2hTxt,rivalsOf} from '../rivals';
 import {wealthLabel} from './economy';
-import {finChart,negociosHTML} from './business';
+import {finBig,finChart,negociosHTML} from './business';
 import {MGR_AT,PROJ,mgrAt,nsCost,projOptions,projState} from '../extras2';
 import {wcs} from '../state';
 import {enciclopediaHTML,fameHTML} from './worldhist';
@@ -118,7 +118,7 @@ export function clubView(){
  const tb=vtab('club',[['dir','Directiva'],['fin','Finanzas'],['neg','Negocios'],['est','Estadio'],['fil','Filial y afiliados'],['ent','Mi carrera'],['par','Partida']],'dir');
  const two=(a,b)=>`${tb.bar}<div class="grid"><div class="stack">${a}</div><div class="stack">${b}</div></div>`;
  switch(tb.cur){
-  case'fin':return two(finChart()+finP+budP,spo+bankP);
+  case'fin':return two(finBig()+finChart()+finP+budP,spo+bankP);
   case'neg':return tb.bar+negociosHTML();
   case'est':return two(stadium,fac+nsP);
   case'fil':return two(filP,affP);

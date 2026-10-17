@@ -12,7 +12,7 @@ const r2=x=>Math.round(x*100)/100;
 const dec=x=>x.toFixed(2).replace('.',',');
 const fx=x=>(x>=0?'+':'−')+Math.abs(x).toFixed(2).replace('.',',');
 const tacLbl=(k,v)=>TACS[k]&&TACS[k].o[v]?TACS[k].o[v].toLowerCase():v;
-const NAMES={mar:'Marcaje',cru:'Centros del rival',dir:'Dirigir la presión',tit:'Tu título de entrenador',ent:'Entradas',off:'Trampa del fuera de juego',tie:'Perder tiempo',pre:'Presión',lin:'Línea defensiva',rit:'Ritmo',anc:'Anchura',est:'Estilo',fase:'Al perder / al recuperar',rol:'Roles de tus jugadores',pos:'Cometidos e instrucciones por puesto',ord:'Órdenes especiales',oi:'Tus instrucciones al rival',oiR:'Las instrucciones del rival',clima:'Clima y campo',mom:'Tus decisiones en momentos clave',cap:'El capitán',ment:'Mentalidad',sin:'Sinergias del once',oop:'Forma sin balón'};
+const NAMES={dpi:'Órdenes individuales sin balón',mar:'Marcaje',cru:'Centros del rival',dir:'Dirigir la presión',tit:'Tu título de entrenador',ent:'Entradas',off:'Trampa del fuera de juego',tie:'Perder tiempo',pre:'Presión',lin:'Línea defensiva',rit:'Ritmo',anc:'Anchura',est:'Estilo',fase:'Al perder / al recuperar',rol:'Roles de tus jugadores',pos:'Cometidos e instrucciones por puesto',ord:'Órdenes especiales',oi:'Tus instrucciones al rival',oiR:'Las instrucciones del rival',clima:'Clima y campo',mom:'Tus decisiones en momentos clave',cap:'El capitán',ment:'Mentalidad',sin:'Sinergias del once',oop:'Forma sin balón'};
 const sideOf=sp=>/^(LD|CAD|MD|ED)$/.test(sp)?'r':/^(LI|CAI|MI|EI)$/.test(sp)?'l':null;
 
 /** Datos del informe (compactos: se guardan con el partido). */

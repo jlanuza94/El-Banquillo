@@ -1,5 +1,6 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {attendance} from '../club';
 import {FIN,reactHTML} from '../talkplus';
 import {ITALK,REFS} from '../extras2';
 import {WX,wxTxt} from '../extras';
@@ -114,6 +115,18 @@ function liveStrip(m){const H=T(m.h),A=T(m.a),pos=Math.round((m.min?m.possSum/m.
  <span class="m2k"><b>${pos}%</b> pos.</span><span class="m2k"><b>${m.st.h.sh}-${m.st.a.sh}</b> tiros</span><span class="m2k"><b>${xg('h')}-${xg('a')}</b> xG</span>
  <span class="m2k m2dom ${dom>=60?'h':dom<=40?'a':''}" title="Quién llega más en los últimos 10 minutos">${dom>=60?'▲ '+esc(H.short)+' aprieta':dom<=40?'▲ '+esc(A.short)+' aprieta':'Igualado'}</span>
  <button class="btn sm m2n" data-a="n2d" aria-pressed="${!!S.n2d}">Nombres</button></div>`;}
+/** Pantalla del pitido final (como la del FMM): goleadores de cada equipo con sus minutos, estadio y público, y las cifras clave. */
+function ftHTML(m){
+ const H=T(m.h),A=T(m.a),side=s=>{const by={};m.ev.filter(e=>(e.t==='goal'||e.t==='red')&&e.s===s).forEach(e=>{const k=(e.t==='red'?'r':'g')+e.pid;(by[k]=by[k]||{t:e.t,pid:e.pid,m:[]}).m.push(fmtMin(e.min)+(e.gt==='pen'?' (pen.)':''));});
+  return Object.values(by).map(x=>`<div class="ftsc"><i>${x.t==='red'?'🟥':'⚽'}</i><b>${esc(lastNm(x.pid).toUpperCase())}</b> ${esc(x.m.join(', '))}</div>`).join('')||'<div class="ftsc muted">—</div>';};
+ const cc=s=>(m.sh||[]).filter(x=>x[0]===(s==='h'?0:1)&&x[2]>=30).length,tr=s=>{const L=m.lu[s].concat(Object.keys(m.played).filter(id=>PL(id)&&PL(id).team===m[s])).filter((v,i,a)=>v&&a.indexOf(v)===i).map(id=>m.rat&&m.rat[id]).filter(Boolean);return L.length?(L.reduce((a,b)=>a+b,0)/L.length).toFixed(1):'—';};
+ const poss=Math.round(m.possSum/Math.max(1,m.min)*100),row=(a,l,b)=>`<div class="ftr"><b>${a}</b><span>${l}</span><b>${b}</b></div>`;
+ const stad=m.h===S.user&&S.naming&&S.naming.until>=S.seasonN?S.naming.name:`Estadio de ${H.city||H.name.split(' ').slice(-1)[0]}`,att=m.h===S.user&&S.club?Math.min(S.club.cap,attendance()):null;
+ return `<div class="ftb"><div class="fth"><span>FINAL</span><span class="ftt">${crest(H,'sm')} ${esc(H.short)} <b>${m.score.h} - ${m.score.a}</b> ${esc(A.short)} ${crest(A,'sm')}</span>${m.pen?`<span>pen. ${m.pen[0]}-${m.pen[1]}</span>`:'<span></span>'}</div>
+ <div class="ftg"><div>${side('h')}</div><div>${side('a')}</div></div>
+ <div class="ftst">${esc(stad)}${att?` (público: ${att.toLocaleString('es')})`:''}</div>
+ <div class="ftgrid"><div>${row(poss+'%','Posesión',(100-poss)+'%')}${row(cc('h'),'Ocasiones claras',cc('a'))}${row(tr('h'),'Nota del equipo',tr('a'))}</div><div>${row(`${m.st.h.sh} (${m.st.h.ot})`,'Tiros (a puerta)',`${m.st.a.sh} (${m.st.a.ot})`)}${row(m.st.h.co||0,'Córners',m.st.a.co||0)}${row(m.st.h.fo||0,'Faltas',m.st.a.fo||0)}</div></div>
+ <div class="ftf"><span>${esc(m.label||'')}</span></div></div>`;}
 export function matchView(){
  if(S.match&&S.match.us&&S.match.min===0&&!S.match.done&&!S.match.talks.pre&&!S.match.preOk)return preMatchView(S.match);
  const m=S.match,H=T(m.h),A=T(m.a),us=m.us,ut=T(m[us]);
@@ -149,7 +162,7 @@ export function matchView(){
  return `<div class="mtopb"><button class="btn sm" data-a="view" data-v="inicio">← Menú</button>${m.label?`<span class="eyebrow mlbl">${m.derby?`<span class="derbytag sm">${derbyName(m.h,m.a)}</span> `:''}${esc(m.label)}${m.agg?` · vuelta: ida ${m.agg[1]}-${m.agg[0]}`:m.ko?' · eliminatoria':''}</span>`:''}<span class="spacer"></span><button class="btn sm" data-a="sound" aria-pressed="${soundOn()}" title="Sonido y vibración">${soundOn()?'🔊':'🔇'}</button><div class="seg"><button data-a="v2d" data-v="1" aria-pressed="${S.v2d!==false}">2D</button><button data-a="v2d" data-v="0" aria-pressed="${S.v2d===false}">Texto</button></div></div>
  <div class="mfm mw-${mw}"><div class="mlL"><div class="mscore ${flash?'flash':''}"><span class="mtime">${label}</span><span class="mtm" style="${crestStyle(H)}">${esc(H.short)}</span><b class="msc h">${m.score.h}</b>${crest(m.us?T(m[m.us]):H,'sm')}<b class="msc a">${m.score.a}</b><span class="mtm" style="${crestStyle(A)}">${esc(A.short)}</span></div>
  <div class="mscr"><span>${esc(scorers('h'))}</span><span class="mag">${m.agg?`global ${m.score.h+m.agg[0]}-${m.score.a+m.agg[1]}`:''}${m.pen?` pen. ${m.pen[0]}-${m.pen[1]}`:''}</span><span>${esc(scorers('a'))}</span></div><div class="mprog"><i style="width:${Math.min(100,m.min/m.end*100)}%"></i></div>
- ${S.v2d!==false?`<div class="p2d"><canvas id="pitch2d" width="800" height="512" aria-label="Vista del partido en 2D"></canvas><div class="mcom" id="mcom" aria-live="polite">${esc(RT.com2d||'')}</div>${liveStrip(m)}</div>`:''}
+ ${m.done&&!RT.replay?ftHTML(m):''}${S.v2d!==false&&!(m.done&&!RT.replay)?`<div class="p2d"><canvas id="pitch2d" width="800" height="512" aria-label="Vista del partido en 2D"></canvas><div class="mcom" id="mcom" aria-live="polite">${esc(RT.com2d||'')}</div>${liveStrip(m)}</div>`:''}
  ${RT.replay?`<div class="row" style="justify-content:center;margin-top:8px"><span class="small muted">Viendo la repetición</span><button class="btn sm dark" data-a="replay-stop">Cerrar repetición</button></div>`:''}
  </div><div class="mlR"><div class="seg mwsel">${[['par','Partido'],['est','Estadísticas'],['eve','Eventos'],['for','Formaciones'],['res','Resultados']].map(([k,l])=>`<button data-a="m-w" data-v="${k}" aria-pressed="${mw===k}">${l}</button>`).join('')}</div><div class="wpar">
  <div class="mbar">${m.done?`<button class="btn primary" data-a="m-finish">Ver resultados de la jornada</button>${m.us?`<button class="btn" data-a="post" data-v="live">📊 Resumen</button><button class="btn" data-a="trep" data-v="live">📋 Informe táctico</button>`:''}`:`${m.paused?`<button class="btn primary" data-a="m-play">${resumeL}</button>`:`<button class="btn dark" data-a="m-pause">Pausar</button>`}

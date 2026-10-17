@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {sideCard} from './fmmcards';
 import {postHubHTML} from './posthub';
 import {matchRecord} from '../analysis';
 import {aucBids} from '../r11club';
@@ -75,12 +76,11 @@ export function modalView(){
   <div class="acts">${n.closed?'':`${p.team!==null&&p.cl<=S.budget?`<button class="btn" data-a="pay-clause" data-id="${p.id}">Pagar cláusula</button>`:''}<button class="btn primary" data-a="bid" data-id="${p.id}">Enviar oferta</button>`}<button class="btn" data-a="modal-close">${n.closed?'Cerrar':'Cancelar'}</button></div>
   <p class="small muted" style="margin:6px 0 0">3 intentos por jornada. Si el club acepta, luego negocias el contrato con el jugador.</p></div></div>`;}}
  else if(md.type==='renew'){const p=PL(md.id),st=renState(md.id);
-  body=`<div class="eyebrow">Renovación de contrato</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
-  <div class="row small muted" style="margin-top:6px">${posChip(p)}${pBadge(p)}<span>${p.age} años · ${hapTag(p)}</span></div>
-  <div class="kv"><span>Contrato actual</span><b>${esc(contractLabel(p))}</b><span>Sueldo actual</span><b>${money(p.wage)}/sem</b><span>Rol actual</span><b>${ROLES[p.role||'ro'].n}</b><span>Cláusula actual</span><b>${money(p.cl)}</b></div>
+  body=`<div class="ctwrap">${sideCard(p)}<div class="ctmain"><div class="row" style="align-items:baseline;gap:8px"><div class="eyebrow">Renovación de contrato</div><span class="spacer"></span>${hapTag(p)}</div><h2 style="margin:2px 0 4px">${esc(p.name)}</h2>
+  <details class="small"><summary>Contrato actual: ${money(p.wage)}/sem · ${esc(contractLabel(p))}</summary><div class="kv"><span>Rol actual</span><b>${ROLES[p.role||'ro'].n}</b><span>Cláusula actual</span><b>${money(p.cl)}</b></div></details>
   ${st.closed?'':termsForm(p,'renew')}
-  ${st.msg?`<div class="negmsg ${st.kind}">${esc(st.msg)}</div>`:''}${counterBox(st,p,'renew')}
-  <div class="acts"><button class="btn" data-a="modal-close">${st.closed?'Cerrar':'Cancelar'}</button>${st.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="renew">Proponer renovación</button>`}</div>`;}
+  <div class="ctreply ${st.kind||''}">${esc(st.msg||'«Escucho tu propuesta.»')}</div>${counterBox(st,p,'renew')}
+  <div class="acts"><button class="btn" data-a="modal-close">${st.closed?'Cerrar':'Salir'}</button>${st.closed?'':`<button class="btn primary" data-a="terms-ok" data-id="${p.id}" data-m="renew">Proponer renovación</button>`}</div></div></div>`;}
  else if(md.type==='meet'){const m=S.meet,p=PL(m?m.id:md.id);
   if(!p){body='<p>Esa reunión ya no está pendiente.</p><div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>';}
   else{body=`<div class="eyebrow">Reunión en tu despacho${m?' · '+esc(TOPICS[m.topic].n):''}</div><h2 style="margin-top:4px">${esc(p.name)}</h2>
@@ -173,5 +173,5 @@ export function modalView(){
  else if(md.type==='cmp'){const a=PL(md.a),b=PL(md.b);if(!a||!b){S.modal=null;return '';}body=compareHTML(a,b);}
  else if(md.type==='stfire'){const m=(S.crew||[]).find(x=>x.id===md.id);if(!m){S.modal=null;return '';}body=fireModal(m);}
  else if(md.type==='newgame'){body=`<h2>¿Empezar de cero?</h2><p>Perderás esta partida con ${esc(T(S.user).name)}, incluido el historial de temporadas.</p><div class="acts"><button class="btn" data-a="modal-close">Seguir con esta partida</button><button class="btn danger" data-a="new-game-ok">Borrar y empezar</button></div>`;}
- return `<div class="ov" data-a="ov"><div class="modal ${md.type==='mrep'||md.type==='trep'||md.type==='post'?'wide':''}" role="dialog" aria-modal="true">${body}</div></div>`;
+ return `<div class="ov" data-a="ov"><div class="modal ${md.type==='mrep'||md.type==='trep'||md.type==='post'||md.type==='renew'?'wide':''}" role="dialog" aria-modal="true">${body}</div></div>`;
 }

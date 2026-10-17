@@ -139,7 +139,7 @@ const app = document.getElementById('app')!;
     ok(mx.soft[0] > 1.03 && mx.soft[1] < mx.soft[0] && mx.soft[1] <= 1 + SOFT_CAP + 1e-9, `con todo al máximo la familiaridad no pasa de +4,5% (${mx.soft.join(' → ')})`);
     S.chem = keep.chem; S.famil[T(S.user).formation] = keep.fam; S.prepB = keep.prep; hp.forEach(([p, h, rf]) => { p.hap = h; p.rf = rf; }); }
   { const m = S.match; ok(fmtMin(93) === '90+3' && fmtMin(40) === '40', 'el descuento se ve como 90+3'); const gt = goalType(m, m.us, m.lu[m.us].filter(Boolean).pop()); ok(!!GOALT[gt], 'tipo de gol: ' + GOALT[gt].n); }
-  simToEnd(); matchView(); finishRound();
+  simToEnd(); { const h = matchView(); ok(/class="ftb"/.test(h) && /class="ftr"/.test(h), 'pitido final: goleadores y cifras clave'); } finishRound();
   ok(S.pre.left === 4, 'amistoso de pretemporada');
   S.pre.left = 0; S.sponsor = S.spOffers[0];
 
@@ -659,6 +659,15 @@ const app = document.getElementById('app')!;
     t.subsNone = false; t.lineup = autoLineupF(S.user, t.formation);
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
+  }
+  { // ronda 5 puntos: contrato FMM, finanzas, órdenes individuales sin balón y estado en la plantilla
+    const { squad: sq_, T: T_ } = await import('../src/state'), M = await import('../src/r11match'), B = await import('../src/views/business'), me = sq_(S.user);
+    S.modal = { type: 'renew', id: me[3].id }; render(); ok(!!app.querySelector('.ctgrid [data-a=tstep]') && !!app.querySelector('#tMood') && !!app.querySelector('.ctwrap .sidec'), 'contrato estilo FMM: pasos +/−, barra de ánimo y tarjeta del jugador'); S.modal = null;
+    if ((S.fin || []).length) ok(/fbig/.test(B.finBig()) && /flegend/.test(B.finBig()), 'finanzas: gráfica de ingresos y gastos por jornada');
+    const t = T_(S.user), d0 = t.dpi, lu = t.lineup.filter(Boolean), opp = S.teams.find(x => x.id !== S.user), ol = sq_(opp.id).slice(0, 11).map(p => p.id);
+    t.dpi = { [lu[5]]: { pr: '+', en: 'd', mk: ol[9] } }; const m = { us: 'h', h: S.user, a: opp.id, lu: { h: lu, a: ol } }; M.dpiSetup(m);
+    ok(M.dpiMods(m, 'h')[1] < 1 && M.dpiMods(m, 'h')[2] > 1 && M.dpiCards(m, 'h') > 1 && M.dpiMark(m, 'a', ol[9]) < 1 && M.dpiMark(m, 'a', ol[8]) === 1, 'órdenes individuales sin balón: presión, entradas y marcaje cuentan'); t.dpi = d0;
+    S.view = 'plantilla'; S.plTab = 'jug'; S.plF = 'all'; render(); ok(app.querySelectorAll('.plf button').length >= 3 && app.querySelectorAll('td.stc select[data-ts]').length >= 10, 'plantilla: filtros rápidos y estado de cada jugador'); S.plF = 'jo'; render(); S.plF = 'all'; S.view = 'inicio';
   }
   { // instrucciones sin balón: marcaje, centros del rival y dirigir la presión
     const D = await import('../src/data'); ok(D.TAC0.mar === 'zon' && D.TAC0.cru === 'nor' && D.TAC0.dir === 'nor' && D.TACS.mar && D.TACS.cru && D.TACS.dir, 'instrucciones sin balón nuevas con valores por defecto');
