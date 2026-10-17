@@ -331,7 +331,7 @@ const HERR = {
   rasqueta: { n: 'Rasqueta', d: 'Pasadas cortas: quita la costra.' },
   espuma: { n: 'Espuma', d: 'Barre la grasa y espera 2 segundos: luego sale el triple de rápido.' },
   hidro: { n: 'Hidro', d: 'Mantén y apunta. Sin espuma, la costra salpica.' },
-  pulidor: { n: 'Pulidor', d: 'Sobre metal limpio: acabado espejo y más propina.' },
+  pulidor: { n: 'Migdalear', d: 'Migdalea el metal limpio: acabado espejo y más propina.' },
 };
 const ICONOS = {
   rasqueta: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M6 24 18 12l4 4L10 28H6z" fill="#ff8a1f" stroke="#ff8a1f"/><path d="M20 14l6-6"/><path d="M24 4l4 4"/></svg>',
@@ -346,7 +346,7 @@ const TIENDA = [
   { id: 'r3', n: 'Rasqueta de carburo', d: 'La hoja definitiva. La costra le tiene miedo.', p: 700, ok: s => s.eq.rasqueta === 2, f: s => { s.eq.rasqueta = 3; } },
   { id: 'xl', n: 'Botella de espuma XL', d: 'La espuma te dura un 50 % más por noche.', p: 180, ok: s => !s.eq.xl, f: s => { s.eq.xl = true; } },
   { id: 'conc', n: 'Desengrasante concentrado', d: 'La espuma ablanda 4× en vez de 3×.', p: 400, ok: s => !s.eq.conc, f: s => { s.eq.conc = true; } },
-  { id: 'orb', n: 'Pulidor orbital', d: 'El acabado espejo en la mitad de pasadas.', p: 300, ok: s => !s.eq.orbital, f: s => { s.eq.orbital = true; } },
+  { id: 'orb', n: 'Migdaleadora orbital', d: 'Migdalea hasta espejo en la mitad de pasadas.', p: 300, ok: s => !s.eq.orbital, f: s => { s.eq.orbital = true; } },
   { id: 'bolsa', n: 'Bolsas de contención nuevas', d: 'Las viejas tienen más parches que bolsa.', p: 120, ok: s => !s.eq.bolsa, f: s => { s.eq.bolsa = true; } },
   { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro ancho y fuerte. Esta es tuya y nadie la vende para comprarse un karaoke.', p: 900, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
   { id: 'cam2', n: 'Camioneta con baca', d: 'Caben 2 ayudantes además del compañero.', p: 500, ok: s => s.eq.camioneta === 1 && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.camioneta = 2; } },
@@ -1040,7 +1040,7 @@ function aplicarTramo(a, b) {
   if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); if (libre > 90) { M.ultRuido = ahora; rafaga(.12, 3500, .05, 'highpass'); } }
   if (herr === 'pulidor') {
     if (q > 0) { if (azar(.3)) emitir(b.punto, 1, 'chispa', b.normal, .4); if (libre > 80) { M.ultRuido = ahora; rafaga(.1, 1800, .04); } }
-    else if (azar(.05)) ayuda('El pulidor va sobre metal limpio. Primero quita la grasa.');
+    else if (azar(.05)) ayuda('Solo se migdalea el metal limpio. Primero quita la grasa.');
   }
   M.trazo.quitado += q;
   return q;
@@ -1329,7 +1329,7 @@ function pintarHud(todo) {
     b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}`;
     if (ok && !M.listoAvisado.has(i)) {
       M.listoAvisado.add(i); sDing();
-      if (i === M.zona) { ayuda(`${z.n} pasa la inspección. Pulir hasta espejo suma propina.`); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
+      if (i === M.zona) { ayuda(`${z.n} pasa la inspección. Migdalear hasta espejo suma propina.`); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
     }
   });
   const g = $('#barraHerr .gasto'); if (g) g.textContent = `${Math.round(M.botella * 100)} %`;
@@ -1668,7 +1668,7 @@ function pantallaParte() {
   const desastre = M.danos.some(d => d.dinero >= 60);
   pantalla(`<div class="rotulo">${aprobado ? (espejo ? 'Metal desnudo' : 'Aprobado') : 'No pasa'}<span>Parte de ${esc(o.nombre)}</span></div>
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % limpio</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
-      <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Pulido espejo: ${Math.round(pulido * 100)} %.</span></div>
+      <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %.</span></div>
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
     <div class="cuentas">
