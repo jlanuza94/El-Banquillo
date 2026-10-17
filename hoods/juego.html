@@ -58,12 +58,17 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .zonas b { font-family: var(--f-cond); font-size: 14px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zonas span { font-family: var(--f-mono); font-size: 12px; color: var(--tenue); font-variant-numeric: tabular-nums; }
 .zonas .listo span { color: var(--ok); }
+.zonas button:disabled { opacity: .4; }
 .mandos { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
 .herr-btn { pointer-events: auto; width: 78px; height: 78px; border-radius: 50%; background: var(--panel-solido); border: 3px solid var(--hivis); display: grid; place-items: center; align-content: center; touch-action: none; flex: none; }
 .herr-btn svg { width: 34px; height: 34px; }
 .herr-btn small { font-family: var(--f-cond); font-weight: 700; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
 .info { display: grid; gap: 4px; justify-items: start; min-width: 0; }
 .ayuda { font-size: 13px; color: var(--acero); text-shadow: 0 1px 2px #000; min-height: 1.4em; }
+.pasos { display: flex; flex-wrap: wrap; gap: 4px; }
+.pasos span { font-family: var(--f-cond); font-weight: 700; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; background: var(--panel-2); color: var(--tenue); }
+.pasos .hecho { color: var(--ok); }
+.pasos .act { background: var(--hivis); color: var(--hivis-tinta); }
 .barra-herr { display: flex; gap: 6px; pointer-events: auto; }
 .barra-herr button { width: 56px; height: 54px; border-radius: 8px; background: var(--panel); border: 2px solid var(--linea); display: grid; place-items: center; align-content: center; padding: 2px; }
 .barra-herr button[aria-pressed="true"] { border-color: var(--hivis); background: var(--panel-2); }
@@ -192,10 +197,11 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
     <div class="hud-arriba">
       <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico" id="pausa" aria-label="Pausa y ajustes">❚❚</button></div>
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
+      <div class="pasos" id="pasos"></div>
       <div class="chat" id="chat"></div>
     </div>
     <div class="combo" id="combo"></div>
-    <div class="hud-abajo">
+    <div class="hud-abajo" id="hudAbajo">
       <div class="mandos">
         <div class="info"><div class="barra-herr" id="barraHerr"></div><span class="ayuda" id="ayuda">Elige la herramienta abajo y haz pasadas cortas sobre la grasa.</span>
           <button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button></div>
@@ -864,11 +870,17 @@ const pctZona = z => clamp(1 - z.sfs.reduce((a, s) => a + s.d.reduce((x, y) => x
 const micras = z => Math.round(M.orden.micras * (1 - pctZona(z)) / 5) * 5;
 const ultZona = () => Z.length - 1;
 
+// Lavar: rasqueta, espuma e hidro. Migdalear: solo la migdaleadora (y solo en la campana).
 function herramientas() {
-  const h = ['rasqueta', 'espuma', 'pulidor'];
-  if (S.eq.hidro || (S.fase === 'aprendiz' && S.noche >= 2)) h.splice(2, 0, 'hidro');   // la de Don Rigo, hasta que Beto la vende
+  if (M && M.etapa === 'migdalear') return ['pulidor'];
+  const h = ['rasqueta', 'espuma'];
+  if (S.eq.hidro || (S.fase === 'aprendiz' && S.noche >= 2)) h.push('hidro');   // la de Don Rigo, hasta que Beto la vende
   return h;
 }
+// Los pasos del trabajo, como en la vida real.
+const PASOS = ['Preparar', 'Lavar', 'Pelar', 'Migdalear', 'Inspector'];
+const pasosHTML = actual => PASOS.map((p, i) => `<span class="${i < actual ? 'hecho' : i === actual ? 'act' : ''}">${i < actual ? '✓' : i + 1 + '.'} ${p}</span>`).join('');
+const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalear: 3 })[M.etapa];
 
 function empezarTurno(orden) {
   construirNoche(orden);
@@ -888,12 +900,13 @@ function empezarTurno(orden) {
 // ---- preparación jugable: seguridad, cubrir la cocina y envolver la campana
 
 const prepEl = $('#prep');
-function panelPrep(titulo, texto, estado, boton) {
+function panelPrep(titulo, texto, estado, boton, alPulsar) {
   if (M.orden.campanas > 1 || innerWidth / innerHeight < .9) texto += ' Usa las flechas de los lados para recorrer la cocina.';
-  prepEl.innerHTML = `<div class="carta"><div class="fila"><h3>${esc(titulo)}</h3><span class="reloj">${hora(M.prepMin)}</span></div><p>${esc(texto)}</p><p class="nota">${esc(estado)}</p>
+  const reloj = M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480);
+  prepEl.innerHTML = `<div class="carta">${M.fase === 'prep' ? `<div class="pasos">${pasosHTML(0)}</div>` : ''}<div class="fila"><h3>${esc(titulo)}</h3><span class="reloj">${reloj}</span></div><p>${esc(texto)}</p><p class="nota">${esc(estado)}</p>
     <div class="acciones"><button class="btn prim" id="prepSig">${esc(boton)}</button></div></div>`;
   prepEl.hidden = false;
-  $('#prepSig').onclick = () => { audio(); escenaPrep(M.escena + 1); };
+  $('#prepSig').onclick = () => { audio(); (alPulsar || (() => escenaPrep(M.escena + 1)))(); };
 }
 function gastar(min) { M.prepMin += min; const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(M.prepMin); }
 function escenaPrep(i) {
@@ -927,12 +940,12 @@ function escenaPrep(i) {
       const btn = $('#prepSig'); if (btn) btn.textContent = ci.every(c => c.hecho) && bo.every(b => b.hecho) ? 'Empezar a limpiar' : 'Empezar sin terminar';
     };
     ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(.6); tono(900 + Math.random() * 200, .05, .06, 'square'); actualizar(); }, true));
-    M.encintar = true;
+    M.arrastrar = true;
     panelPrep('Envolver la campana', 'Pasa el dedo por los puntos del borde para pegar el plástico con cinta: forma un embudo. Luego cuelga la bolsa donde cae el agua.', estado(), 'Empezar sin terminar');
     actualizar();
     decir(M.comp, uno(['Más cinta. Siempre más cinta.', 'El plástico es como un paraguas al revés. No preguntes.', 'Si queda un hueco, el agua lo encuentra. El agua siempre lo encuentra.']));
   } else {
-    M.encintar = false; limpiarMarcas(); prepEl.hidden = true;
+    M.arrastrar = false; limpiarMarcas(); prepEl.hidden = true;
     arrancarTurno();
   }
 }
@@ -942,8 +955,8 @@ addEventListener('pointerdown', () => { dedoAbajo = true; }, true);
 addEventListener('pointerup', () => { dedoAbajo = false; });
 addEventListener('pointercancel', () => { dedoAbajo = false; });
 addEventListener('pointermove', e => {
-  if (!dedoAbajo || !M || !M.encintar) return;
-  for (const m of MARCAS) if (!m.hecho && m.sx !== undefined && Math.hypot(m.sx - e.clientX, m.sy - e.clientY) < 34) tocarMarca(m);
+  if (!dedoAbajo || !M || !M.arrastrar) return;
+  for (const m of MARCAS) if (!m.hecho && m.sx !== undefined && m.el.classList.contains('punto') && Math.hypot(m.sx - e.clientX, m.sy - e.clientY) < 34) tocarMarca(m);
 });
 
 function arrancarTurno() {
@@ -955,8 +968,8 @@ function arrancarTurno() {
   if (p.bolsa && !S.eq.bolsa && azar(.25)) M.eventos.push({ tipo: 'bolsa', zona: ultZona(), en: rnd(14, 24) });
   M.t = M.prepMin / 480 * M.dur;
   matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
-  M.fase = 'turno'; M.enZona = 0;
-  $('#hud').hidden = false;
+  M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0;
+  $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
   irVista(Z[0].vista);
   pintarHud(true);
@@ -1048,7 +1061,7 @@ function aplicarTramo(a, b) {
 
 canvas.addEventListener('pointerdown', e => {
   audio();
-  if (!M || M.fase !== 'turno' || M.pausa || (M.ev && M.ev.bloquea)) return;
+  if (!M || M.fase !== 'turno' || M.etapa === 'pelar' || M.pausa || (M.ev && M.ev.bloquea)) return;
   canvas.setPointerCapture(e.pointerId);
   const h = apuntar(e.clientX, e.clientY);
   M.trazo = { ultimo: h, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, largo: 0, quitado: 0 };
@@ -1143,7 +1156,7 @@ function decir(quien, texto, resp) {
   b.innerHTML = `<div class="cara" style="background:${col}">${esc(nom[0])}</div><div><b>${esc(nom)}</b>${esc(texto)}${resp ? `<div class="resp">${resp.map((r, i) => `<button class="btn peq" data-i="${i}">${esc(r.t)}</button>`).join('')}</div>` : ''}</div>`;
   if (resp) b.querySelectorAll('[data-i]').forEach(x => x.onclick = () => { b.remove(); resp[+x.dataset.i].f(); });
   chat.prepend(b);
-  while (chat.children.length > 3) chat.lastChild.remove();
+  while (chat.children.length > (M && M.etapa === 'pelar' ? 1 : 3)) chat.lastChild.remove();
   setTimeout(() => b.remove(), resp ? 7000 : 4500);
   tono(quien === 'gerente' ? 300 : 520, .05, .04, 'square');
   return b;
@@ -1294,7 +1307,7 @@ function tickTurno(dt) {
       }
     }
     // Desastres programados
-    if (!M.ev) for (const e of M.eventos) if (!M.hechos.has(e) && e.zona === M.zona && M.enZona >= e.en) { lanzarEvento(e); break; }
+    if (!M.ev && M.etapa === 'lavar') for (const e of M.eventos) if (!M.hechos.has(e) && e.zona === M.zona && M.enZona >= e.en) { lanzarEvento(e); break; }
     if (M.ev && M.ev.limite) {
       M.ev.t += dt; const c = $('#cuenta'); if (c) c.style.width = `${Math.max(0, 1 - M.ev.t / M.ev.limite) * 100}%`;
       if (M.ev.t >= M.ev.limite) { const f = M.ev.alAgotar; $('#blancos').innerHTML = ''; M.ev = null; f(); }
@@ -1329,14 +1342,20 @@ function pintarHud(todo) {
     b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}`;
     if (ok && !M.listoAvisado.has(i)) {
       M.listoAvisado.add(i); sDing();
-      if (i === M.zona) { ayuda(`${z.n} pasa la inspección. Migdalear hasta espejo suma propina.`); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
+      if (i === M.zona && M.etapa === 'lavar') { ayuda(`${z.n} pasa la inspección. Al final toca pelar y migdalear la campana.`); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
     }
   });
   const g = $('#barraHerr .gasto'); if (g) g.textContent = `${Math.round(M.botella * 100)} %`;
-  $('#siguiente').textContent = M.zona < ultZona() ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar turno';
+  $('#siguiente').textContent = M.etapa === 'migdalear' ? 'Llamar al inspector' : M.zona < ultZona() ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar de lavar';
+  const pa = pasoActual(); if (M.pasoPintado !== pa) { M.pasoPintado = pa; $('#pasos').innerHTML = pasosHTML(pa); }
+  Z.forEach((z, i) => { $('#zonas').children[i].disabled = M.etapa === 'migdalear' && z.id !== 'campana'; });
 }
-$('#zonas').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b && M && M.fase === 'turno' && !M.ev) irZona(+b.dataset.z); });
-$('#siguiente').addEventListener('click', () => { if (!M || M.fase !== 'turno' || M.ev) return; if (M.zona < ultZona()) irZona(M.zona + 1); else confirmarFin(); });
+$('#zonas').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b && !b.disabled && M && M.fase === 'turno' && M.etapa !== 'pelar' && !M.ev) irZona(+b.dataset.z); });
+$('#siguiente').addEventListener('click', () => {
+  if (!M || M.fase !== 'turno' || M.ev) return;
+  if (M.etapa === 'migdalear') return terminarTurno();
+  if (M.zona < ultZona()) irZona(M.zona + 1); else confirmarFin();
+});
 function irZona(i) {
   if (i === M.zona) return;
   M.zona = i; M.enZona = 0; M.combo = 0; M.trazo = null; irVista(Z[i].vista); pintarHud(false);
@@ -1344,17 +1363,55 @@ function irZona(i) {
 }
 function confirmarFin() {
   const faltan = Z.filter(z => micras(z) > LIMITE).length;
-  if (!faltan) return terminarTurno();
+  if (!faltan) return empezarPelado();
   M.pausa = true;
-  carta('¿Terminar ya?', `${faltan === 1 ? 'Queda una zona' : 'Quedan ' + faltan + ' zonas'} sin pasar la inspección. Son las ${$('#reloj').textContent}.`, [
-    { t: 'Seguir limpiando', prim: true, f: () => { M.pausa = false; cerrarCarta(); } },
-    { t: 'Llamar al inspector', f: () => { cerrarCarta(); terminarTurno(); } },
+  carta('¿Terminaste de lavar?', `${faltan === 1 ? 'Queda una zona' : 'Quedan ' + faltan + ' zonas'} sin pasar la inspección. Son las ${$('#reloj').textContent}.`, [
+    { t: 'Seguir lavando', prim: true, f: () => { M.pausa = false; cerrarCarta(); } },
+    { t: 'Pasar a pelar', f: () => { M.pausa = false; cerrarCarta(); empezarPelado(); } },
   ], { bloquea: true });
+}
+
+// ---- pelar: quitar el plástico de la campana, las cubiertas y bajar la bolsa
+
+function empezarPelado() {
+  M.etapa = 'pelar'; M.trazo = null; M.presionado = false; chorro(false); cerrarRueda();
+  $('#hudAbajo').hidden = true; matPlastico.opacity = .5;
+  irVista(VISTAS.frente); pintarHud(false);
+  const faldas = piezas.faldas.filter(f => f.mesh.visible), cubs = piezas.aparatos.filter(a => a.cubierto), bolsas = piezas.bolsas.filter(b => b.hecho);
+  const listo = () => faldas.every(f => f.pelada) && cubs.every(a => a.quitada) && bolsas.every(b => b.bajada);
+  const estado = () => `Plástico: ${faldas.filter(f => f.pelada).length} de ${faldas.length} · Cubiertas: ${cubs.filter(a => a.quitada).length} de ${cubs.length} · Bolsas: ${bolsas.filter(b => b.bajada).length} de ${bolsas.length}`;
+  const act = () => {
+    const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado();
+    const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(clamp(M.t / M.dur, 0, 1) * 480);
+    const b = $('#prepSig'); if (b) b.textContent = listo() ? 'Siguiente: migdalear la campana' : 'Seguir sin terminar';
+  };
+  faldas.forEach(f => marca(f.mesh.position.clone(), '', () => { f.pelada = true; f.mesh.userData.vuela = 1; rafaga(.2, 1300 + Math.random() * 500, .1, 'bandpass', .6); sumarTiempo(.4); act(); }, true));
+  cubs.forEach(a => marca(a.pos, 'Quitar', () => { a.quitada = true; a.cubierta.userData.sube = .6; rafaga(.25, 900, .08, 'lowpass'); sumarTiempo(1); act(); }));
+  bolsas.forEach(b => marca(b.pos, 'Bajar la bolsa', () => {
+    b.bajada = true; b.mesh.visible = false; sumarTiempo(1.5);
+    if (azar(S.eq.bolsa ? .05 : .2)) { emitir(b.pos, 30, 'agua', null, 1.5); tono(200, .4, .1, 'sawtooth', 80); dano('Bolsa derramada al bajarla', 20, 1); decir(M.comp, '¡Chof! Bueno, el suelo también necesitaba agua.'); }
+    else tono(500, .1, .08, 'triangle');
+    act();
+  }));
+  M.arrastrar = true;
+  panelPrep('Pelar', 'Arrastra el dedo por los puntos para arrancar el plástico, quita las cubiertas y baja la bolsa con cuidado.', estado(), 'Seguir sin terminar', empezarMigdaleo);
+  act();
+  decir(M.comp, uno(['Lo más satisfactorio de la noche: pelar el plástico.', 'Pela despacito, como un plátano de acero.', 'Si el plástico sale entero, pide un deseo.']));
+}
+
+function empezarMigdaleo() {
+  M.arrastrar = false; limpiarMarcas(); prepEl.hidden = true; matPlastico.opacity = .16;
+  M.etapa = 'migdalear'; M.herr = 'pulidor';
+  $('#hudAbajo').hidden = false;
+  M.zona = Z.findIndex(z => z.id === 'campana'); M.enZona = 0; irVista(Z[M.zona].vista);
+  pintarHud(true);
+  ayuda('Migdalea la campana: pasadas sobre el metal limpio hasta que brille como espejo. Cuando acabes, llama al inspector.', 7);
+  decir(M.comp, uno(['Ahora a migdalear. Que se vea hasta el alma.', 'Migdalea bonito, que el dueño se quiere peinar ahí.', 'El toque final. Migdalea como si fuera tu camioneta.']));
 }
 $('#pausa').addEventListener('click', () => { if (M && M.fase === 'turno') { M.pausa = true; pantallaAjustes(true); } });
 
 function terminarTurno() {
-  M.fase = 'parte'; M.pausa = false; chorro(false); cerrarCarta(); cerrarRueda();
+  M.fase = 'parte'; M.pausa = false; M.arrastrar = false; chorro(false); cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true;
   $('#hud').hidden = true; chat.innerHTML = '';
   irVista(Z[1].vista);
   setTimeout(pantallaParte, 500);
@@ -1630,8 +1687,12 @@ function pantallaParte() {
   const zonas = Z.map(z => ({ n: z.n, m: micras(z), pct: pctZona(z) }));
   const aprobado = zonas.every(z => z.m <= LIMITE), espejo = zonas.every(z => z.m <= 50);
   let celdas = 0, pulidas = 0;
-  for (const z of Z) for (const s of z.sfs) for (let i = 0; i < s.pol.length; i++) { celdas++; if (s.pol[i] > .6) pulidas++; }
+  for (const z of Z) if (z.id === 'campana') for (const s of z.sfs) for (let i = 0; i < s.pol.length; i++) { celdas++; if (s.pol[i] > .6) pulidas++; }
   const pulido = pulidas / celdas;
+  const sinPelar = piezas.faldas.filter(f => f.mesh.visible && !f.pelada).length;
+  if (sinPelar) dano(`Plástico olvidado en la campana (${sinPelar} ${sinPelar === 1 ? 'tira' : 'tiras'}): el chef lo encontró al abrir`, sinPelar * 8, 2);
+  if (piezas.aparatos.some(a => a.cubierto && !a.quitada)) dano('Cubiertas sin quitar: el chef las quitó él, y se nota que no le gustó', 0, 1);
+  if (piezas.bolsas.some(b => b.hecho && !b.bajada)) dano('Bolsa llena olvidada colgando de la campana', 30, 2);
   const sinCubrir = piezas.aparatos.filter(a => !a.cubierto).length;
   if (sinCubrir && azar(Math.min(1, sinCubrir / piezas.aparatos.length * 1.4))) dano(`Espuma y grasa en ${sinCubrir} ${sinCubrir === 1 ? 'aparato sin cubrir' : 'aparatos sin cubrir'}`, sinCubrir * 25, sinCubrir > 2 ? 4 : 2);
   if (!M.prep.bolsa) dano('Agua con grasa en el suelo (plástico o bolsa incompletos)', Math.round(90 * (1 - M.prep.envuelto * .6)), 2);
@@ -1809,6 +1870,9 @@ function bucle(ahora) {
   U.tiempo.value = ahora / 1000;
   if (M && M.fase === 'turno') tickTurno(dt);
   else if (!M) { const a = ahora / 9000; VISTA_GENERAL.dir.set(Math.sin(a) * 2.6 + .4, .5, 3.6 + Math.cos(a) * .3).normalize(); }
+  // Plástico que se arranca y cubiertas que se quitan
+  if (piezas.faldas) for (const f of piezas.faldas) { const t = f.mesh.userData.vuela; if (t > 0) { f.mesh.userData.vuela = t - dt * 1.5; f.mesh.position.y -= dt * .9; f.mesh.rotation.x += dt * 4; if (f.mesh.userData.vuela <= 0) f.mesh.visible = false; } }
+  if (piezas.aparatos) for (const ap of piezas.aparatos) { const c = ap.cubierta, t = c.userData.sube; if (t > 0) { c.userData.sube = t - dt; c.position.y += dt * 2.2; if (c.userData.sube <= 0) c.visible = false; } }
   // Cubiertas que caen sobre los aparatos
   if (piezas.aparatos) for (const ap of piezas.aparatos) { const c = ap.cubierta, t = c.userData.caida; if (t > 0) { c.userData.caida = Math.max(0, t - dt); c.position.y = .9 + (ap.alto + .1) / 2 + c.userData.caida * 1.4; } }
   const v = camT.a;
