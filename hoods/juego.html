@@ -239,6 +239,19 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .orden.dia .opciones .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; }
 .orden.dia .opciones .btn small { display: block; font-weight: 400; font-size: 13px; opacity: .8; }
 a.btn { display: inline-block; text-decoration: none; }
+/* Inicio: la camioneta llega de noche */
+.calle { position: relative; height: 130px; margin: 0 calc(-1 * var(--lado-i)) 4px calc(-1 * var(--lado-d)); overflow: hidden; }
+.ciudad { position: absolute; inset: 0; width: 100%; height: 100%; }
+.estrella { animation: titila 2.4s ease-in-out infinite alternate; }
+@keyframes titila { from { opacity: .25; } to { opacity: 1; } }
+.furgo-anda { position: absolute; left: 50%; bottom: 4px; width: 180px; margin-left: -90px; animation: llega 2.8s cubic-bezier(.2, .75, .3, 1) both; }
+.furgo-anda::after { content: ""; position: absolute; left: 96%; bottom: 14px; width: 120px; height: 34px; background: linear-gradient(90deg, rgba(255,236,170,.45), rgba(255,236,170,0)); clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 70%); pointer-events: none; }
+.furgo-anda svg { animation: bache .35s ease-in-out 8 alternate; }
+.furgo-anda .rueda { animation: gira .35s linear 8; }
+@keyframes llega { from { transform: translateX(-100vw); } to { transform: none; } }
+@keyframes bache { to { transform: translateY(-2px); } }
+@keyframes gira { to { transform: rotate(360deg); } }
+.en-radio { font-family: var(--f-mono); font-size: 12px; color: #c6a0ff; }
 #oscuro { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at var(--x, 50%) var(--y, 45%), rgba(0,0,0,0) 0, rgba(0,0,0,.25) 90px, rgba(0,0,0,.94) 190px); }
 .novedad { background: rgba(105,201,122,.14); border: 1px solid var(--ok); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
@@ -693,6 +706,7 @@ function radioCancion() {
   RADIO.cancion = can; RADIO.est = est; RADIO.raiz = raiz; RADIO.a = frase(est, raiz); RADIO.b = frase(est, raiz);
   RADIO.paso = 0; RADIO.pasos = est.compas * 32;
   if (A.ctx) { const t = A.ctx.currentTime; golpe(1400, t, .5, .25, 'bandpass'); RADIO.prox = t + .55; }   // estática entre canciones
+  const er = document.getElementById('enRadio'); if (er) er.textContent = `📻 ♪ ${can.t} — ${can.de}`;
   if (M && (M.fase === 'turno' || M.fase === 'prep')) {
     const loc = azar(.55) ? ' ' + uno(LOCUTOR).replace('{h}', M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480)) : '';
     decir(QUIEN_RADIO, `♪ «${can.t}», de ${can.de}.${loc}`);
@@ -756,7 +770,7 @@ const cam = new T.PerspectiveCamera(55, 1, .05, 60);
 escena.add(cam);
 const lampara = new T.PointLight(0xfff1dd, 1.1, 5, 1.6);   // la linterna del casco
 lampara.position.set(0, .15, 0); cam.add(lampara);
-escena.add(new T.HemisphereLight(0xcfe3ff, 0x3a2d1e, .55));
+const cielo = new T.HemisphereLight(0xcfe3ff, 0x3a2d1e, .55); escena.add(cielo);
 const fluor = new T.DirectionalLight(0xe6f2ff, .65); fluor.position.set(1, 4, 2); escena.add(fluor);
 
 // Entorno para los reflejos del acero: un cuarto gris con tubos fluorescentes.
@@ -805,7 +819,9 @@ function materialGrasa(base, dtex, lado) {
   const m = new T.MeshStandardMaterial({ map: base, color: 0xffffff, metalness: 1, roughness: .3, side: lado || T.FrontSide });
   m.onBeforeCompile = sh => {
     sh.uniforms.mapaGrasa = { value: dtex }; sh.uniforms.uHl = U.hl; sh.uniforms.uT = U.tiempo; sh.uniforms.uEsp = U.espuma; sh.uniforms.uMig = U.mig;
-    sh.fragmentShader = 'uniform sampler2D mapaGrasa;\nuniform float uHl;\nuniform float uT;\nuniform vec3 uEsp;\nuniform float uMig;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n' + sh.fragmentShader
+    sh.fragmentShader = 'uniform sampler2D mapaGrasa;\nuniform float uHl;\nuniform float uT;\nuniform vec3 uEsp;\nuniform float uMig;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n'
+      + 'float vr(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hh(i),hh(i+vec2(1.0,0.0)),f.x),mix(hh(i+vec2(0.0,1.0)),hh(i+vec2(1.0,1.0)),f.x),f.y);}\n'
+      + sh.fragmentShader
       .replace('#include <map_fragment>', `#include <map_fragment>
         vec4 dm = texture2D(mapaGrasa, vUv);
         float gr = hh(floor(vUv * 180.0));
@@ -817,7 +833,8 @@ function materialGrasa(base, dtex, lado) {
         vec3 costra = vec3(0.022, 0.016, 0.012) * (0.7 + 0.7 * gr);
         vec3 grasa = mix(mix(fina, media, smoothstep(0.12, 0.4, dd)), costra, tC);
         diffuseColor.rgb = mix(diffuseColor.rgb, grasa, tF);
-        vec2 celda = fract(vUv * 90.0) - 0.5; float rb = hh(floor(vUv * 90.0));
+        vec2 uvE = vUv * 90.0 + vec2(0.0, uT * 0.35);   // la espuma resbala despacio hacia abajo
+        vec2 celda = fract(uvE) - 0.5; float rb = hh(floor(uvE));
         float burb = smoothstep(0.22 + 0.2 * rb, 0.16 + 0.2 * rb, length(celda));
         float fo = dm.g * (0.6 + 0.4 * burb);
         diffuseColor.rgb = mix(diffuseColor.rgb, uEsp, fo * 0.6);
@@ -830,20 +847,36 @@ function materialGrasa(base, dtex, lado) {
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.5, 0.53, 0.56) + 0.14 * mancha, limpioK * (1.0 - dm.b) * (0.35 + 0.3 * uMig));
         float glint = pow(max(0.0, sin((vUv.x * 1.3 + vUv.y) * 9.0 - uT * 2.2)), 30.0);
         float chispa = step(0.993, hh(floor(vUv * 140.0) + floor(uT * 4.0)));
+        // Mojado (canal A): más oscuro y brillante, con hilos de agua que bajan.
+        float moj = dm.a;
+        float hilo = smoothstep(0.62, 0.95, vr(vec2(vUv.x * 70.0, vUv.y * 3.0 + uT * 1.6)));
+        diffuseColor.rgb *= 1.0 - 0.22 * moj;
+        // Grumos: la costra gruesa alterna zonas brillantes y opacas, y se oscurece en las grietas.
+        float grumo = vr(vUv * 20.0);
+        diffuseColor.rgb *= 1.0 - tC * smoothstep(0.55, 0.85, vr(vUv * 45.0)) * 0.5;
         float brillo = limpioK * dm.b * ((glint * 0.5 + chispa * 0.9) * (0.35 + 0.65 * uMig) + 0.16 * (0.5 + 0.5 * uMig));`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = mix(mix(0.42, 0.03, dm.b), mix(0.42, 0.3, tC), tF);
-        roughnessFactor = mix(roughnessFactor, 0.7, fo);`)
+        roughnessFactor = mix(roughnessFactor, 0.7, fo);
+        roughnessFactor = clamp(roughnessFactor + tC * (grumo - 0.5) * 0.5, 0.04, 1.0);
+        roughnessFactor = mix(roughnessFactor, 0.07, moj * 0.85);`)
       .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
         metalnessFactor = (1.0 - max(tF, fo)) * mix(0.72, 1.0, dm.b);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-        totalEmissiveRadiance += vec3(1.0, 0.42, 0.05) * hlv * 0.45 + vec3(1.0, 0.97, 0.9) * brillo;`);
+        totalEmissiveRadiance += vec3(1.0, 0.42, 0.05) * hlv * 0.45 + vec3(1.0, 0.97, 0.9) * brillo + vec3(0.55, 0.72, 0.85) * moj * hilo * 0.18;`);
   };
   return m;
 }
 const matAcero = new T.MeshStandardMaterial({ map: TX.acero, color: 0xffffff, metalness: .95, roughness: .3 });
 const matPiel = new T.MeshStandardMaterial({ map: TX.acero, color: 0xffffff, metalness: .95, roughness: .25, side: T.BackSide });
 const matOscuro = new T.MeshStandardMaterial({ color: 0x2b3238, metalness: .6, roughness: .5 });
+const matRemache = new T.MeshStandardMaterial({ color: 0xe8edf0, metalness: 1, roughness: .2 });
+const matGota = new T.MeshStandardMaterial({ color: 0x3a2008, roughness: .15, metalness: .1 });
+const ETIQUETA = new T.MeshBasicMaterial({ map: texCanvas(lienzo(240, 72, (g, w, h) => {
+  g.fillStyle = '#ffd23f'; g.fillRect(0, 0, w, h); g.fillStyle = '#1a1004'; g.fillRect(0, 0, 54, h);
+  g.fillStyle = '#ffd23f'; g.font = '700 30px "Barlow Condensed", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 27, h / 2);
+  g.fillStyle = '#1a1004'; g.font = '700 26px "Barlow Condensed", sans-serif'; g.fillText('NFPA 96', 147, 24); g.font = '600 18px "Barlow Condensed", sans-serif'; g.fillText('LIMPIEZA CERTIFICADA', 147, 52);
+})) });
 const matPlastico = new T.MeshStandardMaterial({ color: 0xdfefff, transparent: true, opacity: .28, roughness: .1, side: T.DoubleSide, depthWrite: false });
 const matCubierta = new T.MeshStandardMaterial({ color: 0xbfdcff, transparent: true, opacity: .6, roughness: .15, depthWrite: false });
 
@@ -851,7 +884,7 @@ const matCubierta = new T.MeshStandardMaterial({ color: 0xbfdcff, transparent: t
 function superficie(w, h, base, micrasRel, celda = .03, geo, lado) {
   const nx = Math.max(8, Math.round(w / celda)), ny = Math.max(8, Math.round(h / celda));
   const n = nx * ny;
-  const d = new Float32Array(n), soak = new Float32Array(n).fill(-1), pol = new Float32Array(n);
+  const d = new Float32Array(n), soak = new Float32Array(n).fill(-1), pol = new Float32Array(n), wet = new Float32Array(n);
   const data = new Uint8Array(n * 4);
   const tex = new T.DataTexture(data, nx, ny, T.RGBAFormat);
   tex.magFilter = T.LinearFilter; tex.minFilter = T.LinearFilter; tex.generateMipmaps = false;
@@ -864,7 +897,7 @@ function superficie(w, h, base, micrasRel, celda = .03, geo, lado) {
     d[y * nx + x] = clamp(micrasRel * (.72 + s * .12 + borde + rnd(-.08, .08)), .08, 1.3);
   }
   const mesh = new T.Mesh(geo || new T.PlaneGeometry(w, h), materialGrasa(base, tex, lado));
-  const sf = { mesh, nx, ny, d, soak, pol, data, tex, w, h, celda: w / nx, inicial: d.reduce((a, b) => a + b, 0), sucio: true, interior: lado === T.BackSide };
+  const sf = { mesh, nx, ny, d, soak, pol, wet, data, tex, w, h, celda: w / nx, inicial: d.reduce((a, b) => a + b, 0), sucio: true, interior: lado === T.BackSide };
   mesh.userData.sf = sf;
   pintarSf(sf);
   return sf;
@@ -876,7 +909,7 @@ function pintarSf(sf) {
     const a = soak[i];
     data[i * 4 + 1] = a < 0 ? 0 : Math.max(0, 255 * (1 - a / 30)) * Math.min(1, d[i] * 4);
     data[i * 4 + 2] = Math.min(255, pol[i] * 255);
-    data[i * 4 + 3] = 255;
+    data[i * 4 + 3] = Math.min(255, sf.wet[i] * 255);
   }
   sf.tex.needsUpdate = true; sf.sucio = false;
 }
@@ -895,26 +928,54 @@ let Z = [];         // zonas con sus superficies y su cámara
 const piezas = {};
 const VISTAS = {};
 
-function persona(color, gerente) {
+// Una persona sencilla con brazos: los de la cuadrilla raspan, el gerente mira el reloj, El Cuñado presume su uniforme.
+function persona(color, tipo) {
+  const gerente = tipo === true || tipo === 'gerente', cunado = tipo === 'cunado';
   const g = new T.Group();
   const piel = new T.MeshStandardMaterial({ color: 0xc8956b, roughness: .8 });
-  const ropa = new T.MeshStandardMaterial({ color: gerente ? 0xeeeeee : 0x29425a, roughness: .9 });
-  const pierna = new T.MeshStandardMaterial({ color: 0x1d2228, roughness: .9 });
+  const ropa = new T.MeshStandardMaterial({ color: gerente ? 0xeeeeee : cunado ? 0xb3261e : 0x29425a, roughness: .9 });
+  const pierna = new T.MeshStandardMaterial({ color: cunado ? 0x3a1210 : 0x1d2228, roughness: .9 });
   const p1 = new T.Mesh(new T.CylinderGeometry(.07, .07, .8, 8), pierna); p1.position.set(-.09, .4, 0); g.add(p1);
   const p2 = p1.clone(); p2.position.x = .09; g.add(p2);
   const tronco = new T.Mesh(new T.BoxGeometry(.42, .55, .24), ropa); tronco.position.y = 1.08; g.add(tronco);
   const cabeza = new T.Mesh(new T.SphereGeometry(.17, 16, 12), piel); cabeza.position.y = 1.55; g.add(cabeza);
+  // Brazos colgando del hombro (el grupo gira en el hombro)
+  const brazos = [-1, 1].map(lado => {
+    const h = new T.Group(); h.position.set(lado * .26, 1.3, 0); g.add(h);
+    const b = new T.Mesh(new T.CylinderGeometry(.05, .045, .5, 8), ropa); b.position.y = -.25; h.add(b);
+    const mano = new T.Mesh(new T.SphereGeometry(.055, 8, 6), piel); mano.position.y = -.52; h.add(mano);
+    return h;
+  });
   if (gerente) {
     const corbata = new T.Mesh(new T.BoxGeometry(.06, .34, .02), new T.MeshStandardMaterial({ color: 0xa8322b })); corbata.position.set(0, 1.12, .13); g.add(corbata);
     const pelo = new T.Mesh(new T.SphereGeometry(.175, 16, 8, 0, 6.3, 0, 1.2), new T.MeshStandardMaterial({ color: 0x2a1d15 })); pelo.position.y = 1.57; g.add(pelo);
-    const taza = new T.Mesh(new T.CylinderGeometry(.04, .035, .1, 10), new T.MeshStandardMaterial({ color: 0xffffff })); taza.position.set(.26, 1.0, .12); g.add(taza);
+    const taza = new T.Mesh(new T.CylinderGeometry(.04, .035, .1, 10), new T.MeshStandardMaterial({ color: 0xffffff })); taza.position.set(0, -.56, .05); brazos[1].add(taza);
+    const reloj = new T.Mesh(new T.BoxGeometry(.07, .03, .07), new T.MeshStandardMaterial({ color: 0xd8c27a, metalness: .8, roughness: .3 })); reloj.position.set(0, -.44, .04); brazos[0].add(reloj);
   } else {
     const mc = new T.MeshStandardMaterial({ color, roughness: .4 });
-    const casco = new T.Mesh(new T.SphereGeometry(.19, 16, 8, 0, 6.3, 0, 1.5), mc); casco.position.y = 1.6; g.add(casco);
-    const ala = new T.Mesh(new T.CylinderGeometry(.24, .24, .03, 16), mc); ala.position.y = 1.6; g.add(ala);
+    if (cunado) {   // gorra roja con visera y bigote de campeón
+      const gorra = new T.Mesh(new T.SphereGeometry(.18, 16, 8, 0, 6.3, 0, 1.4), mc); gorra.position.y = 1.6; g.add(gorra);
+      const visera = new T.Mesh(new T.BoxGeometry(.2, .02, .16), mc); visera.position.set(0, 1.62, .2); g.add(visera);
+      const bigote = new T.Mesh(new T.BoxGeometry(.16, .04, .03), new T.MeshStandardMaterial({ color: 0x2a1d15 })); bigote.position.set(0, 1.49, .16); g.add(bigote);
+      const logo = new T.Mesh(new T.PlaneGeometry(.3, .16), new T.MeshBasicMaterial({ map: texCanvas(lienzo(128, 64, (c, w, h) => {
+        c.fillStyle = '#fff'; c.fillRect(0, 0, w, h); c.fillStyle = '#b3261e'; c.font = '700 22px "Barlow Condensed", sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('EL CUÑADO', w / 2, h / 2 + 1, w - 8);
+      })) }));
+      logo.position.set(0, 1.18, .121); g.add(logo);
+    } else {
+      const casco = new T.Mesh(new T.SphereGeometry(.19, 16, 8, 0, 6.3, 0, 1.5), mc); casco.position.y = 1.6; g.add(casco);
+      const ala = new T.Mesh(new T.CylinderGeometry(.24, .24, .03, 16), mc); ala.position.y = 1.6; g.add(ala);
+      // Chaleco con franja reflectante
+      const franja = new T.Mesh(new T.BoxGeometry(.43, .05, .245), new T.MeshStandardMaterial({ color: 0xd9e4ea, emissive: 0x333a3e, roughness: .3 })); franja.position.y = 1.0; g.add(franja);
+    }
+    // La rasqueta en la mano derecha
+    const rasq = new T.Group(); rasq.position.set(0, -.56, .06); brazos[1].add(rasq);
+    rasq.add(new T.Mesh(new T.CylinderGeometry(.015, .015, .22, 6), new T.MeshStandardMaterial({ color: 0x222222 })));
+    const hoja = new T.Mesh(new T.BoxGeometry(.12, .02, .07), new T.MeshStandardMaterial({ color: 0xcfd6db, metalness: .8, roughness: .3 })); hoja.position.y = .12; rasq.add(hoja);
+    rasq.rotation.x = -1.2;
   }
   const ojo = new T.MeshBasicMaterial({ color: 0x111111 });
   for (const x of [-.06, .06]) { const o = new T.Mesh(new T.SphereGeometry(.022, 8, 6), ojo); o.position.set(x, 1.58, .155); g.add(o); }
+  g.userData.brazos = brazos;
   return g;
 }
 function mapache() {
@@ -938,8 +999,8 @@ function aparato(tipo, x, ancho) {
   if (tipo === 'plancha') { add(new T.BoxGeometry(ancho, .06, .6), new T.MeshStandardMaterial({ color: 0x1c1c1c, metalness: .5, roughness: .4 }), 0, .03, 0); gas = 'Cerrar el piloto'; }
   if (tipo === 'freidora') { add(new T.BoxGeometry(ancho, .28, .55), matOscuro, 0, .14, 0); add(new T.BoxGeometry(ancho * .8, .02, .4), new T.MeshStandardMaterial({ color: 0x8a5a14, roughness: .1, metalness: .2 }), 0, .29, 0); alto = .3; gas = 'Cerrar el piloto'; }
   if (tipo === 'wok') { const w = add(new T.SphereGeometry(.22, 16, 8, 0, 6.3, Math.PI / 2, Math.PI / 2), new T.MeshStandardMaterial({ color: 0x222222, metalness: .7, roughness: .4, side: T.DoubleSide }), 0, .22, 0); w.rotation.x = Math.PI; alto = .24; gas = 'Cerrar el piloto'; }
-  if (tipo === 'horno') { add(new T.SphereGeometry(Math.min(.55, ancho / 2), 20, 10, 0, 6.3, 0, Math.PI / 2), new T.MeshStandardMaterial({ color: 0x9b4a2c, roughness: .9 }), 0, 0, 0); add(new T.PlaneGeometry(.3, .2), new T.MeshBasicMaterial({ color: 0x120804 }), 0, .12, .5); alto = .55; }
-  if (tipo === 'carbon') { add(new T.BoxGeometry(ancho, .05, .6), new T.MeshStandardMaterial({ color: 0x111111, roughness: .6 }), 0, .03, 0); for (let i = 0; i < 8; i++) add(new T.SphereGeometry(.05, 6, 4), new T.MeshStandardMaterial({ color: 0x220a02, emissive: 0xff5a10, emissiveIntensity: rnd(.4, 1.2) }), rnd(-ancho / 2.4, ancho / 2.4), .07, rnd(-.22, .22)); gas = 'Apagar las brasas'; }
+  if (tipo === 'horno') { add(new T.SphereGeometry(Math.min(.55, ancho / 2), 20, 10, 0, 6.3, 0, Math.PI / 2), new T.MeshStandardMaterial({ color: 0x9b4a2c, roughness: .9 }), 0, 0, 0); const rh = Math.min(.55, ancho / 2), fuego = new T.MeshBasicMaterial({ color: 0xff7a20 }); add(new T.CircleGeometry(rh * .42, 16, 0, Math.PI), fuego, 0, .01, rh * .93); piezas.brillos.push({ m: fuego, fuego: true }); alto = .55; }
+  if (tipo === 'carbon') { add(new T.BoxGeometry(ancho, .05, .6), new T.MeshStandardMaterial({ color: 0x111111, roughness: .6 }), 0, .03, 0); for (let i = 0; i < 8; i++) { const m = new T.MeshStandardMaterial({ color: 0x220a02, emissive: 0xff5a10, emissiveIntensity: rnd(.4, 1.2) }); add(new T.SphereGeometry(.05, 6, 4), m, rnd(-ancho / 2.4, ancho / 2.4), .07, rnd(-.22, .22)); piezas.brillos.push({ m, brasa: true, base: m.emissiveIntensity }); } gas = 'Apagar las brasas'; }
   if (tipo === 'cafetera') { add(new T.BoxGeometry(ancho * .8, .45, .4), new T.MeshStandardMaterial({ color: 0xa83a2a, metalness: .4, roughness: .3 }), 0, .225, -.05); alto = .46; }
   if (tipo === 'mesa') { add(new T.BoxGeometry(ancho * .7, .03, .35), new T.MeshStandardMaterial({ color: 0xe8e2d0, roughness: .7 }), 0, .015, 0); for (let i = 0; i < 3; i++) add(new T.SphereGeometry(.04, 8, 6), new T.MeshStandardMaterial({ color: [0xd9442b, 0x5a9e3a, 0xf0c419][i] }), rnd(-.15, .15), .06, rnd(-.1, .1)); alto = .1; }
   const cubierta = new T.Mesh(new T.BoxGeometry(ancho + .06, alto + .1, .7), matCubierta); cubierta.position.set(x, .9 + (alto + .1) / 2, -.55); cubierta.visible = false; mundo.add(cubierta);
@@ -950,6 +1011,42 @@ function aparato(tipo, x, ancho) {
     piezas.pilotos.push({ mesh: llama, pos: llama.position.clone(), off: false, txt: gas });
   }
   return ap;
+}
+
+// Cada cocina con su ambiente: color de la pared y sus detalles (pizarrón, neón, farolitos, banderines…).
+function cartel(lineas, fondo, tinta, w, h, borde) {
+  return new T.MeshBasicMaterial({ map: texCanvas(lienzo(Math.round(w * 400), Math.round(h * 400), (g, cw, ch) => {
+    g.fillStyle = fondo; g.fillRect(0, 0, cw, ch); if (borde) { g.strokeStyle = borde; g.lineWidth = 10; g.strokeRect(5, 5, cw - 10, ch - 10); }
+    g.fillStyle = tinta; g.textAlign = 'center'; g.textBaseline = 'middle';
+    lineas.forEach(([t, tam], i) => { g.font = `700 ${tam}px "Barlow Condensed", "Arial Narrow", sans-serif`; g.fillText(t, cw / 2, ch * (i + .5) / lineas.length + 2, cw - 24); });
+  })), transparent: fondo === 'transparent' });
+}
+const AMBIENTE = {
+  cafe: { pared: 0xf3e2c4, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .62), cartel([['MENÚ', 58], ['Café de olla · $25', 34], ['Conchas · $12', 34], ['Chilaquiles · $60', 34]], '#22382c', '#f1f1e6', .75, .62, '#8a5a2b'), xd, 2.2, -.99) },
+  pizza: { pared: 0xeed3c0, deco: ({ add, xd }) => { [0x2e9e5b, 0xf4f4f4, 0xd7382b].forEach((c, i) => add(new T.PlaneGeometry(.18, .5), new T.MeshBasicMaterial({ color: c }), xd - .18 + i * .18, 2.25, -.99)); } },
+  burger: { pared: 0xfaf7f2, deco: ({ add, xd, brillos }) => { const m = cartel([['BURGERS', 92]], 'transparent', '#ff5fa2', .9, .32); add(new T.PlaneGeometry(.9, .32), m, xd, 2.3, -.98); brillos.push({ m, neon: true }); } },
+  wok: { pared: 0xf1cdbd, deco: ({ add, lineW, brillos }) => {
+    for (const x of [-lineW / 2 + .2, 0, lineW / 2 - .2]) {
+      add(new T.CylinderGeometry(.003, .003, .5, 4), new T.MeshBasicMaterial({ color: 0x222222 }), x, 2.75, 1.5);
+      const m = new T.MeshBasicMaterial({ color: 0xd0261a, toneMapped: false });
+      const f = add(new T.SphereGeometry(.13, 14, 10), m, x, 2.45, 1.5); f.scale.y = 1.25; brillos.push({ m, farol: true });
+    } } },
+  asador: { pared: 0xdcc3a2, deco: ({ add, xd }) => add(new T.PlaneGeometry(.9, .36), cartel([['¡AL CARBÓN!', 80]], '#3a1a0a', '#ff9a3c', .9, .36, '#ff9a3c'), xd, 2.3, -.99) },
+  hotel: { pared: 0xeef0f3, deco: ({ add, xd }) => { add(new T.BoxGeometry(8.9, .05, .02), new T.MeshStandardMaterial({ color: 0xd4af37, metalness: .9, roughness: .25 }), 0, 1.8, -.99); add(new T.PlaneGeometry(.8, .3), cartel([['SOLO PERSONAL', 46], ['AUTORIZADO', 46]], '#1b2a33', '#d4af37', .8, .3, '#d4af37'), xd, 2.3, -.98); } },
+  comedor: { pared: 0xd7e6da, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .4), cartel([['LÁVESE', 60], ['LAS MANOS', 60]], '#f4f4f4', '#2e7d4f', .75, .4, '#2e7d4f'), xd, 2.25, -.99) },
+  estadio: { pared: 0xdde3f0, deco: ({ add, xd }) => {
+    for (let i = 0; i < 14; i++) { const b = add(new T.ConeGeometry(.09, .2, 3), new T.MeshBasicMaterial({ color: [0x2f6fd1, 0xffd23f][i % 2] }), -4.1 + i * .62, 2.8, -.97); b.rotation.z = Math.PI; }
+    add(new T.PlaneGeometry(.9, .32), cartel([['¡VAMOS PUMAS!', 74]], '#2f6fd1', '#ffd23f', .9, .32), xd, 2.3, -.99); } },
+};
+// El reloj de pared de todas las cocinas: marca la hora del turno.
+const RELOJ_TX = lienzo(128, 128, () => {});
+function pintarRelojPared(min) {
+  const g = RELOJ_TX.getContext('2d'), m = 22 * 60 + min, a = (m % 60) / 60 * Math.PI * 2, b = ((m / 60) % 12) / 12 * Math.PI * 2;
+  g.clearRect(0, 0, 128, 128); g.fillStyle = '#f4f1e8'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 6; g.strokeStyle = '#2b3238'; g.stroke();
+  g.fillStyle = '#2b3238'; for (let i = 0; i < 12; i++) g.fillRect(64 + Math.sin(i / 6 * Math.PI) * 48 - 3, 64 - Math.cos(i / 6 * Math.PI) * 48 - 3, 6, 6);
+  g.lineCap = 'round'; g.lineWidth = 7; g.beginPath(); g.moveTo(64, 64); g.lineTo(64 + Math.sin(b) * 28, 64 - Math.cos(b) * 28); g.stroke();
+  g.lineWidth = 4; g.beginPath(); g.moveTo(64, 64); g.lineTo(64 + Math.sin(a) * 44, 64 - Math.cos(a) * 44); g.stroke();
+  if (piezas.reloj) piezas.reloj.needsUpdate = true;
 }
 
 function construirNoche(orden) {
@@ -982,6 +1079,12 @@ function construirNoche(orden) {
     g.fillStyle = '#ffe3b8'; g.font = '700 46px "Barlow Condensed", "Arial Narrow", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nombre.toUpperCase(), w / 2, h / 2 + 2, w - 40);
   }));
   add(new T.PlaneGeometry(1.4, .35), new T.MeshBasicMaterial({ map: letrero }), clamp(-lineW / 2 - .9, -2.8, -1.6), 2.5, -.99);
+  const amb = AMBIENTE[orden ? orden.cocina : 'burger'];
+  matPared.color.set(amb.pared);
+  piezas.brillos = [];
+  amb.deco({ add, lineW, xd: clamp(lineW / 2 + .95, 1.9, 3.1), brillos: piezas.brillos });
+  piezas.reloj = texCanvas(RELOJ_TX); pintarRelojPared(0);
+  add(new T.CircleGeometry(.2, 24), new T.MeshBasicMaterial({ map: piezas.reloj, transparent: true }), 3.59, 2.35, .4).rotation.y = -Math.PI / 2;
 
   // Línea de cocina con sus aparatos
   add(new T.BoxGeometry(lineW, .9, .8), matAcero, 0, .45, -.55);
@@ -1018,6 +1121,20 @@ function construirNoche(orden) {
       pon(hW, hood.fondo, new T.Vector3(cx, hY1, hZ), new T.Vector3(0, -1, 0), 1.1);
     }
     add(new T.BoxGeometry(.6, 3 - hY1, .6), matAcero, cx, (hY1 + 3) / 2 + .015, hZ0 + .45);
+    // Detalles de campana de verdad: ceja delantera con remaches, bordes doblados, canaleta de grasa y la etiqueta NFPA 96.
+    add(new T.BoxGeometry(hW + .04, .12, .04), matAcero, cx, hY0 + .06, hZ1 + .02);
+    for (const lado of [-1, 1]) add(new T.BoxGeometry(.035, .035, hood.fondo), matAcero, cx + lado * hW / 2, hY0, hZ);
+    const nR = Math.round(hW / .25);
+    for (let k = 0; k <= nR; k++) add(new T.SphereGeometry(.011, 6, 4), matRemache, cx - hW / 2 + .06 + (hW - .12) * k / nR, hY0 + .06, hZ1 + .042);
+    add(new T.PlaneGeometry(.3, .09), ETIQUETA, cx + hW / 2 - .26, hY0 + .06, hZ1 + .041);
+    add(new T.BoxGeometry(hW - .1, .05, .07), matOscuro, cx, hY0 + .03, hZ0 + .06);
+    add(new T.CylinderGeometry(.045, .04, .08, 12), new T.MeshStandardMaterial({ color: 0x6b4512, roughness: .2, metalness: .2 }), cx - hW / 2 + .12, hY0 - .03, hZ0 + .06);
+    // Grasa que cuelga de la ceja: se va con la limpieza de la campana.
+    const gotas = [];
+    for (let k = 0; k < Math.round(hW * 5 * rel); k++) {
+      const largo = rnd(.03, .11), gt = add(new T.ConeGeometry(rnd(.008, .016), largo, 6), matGota, cx + rnd(-hW / 2 + .05, hW / 2 - .05), hY0 - largo / 2, hZ1 + rnd(0, .03));
+      gt.rotation.x = Math.PI; gt.userData.largo = largo; gotas.push(gt);
+    }
     // Puntos de cinta para el plástico: lado izquierdo, frente y lado derecho del borde de abajo
     const borde = [new T.Vector3(cx - hW / 2, hY0, hZ0 + .2)];
     const nf = Math.max(3, Math.round(hW / .45));
@@ -1035,7 +1152,7 @@ function construirNoche(orden) {
     const bolsa = add(new T.ConeGeometry(.17, .32, 14, 1, true), new T.MeshStandardMaterial({ color: 0xe0e0e0, transparent: true, opacity: .8, side: T.DoubleSide }), cx + hW / 2 - .22, hY0 - .3, hZ0 + .22);
     bolsa.rotation.x = Math.PI; bolsa.visible = false;
     piezas.bolsas.push({ mesh: bolsa, pos: new T.Vector3(cx + hW / 2 - .22, hY0 - .25, hZ0 + .25), hecho: false });
-    campanas.push({ cx, sfs });
+    campanas.push({ cx, sfs, gotas, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
   }
 
   // Filtros sobre la lona, en el suelo
@@ -1082,7 +1199,7 @@ function construirNoche(orden) {
   equipo.forEach((m, i) => { const p = persona(m.principal && look('casco').c ? look('casco').c : m.color, false); p.position.set(-lineW / 2 - .5 + (i % 2) * .5, 0, .5 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
   piezas.gerente = persona(0, true); piezas.gerente.position.set(2.9, 0, 1.3); piezas.gerente.rotation.y = -1; piezas.gerente.visible = !!(orden && orden.eventos.includes('gerente')); mundo.add(piezas.gerente);
   piezas.rival = null;
-  if (orden && orden.duelo) { piezas.rival = persona('#d7382b'); piezas.rival.position.set(Math.min(lineW / 2 + .7, 3.1), 0, .45); mundo.add(piezas.rival); }
+  if (orden && orden.duelo) { piezas.rival = persona('#b3261e', 'cunado'); piezas.rival.position.set(Math.min(lineW / 2 + .7, 3.1), 0, .45); mundo.add(piezas.rival); }
 
   // Vistas de cámara: lo que se ve en cada zona y en la preparación (con desplazamiento lateral si no cabe)
   const vista = (mira, dir, ancho, dMin, dMax, fov) => ({ mira, dir: dir.normalize(), ancho, dMin, dMax, fov, pan: 0, maxPan: 0 });
@@ -1090,7 +1207,7 @@ function construirNoche(orden) {
   VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
   VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
   Z = [{ id: 'filtros', n: 'Filtros', sfs: filtros, vista: vista(new T.Vector3(0, 0, lonaZ), new T.Vector3(0, 1.6, 1.0), lonaW + .2, 1.7, 3.2, 55) }];
-  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs,
+  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs, gotas: c.gotas, labio: c.labio,
     vista: vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74) }));
   Z.push({ id: 'ducto', n: 'Ducto', sfs: ducto, vista: vista(new T.Vector3(0, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80) });
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
@@ -1101,6 +1218,8 @@ function construirNoche(orden) {
 const VISTA_GENERAL = { mira: new T.Vector3(-.2, 1.4, -.4), dir: new T.Vector3(2.6, .5, 3.8).normalize(), ancho: 5, dMin: 3.4, dMax: 5.5, fov: 55, pan: 0 };
 const camT = { a: VISTA_GENERAL, mira: new T.Vector3(), objPos: new T.Vector3(), objMira: new T.Vector3(), off: 0 };
 function irVista(v) { camT.a = v; }
+const VISTA_FINAL = { mira: new T.Vector3(), dir: new T.Vector3(0, -.5, 1).normalize(), ancho: 3, dMin: 2.1, dMax: 3.2, fov: 55, pan: 0 };
+let cine = null;   // el final del turno
 function moverCamara(dt) {
   const v = camT.a, fov = v.fov || 55;
   const hf = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * cam.aspect);
@@ -1231,7 +1350,7 @@ const pasosHTML = actual => PASOS.map((p, i) => `<span class="${i < actual ? 'he
 const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalear: 3 })[M.etapa];
 
 function empezarTurno(orden) {
-  construirNoche(orden); U.mig.value = 0;
+  construirNoche(orden); U.mig.value = 0; cine = null;
   M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
@@ -1385,6 +1504,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
     const i = y * sf.nx + x, f = 1 - dist / rc;
     if (herr === 'espuma') { if (sf.d[i] > .02 && (sf.soak[i] < 0 || sf.soak[i] > 20)) sf.soak[i] = 0; continue; }
     if (herr === 'pulidor') { if (sf.d[i] < .02 && sf.pol[i] < 1) { sf.pol[i] = Math.min(1, sf.pol[i] + cant * f); quit += cant * f; } continue; }
+    if (herr === 'hidro') { sf.wet[i] = 1; sf.mojado = true; }
     if (sf.d[i] <= 0) continue;
     const m = multEspuma(sf.soak[i]);
     const duro = sf.d[i] > .6 && m === 1 ? (herr === 'hidro' ? .25 : .5) : 1;
@@ -1419,7 +1539,7 @@ function aplicarTramo(a, b) {
   let q = 0;
   for (let k = 1; k <= pasos; k++) q += raspar(sf, a.gx + (b.gx - a.gx) * k / pasos, a.gy + (b.gy - a.gy) * k / pasos, rc, cant * .4, herr);
   const ahora = performance.now(), libre = ahora - (M.ultRuido || 0);
-  if (herr === 'rasqueta' && q > .02) { emitir(b.punto, Math.min(6, 1 + q * 4), 'grasa', b.normal, .8); if (libre > 55) { M.ultRuido = ahora; rafaga(.09, 700 + M.combo * 140 + Math.random() * 200, .12); } }
+  if (herr === 'rasqueta' && q > .02) { emitir(b.punto, Math.min(6, 1 + q * 4), 'grasa', b.normal, .8); if (q > .05 && azar(Math.min(.7, q * 2))) trozo(b.punto, b.normal); if (libre > 55) { M.ultRuido = ahora; rafaga(.09, 700 + M.combo * 140 + Math.random() * 200, .12); } }
   if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); pulso('spray'); }
   if (herr === 'pulidor') {
     pulso('pulidora', .2);
@@ -1756,6 +1876,72 @@ function tickDuelo(dt) {
   $('#dTu').style.width = tu * 100 + '%'; $('#dRival').style.width = el * 100 + '%';
 }
 
+// ---- la gente se mueve: la cuadrilla raspa, el gerente pasea (o mira el reloj), El Cuñado presume
+
+// El agua escurre hacia abajo en hilos y se va secando; de la ceja de la campana caen gotas.
+function escurrir(z, dt) {
+  for (const s of z.sfs) {
+    if (!s.mojado) continue;
+    const w = s.wet, nx = s.nx, baja = s.normal && Math.abs(s.normal.y) < .5;
+    let hay = false;
+    for (let i = 0; i < w.length; i++) {
+      if (baja && i + nx < w.length && w[i + nx] > w[i] && Math.random() < .25) w[i] = w[i + nx] * .97;
+      if (w[i] > 0) { w[i] = Math.max(0, w[i] - dt * .1); hay = true; }
+    }
+    s.mojado = hay; s.sucio = true;
+  }
+  if (z.labio && M.goteo > .15 && azar(dt * 14 * M.goteo)) {
+    const l = z.labio; emitir(new T.Vector3(l.cx + rnd(-l.hW / 2, l.hW / 2), l.y - .01, rnd(l.z0 + .1, l.z1)), 1, 'agua', new T.Vector3(0, -1, 0), .2);
+  }
+  if (z.gotas && M.etapa === 'lavar' && azar(dt * .8)) { const g = uno(z.gotas.filter(x => x.visible)); if (g) emitir(new T.Vector3(g.position.x, g.position.y - g.userData.largo / 2, g.position.z), 1, 'grasa', new T.Vector3(0, -1, 0), .1); }
+}
+// Pedazos de costra que saltan al raspar: unas pocas lascas que caen y se quedan un momento en el suelo.
+const TROZOS = [];
+const geoTrozo = new T.BoxGeometry(.03, .007, .022), matTrozo = new T.MeshStandardMaterial({ color: 0x1c1208, roughness: .35 });
+function trozo(p, n) {
+  let t = TROZOS.find(x => x.vida <= 0);
+  if (!t) { if (TROZOS.length >= 30) return; t = { m: new T.Mesh(geoTrozo, matTrozo), v: new T.Vector3(), vida: 0 }; escena.add(t.m); TROZOS.push(t); }
+  t.m.position.copy(p); t.m.visible = true; t.m.scale.setScalar(rnd(.6, 1.5)); t.vida = 2.2;
+  t.v.set(rnd(-.6, .6), rnd(.2, .8), rnd(-.6, .6)); if (n) t.v.addScaledVector(n, 1.2);
+}
+function moverTrozos(dt) {
+  for (const t of TROZOS) {
+    if (t.vida <= 0) continue;
+    t.vida -= dt;
+    if (t.m.position.y > .015) { t.v.y -= 6 * dt; t.m.position.addScaledVector(t.v, dt); t.m.rotation.x += dt * 9; t.m.rotation.z += dt * 7; }
+    else t.m.position.y = .012;
+    if (t.vida <= 0) t.m.visible = false;
+  }
+}
+
+function animarGente(dt) {
+  const t = performance.now() / 1000;
+  const raspa = (p, fase) => { const [bi, bd] = p.userData.brazos; bd.rotation.set(-1.1 + Math.sin(t * 9 + fase) * .45, 0, 0); bi.rotation.set(-.3 + Math.sin(t * 9 + fase + 1) * .1, 0, 0); };
+  if (piezas.rival) {
+    const r = piezas.rival, fin = M.duelo && M.duelo.rivalFin !== null, [bi, bd] = r.userData.brazos;
+    r.position.y = fin ? Math.abs(Math.sin(t * 6)) * .06 : Math.abs(Math.sin(t * 5.5)) * .04;
+    r.rotation.y = fin ? r.rotation.y + dt * 3 : -.7 + Math.sin(t * 2.5) * .2;
+    if (fin) { bi.rotation.set(-2.8, 0, 0); bd.rotation.set(-2.8, 0, 0); } else raspa(r, 2);   // celebra con los brazos arriba
+  }
+  piezas.gente.forEach((p, i) => {
+    const dormido = i === 0 && M.dormido;
+    p.position.y = dormido ? 0 : Math.abs(Math.sin(t * 3.8 + i)) * .03; p.rotation.z = dormido ? .35 : 0;
+    if (dormido) p.userData.brazos.forEach(b => b.rotation.set(0, 0, 0)); else raspa(p, i * 1.7);
+  });
+  const ge = piezas.gerente;
+  if (ge && ge.visible) {
+    const [bi, bd] = ge.userData.brazos, impaciente = M.paciencia < 45 || M.enojado;
+    if (impaciente) {   // se planta, mira el reloj y golpea el suelo con el pie
+      ge.rotation.y += (-1 - ge.rotation.y) * Math.min(1, dt * 4); ge.position.y = Math.abs(Math.sin(t * 7)) * .015;
+      bi.rotation.set(-1.45, 0, .55); bd.rotation.set(-.5, 0, 0);
+    } else {   // pasea con su café
+      const v = Math.cos(t * .4); ge.position.x = 2.75 + Math.sin(t * .4) * .45; ge.position.y = Math.abs(Math.sin(t * 5)) * .02;
+      ge.rotation.y = v > 0 ? Math.PI / 2 : -Math.PI / 2;
+      bi.rotation.set(Math.sin(t * 5) * .35, 0, 0); bd.rotation.set(-.7, 0, 0);
+    }
+  }
+}
+
 // ---- bucle del turno
 
 function tickTurno(dt) {
@@ -1779,6 +1965,7 @@ function tickTurno(dt) {
     for (const s of z.sfs) { let hay = false; for (let i = 0; i < s.soak.length; i++) if (s.soak[i] >= 0) { s.soak[i] += dt; hay = true; if (s.soak[i] > 30 || s.d[i] <= 0) s.soak[i] = -1; } if (hay) { s.sucio = true; espuma = true; } }
     // La espuma chisporrotea y la cocina gotea (más después del chorro).
     if (espuma && azar(dt * 9)) burbuja();
+    escurrir(z, dt);
     if (azar(dt * (.1 + M.goteo * 1.6))) gota(.025 + M.goteo * .035);
     M.goteo = Math.max(0, M.goteo - dt * .07);
     if (!M.fotoAntes && M.etapa === 'lavar' && z.id === 'campana' && M.enZona > 1.3 && !M.ev) { M.fotoAntes = 'pendiente'; pedirFoto(0, img => { if (M) M.fotoAntes = img; }); }
@@ -1827,8 +2014,7 @@ function tickTurno(dt) {
   const mp = piezas.mapache;
   if (mp.visible) { mp.rotation.y = Math.sin(performance.now() / 300) * .2; if (mp.userData.sale) { mp.position.x += dt * .6; if (mp.position.x > .5) mp.visible = false; } if (mp.userData.huye) { mp.position.z += dt * 3; if (mp.position.z > .6) mp.visible = false; } }
   if ((M.alarmaSuena || 0) > 0) { const antes = M.alarmaSuena; M.alarmaSuena -= dt; if (Math.floor(antes * 2) !== Math.floor(M.alarmaSuena * 2)) tono(980, .2, .05, 'square'); }
-  if (piezas.rival) { const r = piezas.rival, fin = M.duelo && M.duelo.rivalFin !== null; r.position.y = fin ? 0 : Math.abs(Math.sin(performance.now() / 180)) * .04; r.rotation.y = fin ? r.rotation.y + dt * 3 : -.7 + Math.sin(performance.now() / 400) * .2; }
-  piezas.gente.forEach((p, i) => { const dormido = i === 0 && M.dormido; p.position.y = dormido ? 0 : Math.abs(Math.sin(performance.now() / 260 + i)) * .03; p.rotation.z = dormido ? .35 : 0; });
+  animarGente(dt);
   if (M.ayudaT > 0 && (M.ayudaT -= dt) <= 0) $('#ayuda').textContent = '';
   for (const s of z.sfs) if (s.sucio) pintarSf(s);
   if ((M.hudT = (M.hudT || 0) - dt) <= 0) { M.hudT = .2; pintarHud(false); }
@@ -1843,6 +2029,7 @@ function pintarHud(todo) {
   }
   Z.forEach((z, i) => {
     const b = $('#zonas').children[i], m = micras(z), ok = m <= LIMITE;
+    if (z.gotas) { const f = clamp(1 - pctZona(z) * 1.25, 0, 1); for (const g of z.gotas) { g.scale.y = Math.max(.01, f); g.position.y = z.labio.y - g.userData.largo * f / 2; g.visible = f > .02; } }
     b.setAttribute('aria-pressed', i === M.zona); b.classList.toggle('listo', ok);
     b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}`;
     if (ok && !M.listoAvisado.has(i)) {
@@ -1932,7 +2119,11 @@ function terminarTurno() {
   irVista(Z[1].vista); Z[1].vista.pan = 0;
   // La foto del después, con la campana recién terminada.
   const m = M; pedirFoto(.7, img => { m.fotoDespues = img || ''; fotoParte(m); });
-  setTimeout(pantallaParte, 500);
+  // Final de película: amanece y la cámara da la vuelta a la campana antes del parte.
+  const l = Z[1].labio; cine = { t: 0 };
+  VISTA_FINAL.mira.set(l.cx, l.y + .2, (l.z0 + l.z1) / 2 + .15); VISTA_FINAL.ancho = l.hW + 1.2;
+  tono(523, .3, .06, 'triangle', null, .2); tono(659, .3, .06, 'triangle', null, .45); tono(784, .6, .07, 'triangle', null, .7);
+  setTimeout(pantallaParte, 2600);
 }
 
 // ------------------------------------------------------------------ órdenes, clientes y cuadrilla
@@ -2049,7 +2240,7 @@ function furgo(nombre, color, et) {
     ${PEGATINAS[look('pegatina').id] || ''}
     ${S.perro ? '<g transform="translate(150 33)"><path d="M0 12q0-10 9-10t9 10z" fill="#c8a27a" stroke="#0b1117" stroke-width="1.5"/><path d="M1 6l-3 7M17 6l3 7" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><circle cx="6" cy="7" r="1.3" fill="#0b1117"/><circle cx="12" cy="7" r="1.3" fill="#0b1117"/><ellipse cx="9" cy="10" rx="2" ry="1.3" fill="#0b1117"/></g>' : ''}
     <rect x="10" y="74" width="212" height="8" rx="3" fill="#2b3238"/>
-    <circle cx="52" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/><circle cx="182" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/>
+    ${[52, 182].map(x => `<g class="rueda" style="transform-origin:${x}px 84px"><circle cx="${x}" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/><path d="M${x} 74v20M${x - 10} 84h20" stroke="#5d6870" stroke-width="2.5"/></g>`).join('')}
     <text x="77" y="53" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="17" fill="#fff" stroke="#0b1117" stroke-width="3" paint-order="stroke"${largo ? ' textLength="122" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(nombre.toUpperCase())}</text>
   </svg>`;
 }
@@ -2067,6 +2258,7 @@ function cabecera() {
 }
 
 function pantallaCamioneta() {
+  if (RADIO.on) radioEncender(false);
   M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true; aplicarLook();
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
@@ -2293,7 +2485,9 @@ function pantallaParte() {
   // El pedido especial del cliente y el duelo con El Cuñado
   const ped = M.pedido, finMin = M.finMin;
   const pedOk = ped ? ped.ok({ finMin, pulido, usoHidro: M.usoHidro, usoEspuma: M.usoEspuma, todoCubierto: piezas.aparatos.every(a => a.cubierto && a.quitada), radioApagada: M.radioApagada }) : null;
-  const d = M.duelo, ganaDuelo = d ? d.tuyo !== null && d.tuyo <= d.tRival : null;
+  const d = M.duelo;
+  if (d && d.tuyo === null && aprobado) d.tuyo = finMin / 480 * M.dur;   // terminó justo al llamar al inspector
+  const ganaDuelo = d ? d.tuyo !== null && d.tuyo <= d.tRival : null;
   const tacos = ped && ped.tacos ? .5 : 1, mitadDuelo = d && !ganaDuelo ? .5 : 1;
   const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) * tacos * mitadDuelo / 10) * 10;
   const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 : 0) + .05 * perk('labia') + M.propinaMod, 0, .3) / 5) * 5);
@@ -2385,6 +2579,7 @@ function pantallaParte() {
   $('#seguir').onclick = siguiente;
   tono(aprobado ? 660 : 300, .3, .1, 'triangle', aprobado ? 990 : 200);
   if (nuevas.length) setTimeout(sDing, 400);
+  rafaga(.18, 160, .35, 'lowpass', 1, null, .3); tono(85, .3, .2, 'sine', 45, .3);   // ¡pum! el sello de la nota
   fotoParte(M);
 }
 
@@ -2428,8 +2623,11 @@ function pantallaInicio() {
   M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true;
   if (!mundo) construirNoche(null);
   irVista(VISTA_GENERAL);
-  pantalla(`<div class="portada"><div class="rotulo grande">Hood Cleaners<span>The Night Shift</span></div>
-      <p class="nota">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p></div>
+  const emp = S.fase === 'empresa' && S.empresa;
+  pantalla(`<div class="portada"><div class="calle" aria-hidden="true">${CIUDAD}<div class="furgo-anda">${furgo(emp ? S.empresa.nombre : 'Grasa Brava', emp ? S.empresa.color : '#e0a040', emp ? S.etapa : 0)}</div></div>
+      <div class="rotulo grande">Hood Cleaners<span>The Night Shift</span></div>
+      <p class="nota">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p>
+      <p class="en-radio" id="enRadio">📻 Toca la pantalla para encender Radio Grasa FM</p></div>
     <div id="novedad"></div>
     ${guardada ? `<button class="orden" id="continuar"><h3>Continuar${S.jugador ? ', ' + esc(S.jugador) : ''}</h3>
       <span class="nota">Noche ${S.noche} · ${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + ETAPAS[S.etapa].n : 'Aprendiz en Grasa Brava'} · ${dinero(S.dinero)}</span></button>` : ''}
@@ -2438,7 +2636,14 @@ function pantallaInicio() {
   $('#nuevaP').onclick = () => { audio(); pantallaNombre(true); };
   $('#ajustesIni').onclick = () => pantallaAjustes(false, true);
   pintarNovedad(); buscarNovedad();
+  P.addEventListener('pointerdown', () => { audio(); if (!M && $('#enRadio')) radioEncender(true); }, { once: true });
+  if (RADIO.on && RADIO.cancion) $('#enRadio').textContent = `📻 ♪ ${RADIO.cancion.t} — ${RADIO.cancion.de}`;
 }
+const CIUDAD = `<svg class="ciudad" viewBox="0 0 400 120" preserveAspectRatio="xMidYMax slice"><g fill="#fff">${Array.from({ length: 22 }, (_, i) => `<circle class="estrella" cx="${(i * 37 + 11) % 400}" cy="${(i * 23) % 50 + 6}" r="${i % 3 ? 1 : 1.6}" style="animation-delay:${(i % 7) * .4}s"/>`).join('')}</g>
+  <circle cx="340" cy="26" r="13" fill="#f4ecd0"/><circle cx="346" cy="22" r="12" fill="#131d26"/>
+  <path d="M0 120V70h30V52h26v18h18V40h34v30h14V60h30v60zM166 120V48h40v20h16V30h30v38h22V56h28v64zM302 120V62h24V44h36v26h38v50z" fill="#1c2a35"/>
+  <g fill="#ffd27a" opacity=".75"><rect x="40" y="58" width="5" height="6"/><rect x="86" y="50" width="5" height="6"/><rect x="96" y="64" width="5" height="6"/><rect x="178" y="58" width="5" height="6"/><rect x="232" y="40" width="5" height="6"/><rect x="242" y="54" width="5" height="6"/><rect x="314" y="72" width="5" height="6"/><rect x="338" y="54" width="5" height="6"/></g>
+  <rect y="112" width="400" height="8" fill="#2b3238"/><g fill="#ffd23f">${Array.from({ length: 10 }, (_, i) => `<rect x="${i * 42 + 6}" y="115" width="20" height="2"/>`).join('')}</g></svg>`;
 // En el APK: avisa si en GitHub hay una versión más nueva para instalar encima (la partida se queda).
 const APK_URL = 'https://github.com/jlanuza94/El-Banquillo/releases/download/hood-cleaners-latest/Hood-Cleaners.apk';
 let novedad = null;
@@ -2565,13 +2770,38 @@ function aplicarLook() {
   lampara.color.setHex(look('linterna').c || 0xfff1dd);
 }
 // Luces: el apagón deja solo la linterna; la linterna disco cambia de color.
+const C_NOCHE = new T.Color(0x0b1117), C_ALBA = new T.Color(0x3d4766), C_CIELO = new T.Color(0xcfe3ff), C_CIELO_ALBA = new T.Color(0xffc48a);
+let alba = 0;
 function luces(dt, ahora) {
+  if (cine && (!M || M.fase !== 'parte')) cine = null;
+  if (cine) {
+    cine.t += dt;
+    if (cine.t > .8) { const a = -.8 + (cine.t - .8) * .32; VISTA_FINAL.dir.set(Math.sin(a), -.42, Math.cos(a)).normalize(); if (camT.a !== VISTA_FINAL) irVista(VISTA_FINAL); }
+  }
+  const objAlba = cine ? clamp((cine.t - .3) / 2.4, 0, 1) : 0;
+  if (Math.abs(objAlba - alba) > .001) {
+    alba += (objAlba - alba) * Math.min(1, dt * (cine ? 3 : 2));
+    escena.background.copy(C_NOCHE).lerp(C_ALBA, alba); escena.fog.color.copy(escena.background);
+    cielo.color.copy(C_CIELO).lerp(C_CIELO_ALBA, alba); cielo.intensity = .55 + .5 * alba;
+  }
   const oscuro = M && M.fase === 'turno' && M.apagon > 0, k = 1 - Math.exp(-dt * 4);
   R.toneMappingExposure += ((oscuro ? .45 : 1.05) - R.toneMappingExposure) * k;
   lampara.intensity += ((oscuro ? 2.4 : 1.1) - lampara.intensity) * k;
   const v = $('#oscuro'), op = +v.style.opacity || 0, obj = oscuro ? 1 : 0;
   if (op !== obj) v.style.opacity = Math.abs(obj - op) < .02 ? obj : op + (obj - op) * k;
   if (look('linterna').id === 'disco' && M) lampara.color.setHSL(ahora / 2500 % 1, .9, .7);
+}
+// Fuego del horno, brasas, neón y farolitos; el reloj de la pared sigue la hora del turno.
+let relojMin = -1;
+function titilar(ahora) {
+  for (const b of piezas.brillos || []) {
+    if (b.fuego) b.m.color.setHSL(.06 + Math.random() * .02, 1, .45 + Math.random() * .12);
+    else if (b.brasa) b.m.emissiveIntensity = b.base * (.75 + Math.random() * .5);
+    else if (b.neon) b.m.opacity = Math.random() < .015 ? .3 : 1;
+    else if (b.farol) b.m.color.setHSL(.01, .85, .4 + Math.sin(ahora / 700) * .04);
+  }
+  const min = M && M.fase === 'turno' ? Math.floor(clamp(M.t / M.dur, 0, 1) * 480) : M && M.fase === 'prep' ? Math.floor(M.prepMin) : 0;
+  if (min !== relojMin) { relojMin = min; pintarRelojPared(min); }
 }
 let ult = performance.now(), faltaT = 0;
 function bucle(ahora) {
@@ -2593,7 +2823,7 @@ function bucle(ahora) {
   moverCamara(dt);
   moverParticulas(dt);
   if (MARCAS.length) moverMarcas();
-  luces(dt, ahora); apagarPulsos(); radioTick();
+  luces(dt, ahora); apagarPulsos(); radioTick(); moverTrozos(dt); titilar(ahora);
   R.render(escena, cam);
   if (fotoPend && (fotoPend.t -= dt) <= 0) { const f = fotoPend; fotoPend = null; f.cb(instantanea()); }
   requestAnimationFrame(bucle);
