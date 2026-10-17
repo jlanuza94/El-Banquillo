@@ -1438,7 +1438,7 @@ html[data-cb="1"] .vs .vtile.su1{background:linear-gradient(180deg,#3fa0e0,#0072
 .fhist tr.cur td{background:color-mix(in srgb,var(--accent) 14%,transparent)}.fhist .hcl{color:#c9a213}.fhist tr.tot td{border-top:2px solid var(--ink);font-weight:800;background:var(--surface2)}
 /* Campeones y diploma (FMM) */
 .wboard{flex-shrink:0;padding:0;overflow:hidden;background:linear-gradient(180deg,#5a4a1e,#3d3214);color:#f4ead0;border:0}
-.wbh{background:linear-gradient(180deg,#f6dc7a,#d9b23a);color:#4a3a08;font-family:var(--f-display);font-weight:900;font-size:24px;text-align:center;padding:8px;letter-spacing:.04em}
+.wbh{background:linear-gradient(180deg,#f6dc7a,#d9b23a);color:#4a3a08;font-family:var(--f-display);font-weight:900;font-size:19px;text-align:center;padding:7px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wbb{display:grid;grid-template-columns:1fr 110px;align-items:center;padding:8px 10px 12px;gap:8px}.cupsvg{width:100%;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
 .wbr{display:grid;grid-template-columns:34px 24px 1fr auto;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08)}.wbr span{font-weight:800}.wbr em{font-style:normal;font-weight:800;font-family:var(--f-display);font-size:18px}
 .wbr.first{background:linear-gradient(90deg,#e9cf73,#d3b04a);color:#3e3006;border-radius:4px;clip-path:polygon(0 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%)}.wbr.me b{text-decoration:underline}
