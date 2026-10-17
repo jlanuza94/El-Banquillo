@@ -67,4 +67,8 @@ jobs:
           cp android-hoods/app/build/outputs/apk/release/app-release.apk Hood-Cleaners.apk
           gh release view hood-cleaners-latest >/dev/null 2>&1 || gh release create hood-cleaners-latest --title "Hood Cleaners para Android" --notes "APK de Hood Cleaners: The Night Shift. Descárgalo en el móvil e instálalo (Android te pedirá permiso para instalar apps de este origen). El juego va dentro de la app y funciona sin conexión."
           gh release upload hood-cleaners-latest Hood-Cleaners.apk --clobber
+          # El juego lee «Versión: N» de las notas para avisar dentro de la app de que hay una versión nueva.
+          gh release edit hood-cleaners-latest --notes "APK de Hood Cleaners: The Night Shift. Descárgalo en el móvil e instálalo (Android te pedirá permiso para instalar apps de este origen). Para actualizar, instala el nuevo encima: la partida se queda. El juego va dentro de la app y funciona sin conexión.
+
+          Versión: $VERSION_CODE"
           echo "::notice title=APK::Versión $VERSION_CODE publicada"

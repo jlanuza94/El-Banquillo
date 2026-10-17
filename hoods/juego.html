@@ -113,7 +113,7 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .cara { width: 40px; height: 40px; border-radius: 50% 50% 8px 8px; display: grid; place-items: center; font-family: var(--f-display); color: var(--hivis-tinta); }
 .jefe b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); display: block; }
 .tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 2px solid var(--linea); }
-.tabs button { background: none; border: 0; padding: 9px 12px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.tabs button { background: none; border: 0; padding: 9px 10px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
 .tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); }
 .tabs .cuenta { font-family: var(--f-mono); font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; margin-left: 4px; }
 h2.sec { margin: 4px 0 0; font-family: var(--f-cond); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); font-weight: 700; }
@@ -188,16 +188,65 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .blanco { position: absolute; width: 74px; height: 74px; margin: -37px 0 0 -37px; border-radius: 50%; background: #c9c9c9; border: 4px dashed #6f6f6f; display: grid; place-items: center; font-family: var(--f-cond); font-weight: 700; color: #222; font-size: 15px; text-transform: uppercase; animation: late .6s ease-in-out infinite alternate; }
 @keyframes late { to { transform: scale(1.08); } }
 .cargando { min-height: 100%; display: grid; place-items: center; text-align: center; }
+.blanco.cuca { background: none; border: 0; border-radius: 0; animation: none; width: 76px; height: 76px; margin: -38px 0 0 -38px; transition: left .7s ease-in-out, top .7s ease-in-out; }
+.blanco.cuca svg { transition: transform .3s; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+
+/* Radio y duelo en el HUD */
+.btn-ico.radio { width: auto; min-width: 40px; padding: 0 8px; font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: #c6a0ff; }
+.btn-ico.radio[aria-pressed="false"] { color: var(--tenue); }
+.duelo { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 6px; align-items: center; font-family: var(--f-cond); font-weight: 700; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+.duelo .barra div { background: var(--ok); }
+.duelo .barra.rival div { background: var(--mal); }
+
+/* Parte: nota, medallas, fotos */
+.parte-cab { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.nota-grande { width: 78px; height: 78px; border-radius: 12px; border: 3px solid var(--c); color: var(--c); background: var(--panel); display: grid; place-items: center; font-family: var(--f-display); font-size: 38px; animation: sello .5s ease-out; }
+@keyframes sello { 0% { transform: scale(2.2) rotate(-12deg); opacity: 0; } 70% { transform: scale(.92) rotate(3deg); opacity: 1; } 100% { transform: none; } }
+.medallas { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; }
+.medalla { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 8px 10px; }
+.medalla .ico { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe680, #d99a1e); color: var(--hivis-tinta); display: grid; place-items: center; font-family: var(--f-display); font-size: 15px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+.medalla b { font-family: var(--f-cond); font-size: 15px; display: block; }
+.medalla small { color: var(--tenue); font-size: 12px; }
+.medalla.bloq { opacity: .45; }
+.medalla.bloq .ico { background: var(--panel-2); color: var(--tenue); }
+.medalla.nueva { border-color: var(--grasa); animation: entra .4s ease-out; }
+.notas { display: flex; flex-wrap: wrap; gap: 4px; }
+.notas span { font-family: var(--f-display); font-size: 14px; color: var(--c); border: 1px solid var(--c); border-radius: 4px; min-width: 26px; text-align: center; padding: 1px 3px; }
+.estilo { display: grid; gap: 6px; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; }
+.estilo > b { font-family: var(--f-cond); font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.muestra { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.4); }
+.album { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.foto { margin: 0; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 8px; display: grid; gap: 6px; }
+.foto-par { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+.foto-par div { position: relative; }
+.foto-par img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; display: block; }
+.foto-par span { position: absolute; left: 4px; top: 4px; background: rgba(10,16,22,.8); font-family: var(--f-cond); font-weight: 700; font-size: 11px; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; }
+.foto figcaption { font-size: 13px; color: var(--tenue); }
+.foto figcaption b { color: var(--acero); }
+
+/* Pedidos especiales y lo que pasa de día */
+.pedido { font-size: 14px; }
+.pedido b { color: var(--grasa); }
+.pedido i { font-style: normal; color: var(--ok); }
+.orden.dia { border-color: var(--grasa); }
+.orden.dia .opciones { display: grid; gap: 6px; }
+.orden.dia .opciones .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; }
+.orden.dia .opciones .btn small { display: block; font-weight: 400; font-size: 13px; opacity: .8; }
+a.btn { display: inline-block; text-decoration: none; }
+#oscuro { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at var(--x, 50%) var(--y, 45%), rgba(0,0,0,0) 0, rgba(0,0,0,.25) 90px, rgba(0,0,0,.94) 190px); }
+.novedad { background: rgba(105,201,122,.14); border: 1px solid var(--ok); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 
 <div id="juego">
   <canvas id="gl" aria-label="Cocina en 3D: arrastra sobre la grasa para limpiar"></canvas>
+  <div id="oscuro" aria-hidden="true"></div>
   <div id="marcas"></div>
   <div id="hud" hidden>
     <div class="hud-arriba">
-      <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico" id="pausa" aria-label="Pausa y ajustes">❚❚</button></div>
+      <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="pausa" aria-label="Pausa y ajustes">❚❚</button></div>
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
+      <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div></div>
       <div class="pasos" id="pasos"></div>
       <div class="chat" id="chat"></div>
     </div>
@@ -244,6 +293,7 @@ const APRENDIZ = 4;            // noches trabajando para Don Rigo antes del desp
 const SUELDO_APRENDIZ = 110;
 const GASOLINA = 35;
 const RIVAL = 'Limpiezas El Cuñado';
+const QUIEN_CUNADO = { n: 'El Cuñado', color: '#d7382b' };
 // Las etapas de tu empresa: se pasa a la siguiente con reputación y pagando el salto.
 const ETAPAS = [
   { n: 'Camioneta vieja', txt: 'Tú, Beto y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías.' },
@@ -373,6 +423,106 @@ const TIENDA = [
 ];
 const PLAZAS = [0, 1, 2, 4];
 
+// Pedidos especiales: cada cliente tiene su manía. Cumplirla paga extra; fallarla, sale caro.
+const PEDIDOS = [
+  { id: 'antes3', chip: 'Antes de las 3', quien: 'El dueño', txt: 'Terminen antes de las 3:00, que a esa hora llega el panadero y no quiero testigos.', premio: .2,
+    ok: c => c.finMin <= 300, mal: 'A las 3:05 llegó el panadero y los vio. El dueño no lo superó.' },
+  { id: 'espejo', chip: 'Quiere verse', quien: 'La chef', txt: 'Quiero peinarme en mi campana. Migdaléenla hasta que brille como espejo.', premio: .25,
+    ok: c => c.pulido >= .75, mal: 'La chef intentó peinarse en la campana y solo vio una mancha con forma de Beto.' },
+  { id: 'sinHidro', chip: 'Bebé dormido', quien: 'El dueño', txt: 'Mi bebé duerme arriba: nada de hidrolavadora, que hace ruido. A mano, como antes.', premio: .2, hidro: true,
+    ok: c => !c.usoHidro, mal: 'El bebé se despertó con la hidrolavadora. Y el dueño. Y medio barrio.' },
+  { id: 'sinEspuma', chip: 'Alérgico', quien: 'El chef', txt: 'Soy alérgico al desengrasante. Ni una gota de espuma. Pura rasqueta y fe.', premio: .25,
+    ok: c => !c.usoEspuma, mal: 'El chef estornudó cuarenta veces seguidas. Dice que te va a mandar la cuenta del doctor.' },
+  { id: 'abuela', chip: 'Plancha sagrada', quien: 'Doña Chela', txt: 'Esa plancha era de mi abuela. Si le cae una gota de grasa, me muero. Cubran TODO y quiten todo al final.', premio: .2,
+    ok: c => c.todoCubierto, mal: 'Le cayó una gota a la plancha de la abuela. Doña Chela llora y la limpia con un pañuelo bordado.' },
+  { id: 'musica', chip: 'Con música', quien: 'El gerente', txt: 'Aquí la cocina trabaja con música. Si apagan la radio, la campana se pone triste. En serio.', premio: .15,
+    ok: c => !c.radioApagada, mal: 'Apagaste la radio. El gerente asegura que la campana «se ve deprimida».' },
+  { id: 'tacos', chip: 'Paga en tacos', quien: 'Don Toño', txt: 'Ando corto de efectivo. Te pago la mitad en dinero y la otra mitad en tacos de pastor. Ciento veinte.', premio: 0, tacos: true,
+    ok: () => true, mal: '' },
+];
+const pedido = id => PEDIDOS.find(p => p.id === id);
+
+// Medallas: se ganan en el turno y desbloquean el estilo de la empresa.
+const MEDALLAS = [
+  { id: 'primera', n: 'Primera de muchas', d: 'Aprueba tu primera inspección.', ico: '✓' },
+  { id: 'notaA', n: 'Cuadro de honor', d: 'Saca una A en un turno.', ico: 'A' },
+  { id: 'espejo', n: 'Metal desnudo', d: 'Todas las zonas a 50 µm o menos.', ico: '◇' },
+  { id: 'rapido', n: 'Relámpago', d: 'Aprueba antes de las 3:00.', ico: '⚡' },
+  { id: 'limpio', n: 'Turno sin rasguños', d: 'Aprueba sin ningún daño.', ico: '♥' },
+  { id: 'combo', n: 'Raspador de élite', d: 'Llega al combo ×3.', ico: '×3' },
+  { id: 'migdal', n: 'Maestro migdaleador', d: 'Migdalea el 90 % de la campana.', ico: '✦' },
+  { id: 'gerente', n: 'Domador de gerentes', d: 'Aprueba con gerente sin que explote.', ico: '☕' },
+  { id: 'mapache', n: 'Amigo de los mapaches', d: 'Saca al mapache por las buenas.', ico: '🦝' },
+  { id: 'cuca', n: 'Cazacucarachas', d: 'Atrapa a la cucaracha gigante.', ico: '✋' },
+  { id: 'apagon', n: 'Ojos de gato', d: 'Aprueba una noche con apagón.', ico: '☾' },
+  { id: 'pedido', n: 'Cliente exigente', d: 'Cumple un pedido especial.', ico: '★' },
+  { id: 'duelo', n: 'Adiós, Cuñado', d: 'Gánale un duelo a El Cuñado.', ico: '⚑' },
+  { id: 'diez', n: 'Veterano', d: 'Aprueba 10 inspecciones.', ico: '10' },
+  { id: 'fotos', n: 'Fotógrafo de grasa', d: 'Junta 6 fotos en el álbum.', ico: '▣' },
+];
+const medalla = id => MEDALLAS.find(m => m.id === id);
+const NOTAS = [[92, 'A+'], [82, 'A'], [70, 'B'], [58, 'C'], [45, 'D'], [0, 'F']];
+const nota = p => NOTAS.find(n => p >= n[0])[1];
+const COL_NOTA = { 'A+': '#ffd23f', A: '#69c97a', B: '#9fe0ef', C: '#e0a040', D: '#ff8a1f', F: '#ff6a5c' };
+
+// Estilo de la empresa: se desbloquea con medallas.
+const LOOK = {
+  espuma: { n: 'Color de la espuma', ops: [
+    { id: 'blanca', n: 'Blanca', c: [.92, .97, 1] }, { id: 'rosa', n: 'Rosa chicle', c: [1, .55, .8], m: 'combo' },
+    { id: 'menta', n: 'Verde menta', c: [.55, 1, .75], m: 'limpio' }, { id: 'oro', n: 'Dorada', c: [1, .82, .3], m: 'notaA' }] },
+  casco: { n: 'Casco del compañero', ops: [
+    { id: 'normal', n: 'El suyo' }, { id: 'oro', n: 'Dorado', c: '#ffcc33', m: 'espejo' },
+    { id: 'rosa', n: 'Rosa', c: '#ff7ab8', m: 'mapache' }, { id: 'negro', n: 'Negro mate', c: '#2a2a2e', m: 'duelo' }] },
+  pegatina: { n: 'Pegatina de la camioneta', ops: [
+    { id: 'nada', n: 'Ninguna' }, { id: 'llamas', n: 'Llamas', m: 'rapido' }, { id: 'mapache', n: 'Mapache', m: 'mapache' },
+    { id: 'estrella', n: 'Estrella', m: 'pedido' }, { id: 'cuca', n: 'Cucaracha', m: 'cuca' }] },
+  linterna: { n: 'Luz del casco', ops: [
+    { id: 'calida', n: 'Cálida', c: 0xfff1dd }, { id: 'fria', n: 'Fría', c: 0xd8ecff, m: 'primera' },
+    { id: 'disco', n: 'Disco', m: 'apagon' }] },
+  combo: { n: 'Sonido del combo', ops: [
+    { id: 'clasico', n: 'Clásico' }, { id: 'corneta', n: 'Corneta', m: 'diez' }, { id: 'cumbia', n: 'Güiro', m: 'migdal' }] },
+};
+const look = k => LOOK[k].ops.find(o => o.id === (S.look || {})[k]) || LOOK[k].ops[0];
+
+// Lo que pasa de día, antes de salir a trabajar.
+const DIAS = [
+  { id: 'llanta', t: 'Llanta ponchada', txt: 'Camino al trabajo, ¡pum! La llanta trasera. Beto jura que el clavo «ya estaba ahí».', ops: [
+    { t: 'Cambiarla nosotros', d: 'Gratis, pero llegas 30 minutos tarde', f: H => { H.retraso = 30; return 'Cambiada. Beto apretó las tuercas «a ojo». Llegan media hora tarde.'; } },
+    { t: 'Llamar a la grúa', d: '−$80', f: () => { S.dinero -= 80; return 'La grúa llegó en diez minutos y cobró como si fueran tres horas.'; } }] },
+  { id: 'multa', t: 'El de tránsito', txt: 'Un oficial te para: la camioneta echa humo negro y el escape va amarrado con alambre.', ops: [
+    { t: 'Pagar la multa', d: '−$60', f: () => { S.dinero -= 60; return 'Multa pagada. El oficial se lleva también un llavero de recuerdo.'; } },
+    { t: 'Explicarle la norma NFPA 96', d: 'A ver qué pasa', f: () => { if (azar(.5)) return 'A los cuatro minutos se quedó dormido. Te vas despacito.'; S.dinero -= 120; return 'No le gustó la clase. Multa doble: −$120.'; } }] },
+  { id: 'almuerzo', t: 'El almuerzo desaparecido', txt: 'Beto se comió tu almuerzo. Y el del cliente. Y la salsa del cliente.', ops: [
+    { t: 'Comprar tacos para todos', d: '−$40 · la cuadrilla trabaja más rápido esta noche', f: H => { S.dinero -= 40; H.animo = true; return 'Tacos para todos. La cuadrilla va con energía de domingo.'; } },
+    { t: 'Perdonarlo', d: 'Es familia (de Don Rigo)', f: () => 'Beto promete no volver a hacerlo. Lo promete con la boca llena.' }] },
+  { id: 'viral', t: '¡Video viral!', txt: 'Un sobrino de Beto subió un video tuyo raspando una campana en cámara rápida. Va por los cincuenta mil «me gusta».', ops: [
+    { t: 'Aprovechar la fama', d: '+3 de reputación', f: () => { S.rep = clamp(S.rep + 3, 0, 100); return 'Te reconocen en la gasolinera. Un señor te pide que le firmes la gorra.'; } },
+    { t: 'Pedir que lo borre', d: 'Discreción ante todo', f: () => 'Lo borró. Bueno, lo resubió con música de suspenso. Ya va por cien mil.' }] },
+  { id: 'perro', t: 'Pasajero nuevo', txt: 'Un perro callejero se subió a la camioneta y se sentó en el asiento del copiloto. No se quiere bajar.', solo: s => !s.perro, ops: [
+    { t: 'Adoptarlo', d: 'Se llamará Grasita', f: () => { S.perro = true; return 'Grasita ya es parte de la empresa. Ladra a los ductos. A todos.'; } },
+    { t: 'Darle un taco y despedirlo', d: 'Con dolor', f: () => 'Se comió el taco, te miró con desprecio y se fue. Beto lloró un poquito.' }] },
+  { id: 'arrancon', t: 'Semáforo en rojo', txt: `La camioneta de ${RIVAL} se para junto a la tuya. El Cuñado acelera dos veces y te guiña un ojo.`, ops: [
+    { t: '¡Arrancón!', d: 'Por el honor de la empresa', f: () => { if (azar(.5)) { S.rep = clamp(S.rep + 2, 0, 100); return '¡Ganaste! La camioneta vieja tiene más corazón que motor. +2 de reputación.'; } S.dinero -= 30; return 'La camioneta se apagó a media calle. El Cuñado se rió. Empujarla costó $30 en refrescos.'; } },
+    { t: 'Ignorarlo con dignidad', d: 'Mirada al frente', f: () => 'Lo ignoras. Beto le saca la lengua por la ventana. Dignidad a medias.' }] },
+  { id: 'donas', t: 'Regalo de una clienta', txt: 'Una clienta te deja una caja de donas: «Por la campana de la otra vez, quedó preciosa».', ops: [
+    { t: 'Guardarlas para el gerente', d: 'Esta noche tendrá más paciencia', f: H => { H.donas = true; return 'Las donas viajan en el asiento de atrás, custodiadas por Beto. Faltan dos.'; } },
+    { t: 'Comérselas ya', d: '+25 de experiencia', f: () => { S.xp += 25; return 'Desayuno de campeones. Beto se comió cuatro y dice que fue una.'; } }] },
+];
+
+// Radio Grasa FM: canciones inventadas, un locutor nocturno y mucha grasa.
+const CANCIONES = [
+  { t: 'Cumbia del Ducto', de: 'Los Extractores del Norte', estilo: 'cumbia' },
+  { t: 'La Rasqueta Sabrosona', de: 'Sonora Desengrasante', estilo: 'cumbia' },
+  { t: 'Mi Corazón Tiene Más Grasa Que Tu Campana', de: 'Trío Los Filtros', estilo: 'bolero' },
+  { t: 'Extractor de Amor', de: 'Lucerito del Ducto', estilo: 'bolero' },
+  { t: 'Ranchera del Mapache', de: 'Mariachi Tres Micras', estilo: 'ranchera' },
+  { t: 'El Corrido de Don Rigo', de: 'Los Jubilados del Lago', estilo: 'ranchera' },
+  { t: 'Rata de Dos Patas (versión de Beto)', de: 'Beto y su Karaoke', estilo: 'ranchera' },
+];
+const LOCUTOR = ['Son las {h} y esto es Radio Grasa FM, la estación que no se despega.', 'Saludos a todos los que limpian campanas a estas horas. Ustedes son los verdaderos héroes. Y huelen a papas.',
+  'Mensaje de un radioescucha: «Beto, devuélveme la licuadora». Firma: tu prima.', 'Recuerden: la espuma ablanda, la rasqueta quita y el mapache observa.',
+  `Esta canción va para ${RIVAL}: que les dure la grasa.`, 'Radio Grasa FM: si la escuchas, ya es tarde para dormir.', 'Llamó Doña Chela: dice que nadie toque la plancha de su abuela. Ni en la radio.'];
+
 // Buscar clientes: cada noche hay dos llamadas.
 const MARKETING = [
   { id: 'volantes', n: 'Repartir volantes en el barrio', d: 'Una orden más esta noche, de las sencillas.', p: 40, etapa: 0,
@@ -392,12 +542,27 @@ function nueva() {
   S = { v: 4, fase: 'aprendiz', etapa: 0, empresa: null, abierta: 0, compPref: 'beto', noche: 1, dinero: 0, rep: 25, aprobados: 0, mejor: 0, nivel: 1, xp: 0, perks: {},
     eq: { rasqueta: 1, conc: false, hidro: false, orbital: false, bolsa: false, xl: false, camioneta: 1 },
     aj: { asist: true, resaltar: false, comodo: false, sonido: true }, album: [], clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 1 };
+  completar(S);
+}
+// Lo que se añadió después (medallas, récords, estilo, radio): se rellena sin tocar la partida.
+function completar(s) {
+  s.medallas = s.medallas || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
+  if (s.aj.radio === undefined) s.aj.radio = true;
+  return s;
 }
 function migrar(s) {
   if (s.v === 2) Object.assign(s, { v: 3, nivel: 1, xp: 0, perks: {}, clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 1 }, { eq: Object.assign({ xl: false, camioneta: 1 }, s.eq) });
   // Las partidas de antes pasan por el aprendizaje: si ya llevaban más de 4 noches, toca el despido.
   if (s.v === 3) { Object.assign(s, { v: 4, fase: 'aprendiz', etapa: 0, empresa: null, abierta: 0, compPref: 'beto', hoy: null }); delete s.rango; }
-  return s.v === 4 ? s : null;
+  return s.v === 4 ? completar(s) : null;
+}
+// Fotos del álbum: aparte de la partida, para no inflarla.
+const KEY_FOTOS = 'hood-cleaners-fotos';
+function fotos() { try { return JSON.parse(localStorage.getItem(KEY_FOTOS)) || []; } catch (e) { return []; } }
+function guardarFoto(f) {
+  const l = fotos(); l.unshift(f);
+  // Si no cabe, se sueltan las más viejas.
+  for (let n = Math.min(l.length, 12); n > 0; n--) { try { localStorage.setItem(KEY_FOTOS, JSON.stringify(l.slice(0, n))); return; } catch (e) { /* lleno */ } }
 }
 let guardada = false;   // hay una partida guardada que se puede continuar
 function guardar() { guardada = true; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
@@ -407,7 +572,7 @@ const jugador = () => S.jugador || 'chamaco';
 
 // ------------------------------------------------------------------ audio
 
-const A = { ctx: null, ruido: null, chorro: null };
+const A = { ctx: null, ruido: null, salida: null, loops: {}, hasta: {} };
 function audio() {
   if (!A.ctx) {
     try {
@@ -415,37 +580,154 @@ function audio() {
       const b = A.ctx.createBuffer(1, A.ctx.sampleRate, A.ctx.sampleRate), d = b.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       A.ruido = b;
+      A.salida = A.ctx.createDynamicsCompressor(); A.salida.connect(A.ctx.destination);   // que el chorro y la radio juntos no saturen
     } catch (e) { A.ctx = null; }
   }
   if (A.ctx && A.ctx.state === 'suspended') A.ctx.resume();
 }
 const suena = () => A.ctx && S.aj.sonido;
-function rafaga(dur, freq, vol, tipo = 'bandpass', q = 1.2) {
+function rafaga(dur, freq, vol, tipo = 'bandpass', q = 1.2, hasta = null, cuando = 0) {
   if (!suena()) return;
-  const c = A.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-  s.buffer = A.ruido; s.loop = true; f.type = tipo; f.frequency.value = freq; f.Q.value = q;
-  g.gain.setValueAtTime(vol, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + dur);
-  s.connect(f); f.connect(g); g.connect(c.destination); s.start(c.currentTime, Math.random() * .5); s.stop(c.currentTime + dur + .02);
+  const c = A.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t0 = c.currentTime + cuando;
+  s.buffer = A.ruido; s.loop = true; f.type = tipo; f.frequency.setValueAtTime(freq, t0); f.Q.value = q;
+  if (hasta) f.frequency.exponentialRampToValueAtTime(hasta, t0 + dur);
+  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+  s.connect(f); f.connect(g); g.connect(A.salida); s.start(t0, Math.random() * .5); s.stop(t0 + dur + .02);
 }
 function tono(freq, dur, vol = .12, tipo = 'sine', fin = null, cuando = 0) {
   if (!suena()) return;
   const c = A.ctx, o = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + cuando;
   o.type = tipo; o.frequency.setValueAtTime(freq, t0); if (fin) o.frequency.exponentialRampToValueAtTime(fin, t0 + dur);
   g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
-  o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + dur + .02);
+  o.connect(g); g.connect(A.salida); o.start(t0); o.stop(t0 + dur + .02);
 }
-function chorro(on) {
+// Sonidos continuos: el spray de la espuma (psssh), el chorro de la hidro con su bomba, la migdaleadora (bzzz).
+const VOL_LOOP = { spray: .11, agua: .16, pulidora: .07, coche: .05 };
+function crearLoop(id) {
+  const c = A.ctx, g = c.createGain(), fuentes = [];
+  g.gain.value = 0; g.connect(A.salida);
+  const ruido = (tipo, f, q, vol) => { const s = c.createBufferSource(), fl = c.createBiquadFilter(), gg = c.createGain(); s.buffer = A.ruido; s.loop = true; fl.type = tipo; fl.frequency.value = f; fl.Q.value = q; gg.gain.value = vol; s.connect(fl); fl.connect(gg); gg.connect(g); s.start(0, Math.random() * .5); fuentes.push(s); return { fl, gg }; };
+  const osc = (tipo, f, vol) => { const o = c.createOscillator(), gg = c.createGain(); o.type = tipo; o.frequency.value = f; gg.gain.value = vol; o.connect(gg); gg.connect(g); o.start(); fuentes.push(o); return { o, gg }; };
+  const lfo = (param, f, prof) => { const o = c.createOscillator(), gg = c.createGain(); o.frequency.value = f; gg.gain.value = prof; o.connect(gg); gg.connect(param); o.start(); fuentes.push(o); };
+  if (id === 'spray') { const a = ruido('bandpass', 5200, .7, 1); ruido('highpass', 8500, .7, .4); lfo(a.fl.frequency, 6, 900); lfo(a.gg.gain, 17, .2); }
+  if (id === 'agua') { const a = ruido('bandpass', 850, .5, .9); const b = ruido('highpass', 3000, .7, .5); lfo(a.gg.gain, 9, .3); lfo(b.fl.frequency, 4, 700); const m = osc('sawtooth', 48, .06); lfo(m.o.frequency, 2.5, 2); }
+  if (id === 'pulidora') { const m = osc('sawtooth', 112, .5); lfo(m.o.frequency, 8, 7); ruido('bandpass', 2600, 3, .5); }
+  if (id === 'coche') { const m = osc('square', 800, .5); lfo(m.o.frequency, 2.2, 380); }
+  return { g, fuentes, apagado: false, t: null };
+}
+function loop(id, on) {
   if (!A.ctx) return;
-  if (on && suena() && !A.chorro) {
-    const c = A.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-    s.buffer = A.ruido; s.loop = true; f.type = 'highpass'; f.frequency.value = 2400; g.gain.value = .07;
-    s.connect(f); f.connect(g); g.connect(c.destination); s.start(); A.chorro = { s };
-  } else if (!on && A.chorro) { A.chorro.s.stop(); A.chorro = null; }
+  on = !!(on && suena());
+  let b = A.loops[id];
+  if (on && !b) b = A.loops[id] = crearLoop(id);
+  if (!b || b.apagado === !on) return;
+  const t = A.ctx.currentTime;
+  b.apagado = !on; b.g.gain.cancelScheduledValues(t); b.g.gain.setTargetAtTime(on ? VOL_LOOP[id] : 0, t, on ? .025 : .07);
+  clearTimeout(b.t);
+  if (!on) b.t = setTimeout(() => { if (A.loops[id] === b && b.apagado) { b.fuentes.forEach(s => { try { s.stop(); } catch (_) { /* ya parado */ } }); delete A.loops[id]; } }, 500);
 }
+// Un loop que suena mientras se siga pidiendo (cada pasada lo alarga un poco).
+function pulso(id, seg = .16) { if (!A.loops[id] || A.loops[id].apagado) { if (id === 'spray') rafaga(.06, 2600, .12, 'highpass'); } loop(id, true); A.hasta[id] = performance.now() + seg * 1000; }
+function apagarPulsos() { const n = performance.now(); for (const id in A.hasta) if (n > A.hasta[id]) { delete A.hasta[id]; loop(id, false); } }
+const chorro = on => loop('agua', on);
+const gota = (vol = .05) => tono(rnd(1300, 2300), .08, vol, 'sine', rnd(320, 600));      // plic
+const burbuja = () => tono(rnd(2400, 4600), .025, .014, 'sine', rnd(4800, 6000));     // la espuma chisporrotea
+const rasgar = () => { rafaga(.32, 450, .2, 'bandpass', 2.2, 3800); rafaga(.18, 5000, .05, 'highpass', 1, null, .08); };   // rrrrip
+const cinta = () => rafaga(.12, 3200, .1, 'bandpass', 3, 1100);   // zzzip
 const sDing = () => { tono(880, .25, .12); tono(1320, .4, .1, 'sine', null, .12); };
 const sAlarma = () => { tono(520, .35, .1, 'square', 300); tono(390, .45, .09, 'square', 220, .32); };
-const sCombo = n => tono(500 + n * 180, .18, .08, 'triangle');
+function sCombo(n) {
+  const k = look('combo').id;
+  if (k === 'corneta') [0, 4, 7, n > 2 ? 12 : 7].forEach((s, i) => tono(392 * Math.pow(2, s / 12), i === 3 ? .35 : .1, .07, 'sawtooth', null, i * .09));
+  else if (k === 'cumbia') { for (let i = 0; i < 3; i++) rafaga(i === 2 ? .14 : .05, 4200, .12, 'bandpass', 2, 2600, i * .08); tono(830, .12, .08, 'square', null, .26); }
+  else tono(500 + n * 180, .18, .08, 'triangle');
+}
 const sCaja = () => { tono(1046, .12, .1, 'triangle'); tono(1568, .3, .09, 'triangle', null, .1); };
+
+// ---- Radio Grasa FM: música inventada sobre la marcha, sonando por un altavoz barato
+const RADIO = { on: false, nodo: null, cancion: null, paso: 0, prox: 0, pasos: 0 };
+const QUIEN_RADIO = { n: 'Radio Grasa FM', color: '#c6a0ff' };
+const ESTILOS = {
+  cumbia: { bpm: 104, compas: 8, prog: [[0, 0], [5, 0], [7, 0], [0, 0]] },
+  bolero: { bpm: 70, compas: 8, prog: [[0, 0], [9, 1], [2, 1], [7, 0]] },
+  ranchera: { bpm: 150, compas: 6, prog: [[0, 0], [7, 0], [7, 0], [0, 0]] },
+};
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+function voz(tipo, f, t, dur, vol, ataque = .006) {
+  const c = A.ctx, o = c.createOscillator(), g = c.createGain();
+  o.type = tipo; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + ataque); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  o.connect(g); g.connect(RADIO.nodo); o.start(t); o.stop(t + dur + .05);
+}
+function golpe(f, t, dur, vol, tipo = 'highpass') {
+  const c = A.ctx, s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = A.ruido; fl.type = tipo; fl.frequency.value = f; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+  s.connect(fl); fl.connect(g); g.connect(RADIO.nodo); s.start(t, Math.random() * .5); s.stop(t + dur + .02);
+}
+// Una melodía de 4 compases sobre la escala pentatónica; la canción es A A B A, dos veces.
+function frase(est, raiz) {
+  const pent = [0, 2, 4, 7, 9, 12, 14, 16], n = est.compas * 4, out = [];
+  let i = 3;
+  for (let k = 0; k < n; k++) {
+    const fuerte = k % (est.compas / 2) === 0;
+    if (azar(fuerte ? .9 : est.compas === 6 ? .55 : .4)) { i = clamp(i + Math.round(rnd(-2, 2)), 0, pent.length - 1); out.push(raiz + 12 + pent[i]); } else out.push(null);
+  }
+  return out;
+}
+function radioCancion() {
+  const estilos = S.fase === 'aprendiz' || S.eq.camioneta < 2 ? ['ranchera', 'cumbia'] : Object.keys(ESTILOS);   // la radio de Don Rigo casi solo agarra rancheras
+  const lista = CANCIONES.filter(c => estilos.includes(c.estilo) && c !== RADIO.cancion);
+  const can = uno(lista), est = ESTILOS[can.estilo], raiz = 50 + Math.floor(rnd(0, 7));
+  RADIO.cancion = can; RADIO.est = est; RADIO.raiz = raiz; RADIO.a = frase(est, raiz); RADIO.b = frase(est, raiz);
+  RADIO.paso = 0; RADIO.pasos = est.compas * 32;
+  if (A.ctx) { const t = A.ctx.currentTime; golpe(1400, t, .5, .25, 'bandpass'); RADIO.prox = t + .55; }   // estática entre canciones
+  if (M && (M.fase === 'turno' || M.fase === 'prep')) {
+    const loc = azar(.55) ? ' ' + uno(LOCUTOR).replace('{h}', M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480)) : '';
+    decir(QUIEN_RADIO, `♪ «${can.t}», de ${can.de}.${loc}`);
+  }
+}
+function radioEncender(on) {
+  on = !!(on && suena() && S.aj.radio);
+  if (on === RADIO.on) return;
+  RADIO.on = on;
+  if (on) {
+    if (!RADIO.nodo) {
+      const c = A.ctx, g = c.createGain(), hp = c.createBiquadFilter(), lp = c.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.value = 280; lp.type = 'lowpass'; lp.frequency.value = 3400;
+      g.connect(hp); hp.connect(lp); lp.connect(A.salida); RADIO.nodo = g;
+    }
+    RADIO.nodo.gain.setTargetAtTime(.2, A.ctx.currentTime, .1);
+    radioCancion();
+  } else if (RADIO.nodo) RADIO.nodo.gain.setTargetAtTime(0, A.ctx.currentTime, .05);
+}
+// Va programando las notas un poco por delante del reloj del audio.
+function radioTick() {
+  if (!RADIO.on || !A.ctx) return;
+  const est = RADIO.est, paso = 60 / est.bpm / 2;
+  while (RADIO.prox < A.ctx.currentTime + .3) {
+    const t = RADIO.prox, k = RADIO.paso, cpz = est.compas, enC = k % cpz, compas = Math.floor(k / cpz);
+    const [grado, menor] = est.prog[compas % 4], r = RADIO.raiz + grado, tercera = menor ? 3 : 4;
+    const seccion = Math.floor(compas / 4) % 4, mel = (seccion === 2 ? RADIO.b : RADIO.a)[k % (cpz * 4)];
+    if (est === ESTILOS.cumbia) {
+      if (enC === 0 || enC === 4) voz('triangle', hz(r - 12 + (enC === 4 ? 7 : 0)), t, paso * 1.8, .5);
+      golpe(enC % 2 ? 6500 : 4200, t, enC % 4 === 2 ? .16 : .05, enC % 2 ? .1 : .16);   // güiro
+      if (enC % 2) for (const s of [0, tercera, 7]) voz('square', hz(r + s), t, paso * .5, .045);
+      if (mel) voz('sawtooth', hz(mel), t, paso * 1.6, .07, .02);
+    } else if (est === ESTILOS.bolero) {
+      if (enC === 0 || enC === 4) voz('triangle', hz(r - 12 + (enC === 4 ? 7 : 0)), t, paso * 3.5, .45);
+      voz('triangle', hz(r + [0, tercera, 7, 12][enC % 4]), t, paso * 2, .1);   // la guitarra arpegia
+      if (enC % 2 === 0) golpe(7000, t, .06, .05);   // maracas
+      if (mel && enC % 2 === 0) voz('sine', hz(mel), t, paso * 3, .16, .04);
+    } else {
+      if (enC === 0) voz('triangle', hz(r - 12), t, paso * 1.8, .55);
+      if (enC === 3) voz('triangle', hz(r - 5), t, paso * 1.8, .4);
+      if (enC === 2 || enC === 4) for (const s of [0, tercera, 7]) voz('square', hz(r + s), t, paso * .6, .04);
+      if (mel) voz('sawtooth', hz(mel), t, paso * 1.3, .09, .01);   // la trompeta
+    }
+    RADIO.prox += paso; RADIO.paso++;
+    if (RADIO.paso >= RADIO.pasos) { radioCancion(); return; }
+  }
+}
 
 // ------------------------------------------------------------------ escena 3D
 
@@ -506,12 +788,12 @@ TX.lona = texCanvas(lienzo(128, 128, (g, w, h) => {
 
 // Material de grasa: una textura de datos por superficie (R grasa, G espuma, B pulido) decide color, brillo y metal.
 // Costra negra y brillante → película ámbar → acero que refleja la luz.
-const U = { hl: { value: 0 }, tiempo: { value: 0 } };
+const U = { hl: { value: 0 }, tiempo: { value: 0 }, espuma: { value: new T.Vector3(.92, .97, 1) } };
 function materialGrasa(base, dtex, lado) {
   const m = new T.MeshStandardMaterial({ map: base, color: 0xffffff, metalness: 1, roughness: .3, side: lado || T.FrontSide });
   m.onBeforeCompile = sh => {
-    sh.uniforms.mapaGrasa = { value: dtex }; sh.uniforms.uHl = U.hl; sh.uniforms.uT = U.tiempo;
-    sh.fragmentShader = 'uniform sampler2D mapaGrasa;\nuniform float uHl;\nuniform float uT;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n' + sh.fragmentShader
+    sh.uniforms.mapaGrasa = { value: dtex }; sh.uniforms.uHl = U.hl; sh.uniforms.uT = U.tiempo; sh.uniforms.uEsp = U.espuma;
+    sh.fragmentShader = 'uniform sampler2D mapaGrasa;\nuniform float uHl;\nuniform float uT;\nuniform vec3 uEsp;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n' + sh.fragmentShader
       .replace('#include <map_fragment>', `#include <map_fragment>
         vec4 dm = texture2D(mapaGrasa, vUv);
         float gr = hh(floor(vUv * 180.0));
@@ -526,7 +808,7 @@ function materialGrasa(base, dtex, lado) {
         vec2 celda = fract(vUv * 90.0) - 0.5; float rb = hh(floor(vUv * 90.0));
         float burb = smoothstep(0.22 + 0.2 * rb, 0.16 + 0.2 * rb, length(celda));
         float fo = dm.g * (0.6 + 0.4 * burb);
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.97, 1.0), fo * 0.6);
+        diffuseColor.rgb = mix(diffuseColor.rgb, uEsp, fo * 0.6);
         float hlv = uHl * tF * (0.55 + 0.45 * sin(uT * 6.0));`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = mix(mix(0.24, 0.05, dm.b), mix(0.42, 0.3, tC), tF);
@@ -776,8 +1058,10 @@ function construirNoche(orden) {
   // Gente: el compañero, los ayudantes y, si toca, el gerente
   piezas.gente = [];
   const equipo = orden ? orden.equipo : [{ color: COMPANEROS.beto.color }];
-  equipo.forEach((m, i) => { const p = persona(m.color, false); p.position.set(-lineW / 2 - .5 + (i % 2) * .5, 0, .5 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
+  equipo.forEach((m, i) => { const p = persona(i === 0 && look('casco').c ? look('casco').c : m.color, false); p.position.set(-lineW / 2 - .5 + (i % 2) * .5, 0, .5 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
   piezas.gerente = persona(0, true); piezas.gerente.position.set(2.9, 0, 1.3); piezas.gerente.rotation.y = -1; piezas.gerente.visible = !!(orden && orden.eventos.includes('gerente')); mundo.add(piezas.gerente);
+  piezas.rival = null;
+  if (orden && orden.duelo) { piezas.rival = persona('#d7382b'); piezas.rival.position.set(Math.min(lineW / 2 + .7, 3.1), 0, .45); mundo.add(piezas.rival); }
 
   // Vistas de cámara: lo que se ve en cada zona y en la preparación (con desplazamiento lateral si no cabe)
   const vista = (mira, dir, ancho, dMin, dMax, fov) => ({ mira, dir: dir.normalize(), ancho, dMin, dMax, fov, pan: 0, maxPan: 0 });
@@ -923,15 +1207,33 @@ function empezarTurno(orden) {
   construirNoche(orden);
   M = { orden, comp: COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60, herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
-    eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: 0,
-    equipo: orden.equipo.map(e => ({ ...e, t: rnd(.2, .8) })) };
+    eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
+    maxCombo: 0, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
+    pedido: orden.pedido ? pedido(orden.pedido) : null, cliente: { n: 'Cliente', color: '#e9e9e9' },
+    equipo: orden.equipo.map(e => ({ ...e, fuerza: e.fuerza * (orden.animo ? 1.15 : 1), t: rnd(.2, .8) })) };
+  if (orden.donas) M.paciencia += 40;   // las donas de la clienta, para el gerente
+  if (M.pedido) M.cliente = { n: M.pedido.quien, color: '#e9e9e9' };
+  // El duelo: El Cuñado limpia la misma cocina a la vez. Gana quien deje todo bajo el límite primero.
+  if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74), tuyo: null, rivalFin: null, charlaT: rnd(14, 22) };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   if (orden.comp === 'beto' && azar(.75)) M.eventos.push({ tipo: 'tuberia', zona: 1, en: rnd(14, 26) });
   if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: ultZona(), en: rnd(8, 14) });
   if (orden.eventos.includes('alarma')) M.eventos.push({ tipo: 'alarma', zona: 1, en: rnd(25, 40) });
   if (orden.eventos.includes('techo')) M.eventos.push({ tipo: 'techo', zona: ultZona(), en: 1.2 });
+  // Sorpresas que no avisan: como mucho dos por noche.
+  if (S.noche >= 2) {
+    const extra = [];
+    if (azar(.3)) extra.push({ tipo: 'cucaracha', zona: 1, en: rnd(9, 20) });
+    if (azar(.3)) extra.push({ tipo: 'atorado', zona: ultZona(), en: rnd(4, 10) });
+    if (azar(.2)) extra.push({ tipo: 'apagon', zona: 1, en: rnd(14, 26) });
+    if (azar(.2)) extra.push({ tipo: 'coche', zona: 0, en: rnd(8, 18) });
+    M.eventos.push(...extra.sort(() => Math.random() - .5).slice(0, 2));
+  }
   P.hidden = true;
   escenaPrep(0);
+  radioEncender(true);
+  if (M.pedido) setTimeout(() => M && M.fase === 'prep' && decir(M.cliente, M.pedido.txt), 1800);
+  if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
 }
 
 // ---- preparación jugable: seguridad, cubrir la cocina y envolver la campana
@@ -966,6 +1268,7 @@ function escenaPrep(i) {
     ap.forEach(a => marca(a.pos, 'Cubrir', () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
     panelPrep('Cubrir la cocina', 'Toca cada aparato para taparlo con plástico. Lo que quede al aire se llena de agua con grasa y espuma.', estado(), 'Seguir sin terminar');
     actualizar();
+    if (M.pedido && M.pedido.id === 'abuela') decir(M.cliente, '¡Esa plancha es la de mi abuela! Cúbranla bien. Y todo lo demás también.');
   } else if (i === 2) {
     irVista(VISTAS.frente);
     const ci = piezas.cintas, bo = piezas.bolsas;
@@ -976,7 +1279,7 @@ function escenaPrep(i) {
       if (ci.every(c => c.hecho) && !bo.some(b => b.marca)) bo.forEach(b => { b.marca = marca(b.pos, 'Colgar la bolsa', () => { b.hecho = true; b.mesh.visible = true; gastar(2); tono(500, .1, .08, 'triangle'); actualizar(); }); });
       const btn = $('#prepSig'); if (btn) btn.textContent = ci.every(c => c.hecho) && bo.every(b => b.hecho) ? 'Empezar a limpiar' : 'Empezar sin terminar';
     };
-    ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(.6); tono(900 + Math.random() * 200, .05, .06, 'square'); actualizar(); }, true));
+    ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(.6); cinta(); actualizar(); }, true));
     M.arrastrar = true;
     panelPrep('Envolver la campana', 'Pasa el dedo por los puntos del borde para pegar el plástico con cinta: forma un embudo. Luego cuelga la bolsa donde cae el agua.', estado(), 'Empezar sin terminar');
     actualizar();
@@ -1008,6 +1311,7 @@ function arrancarTurno() {
   M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0;
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
+  $('#duelo').hidden = !M.duelo; pintarRadio();
   irVista(Z[0].vista);
   pintarHud(true);
   decir(M.comp, uno(['Vamos. Tú los filtros, yo vigilo.', 'Empezamos por los filtros. Como dice Don Rigo: de abajo hacia arriba y sin preguntar.', 'Filtros primero. Si ves algo que se mueve, no es grasa.']));
@@ -1079,7 +1383,7 @@ function aplicarTramo(a, b) {
     if (M.botella <= 0) { ayuda('Botella de espuma vacía. Te queda la rasqueta.'); return 0; }
     if (!M.avisoEspuma) { M.avisoEspuma = true; ayuda('La espuma no limpia: ablanda la grasa. Espera 2 segundos y pásale la rasqueta.', 6); decir(M.comp, 'Ojo: la espuma no quita nada, solo ablanda. Luego toca la rasqueta.'); }
     else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda('Esto ya está blando: cambia a la rasqueta y raspa.', 4); }
-    rc = .15 / sf.celda; cant = 0; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (S.eq.xl ? 1.5 : 1));
+    rc = .15 / sf.celda; cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (S.eq.xl ? 1.5 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = S.eq.orbital ? .5 : .28; }
   else { rc = radioRasqueta() / sf.celda; cant = fuerzaRasqueta() * ef * multCombo; }
   const pasos = Math.ceil(dist / .4);
@@ -1087,9 +1391,10 @@ function aplicarTramo(a, b) {
   for (let k = 1; k <= pasos; k++) q += raspar(sf, a.gx + (b.gx - a.gx) * k / pasos, a.gy + (b.gy - a.gy) * k / pasos, rc, cant * .4, herr);
   const ahora = performance.now(), libre = ahora - (M.ultRuido || 0);
   if (herr === 'rasqueta' && q > .02) { emitir(b.punto, Math.min(6, 1 + q * 4), 'grasa', b.normal, .8); if (libre > 55) { M.ultRuido = ahora; rafaga(.09, 700 + M.combo * 140 + Math.random() * 200, .12); } }
-  if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); if (libre > 90) { M.ultRuido = ahora; rafaga(.12, 3500, .05, 'highpass'); } }
+  if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); pulso('spray'); }
   if (herr === 'pulidor') {
-    if (q > 0) { if (azar(.3)) emitir(b.punto, 1, 'chispa', b.normal, .4); if (libre > 80) { M.ultRuido = ahora; rafaga(.1, 1800, .04); } }
+    pulso('pulidora', .2);
+    if (q > 0) { if (azar(.3)) emitir(b.punto, 1, 'chispa', b.normal, .4); }
     else if (azar(.05)) ayuda('Solo se migdalea el metal limpio. Primero quita la grasa.');
   }
   M.trazo.quitado += q;
@@ -1116,6 +1421,7 @@ canvas.addEventListener('pointerdown', e => {
   M.presionado = true; M.apuntado = h;
 });
 canvas.addEventListener('pointermove', e => {
+  if (M && M.apagon > 0) { const o = $('#oscuro').style; o.setProperty('--x', e.clientX + 'px'); o.setProperty('--y', e.clientY + 'px'); }   // la linterna sigue al dedo
   if (dedos.has(e.pointerId)) dedos.set(e.pointerId, e.clientX);
   if (arrastreVista) { const v = camT.a, x = arrastreVista.dos ? xMedia() : e.clientX; v.pan = arrastreVista.pan0 - (x - arrastreVista.x) * (v.vis || 2) / innerWidth; return; }
   if (!M || !M.trazo) return;
@@ -1138,7 +1444,7 @@ function soltar(e) {
     const dir = [dx / l, dy / l];
     const paralela = M.ultDir ? Math.abs(dir[0] * M.ultDir[0] + dir[1] * M.ultDir[1]) > .75 : true;
     if (ahora - M.ultSuelta < 1300 && paralela) {
-      const antes = M.combo; M.combo++;
+      const antes = M.combo; M.combo++; M.maxCombo = Math.max(M.maxCombo, M.combo);
       if ((antes < 3 && M.combo >= 3) || (antes < 6 && M.combo >= 6)) {
         verCombo(M.combo >= 6 ? '×3' : '×2'); sCombo(M.combo >= 6 ? 3 : 2);
         if (M.combo >= 6 && azar(.5)) decir(M.comp, uno(['¡Eso! ¡Como en los videos!', 'Mira nomás, ya pareces profesional.', 'Así se raspa, sí señor.']));
@@ -1149,7 +1455,7 @@ function soltar(e) {
 }
 canvas.addEventListener('pointerup', soltar);
 canvas.addEventListener('pointercancel', soltar);
-function verCombo(t) { const c = $('#combo'); c.textContent = 'COMBO ' + t; c.classList.remove('ve'); void c.offsetWidth; c.classList.add('ve'); }
+function verCombo(t, tal) { const c = $('#combo'); c.textContent = tal ? t : 'COMBO ' + t; c.classList.remove('ve'); void c.offsetWidth; c.classList.add('ve'); }
 
 // ---- rueda de herramientas (mantener para abrir, deslizar y soltar; un toque vuelve a la anterior)
 
@@ -1160,7 +1466,11 @@ function pintarHerrBtn() {
   $('#barraHerr').innerHTML = herramientas().map(h => `<button data-hb="${h}" aria-pressed="${h === M.herr}" aria-label="${HERR[h].n}">${ICONOS[h]}${h === 'espuma' ? `<small class="gasto">${Math.round(M.botella * 100)} %</small>` : `<small>${HERR[h].n}</small>`}</button>`).join('');
 }
 $('#barraHerr').addEventListener('click', e => { const b = e.target.closest('[data-hb]'); if (b && M && M.fase === 'turno' && !(M.ev && M.ev.bloquea)) { audio(); cambiarHerr(b.dataset.hb); } });
-function cambiarHerr(h) { if (h === M.herr) return; M.prevHerr = M.herr; M.herr = h; pintarHerrBtn(); tono(660, .06, .06, 'triangle'); ayuda(HERR[h].d); }
+function cambiarHerr(h) {
+  if (h === M.herr) return; M.prevHerr = M.herr; M.herr = h; pintarHerrBtn(); tono(660, .06, .06, 'triangle'); ayuda(HERR[h].d);
+  const p = M.pedido && M.pedido.id;
+  if ((p === 'sinHidro' && h === 'hidro') || (p === 'sinEspuma' && h === 'espuma')) { ayuda(`Ojo: ${M.pedido.quien.toLowerCase()} pidió ${h === 'hidro' ? 'nada de hidrolavadora' : 'ni una gota de espuma'}.`, 5); decir(M.comp, 'Psst… acuérdate de lo que pidió el cliente.'); }
+}
 hb.addEventListener('pointerdown', e => {
   audio(); if (!M || M.fase !== 'turno' || (M.ev && M.ev.bloquea)) return;
   e.preventDefault(); hb.setPointerCapture(e.pointerId);
@@ -1292,7 +1602,7 @@ const EVENTOS = {
   mapache() {
     piezas.mapache.visible = true; tono(1200, .1, .07, 'square', 1800); tono(1500, .1, .07, 'square', 900, .15);
     carta('Algo se mueve en el ducto', 'Dos ojos brillan al fondo. Es un mapache. Siempre es un mapache.', [
-      { t: 'Abrir el registro despacio', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5, f: () => { piezas.mapache.userData.sale = 1; M.album.push('El mapache del ducto'); resultado('Desalojo amistoso', 'El mapache sale por el registro, te mira y se va con un trozo de pizza. Parece que asiente.', M.comp, 'Creo que nos hicimos amigos. Le voy a poner Rigoberto.'); } },
+      { t: 'Abrir el registro despacio', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5, f: () => { piezas.mapache.userData.sale = 1; M.mapacheAmigo = true; M.album.push('El mapache del ducto'); resultado('Desalojo amistoso', 'El mapache sale por el registro, te mira y se va con un trozo de pizza. Parece que asiente.', M.comp, 'Creo que nos hicimos amigos. Le voy a poner Rigoberto.'); } },
       { t: 'Golpear el ducto', d: 'Que se asuste y salga', f: () => { piezas.mapache.userData.huye = 1; dano('Mapache suelto en la cocina', 60, 3); resultado('Mapache en la cocina', 'Sale disparado hacia la cocina, tira una torre de bandejas y desaparece por la puerta del almacén.', M.comp, '¡Se llevó un pan! ¡SE LLEVÓ UN PAN!'); } },
     ], { bloquea: true });
   },
@@ -1307,8 +1617,54 @@ const EVENTOS = {
     } })), { bloquea: true });
     pedir();
   },
+  atorado() {
+    const c = M.comp; tono(300, .3, .08, 'sawtooth', 150);
+    carta(`¡${c.n} se atoró en el ducto!`, 'Se metió «para ver de cerca» y ahora solo se le ven las botas. Dice que está cómodo. No suena cómodo.', [
+      { t: 'Jalarlo de las botas', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5, f: () => { rafaga(.4, 260, .2, 'lowpass'); tono(500, .15, .1, 'sine', 1400); resultado('¡Plop!', `${c.n} sale disparado como corcho de sidra. Trae una bota menos y un calcetín lleno de grasa.`, c, 'Gracias. Vi cosas ahí dentro. Cosas que no voy a contar.'); } },
+      { t: 'Echarle espuma para que resbale', d: 'Gasta un cuarto de la botella', f: () => { M.botella = Math.max(0, M.botella - .25); pulso('spray', .7); pintarHerrBtn(); resultado('Sale resbalando', `Con la espuma, ${c.n} sale solito, brillante y oliendo a limón industrial.`, c, 'Nunca había estado tan limpio. Ni el día de mi boda.'); } },
+      { t: 'Limpiar alrededor de sus botas', d: 'Sale solo… en 20 minutos', f: () => { sumarTiempo(20); resultado('Ahí se quedó', `Limpias alrededor de las botas de ${c.n}. A los veinte minutos sale solo y dice que «estaba descansando».`, c, 'La mejor siesta de mi vida. Ahí dentro hace calorcito.'); } },
+    ], { bloquea: true });
+  },
+  cucaracha() {
+    tono(2000, .08, .05, 'square', 2600); tono(2300, .08, .05, 'square', 1800, .1);
+    decir(M.comp, uno(['¡¿QUÉ ES ESO?!', '¡Una cucaracha del tamaño de un taco!', 'No grites. No grites. ¡AAAH!']));
+    let quedan = 3;
+    carta('¡Cucaracha gigante!', 'Salió de detrás de la campana y corre por la pared. Atrápala tres veces antes de que se meta en la cafetera.', [], { limite: 7, alAgotar: () => {
+      dano('Fumigación de emergencia (la cucaracha se metió en la cafetera)', 70, 2);
+      resultado('Se escapó', 'Se metió en la cafetera. Mañana alguien va a pedir un capuchino muy crujiente.', M.comp, 'Yo no vuelvo a tomar café. Nunca.');
+    } });
+    const b = document.createElement('button'); b.className = 'blanco cuca'; b.innerHTML = SVG_CUCA; b.setAttribute('aria-label', 'Atrapar la cucaracha');
+    const mover = () => { b.style.left = rnd(12, 88) + '%'; b.style.top = rnd(16, 58) + '%'; b.firstChild.style.transform = `rotate(${Math.round(rnd(0, 360))}deg)`; rafaga(.15, 6000, .03, 'highpass'); };
+    mover();
+    const iv = setInterval(() => { if (!b.isConnected) return clearInterval(iv); mover(); }, 800);
+    b.onclick = () => {
+      tono(900 + quedan * 200, .08, .08, 'square');
+      if (--quedan > 0) return mover();
+      clearInterval(iv); b.remove(); M.cuca = true; M.album.push('La cucaracha gigante');
+      resultado('¡Atrapada!', 'La sacas en un vaso, con todo respeto. Se va caminando muy digna hacia el estacionamiento.', M.comp, 'Le voy a poner Rigoberta. Como el mapache, pero en chiquito.');
+    };
+    $('#blancos').appendChild(b);
+  },
+  apagon() {
+    tono(140, .7, .12, 'sawtooth', 40); M.apagon = 40; M.huboApagon = true; loop('agua', false);
+    carta('¡Apagón!', 'Se fue la luz en toda la cuadra. Solo te queda la linterna del casco. Desde algún lugar, el gerente grita: «¡¿Quién apagó?!»', [
+      { t: 'Seguir con la linterna', d: 'La luz vuelve sola en un rato', prim: true, f: () => { cerrarCarta(); decir(M.comp, uno(['Esto es como acampar, pero con grasa.', 'Si ves dos ojos brillando, no soy yo.', 'Yo no veo nada. Bueno, nunca veo nada.'])); } },
+      { t: 'Buscar el tablero de la luz', d: 'Pierdes 15 minutos, pero vuelve la luz', f: () => { sumarTiempo(15); M.apagon = 0; resultado('Hágase la luz', 'El tablero estaba detrás de una caja de jitomates. Vuelve la luz y el refrigerador hace un ruido de alivio.', M.comp, 'Y se hizo. Gracias a ti. Y a los jitomates.'); } },
+    ], { bloquea: true });
+  },
+  coche() {
+    M.coche = 25; loop('coche', true);
+    const parar = () => { M.coche = 0; loop('coche', false); };
+    carta('¡Alarma de coche!', 'Afuera suena una alarma: UIIIU, UIIIU. Es la de tu camioneta. Un gato se le subió encima y no piensa bajarse.', [
+      { t: 'Salir a apagarla', d: 'Pierdes 10 minutos', f: () => { parar(); sumarTiempo(10); resultado('Silencio', 'El gato sigue encima de la camioneta, mirándote con desprecio. Lo dejas ahí.', M.comp, 'Ese gato tiene más actitud que el gerente.'); } },
+      { t: `Que vaya ${M.comp.n}`, d: '¿Qué podría salir mal?', f: () => { parar(); if (azar(.5)) resultado('Misión cumplida', `${M.comp.n} vuelve con la alarma apagada y un elote para cada uno.`, M.comp, 'El señor de los elotes me fió. Ahora somos amigos.'); else { dano('Cerrajero: las llaves se quedaron dentro de la camioneta', 60, 0); resultado('Llaves dentro', `${M.comp.n} apagó la alarma… y cerró la camioneta con las llaves dentro.`, M.comp, 'Técnicamente ya no suena. Misión cumplida.'); } } },
+      { t: 'Ignorarla', d: 'Tarde o temprano se calla. ¿No?', f: () => { cerrarCarta(); M.vecinos = true; decir(M.comp, 'Los vecinos están prendiendo las luces… uno trae una chancla.'); } },
+    ], { bloquea: true });
+  },
 };
+const SVG_CUCA = '<svg viewBox="0 0 60 60" width="64" height="64"><g stroke="#2a1608" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M22 24 9 15M21 32 6 32M22 40 10 50M38 24 51 15M39 32 54 32M38 40 50 50"/><path d="M27 12 19 1M33 12 41 1" stroke-width="1.6"/></g><ellipse cx="30" cy="34" rx="11" ry="18" fill="#7a4314" stroke="#2a1608" stroke-width="2"/><ellipse cx="30" cy="15" rx="7.5" ry="5.5" fill="#4a250a"/><path d="M30 19v31" stroke="#2a1608" stroke-width="1.6"/><circle cx="26" cy="27" r="2.5" fill="#fff" opacity=".35"/></svg>';
 function lanzarEvento(e) { M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](); }
+const QUIEN_PERRO = { n: 'Grasita', color: '#c8a27a' };
 
 // ---- el gerente que te apura
 
@@ -1347,6 +1703,29 @@ function explotaGerente() {
   ], { bloquea: true });
 }
 
+// ---- el duelo contra El Cuñado: limpia la misma cocina a la vez que tú
+
+const avanceTuyo = () => Z.reduce((a, z) => a + clamp(pctZona(z) / Math.max(.05, 1 - LIMITE / M.orden.micras), 0, 1), 0) / Z.length;
+function tickDuelo(dt) {
+  const d = M.duelo;
+  if ((d.chk = (d.chk || 0) - dt) > 0) return;
+  d.chk = .25;
+  if (d.tuyo === null && Z.every(z => micras(z) <= LIMITE)) {
+    d.tuyo = M.t;
+    if (d.rivalFin === null) { verCombo('¡GANASTE!', true); sCaja(); decir(QUIEN_CUNADO, uno(['¿Ya? ¿YA? Esto no se queda así.', 'Seguro hicieron trampa. Una rasqueta con turbo o algo.', 'Mi cuñado el alcalde se va a enterar de esto.'])); }
+  }
+  if (d.rivalFin === null && M.t >= d.tRival) {
+    d.rivalFin = M.t;
+    if (d.tuyo === null) { tono(400, .5, .1, 'sawtooth', 200); decir(QUIEN_CUNADO, uno(['¡Terminé! ¿Les presto una rasqueta?', 'Listo. El cliente es mío. Ustedes sigan jugando a limpiar.', '¡Ganamos! Bueno, gané yo. Ustedes no.'])); ayuda('El Cuñado terminó primero. Acaba igual: el cliente te paga la mitad.', 6); }
+  }
+  const tu = d.tuyo !== null ? 1 : avanceTuyo(), el = clamp(M.t / d.tRival, 0, 1);
+  if ((d.charlaT -= .25) <= 0 && d.rivalFin === null && d.tuyo === null && !M.ev) {
+    d.charlaT = rnd(18, 28);
+    decir(QUIEN_CUNADO, uno(el > tu ? ['Yo ya voy por el ducto. ¿Y ustedes?', 'Uy, qué lentos. ¿Les traigo un cafecito?', 'Mi rasqueta es importada. De Tijuana.'] : ['¿Cómo van tan rápido? ¿Eso es legal?', 'No me presionen, que me tiembla la rasqueta.', 'Voy atrás porque mi ayudante se fue al baño. Hace una hora.']));
+  }
+  $('#dTu').style.width = tu * 100 + '%'; $('#dRival').style.width = el * 100 + '%';
+}
+
 // ---- bucle del turno
 
 function tickTurno(dt) {
@@ -1358,14 +1737,25 @@ function tickTurno(dt) {
     if (M.presionado && M.herr === 'hidro' && M.apuntado) {
       const a = M.apuntado;
       const q = raspar(a.sf, a.gx, a.gy, .17 / a.sf.celda, (S.eq.hidro ? 1.8 : 1.1) * dt, 'hidro');
-      emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true);
+      emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4);
+      if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
       if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5)) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda('¡Salpica! Echa espuma antes en la costra.'); }
       const al = M.eventos.find(x => x.tipo === 'alarma' && !M.hechos.has(x));
       if (q > 0 && al && z.id === 'campana' && azar(dt * .3)) lanzarEvento(al);
     } else if (!M.presionado) chorro(false);
     // Espuma: el tiempo corre para la grasa empapada.
-    for (const s of z.sfs) { let hay = false; for (let i = 0; i < s.soak.length; i++) if (s.soak[i] >= 0) { s.soak[i] += dt; hay = true; if (s.soak[i] > 30 || s.d[i] <= 0) s.soak[i] = -1; } if (hay) s.sucio = true; }
+    let espuma = false;
+    for (const s of z.sfs) { let hay = false; for (let i = 0; i < s.soak.length; i++) if (s.soak[i] >= 0) { s.soak[i] += dt; hay = true; if (s.soak[i] > 30 || s.d[i] <= 0) s.soak[i] = -1; } if (hay) { s.sucio = true; espuma = true; } }
+    // La espuma chisporrotea y la cocina gotea (más después del chorro).
+    if (espuma && azar(dt * 9)) burbuja();
+    if (azar(dt * (.1 + M.goteo * 1.6))) gota(.025 + M.goteo * .035);
+    M.goteo = Math.max(0, M.goteo - dt * .07);
+    if (!M.fotoAntes && M.etapa === 'lavar' && z.id === 'campana' && M.enZona > 1.3 && !M.ev) { M.fotoAntes = 'pendiente'; pedirFoto(0, img => { if (M) M.fotoAntes = img; }); }
+    if (M.apagon > 0 && (M.apagon -= dt) <= 0) { sDing(); decir(M.comp, uno(['¡Volvió la luz! Ya extrañaba ver la grasa.', 'Luz. Por fin. Me estaba dando miedo mi propia sombra.'])); }
+    if (M.coche > 0 && (M.coche -= dt) <= 0) { loop('coche', false); if (M.vecinos) { dano('Queja de los vecinos por la alarma (y una chancla)', 0, 2); decir(M.comp, 'Ya se calló. Una vecina le tiró una chancla al gato. Y luego a nosotros.'); } }
+    if (M.pedido && M.pedido.id === 'antes3' && !M.aviso3 && M.t / M.dur * 480 >= 270) { M.aviso3 = true; decir(M.cliente, '¡Ya son las dos y media! El panadero llega a las tres, ¿eh?'); }
+    if (M.duelo) tickDuelo(dt);
     if (!M.ev) {
       // Chuy se duerme; hay que despertarlo.
       if (M.orden.comp === 'chuy' && !M.dormido && (M.dormirT -= dt) <= 0) { M.dormido = true; M.ronqT = 0; }
@@ -1385,7 +1775,8 @@ function tickTurno(dt) {
       if ((M.charlaT -= dt) <= 0) {
         M.charlaT = rnd(16, 26);
         const quien = uno(M.equipo);
-        if (quien.principal) { if (!M.dormido) decir(M.comp, uno(M.comp.frases)); } else decir(quien, quien.frase);
+        if (S.perro && azar(.18)) decir(QUIEN_PERRO, uno(['¡Guau! (le ladra al ducto)', '¡Guau guau! (se comió un trozo de plástico)', '(se echa justo donde vas a pisar)', '¡Auuuu! (aúlla con la radio)']));
+        else if (quien.principal) { if (!M.dormido) decir(M.comp, uno(M.comp.frases)); } else decir(quien, quien.frase);
       }
       if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) visitaGerente();
     }
@@ -1406,6 +1797,7 @@ function tickTurno(dt) {
   const mp = piezas.mapache;
   if (mp.visible) { mp.rotation.y = Math.sin(performance.now() / 300) * .2; if (mp.userData.sale) { mp.position.x += dt * .6; if (mp.position.x > .5) mp.visible = false; } if (mp.userData.huye) { mp.position.z += dt * 3; if (mp.position.z > .6) mp.visible = false; } }
   if ((M.alarmaSuena || 0) > 0) { const antes = M.alarmaSuena; M.alarmaSuena -= dt; if (Math.floor(antes * 2) !== Math.floor(M.alarmaSuena * 2)) tono(980, .2, .05, 'square'); }
+  if (piezas.rival) { const r = piezas.rival, fin = M.duelo && M.duelo.rivalFin !== null; r.position.y = fin ? 0 : Math.abs(Math.sin(performance.now() / 180)) * .04; r.rotation.y = fin ? r.rotation.y + dt * 3 : -.7 + Math.sin(performance.now() / 400) * .2; }
   piezas.gente.forEach((p, i) => { const dormido = i === 0 && M.dormido; p.position.y = dormido ? 0 : Math.abs(Math.sin(performance.now() / 260 + i)) * .03; p.rotation.z = dormido ? .35 : 0; });
   if (M.ayudaT > 0 && (M.ayudaT -= dt) <= 0) $('#ayuda').textContent = '';
   for (const s of z.sfs) if (s.sucio) pintarSf(s);
@@ -1468,7 +1860,7 @@ function empezarPelado() {
     const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(clamp(M.t / M.dur, 0, 1) * 480);
     const b = $('#prepSig'); if (b) b.textContent = listo() ? 'Siguiente: migdalear la campana' : 'Seguir sin terminar';
   };
-  faldas.forEach(f => marca(f.mesh.position.clone(), '', () => { f.pelada = true; f.mesh.userData.vuela = 1; rafaga(.2, 1300 + Math.random() * 500, .1, 'bandpass', .6); sumarTiempo(.4); act(); }, true));
+  faldas.forEach(f => marca(f.mesh.position.clone(), '', () => { f.pelada = true; f.mesh.userData.vuela = 1; rasgar(); sumarTiempo(.4); act(); }, true));
   cubs.forEach(a => marca(a.pos, 'Quitar', () => { a.quitada = true; a.cubierta.userData.sube = .6; rafaga(.25, 900, .08, 'lowpass'); sumarTiempo(1); act(); }));
   bolsas.forEach(b => marca(b.pos, 'Bajar la bolsa', () => {
     b.bajada = true; b.mesh.visible = false; sumarTiempo(1.5);
@@ -1492,11 +1884,24 @@ function empezarMigdaleo() {
   decir(M.comp, uno(['Ahora a migdalear. Que se vea hasta el alma.', 'Migdalea bonito, que el dueño se quiere peinar ahí.', 'El toque final. Migdalea como si fuera tu camioneta.']));
 }
 $('#pausa').addEventListener('click', () => { if (M && M.fase === 'turno') { M.pausa = true; pantallaAjustes(true); } });
+function pintarRadio() { const b = $('#radioBtn'); b.setAttribute('aria-pressed', !!S.aj.radio); b.textContent = S.aj.radio ? 'FM' : 'FM ✕'; }
+$('#radioBtn').addEventListener('click', () => {
+  if (!M || M.fase !== 'turno') return;
+  audio(); S.aj.radio = !S.aj.radio; guardar(); pintarRadio();
+  if (!S.aj.radio) { M.radioApagada = true; radioEncender(false); if (M.pedido && M.pedido.id === 'musica') decir(M.cliente, '¡No! ¡La música! La campana se pone triste.'); }
+  else if (!S.aj.sonido) ayuda('El sonido está apagado en Ajustes.');
+  else radioEncender(true);
+});
 
 function terminarTurno() {
-  M.fase = 'parte'; M.pausa = false; M.arrastrar = false; chorro(false); cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true;
+  M.finMin = clamp(M.t / M.dur, 0, 1) * 480; M.apagon = 0;
+  M.fase = 'parte'; M.pausa = false; M.arrastrar = false; cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true;
+  for (const id in A.loops) loop(id, false);
+  radioEncender(false);
   $('#hud').hidden = true; chat.innerHTML = '';
-  irVista(Z[1].vista);
+  irVista(Z[1].vista); Z[1].vista.pan = 0;
+  // La foto del después, con la campana recién terminada.
+  const m = M; pedirFoto(.7, img => { m.fotoDespues = img || ''; fotoParte(m); });
   setTimeout(pantallaParte, 500);
 }
 
@@ -1519,7 +1924,13 @@ function genOrden(k, cliente) {
   const base = cliente ? cliente.pagoBase : Math.round(rnd(C.pago[0], C.pago[1]) / 10) * 10;
   return { id: S.sigId++, cocina: k, nombre: cliente ? cliente.nombre : uno(C.nombres), filtros: diseno.filtros, campanas: diseno.campanas, ayud: diseno.ayud,
     hood: diseno.hood, ducto: diseno.ducto, eventos, micras: Math.round(rnd(C.micras[0], C.micras[1]) / 50) * 50,
-    pagoBase: base, pago: Math.round(base * multPago() * (cliente ? 1.1 : 1) / 10) * 10, clienteId: cliente ? cliente.id : null, diseno };
+    pagoBase: base, pago: Math.round(base * multPago() * (cliente ? 1.1 : 1) / 10) * 10, clienteId: cliente ? cliente.id : null, diseno, pedido: genPedido() };
+}
+// A partir de la segunda noche, un cliente de cada tres trae su manía.
+function genPedido() {
+  if (S.noche < 2 || !azar(.35)) return null;
+  const hidro = S.eq.hidro || S.fase === 'aprendiz';
+  return uno(PEDIDOS.filter(p => (hidro || !p.hidro) && !(p.tacos && S.fase === 'aprendiz'))).id;
 }
 function generarOrdenes() {
   if (S.fase === 'aprendiz') return [genOrden(uno(cocinasHasta(0)))];   // Don Rigo elige
@@ -1534,6 +1945,9 @@ function generarOrdenes() {
     out.push(genOrden(k));
   }
   if (S.etapa >= 2 && azar(.3)) out.push(genOrden(S.etapa >= 3 && azar(.4) ? 'estadio' : 'comedor'));
+  // Duelo: El Cuñado también quiere este cliente y limpiará a la vez que tú.
+  const libres = out.filter(o => !o.clienteId && o.campanas === 1);
+  if (S.noche >= S.abierta + 1 && libres.length && azar(.3)) { const o = uno(libres); o.duelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.4 / 10) * 10; }
   return out;
 }
 function genCandidatos() {
@@ -1574,6 +1988,9 @@ function prepararNoche() {
     ? (S.noche === 1 ? `Bienvenido a Grasa Brava, ${jugador()}. Toma la rasqueta, súbete a la camioneta y no toques mi radio.` : uno(RIGO))
     : (S.noche === S.abierta ? `Primera noche de ${S.empresa.nombre}. Yo estaré pescando. No me llames. Bueno, llámame si hay mapache.` : uno(RIGO_CONSEJOS));
   S.hoy = { noche: S.noche, ordenes, sel: 0, comp, ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2, avisos, frase, resultado: '' };
+  // Lo que pasa de día: una de cada dos noches, algo en la camioneta.
+  const dias = DIAS.filter(d => !d.solo || d.solo(S));
+  if (S.noche >= 2 && azar(.5)) S.hoy.dia = { id: uno(dias).id, res: '' };
   guardar();
 }
 
@@ -1585,6 +2002,12 @@ const cara = (col, letra) => `<div class="cara" style="background:${col}">${esc(
 let tab = 'noche';
 
 // La camioneta de tu empresa, con tu nombre y tu pintura. Mejora con cada etapa.
+const PEGATINAS = {
+  llamas: '<path d="M178 73q3-10 8-7q1-9 8-12q-2 9 4 10q2-6 7-5q-3 8 1 14z" fill="#ff8a1f" stroke="#0b1117" stroke-width="1.5"/>',
+  mapache: '<g transform="translate(197 63)"><circle r="8" fill="#8a8580" stroke="#0b1117" stroke-width="1.5"/><path d="M-7-1h14v4h-14z" fill="#1b1b1b"/><circle cx="-3" cy="1" r="1.3" fill="#fff3a0"/><circle cx="3" cy="1" r="1.3" fill="#fff3a0"/><path d="M-7-5l-1-6 5 3M7-5l1-6-5 3" fill="#8a8580" stroke="#0b1117" stroke-width="1.2"/></g>',
+  estrella: '<path d="M197 52l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.5"/>',
+  cuca: '<g transform="translate(197 63) rotate(-30)"><ellipse rx="5" ry="8" fill="#7a4314" stroke="#0b1117" stroke-width="1.2"/><path d="M-4-3-9-6M-4 1-10 1M-4 5-9 8M4-3 9-6M4 1 10 1M4 5 9 8M-2-8-5-13M2-8 5-13" stroke="#0b1117" stroke-width="1.2"/></g>',
+};
 function furgo(nombre, color, et) {
   const largo = nombre.length > 13;
   return `<svg class="furgo" viewBox="0 0 230 110" role="img" aria-label="La camioneta de ${esc(nombre)}">
@@ -1594,6 +2017,8 @@ function furgo(nombre, color, et) {
     ${et === 0 ? '<circle cx="30" cy="66" r="4" fill="#7a4a1e" opacity=".8"/><circle cx="118" cy="40" r="3" fill="#7a4a1e" opacity=".7"/><circle cx="196" cy="68" r="3.5" fill="#7a4a1e" opacity=".8"/>' : ''}
     ${et >= 3 ? '<rect x="40" y="18" width="70" height="8" rx="3" fill="#d3dae0" stroke="#0b1117" stroke-width="2"/>' : ''}
     ${et >= 4 ? '<path d="M200 22l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.5"/>' : ''}
+    ${PEGATINAS[look('pegatina').id] || ''}
+    ${S.perro ? '<g transform="translate(150 33)"><path d="M0 12q0-10 9-10t9 10z" fill="#c8a27a" stroke="#0b1117" stroke-width="1.5"/><path d="M1 6l-3 7M17 6l3 7" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><circle cx="6" cy="7" r="1.3" fill="#0b1117"/><circle cx="12" cy="7" r="1.3" fill="#0b1117"/><ellipse cx="9" cy="10" rx="2" ry="1.3" fill="#0b1117"/></g>' : ''}
     <rect x="10" y="74" width="212" height="8" rx="3" fill="#2b3238"/>
     <circle cx="52" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/><circle cx="182" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/>
     <text x="77" y="53" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="17" fill="#fff" stroke="#0b1117" stroke-width="3" paint-order="stroke"${largo ? ' textLength="122" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(nombre.toUpperCase())}</text>
@@ -1613,19 +2038,19 @@ function cabecera() {
 }
 
 function pantallaCamioneta() {
-  M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true;
+  M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true; aplicarLook();
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
   else if (!mundo) construirNoche(null);
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
-  const tabs = S.fase === 'aprendiz' ? [['noche', 'Esta noche'], ['taller', 'Taller']] : [['noche', 'Esta noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller']];
+  const tabs = S.fase === 'aprendiz' ? [['noche', 'Esta noche'], ['taller', 'Taller'], ['logros', 'Logros y álbum']] : [['noche', 'Noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller'], ['logros', 'Logros']];
   if (!tabs.some(t => t[0] === tab)) tab = 'noche';
   pantalla(`${cabecera()}
     <div class="jefe">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? 'Don Rigo, por la radio' : 'Don Rigo, desde el lago'}</b>${esc(H.frase)}</div></div>
     ${H.avisos.length ? `<div class="cita"><b>Noticias del barrio</b>${esc(H.avisos.join(' '))}</div>` : ''}
     <nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
-    ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller })[tab]()}
+    ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}
     <div class="acciones"><button class="btn" id="ajustes">Ajustes</button></div>`);
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
@@ -1636,9 +2061,11 @@ function tarjetaOrden(o, i) {
   const C = COCINAS[o.cocina], H = S.hoy;
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span></div>
+    <div class="chips">${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? '<span class="chip mal">Duelo con El Cuñado</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span></div>
     <h3>${esc(o.nombre)}</h3>
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + ' campanas · ' : ''}${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
+    ${o.pedido ? `<span class="pedido"><b>${esc(pedido(o.pedido).quien)}:</b> «${esc(pedido(o.pedido).txt)}»${pedido(o.pedido).premio ? ` <i>Si cumples: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
+    ${o.duelo ? `<span class="aviso">${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(PISTAS[e])}</span>`).join('') : '<span class="pista">Todo tranquilo. Sospechoso.</span>'}
     ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}</span>` : ''}
   </button>`;
@@ -1656,7 +2083,10 @@ function vNoche() {
   const H = S.hoy, aprendiz = S.fase === 'aprendiz', plazas = PLAZAS[S.eq.camioneta];
   const o = H.ordenes[H.sel], bloqueada = o && o.ayud > H.ayud.length;
   const sig = !aprendiz && ETAPAS[S.etapa + 1];
-  return `${sig ? tarjetaEtapa(sig) : ''}
+  const dia = H.dia && DIAS.find(x => x.id === H.dia.id);
+  return `${dia ? `<div class="orden dia"><span class="chip naranja">Antes de salir</span><h3>${esc(dia.t)}</h3><p>${esc(dia.txt)}</p>
+      ${H.dia.res ? `<div class="cita"><b>Qué pasó</b>${esc(H.dia.res)}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(op.t)}<small>${esc(op.d)}</small></button>`).join('')}</div>`}</div>` : ''}
+    ${sig ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
     ${H.ordenes.map(tarjetaOrden).join('') || '<p class="nota">No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.</p>'}
     <h2 class="sec">${aprendiz ? 'Tu compañero esta noche' : 'Elige compañero'}</h2>
@@ -1667,7 +2097,8 @@ function vNoche() {
     ${S.cuadrilla.length ? `<h2 class="sec">Ayudantes en la camioneta · ${H.ayud.length} de ${plazas}</h2>
       <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     <div class="acciones"><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
-    <p class="nota">${aprendiz ? `Don Rigo te paga ${dinero(SUELDO_APRENDIZ)} por noche, ${dinero(40)} más si apruebas, y la propina es tuya. Los daños los paga él (y te los recuerda).` : 'Cobras el trabajo entero, pero pagas gasolina, sueldos y daños.'}${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}${S.album.length ? ` Álbum: ${esc(S.album.join(', '))}.` : ''}</p>`;
+    ${dia && !H.dia.res ? '<p class="nota">Si sales sin decidir lo de la camioneta, se resuelve solo. Más o menos.</p>' : ''}
+    <p class="nota">${aprendiz ? `Don Rigo te paga ${dinero(SUELDO_APRENDIZ)} por noche, ${dinero(40)} más si apruebas, y la propina es tuya. Los daños los paga él (y te los recuerda).` : 'Cobras el trabajo entero, pero pagas gasolina, sueldos y daños.'}${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}</p>`;
 }
 
 function vClientes() {
@@ -1703,6 +2134,30 @@ function vTaller() {
     ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}`;
 }
 
+function vLogros() {
+  const ganadas = MEDALLAS.filter(m => S.medallas[m.id]).length, r = S.rec;
+  const dato = (i, b, sm) => `<div class="dato"><i>${i}</i><b>${b}</b>${sm ? `<small>${sm}</small>` : ''}</div>`;
+  return `<h2 class="sec">Récords</h2>
+    <div class="datos">${dato('Mejor nota', r.nota || '—', r.pts ? r.pts + ' pts' : '')}${dato('Mejor noche', S.mejor ? dinero(S.mejor) : '—')}${dato('Inspector más temprano', r.fin !== undefined ? hora(r.fin) : '—')}${dato('Combo más largo', r.combo || 0)}${dato('Aprobadas', S.aprobados)}${r.duelos ? dato('Duelos ganados', r.duelos) : ''}</div>
+    ${S.notas.length ? `<div class="notas">${S.notas.slice(-12).map(n => `<span style="--c:${COL_NOTA[n]}">${n}</span>`).join('')}</div>` : ''}
+    ${vAlbum()}
+    <h2 class="sec">Medallas · ${ganadas} de ${MEDALLAS.length}</h2>
+    <div class="medallas">${MEDALLAS.map(m => tarjetaMedalla(m)).join('')}</div>
+    <h2 class="sec">Estilo de la empresa</h2>
+    <p class="nota">Las medallas desbloquean colores y detalles. Se ven durante el turno${S.fase === 'empresa' ? ' y en tu camioneta' : ''}.</p>
+    ${Object.entries(LOOK).map(([k, g]) => `<div class="estilo"><b>${g.n}</b><div class="chips">${g.ops.map(op => {
+      const libre = !op.m || S.medallas[op.m], sel = look(k).id === op.id;
+      return `<button class="btn peq ${sel ? 'prim' : ''}" data-look="${k}:${op.id}" aria-pressed="${sel}" ${libre ? '' : 'disabled'} title="${libre ? '' : 'Medalla: ' + esc(medalla(op.m).n)}">${op.c && typeof op.c !== 'number' ? `<i class="muestra" style="background:${Array.isArray(op.c) ? `rgb(${op.c.map(v => Math.round(v * 255)).join(',')})` : op.c}"></i>` : ''}${esc(op.n)}${libre ? '' : ' 🔒'}</button>`;
+    }).join('')}</div>${g.ops.some(op => op.m && !S.medallas[op.m]) ? `<small class="nota">${g.ops.filter(op => op.m && !S.medallas[op.m]).map(op => `${esc(op.n)}: medalla «${esc(medalla(op.m).n)}»`).join(' · ')}</small>` : ''}</div>`).join('')}`;
+}
+
+function vAlbum() {
+  const l = fotos();
+  return `<h2 class="sec">Álbum</h2><p class="nota">Cada noche se guarda la foto de la campana antes y después de limpiarla. Caben las últimas 12.</p>
+    ${l.length ? `<div class="album">${l.map(tarjetaFoto).join('')}</div>` : '<p class="nota">Todavía no hay fotos. Termina un turno y aparece la primera.</p>'}
+    ${S.album.length ? `<h2 class="sec">Momentos</h2><div class="cita">${esc(S.album.join(' · '))}</div>` : ''}`;
+}
+
 function enlazar() {
   const H = S.hoy;
   P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; guardar(); pantallaCamioneta(); });
@@ -1717,8 +2172,17 @@ function enlazar() {
     audio();
     const o = H.ordenes[H.sel], c = COMPANEROS[H.comp];
     const equipo = [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }, ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.sueldo }))];
-    empezarTurno({ ...o, comp: H.comp, equipo });
+    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas });
   };
+  P.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => {
+    audio(); const dia = DIAS.find(x => x.id === H.dia.id);
+    H.dia.res = dia.ops[+b.dataset.dia].f(H); tono(600, .12, .08, 'triangle'); guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-look]').forEach(b => b.onclick = () => {
+    const [k, id] = b.dataset.look.split(':'); S.look[k] = id; aplicarLook(); guardar(); tono(880, .08, .06, 'triangle');
+    if (k === 'combo') sCombo(3);
+    pantallaCamioneta();
+  });
   const sj = $('#saltar'); if (sj) sj.onclick = () => { const sig = ETAPAS[S.etapa + 1]; S.dinero -= sig.compra; S.etapa++; guardar(); cola = [subirEtapa]; siguiente(); };
   P.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
     const m = MARKETING.find(x => x.id === b.dataset.m);
@@ -1748,14 +2212,18 @@ function pantallaAjustes(enTurno, desdeInicio) {
     ['asist', 'Asistencia de apuntado', 'La pasada se acerca sola a la mancha más cercana.'],
     ['resaltar', 'Resaltar suciedad', 'Lo que falta parpadea en naranja.'],
     ['comodo', 'Modo cómodo', 'El reloj corre a la mitad de velocidad.'],
-    ['sonido', 'Sonido', 'Raspados, chorros y alarmas.'],
+    ['sonido', 'Sonido', 'Raspados, chorros, spray y alarmas.'],
+    ['radio', 'Radio Grasa FM', 'Música inventada y un locutor nocturno durante el turno.'],
   ];
   pantalla(`<div class="rotulo">${enTurno ? 'Pausa' : 'Ajustes'}</div>
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
     ${Object.keys(S.perks).length ? `<div class="cita"><b>Tus mejoras</b>${Object.entries(S.perks).map(([k, n]) => `${PERKS[k].n}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
     <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, arrastra con dos dedos (o con uno sobre la pared o el suelo) para mover la vista. El aviso naranja del borde te dice si falta algo por ese lado: tócalo y te lleva. En ordenador, las flechas del teclado. En ordenador, teclas 1 a 4.</div>
     <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="menu">Menú principal</button>'}</div>`);
-  P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.aj[b.dataset.k] = !S.aj[b.dataset.k]; b.setAttribute('aria-pressed', S.aj[b.dataset.k]); U.hl.value = S.aj.resaltar ? 1 : 0; guardar(); });
+  P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+    const k = b.dataset.k; S.aj[k] = !S.aj[k]; b.setAttribute('aria-pressed', S.aj[k]); U.hl.value = S.aj.resaltar ? 1 : 0; guardar();
+    if (k === 'sonido' || k === 'radio') { audio(); if (!S.aj.sonido) for (const id in A.loops) loop(id, false); if (M && !S.aj.radio) M.radioApagada = true; radioEncender(!!M && S.aj.radio); }
+  });
   $('#volver').onclick = () => { if (enTurno) { P.hidden = true; M.pausa = false; } else if (desdeInicio) pantallaInicio(); else pantallaCamioneta(); };
   const ab = $('#abandonar'); if (ab) ab.onclick = () => { P.hidden = true; terminarTurno(); };
   const mn = $('#menu'); if (mn) mn.onclick = pantallaInicio;
@@ -1780,19 +2248,58 @@ function pantallaParte() {
   if (sinCubrir && azar(Math.min(1, sinCubrir / piezas.aparatos.length * 1.4))) dano(`Espuma y grasa en ${sinCubrir} ${sinCubrir === 1 ? 'aparato sin cubrir' : 'aparatos sin cubrir'}`, sinCubrir * 25, sinCubrir > 2 ? 4 : 2);
   if (!M.prep.bolsa) dano('Agua con grasa en el suelo (plástico o bolsa incompletos)', Math.round(90 * (1 - M.prep.envuelto * .6)), 2);
   const limpio = zonas.reduce((a, z) => a + z.pct, 0) / zonas.length;
-  const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) / 10) * 10;
+  // El pedido especial del cliente y el duelo con El Cuñado
+  const ped = M.pedido, finMin = M.finMin;
+  const pedOk = ped ? ped.ok({ finMin, pulido, usoHidro: M.usoHidro, usoEspuma: M.usoEspuma, todoCubierto: piezas.aparatos.every(a => a.cubierto && a.quitada), radioApagada: M.radioApagada }) : null;
+  const d = M.duelo, ganaDuelo = d ? d.tuyo !== null && d.tuyo <= d.tRival : null;
+  const tacos = ped && ped.tacos ? .5 : 1, mitadDuelo = d && !ganaDuelo ? .5 : 1;
+  const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) * tacos * mitadDuelo / 10) * 10;
   const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 : 0) + .05 * perk('labia') + M.propinaMod, 0, .3) / 5) * 5);
-  const danos = M.danos.reduce((a, d) => a + d.dinero, 0);
+  const extraPed = ped && !ped.tacos ? (pedOk ? Math.round(o.pago * ped.premio * (aprendiz ? .25 : 1) / 10) * 10 : aprendiz ? 0 : -Math.round(o.pago * .1 / 10) * 10) : 0;
+  const danos = M.danos.reduce((a, x) => a + x.dinero, 0);
   const sueldos = M.equipo.reduce((a, e) => a + (e.sueldo || 0), 0);
   // De aprendiz cobras sueldo y Don Rigo paga los daños; con tu empresa cobras todo y lo pagas todo.
   const lineas = aprendiz
-    ? [['Sueldo de la noche', SUELDO_APRENDIZ], ['Bono por aprobar', aprobado ? 40 : 0], ['Propina', propina], ...M.danos.map(d => [d.t + (d.dinero ? ' (lo paga Don Rigo)' : ''), null])]
-    : [[`${aprobado ? 'Pago del trabajo' : 'Pago parcial'}${M.descuento ? ' (con el descuento prometido al gerente)' : ''}`, cobro], ['Propina', propina], ...M.danos.map(d => [d.t, d.dinero ? -d.dinero : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
+    ? [['Sueldo de la noche', SUELDO_APRENDIZ], ['Bono por aprobar', aprobado ? 40 : 0], ['Propina', propina], ['Propina extra por el pedido especial', extraPed], ...M.danos.map(x => [x.t + (x.dinero ? ' (lo paga Don Rigo)' : ''), null])]
+    : [[`${aprobado ? 'Pago del trabajo' : 'Pago parcial'}${M.descuento ? ' (con el descuento prometido al gerente)' : ''}${tacos < 1 ? ' (la otra mitad, en tacos)' : ''}${d && !ganaDuelo ? ' (la mitad: ganó El Cuñado)' : ''}`, cobro],
+      ...(tacos < 1 ? [['120 tacos de pastor', null]] : []), ['Propina', propina], [pedOk ? 'Extra por cumplir el pedido especial' : 'Descuento por no cumplir el pedido', extraPed],
+      ...M.danos.map(x => [x.t, x.dinero ? -x.dinero : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
   const neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
-  const rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0);
-  const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0);
+  const rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
+  const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
+  // La nota del turno: limpieza, acabado, rapidez, preparación y lo que salió mal.
+  const pts = Math.round(limpio * 45 + (aprobado ? 15 : 0) + pulido * 12 + (espejo ? 5 : 0) + clamp((480 - finMin) / 480, 0, .5) * 20
+    + (M.prep.gas ? 2 : 0) + (M.prep.luz ? 2 : 0) + M.prep.cubierto * 3 + (M.prep.bolsa ? 3 : 0)
+    - M.danos.length * 4 - (M.enojado ? 5 : 0) + (ped && !ped.tacos ? (pedOk ? 5 : -6) : 0) + (d ? (ganaDuelo ? 4 : -2) : 0));
+  const n = nota(pts);
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
-  S.mejor = Math.max(S.mejor, neto); S.noche++;
+  // Récords
+  const records = [];
+  if (neto > S.mejor && S.noche > 1) records.push('Noche con más dinero');
+  S.mejor = Math.max(S.mejor, neto);
+  if (pts > (S.rec.pts || 0)) { if (S.rec.pts !== undefined) records.push('Mejor nota'); S.rec.pts = pts; S.rec.nota = n; }
+  if (aprobado && finMin < (S.rec.fin || 481)) { if (S.rec.fin !== undefined) records.push('Inspector más temprano'); S.rec.fin = finMin; }
+  if (M.maxCombo > (S.rec.combo || 0)) S.rec.combo = M.maxCombo;
+  if (d && ganaDuelo) S.rec.duelos = (S.rec.duelos || 0) + 1;
+  S.notas.push(n); if (S.notas.length > 30) S.notas.shift();
+  // Medallas
+  const nuevas = [];
+  const dar = id => { if (!S.medallas[id]) { S.medallas[id] = S.noche; nuevas.push(id); } };
+  if (aprobado) dar('primera');
+  if (n === 'A' || n === 'A+') dar('notaA');
+  if (espejo) dar('espejo');
+  if (aprobado && finMin <= 300) dar('rapido');
+  if (aprobado && !M.danos.length) dar('limpio');
+  if (M.maxCombo >= 6) dar('combo');
+  if (pulido >= .9) dar('migdal');
+  if (aprobado && piezas.gerente.visible && !M.enojado) dar('gerente');
+  if (M.mapacheAmigo) dar('mapache');
+  if (M.cuca) dar('cuca');
+  if (aprobado && M.huboApagon) dar('apagon');
+  if (ped && !ped.tacos && pedOk) dar('pedido');
+  if (ganaDuelo) dar('duelo');
+  if (S.aprobados >= 10) dar('diez');
+  S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
   for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) c.noches++; }
   // Clientes fijos (solo con tu empresa: los de Don Rigo son suyos)
@@ -1802,17 +2309,25 @@ function pantallaParte() {
   if (cli) {
     if (aprobado) { cli.proxima = S.noche + FREC[COCINAS[cli.cocina].frec]; cli.visitas++; notaCliente = `${cli.nombre} te espera otra vez la noche ${cli.proxima}.`; }
     else { S.clientes = S.clientes.filter(c => c !== cli); notaCliente = `${cli.nombre} cancela el contrato.`; }
-  } else if (!aprendiz && aprobado && azar(.35 + S.rep / 250 + .1 * perk('gentes'))) cola.push(() => ofertaContrato(o));
+  } else if (!aprendiz && aprobado && (!d || ganaDuelo) && azar(.35 + S.rep / 250 + .1 * perk('gentes') + (ganaDuelo ? .3 : 0))) cola.push(() => ofertaContrato(o));
   // Experiencia y nivel
   S.xp += xp; let subidas = 0;
   while (S.xp >= xpNivel(S.nivel)) { S.xp -= xpNivel(S.nivel); S.nivel++; subidas++; }
   for (let i = 0; i < subidas; i++) cola.push(elegirPerk);
   if (aprendiz && S.noche > APRENDIZ) cola.push(despido);
   guardar();
-  const desastre = M.danos.some(d => d.dinero >= 60);
-  pantalla(`<div class="rotulo">${aprobado ? (espejo ? 'Metal desnudo' : 'Aprobado') : 'No pasa'}<span>Parte de ${esc(o.nombre)}</span></div>
+  M.nota = n; M.nombre = o.nombre; M.nocheParte = S.noche - 1;
+  const desastre = M.danos.some(x => x.dinero >= 60);
+  const desbloq = nuevas.flatMap(id => Object.values(LOOK).flatMap(g => g.ops.filter(op => op.m === id).map(op => `${g.n}: ${op.n}`)));
+  pantalla(`<div class="parte-cab"><div class="nota-grande" style="--c:${COL_NOTA[n]}" aria-label="Nota ${n}">${n}</div>
+      <div class="rotulo">${aprobado ? (espejo ? 'Metal desnudo' : 'Aprobado') : 'No pasa'}<span>Parte de ${esc(o.nombre)}</span></div></div>
+    ${records.length ? `<div class="chips">${records.map(r => `<span class="chip naranja">¡Récord! ${esc(r)}</span>`).join('')}</div>` : ''}
+    ${nuevas.length ? `<div class="medallas">${nuevas.map(id => tarjetaMedalla(medalla(id), true)).join('')}</div>${desbloq.length ? `<p class="pista">Desbloqueaste: ${esc(desbloq.join(' · '))}. Cámbialo en «Logros».</p>` : ''}` : ''}
+    <div id="fotoParte"></div>
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % limpio</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
-      <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %.</span></div>
+      <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.</span></div>
+    ${d ? `<div class="cita"><b>${ganaDuelo ? 'Duelo ganado' : 'Duelo perdido'}</b>${ganaDuelo ? `Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.` : `El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`}</div>` : ''}
+    ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Beto se comió treinta antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
     <div class="cuentas">
@@ -1820,13 +2335,31 @@ function pantallaParte() {
       <span class="total">Te llevas</span><span class="total">${dinero(neto)}</span>
       <span>Reputación${aprendiz ? ' de Grasa Brava' : ''}</span><span>${rep >= 0 ? '+' : ''}${rep}</span>
       <span>Experiencia</span><span>+${xp}</span>
+      <span>Nota</span><span>${n} · ${pts} pts</span>
     </div>
     ${aprendiz && danos ? '<p class="nota">Don Rigo paga los daños. Te los va a recordar en tu boda.</p>' : ''}
-    ${M.album.length ? `<p class="nota">Nueva foto en el álbum: ${esc(M.album.join(', '))}.</p>` : ''}
+    ${M.album.length ? `<p class="nota">Nuevo momento para el álbum: ${esc(M.album.join(', '))}.</p>` : ''}
     <div class="acciones"><button class="btn prim" id="seguir">Seguir</button></div>`);
   $('#seguir').onclick = siguiente;
   tono(aprobado ? 660 : 300, .3, .1, 'triangle', aprobado ? 990 : 200);
+  if (nuevas.length) setTimeout(sDing, 400);
+  fotoParte(M);
 }
+
+// El antes y el después: se guarda en el álbum cuando ya hay nota y foto.
+function fotoParte(m) {
+  if (m.fotoDespues === undefined || m.nota === undefined || m.fotoGuardada) return;
+  m.fotoGuardada = true;
+  const antes = m.fotoAntes && m.fotoAntes.startsWith('data:') ? m.fotoAntes : null, despues = m.fotoDespues || null;
+  if (!despues) return;
+  const f = { noche: m.nocheParte, nombre: m.nombre, nota: m.nota, antes, despues };
+  guardarFoto(f);
+  const el = $('#fotoParte'); if (el) el.innerHTML = tarjetaFoto(f);
+  if (fotos().length >= 6 && !S.medallas.fotos) { S.medallas.fotos = S.noche; guardar(); if (el) el.insertAdjacentHTML('beforeend', `<div class="medallas">${tarjetaMedalla(medalla('fotos'), true)}</div>`); }
+}
+const tarjetaFoto = f => `<figure class="foto"><div class="foto-par">${f.antes ? `<div><img src="${f.antes}" alt="Antes"><span>Antes</span></div>` : ''}<div><img src="${f.despues}" alt="Después"><span>Después</span></div></div>
+  <figcaption><b>${esc(f.nombre)}</b> · Noche ${f.noche} · Nota ${esc(f.nota)}</figcaption></figure>`;
+const tarjetaMedalla = (m, nueva) => `<div class="medalla ${nueva ? 'nueva' : ''} ${nueva || S.medallas[m.id] ? '' : 'bloq'}"><span class="ico">${m.ico}</span><div><b>${nueva ? '¡Medalla! ' : ''}${esc(m.n)}</b><small>${esc(m.d)}</small></div></div>`;
 
 function ofertaContrato(o) {
   const C = COCINAS[o.cocina], cada = FREC[C.frec];
@@ -1855,12 +2388,30 @@ function pantallaInicio() {
   irVista(VISTA_GENERAL);
   pantalla(`<div class="portada"><div class="rotulo grande">Hood Cleaners<span>The Night Shift</span></div>
       <p class="nota">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p></div>
+    <div id="novedad"></div>
     ${guardada ? `<button class="orden" id="continuar"><h3>Continuar${S.jugador ? ', ' + esc(S.jugador) : ''}</h3>
       <span class="nota">Noche ${S.noche} · ${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + ETAPAS[S.etapa].n : 'Aprendiz en Grasa Brava'} · ${dinero(S.dinero)}</span></button>` : ''}
     <div class="acciones"><button class="btn ${guardada ? '' : 'prim'}" id="nuevaP">Nueva partida</button><button class="btn" id="ajustesIni">Ajustes</button></div>`);
   const c = $('#continuar'); if (c) c.onclick = () => { audio(); if (S.jugador) pantallaCamioneta(); else pantallaNombre(false); };
   $('#nuevaP').onclick = () => { audio(); pantallaNombre(true); };
   $('#ajustesIni').onclick = () => pantallaAjustes(false, true);
+  pintarNovedad(); buscarNovedad();
+}
+// En el APK: avisa si en GitHub hay una versión más nueva para instalar encima (la partida se queda).
+const APK_URL = 'https://github.com/jlanuza94/El-Banquillo/releases/download/hood-cleaners-latest/Hood-Cleaners.apk';
+let novedad = null;
+function buscarNovedad() {
+  const local = +window.HC_VERSION || 0;
+  if (!local || novedad !== null || !window.fetch) return;
+  novedad = 0;
+  fetch('https://api.github.com/repos/jlanuza94/El-Banquillo/releases/tags/hood-cleaners-latest')
+    .then(r => r.ok ? r.json() : null)
+    .then(j => { const m = j && /Versi[oó]n:\s*(\d+)/.exec(j.body || ''); if (m && +m[1] > local) { novedad = +m[1]; pintarNovedad(); } })
+    .catch(() => { /* sin conexión: ya avisará otro día */ });
+}
+function pintarNovedad() {
+  const el = $('#novedad'); if (!el || !novedad) return;
+  el.innerHTML = `<div class="novedad"><b>¡Hay una versión nueva del juego!</b><span class="nota">Descárgala e instálala encima de esta: tu partida se queda donde está.</span><div class="acciones"><a class="btn prim" href="${APK_URL}">Descargar la versión nueva</a></div></div>`;
 }
 
 // nueva = true empieza otra partida; false solo pone nombre a la que ya hay.
@@ -1947,6 +2498,29 @@ function subirEtapa() {
 
 function redimensionar() { R.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
 addEventListener('resize', redimensionar);
+// Fotos del álbum: se copian del lienzo justo después de dibujar (sin guardar el búfer de WebGL).
+let fotoPend = null;
+function pedirFoto(seg, cb) { fotoPend = { t: seg, cb }; }
+function instantanea() {
+  try {
+    const k = 360 / Math.max(canvas.width, canvas.height), w = Math.round(canvas.width * k), h = Math.round(canvas.height * k);
+    return lienzo(w, h, g => g.drawImage(canvas, 0, 0, w, h)).toDataURL('image/jpeg', .72);
+  } catch (e) { return null; }
+}
+// El estilo elegido: color de la espuma y luz del casco.
+function aplicarLook() {
+  const e = look('espuma').c; U.espuma.value.set(e[0], e[1], e[2]); COL.espuma = e;
+  lampara.color.setHex(look('linterna').c || 0xfff1dd);
+}
+// Luces: el apagón deja solo la linterna; la linterna disco cambia de color.
+function luces(dt, ahora) {
+  const oscuro = M && M.fase === 'turno' && M.apagon > 0, k = 1 - Math.exp(-dt * 4);
+  R.toneMappingExposure += ((oscuro ? .45 : 1.05) - R.toneMappingExposure) * k;
+  lampara.intensity += ((oscuro ? 2.4 : 1.1) - lampara.intensity) * k;
+  const v = $('#oscuro'), op = +v.style.opacity || 0, obj = oscuro ? 1 : 0;
+  if (op !== obj) v.style.opacity = Math.abs(obj - op) < .02 ? obj : op + (obj - op) * k;
+  if (look('linterna').id === 'disco' && M) lampara.color.setHSL(ahora / 2500 % 1, .9, .7);
+}
 let ult = performance.now(), faltaT = 0;
 function bucle(ahora) {
   const dt = Math.min(.05, (ahora - ult) / 1000); ult = ahora;
@@ -1967,13 +2541,15 @@ function bucle(ahora) {
   moverCamara(dt);
   moverParticulas(dt);
   if (MARCAS.length) moverMarcas();
+  luces(dt, ahora); apagarPulsos(); radioTick();
   R.render(escena, cam);
+  if (fotoPend && (fotoPend.t -= dt) <= 0) { const f = fotoPend; fotoPend = null; f.cb(instantanea()); }
   requestAnimationFrame(bucle);
 }
 
 function arrancar(datos) {
   if (datos && datos.S && migrar(datos.S)) { S = datos.S; guardada = true; } else if (cargar()) guardada = true; else nueva();
-  U.hl.value = S.aj.resaltar ? 1 : 0;
+  U.hl.value = S.aj.resaltar ? 1 : 0; aplicarLook();
   redimensionar();
   pantallaInicio();
   requestAnimationFrame(bucle);
