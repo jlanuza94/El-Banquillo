@@ -1,5 +1,6 @@
 /* El Banquillo · views/modals.js — Ventanas emergentes (negociaciones, resultados, avisos). */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {keys3,keysHTML,knownStyle,preMatchWarns,sellWarns,warnBox} from '../r12';
 import {sideCard} from './fmmcards';
 import {postHubHTML} from './posthub';
 import {matchRecord} from '../analysis';
@@ -34,7 +35,7 @@ import {compareHTML} from './awards';
 import {SON_PCT,dealPrice,swapValue} from '../market2';
 import {fireModal} from './staff';
 import {esc,money,r2} from '../core';
-import {AT_SH,PERS,ROLES,posChip} from '../data';
+import {AT_SH,PERS,ROLES,TACS,posChip} from '../data';
 import {crestStyle,PL,S,T,atCell,crest,lgName,pBadge,seasonLabel,squad,uLg} from '../state';
 import {news,objectiveFor,startBudget} from '../world';
 import {step} from '../engine';
@@ -44,7 +45,7 @@ import {contractLabel,loanFee,loanMinutes,loansIn,optPrice,renState} from '../co
 import {hapReasons,hapTag} from '../squad';
 import {atCellS,keyAttrs,nameBtn,pBadgeS,resRow} from './common';
 import {fichaHTML} from './squad';
-import {reportHTML,tacReport} from '../tacreport';
+import {reportHTML,reportTips,tacReport} from '../tacreport';
 import {helpHTML} from '../help';
 /** Charla con un jugador tuyo (en su ficha o en una ventana): por qué está como está y qué le puedes decir. */
 export function chatPanel(p,msg,kind){const done=p.tw===S.week;
@@ -103,13 +104,13 @@ export function modalView(){
  else if(md.type==='loanout'){const p=PL(md.id),o=S.lo[md.id],aff=affiliates();
   body=o.none&&!aff.length?`<div class="eyebrow">Ceder jugador</div><h2 style="margin-top:4px">${esc(p.name)}</h2><p>Ningún club está interesado en llevárselo cedido esta jornada. Prueba la próxima.</p><div class="acts"><button class="btn" data-a="modal-close">Cerrar</button></div>`
   :`<div class="eyebrow">${o.none?'Ceder a un club afiliado':'Clubes interesados en la cesión'}</div><h2 style="margin-top:4px">Ceder a ${esc(p.name)}</h2>
-  <div class="kv">${o.none?'':`<span>Club</span><b>${esc(T(o.team).name)}</b><span>Liga</span><b>${esc(lgName(T(o.team).lg))}</b>`}<span>Duración</span><b>Hasta final de temporada</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>${(()=>{const B=aucBids(md.id);return B?`<div class="eyebrow" style="margin-top:10px">🔨 Pujas de la subasta</div>${B.map((b,i)=>`<div class="small" style="display:flex;justify-content:space-between;padding:2px 0;${i?'opacity:.7':''}"><span>${esc(T(b.t).name)}</span><b>${money(b.a)}</b></div>`).join('')}<p class="small muted" style="margin:4px 0 0">La subasta dura hasta el día ${S.auc.end-(S.day??0)>0?`+${S.auc.end-(S.day??0)}`:'de hoy'}: puedes esperar a que suban o aceptar ya.</p>`:'';})()}
+  <div class="kv">${o.none?'':`<span>Club</span><b>${esc(T(o.team).name)}</b><span>Liga</span><b>${esc(lgName(T(o.team).lg))}</b>`}<span>Duración</span><b>Hasta final de temporada</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>${warnBox(sellWarns(p))}${(()=>{const B=aucBids(md.id);return B?`<div class="eyebrow" style="margin-top:10px">🔨 Pujas de la subasta</div>${B.map((b,i)=>`<div class="small" style="display:flex;justify-content:space-between;padding:2px 0;${i?'opacity:.7':''}"><span>${esc(T(b.t).name)}</span><b>${money(b.a)}</b></div>`).join('')}<p class="small muted" style="margin:4px 0 0">La subasta dura hasta el día ${S.auc.end-(S.day??0)>0?`+${S.auc.end-(S.day??0)}`:'de hoy'}: puedes esperar a que suban o aceptar ya.</p>`:'';})()}
   <div class="eyebrow" style="margin-top:12px">Elige destino según los minutos que tendría</div><div class="loanl">${[...(o.opts||[]),...aff.filter(id=>!(o.opts||[]).includes(id))].map((id,i)=>{const [pc,l]=loanMinutes(p,id),sel=(S.loanPick??(o.opts||aff)[0])===id;return `<button class="loanc${sel?' on':''}" data-a="loan-pick" data-v="${id}">${crest(T(id),'sm')}<span class="t"><b>${esc(T(id).name)}</b><small>${esc(lgName(T(id).lg))}${aff.includes(id)?' · afiliado':''}</small></span><span class="lm ${pc>=80?'q5':pc>=45?'q3':'q1'}">${l} · ~${pc}%</span></button>`;}).join('')}</div><input type="hidden" id="loanTo" value="${S.loanPick??(o.opts||aff)[0]??''}">
   <label class="f" style="margin-top:12px"><span class="eyebrow">Objetivo de minutos</span><select id="loanObj">${Object.entries(LOAN_OBJ).map(([k,[l]])=>`<option value="${k}">${l}</option>`).join('')}</select></label>
   <p class="small muted" style="margin:10px 0 0">Allí jugará más minutos, y los jóvenes que juegan progresan. Con un objetivo, el club se compromete a darle esos minutos: si lo cumple vuelve más hecho; si no, te paga una compensación. Vuelve a tu plantilla en junio.</p>
   <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn primary" data-a="loanout-ok" data-id="${p.id}">Aceptar cesión</button></div>`;}
  else if(md.type==='sell'){const p=PL(md.id),o=S.offers[md.id];body=`<div class="eyebrow">Oferta recibida</div><h2 style="margin-top:4px">${esc(T(o.team).name)} quiere a ${esc(p.name)}</h2>
-  <div class="kv"><span>Liga del club</span><b>${esc(lgName(T(o.team).lg))}</b><span>Oferta</span><b>${money(o.amount)}</b><span>Valor de mercado</span><b>${money(p.value)}</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>
+  <div class="kv"><span>Liga del club</span><b>${esc(lgName(T(o.team).lg))}</b><span>Oferta</span><b>${money(o.amount)}</b><span>Valor de mercado</span><b>${money(p.value)}</b><span>Sueldo que te ahorras</span><b>${money(p.wage)}/sem</b></div>${warnBox(sellWarns(p))}
   <p class="small muted" style="margin:10px 0 0">Si pides un ${Math.round(SON_PCT*100)}% de futura venta, cobras un 10% menos ahora, pero si algún día lo traspasan, te llevas el ${Math.round(SON_PCT*100)}% de lo que paguen.</p>
   <div class="acts"><button class="btn" data-a="modal-close">Rechazar</button><button class="btn" data-a="sell-bb" data-id="${p.id}" title="Durante ${BB_YEARS} temporadas podrás recomprarlo por el ${Math.round(BB_MULT*100)}% de lo que pagan">${money(o.amount*.9)} + cláusula de recompra</button><button class="btn" data-a="sell-son" data-id="${p.id}">${money(o.amount*.9)} + ${Math.round(SON_PCT*100)}% de futura venta</button><button class="btn primary" data-a="sell-ok" data-id="${p.id}">Aceptar ${money(o.amount)}</button></div>`;}
  else if(md.type==='round'){const fx=S.fixtures[uLg()][md.round];body=`<div class="eyebrow">${esc(lgName(uLg()))} · Resultados</div><h2 style="margin:4px 0 8px">Jornada ${md.round+1}</h2>${fx.map(f=>resRow(f,null)).join('')}
@@ -132,7 +133,7 @@ export function modalView(){
  else if(md.type==='matchday'){const nm=nextMatch();if(!nm){S.modal=null;return '';}const home=nm.fx.h===S.user,opp=T(home?nm.fx.a:nm.fx.h),dv=isDerby(S.user,opp.id),iss=lineupIssues();
   body=`<div class="eyebrow">${esc(dateTxt(S.day,true))} · Día de partido</div><h2 style="margin:4px 0 6px">${home?'':'En '}${esc(home?T(S.user).name+' - '+opp.name:opp.name)}</h2>
   ${dv?`<div class="derbytag">🔥 ${derbyName(S.user,opp.id)}</div>`:''}<div class="small muted">${esc(nm.label)} · ${home?'en casa':'a domicilio'} · tu historial: ${esc(h2hTxt(opp.id))}</div>${(()=>{const w=nextWeather(),c=coachOf(opp.id),r=coachH2H(opp.id);return `<div class="small" style="margin-top:6px">${w?`${esc(wxTxt(w))} · ${esc(WX[w.k].d)}`:''}${c?`<br>Enfrente: ${esc(c.name)}${r?` (tú ${r.w}G ${r.d}E ${r.l}P contra él)`:''}${S.pique&&S.pique.opp===opp.id&&S.pique.resp==='r'?' · le respondiste en la prensa: el equipo sale motivado':''}`:''}${(()=>{const R=refFor(nm.ref,nm.fx.h);return `<br>Árbitro: ${esc(R.name)} (${REFS[R.k].n.toLowerCase()})`;})()}${spPrepFor(opp.id)?'<br>Has preparado la defensa a balón parado.':''}</div>`;})()}
-  ${iss.length?`<div class="warnbox" style="margin-top:10px"><span>Tu once tiene ${iss.length} hueco${iss.length>1?'s':''} o jugadores no disponibles.</span><button class="btn sm" data-a="fixlu">Completar</button></div>`:''}
+  ${iss.length?`<div class="warnbox" style="margin-top:10px"><span>Tu once tiene ${iss.length} hueco${iss.length>1?'s':''} o jugadores no disponibles.</span><button class="btn sm" data-a="fixlu">Completar</button></div>`:''}${warnBox(preMatchWarns())}${(()=>{const k=knownStyle();return k?`<div class="negmsg" style="margin-top:8px">🔎 Tu estilo ya es conocido: has jugado al <b>${TACS.est.o[k].toLowerCase()}</b> en casi todos los últimos partidos. El rival vendrá preparado para contrarrestarlo; cambiar de estilo le pilla desprevenido.</div>`:'';})()}
   <div class="stack" style="gap:8px;margin-top:14px"><button class="btn primary big" data-a="play">Jugar el partido</button><button class="btn" data-a="sim-go" data-v="next">Simular: lo dirige tu segundo</button><button class="btn" data-a="view" data-v="tacticas">Revisar tácticas antes</button></div>
   <div class="acts"><button class="btn" data-a="modal-close">Ahora no</button></div>`;}
  else if(md.type==='sim'){body=`<h2>Simular</h2><p class="small muted">Se juegan tus partidos sin verlos, con tu alineación y tácticas actuales. Los cambios y la rotación los hace tu ayudante.</p>
@@ -169,7 +170,7 @@ export function modalView(){
  else if(md.type==='help'){body=helpHTML(md.v)+`<div class="acts"><button class="btn primary" data-a="modal-close">Entendido</button></div>`;}
  else if(md.type==='post'){const r=md.live?(S.match&&matchRecord(S.match)):(S.mlog||[]).find(x=>x.n===md.n);if(!r){S.modal=null;return '';}body=`<div class="row" style="margin-bottom:8px"><span class="eyebrow">Resumen del partido</span><span class="spacer"></span><button class="btn sm" data-a="modal-close">Cerrar</button></div>${postHubHTML(r)}`;}
  else if(md.type==='trep'){const r=md.live?null:(S.mlog||[]).find(x=>x.n===md.n),R=md.live?(S.match&&tacReport(S.match)):r&&r.tr;if(!R){S.modal=null;return '';}const h=md.live?S.match:r;
-  body=`<div class="eyebrow">Informe táctico de tu segundo entrenador</div><h2 style="margin:4px 0 10px">${esc(T(h.h).name)} ${md.live?h.score.h:h.hg}-${md.live?h.score.a:h.ag} ${esc(T(h.a).name)}</h2>${reportHTML(R)}<div class="acts">${md.live?'':`<button class="btn" data-a="an-match" data-i="${(S.mlog||[]).indexOf(r)}">Estadísticas del partido</button>`}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
+  body=`<div class="eyebrow">Informe táctico de tu segundo entrenador</div><h2 style="margin:4px 0 10px">${esc(T(h.h).name)} ${md.live?h.score.h:h.hg}-${md.live?h.score.a:h.ag} ${esc(T(h.a).name)}</h2>${keysHTML(keys3(R,reportTips(R)))}${reportHTML(R)}<div class="acts">${md.live?'':`<button class="btn" data-a="an-match" data-i="${(S.mlog||[]).indexOf(r)}">Estadísticas del partido</button>`}<button class="btn primary" data-a="modal-close">Cerrar</button></div>`;}
  else if(md.type==='cmp'){const a=PL(md.a),b=PL(md.b);if(!a||!b){S.modal=null;return '';}body=compareHTML(a,b);}
  else if(md.type==='stfire'){const m=(S.crew||[]).find(x=>x.id===md.id);if(!m){S.modal=null;return '';}body=fireModal(m);}
  else if(md.type==='newgame'){body=`<h2>¿Empezar de cero?</h2><p>Perderás esta partida con ${esc(T(S.user).name)}, incluido el historial de temporadas.</p><div class="acts"><button class="btn" data-a="modal-close">Seguir con esta partida</button><button class="btn danger" data-a="new-game-ok">Borrar y empezar</button></div>`;}

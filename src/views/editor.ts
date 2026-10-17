@@ -9,6 +9,7 @@ import {pBadge} from '../state';
 const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${esc(v)}" ${String(cur)===String(v)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
 const q=s=>plain(String(s||'').toLowerCase());
 
+function modReport(m){if(!m||(!m.nE&&!m.nW))return m&&m.check?'<p class="small" style="color:var(--win)">✓ Sin errores: se puede importar todo.</p>':'';const li=(x,c)=>`<li class="small"><b style="color:${c}">${x.l?'Línea '+x.l:'Archivo'}</b> · ${esc(x.m)}</li>`;return `<div class="modrep">${m.nE?`<div class="eyebrow" style="color:var(--loss)">${m.nE} error${m.nE>1?'es':''} · esas filas no se aplican</div><ul>${m.errors.map(x=>li(x,'var(--loss)')).join('')}${m.nE>m.errors.length?`<li class="small muted">… y ${m.nE-m.errors.length} más</li>`:''}</ul>`:''}${m.nW?`<div class="eyebrow" style="color:#b07a00">${m.nW} aviso${m.nW>1?'s':''}</div><ul>${m.warns.map(x=>li(x,'#b07a00')).join('')}</ul>`:''}</div>`;}
 export function editorView(){
  const tab=S.edTab||'club';
  const seg=`<div class="seg" style="margin-bottom:14px;max-width:100%;overflow-x:auto">${[['club','Clubes'],['pl','Jugadores'],['names','Ligas y países'],['io','Importar y exportar']].map(([k,l])=>`<button data-a="ed-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>`;
@@ -54,7 +55,7 @@ export function editorView(){
  <section class="panel"><div class="panel-h"><h2>Importar</h2></div>
  <label class="f"><span class="eyebrow">Archivo (JSON o CSV)</span><input type="file" id="ioFile" accept=".json,.csv,.txt,application/json,text/csv"></label>
  <label class="f" style="margin-top:10px"><span class="eyebrow">O pega aquí el contenido</span><textarea id="ioTxt" style="width:100%;height:120px;font:12px var(--f-num);border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink)"></textarea></label>
- <div class="acts" style="justify-content:flex-start"><button class="btn primary" data-a="io-paste">Importar texto</button></div>
- ${S.ioMsg?`<div class="negmsg ${S.ioMsg.ok?'ok':'no'}">${esc(S.ioMsg.msg)}</div>`:''}
+ <div class="acts" style="justify-content:flex-start"><button class="btn" data-a="io-check">Comprobar sin importar</button><button class="btn primary" data-a="io-paste">Importar texto</button></div>
+ ${S.ioMsg?`<div class="negmsg ${S.ioMsg.ok&&!S.ioMsg.nE?'ok':'no'}">${esc(S.ioMsg.msg)}</div>${modReport(S.ioMsg)}`:''}
  <p class="small muted" style="margin:10px 0 0">Un mod en JSON trae nombres y colores de clubes, nombres de ligas y países y los jugadores que hayas editado. En los CSV de jugadores, si no hay columna id, se asignan por club y posición.</p></section></div>`;
 }

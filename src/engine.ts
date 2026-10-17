@@ -1,5 +1,6 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {aiAdapt,knownStyle,noteStyle} from './r12';
 import {appealOffer,feudMult} from './r11club';
 import {shoutCards,shoutMods,altMods,dpiCards,dpiMark,dpiMods,dpiSetup,setTarget,tgtCards,tgtMult,varReview} from './r11match';
 import {tlAdd,tlMatch} from './timeline';
@@ -65,7 +66,7 @@ export function createMatch(ref){
 export function aiCounter(own,u){const t=Object.assign({},own);if(u.est==='pos'&&rnd()<.6)t.pre='alt';if(u.lin==='alt'&&rnd()<.6)t.est='con';if(u.pre==='alt'&&rnd()<.5)t.est='dir';if(u.est==='con'&&rnd()<.6){t.lin='baj';t.pre='med';}return t;}
 export function prepTactics(m){
  ['h','a'].forEach(s=>{const o=s==='h'?'a':'h';
-  if(m.us&&m.us!==s&&rnd()<.75)m.tac[s]=aiCounter(m.tac[s],m.tac[m.us]);
+  if(m.us&&m.us!==s&&rnd()<(knownStyle()?.97:.75))m.tac[s]=aiCounter(m.tac[s],m.tac[m.us]);if(m.us===s&&!m._ns){m._ns=1;noteStyle(m.tac[s]);}
   const sl=slotsOf(m.f[s]),wide=[],cen=[];let mid=[],del=[];
   m.lu[s].forEach((id,i)=>{const p=PL(id);if(!p)return;const v=eff(p,sl[i]);if(WIDE.includes(sl[i]))wide.push(v);else if(sl[i]!=='POR'&&sl[i]!=='DFC')cen.push(v);if(GRP[sl[i]]==='MED')mid.push(v);if(GRP[sl[i]]==='DEL')del.push(v);});
   const av=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:50;m.wide=m.wide||{};m.wide[s]=av(wide)-av(cen);m.mq=m.mq||{};m.mq[s]=[av(mid),av(del)];
@@ -330,7 +331,7 @@ export function step(m){
   if(live)addEv(m,'inj',s,`${PL(id).name} se duele de la rodilla y no puede seguir al mismo nivel.`,id);
   if(m.us===s&&!m.auto){if(!m.mom)momentInj(m,id);else{m.paused=true;m.alert=`${PL(id).name} está lesionado. Haz un cambio.`;}}}}
  if(m.min>=58||Object.keys(m.hurt).length)['h','a'].forEach(s=>{if(m.us!==s||m.auto)aiManage(m,s);});
- if(m.us)['h','a'].forEach(s=>aiInMatch(m,s,addEv,live));
+ if(m.us)['h','a'].forEach(s=>{aiInMatch(m,s,addEv,live);aiAdapt(m,s,addEv,live,doSub,bench);});
  if(m.us)condTick(m,addEv,MENT);
  if(m.min===45&&live){addEv(m,'sys',null,`Descanso · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);m.half=true;if(!m.auto)m.paused=true;}
  if(m.min>=m.end){m.done=true;m.paused=true;calcRatings(m);if(live)addEv(m,'sys',null,`Final · ${T(m.h).short} ${scoreStr(m)} ${T(m.a).short}`);

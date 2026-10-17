@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {autoDev,bulkList,bulkRenew,fitAdjust,wageProjHTML} from './r12';
 import {shout} from './r11match';
 import {termsMood} from './market';
 import {ROLES} from './data';
@@ -62,7 +63,7 @@ import {applyNT,autoCall,leaveNT,takeNT,toggleCall} from './nations';
 import {meetAnswer,onOfferRejected} from './talks';
 import {cycleTheme,THEMES} from './theme';
 import {searchResults} from './views/search';
-import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData} from './mods';
+import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData,validateData} from './mods';
 import {addAffiliate,createFilial,fromFilial,moveBudget,removeAffiliate,takeBankLoan,toFilial} from './clubplus';
 import {loadPlan,planInMatch,savePlan} from './plans';
 import {addPair,removePair} from './mentor';
@@ -231,6 +232,12 @@ document.addEventListener('click',e=>{
   case'io-clubs':download('clubes.csv',exportClubsCSV(),'text/csv');break;
   case'io-squad':download('mi-plantilla.csv',exportPlayersCSV(S.user),'text/csv');break;
   case'io-players':download('jugadores.csv',exportPlayersCSV(null),'text/csv');break;
+  case'dec-pl':S.view='plantilla';S.plF=d.v||'all';S.plTab='jug';break;
+  case'bulk-renew':{const r=bulkRenew();toast(r.ok.length?`Renuevan ${r.ok.length} de ${r.ok.length+r.ko.length}.`:'Nadie ha renovado: mira la bandeja.');break;}
+  case'bulk-list':{const r=bulkList();toast(r.length?`En venta: ${r.slice(0,4).join(', ')}${r.length>4?'…':''}.`:'No sobra nadie claramente.');break;}
+  case'auto-dev':{const n=autoDev();toast(`Plan automático: ${n.pos} aprenden puesto, ${n.tr} un rasgo${n.load?`, ${n.load} con carga baja`:''}.`);break;}
+  case'fit-adjust':toast(fitAdjust());break;
+  case'io-check':{const V=validateData(document.getElementById('ioTxt')?.value||'');S.ioMsg={ok:!V.errors.length,check:1,msg:`Comprobado (${V.kind==='json'?'mod JSON':V.kind==='csv-jugadores'?'CSV de jugadores':V.kind==='csv-clubes'?'CSV de clubes':'?'}, ${V.rows} fila${V.rows===1?'':'s'}): nada se ha cambiado todavía.`,errors:V.errors.slice(0,12),warns:V.warns.slice(0,8),nE:V.errors.length,nW:V.warns.length};break;}
   case'io-paste':{S.ioMsg=importData(document.getElementById('ioTxt')?.value||'');break;}
   case'gsearch':S.modal={type:'search'};render();setTimeout(()=>document.getElementById('gsq')?.focus(),30);return;
   case'gs-lg':S.modal=null;S.view='mundo';S.ligaLg=+d.id;break;
@@ -497,7 +504,8 @@ document.addEventListener('change',e=>{
 });
 /** Barra de ánimo del contrato: se mueve con lo que vas ofreciendo. */
 function moodUpd(){const g=document.querySelector('.ctgrid'),b=document.getElementById('tMood');if(!g||!b)return;const w=parseFloat(document.getElementById('tWage')?.value||'0')||0,bo=parseFloat(document.getElementById('tBonus')?.value||'0')||0,rv=document.getElementById('tRole')?.value,er=g.dataset.er;
- const v=termsMood(+g.dataset.dem,w,bo,!rv||!ROLES[er]||ROLES[rv].l>=ROLES[er].l);b.style.width=v+'%';b.className=v>=70?'ok':v>=45?'mid':'low';}
+ const v=termsMood(+g.dataset.dem,w,bo,!rv||!ROLES[er]||ROLES[rv].l>=ROLES[er].l);b.style.width=v+'%';b.className=v>=70?'ok':v>=45?'mid':'low';
+ const pj=document.getElementById('tProj'),md=S.modal,pid=md&&(md.id||md.pid),p=pid!=null&&PL(pid);if(pj&&p)pj.innerHTML=wageProjHTML(p,md.type==='renew'?'renew':'buy',w,bo,!rv||!ROLES[er]||ROLES[rv].l>=ROLES[er].l,+g.dataset.dem);}
 document.addEventListener('input',e=>{
  if(e.target.id==='tWage'||e.target.id==='tBonus'||e.target.id==='tClause'){moodUpd();return;}
  if(e.target.id==='bidAmt'){oddsUpd(e.target);return;}

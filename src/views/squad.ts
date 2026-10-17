@@ -1,5 +1,6 @@
 /* El Banquillo · views/squad.js — Plantilla, ficha de jugador, tácticas, entrenamiento y cantera. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {loadLightsHTML,tradeHTML} from '../r12';
 import {TS} from '../marketfm';
 import {DPI} from '../r11match';
 import {historyTable} from './fmmcards';
@@ -98,7 +99,7 @@ export function entrenoView(){
  const tb=vtab('ent',[['cal','Calendario'],['ses','Sesiones colectivas'],['ind','Individual'],['staff','Cuerpo técnico'],['inf','Informe de desarrollo']],'cal');
  const two=(l,r)=>`<div class="grid"><div class="stack">${l}</div><div class="stack">${r}</div></div>`;
  const dl=deleg('tr')?`<div class="negmsg ok" style="margin:0 0 10px">🤝 La semana la planifica tu segundo${S.delegWhy?`: ${esc(S.delegWhy)}`:''}. Si cambias algún día, sigue decidiendo él la semana que viene. <button class="btn sm" data-a="deleg" data-v="tr">Lo llevo yo</button></div>`:`<div class="row" style="margin:0 0 8px;justify-content:flex-end"><button class="btn sm" data-a="deleg" data-v="tr">🤝 Que lo decida mi segundo</button></div>`;
- return tb.bar+(tb.cur==='cal'?tcCalHTML(dl):tb.cur==='ses'?tcSesHTML():tb.cur==='ind'?tcIndHTML(`<div style="margin-top:10px">${devHTML()}</div><div style="margin-top:10px">${mentor}</div>`):tb.cur==='staff'?tcStaffHTML():tcInfHTML(`<div style="margin-top:10px">${two(chem,trP+log)}</div>`));
+ return tb.bar+(tb.cur==='cal'?tcCalHTML(dl)+loadLightsHTML():tb.cur==='ses'?tcSesHTML():tb.cur==='ind'?tcIndHTML(`<div style="margin-top:10px">${devHTML()}</div><div style="margin-top:10px">${mentor}</div>`):tb.cur==='staff'?tcStaffHTML():tcInfHTML(`<div style="margin-top:10px">${two(chem,trP+log)}</div>`));
 }
 export function canteraView(){
  const regSel=(sc)=>`<select data-reg="${sc.id}" aria-label="Región de ${esc(sc.name)}">${REGIONS.map((R,i)=>`<option value="${i}" ${sc.reg===i?'selected':''}>${R.n}</option>`).join('')}</select>`;
@@ -170,7 +171,7 @@ export function tacticasView(){
  const nm=nextMatch(),opp=nm?(nm.fx.h===S.user?nm.fx.a:nm.fx.h):null;
  const IG={atk:['est','rit','anc'],def:['lin','pre','mar','cru','dir','ent','off'],tra:['per','rec','tie']},it=vtab('ins',[['atk','⚽ Con balón'],['def','🛡 Sin balón'],['tra','🔁 Transición']],'def');
  const inst=`<section class="panel insp"><div class="panel-h"><h2>Instrucciones de equipo</h2><div class="row" style="gap:8px"><span class="eyebrow">${fLabel(t.formation)} · ${MENT[t.ment].label}</span>${it.bar.replace('seg pltabs','seg insseg')}</div></div>
- <div class="insg">${insPitch(tac,it.cur)}<div class="insr"><div class="insrow"><div class="insl">Mentalidad</div><div class="inso" style="--n:3">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>${IG[it.cur].map(k=>{const v=TACS[k];return `<div class="insrow"><div class="insl">${v.n}</div><div class="inso" style="--n:${Object.keys(v.o).length}">${Object.entries(v.o).map(([ok,ol])=>`<button data-a="tac" data-k="${k}" data-v="${ok}" aria-pressed="${tac[k]===ok}">${ol}</button>`).join('')}</div></div>`;}).join('')}
+ <div class="insg">${insPitch(tac,it.cur)}<div class="insr"><div class="insrow"><div class="insl">Mentalidad</div><div class="inso" style="--n:3">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>${IG[it.cur].map(k=>{const v=TACS[k];return `<div class="insrow"><div class="insl">${v.n}</div><div class="inso" style="--n:${Object.keys(v.o).length}">${Object.entries(v.o).map(([ok,ol])=>`<button data-a="tac" data-k="${k}" data-v="${ok}" aria-pressed="${tac[k]===ok}">${ol}</button>`).join('')}</div>${tradeHTML(k,tac[k])}</div>`;}).join('')}
  <p class="small muted insd">${IG[it.cur].map(k=>`<b>${TACS[k].n}:</b> ${TACS[k].d}`).join(' ')}</p></div></div></section>`;
  const sel=(id,cur,opts)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${v}" ${String(cur)===String(v)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
  const pl=sq.map(p=>[p.id,`${p.sp} · ${p.name}`]);

@@ -1,5 +1,6 @@
 /* El Banquillo · views/home.js — Inicio, informe del rival, calendario y fin de temporada. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {decisionChips,decisionsHTML} from '../r12';
 import {certHTML,winnersHTML} from './fmmcards';
 import {fanWallHTML} from '../fans';
 import {goalsHTML} from '../boardgoals';
@@ -44,14 +45,7 @@ export function offersPanel(){
 function dashHTML(nm,tb){
  const fx=nm.fx,opp=T(fx.h===S.user?fx.a:fx.h),dtm=daysToMatch(),me=tb.find(r=>r.id===S.user),sq=squad(S.user),inj=sq.filter(p=>p.inj).length,sus=sq.filter(p=>p.susp).length;
  const negs=Object.values(S.neg||{}).filter(n=>n.wait||n.agreed).length,inc=Object.values(S.offers||{}).filter(o=>o.incoming).length,un=unread();
- const T_=[];const add=(t,a,v)=>T_.push(`<button class="task" data-a="${a}" data-v="${v||''}">${t}</button>`);
- if(lineupIssues().length)add('⚠️ Completa tu once','view','tacticas');
- if(S.spOffers&&S.spOffers.length&&!S.sponsor)add('🤝 Elige patrocinador','view','inicio');
- if(S.meet)add('🗣️ Un jugador quiere hablar contigo','meet');
- if(inc)add(`💰 ${inc} oferta${inc>1?'s':''} por tus jugadores`,'view','mercado');
- const exp=sq.filter(p=>!p.loan&&p.contract<=1).length;if(exp)add(`📝 ${exp} contrato${exp>1?'s':''} acaba${exp>1?'n':''}`,'view','inicio');
- const sad=sq.filter(p=>(p.hap??70)<40).length;if(sad)add(`😠 ${sad} jugador${sad>1?'es':''} descontento${sad>1?'s':''}`,'view','plantilla');
- if(!S.proj&&S.projOpts)add('🎯 Pacta un proyecto con la directiva','view','club');
+ const T_=decisionChips();
  const ev=dayOfEvent(S.ci),home=fx.h===S.user,O=S.mgr?Math.round(S.mgr.conf):60,mk=inWindow();
  const tside=tm=>{const r=tb.find(x=>x.id===tm.id);return `<div class="hteam">${crest(tm,'lg')}<b>${esc(tm.name)}</b><span>${r&&S.week?`${posOf(tm.id)}º · `:''}${r&&r.form&&r.form.length?formDots(r.form.slice(-5)):`<span class="divtag">${lgName(tm.lg,true)}</span>`}</span></div>`;};
  const stat=(l,v,sub,a,vv,cls='')=>`<button class="hstat ${cls}" data-a="${a}" data-v="${vv}"><span>${l}</span><b>${v}</b><small>${sub}</small></button>`;
@@ -118,7 +112,7 @@ export function inicioView(){
  const news6=`<section class="panel"><div class="panel-h"><h2>Noticias</h2><button class="btn sm" data-a="view" data-v="buzon">Bandeja${unread()?' ('+unread()+')':''}</button></div><ul class="news">${S.news.slice(0,6).map(n=>`<li class="${n.kind}"><span class="wk">J${n.wk}</span><span class="t">${esc(n.txt)}</span></li>`).join('')}</ul></section>`;
  const comps=`<section class="panel"><div class="panel-h"><h2>Competiciones</h2><button class="btn sm" data-a="view" data-v="copas">Ver copas</button></div><div class="kv" style="margin-top:0"><span>${userCup()?cupName(userCup().c):'Copa nacional'}</span><b>${cupStatus()}</b><span>${ctOf(S.user)>=0?CONTS[ctOf(S.user)].n:'Competición continental'}</span><b>${ctStatus()}</b><span>Mundial de Clubes</span><b>${cwcStatus()}</b></div></section>`;
  const tabla=`<section class="panel"><div class="panel-h"><h2>${LV_NAMES[LG(lg).lv]}</h2><button class="btn sm" data-a="view" data-v="liga">Ver ligas</button></div>${tableHTML(tb,lg,true)}</section>`;
- return dashHTML(nm,tb)+(urg?`<div class="hsect">Te espera</div><div class="hurg">${urg}</div>`:'')+preP+`<div class="grid hgrid"><div class="stack">${poHTML()}${galaHTML()}${pre?'':next}${sugP}${S.week?`<section class="panel"><div class="panel-h"><h2>Últimos resultados</h2></div>${lastH}</section>`:''}${goalsHTML(esc)}${pre?'':reportHTML(opp.id,true)}</div>
+ return dashHTML(nm,tb)+(urg?`<div class="hsect">Te espera</div><div class="hurg">${urg}</div>`:'')+preP+`<div class="grid hgrid"><div class="stack">${decisionsHTML()}${poHTML()}${galaHTML()}${pre?'':next}${sugP}${S.week?`<section class="panel"><div class="panel-h"><h2>Últimos resultados</h2></div>${lastH}</section>`:''}${goalsHTML(esc)}${pre?'':reportHTML(opp.id,true)}</div>
   <div class="stack">${tabla}${fanWallHTML(esc,5)}${comps}${contractsPanel()}${news6}</div></div>`;
 }
 export function reportHTML(oid,compact){

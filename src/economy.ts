@@ -3,6 +3,7 @@
  *  · cada club de la IA tiene su caja: gana o pierde dinero según dónde queda, los premios, ascensos y traspasos;
  *  · la IA planifica su plantilla cada verano según lo que le falta y el dinero que tiene. */
 // @ts-nocheck — usa el estado heredado S.
+import {successionNeed} from './r12';
 import {clamp,money,pick,r2,r3,ri,rnd} from './core';
 import {GRP} from './data';
 import {LG,PL,RT,S,T,clubWF,lgName,lgTeams,lunit,seasonLabel,setTeam,squad,uLg,unit} from './state';
@@ -135,13 +136,13 @@ export function needOf(tid){
  return gaps.sort((a,b)=>(b.miss>0)-(a.miss>0)||b.miss-a.miss||b.weak-a.weak)[0];
 }
 /** Un club de la IA busca un jugador para la línea g con el dinero que tiene. Devuelve el fichado o null. */
-export function aiBuy(t,g,all){
+export function aiBuy(t,g,all,young){
  initCash();const L=LG(t.lg),sq=squad(t.id),cur=sq.filter(p=>grp(p)===g).map(p=>p.ovr).sort((a,b)=>b-a),need=cur.length?cur[Math.min(cur.length-1,g==='POR'?0:2)]:0;
  const ge=gesOf(t),budget=Math.max(0,t.cash*(ge==='aus'?.4:.6)+(ge==='der'?lunit(L.id)*6:0)),maxOvr=t.rep+6;let best=null,bs=-1;all=all||Object.values(S.players);
  for(let i=0;i<180;i++){const p=all[Math.floor(rnd()*all.length)];if(!p||grp(p)!==g||p.team===t.id||p.team===S.user||p.loan||!S.players[p.id])continue;
-  if(p.ovr<=need+1||p.ovr>maxOvr||p.age>32)continue;if(p.team===null&&(RT.faLow||rnd()<.45))continue;const fee=p.team===null?0:p.value*(p.contract<=1?.7:1.1);if(fee>budget)continue;
+  if(young?(p.age>24||p.ovr<need-6||p.ovr>maxOvr):(p.ovr<=need+1||p.ovr>maxOvr||p.age>32))continue;if(p.team===null&&(RT.faLow||rnd()<.45))continue;const fee=p.team===null?0:p.value*(p.contract<=1?.7:1.1);if(fee>budget)continue;
   if(p.team!==null&&LG(T(p.team).lg).rep>L.rep+4)continue;
-  const sc=p.ovr-p.age*.25+(p.age<=23?(p.pot*10-p.ovr)*.2:0)-fee/Math.max(.05,lunit(L.id))*.6+rnd()*3;if(sc>bs){bs=sc;best=p;}}
+  const sc=p.ovr-p.age*.25+(p.age<=23?(p.pot*10-p.ovr)*(young?.6:.2):0)-fee/Math.max(.05,lunit(L.id))*.6+rnd()*3;if(sc>bs){bs=sc;best=p;}}
  if(!best)return null;
  const from=best.team,fee=from===null?0:r2(best.value*(best.contract<=1?.7:1.1)*(.95+rnd()*.2));
  setTeam(best,t.id);assignNum(best);best.contract=ri(2,4);best.cl=r2(best.value*(2+rnd()*3));best.wage=Math.max(best.wage,baseWage(best));
@@ -156,6 +157,8 @@ export function aiSummerPlan(t,all){
  sq=squad(t.id);if(sq.length>24){const gk=sq.filter(p=>grp(p)==='POR').length,nOut=sq.length-24;sq=sq.filter(p=>grp(p)!=='POR'||gk>2);sq.sort((a,b)=>(a.ovr-a.age*.3+(a.age<=19?(a.pot*10-a.ovr)*.5:0))-(b.ovr-b.age*.3+(b.age<=19?(b.pot*10-b.ovr)*.5:0))).slice(0,nOut).forEach(p=>{setTeam(p,null);p.contract=0;});}
  // cubre huecos: fichando si hay dinero; si no, con jugadores modestos
  for(let k=0;k<6;k++){const n=needOf(t.id);if(n.miss<=0)break;if(!aiBuy(t,n.g,all)){const p=genPlayer(n.g,t.rep-4,t.id);assignNum(p);}}
+ // planifica a 2-3 años: si una línea depende de veteranos y no hay relevo, ficha a un joven para esa línea
+ {const g=successionNeed(t.id,TARGET,grp);if(g&&t.cash>lunit(t.lg)*1.5){const r=aiBuy(t,g,all,true);if(r){t.plan={g,s:S.seasonN+1,p:r.p.id};const s2=squad(t.id);if(s2.length>25){const w=s2.filter(p=>p!==r.p&&grp(p)===g&&p.age>=31).sort((a,b)=>(a.ovr-a.age*.3)-(b.ovr-b.age*.3))[0];if(w){setTeam(w,null);w.contract=0;}}}}}
  // con caja de sobra, refuerza sus líneas más flojas (los ricos gastan más)
  const u=lunit(t.lg),tries=(t.cash>u*9?3:t.cash>u*5?2:t.cash>u*3?1:0)+(gesOf(t)==='der'?2:0);
  for(let k=0;k<tries;k++){const n=needOf(t.id);if(n.weak<=1)break;const r=aiBuy(t,n.g,all);if(!r)break;

@@ -1,5 +1,7 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {keys3,keysHTML} from '../r12';
+import {tacReport,reportTips} from '../tacreport';
 import {SHOUTS} from '../r11match';
 import {attendance} from '../club';
 import {FIN,reactHTML} from '../talkplus';
@@ -127,7 +129,7 @@ function ftHTML(m){
  <div class="ftg"><div>${side('h')}</div><div>${side('a')}</div></div>
  <div class="ftst">${esc(stad)}${att?` (público: ${att.toLocaleString('es')})`:''}</div>
  <div class="ftgrid"><div>${row(poss+'%','Posesión',(100-poss)+'%')}${row(cc('h'),'Ocasiones claras',cc('a'))}${row(tr('h'),'Nota del equipo',tr('a'))}</div><div>${row(`${m.st.h.sh} (${m.st.h.ot})`,'Tiros (a puerta)',`${m.st.a.sh} (${m.st.a.ot})`)}${row(m.st.h.co||0,'Córners',m.st.a.co||0)}${row(m.st.h.fo||0,'Faltas',m.st.a.fo||0)}</div></div>
- <div class="ftf"><span>${esc(m.label||'')}</span></div></div>`;}
+ <div class="ftf"><span>${esc(m.label||'')}</span></div></div>${m.us?(()=>{try{const R=tacReport(m);return R?keysHTML(keys3(R,reportTips(R))):'';}catch(e){return '';}})():''}`;}
 export function matchView(){
  if(S.match&&S.match.us&&S.match.min===0&&!S.match.done&&!S.match.talks.pre&&!S.match.preOk)return preMatchView(S.match);
  const m=S.match,H=T(m.h),A=T(m.a),us=m.us,ut=T(m[us]);

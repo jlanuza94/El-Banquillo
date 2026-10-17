@@ -677,6 +677,31 @@ const app = document.getElementById('app')!;
     ok(M.dpiMods(m, 'h')[1] < 1 && M.dpiMods(m, 'h')[2] > 1 && M.dpiCards(m, 'h') > 1 && M.dpiMark(m, 'a', ol[9]) < 1 && M.dpiMark(m, 'a', ol[8]) === 1, 'órdenes individuales sin balón: presión, entradas y marcaje cuentan'); t.dpi = d0;
     S.view = 'plantilla'; S.plTab = 'jug'; S.plF = 'all'; render(); ok(app.querySelectorAll('.plf button').length >= 3 && app.querySelectorAll('td.stc select[data-ts]').length >= 10, 'plantilla: filtros rápidos y estado de cada jugador'); S.plF = 'jo'; render(); S.plF = 'all'; S.view = 'inicio';
   }
+  { // ronda 12: avisos, decisiones, acciones en bloque, carga, coste/beneficio, 3 claves, IA que se adapta, plantillas a 3 años y validador de mods
+    const { squad: sq_, T: T_, PL: PL_ } = await import('../src/state'), Z = await import('../src/r12'), Mo = await import('../src/mods'), me = sq_(S.user).filter(p => !p.loan);
+    const gk = me.filter(p => p.pos === 'POR').sort((a, b) => b.ovr - a.ovr)[0], keep = me.filter(p => p.pos === 'POR' && p !== gk);
+    keep.forEach(p => p.inj = 9); ok(Z.sellWarns(gk).some(w => /portero/.test(w)), 'aviso: vender al único portero disponible'); keep.forEach(p => p.inj = 0);
+    const D = Z.decisions(); ok(Array.isArray(D) && D.every((x, i) => !i || D[i - 1].p >= x.p), 'decisiones ordenadas por prioridad');
+    S.view = 'inicio'; render(); ok(!D.length || !!app.querySelector('.decp .dec'), 'panel de decisiones en Inicio');
+    const c0 = me.map(p => [p, p.contract, p.wage, p.hap]); me.slice(0, 3).forEach(p => { p.contract = 1; p.hap = 80; p.req = 0; delete S.ren[p.id]; p.noRen = 0; });
+    const cap0 = S.wageCap; S.wageCap = null; const R = Z.bulkRenew(); ok(R.ok.length + R.ko.length >= 3 && R.ok.length >= 1, 'renovar en bloque: ' + R.ok.length + ' de ' + (R.ok.length + R.ko.length)); S.wageCap = cap0; c0.forEach(([p, c, w, h]) => { p.contract = c; p.wage = w; p.hap = h; });
+    const n = Z.autoDev(); ok(n.pos + n.tr >= 1, 'plan individual automático para los jóvenes');
+    ok(/semana/.test(Z.fitAdjust()) && /lrow/.test(Z.loadLightsHTML()), 'semáforo de carga y ajustar la semana al calendario');
+    ok(/pro/.test(Z.tradeHTML('pre', 'alt')) && /con/.test(Z.tradeHTML('pre', 'alt')), 'coste y beneficio de cada instrucción');
+    const Rp = { r: [2, 1], xg: [1.6, .7], f: [['pre', 'Presión alta', .4, .1, 0], ['lin', 'Línea defensiva alta', .05, .3, 0]] }; const K = Z.keys3(Rp, ['Baja la línea.']);
+    ok(K.length === 3 && /merecida/.test(K[0]) && /ayudó/.test(K[1]) && /costó/.test(K[2]), 'las 3 claves del partido');
+    S.uSty = Array(8).fill('con'); ok(Z.knownStyle() === 'con', 'los rivales conocen tu estilo si lo repites'); S.uSty = [];
+    const opp = S.teams.find(x => x.id !== S.user && sq_(x.id).length >= 18), ol = sq_(opp.id).slice(0, 11).map(p => p.id), ul = T_(S.user).lineup.slice();
+    const m = { us: 'h', h: S.user, a: opp.id, min: 64, score: { h: 1, a: 0 }, lu: { h: ul, a: ol.slice() }, subs: { h: 0, a: 0 }, en: {}, st: { h: { xg: 1 }, a: { xg: .5 } }, ment: { h: 'bal', a: 'bal' }, tac: { h: {}, a: {} }, off: [], out: [], ev: [] };
+    let sub = null; Z.aiAdapt(m, 'a', () => {}, false, (mm, s, o, i) => { sub = [o, i]; }, () => sq_(opp.id).filter(p => !ol.includes(p.id)));
+    ok(m.aia.ht === 1 && (sub === null || (PL_(sub[1]).pos === 'DEL' || /DEL/.test(PL_(sub[1]).pos))), 'el rival revisa el partido en el descanso y cambia a por el empate');
+    const old = S.teams.find(t => t.id !== S.user && !t.parent); const TG = { POR: 3, DEF: 8, MED: 8, DEL: 5 }; const grp = p => ({ POR: 'POR', DFC: 'DEF', LD: 'DEF', LI: 'DEF', MCD: 'MED', MC: 'MED', MCO: 'MED', MD: 'MED', MI: 'MED', ED: 'DEL', EI: 'DEL', DC: 'DEL' }[p.sp] || p.pos);
+    const ages = sq_(old.id).map(p => [p, p.age]); sq_(old.id).filter(p => grp(p) === 'DEL').forEach(p => p.age = 33); ok(Z.successionNeed(old.id, TG, grp) === 'DEL', 'la IA detecta una línea sin relevo'); { const Ec = await import('../src/economy'), c0 = old.cash; old.cash = 999; Ec.aiSummerPlan(old, Object.values(S.players)); const pl = old.plan && PL_(old.plan.p); ok(!!pl && pl.age <= 24 && pl.team === old.id, 'la IA ficha a un joven de relevo para esa línea: ' + (pl ? pl.name + ' (' + pl.age + ')' : 'ninguno')); old.cash = c0; } ages.forEach(([p, a]) => p.age = a);
+    const V = Mo.validateData('id;nombre;posicion;edad\n' + me[0].id + ';Ok Nombre;DC;25\nNOEXISTE;X;ZZ;99');
+    ok(V.errors.length >= 2 && V.errors.some(e => e.l === 3 && /posición/.test(e.m)) && V.warns.some(w => /edad/.test(w.m)), 'validador de mods: errores con su línea');
+    ok(Mo.validateData('{"type":"el-banquillo-mod",').errors.length === 1, 'validador de mods: JSON roto');
+    S.view = 'inicio';
+  }
   { // instrucciones sin balón: marcaje, centros del rival y dirigir la presión
     const D = await import('../src/data'); ok(D.TAC0.mar === 'zon' && D.TAC0.cru === 'nor' && D.TAC0.dir === 'nor' && D.TACS.mar && D.TACS.cru && D.TACS.dir, 'instrucciones sin balón nuevas con valores por defecto');
     S.view = 'tacticas'; S.vt = { tac: 'tac', ins: 'def' }; render(); ok(!!app.querySelector('[data-a=tac][data-k=cru]') && !!app.querySelector('[data-a=tac][data-k=dir]') && !!app.querySelector('[data-a=tac][data-k=mar]'), 'pestaña Sin balón con las instrucciones defensivas');

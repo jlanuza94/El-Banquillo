@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wageProjHTML} from './r12';
 import {fansSell} from './fans';
 import {tlAdd} from './timeline';
 import {noteSigning} from './pressplus';
@@ -133,6 +134,7 @@ export function termsForm(p,mode){
  ${step('tClause','Cláusula de rescisión (M€)',cl0,`<input type="number" id="tClause" min="0.01" step="0.05" value="${cl0.toFixed(2)}">`)}
  <div class="ctf"><span class="eyebrow">Salida si descendemos</span><label class="chk ctchk"><input type="checkbox" id="tRel" ${p.rel?'checked':''}> Activada</label></div></div>
  <div class="ctbar"><span><span class="eyebrow">Presupuesto</span> <b>${money(bud)}</b></span><span><span class="eyebrow">Pide</span> <b>${money(D)}/sem</b></span><span><span class="eyebrow">Agente</span> <b>${esc(agentName(p))} · ${agentOf(p).n}</b>${mode==='buy'?` <small>(comisión ${money(agentFee(p,negState(p.id).agreed||0))})</small>`:''}</span><span class="ctmood"><span class="eyebrow">Ánimo</span><i class="ctm">${(v=>`<b id="tMood" class="${v>=70?'ok':v>=45?'mid':'low'}" style="width:${v}%"></b>`)(termsMood(D,w0,0,true))}</i></span></div>
+ <div id="tProj">${wageProjHTML(p,mode,w0,0,true,D)}</div>
  <p class="small muted" style="margin:6px 0 0">Espera ser <b>${ROLES[er].n.toLowerCase()}</b>. Cláusula: ${wantsFree?'la quiere baja (menos de '+money(p.value*2)+')':'le da igual'}. Carácter: ${PERS[p.per].n.toLowerCase()}. Prometer un rol mejor abarata el sueldo, pero si no juega se enfadará. La prima se paga una vez.</p>
  ${bonusFields(p).replace(/<label class="chk"[\s\S]*?<\/label>/,'')}`:'</div><div class="negmsg">Ya tiene el contrato más largo que está dispuesto a firmar.</div>'}`;
 }
