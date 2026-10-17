@@ -78,9 +78,10 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .combo { position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%); font-family: var(--f-display); font-size: 40px; color: var(--hivis); text-shadow: 0 3px 0 var(--hivis-tinta), 0 0 18px rgba(255,138,31,.5); pointer-events: none; opacity: 0; white-space: nowrap; }
 .combo.ve { animation: combo .7s ease-out; }
 @keyframes combo { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.7); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
-.pan { position: absolute; top: 46%; transform: translateY(-50%); width: 44px; height: 72px; border-radius: 8px; background: var(--panel); border: 1px solid var(--linea); font-size: 26px; font-weight: 700; touch-action: none; }
-#panI { left: max(6px, env(safe-area-inset-left, 0px)); }
-#panD { right: max(6px, env(safe-area-inset-right, 0px)); }
+.falta { position: absolute; top: 50%; transform: translateY(-50%); border: 0; background: var(--hivis); color: var(--hivis-tinta); font-family: var(--f-cond); font-weight: 700; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; padding: 10px 8px; box-shadow: 0 0 18px rgba(255,138,31,.6); animation: falta 1s ease-in-out infinite alternate; writing-mode: vertical-rl; }
+#faltaI { left: 0; border-radius: 0 10px 10px 0; padding-left: max(8px, env(safe-area-inset-left, 0px)); transform: translateY(-50%) rotate(180deg); }
+#faltaD { right: 0; border-radius: 10px 0 0 10px; padding-right: max(8px, env(safe-area-inset-right, 0px)); }
+@keyframes falta { to { opacity: .55; } }
 
 /* Rueda de herramientas */
 .rueda { position: absolute; width: 250px; height: 250px; margin: -125px 0 0 -125px; pointer-events: none; }
@@ -210,8 +211,8 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
       <div class="zonas" id="zonas"></div>
     </div>
   </div>
-  <button class="pan" id="panI" aria-label="Mover la cámara a la izquierda" hidden>‹</button>
-  <button class="pan" id="panD" aria-label="Mover la cámara a la derecha" hidden>›</button>
+  <button class="falta" id="faltaI" aria-label="Mover la vista a la izquierda: falta algo por ahí" hidden></button>
+  <button class="falta" id="faltaD" aria-label="Mover la vista a la derecha: falta algo por ahí" hidden></button>
   <div class="rueda" id="rueda" hidden></div>
   <div id="blancos"></div>
   <div class="evento prep" id="prep" hidden></div>
@@ -316,6 +317,18 @@ const CANDIDATOS = [
   ['Pancho', 'Les tiene miedo a los mapaches.', '¿Eso que se movió fue un mapache? Dime que no.'],
 ];
 const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
+// El gerente: su paciencia baja con cada visita, y mucho más si vas atrasado. Solo explota si de verdad tardas.
+const GERENTE_IMPACIENTE = ['Ya van tres horas, ¿eh?', '¿Esto siempre tarda tanto o es usted?', 'Mi suegra limpia más rápido. Y tiene 80 años.', 'Le aviso que a las seis llega el panadero.'];
+const GERENTE_FURIOSO = ['¿Es en serio? ¡Mañana abrimos!', '¡Les pago por limpiar, no por mirar la grasa!', 'Estoy a esto de llamar a su jefe. A ESTO.'];
+const RESPUESTAS_GERENTE = [
+  { t: 'Ya casi, jefe', paciencia: 8 },
+  { t: 'Falta poquito. Desde 2009.', paciencia: -12, propina: -.03, comp: 'JAJA. Desde 2009.' },
+  { t: '¿Me trae un cafecito?', paciencia: 18, gerente: 'Bueno… ¿con azúcar? (Se va a la máquina y tarda un buen rato.)', calma: 30 },
+  { t: 'Le explico la norma NFPA 96…', paciencia: 15, gerente: '…zzz. Ah, sí, sí. Muy interesante. Sigan, sigan.' },
+  { t: '¿Por qué no nos ayuda?', paciencia: -6, gerente: 'Agarra un trapo, lo moja, lo mira, lo deja y se va a su oficina.' },
+  { t: 'Esta grasa es de 2019, jefe.', paciencia: 10, gerente: '…Sí, es que el anterior gerente… bueno. Sigan.' },
+  { t: 'Si me deja trabajar, acabo antes', paciencia: -4, gerente: 'Está bien, está bien. Me callo. (No se calla.)' },
+];
 const GERENTE = ['¿Ya casi?', '¿Cuánto falta? Es que mañana abrimos.', 'Yo lo habría hecho con un trapito.', '¿Eso es grasa o es el diseño?', '¿Y eso brilla así siempre o es la luz?'];
 const RIGO_CONSEJOS = ['Consejo de Don Rigo: si el cliente no paga, límpiale solo la mitad. No, espera, no hagas eso.', 'Desde el lago: pesqué una bota. Igual que mi primer cliente. ¿Cómo va la empresa?', 'Consejo de Don Rigo: nunca le prestes la camioneta a Beto. Nunca.', 'Consejo de Don Rigo: los mapaches respetan a quien les habla de usted.', `Desde el lago: ${RIVAL} me ofreció trabajo. Les dije que estoy jubilado. Y que sus campanas dan pena.`, 'Consejo de Don Rigo: cobra antes de raspar. O después. Pero cobra.'];
 const RIGO = ['Hoy te toca una fácil. Mentira, ninguna es fácil.', 'Si te preguntan, la camioneta siempre hizo ese ruido.', 'El seguro no cubre mapaches. Lo pregunté.', 'Si algo explota, tú no estabas.', 'Recuerda: el cliente siempre tiene razón, hasta que paga.', 'Los clientes no se consiguen solos. Bueno, a veces sí, pero no cuentes con eso.'];
@@ -786,7 +799,8 @@ function moverCamara(dt) {
   const v = camT.a, fov = v.fov || 55;
   const hf = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * cam.aspect);
   const dist = clamp(v.ancho / 2 / Math.tan(hf / 2), v.dMin, v.dMax);
-  v.maxPan = Math.max(0, (v.ancho - 2 * dist * Math.tan(hf / 2)) / 2);
+  v.vis = 2 * dist * Math.tan(hf / 2);
+  v.maxPan = Math.max(0, (v.ancho - v.vis) / 2);
   v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
   camT.objMira.copy(v.mira); camT.objMira.x += v.pan;
   camT.objPos.copy(camT.objMira).addScaledVector(v.dir, dist);
@@ -796,11 +810,34 @@ function moverCamara(dt) {
   cam.lookAt(camT.mira);
   cam.fov = fov; cam.updateProjectionMatrix();
 }
-let panDir = 0;
-for (const [id, d] of [['#panI', -1], ['#panD', 1]]) {
-  const b = $(id);
-  b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); panDir = d; });
-  for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, () => { panDir = 0; });
+// Mover la vista: arrastrar con dos dedos, arrastrar sobre algo que no se limpia (pared, suelo, aire),
+// tocar el aviso naranja del borde o, en ordenador, las flechas del teclado.
+let arrastreVista = null;
+const dedos = new Map();
+const capturar = e => { try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* puntero ya suelto */ } };
+const xMedia = () => [...dedos.values()].reduce((a, x) => a + x, 0) / dedos.size;
+const moverVista = metros => { camT.a.pan = (camT.a.pan || 0) + metros; };
+$('#faltaI').addEventListener('click', () => moverVista(-(camT.a.vis || 2) * .6));
+$('#faltaD').addEventListener('click', () => moverVista((camT.a.vis || 2) * .6));
+// La señal de que falta algo fuera de la pantalla: grasa (o metal sin migdalear) o marcas de la preparación sin hacer.
+const pv = new T.Vector3();
+function faltaFuera() {
+  let izq = false, der = false;
+  const lado = x => { if (x < -1.02) izq = true; else if (x > 1.02) der = true; };
+  if (M.fase === 'prep' || M.etapa === 'pelar') {
+    for (const m of MARCAS) if (!m.hecho) { pv.copy(m.pos).project(cam); lado(pv.x); }
+  } else if (camT.a.maxPan > .05) {
+    for (const s of zonaAct().sfs) {
+      if (s.interior) continue;
+      for (let i = 0; i < s.d.length; i += 3) {
+        const falta = M.etapa === 'migdalear' ? s.d[i] === 0 && s.pol[i] < .6 : s.d[i] > .1;
+        if (!falta) continue;
+        pv.set(((i % s.nx) / s.nx - .5) * s.w, ((i / s.nx | 0) / s.ny - .5) * s.h, 0); s.mesh.localToWorld(pv); pv.project(cam); lado(pv.x);
+        if (izq && der) break;
+      }
+    }
+  }
+  return [izq, der];
 }
 
 // ------------------------------------------------------------------ partículas
@@ -885,7 +922,7 @@ const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalea
 function empezarTurno(orden) {
   construirNoche(orden);
   M = { orden, comp: COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60, herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
-    trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')),
+    trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: 0,
     equipo: orden.equipo.map(e => ({ ...e, t: rnd(.2, .8) })) };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
@@ -901,7 +938,7 @@ function empezarTurno(orden) {
 
 const prepEl = $('#prep');
 function panelPrep(titulo, texto, estado, boton, alPulsar) {
-  if (M.orden.campanas > 1 || innerWidth / innerHeight < .9) texto += ' Usa las flechas de los lados para recorrer la cocina.';
+  if (M.orden.campanas > 1 || innerWidth / innerHeight < .9) texto += ' Para ver el resto de la cocina, arrastra con dos dedos o toca el aviso naranja del borde.';
   const reloj = M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480);
   prepEl.innerHTML = `<div class="carta">${M.fase === 'prep' ? `<div class="pasos">${pasosHTML(0)}</div>` : ''}<div class="fila"><h3>${esc(titulo)}</h3><span class="reloj">${reloj}</span></div><p>${esc(texto)}</p><p class="nota">${esc(estado)}</p>
     <div class="acciones"><button class="btn prim" id="prepSig">${esc(boton)}</button></div></div>`;
@@ -955,7 +992,7 @@ addEventListener('pointerdown', () => { dedoAbajo = true; }, true);
 addEventListener('pointerup', () => { dedoAbajo = false; });
 addEventListener('pointercancel', () => { dedoAbajo = false; });
 addEventListener('pointermove', e => {
-  if (!dedoAbajo || !M || !M.arrastrar) return;
+  if (!dedoAbajo || !M || !M.arrastrar || arrastreVista) return;
   for (const m of MARCAS) if (!m.hecho && m.sx !== undefined && m.el.classList.contains('punto') && Math.hypot(m.sx - e.clientX, m.sy - e.clientY) < 34) tocarMarca(m);
 });
 
@@ -1061,20 +1098,36 @@ function aplicarTramo(a, b) {
 
 canvas.addEventListener('pointerdown', e => {
   audio();
-  if (!M || M.fase !== 'turno' || M.etapa === 'pelar' || M.pausa || (M.ev && M.ev.bloquea)) return;
-  canvas.setPointerCapture(e.pointerId);
-  const h = apuntar(e.clientX, e.clientY);
+  dedos.set(e.pointerId, e.clientX);
+  if (dedos.size === 2) {   // segundo dedo: se cancela la pasada y los dos dedos mueven la vista
+    if (M) { M.trazo = null; M.presionado = false; chorro(false); }
+    arrastreVista = { x: xMedia(), pan0: camT.a.pan || 0, dos: true }; capturar(e);
+    return;
+  }
+  if (!M || M.pausa || (M.ev && M.ev.bloquea) || (M.fase !== 'turno' && M.fase !== 'prep')) return;
+  const h = M.fase === 'turno' && M.etapa !== 'pelar' ? apuntar(e.clientX, e.clientY) : null;
+  if (!h) {   // nada que limpiar bajo el dedo: se mueve la vista
+    if (camT.a.maxPan > .05) { arrastreVista = { x: e.clientX, pan0: camT.a.pan || 0 }; capturar(e); }
+    if (M.fase !== 'turno' || M.etapa === 'pelar') return;
+  }
+  capturar(e);
+  if (arrastreVista) return;
   M.trazo = { ultimo: h, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, largo: 0, quitado: 0 };
   M.presionado = true; M.apuntado = h;
 });
 canvas.addEventListener('pointermove', e => {
+  if (dedos.has(e.pointerId)) dedos.set(e.pointerId, e.clientX);
+  if (arrastreVista) { const v = camT.a, x = arrastreVista.dos ? xMedia() : e.clientX; v.pan = arrastreVista.pan0 - (x - arrastreVista.x) * (v.vis || 2) / innerWidth; return; }
   if (!M || !M.trazo) return;
   const h = apuntar(e.clientX, e.clientY);
   M.apuntado = h; M.trazo.x = e.clientX; M.trazo.y = e.clientY;
   if (M.herr !== 'hidro') aplicarTramo(M.trazo.ultimo, h);
   M.trazo.ultimo = h;
 });
-function soltar() {
+function soltar(e) {
+  if (e && e.pointerId !== undefined) dedos.delete(e.pointerId);
+  if (arrastreVista && arrastreVista.dos && dedos.size) return;   // queda un dedo: sigue la vista hasta soltarlo
+  arrastreVista = null;
   if (!M || !M.trazo) return;
   const tr = M.trazo; M.trazo = null; M.presionado = false; chorro(false);
   if (M.herr !== 'rasqueta') return;
@@ -1141,6 +1194,7 @@ function elegirEnRueda(x, y) {
 }
 function cerrarRueda() { ruedaAbierta = false; $('#rueda').hidden = true; if (M) M.pausaRueda = false; }
 addEventListener('keydown', e => {
+  if (M && (M.fase === 'turno' || M.fase === 'prep') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { moverVista((e.key === 'ArrowLeft' ? -.25 : .25) * (camT.a.vis || 2)); return; }
   if (!M || M.fase !== 'turno') return;
   const h = RUEDA[+e.key - 1];
   if (h && herramientas().includes(h)) cambiarHerr(h);
@@ -1150,7 +1204,7 @@ addEventListener('keydown', e => {
 
 const chat = $('#chat');
 function decir(quien, texto, resp) {
-  const b = document.createElement('div'); b.className = 'burbuja';
+  const b = document.createElement('div'); b.className = 'burbuja' + (quien === 'gerente' ? ' de-gerente' : '');
   const col = quien === 'gerente' ? '#e9e9e9' : quien === 'rigo' ? '#b9a27a' : quien.color;
   const nom = quien === 'gerente' ? 'Gerente' : quien === 'rigo' ? 'Don Rigo' : quien.n;
   b.innerHTML = `<div class="cara" style="background:${col}">${esc(nom[0])}</div><div><b>${esc(nom)}</b>${esc(texto)}${resp ? `<div class="resp">${resp.map((r, i) => `<button class="btn peq" data-i="${i}">${esc(r.t)}</button>`).join('')}</div>` : ''}</div>`;
@@ -1256,6 +1310,43 @@ const EVENTOS = {
 };
 function lanzarEvento(e) { M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](); }
 
+// ---- el gerente que te apura
+
+// Vas atrasado si llevas limpia una parte menor que la parte de la noche que ya pasó.
+function atrasado() {
+  const f = M.t / M.dur;
+  const hecho = M.etapa === 'lavar' ? Z.reduce((a, z) => a + pctZona(z), 0) / Z.length : 1;
+  return f > .3 && hecho < f * 1.15;
+}
+function visitaGerente() {
+  M.gerenteT = rnd(22, 32) * (1 + .3 * perk('labia'));
+  const tarde = atrasado();
+  M.paciencia -= tarde ? 22 : 8;
+  if (!tarde) M.paciencia = Math.max(25, M.paciencia);   // si vas a buen ritmo, como mucho se impacienta
+  if (M.paciencia <= 0 && !M.enojado) return explotaGerente();
+  const frase = M.paciencia > 60 ? uno(GERENTE) : M.paciencia > 30 ? uno(GERENTE_IMPACIENTE) : uno(GERENTE_FURIOSO);
+  let resp = false;
+  const ops = [RESPUESTAS_GERENTE[0], ...RESPUESTAS_GERENTE.slice(1).sort(() => Math.random() - .5).slice(0, 2)];
+  chat.querySelectorAll('.de-gerente').forEach(x => x.remove());
+  const b = decir('gerente', frase, ops.map(o => ({ t: o.t, f: () => {
+    resp = true; if (!M) return;
+    M.paciencia = Math.min(110, M.paciencia + o.paciencia);
+    if (o.propina) M.propinaMod += o.propina;
+    if (o.calma) M.gerenteT += o.calma;
+    if (o.gerente) setTimeout(() => M && decir('gerente', o.gerente), 400);
+    if (o.comp) setTimeout(() => M && decir(M.comp, o.comp), 400);
+  } })));
+  setTimeout(() => { if (!resp && M && M.fase === 'turno' && b.isConnected) { M.paciencia -= 8; decir('gerente', M.paciencia > 30 ? '¿Hola? ¿Me escucha? ¿¿YA CASI??' : '¡¿ME ESTÁ IGNORANDO?!'); } }, 6800);
+}
+function explotaGerente() {
+  M.enojado = true; sAlarma();
+  carta('¡El gerente explota!', '«¡Llevo toda la noche esperando! ¡Mañana abrimos a las siete! ¡Voy a llamar a su jefe!»', [
+    { t: 'Calmarlo con un café y una charla', d: 'Pierdes 15 minutos de turno', f: () => { sumarTiempo(15); M.paciencia = 50; resultado('Más tranquilo', 'Se toma el café, te cuenta lo de su divorcio y vuelve a su oficina. Ya no te molesta.', M.comp, 'Yo también lloré con lo del divorcio.'); } },
+    { t: 'Prometerle un 10 % de descuento', d: 'Menos cobro, pero contento', f: () => { M.descuento = .1; M.paciencia = 70; resultado('Trato hecho', '«Un diez por ciento… bueno. Pero que brille, ¿eh?»', M.comp, 'El descuento sale de tu sueldo, ¿verdad? Solo preguntaba.'); } },
+    { t: 'Ignorarlo y seguir raspando', d: 'Él llama a quien tenga que llamar', f: () => { dano('El gerente se quejó por teléfono de lo que tardaste', 0, 4); M.paciencia = 10; resultado('Llamada furiosa', S.fase === 'aprendiz' ? 'Llama a Don Rigo a las tres de la mañana. Don Rigo contesta en pijama. No está contento.' : 'Te deja una reseña de una estrella: «Lentos. La campana quedó bien, pero lentos».', M.comp, 'Uy. Yo de ti no contestaba el teléfono mañana.'); } },
+  ], { bloquea: true });
+}
+
 // ---- bucle del turno
 
 function tickTurno(dt) {
@@ -1296,15 +1387,7 @@ function tickTurno(dt) {
         const quien = uno(M.equipo);
         if (quien.principal) { if (!M.dormido) decir(M.comp, uno(M.comp.frases)); } else decir(quien, quien.frase);
       }
-      if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) {
-        M.gerenteT = rnd(24, 34) * (1 + .3 * perk('labia'));
-        let resp = false;
-        const b = decir('gerente', uno(GERENTE), [
-          { t: 'Ya casi, jefe', f: () => { resp = true; } },
-          { t: 'Falta poquito. Desde 2009.', f: () => { resp = true; if (M) { M.propinaMod -= .03; decir(M.comp, 'JAJA. Desde 2009.'); } } },
-        ]);
-        setTimeout(() => { if (!resp && M && M.fase === 'turno' && b.isConnected) decir('gerente', '¿¿YA CASI??'); }, 6800);
-      }
+      if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) visitaGerente();
     }
     // Desastres programados
     if (!M.ev && M.etapa === 'lavar') for (const e of M.eventos) if (!M.hechos.has(e) && e.zona === M.zona && M.enZona >= e.en) { lanzarEvento(e); break; }
@@ -1670,7 +1753,7 @@ function pantallaAjustes(enTurno, desdeInicio) {
   pantalla(`<div class="rotulo">${enTurno ? 'Pausa' : 'Ajustes'}</div>
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
     ${Object.keys(S.perks).length ? `<div class="cita"><b>Tus mejoras</b>${Object.entries(S.perks).map(([k, n]) => `${PERKS[k].n}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
-    <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, usa las flechas de los lados. En ordenador, teclas 1 a 4.</div>
+    <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, arrastra con dos dedos (o con uno sobre la pared o el suelo) para mover la vista. El aviso naranja del borde te dice si falta algo por ese lado: tócalo y te lleva. En ordenador, las flechas del teclado. En ordenador, teclas 1 a 4.</div>
     <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="menu">Menú principal</button>'}</div>`);
   P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.aj[b.dataset.k] = !S.aj[b.dataset.k]; b.setAttribute('aria-pressed', S.aj[b.dataset.k]); U.hl.value = S.aj.resaltar ? 1 : 0; guardar(); });
   $('#volver').onclick = () => { if (enTurno) { P.hidden = true; M.pausa = false; } else if (desdeInicio) pantallaInicio(); else pantallaCamioneta(); };
@@ -1697,14 +1780,14 @@ function pantallaParte() {
   if (sinCubrir && azar(Math.min(1, sinCubrir / piezas.aparatos.length * 1.4))) dano(`Espuma y grasa en ${sinCubrir} ${sinCubrir === 1 ? 'aparato sin cubrir' : 'aparatos sin cubrir'}`, sinCubrir * 25, sinCubrir > 2 ? 4 : 2);
   if (!M.prep.bolsa) dano('Agua con grasa en el suelo (plástico o bolsa incompletos)', Math.round(90 * (1 - M.prep.envuelto * .6)), 2);
   const limpio = zonas.reduce((a, z) => a + z.pct, 0) / zonas.length;
-  const cobro = aprobado ? o.pago : Math.round(o.pago * .5 * limpio / 10) * 10;
+  const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) / 10) * 10;
   const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 : 0) + .05 * perk('labia') + M.propinaMod, 0, .3) / 5) * 5);
   const danos = M.danos.reduce((a, d) => a + d.dinero, 0);
   const sueldos = M.equipo.reduce((a, e) => a + (e.sueldo || 0), 0);
   // De aprendiz cobras sueldo y Don Rigo paga los daños; con tu empresa cobras todo y lo pagas todo.
   const lineas = aprendiz
     ? [['Sueldo de la noche', SUELDO_APRENDIZ], ['Bono por aprobar', aprobado ? 40 : 0], ['Propina', propina], ...M.danos.map(d => [d.t + (d.dinero ? ' (lo paga Don Rigo)' : ''), null])]
-    : [[`${aprobado ? 'Pago del trabajo' : 'Pago parcial'}`, cobro], ['Propina', propina], ...M.danos.map(d => [d.t, d.dinero ? -d.dinero : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
+    : [[`${aprobado ? 'Pago del trabajo' : 'Pago parcial'}${M.descuento ? ' (con el descuento prometido al gerente)' : ''}`, cobro], ['Propina', propina], ...M.danos.map(d => [d.t, d.dinero ? -d.dinero : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
   const neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   const rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0);
@@ -1864,7 +1947,7 @@ function subirEtapa() {
 
 function redimensionar() { R.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
 addEventListener('resize', redimensionar);
-let ult = performance.now();
+let ult = performance.now(), faltaT = 0;
 function bucle(ahora) {
   const dt = Math.min(.05, (ahora - ult) / 1000); ult = ahora;
   U.tiempo.value = ahora / 1000;
@@ -1875,10 +1958,12 @@ function bucle(ahora) {
   if (piezas.aparatos) for (const ap of piezas.aparatos) { const c = ap.cubierta, t = c.userData.sube; if (t > 0) { c.userData.sube = t - dt; c.position.y += dt * 2.2; if (c.userData.sube <= 0) c.visible = false; } }
   // Cubiertas que caen sobre los aparatos
   if (piezas.aparatos) for (const ap of piezas.aparatos) { const c = ap.cubierta, t = c.userData.caida; if (t > 0) { c.userData.caida = Math.max(0, t - dt); c.position.y = .9 + (ap.alto + .1) / 2 + c.userData.caida * 1.4; } }
-  const v = camT.a;
-  if (panDir) v.pan = (v.pan || 0) + panDir * dt * 1.4;
-  const conPan = M && (M.fase === 'turno' || M.fase === 'prep') && v.maxPan > .05;
-  $('#panI').hidden = !conPan; $('#panD').hidden = !conPan;
+  if ((faltaT -= dt) <= 0) {
+    faltaT = .35;
+    const [izq, der] = M && (M.fase === 'turno' || M.fase === 'prep') ? faltaFuera() : [false, false];
+    const txt = !M ? '' : M.fase === 'prep' || M.etapa === 'pelar' ? 'falta' : M.etapa === 'migdalear' ? 'falta migdalear' : 'falta grasa';
+    $('#faltaI').hidden = !izq; $('#faltaD').hidden = !der; $('#faltaI').textContent = txt + ' ›'; $('#faltaD').textContent = txt + ' ›';
+  }
   moverCamara(dt);
   moverParticulas(dt);
   if (MARCAS.length) moverMarcas();
