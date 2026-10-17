@@ -523,10 +523,10 @@ document.addEventListener('pointercancel',()=>{clearTimeout(LP.t);LP.t=0;},true)
 /* En algunos móviles (WebView de Android) el navegador intenta desplazar la página a mitad del arrastre y lo corta: mientras arrastras, se bloquea el desplazamiento. */
 document.addEventListener('touchmove',e=>{if(DG)e.preventDefault();},{passive:false});
 const dgMove=e=>{if(!DG)return;if(!DG.moved){if(Math.hypot(e.clientX-DG.x0,e.clientY-DG.y0)<7)return;DG.moved=true;
-  const p=PL(DG.pid);const g=document.createElement('div');if(DG.src==='slot'){g.className='dragghost vs dgchip';g.innerHTML=DG.el.innerHTML;DG.el.classList.add('dragging');}else{g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';}document.body.appendChild(g);DG.g=g;
-  document.body.classList.add('fmdrag');const fit=fitOf(DG.pid);document.querySelectorAll('.fmgrid .slot[data-i]').forEach(s=>s.classList.add('fit'+(fit[+s.dataset.i]||4)));
+  const p=PL(DG.pid);const g=document.createElement('div');if(DG.src==='slot'||DG.src==='eslot'||DG.src==='eoop'){g.className='dragghost vs dgchip';g.innerHTML=DG.el.innerHTML;DG.el.classList.add('dragging');}else{g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';}document.body.appendChild(g);DG.g=g;
+  document.body.classList.add('fmdrag');const fit=DG.pid?fitOf(DG.pid):'';document.querySelectorAll('.fmgrid .slot[data-i]').forEach(s=>s.classList.add('fit'+(fit[+s.dataset.i]||4)));
   try{DG.el.setPointerCapture(e.pointerId);}catch(err){}}
- e.preventDefault();DG.g.style.transform=DG.src==='slot'?`translate(${e.clientX}px,${e.clientY}px) translate(-50%,-60%)`:`translate(${e.clientX+10}px,${e.clientY-28}px)`;
+ e.preventDefault();DG.g.style.transform=(DG.src==='slot'||DG.src==='eslot'||DG.src==='eoop')?`translate(${e.clientX}px,${e.clientY}px) translate(-50%,-60%)`:`translate(${e.clientX+10}px,${e.clientY-28}px)`;
  const t=dropAt(e.clientX,e.clientY);if(t!==DG.over){DG.over&&DG.over.classList.remove('over');DG.over=t;t&&t.classList.add('over');}};
 document.addEventListener('pointermove',e=>{if(DG&&DG.lp&&DG.tch)return;dgMove(e);},{passive:false});
 // mantener pulsado en la lista: el arrastre sigue al dedo con los eventos táctiles (el navegador cancela los de puntero al intentar desplazar la lista)
@@ -537,7 +537,8 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
  DG_T=Date.now();if(e.type==='pointercancel')return;
  const t=dropAt(e.clientX,e.clientY);if(!t)return;
- if(d.src==='oop'&&t.matches('.vcell')){if(oopMoveTo(T(S.user),+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy))S.oopSel=null;}
+ if(d.src==='eslot'||d.src==='eoop'){const tt=T(S.user),i=+d.el.dataset.i;if(t.matches('.vcell')){if(d.src==='eoop'){oopMoveTo(tt,i,+t.dataset.cx,+t.dataset.cy);}else if(moveSlotTo(i,+t.dataset.cx,+t.dataset.cy))afterMove(slotsOf(FREE),roleList);}else if(d.src==='eslot'&&t.matches('.slot[data-i]')&&!t.matches('.oopm')){const j=+t.dataset.i;if(i&&j&&i!==j){const x=tt.lineup[i];tt.lineup[i]=tt.lineup[j];tt.lineup[j]=x;}}}
+ else if(d.src==='oop'&&t.matches('.vcell')){if(oopMoveTo(T(S.user),+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy))S.oopSel=null;}
  else if(d.src==='oop'){if(t.matches('.slot[data-i]')&&+t.dataset.i!==+d.el.dataset.i){if(oopMap(T(S.user)))oopSwap(T(S.user),+d.el.dataset.i,+t.dataset.i);else placeInSlot(d.pid,+t.dataset.i);}else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);else if(t.matches('.fmlist'))removeFromTeam(d.pid);S.oopSel=null;}
  else if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);}}
  else if(t.matches('.slot[data-i]'))placeInSlot(d.pid,t.matches('.oopm')?ipIdx(+t.dataset.i):+t.dataset.i);

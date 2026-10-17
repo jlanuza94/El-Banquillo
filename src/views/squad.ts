@@ -144,6 +144,17 @@ function insPitch(tac,mode){
   if(tac.off==='si')g+=`<path d="M3 ${L-1.6}H57" stroke="#fff" stroke-width=".6" stroke-dasharray="2 1.5"/><text x="57" y="${L-3}" text-anchor="end" font-size="3.2" fill="#fff" opacity=".85">Fuera de juego</text>`;
   if(tac.per==='cpr')g+=`<circle cx="30" cy="${P-5}" r="4" fill="none" stroke="${col}" stroke-width="1"/><text x="30" y="${P-3.8}" text-anchor="middle" font-size="3.4" fill="#fff">⟲</text>`;
   if(tac.tie==='si')g+=`<text x="5" y="86" font-size="5">⏱</text>`;
+  if(tac.dir==='fue')g+=`<path d="M24 ${P-8}l-10 0M36 ${P-8}l10 0" stroke="#fff" stroke-width="1.1" marker-end=""/><path d="M14 ${P-10}l-3 2 3 2M46 ${P-10}l3 2-3 2" fill="none" stroke="#fff" stroke-width="1.1"/><text x="30" y="${P-11}" text-anchor="middle" font-size="3.2" fill="#fff">A la banda</text>`;
+  else if(tac.dir==='den')g+=`<path d="M10 ${P-8}l10 0M50 ${P-8}l-10 0" stroke="#fff" stroke-width="1.1"/><path d="M20 ${P-10}l3 2-3 2M40 ${P-10}l-3 2 3 2" fill="none" stroke="#fff" stroke-width="1.1"/><text x="30" y="${P-11}" text-anchor="middle" font-size="3.2" fill="#fff">Al embudo</text>`;
+  if(tac.cru==='imp')g+=`<rect x="3" y="${L-16}" width="5" height="12" rx="1" fill="#4aa3ff" opacity=".8"/><rect x="52" y="${L-16}" width="5" height="12" rx="1" fill="#4aa3ff" opacity=".8"/>`;
+  else if(tac.cru==='dej')g+=`<rect x="18" y="${L+4}" width="24" height="6" rx="1" fill="#4aa3ff" opacity=".55"/>`;
+  if(tac.mar==='hom')[18,30,42].forEach(x=>g+=`<circle cx="${x}" cy="${L-7}" r="1.6" fill="#ff8c7a"/><path d="M${x} ${L-5}V${L}" stroke="#ff8c7a" stroke-width=".7"/>`);
+ }else if(mode==='tra'){
+  if(tac.per==='cpr')g+=`<circle cx="30" cy="30" r="9" fill="none" stroke="#e0473e" stroke-width="1.2"/><text x="30" y="32" text-anchor="middle" font-size="5" fill="#fff">⟲</text><text x="30" y="44" text-anchor="middle" font-size="3.4" fill="#fff">Contrapresión</text>`;
+  else if(tac.per==='rep')g+=`<path d="M30 26V58" stroke="#e3a33a" stroke-width="1.6"/><path d="M27 55l3 4 3-4z" fill="#e3a33a"/><text x="30" y="22" text-anchor="middle" font-size="3.4" fill="#fff">Replegar</text>`;
+  if(tac.rec==='cont')g+=`<path d="M30 76 L22 50" stroke="#e0473e" stroke-width="1" stroke-dasharray="2 1.5"/><path d="M19.5 52l2.5-4.5 2.7 4.3z" fill="#e0473e"/><text x="30" y="84" text-anchor="middle" font-size="3.4" fill="#fff">Contraataque</text>`;
+  else if(tac.rec==='pau')g+=`<text x="30" y="80" text-anchor="middle" font-size="3.4" fill="#fff">Pausar y ordenarse</text>`;
+  if(tac.tie==='si')g+=`<text x="5" y="86" font-size="5">⏱</text>`;
  }else{
   const W={est:[22,30,38],nor:[13,30,47],anc:[6,30,54]}[tac.anc],len={len:16,nor:24,rap:32}[tac.rit],st=tac.est,c=st==='dir'?'#e3a33a':st==='con'?'#e0473e':st==='pos'?'#4aa3ff':'#d8d8d8';
   W.forEach((x,i)=>{const y0=60,y1=y0-len-(i===1?4:0);g+=st==='pos'?`<path d="M${x} ${y0}V${y1}" stroke="${c}" stroke-width="1.4" stroke-dasharray="1.6 2.2"/>`:`<path d="M${x} ${y0}V${y1+3}" stroke="${c}" stroke-width="${st==='dir'?2.4:1.6}"/>`;g+=`<path d="M${x-3} ${y1+3}l3-4 3 4z" fill="${c}"/>`;});
@@ -155,7 +166,7 @@ function insPitch(tac,mode){
 export function tacticasView(){
  const t=T(S.user),tac=Object.assign({},TAC0,t.tac||{}),xi=t.lineup.filter(id=>id&&PL(id)).map(PL),sq=squad(S.user).filter(p=>!p.inj);
  const nm=nextMatch(),opp=nm?(nm.fx.h===S.user?nm.fx.a:nm.fx.h):null;
- const IG={def:['lin','pre','ent','off','tie','per'],atk:['est','rit','anc','rec']},it=vtab('ins',[['def','Defensa'],['atk','Ataque']],'def');
+ const IG={atk:['est','rit','anc'],def:['lin','pre','mar','cru','dir','ent','off'],tra:['per','rec','tie']},it=vtab('ins',[['atk','⚽ Con balón'],['def','🛡 Sin balón'],['tra','🔁 Transición']],'def');
  const inst=`<section class="panel insp"><div class="panel-h"><h2>Instrucciones de equipo</h2><div class="row" style="gap:8px"><span class="eyebrow">${fLabel(t.formation)} · ${MENT[t.ment].label}</span>${it.bar.replace('seg pltabs','seg insseg')}</div></div>
  <div class="insg">${insPitch(tac,it.cur)}<div class="insr"><div class="insrow"><div class="insl">Mentalidad</div><div class="inso" style="--n:3">${Object.entries(MENT).map(([k,v])=>`<button data-a="ment" data-v="${k}" aria-pressed="${t.ment===k}">${v.label}</button>`).join('')}</div></div>${IG[it.cur].map(k=>{const v=TACS[k];return `<div class="insrow"><div class="insl">${v.n}</div><div class="inso" style="--n:${Object.keys(v.o).length}">${Object.entries(v.o).map(([ok,ol])=>`<button data-a="tac" data-k="${k}" data-v="${ok}" aria-pressed="${tac[k]===ok}">${ol}</button>`).join('')}</div></div>`;}).join('')}
  <p class="small muted insd">${IG[it.cur].map(k=>`<b>${TACS[k].n}:</b> ${TACS[k].d}`).join(' ')}</p></div></div></section>`;
@@ -289,10 +300,10 @@ function alineacionHTML(){
  const ph=S.lph==='oop'?'oop':'ip',of=oopForm(t),om=oopMap(t),fShow=ph==='oop'&&of?of:t.formation,luShow=ph==='oop'&&of?oopLineup(t.lineup,om):t.lineup;
  const fsel=`<select id="formSel" aria-label="Sistema">${[...Object.keys(FORMS),FREE].map(f=>`<option value="${f}" ${f===t.formation?'selected':''}>${f===FREE?(t.formation===FREE?fLabel(FREE)+' (a tu gusto)':'A tu gusto (arrastra)'):f} · ${Math.round(famOf(f))}%</option>`).join('')}</select>`;
  const marks=vCoords(fShow).map(({s,x,y},i)=>{const p=PL(luShow[i]);let cls='';if(ph==='oop'){if(S.oopSel===i)cls+=' sel';const r=p?eff(p,s)/10:0;
-  return `<button class="slot vs oopm${cls}" style="${vpos(x,y)}" data-a="oop-slot" data-i="${i}"${p&&i>0?` data-pid="${p.id}" data-drag="oop"`:''} aria-label="${SPN[s]} sin balón${p?': '+esc(p.name):''}">${tileChip(p,s,p?suitOf(p,s):0,null,null)}<span class="vnm">${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'Vacío'}</span>${p?`<span class="vv ${qc(r)}">${Math.round(r*10)}</span>`:''}</button>`;}
+  return `<button class="slot vs oopm${cls}" style="${vpos(x,y)}" data-a="oop-slot" data-i="${i}"${p&&i>0?` data-pid="${p.id}" data-drag="oop"`:i>0?' data-drag="eoop"':''} aria-label="${SPN[s]} sin balón${p?': '+esc(p.name):''}">${tileChip(p,s,p?suitOf(p,s):0,null,null)}<span class="vnm">${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'Vacío'}</span>${p?`<span class="vv ${qc(r)}">${Math.round(r*10)}</span>`:''}</button>`;}
   if(!p)cls='empty';else if(!available(p))cls='bad';else if(prof(p,s)<1||footF(p,s)<1)cls='oop';if(selSlot===i)cls+=' sel';
   const v=p?lval(p,s,ro[i]):null,su=p?suitOf(p,s):0;
-  return `<button class="slot vs ${cls}" style="${vpos(x,y)}" data-a="slot" data-i="${i}"${p?` data-pid="${p.id}" data-drag="slot"`:''} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}">
+  return `<button class="slot vs ${cls}" style="${vpos(x,y)}" data-a="slot" data-i="${i}"${p?` data-pid="${p.id}" data-drag="slot"`:i>0?' data-drag="eslot"':''} aria-label="${SPN[s]}${p?': '+esc(p.name):' vacío'}">
   ${tileChip(p,s,su,ro[i],dus[i])}<span class="vnm">${p?esc(p.name.split(' ').slice(1).join(' ')||p.name):'Vacío'}${p?`<i class="vcb ${p.energy>=75?'':p.energy>=55?'mid':'low'}" style="width:${Math.round(p.energy)}%"></i>`:''}</span>${p?`<span class="vv ${v[1]}">${v[0]}</span>`:''}</button>`;}).join('');
  const cells=CELLS.map(c=>`<span class="vcell" data-cx="${c.x}" data-cy="${c.y}" style="${vpos(c.x,c.y)}"><i>${c.s}</i></span>`).join('');
  const tired=ph==='oop'?[]:luShow.map(PL).filter(p=>p&&(p.energy<72||!available(p)));

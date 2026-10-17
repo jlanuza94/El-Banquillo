@@ -660,6 +660,11 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // instrucciones sin balón: marcaje, centros del rival y dirigir la presión
+    const D = await import('../src/data'); ok(D.TAC0.mar === 'zon' && D.TAC0.cru === 'nor' && D.TAC0.dir === 'nor' && D.TACS.mar && D.TACS.cru && D.TACS.dir, 'instrucciones sin balón nuevas con valores por defecto');
+    S.view = 'tacticas'; S.vt = { tac: 'tac', ins: 'def' }; render(); ok(!!app.querySelector('[data-a=tac][data-k=cru]') && !!app.querySelector('[data-a=tac][data-k=dir]') && !!app.querySelector('[data-a=tac][data-k=mar]'), 'pestaña Sin balón con las instrucciones defensivas');
+    S.vt = { tac: 'tac', ins: 'tra' }; render(); ok(!!app.querySelector('[data-a=tac][data-k=per]') && !!app.querySelector('[data-a=tac][data-k=rec]'), 'pestaña Transición'); S.view = 'inicio'; S.vt = {};
+  }
   { // bandeja estilo FMM: tarjeta de fichaje y ficha del jugador al lado
     const { mail: mailF } = await import('../src/inbox'), { T: T_ } = await import('../src/state'); const p = Object.values(S.players).find(x => x.team !== null && x.team !== S.user && x.car);
     if (p) { mailF('Prueba de fichaje', { cat: 'not', subj: 'Fichaje bomba: prueba', tr: { pid: p.id, from: p.team, to: S.user, fee: 1.5 }, act: [{ l: 'Ver ficha', a: 'ficha', id: p.id }] }); S.mailSel = S.inbox[0].id; S.view = 'buzon'; render();

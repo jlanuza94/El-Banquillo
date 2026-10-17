@@ -90,6 +90,10 @@ export function tacMods(m,s,log){
  if(A.ent==='dur')f('ent',1,.96);else if(A.ent==='pru')f('ent',1,1.03);
  if(A.off==='si'){const c=avgAt(m,s,'DEF','col'),v=avgAt(m,s,'DEF','vel');f('off',1,A.lin==='alt'?(c>=6?.95:c+v/2<8?1.06:1):(c>=6?.98:1.03));}
  if(A.tie==='si'&&m.score&&m.score[s]>m.score[o])f('tie',.9,.9,.95,.03);
+ {const wo=(m.wide&&m.wide[o])||0,bw=B.anc==='anc'||wo>3,bc=B.anc==='est';
+  if(A.mar==='hom'){const v=avgAt(m,o,'DEL','vel');f('mar',1,v>=6.2?1.035:.965,1.03);}
+  if(A.cru==='imp')f('cru',1,bw?.96:bc?1.02:.995,1.03);else if(A.cru==='dej'){const hd=avgAt(m,s,'DEF','cab');f('cru',1,bw?(hd>=6.5?.995:1.045):.975,.98);}
+  if(A.dir==='fue')f('dir',1,bc?.965:bw?1.04:1);else if(A.dir==='den')f('dir',1,bw?.965:bc?1.04:1);}
  const w=(m.wide&&m.wide[s])||0;if(A.anc==='anc')f('anc',1+w/150,1);else if(A.anc==='est')f('anc',1-w/150,1);
  const mq=(m.mq&&m.mq[s])||[50,50];
  if(A.est==='pos'){const pq=avgAt(m,s,'MED','pas')*.7+avgAt(m,s,'DEF','pas')*.3;f('est',(B.pre==='baj'?1.06:B.pre==='alt'?Math.min(1,.93+.015*(pq-5)):1)*(1+.015*(pq-5)),1,1,.05);}else if(A.est==='dir')f('est',mq[1]>mq[0]?1.05:.98,1,1,-.02);else if(A.est==='con')f('est',((B.lin==='alt'||m.ment[o]==='att')?1.09:.95)*(1+.012*(avgAt(m,s,'DEL','vel')-5)),1,1,-.05);
