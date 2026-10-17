@@ -181,8 +181,14 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .evento .opciones { display: grid; gap: 6px; }
 .evento .opciones .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; touch-action: none; }
 .evento .opciones .btn small { display: block; font-weight: 400; font-size: 13px; opacity: .8; }
-.prep .carta { border-color: var(--linea); }
-.prep .fila .reloj { font-size: 20px; }
+.prep .carta { border-color: var(--linea); padding: 10px 12px; gap: 6px; }
+.prep h3 { font-size: 17px; }
+.prep .fila .reloj { font-size: 17px; }
+.prep .txt { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+.prep .txt.abierto { display: block; }
+.prep .pie { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.prep .pie .nota { min-width: 0; }
+.prep .pie .btn { flex: none; padding: 9px 12px; font-size: 15px; }
 .cuenta-atras { height: 6px; background: rgba(255,255,255,.1); border-radius: 3px; overflow: hidden; }
 .cuenta-atras div { height: 100%; background: var(--mal); }
 .blanco { position: absolute; width: 74px; height: 74px; margin: -37px 0 0 -37px; border-radius: 50%; background: #c9c9c9; border: 4px dashed #6f6f6f; display: grid; place-items: center; font-family: var(--f-cond); font-weight: 700; color: #222; font-size: 15px; text-transform: uppercase; animation: late .6s ease-in-out infinite alternate; }
@@ -296,9 +302,9 @@ const RIVAL = 'Limpiezas El Cuñado';
 const QUIEN_CUNADO = { n: 'El Cuñado', color: '#d7382b' };
 // Las etapas de tu empresa: se pasa a la siguiente con reputación y pagando el salto.
 const ETAPAS = [
-  { n: 'Camioneta vieja', txt: 'Tú, Beto y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías.' },
-  { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe se pasa a tu empresa, puedes contratar ayudantes y anunciarte en redes.' },
-  { n: 'Oficina con fax', rep: 40, compra: 4000, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy se une (despierto, casi siempre).' },
+  { n: 'Camioneta vieja', txt: 'Tú solo y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías. Beto espera a que puedas pagarle.' },
+  { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe busca trabajo, puedes contratar ayudantes y anunciarte en redes.' },
+  { n: 'Oficina con fax', rep: 40, compra: 4000, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy busca trabajo (despierto, casi siempre).' },
   { n: 'Contratista de confianza', rep: 60, compra: 8000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
   { n: 'Leyenda de la grasa', rep: 85, compra: 15000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
 ];
@@ -353,6 +359,11 @@ const COMPANEROS = {
     frases: ['Esto pesa poquito. Lo cargo yo.', '¿Ya es de día? ¿No? Ah.', 'Yo de niño quería ser almohada.', 'Qué buena siesta haría en ese ducto.'],
     bien: 'Buen turno. Me voy a dormir en la camioneta, despiértame en el próximo semáforo.', mal: 'Yo vi todo limpio. Bueno, vi con los ojos cerrados.', desastre: 'Me perdí lo mejor. Estaba descansando la vista.' },
 };
+// Con tu empresa empiezas sin compañero y hablas solo (entre paréntesis). A Beto, Lupe y Chuy hay que contratarlos.
+const SOLO = { n: 'Tú', color: '#ff8a1f', fuerza: 0, sueldo: 0, solo: true,
+  frases: ['(Hablas solo) Tú puedes. Eres el mejor. Bueno, el único.', '(Piensas) Si Beto estuviera aquí, ya habría roto algo.', '(Tarareas la canción de la radio sin saberte la letra.)', '(Piensas) Necesito un ayudante. O un perro. O las dos cosas.', '(Piensas) Esta mancha me está mirando.'],
+  bien: '(Te miras en la campana y te guiñas el ojo. Nadie te vio. Mejor.)', mal: '(Piensas) Con un ayudante esto no pasaba. Creo.', desastre: '(Piensas) Esto no se lo cuento a nadie. Ni a Don Rigo.' };
+const ADELANTO = { beto: 150, lupe: 300, chuy: 400 };   // lo que piden para unirse a tu empresa
 // Gente que busca trabajo: cada uno con su manía.
 const CANDIDATOS = [
   ['Kevin', 'Graba todo para sus redes.', '¡Saluden a mis doce seguidores!'],
@@ -486,27 +497,27 @@ const look = k => LOOK[k].ops.find(o => o.id === (S.look || {})[k]) || LOOK[k].o
 
 // Lo que pasa de día, antes de salir a trabajar.
 const DIAS = [
-  { id: 'llanta', t: 'Llanta ponchada', txt: 'Camino al trabajo, ¡pum! La llanta trasera. Beto jura que el clavo «ya estaba ahí».', ops: [
-    { t: 'Cambiarla nosotros', d: 'Gratis, pero llegas 30 minutos tarde', f: H => { H.retraso = 30; return 'Cambiada. Beto apretó las tuercas «a ojo». Llegan media hora tarde.'; } },
+  { id: 'llanta', t: 'Llanta ponchada', txt: 'Camino al trabajo, ¡pum! La llanta trasera. El clavo tiene pinta de llevar ahí desde 2019.', ops: [
+    { t: 'Cambiarla nosotros', d: 'Gratis, pero llegas 30 minutos tarde', f: H => { H.retraso = 30; return 'Cambiada. Las tuercas, apretadas «a ojo». Llegas media hora tarde.'; } },
     { t: 'Llamar a la grúa', d: '−$80', f: () => { S.dinero -= 80; return 'La grúa llegó en diez minutos y cobró como si fueran tres horas.'; } }] },
   { id: 'multa', t: 'El de tránsito', txt: 'Un oficial te para: la camioneta echa humo negro y el escape va amarrado con alambre.', ops: [
     { t: 'Pagar la multa', d: '−$60', f: () => { S.dinero -= 60; return 'Multa pagada. El oficial se lleva también un llavero de recuerdo.'; } },
     { t: 'Explicarle la norma NFPA 96', d: 'A ver qué pasa', f: () => { if (azar(.5)) return 'A los cuatro minutos se quedó dormido. Te vas despacito.'; S.dinero -= 120; return 'No le gustó la clase. Multa doble: −$120.'; } }] },
-  { id: 'almuerzo', t: 'El almuerzo desaparecido', txt: 'Beto se comió tu almuerzo. Y el del cliente. Y la salsa del cliente.', ops: [
+  { id: 'almuerzo', t: 'El almuerzo desaparecido', solo: s => s.fase === 'aprendiz' || s.fijos.includes('beto'), txt: 'Beto se comió tu almuerzo. Y el del cliente. Y la salsa del cliente.', ops: [
     { t: 'Comprar tacos para todos', d: '−$40 · la cuadrilla trabaja más rápido esta noche', f: H => { S.dinero -= 40; H.animo = true; return 'Tacos para todos. La cuadrilla va con energía de domingo.'; } },
     { t: 'Perdonarlo', d: 'Es familia (de Don Rigo)', f: () => 'Beto promete no volver a hacerlo. Lo promete con la boca llena.' }] },
-  { id: 'viral', t: '¡Video viral!', txt: 'Un sobrino de Beto subió un video tuyo raspando una campana en cámara rápida. Va por los cincuenta mil «me gusta».', ops: [
+  { id: 'viral', t: '¡Video viral!', txt: 'Un niño del barrio subió un video tuyo raspando una campana en cámara rápida. Va por los cincuenta mil «me gusta».', ops: [
     { t: 'Aprovechar la fama', d: '+3 de reputación', f: () => { S.rep = clamp(S.rep + 3, 0, 100); return 'Te reconocen en la gasolinera. Un señor te pide que le firmes la gorra.'; } },
     { t: 'Pedir que lo borre', d: 'Discreción ante todo', f: () => 'Lo borró. Bueno, lo resubió con música de suspenso. Ya va por cien mil.' }] },
   { id: 'perro', t: 'Pasajero nuevo', txt: 'Un perro callejero se subió a la camioneta y se sentó en el asiento del copiloto. No se quiere bajar.', solo: s => !s.perro, ops: [
     { t: 'Adoptarlo', d: 'Se llamará Grasita', f: () => { S.perro = true; return 'Grasita ya es parte de la empresa. Ladra a los ductos. A todos.'; } },
-    { t: 'Darle un taco y despedirlo', d: 'Con dolor', f: () => 'Se comió el taco, te miró con desprecio y se fue. Beto lloró un poquito.' }] },
+    { t: 'Darle un taco y despedirlo', d: 'Con dolor', f: () => 'Se comió el taco, te miró con desprecio y se fue. Lloraste un poquito.' }] },
   { id: 'arrancon', t: 'Semáforo en rojo', txt: `La camioneta de ${RIVAL} se para junto a la tuya. El Cuñado acelera dos veces y te guiña un ojo.`, ops: [
     { t: '¡Arrancón!', d: 'Por el honor de la empresa', f: () => { if (azar(.5)) { S.rep = clamp(S.rep + 2, 0, 100); return '¡Ganaste! La camioneta vieja tiene más corazón que motor. +2 de reputación.'; } S.dinero -= 30; return 'La camioneta se apagó a media calle. El Cuñado se rió. Empujarla costó $30 en refrescos.'; } },
-    { t: 'Ignorarlo con dignidad', d: 'Mirada al frente', f: () => 'Lo ignoras. Beto le saca la lengua por la ventana. Dignidad a medias.' }] },
+    { t: 'Ignorarlo con dignidad', d: 'Mirada al frente', f: () => 'Lo ignoras. Por el retrovisor, ves que El Cuñado se cala en la siguiente esquina. Justicia divina.' }] },
   { id: 'donas', t: 'Regalo de una clienta', txt: 'Una clienta te deja una caja de donas: «Por la campana de la otra vez, quedó preciosa».', ops: [
-    { t: 'Guardarlas para el gerente', d: 'Esta noche tendrá más paciencia', f: H => { H.donas = true; return 'Las donas viajan en el asiento de atrás, custodiadas por Beto. Faltan dos.'; } },
-    { t: 'Comérselas ya', d: '+25 de experiencia', f: () => { S.xp += 25; return 'Desayuno de campeones. Beto se comió cuatro y dice que fue una.'; } }] },
+    { t: 'Guardarlas para el gerente', d: 'Esta noche tendrá más paciencia', f: H => { H.donas = true; return 'Las donas viajan en el asiento del copiloto, con el cinturón puesto.'; } },
+    { t: 'Comérselas ya', d: '+25 de experiencia', f: () => { S.xp += 25; return 'Desayuno de campeones. Te comiste cuatro y dices que fue una.'; } }] },
 ];
 
 // Radio Grasa FM: canciones inventadas, un locutor nocturno y mucha grasa.
@@ -526,7 +537,7 @@ const LOCUTOR = ['Son las {h} y esto es Radio Grasa FM, la estación que no se d
 // Buscar clientes: cada noche hay dos llamadas.
 const MARKETING = [
   { id: 'volantes', n: 'Repartir volantes en el barrio', d: 'Una orden más esta noche, de las sencillas.', p: 40, etapa: 0,
-    hacer: () => { const o = genOrden(uno(cocinasHasta(Math.min(S.etapa, 1)))); o.origen = 'Volante'; return [o, 'Beto repartió la mitad. La otra mitad sigue en su chaqueta, pero llamó alguien.']; } },
+    hacer: () => { const o = genOrden(uno(cocinasHasta(Math.min(S.etapa, 1)))); o.origen = 'Volante'; return [o, 'Repartiste la mitad. La otra mitad se la llevó el viento, pero llamó alguien.']; } },
   { id: 'donas', n: 'Visitar restaurantes con donas', d: 'A veces sale una orden mejor pagada. A veces solo se comen las donas.', p: 25, etapa: 0,
     hacer: () => { if (azar(.4)) return [null, 'Se comieron las donas, dijeron «ya te llamamos» y no te llamaron.']; const o = genOrden(uno(cocinasHasta(S.etapa))); o.pago = Math.round(o.pago * 1.15 / 10) * 10; o.origen = 'Donas'; return [o, 'Las donas abrieron puertas. Literalmente: el chef te abrió la cocina para enseñarte el desastre.']; } },
   { id: 'redes', n: 'Anuncio en redes', d: 'Dos órdenes más. Puede llegar un cliente raro que paga el doble.', p: 150, etapa: 1,
@@ -546,6 +557,7 @@ function nueva() {
 }
 // Lo que se añadió después (medallas, récords, estilo, radio): se rellena sin tocar la partida.
 function completar(s) {
+  if (!s.fijos) s.fijos = s.fase === 'empresa' ? Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= s.etapa) : [];   // partidas de antes: los que ya estaban
   s.medallas = s.medallas || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
   if (s.aj.radio === undefined) s.aj.radio = true;
   return s;
@@ -788,12 +800,12 @@ TX.lona = texCanvas(lienzo(128, 128, (g, w, h) => {
 
 // Material de grasa: una textura de datos por superficie (R grasa, G espuma, B pulido) decide color, brillo y metal.
 // Costra negra y brillante → película ámbar → acero que refleja la luz.
-const U = { hl: { value: 0 }, tiempo: { value: 0 }, espuma: { value: new T.Vector3(.92, .97, 1) } };
+const U = { hl: { value: 0 }, tiempo: { value: 0 }, espuma: { value: new T.Vector3(.92, .97, 1) }, mig: { value: 0 } };
 function materialGrasa(base, dtex, lado) {
   const m = new T.MeshStandardMaterial({ map: base, color: 0xffffff, metalness: 1, roughness: .3, side: lado || T.FrontSide });
   m.onBeforeCompile = sh => {
-    sh.uniforms.mapaGrasa = { value: dtex }; sh.uniforms.uHl = U.hl; sh.uniforms.uT = U.tiempo; sh.uniforms.uEsp = U.espuma;
-    sh.fragmentShader = 'uniform sampler2D mapaGrasa;\nuniform float uHl;\nuniform float uT;\nuniform vec3 uEsp;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n' + sh.fragmentShader
+    sh.uniforms.mapaGrasa = { value: dtex }; sh.uniforms.uHl = U.hl; sh.uniforms.uT = U.tiempo; sh.uniforms.uEsp = U.espuma; sh.uniforms.uMig = U.mig;
+    sh.fragmentShader = 'uniform sampler2D mapaGrasa;\nuniform float uHl;\nuniform float uT;\nuniform vec3 uEsp;\nuniform float uMig;\nfloat hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n' + sh.fragmentShader
       .replace('#include <map_fragment>', `#include <map_fragment>
         vec4 dm = texture2D(mapaGrasa, vUv);
         float gr = hh(floor(vUv * 180.0));
@@ -809,14 +821,23 @@ function materialGrasa(base, dtex, lado) {
         float burb = smoothstep(0.22 + 0.2 * rb, 0.16 + 0.2 * rb, length(celda));
         float fo = dm.g * (0.6 + 0.4 * burb);
         diffuseColor.rgb = mix(diffuseColor.rgb, uEsp, fo * 0.6);
-        float hlv = uHl * tF * (0.55 + 0.45 * sin(uT * 6.0));`)
+        float hlv = uHl * tF * (0.55 + 0.45 * sin(uT * 6.0));
+        // Metal limpio sin migdalear: satinado y con manchas de agua. Migdaleado: espejo con destellos que corren.
+        float limpioK = (1.0 - tF) * (1.0 - fo);
+        vec2 q = vUv * vec2(7.0, 5.0); vec2 qi = floor(q); vec2 qf = fract(q); qf = qf * qf * (3.0 - 2.0 * qf);
+        float vn = mix(mix(hh(qi), hh(qi + vec2(1.0, 0.0)), qf.x), mix(hh(qi + vec2(0.0, 1.0)), hh(qi + vec2(1.0, 1.0)), qf.x), qf.y);
+        float mancha = smoothstep(0.45, 0.8, vn);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.5, 0.53, 0.56) + 0.14 * mancha, limpioK * (1.0 - dm.b) * (0.35 + 0.3 * uMig));
+        float glint = pow(max(0.0, sin((vUv.x * 1.3 + vUv.y) * 9.0 - uT * 2.2)), 30.0);
+        float chispa = step(0.993, hh(floor(vUv * 140.0) + floor(uT * 4.0)));
+        float brillo = limpioK * dm.b * ((glint * 0.5 + chispa * 0.9) * (0.35 + 0.65 * uMig) + 0.16 * (0.5 + 0.5 * uMig));`)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = mix(mix(0.24, 0.05, dm.b), mix(0.42, 0.3, tC), tF);
+        roughnessFactor = mix(mix(0.42, 0.03, dm.b), mix(0.42, 0.3, tC), tF);
         roughnessFactor = mix(roughnessFactor, 0.7, fo);`)
       .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
-        metalnessFactor = 1.0 - max(tF, fo);`)
+        metalnessFactor = (1.0 - max(tF, fo)) * mix(0.72, 1.0, dm.b);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-        totalEmissiveRadiance += vec3(1.0, 0.42, 0.05) * hlv * 0.45;`);
+        totalEmissiveRadiance += vec3(1.0, 0.42, 0.05) * hlv * 0.45 + vec3(1.0, 0.97, 0.9) * brillo;`);
   };
   return m;
 }
@@ -1058,7 +1079,7 @@ function construirNoche(orden) {
   // Gente: el compañero, los ayudantes y, si toca, el gerente
   piezas.gente = [];
   const equipo = orden ? orden.equipo : [{ color: COMPANEROS.beto.color }];
-  equipo.forEach((m, i) => { const p = persona(i === 0 && look('casco').c ? look('casco').c : m.color, false); p.position.set(-lineW / 2 - .5 + (i % 2) * .5, 0, .5 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
+  equipo.forEach((m, i) => { const p = persona(m.principal && look('casco').c ? look('casco').c : m.color, false); p.position.set(-lineW / 2 - .5 + (i % 2) * .5, 0, .5 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
   piezas.gerente = persona(0, true); piezas.gerente.position.set(2.9, 0, 1.3); piezas.gerente.rotation.y = -1; piezas.gerente.visible = !!(orden && orden.eventos.includes('gerente')); mundo.add(piezas.gerente);
   piezas.rival = null;
   if (orden && orden.duelo) { piezas.rival = persona('#d7382b'); piezas.rival.position.set(Math.min(lineW / 2 + .7, 3.1), 0, .45); mundo.add(piezas.rival); }
@@ -1067,6 +1088,7 @@ function construirNoche(orden) {
   const vista = (mira, dir, ancho, dMin, dMax, fov) => ({ mira, dir: dir.normalize(), ancho, dMin, dMax, fov, pan: 0, maxPan: 0 });
   VISTAS.linea = vista(new T.Vector3(-.3, 1.0, -.55), new T.Vector3(0, .5, 1.2), lineW + 1.2, 1.9, 3.2, 58);
   VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
+  VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
   Z = [{ id: 'filtros', n: 'Filtros', sfs: filtros, vista: vista(new T.Vector3(0, 0, lonaZ), new T.Vector3(0, 1.6, 1.0), lonaW + .2, 1.7, 3.2, 55) }];
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs,
     vista: vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74) }));
@@ -1077,7 +1099,7 @@ function construirNoche(orden) {
 // ------------------------------------------------------------------ cámara
 
 const VISTA_GENERAL = { mira: new T.Vector3(-.2, 1.4, -.4), dir: new T.Vector3(2.6, .5, 3.8).normalize(), ancho: 5, dMin: 3.4, dMax: 5.5, fov: 55, pan: 0 };
-const camT = { a: VISTA_GENERAL, mira: new T.Vector3(), objPos: new T.Vector3(), objMira: new T.Vector3() };
+const camT = { a: VISTA_GENERAL, mira: new T.Vector3(), objPos: new T.Vector3(), objMira: new T.Vector3(), off: 0 };
 function irVista(v) { camT.a = v; }
 function moverCamara(dt) {
   const v = camT.a, fov = v.fov || 55;
@@ -1092,6 +1114,11 @@ function moverCamara(dt) {
   cam.position.lerp(camT.objPos, k); camT.mira.lerp(camT.objMira, k);
   if (M && M.fase === 'turno') { const t = performance.now() / 1000; cam.position.x += Math.sin(t * .5) * .004; cam.position.y += Math.sin(t * .7) * .003; }
   cam.lookAt(camT.mira);
+  // Con el panel de preparación abierto, la escena se sube al hueco libre para que no quede nada tapado.
+  let off = 0;
+  if (!prepEl.hidden) { const arriba = $('#hud').hidden ? 0 : $('#pasos').getBoundingClientRect().bottom; off = (prepEl.offsetHeight - arriba) / 2; }
+  camT.off += (off - camT.off) * k;
+  if (Math.abs(camT.off) > .5) cam.setViewOffset(innerWidth, innerHeight, 0, camT.off, innerWidth, innerHeight); else if (cam.view && cam.view.enabled) cam.clearViewOffset();
   cam.fov = fov; cam.updateProjectionMatrix();
 }
 // Mover la vista: arrastrar con dos dedos, arrastrar sobre algo que no se limpia (pared, suelo, aire),
@@ -1110,7 +1137,7 @@ function faltaFuera() {
   const lado = x => { if (x < -1.02) izq = true; else if (x > 1.02) der = true; };
   if (M.fase === 'prep' || M.etapa === 'pelar') {
     for (const m of MARCAS) if (!m.hecho) { pv.copy(m.pos).project(cam); lado(pv.x); }
-  } else if (camT.a.maxPan > .05) {
+  } else if (camT.a.maxPan > .05 && (M.etapa === 'migdalear' || micras(zonaAct()) > LIMITE)) {   // si la zona ya pasa, no hay nada que avisar
     for (const s of zonaAct().sfs) {
       if (s.interior) continue;
       for (let i = 0; i < s.d.length; i += 3) {
@@ -1204,8 +1231,8 @@ const pasosHTML = actual => PASOS.map((p, i) => `<span class="${i < actual ? 'he
 const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalear: 3 })[M.etapa];
 
 function empezarTurno(orden) {
-  construirNoche(orden);
-  M = { orden, comp: COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60, herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
+  construirNoche(orden); U.mig.value = 0;
+  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
     maxCombo: 0, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
@@ -1224,7 +1251,7 @@ function empezarTurno(orden) {
   if (S.noche >= 2) {
     const extra = [];
     if (azar(.3)) extra.push({ tipo: 'cucaracha', zona: 1, en: rnd(9, 20) });
-    if (azar(.3)) extra.push({ tipo: 'atorado', zona: ultZona(), en: rnd(4, 10) });
+    if (azar(.3) && !M.comp.solo) extra.push({ tipo: 'atorado', zona: ultZona(), en: rnd(4, 10) });
     if (azar(.2)) extra.push({ tipo: 'apagon', zona: 1, en: rnd(14, 26) });
     if (azar(.2)) extra.push({ tipo: 'coche', zona: 0, en: rnd(8, 18) });
     M.eventos.push(...extra.sort(() => Math.random() - .5).slice(0, 2));
@@ -1242,9 +1269,11 @@ const prepEl = $('#prep');
 function panelPrep(titulo, texto, estado, boton, alPulsar) {
   if (M.orden.campanas > 1 || innerWidth / innerHeight < .9) texto += ' Para ver el resto de la cocina, arrastra con dos dedos o toca el aviso naranja del borde.';
   const reloj = M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480);
-  prepEl.innerHTML = `<div class="carta">${M.fase === 'prep' ? `<div class="pasos">${pasosHTML(0)}</div>` : ''}<div class="fila"><h3>${esc(titulo)}</h3><span class="reloj">${reloj}</span></div><p>${esc(texto)}</p><p class="nota">${esc(estado)}</p>
-    <div class="acciones"><button class="btn prim" id="prepSig">${esc(boton)}</button></div></div>`;
+  // Compacto, para que no tape lo que hay que tocar: la explicación ocupa dos líneas y se abre al tocarla.
+  prepEl.innerHTML = `<div class="carta">${M.fase === 'prep' ? `<div class="pasos">${pasosHTML(0)}</div>` : ''}<div class="fila"><h3>${esc(titulo)}</h3><span class="reloj">${reloj}</span></div><p class="txt">${esc(texto)}</p>
+    <div class="pie"><p class="nota">${esc(estado)}</p><button class="btn prim" id="prepSig">${esc(boton)}</button></div></div>`;
   prepEl.hidden = false;
+  prepEl.querySelector('.txt').onclick = e => e.currentTarget.classList.toggle('abierto');
   $('#prepSig').onclick = () => { audio(); (alPulsar || (() => escenaPrep(M.escena + 1)))(); };
 }
 function gastar(min) { M.prepMin += min; const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(M.prepMin); }
@@ -1514,6 +1543,7 @@ addEventListener('keydown', e => {
 
 const chat = $('#chat');
 function decir(quien, texto, resp) {
+  if (quien === SOLO && !texto.startsWith('(')) return null;   // trabajando solo, solo se oyen tus pensamientos
   const b = document.createElement('div'); b.className = 'burbuja' + (quien === 'gerente' ? ' de-gerente' : '');
   const col = quien === 'gerente' ? '#e9e9e9' : quien === 'rigo' ? '#b9a27a' : quien.color;
   const nom = quien === 'gerente' ? 'Gerente' : quien === 'rigo' ? 'Don Rigo' : quien.n;
@@ -1585,7 +1615,7 @@ const EVENTOS = {
   extractor() {
     sAlarma(); M.ventiladorRapido = 4;
     sumarTiempo(20); dano('Revisión del ventilador', 40, 1);
-    resultado('El extractor arrancó', `Nadie cortó la corriente. ${M.comp.n} estaba en el techo y salió volando un metro. Aterrizó de pie. Perdéis veinte minutos buscando su casco.`, M.comp, 'Estoy bien. Estoy BIEN.');
+    resultado('El extractor arrancó', M.comp.solo ? 'Nadie cortó la corriente. Estabas en el techo y saliste volando un metro. Aterrizaste de pie. Pierdes veinte minutos buscando tu casco.' : `Nadie cortó la corriente. ${M.comp.n} estaba en el techo y salió volando un metro. Aterrizó de pie. Perdéis veinte minutos buscando su casco.`, M.comp, 'Estoy bien. Estoy BIEN.');
   },
   bolsa() {
     tono(200, .4, .1, 'sawtooth', 80);
@@ -1657,7 +1687,7 @@ const EVENTOS = {
     const parar = () => { M.coche = 0; loop('coche', false); };
     carta('¡Alarma de coche!', 'Afuera suena una alarma: UIIIU, UIIIU. Es la de tu camioneta. Un gato se le subió encima y no piensa bajarse.', [
       { t: 'Salir a apagarla', d: 'Pierdes 10 minutos', f: () => { parar(); sumarTiempo(10); resultado('Silencio', 'El gato sigue encima de la camioneta, mirándote con desprecio. Lo dejas ahí.', M.comp, 'Ese gato tiene más actitud que el gerente.'); } },
-      { t: `Que vaya ${M.comp.n}`, d: '¿Qué podría salir mal?', f: () => { parar(); if (azar(.5)) resultado('Misión cumplida', `${M.comp.n} vuelve con la alarma apagada y un elote para cada uno.`, M.comp, 'El señor de los elotes me fió. Ahora somos amigos.'); else { dano('Cerrajero: las llaves se quedaron dentro de la camioneta', 60, 0); resultado('Llaves dentro', `${M.comp.n} apagó la alarma… y cerró la camioneta con las llaves dentro.`, M.comp, 'Técnicamente ya no suena. Misión cumplida.'); } } },
+      ...M.comp.solo ? [] : [{ t: `Que vaya ${M.comp.n}`, d: '¿Qué podría salir mal?', f: () => { parar(); if (azar(.5)) resultado('Misión cumplida', `${M.comp.n} vuelve con la alarma apagada y un elote para cada uno.`, M.comp, 'El señor de los elotes me fió. Ahora somos amigos.'); else { dano('Cerrajero: las llaves se quedaron dentro de la camioneta', 60, 0); resultado('Llaves dentro', `${M.comp.n} apagó la alarma… y cerró la camioneta con las llaves dentro.`, M.comp, 'Técnicamente ya no suena. Misión cumplida.'); } } }],
       { t: 'Ignorarla', d: 'Tarde o temprano se calla. ¿No?', f: () => { cerrarCarta(); M.vecinos = true; decir(M.comp, 'Los vecinos están prendiendo las luces… uno trae una chancla.'); } },
     ], { bloquea: true });
   },
@@ -1776,7 +1806,7 @@ function tickTurno(dt) {
         M.charlaT = rnd(16, 26);
         const quien = uno(M.equipo);
         if (S.perro && azar(.18)) decir(QUIEN_PERRO, uno(['¡Guau! (le ladra al ducto)', '¡Guau guau! (se comió un trozo de plástico)', '(se echa justo donde vas a pisar)', '¡Auuuu! (aúlla con la radio)']));
-        else if (quien.principal) { if (!M.dormido) decir(M.comp, uno(M.comp.frases)); } else decir(quien, quien.frase);
+        else if (!quien || quien.principal) { if (!M.dormido) decir(M.comp, uno(M.comp.frases)); } else decir(quien, quien.frase);
       }
       if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) visitaGerente();
     }
@@ -1851,7 +1881,7 @@ function confirmarFin() {
 function empezarPelado() {
   M.etapa = 'pelar'; M.trazo = null; M.presionado = false; chorro(false); cerrarRueda();
   $('#hudAbajo').hidden = true; matPlastico.opacity = .5;
-  irVista(VISTAS.frente); pintarHud(false);
+  irVista(VISTAS.pelar); pintarHud(false);
   const faldas = piezas.faldas.filter(f => f.mesh.visible), cubs = piezas.aparatos.filter(a => a.cubierto), bolsas = piezas.bolsas.filter(b => b.hecho);
   const listo = () => faldas.every(f => f.pelada) && cubs.every(a => a.quitada) && bolsas.every(b => b.bajada);
   const estado = () => `Plástico: ${faldas.filter(f => f.pelada).length} de ${faldas.length} · Cubiertas: ${cubs.filter(a => a.quitada).length} de ${cubs.length} · Bolsas: ${bolsas.filter(b => b.bajada).length} de ${bolsas.length}`;
@@ -1876,7 +1906,7 @@ function empezarPelado() {
 
 function empezarMigdaleo() {
   M.arrastrar = false; limpiarMarcas(); prepEl.hidden = true; matPlastico.opacity = .16;
-  M.etapa = 'migdalear'; M.herr = 'pulidor';
+  M.etapa = 'migdalear'; M.herr = 'pulidor'; U.mig.value = 1;
   $('#hudAbajo').hidden = false;
   M.zona = Z.findIndex(z => z.id === 'campana'); M.enZona = 0; irVista(Z[M.zona].vista);
   pintarHud(true);
@@ -1894,7 +1924,7 @@ $('#radioBtn').addEventListener('click', () => {
 });
 
 function terminarTurno() {
-  M.finMin = clamp(M.t / M.dur, 0, 1) * 480; M.apagon = 0;
+  M.finMin = clamp(M.t / M.dur, 0, 1) * 480; M.apagon = 0; U.mig.value = 0;
   M.fase = 'parte'; M.pausa = false; M.arrastrar = false; cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true;
   for (const id in A.loops) loop(id, false);
   radioEncender(false);
@@ -1982,8 +2012,7 @@ function prepararNoche() {
   if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos();
   const ordenes = generarOrdenes();
   rival(ordenes, avisos);
-  const disponibles = Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= etapa());
-  const comp = S.fase === 'aprendiz' ? (S.noche <= 2 ? 'beto' : 'lupe') : disponibles.includes(S.compPref) ? S.compPref : 'beto';
+  const comp = S.fase === 'aprendiz' ? (S.noche <= 2 ? 'beto' : 'lupe') : S.fijos.includes(S.compPref) ? S.compPref : 'solo';
   const frase = S.fase === 'aprendiz'
     ? (S.noche === 1 ? `Bienvenido a Grasa Brava, ${jugador()}. Toma la rasqueta, súbete a la camioneta y no toques mi radio.` : uno(RIGO))
     : (S.noche === S.abierta ? `Primera noche de ${S.empresa.nombre}. Yo estaré pescando. No me llames. Bueno, llámame si hay mapache.` : uno(RIGO_CONSEJOS));
@@ -2089,10 +2118,12 @@ function vNoche() {
     ${sig ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
     ${H.ordenes.map(tarjetaOrden).join('') || '<p class="nota">No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.</p>'}
-    <h2 class="sec">${aprendiz ? 'Tu compañero esta noche' : 'Elige compañero'}</h2>
-    <div class="companeros">${Object.entries(COMPANEROS).map(([id, c]) => {
-      const falta = !aprendiz && etapa() < c.etapa;
-      return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${c.n}</b><span>${falta ? 'Se une con la etapa ' + ETAPAS[c.etapa].n : esc(c.rasgo) + (aprendiz ? '' : ` ${dinero(c.sueldo)} por noche.`)}</span></div></button>`;
+    <h2 class="sec">${aprendiz ? 'Tu compañero esta noche' : 'Con quién vas'}</h2>
+    <div class="companeros">${(aprendiz ? Object.entries(COMPANEROS) : [['solo', SOLO], ...Object.entries(COMPANEROS)]).map(([id, c]) => {
+      const falta = !aprendiz && id !== 'solo' && !S.fijos.includes(id);
+      const txt = id === 'solo' ? 'Sin compañero: no hay sueldo que pagar, pero todo lo limpias tú. El turno dura un poco más.'
+        : falta ? (etapa() < c.etapa ? 'Busca trabajo desde la etapa ' + ETAPAS[c.etapa].n + '.' : 'Contrátalo en «Cuadrilla».') : esc(c.rasgo) + (aprendiz ? '' : ` ${dinero(c.sueldo)} por noche.`);
+      return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${id === 'solo' ? 'Yo solo' : c.n}</b><span>${txt}</span></div></button>`;
     }).join('')}</div>
     ${S.cuadrilla.length ? `<h2 class="sec">Ayudantes en la camioneta · ${H.ayud.length} de ${plazas}</h2>
       <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
@@ -2119,10 +2150,17 @@ function vClientes() {
 
 function vCuadrilla() {
   const plazas = PLAZAS[S.eq.camioneta];
-  if (S.etapa < 1) return `<div class="cita"><b>Beto</b>¿Contratar? Si apenas cabemos tú y yo en la camioneta. Y el karaoke. Cuando tengamos taller, hablamos.</div>`;
+  const comps = Object.entries(COMPANEROS).map(([id, c]) => {
+    const mio = S.fijos.includes(id), pronto = S.etapa < c.etapa, precio = ADELANTO[id];
+    return `<div class="persona">${cara(c.color, c.n[0])}<div><b>${c.n} ${esc(c.apodo)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} por noche que sale contigo.${mio || pronto ? '' : ` Pide ${dinero(precio)} de adelanto.`}</span></div>
+      ${mio ? '<span class="chip ok">En tu equipo</span>' : pronto ? `<span class="chip">Etapa ${ETAPAS[c.etapa].n}</span>` : `<button class="btn prim peq" data-fichar="${id}" ${S.dinero < precio ? 'disabled' : ''}>Contratar</button>`}</div>`;
+  }).join('');
+  const companeros = `<h2 class="sec">Compañeros · van contigo y limpian a tu lado</h2>
+    ${S.fijos.length ? '' : `<div class="cita"><b>Beto, por teléfono</b>Jefe, cuando tengas para el adelanto, me llamas. Ya practiqué con el karaoke: rompo menos cosas que antes. Casi.</div>`}${comps}`;
+  if (S.etapa < 1) return `${companeros}<p class="nota">Los ayudantes (gente del barrio que limpia sola durante el turno) se contratan cuando tengas taller propio.</p>`;
   const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} por noche · ${c.noches} noches</span></div><button class="btn peq" data-despedir="${c.id}">Despedir</button></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · pide ${dinero(c.sueldo)} por noche</span></div><button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
-  return `<h2 class="sec">Tu cuadrilla · caben ${plazas} en la camioneta</h2>${mios}
+  return `${companeros}<h2 class="sec">Ayudantes · caben ${plazas} en la camioneta</h2>${mios}
     <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes.</p>
     <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}`;
 }
@@ -2170,8 +2208,8 @@ function enlazar() {
   });
   const sal = $('#salir'); if (sal) sal.onclick = () => {
     audio();
-    const o = H.ordenes[H.sel], c = COMPANEROS[H.comp];
-    const equipo = [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }, ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.sueldo }))];
+    const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
+    const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.sueldo }))];
     empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas });
   };
   P.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => {
@@ -2192,6 +2230,10 @@ function enlazar() {
     H.resultado = txt + (nuevas ? ' La orden ya está en «Esta noche».' : '');
     if (nuevas) sCaja(); else tono(300, .3, .08, 'triangle', 200);
     guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-fichar]').forEach(b => b.onclick = () => {
+    const id = b.dataset.fichar; S.dinero -= ADELANTO[id]; S.fijos.push(id); H.comp = S.compPref = id;
+    sCaja(); guardar(); pantallaCamioneta();
   });
   P.querySelectorAll('[data-contratar]').forEach(b => b.onclick = () => {
     const c = S.candidatos.find(x => x.id === +b.dataset.contratar);
@@ -2327,7 +2369,7 @@ function pantallaParte() {
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % limpio</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
       <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.</span></div>
     ${d ? `<div class="cita"><b>${ganaDuelo ? 'Duelo ganado' : 'Duelo perdido'}</b>${ganaDuelo ? `Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.` : `El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`}</div>` : ''}
-    ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Beto se comió treinta antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
+    ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
     <div class="cuentas">
@@ -2456,9 +2498,9 @@ function despido() {
     const resp = b.dataset.r === '0' ? 'Ya sé que no fuiste tú. Pero alguien tiene que pagar el pato, y Beto es mi sobrino.' : 'Tiene «Rata de dos patas». Beto la cantó tres veces. Me duele el alma.';
     pantalla(`<div class="rotulo">Estás despedido<span>(más o menos)</span></div>
       <div class="cita"><b>Don Rigo</b>${esc(resp)} Total, que cierro Grasa Brava y me voy a pescar. Ya estoy viejo para mapaches.</div>
-      <div class="cita"><b>Don Rigo</b>Llévate la camioneta. No arranca en subida y la radio solo agarra rancheras. Aquí tienes ${dinero(300)} de finiquito. Y llévate a Beto, por favor. Te lo suplico.</div>
-      <div class="cita"><b>Beto</b>${esc(jugador())}… digo, jefe. Yo me voy contigo. Traigo el karaoke.</div>
-      <p class="nota">Tus herramientas, tu nivel y tus mejoras se vienen contigo. La hidrolavadora de Don Rigo no (ya sabes por qué). Los clientes son suyos: tu reputación empieza en cero.</p>
+      <div class="cita"><b>Don Rigo</b>Llévate la camioneta. No arranca en subida y la radio solo agarra rancheras. Aquí tienes ${dinero(300)} de finiquito. Beto se queda conmigo a pescar… hasta que tengas con qué pagarle.</div>
+      <div class="cita"><b>Beto</b>${esc(jugador())}… digo, jefe. Cuando puedas pagarme, me llamas. Yo me voy contigo. Con el karaoke.</div>
+      <p class="nota">Tus herramientas, tu nivel y tus mejoras se vienen contigo. La hidrolavadora de Don Rigo no (ya sabes por qué). Los clientes son suyos: tu reputación empieza en cero. Y empiezas tú solo.</p>
       <div class="acciones"><button class="btn prim" id="abrir">Abrir mi propia empresa</button></div>`);
     tono(220, .6, .08, 'triangle', 110);
     $('#abrir').onclick = nombrarEmpresa;
@@ -2475,7 +2517,7 @@ function nombrarEmpresa() {
     <div class="chips">${NOMBRES.map(n => `<button class="btn peq" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
     <h2 class="sec">Pintura de la camioneta</h2>
     <div class="chips">${PINTURAS.map(([c, n]) => `<button class="color" data-col="${c}" style="background:${c}" aria-label="Pintura ${n}" aria-pressed="${c === color}"></button>`).join('')}</div>
-    <p class="nota">Empiezas con ${dinero(300)} de finiquito más lo que ahorraste, la camioneta vieja, Beto y reputación cero. A buscar clientes.</p>
+    <p class="nota">Empiezas tú solo, con ${dinero(300)} de finiquito más lo que ahorraste, la camioneta vieja y reputación cero. Cuando juntes para el adelanto, contrata a Beto en «Cuadrilla».</p>
     <div class="acciones"><button class="btn prim" id="fundar">Abrir la empresa</button></div>`);
   const inp = $('#nombreEmp'), fundar = $('#fundar');
   const pintar = () => { $('#vistaFurgo').innerHTML = furgo(nombre || 'Sin nombre', color, 0); fundar.disabled = !nombre; };
@@ -2485,7 +2527,7 @@ function nombrarEmpresa() {
   P.querySelectorAll('[data-col]').forEach(b => b.onclick = () => { color = b.dataset.col; P.querySelectorAll('[data-col]').forEach(x => x.setAttribute('aria-pressed', x === b)); pintar(); });
   fundar.onclick = () => {
     if (!nombre) return;
-    Object.assign(S, { fase: 'empresa', etapa: 0, empresa: { nombre, color }, rep: 0, clientes: [], cuadrilla: [], candidatos: [], hoy: null, compPref: 'beto', abierta: S.noche });
+    Object.assign(S, { fase: 'empresa', etapa: 0, empresa: { nombre, color }, rep: 0, clientes: [], cuadrilla: [], candidatos: [], hoy: null, compPref: 'solo', fijos: [], abierta: S.noche });
     S.dinero += 300;
     guardar(); sCaja(); tab = 'clientes';
     pantallaCamioneta();
@@ -2494,7 +2536,7 @@ function nombrarEmpresa() {
 
 function subirEtapa() {
   const e = ETAPAS[S.etapa];
-  const frases = ['', ['Beto', 'Un taller propio. Con baño y todo. Lupe llamó: dice que se viene con nosotros si le dejas su propia taza.'], ['Lupe', 'Oficina con fax. Nadie sabe usar el fax. Chuy ya se durmió en el sofá de la entrada: está contratado.'], ['Beto', 'Nos llaman de un estadio. ¡De un estadio! El cuñado del alcalde pasó por delante y no nos saludó. Eso es que vamos bien.'], ['Don Rigo', `Saliste en el noticiero de las seis. Siempre supe que valías, ${jugador()}. Mentira, pero se agradece. Ahora, ¿me das trabajo? Es broma. Bueno, medio broma.`]][S.etapa];
+  const frases = ['', ['Don Rigo', 'Un taller propio. Con baño y todo. Lupe me llamó: busca trabajo y solo pide su propia taza. Contrátala en «Cuadrilla».'], ['Don Rigo', 'Oficina con fax. Nadie sabe usar el fax. Chuy ya se durmió en el sofá de la entrada: dice que si lo contratas, se despierta.'], ['Radio Grasa FM', 'Última hora: a esta empresa la llaman de un estadio. ¡De un estadio! El cuñado del alcalde pasó por delante y no los saludó. Eso es que van bien.'], ['Don Rigo', `Saliste en el noticiero de las seis. Siempre supe que valías, ${jugador()}. Mentira, pero se agradece. Ahora, ¿me das trabajo? Es broma. Bueno, medio broma.`]][S.etapa];
   pantalla(`<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(e.n)}<span>${esc(S.empresa.nombre)}</span></div></div>
     <div class="cita"><b>${esc(frases[0])}</b>${esc(frases[1])}</div>
     <p>${esc(e.txt)}</p>
