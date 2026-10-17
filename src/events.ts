@@ -1,5 +1,6 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {shout} from './r11match';
 import {termsMood} from './market';
 import {ROLES} from './data';
 import {parseChal,parseResult,chalCode,resultCode} from './r11chal';
@@ -263,6 +264,7 @@ document.addEventListener('click',e=>{
   case'm-play':if(m&&m.mom){toast('Primero decide qué hacer.');return;}stopReplay();matchFx(m);m.paused=false;m.alert='';m.subOpen=false;render();runTimer();return;
   case'm-pause':m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-speed':m.speed=+d.v;S.mSpeed=+d.v;render();runTimer();return;
+  case'm-shout':{const r=shout(m,d.v);addEv(m,'sys',null,r);toast(r);break;}
   case'm-ment':if(m.ment[m.us]!==d.v){m.ment[m.us]=d.v;addEv(m,'sys',null,`${T(m[m.us]).short} cambia a mentalidad ${MENT[d.v].label.toLowerCase()}`);}break;
   case'm-oi':{m.oi=m.oi||{};const o=m.oi[m.us]=m.oi[m.us]||{};o[d.v]=!o[d.v];addEv(m,'sys',null,`${o[d.v]?'Nueva instrucción':'Se retira la instrucción'}: ${OIS[d.v].n.toLowerCase()}.`);break;}
   case'oi':{const t=T(S.user);t.oi=t.oi||{};t.oi[d.v]=!t.oi[d.v];break;}

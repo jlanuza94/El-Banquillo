@@ -1,7 +1,7 @@
 /* El Banquillo · engine.js — Motor de partido: minuto a minuto, simulación rápida, charlas, penaltis, notas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
 import {appealOffer,feudMult} from './r11club';
-import {altMods,dpiCards,dpiMark,dpiMods,dpiSetup,setTarget,tgtCards,tgtMult,varReview} from './r11match';
+import {shoutCards,shoutMods,altMods,dpiCards,dpiMark,dpiMods,dpiSetup,setTarget,tgtCards,tgtMult,varReview} from './r11match';
 import {tlAdd,tlMatch} from './timeline';
 import {fitMult} from './presched';
 import {liveChangeCheck} from './tacreport';
@@ -111,7 +111,7 @@ export function tacMods(m,s,log){
  if(OI.sal){const dq=avgAt(m,s,'DEF','pas');f('oiR',dq<5?.97:.99,1,1,-.03);}if(MY.sal)f('oi',1,1,1.06);
  if(OI.dur)f('oiR',m.refr?REFS[m.refr.k].dur:.975,1);
  {const ph=phaseMods(A,B,avgAt(m,s,'DEL','vel'),m.ment[o]);f('fase',ph.own,ph.opp,ph.drain,ph.poss);}
- {const w=weatherMods(m.wx,A);f('clima',w.own,w.opp,w.drain,w.poss);const al=altMods(m,s);if(al.own<1)f('alt',al.own,1,al.drain);const dp=dpiMods(m,s);if(dp)f('dpi',dp[0],dp[1],dp[2]);const mm=m.mm&&m.mm[s];if(mm)f('mom',mm.own,mm.opp);}
+ {const w=weatherMods(m.wx,A);f('clima',w.own,w.opp,w.drain,w.poss);const al=altMods(m,s);if(al.own<1)f('alt',al.own,1,al.drain);const dp=dpiMods(m,s);if(dp)f('dpi',dp[0],dp[1],dp[2]);const sx=shoutMods(m,s);if(sx)f('grito',sx.own,sx.opp);const mm=m.mm&&m.mm[s];if(mm)f('mom',mm.own,mm.opp);}
  const cap=m.cap&&m.cap[s]&&m.lu[s].includes(m.cap[s])?PL(m.cap[s]):null;if(cap)f('cap',1+.004*Math.max(0,(cap.at.lid??(cap.per==='lid'?9:5))-4),1);
  {const tm=titleMods(m,s);if(tm)f('tit',tm.own,tm.opp,tm.dr,tm.ps);}
  return{own,opp,drain,poss};
@@ -323,7 +323,7 @@ export function step(m){
  if(live)phaseLog(m,clamp(Ph.mid**2/(Ph.mid**2+Pa.mid**2)+Th.poss-Ta.poss,.2,.8));
  if(live&&m.us&&m.min%15===0&&m.min<90)assistantTip(m);
  if(live&&m.us){const v=liveChangeCheck(m);if(v)addEv(m,'sys',null,v.tx);}
- {const ec=x=>x&&x.ent==='dur'?1.35:x&&x.ent==='pru'?.7:1,dh=(m.oi&&m.oi.h&&m.oi.h.dur?1.6:1)*ec(m.tac.h)*tgtCards(m,'h')*dpiCards(m,'h'),da=(m.oi&&m.oi.a&&m.oi.a.dur?1.6:1)*ec(m.tac.a)*tgtCards(m,'a')*dpiCards(m,'a'),ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
+ {const ec=x=>x&&x.ent==='dur'?1.35:x&&x.ent==='pru'?.7:1,dh=(m.oi&&m.oi.h&&m.oi.h.dur?1.6:1)*ec(m.tac.h)*tgtCards(m,'h')*dpiCards(m,'h')*shoutCards(m,'h'),da=(m.oi&&m.oi.a&&m.oi.a.dur?1.6:1)*ec(m.tac.a)*tgtCards(m,'a')*dpiCards(m,'a')*shoutCards(m,'a'),ph=(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5)*dh,pa=(1-(m.ment.h==='def'?.57:m.ment.a==='def'?.43:.5))*da;
   if(rnd()<.034*(ph+pa)*(m.derby?1.3:1)*(m.refr?REFS[m.refr.k].c:1))card(m,rnd()<ph/(ph+pa)?'h':'a',false);}
  if(rnd()<.0005)card(m,rnd()<.5?'h':'a',true);
  if(rnd()<.0032*(1+.1*[...m.lu.h,...m.lu.a].filter(id=>id&&!m.hurt[id]&&m.en[id]<55).length)){const s=rnd()<.5?'h':'a';const ids=m.lu[s].filter(id=>id&&!m.hurt[id]);if(ids.length){const pool=ids.flatMap(x=>{const w=injWeight(PL(x),m.en[x]);return Array(Math.round(w*2)).fill(x);}),id=pick(pool);m.hurt[id]=1;if(m.ref.k!=='fr'||rnd()<.5){const J=rollInjury(PL(id));PL(id).pInj=J[1];PL(id).pInjT=J[0];}

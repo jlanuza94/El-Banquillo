@@ -660,6 +660,14 @@ const app = document.getElementById('app')!;
     S.view = 'cantera'; S.vt = { can: 'u19' }; render(); ok(app.textContent.includes('Convocar'), 'pantalla de la sub-19'); S.vt = {}; S.view = 'inicio';
     S.view = 'mojeo'; render(); S.view = 'mofer'; render(); S.view = 'mstaff'; render(); ok(app.textContent.includes('Ojeador'), 'mercado: submenús y personal en lista'); S.view = 'inicio';
   }
+  { // ronda 6: gritos, vestuario, informe de ojeo
+    const M = await import('../src/r11match'), { squad: sq_, T: T_ } = await import('../src/state'), { mail: mailF } = await import('../src/inbox');
+    const m = { us: 'h', h: S.user, a: 1, done: false, min: 60, score: { h: 0, a: 1 } }; const r1 = M.shout(m, 'exi'), r2 = M.shout(m, 'ani');
+    ok(/Exigir/.test(r1) && M.shoutMods(m, 'h').own > 1 && /espera/.test(r2) && M.shoutMods(m, 'a') === null, 'gritos desde la banda: efecto según el marcador y espera entre gritos');
+    S.view = 'tacticas'; S.vt = { tac: 'jer' }; render(); ok(!!app.querySelector('.hapd') && !!app.querySelector('.ghap'), 'vestuario: felicidad del grupo y de cada grupo social');
+    const p = Object.values(S.players).find(x => x.team !== null && x.team !== S.user); mailF('Informe', { cat: 'oje', subj: 'Informe: prueba', sr: { pid: p.id, by: 'Ojeador', g: 'B' } }); S.mailSel = S.inbox[0].id; S.view = 'buzon'; render();
+    ok(!!app.querySelector('.scard .scg') && app.querySelectorAll('.scard .scp').length >= 3, 'informe de ojeo estilo FMM: nota, puntos fuertes y débiles'); S.inbox.shift(); S.mailSel = null; S.view = 'inicio'; S.vt = {};
+  }
   { // ronda 5 puntos: contrato FMM, finanzas, órdenes individuales sin balón y estado en la plantilla
     const { squad: sq_, T: T_ } = await import('../src/state'), M = await import('../src/r11match'), B = await import('../src/views/business'), me = sq_(S.user);
     S.modal = { type: 'renew', id: me[3].id }; render(); ok(!!app.querySelector('.ctgrid [data-a=tstep]') && !!app.querySelector('#tMood') && !!app.querySelector('.ctwrap .sidec'), 'contrato estilo FMM: pasos +/−, barra de ánimo y tarjeta del jugador'); S.modal = null;
@@ -944,7 +952,7 @@ const app = document.getElementById('app')!;
   { // más selecciones: Mundial de 32, Eurocopa y Copa América de 16, con grupos de 4 y eliminatorias
     const NA = await import('../src/nations'), D = await import('../src/data');
     NA.initIntl(); ok(NA.members('wc').length === 32 && NA.members('eu').length === 16 && NA.members('ca').length === 16, 'Mundial con 32 selecciones y Eurocopa/Copa América con 16');
-    const T0 = NA.playTournament('wc'); ok(T0.groups.length === 8 && T0.ko.length === 4 && T0.champ != null && D.ALLN[T0.champ], `Mundial jugado: campeona ${D.ALLN[T0.champ].n}`);
+    const T0 = NA.playTournament('wc'); ok(T0.groups.length === 8 && T0.ko.length === 4 && T0.champ != null && D.ALLN[T0.champ], `Mundial jugado: campeona ${D.ALLN[T0.champ].n}`); ok(T0.ko.every(r => r.mo && r.mo.length) && T0.ko[T0.ko.length - 1].mo[0][5] === T0.champ, 'Mundial con cuadro de eliminatorias');
     ok(D.ALLN.length > 120 && D.ALLN[0] === D.COUNTRIES[0], 'nacionalidades: todos los países del mundo para el entrenador');
     S.view = 'selecciones'; S.ntTab = 'rk'; render(); ok(app.textContent.includes('Croacia'), 'ranking con las selecciones nuevas'); S.view = 'inicio'; S.ntTab = null;
   }

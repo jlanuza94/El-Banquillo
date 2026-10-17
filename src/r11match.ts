@@ -47,3 +47,17 @@ export function dpiMods(m,s){const d=m.dpi;if(!d||d.s!==s)return null;return [1,
 export const dpiCards=(m,s)=>m.dpi&&m.dpi.s===s?1+.08*m.dpi.ed-.06*m.dpi.ep:1;
 /** El rival que tiene a alguien encima marca y asiste menos. */
 export const dpiMark=(m,s,id)=>m.dpi&&m.dpi.s!==s&&m.dpi.mk.includes(id)?.72:1;
+
+/* ---------- Gritos desde la banda (como en el FMM) ---------- */
+export const SHOUTS={exi:'Exigir más',ani:'¡Vamos, se puede!',cal:'Calma',ala:'Alabar',con:'¡Concentración!'};
+/** Das una orden a gritos: su efecto depende del marcador y dura unos minutos. Hay que esperar 10 minutos entre gritos. */
+export function shout(m,k){if(!m||!m.us||m.done||!SHOUTS[k])return 'No es el momento.';if(m.shCd&&m.min<m.shCd)return `Tus jugadores aún están con el último grito (espera al minuto ${m.shCd}).`;
+ const o=m.us==='h'?'a':'h',d=m.score[m.us]-m.score[o],late=m.min>=75;let own=1,opp=1,cards=1,tx='';
+ if(k==='exi'){if(d<=0){own=1.05;cards=1.15;tx='El equipo da un paso adelante y aprieta.';}else{own=.99;tx='Los jugadores no entienden la bronca yendo por delante y se tensan.';}}
+ else if(k==='ani'){if(d<0){own=d<=-2?1.035:1.03;tx='El equipo se levanta: ¡a por la remontada!';}else{own=1.01;tx='Ánimos recibidos.';}}
+ else if(k==='cal'){cards=.65;if(d<0&&m.min>=60){opp=.98;tx='Calma: el equipo deja de precipitarse.';}else{opp=.99;tx='El equipo baja pulsaciones.';}}
+ else if(k==='ala'){if(d>0){own=1.03;tx='Tus jugadores se crecen con los elogios.';}else{own=.98;tx='¿Elogios perdiendo? Alguno se relaja.';}}
+ else if(k==='con'){if(late&&d>=0){opp=.94;tx='¡Todos atentos! El equipo cierra filas.';}else{opp=.985;tx='El equipo se concentra en lo suyo.';}}
+ m.shx={k,until:m.min+12,own,opp,cards};m.shCd=m.min+10;return `📣 ${SHOUTS[k]}: ${tx}`;}
+export const shoutMods=(m,s)=>m.shx&&m.us===s&&m.min<=m.shx.until?m.shx:null;
+export const shoutCards=(m,s)=>{const x=shoutMods(m,s);return x?x.cards:1;};

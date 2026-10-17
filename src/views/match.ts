@@ -1,5 +1,6 @@
 /* El Banquillo · views/match.js — Pantalla del partido en directo. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {SHOUTS} from '../r11match';
 import {attendance} from '../club';
 import {FIN,reactHTML} from '../talkplus';
 import {ITALK,REFS} from '../extras2';
@@ -167,7 +168,7 @@ export function matchView(){
  </div><div class="mlR"><div class="seg mwsel">${[['par','Partido'],['est','Estadísticas'],['eve','Eventos'],['for','Formaciones'],['res','Resultados']].map(([k,l])=>`<button data-a="m-w" data-v="${k}" aria-pressed="${mw===k}">${l}</button>`).join('')}</div><div class="wpar">
  <div class="mbar">${m.done?`<button class="btn primary" data-a="m-finish">Ver resultados de la jornada</button>${m.us?`<button class="btn" data-a="post" data-v="live">📊 Resumen</button><button class="btn" data-a="trep" data-v="live">📋 Informe táctico</button>`:''}`:`${m.paused?`<button class="btn primary" data-a="m-play">${resumeL}</button>`:`<button class="btn dark" data-a="m-pause">Pausar</button>`}
   <div class="seg" aria-label="Velocidad">${[1,2,4,9].map(v=>`<button data-a="m-speed" data-v="${v}" aria-pressed="${m.speed===v}" ${v===9?'title="Solo ocasiones, goles y decisiones"':''}>${v===9?'Clave':'x'+v}</button>`).join('')}</div>
-  <button class="btn" data-a="m-subs" ${m.subs[us]>=5||m.min===0?'disabled':''}>Cambios ${m.subs[us]}/5</button><button class="btn" data-a="m-sim">Simular</button>`}</div>
+  <button class="btn" data-a="m-subs" ${m.subs[us]>=5||m.min===0?'disabled':''}>Cambios ${m.subs[us]}/5</button><button class="btn" data-a="m-sim">Simular</button>`}</div>${!m.done&&m.min>0&&m.us?`<div class="shouts"><span class="eyebrow">📣 Gritos${m.shCd&&m.min<m.shCd?` · otra vez en el ${m.shCd}'`:''}</span>${Object.entries(SHOUTS).map(([k,l])=>`<button class="btn sm ${m.shx&&m.shx.k===k&&m.min<=m.shx.until?'dark':''}" data-a="m-shout" data-v="${k}" ${m.shCd&&m.min<m.shCd?'disabled':''}>${l}</button>`).join('')}</div>`:''}
  ${m.mom&&!m.done?`<div class="momb"><b>${esc(m.mom.txt)}</b><div class="stack" style="gap:6px;margin-top:8px">${m.mom.opts.map(([v,l])=>`<button class="btn ${v===m.mom.opts[0][0]?'primary':''}" data-a="mom" data-v="${v}">${esc(l)}</button>`).join('')}</div></div>`:''}${m.half&&m.paused&&!m.done&&m.min===45&&m.us?`<div class="itkb"><b>Habla con un jugador</b> <span class="small muted">(hasta 2)</span><div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><select id="itkP">${m.lu[m.us].filter(Boolean).map(id=>`<option value="${id}">${esc(PL(id).name)}${m.itk&&m.itk[id]?' ✓':''}</option>`).join('')}</select>${Object.entries(ITALK).map(([k,l])=>`<button class="btn sm" data-a="itk" data-v="${k}">${l}</button>`).join('')}</div></div>`:''}${m.alert&&!m.done?`<div class="alert">${esc(m.alert)}</div>`:''}${talkP}${subsP}
  <div class="seg mtabs" role="tablist">${MTABS.map(([k,l])=>`<button data-a="m-tab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>
  <section class="panel mtab">${tab==='jug'?playersTab(m,us):tab==='est'?estC

@@ -75,6 +75,7 @@ export function ntMatch(a,b,ko,k=30){
  eloUpd(a,b,ga+(pen?(pen[0]>pen[1]?.1:-.1):0),gb,k);
  return{a,b,ga,gb,pen,w:ga>gb||(pen&&pen[0]>pen[1])?a:b};
 }
+const mo=r=>[r.a,r.ga,r.b,r.gb,r.pen||null,r.w];
 const fmt=r=>`${natName(r.a)} ${r.ga}-${r.gb} ${natName(r.b)}${r.pen?` (pen. ${r.pen[0]}-${r.pen[1]})`:''}`;
 
 /** Juega un torneo completo: grupos y eliminatorias. Devuelve el resumen. */
@@ -92,7 +93,7 @@ export function playTournament(k){
   const G=groups.map(groupStage);T0.groups=G.map(g=>({tb:g.tb,ms:g.ms.map(fmt)}));
   let round=[];for(let g=0;g<nG;g+=2){const a=G[g],b=G[g+1]||G[0];round.push([a.tb[0].c,b.tb[1].c],[b.tb[0].c,a.tb[1].c]);}
   const RN={8:'Octavos de final',4:'Cuartos de final',2:'Semifinales'};
-  while(round.length>1){const rs=round.map(([a,b])=>ntMatch(a,b,true,40));T0.ko.push({rd:RN[round.length]||`Ronda de ${round.length*2}`,ms:rs.map(fmt)});if(round.length===2)T0.semi=rs.flatMap(r=>[r.a,r.b]);
+  while(round.length>1){const rs=round.map(([a,b])=>ntMatch(a,b,true,40));T0.ko.push({rd:RN[round.length]||`Ronda de ${round.length*2}`,ms:rs.map(fmt),mo:rs.map(mo)});if(round.length===2)T0.semi=rs.flatMap(r=>[r.a,r.b]);
    const w=rs.map(r=>r.w);round=[];for(let i=0;i<w.length;i+=2)round.push([w[i],w[i+1]]);}
   fin=round[0];
  }else{
@@ -101,8 +102,8 @@ export function playTournament(k){
  T0.groups=gTables.map(g=>({tb:g.tb,ms:g.ms.map(fmt)}));
  if(tm.length===3){fin=[gTables[0].tb[0].c,gTables[0].tb[1].c];}
  else{const semis=nG===2?[[gTables[0].tb[0].c,gTables[1].tb[1].c],[gTables[1].tb[0].c,gTables[0].tb[1].c]]:[[gTables[0].tb[0].c,gTables[0].tb[3].c],[gTables[0].tb[1].c,gTables[0].tb[2].c]];
-  const sr=semis.map(([a,b])=>ntMatch(a,b,true,40));T0.ko.push({rd:'Semifinales',ms:sr.map(fmt)});T0.semi=sr.flatMap(r=>[r.a,r.b]);fin=sr.map(r=>r.w);}}
- const f=ntMatch(fin[0],fin[1],true,50);T0.ko.push({rd:'Final',ms:[fmt(f)]});T0.champ=f.w;T0.runner=f.w===f.a?f.b:f.a;
+  const sr=semis.map(([a,b])=>ntMatch(a,b,true,40));T0.ko.push({rd:'Semifinales',ms:sr.map(fmt),mo:sr.map(mo)});T0.semi=sr.flatMap(r=>[r.a,r.b]);fin=sr.map(r=>r.w);}}
+ const f=ntMatch(fin[0],fin[1],true,50);T0.ko.push({rd:'Final',ms:[fmt(f)],mo:[mo(f)]});T0.champ=f.w;T0.runner=f.w===f.a?f.b:f.a;
  S.intl.titles[T0.champ][k]++;
  // máximo goleador del torneo: el que más goles internacionales sumó en este torneo
  return T0;
