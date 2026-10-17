@@ -143,6 +143,8 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .zonas-parte { display: grid; gap: 6px; background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 12px; }
 .cita { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
 .cita b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); display: block; }
+.portada { min-height: 34vh; display: grid; align-content: end; gap: 10px; }
+.rotulo.grande { font-size: clamp(40px, 12vw, 64px); }
 .empresa { display: grid; grid-template-columns: minmax(0, 190px) 1fr; gap: 12px; align-items: center; }
 .furgo { width: 100%; height: auto; display: block; }
 .empresa .rotulo { font-size: clamp(22px, 6vw, 32px); overflow-wrap: anywhere; }
@@ -373,9 +375,11 @@ function migrar(s) {
   if (s.v === 3) { Object.assign(s, { v: 4, fase: 'aprendiz', etapa: 0, empresa: null, abierta: 0, compPref: 'beto', hoy: null }); delete s.rango; }
   return s.v === 4 ? s : null;
 }
-function guardar() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
+let guardada = false;   // hay una partida guardada que se puede continuar
+function guardar() { guardada = true; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
 function cargar() { try { const t = localStorage.getItem(KEY); if (t) { const s = migrar(JSON.parse(t)); if (s) { S = s; return true; } } } catch (e) { /* nueva */ } return false; }
 const perk = k => S.perks[k] || 0;
+const jugador = () => S.jugador || 'chamaco';
 
 // ------------------------------------------------------------------ audio
 
@@ -1416,7 +1420,7 @@ function prepararNoche() {
   const disponibles = Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= etapa());
   const comp = S.fase === 'aprendiz' ? (S.noche <= 2 ? 'beto' : 'lupe') : disponibles.includes(S.compPref) ? S.compPref : 'beto';
   const frase = S.fase === 'aprendiz'
-    ? (S.noche === 1 ? 'Bienvenido a Grasa Brava. Toma la rasqueta, súbete a la camioneta y no toques mi radio.' : uno(RIGO))
+    ? (S.noche === 1 ? `Bienvenido a Grasa Brava, ${jugador()}. Toma la rasqueta, súbete a la camioneta y no toques mi radio.` : uno(RIGO))
     : (S.noche === S.abierta ? `Primera noche de ${S.empresa.nombre}. Yo estaré pescando. No me llames. Bueno, llámame si hay mapache.` : uno(RIGO_CONSEJOS));
   S.hoy = { noche: S.noche, ordenes, sel: 0, comp, ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2, avisos, frase, resultado: '' };
   guardar();
@@ -1588,7 +1592,7 @@ function enlazar() {
   P.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const t = TIENDA.find(x => x.id === b.dataset.t); S.dinero -= t.p; t.f(S); guardar(); tono(880, .1, .08); pantallaCamioneta(); });
 }
 
-function pantallaAjustes(enTurno) {
+function pantallaAjustes(enTurno, desdeInicio) {
   const op = [
     ['asist', 'Asistencia de apuntado', 'La pasada se acerca sola a la mancha más cercana.'],
     ['resaltar', 'Resaltar suciedad', 'Lo que falta parpadea en naranja.'],
@@ -1599,16 +1603,11 @@ function pantallaAjustes(enTurno) {
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
     ${Object.keys(S.perks).length ? `<div class="cita"><b>Tus mejoras</b>${Object.entries(S.perks).map(([k, n]) => `${PERKS[k].n}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
     <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, usa las flechas de los lados. En ordenador, teclas 1 a 4.</div>
-    <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="borrar">Empezar de cero</button>'}</div>`);
+    <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="menu">Menú principal</button>'}</div>`);
   P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { S.aj[b.dataset.k] = !S.aj[b.dataset.k]; b.setAttribute('aria-pressed', S.aj[b.dataset.k]); U.hl.value = S.aj.resaltar ? 1 : 0; guardar(); });
-  $('#volver').onclick = () => { if (enTurno) { P.hidden = true; M.pausa = false; } else pantallaCamioneta(); };
+  $('#volver').onclick = () => { if (enTurno) { P.hidden = true; M.pausa = false; } else if (desdeInicio) pantallaInicio(); else pantallaCamioneta(); };
   const ab = $('#abandonar'); if (ab) ab.onclick = () => { P.hidden = true; terminarTurno(); };
-  const br = $('#borrar'); if (br) br.onclick = () => {
-    pantalla(`<div class="rotulo">¿Empezar de cero?</div><p>Se borran tu dinero, tu empresa, tus clientes y tu cuadrilla. Vuelves a ser el nuevo de Grasa Brava. Don Rigo no se acordará de ti. Bueno, nunca se acordó.</p>
-      <div class="acciones"><button class="btn" id="no">Cancelar</button><button class="btn prim" id="si">Empezar de cero</button></div>`);
-    $('#no').onclick = () => pantallaAjustes(false);
-    $('#si').onclick = () => { nueva(); tab = 'noche'; guardar(); pantallaCamioneta(); };
-  };
+  const mn = $('#menu'); if (mn) mn.onclick = pantallaInicio;
 }
 
 // Después del parte: contrato, nivel y despido, en cola.
@@ -1693,11 +1692,46 @@ function elegirPerk() {
   P.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { S.perks[b.dataset.p] = perk(b.dataset.p) + 1; guardar(); siguiente(); });
 }
 
+// ---- inicio: continuar o nueva partida con tu nombre
+
+function pantallaInicio() {
+  M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true;
+  if (!mundo) construirNoche(null);
+  irVista(VISTA_GENERAL);
+  pantalla(`<div class="portada"><div class="rotulo grande">Hood Cleaners<span>The Night Shift</span></div>
+      <p class="nota">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p></div>
+    ${guardada ? `<button class="orden" id="continuar"><h3>Continuar${S.jugador ? ', ' + esc(S.jugador) : ''}</h3>
+      <span class="nota">Noche ${S.noche} · ${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + ETAPAS[S.etapa].n : 'Aprendiz en Grasa Brava'} · ${dinero(S.dinero)}</span></button>` : ''}
+    <div class="acciones"><button class="btn ${guardada ? '' : 'prim'}" id="nuevaP">Nueva partida</button><button class="btn" id="ajustesIni">Ajustes</button></div>`);
+  const c = $('#continuar'); if (c) c.onclick = () => { audio(); if (S.jugador) pantallaCamioneta(); else pantallaNombre(false); };
+  $('#nuevaP').onclick = () => { audio(); pantallaNombre(true); };
+  $('#ajustesIni').onclick = () => pantallaAjustes(false, true);
+}
+
+// nueva = true empieza otra partida; false solo pone nombre a la que ya hay.
+function pantallaNombre(nueva_) {
+  pantalla(`<div class="rotulo">${nueva_ ? 'Nueva partida' : 'Tu nombre'}</div>
+    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>¿Y tú quién eres? Habla fuerte, que el extractor hace ruido.</div></div>
+    <label class="campo"><span>Tu nombre</span><input id="nombreJug" maxlength="18" autocomplete="off" spellcheck="false" value="${nueva_ ? '' : esc(S.jugador || '')}"></label>
+    ${nueva_ && guardada ? `<p class="aviso">Se borra la partida guardada${S.jugador ? ' de ' + esc(S.jugador) : ''} (noche ${S.noche}).</p>` : ''}
+    <div class="acciones"><button class="btn prim" id="empezarJ">${nueva_ ? 'Empezar' : 'Seguir'}</button><button class="btn" id="volverJ">Volver</button></div>`);
+  const inp = $('#nombreJug'), ok = $('#empezarJ');
+  const val = () => { ok.disabled = !inp.value.trim(); };
+  inp.oninput = val; val();
+  inp.onkeydown = e => { if (e.key === 'Enter' && !ok.disabled) ok.click(); };
+  ok.onclick = () => {
+    const n = inp.value.trim(); if (!n) return;
+    if (nueva_) { nueva(); tab = 'noche'; }
+    S.jugador = n; guardar(); pantallaCamioneta();
+  };
+  $('#volverJ').onclick = pantallaInicio;
+}
+
 // ---- el despido y tu empresa desde cero
 
 function despido() {
   pantalla(`<div class="rotulo">La última noche<span>de Grasa Brava</span></div>
-    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>Ven a la camioneta. Tenemos que hablar. Trae la rasqueta.</div></div>
+    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>${esc(jugador())}, ven a la camioneta. Tenemos que hablar. Trae la rasqueta.</div></div>
     <p>Don Rigo tiene la cara de cuando el mapache se comió su almuerzo. Beto silba mirando al techo.</p>
     <div class="cita"><b>Don Rigo</b>Beto vendió la hidrolavadora para comprarse una máquina de karaoke. Dice que tú le diste permiso.</div>
     <div class="acciones"><button class="btn prim" data-r="0">¡Yo no fui!</button><button class="btn" data-r="1">…¿Qué canciones tiene?</button></div>`);
@@ -1707,7 +1741,7 @@ function despido() {
     pantalla(`<div class="rotulo">Estás despedido<span>(más o menos)</span></div>
       <div class="cita"><b>Don Rigo</b>${esc(resp)} Total, que cierro Grasa Brava y me voy a pescar. Ya estoy viejo para mapaches.</div>
       <div class="cita"><b>Don Rigo</b>Llévate la camioneta. No arranca en subida y la radio solo agarra rancheras. Aquí tienes ${dinero(300)} de finiquito. Y llévate a Beto, por favor. Te lo suplico.</div>
-      <div class="cita"><b>Beto</b>Jefe… digo, nuevo jefe. Yo me voy contigo. Traigo el karaoke.</div>
+      <div class="cita"><b>Beto</b>${esc(jugador())}… digo, jefe. Yo me voy contigo. Traigo el karaoke.</div>
       <p class="nota">Tus herramientas, tu nivel y tus mejoras se vienen contigo. La hidrolavadora de Don Rigo no (ya sabes por qué). Los clientes son suyos: tu reputación empieza en cero.</p>
       <div class="acciones"><button class="btn prim" id="abrir">Abrir mi propia empresa</button></div>`);
     tono(220, .6, .08, 'triangle', 110);
@@ -1716,7 +1750,7 @@ function despido() {
 }
 
 function nombrarEmpresa() {
-  const NOMBRES = ['Grasa Cero', 'Campanas Relucientes', 'Los Limpiadores de Hoods', 'Ductos Felices', 'Brillo Nocturno'];
+  const NOMBRES = ['Grasa Cero', 'Campanas Relucientes', 'Los Limpiadores de Hoods', ...(S.jugador ? [`Limpiezas ${S.jugador}`, `${S.jugador} e Hijos`] : []), 'Ductos Felices', 'Brillo Nocturno'];
   const PINTURAS = [['#ff8a1f', 'naranja'], ['#2f6fd1', 'azul'], ['#d7382b', 'rojo'], ['#2e9e5b', 'verde'], ['#e8e3d6', 'blanco'], ['#7b4fd1', 'morado']];
   let nombre = uno(NOMBRES), color = PINTURAS[0][0];
   pantalla(`<div class="rotulo">Tu empresa<span>desde cero</span></div>
@@ -1744,7 +1778,7 @@ function nombrarEmpresa() {
 
 function subirEtapa() {
   const e = ETAPAS[S.etapa];
-  const frases = ['', ['Beto', 'Un taller propio. Con baño y todo. Lupe llamó: dice que se viene con nosotros si le dejas su propia taza.'], ['Lupe', 'Oficina con fax. Nadie sabe usar el fax. Chuy ya se durmió en el sofá de la entrada: está contratado.'], ['Beto', 'Nos llaman de un estadio. ¡De un estadio! El cuñado del alcalde pasó por delante y no nos saludó. Eso es que vamos bien.'], ['Don Rigo', 'Saliste en el noticiero de las seis. Siempre supe que valías. Mentira, pero se agradece. Ahora, ¿me das trabajo? Es broma. Bueno, medio broma.']][S.etapa];
+  const frases = ['', ['Beto', 'Un taller propio. Con baño y todo. Lupe llamó: dice que se viene con nosotros si le dejas su propia taza.'], ['Lupe', 'Oficina con fax. Nadie sabe usar el fax. Chuy ya se durmió en el sofá de la entrada: está contratado.'], ['Beto', 'Nos llaman de un estadio. ¡De un estadio! El cuñado del alcalde pasó por delante y no nos saludó. Eso es que vamos bien.'], ['Don Rigo', `Saliste en el noticiero de las seis. Siempre supe que valías, ${jugador()}. Mentira, pero se agradece. Ahora, ¿me das trabajo? Es broma. Bueno, medio broma.`]][S.etapa];
   pantalla(`<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(e.n)}<span>${esc(S.empresa.nombre)}</span></div></div>
     <div class="cita"><b>${esc(frases[0])}</b>${esc(frases[1])}</div>
     <p>${esc(e.txt)}</p>
@@ -1778,10 +1812,10 @@ function bucle(ahora) {
 }
 
 function arrancar(datos) {
-  if (datos && datos.S && migrar(datos.S)) S = datos.S; else if (!cargar()) nueva();
+  if (datos && datos.S && migrar(datos.S)) { S = datos.S; guardada = true; } else if (cargar()) guardada = true; else nueva();
   U.hl.value = S.aj.resaltar ? 1 : 0;
   redimensionar();
-  pantallaCamioneta();
+  pantallaInicio();
   requestAnimationFrame(bucle);
 }
 window.claude?.hot?.snapshot?.(() => ({ S }));
