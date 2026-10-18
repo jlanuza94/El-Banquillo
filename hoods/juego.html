@@ -35,6 +35,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 #juego { position: fixed; inset: 0; overflow: hidden; }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.vineta { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(4,8,12,.42) 100%); }
 
 /* HUD del turno */
 .hud-arriba { position: absolute; left: 0; right: 0; top: 0; padding-top: max(10px, env(safe-area-inset-top, 0px)); padding-left: var(--lado-i); padding-right: var(--lado-d); padding-bottom: 18px; display: grid; gap: 6px; pointer-events: none; background: linear-gradient(rgba(10,16,22,.75), rgba(10,16,22,0)); }
@@ -45,9 +46,17 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .tiempo { height: 4px; background: rgba(255,255,255,.12); border-radius: 2px; overflow: hidden; }
 .tiempo div { height: 100%; background: var(--hivis); }
 .chat { display: grid; gap: 5px; justify-items: start; }
-.burbuja { pointer-events: auto; max-width: min(92%, 420px); background: var(--panel); border: 1px solid var(--linea); border-radius: 4px 12px 12px 12px; padding: 7px 10px; display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: start; animation: entra .25s ease-out; font-size: 14px; }
-.burbuja .cara { width: 30px; height: 30px; border-radius: 50% 50% 6px 6px; display: grid; place-items: center; font-family: var(--f-display); font-size: 13px; color: var(--hivis-tinta); }
-.burbuja b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); display: block; }
+.burbuja { pointer-events: auto; max-width: min(88%, 400px); background: rgba(17,25,33,.8); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); border: 1px solid var(--linea); border-radius: 4px 12px 12px 12px; padding: 5px 9px; display: grid; grid-template-columns: 24px 1fr; gap: 7px; align-items: start; animation: entra .25s ease-out; font-size: 13px; line-height: 1.3; }
+/* Lo que dicen se lee en dos o tres líneas; tocar el globo lo cierra. */
+.burbuja > div > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.burbuja .cara { width: 24px; height: 24px; border-radius: 50% 50% 6px 6px; display: grid; place-items: center; font-family: var(--f-display); font-size: 11px; color: var(--hivis-tinta); }
+.burbuja b { font-family: var(--f-cond); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--tenue); display: block; }
+/* La radio pasa en una cinta de una línea, debajo de los pasos, sin tapar la cocina. */
+.cinta { pointer-events: none; display: flex; align-items: center; height: 22px; overflow: hidden; white-space: nowrap; background: rgba(36,22,58,.72); border: 1px solid rgba(198,160,255,.35); border-radius: 999px; font-size: 12.5px; color: #e6d8ff; }
+.cinta b { flex: none; font-family: var(--f-cond); font-size: 11px; letter-spacing: .06em; color: #10161c; background: #c6a0ff; border-radius: 999px; padding: 0 8px; line-height: 20px; margin-left: 1px; }
+.cinta div { flex: 1; overflow: hidden; min-width: 0; }
+.cinta span { display: inline-block; padding-left: 100%; animation: cinta var(--dur, 12s) linear forwards; }
+@keyframes cinta { to { transform: translateX(-100%); } }
 .burbuja .resp { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 @keyframes entra { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
 
@@ -329,9 +338,31 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .pedido b { color: var(--grasa); }
 .pedido i { font-style: normal; color: var(--ok); }
 .orden.dia { border-color: var(--grasa); }
-.orden.dia .opciones { display: grid; gap: 6px; }
-.orden.dia .opciones .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; }
-.orden.dia .opciones .btn small { display: block; font-weight: 400; font-size: 13px; opacity: .8; }
+.orden.dia { padding: 10px 12px; gap: 5px; box-sizing: border-box; }
+.orden.dia > .chip { justify-self: start; }
+.orden.dia h3 { font-size: 18px; }
+.orden.dia p { font-size: 14px; }
+.orden.dia .opciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px; }
+.orden.dia .opciones .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 14px; letter-spacing: 0; padding: 7px 10px; min-height: 0; }
+.orden.dia .opciones .btn small { display: block; font-weight: 400; font-size: 12px; opacity: .8; }
+/* Menú de la noche compacto: que lo importante (los trabajos) se vea sin deslizar. */
+.hoja:has(> .lado-cab) { gap: 10px; }
+.lado-cab, .lado-main { display: contents; }
+.cab { display: grid; gap: 8px; }
+.cab .empresa { grid-template-columns: 84px 1fr; gap: 10px; }
+.cab .empresa .rotulo { font-size: clamp(20px, 5.4vw, 28px); }
+.cab .rotulo span { font-size: .55em; margin-top: 2px; }
+.cab .datos { display: grid; grid-template-columns: auto auto 1fr auto; gap: 5px; }
+.cab .dato { padding: 3px 8px; min-width: 0; }
+.cab .dato b { font-size: 15px; }
+.cab .dato i { font-size: 10px; }
+.cab .dato small { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jefe.corto { width: 100%; text-align: left; color: inherit; border: 0; grid-template-columns: 28px 1fr; gap: 8px; padding: 6px 10px; font-size: 14px; }
+.jefe.corto .cara { width: 28px; height: 28px; font-size: 12px; }
+.jefe.corto b { font-size: 11px; }
+.jefe.corto span, .cita.corto { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.jefe.corto.abierto span { -webkit-line-clamp: unset; }
+.cita.corto { font-size: 13.5px; padding: 6px 10px; -webkit-line-clamp: 3; }
 a.btn { display: inline-block; text-decoration: none; }
 /* Inicio: la camioneta llega de noche */
 .calle { position: relative; height: 130px; margin: 0 calc(-1 * var(--lado-i)) 4px calc(-1 * var(--lado-d)); overflow: hidden; }
@@ -380,6 +411,12 @@ a.btn { display: inline-block; text-decoration: none; }
 /* Celular acostado: barras compactas, el chat a la derecha y los paneles a la izquierda para que se vea la escena. */
 @media (orientation: landscape) and (max-height: 560px) {
   .hoja:has(.inicio) { max-width: 980px; }
+  /* Menú de la noche acostado: la empresa a la izquierda (fija) y los trabajos a la derecha. */
+  .hoja:has(> .lado-cab) { max-width: 1060px; grid-template-columns: minmax(230px, 32%) minmax(0, 1fr); align-items: start; gap: 14px; }
+  .lado-cab, .lado-main { display: grid; gap: 10px; min-width: 0; }
+  .lado-cab { position: sticky; top: 0; }
+  .lado-cab .cab .datos { grid-template-columns: 1fr 1fr; }
+  .lado-cab .cab .empresa { grid-template-columns: 64px 1fr; }
   .inicio { grid-template-columns: 1.1fr 1fr; align-items: center; gap: 28px; }
   .inicio .portada { min-height: 0; }
   .inicio .calle { height: 90px; }
@@ -397,8 +434,8 @@ a.btn { display: inline-block; text-decoration: none; }
   .duelo { max-width: 55vw; }
   .chat { position: fixed; right: var(--lado-d); top: 58px; width: min(36vw, 340px); justify-items: end; }
   .chat { max-height: calc(100vh - 58px - 130px); overflow: hidden; align-content: start; }
-  .chat .burbuja:nth-child(n+2) { display: none; }
   .burbuja { font-size: 12.5px; padding: 5px 8px; grid-template-columns: 22px 1fr; gap: 6px; max-width: 100%; }
+  .cinta { max-width: 56vw; height: 20px; font-size: 12px; }
   .burbuja .cara { width: 22px; height: 22px; font-size: 11px; }
   .burbuja b { font-size: 11px; }
   .burbuja .btn.peq { padding: 4px 8px; font-size: 12px; }
@@ -432,6 +469,7 @@ a.btn { display: inline-block; text-decoration: none; }
 <div id="juego">
   <canvas id="gl" aria-label="Cocina en 3D: arrastra sobre la grasa para limpiar"></canvas>
   <div id="oscuro" aria-hidden="true"></div>
+  <div class="vineta" aria-hidden="true"></div>
   <div id="marcas"></div>
   <div id="hud" hidden>
     <div class="hud-arriba">
@@ -439,6 +477,7 @@ a.btn { display: inline-block; text-decoration: none; }
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
       <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
       <div class="pasos" id="pasos"></div>
+      <div class="cinta" id="cinta" hidden><b>FM</b><div><span></span></div></div>
       <div class="tuto" id="tuto" hidden></div>
       <div class="chat" id="chat"></div>
     </div>
@@ -1321,8 +1360,9 @@ function materialGrasa(base, dtex, lado, ttex) {
       + sh.fragmentShader
       .replace('#include <map_fragment>', `#include <map_fragment>
         vec4 dm = texture2D(mapaGrasa, vUv);
-        float gr = hh(floor(vUv * 180.0));
-        float dd = dm.r * 1.4 + (gr - 0.5) * 0.06;
+        // Grano suave (sin cuadritos) y bordes irregulares, como grasa de verdad.
+        float gr = vr(vUv * 150.0) * 0.65 + vr(vUv * 410.0) * 0.35;
+        float dd = dm.r * 1.4 + (gr - 0.5) * 0.06 + (vr(vUv * 38.0) - 0.5) * 0.14;
         float tF = smoothstep(0.02, 0.22, dd);
         float tC = smoothstep(0.55, 0.95, dd + (gr - 0.5) * 0.14);
         vec3 fina = vec3(0.42, 0.24, 0.05) * (0.85 + 0.3 * gr);
@@ -1330,7 +1370,7 @@ function materialGrasa(base, dtex, lado, ttex) {
         vec3 costra = vec3(0.022, 0.016, 0.012) * (0.7 + 0.7 * gr);
         vec3 grasa = mix(mix(fina, media, smoothstep(0.12, 0.4, dd)), costra, tC);
         // Quemada: negra como carbón, con escamas. Aceite: ámbar líquido. Sarro: óxido naranja y opaco.
-        vec3 tp = texture2D(mapaTipo, vUv).rgb;
+        vec3 tp = smoothstep(0.3, 0.7, texture2D(mapaTipo, vUv).rgb + (vr(vUv * 31.0) - 0.5) * 0.45);   // manchas de borde irregular, no en escalera
         float escama = vr(vUv * 70.0);
         grasa = mix(grasa, vec3(0.012, 0.011, 0.01) + vec3(0.05, 0.04, 0.035) * smoothstep(0.7, 0.95, escama), tp.r);
         grasa = mix(grasa, vec3(0.62, 0.42, 0.07) * (0.75 + 0.35 * vr(vUv * 12.0 + vec2(0.0, uT * 0.2))), tp.g);
@@ -1838,8 +1878,11 @@ function construirNoche(orden) {
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, labio: c.labio,
     vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100 } } }));
   piezas.robot = null;
-  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } }));
+  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 }, acostado: { dMin: dL - .05, dMax: dL - .05 } } }));
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
+  // La caja de lo que hay que lavar en cada campana: la cámara la encuadra entera en el hueco que deja el HUD.
+  mundo.updateMatrixWorld(true);
+  for (const z of Z) if (z.id === 'campana') { const c = new T.Box3(); z.meshes.forEach(m => c.expandByObject(m)); z.vista.caja = c; }
 }
 
 // ------------------------------------------------------------------ cámara
@@ -1852,7 +1895,8 @@ let cine = null;   // el final del turno
 function moverCamara(dt) {
   // En el celular de pie (pantalla estrecha) algunas vistas tienen otra versión: más lejos, más de frente y más angular,
   // para que la campana y el ducto quepan enteros y no se corten las esquinas.
-  const v = camT.a, alt = cam.aspect < .9 && v.alt, dir = alt && alt.dir || v.dir;
+  // Acostado, el ducto también se ve desde dentro: desde la boca se colaba la cocina por los lados.
+  const v = camT.a, alt = cam.aspect < .9 ? v.alt : cam.aspect > 1.3 && v.acostado, dir = alt && alt.dir || v.dir;
   let fov = v.fov || 55;
   if (alt && alt.hfMin) fov = clamp(2 * Math.atan(Math.tan(alt.hfMin * Math.PI / 360) / cam.aspect) * 180 / Math.PI, fov, alt.fovMax || 100);
   // Panel de preparación a un lado (celular acostado): se encuadra en el hueco que queda libre a la derecha.
@@ -1865,6 +1909,18 @@ function moverCamara(dt) {
   v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
   camT.objMira.copy(v.mira); camT.objMira.x += v.pan;
   camT.objPos.copy(camT.objMira).addScaledVector(dir, dist);
+  const hueco = !lado && huecoLibre();
+  if (hueco && v.caja) {
+    // Si de cerca no cabe sin deformarse, la cámara se aleja (sin bajar del suelo) hasta que quepa con un ángulo razonable.
+    v.caja.getCenter(camT.objMira); camT.objPos.copy(camT.objMira).addScaledVector(dir, dist);
+    const tope = dir.y < 0 ? (camT.objMira.y - .45) / -dir.y : dist + 1.5;
+    let f = fovParaCaja(v.caja, hueco), d = dist;
+    while (f > 78 && d + .1 <= tope) { d += .1; camT.objPos.copy(camT.objMira).addScaledVector(dir, d); f = fovParaCaja(v.caja, hueco); }
+    fov = Math.max(fov, f);
+    const hf2 = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * cam.aspect);
+    v.vis = 2 * d * Math.tan(hf2 / 2); v.maxPan = Math.max(0, (v.ancho - v.vis) / 2); v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
+    camT.objMira.x += v.pan; camT.objPos.x += v.pan;
+  }
   const k = 1 - Math.exp(-dt * 7);
   cam.position.lerp(camT.objPos, k); camT.mira.lerp(camT.objMira, k);
   if (M && M.fase === 'turno') { const t = performance.now() / 1000; cam.position.x += Math.sin(t * .5) * .004; cam.position.y += Math.sin(t * .7) * .003; }
@@ -1875,6 +1931,7 @@ function moverCamara(dt) {
   }
   // Con el panel de preparación abierto, la escena se sube al hueco libre para que no quede nada tapado.
   let off = 0, offX = 0;
+  if (hueco) off = innerHeight / 2 - hueco.cy;   // la escena se centra en el hueco entre los botones de arriba y los de abajo
   if (lado) {
     if (libre < 1) offX = -lado.right / 2;   // panel a la izquierda (celular acostado): la escena se corre a la derecha
     else { const arriba = $('#hud').hidden ? 0 : $('#pasos').getBoundingClientRect().bottom; off = (prepEl.offsetHeight - arriba) / 2; }
@@ -1882,6 +1939,29 @@ function moverCamara(dt) {
   camT.off += (off - camT.off) * k; camT.offX += (offX - camT.offX) * k;
   if (Math.abs(camT.off) > .5 || Math.abs(camT.offX) > .5) cam.setViewOffset(innerWidth, innerHeight, camT.offX, camT.off, innerWidth, innerHeight); else if (cam.view && cam.view.enabled) cam.clearViewOffset();
   cam.fov = fov; cam.updateProjectionMatrix();
+}
+// El hueco de pantalla que dejan libre el HUD de arriba (reloj y pasos) y el de abajo (herramientas y zonas).
+let huecoMemo = null;
+function huecoLibre() {
+  if (!M || M.fase !== 'turno' || $('#hud').hidden || cine || M.robotCam) return null;
+  const ahora = performance.now();
+  if (huecoMemo && ahora - huecoMemo.t < 400) return huecoMemo.h;
+  const arriba = $('#pasos').getBoundingClientRect().bottom + 6, abajo = $('#hudAbajo .mandos').getBoundingClientRect().top - 4;
+  const h = abajo - arriba > innerHeight * .3 ? { cy: (arriba + abajo) / 2, fh: (abajo - arriba) / innerHeight } : null;
+  huecoMemo = { t: ahora, h }; return h;
+}
+// El campo de visión que hace falta para que toda la caja quepa en el hueco (con un poco de margen), visto desde donde va la cámara.
+const _f = new T.Vector3(), _r = new T.Vector3(), _u = new T.Vector3(), _p = new T.Vector3();
+function fovParaCaja(caja, hueco) {
+  _f.subVectors(camT.objMira, camT.objPos).normalize(); _r.crossVectors(_f, cam.up).normalize(); _u.crossVectors(_r, _f);
+  let tx = 0, ty = 0;
+  for (let i = 0; i < 8; i++) {
+    _p.set(i & 1 ? caja.max.x : caja.min.x, i & 2 ? caja.max.y : caja.min.y, i & 4 ? caja.max.z : caja.min.z).sub(camT.objPos);
+    const z = Math.max(_p.dot(_f), .15); tx = Math.max(tx, Math.abs(_p.dot(_r)) / z); ty = Math.max(ty, Math.abs(_p.dot(_u)) / z);
+  }
+  // Lo alto tiene que caber siempre; lo ancho, hasta cierto ángulo: si la campana es muy larga se desliza de lado.
+  const g = t => 2 * Math.atan(t * 1.06) * 180 / Math.PI;
+  return Math.min(Math.max(g(ty / hueco.fh), Math.min(g(tx / cam.aspect), 84)), 104);
 }
 // Mover la vista: arrastrar con dos dedos, arrastrar sobre algo que no se limpia (pared, suelo, aire),
 // tocar el aviso naranja del borde o, en ordenador, las flechas del teclado.
@@ -2458,16 +2538,25 @@ addEventListener('keydown', e => {
 // ---- charla por la radio
 
 const chat = $('#chat');
+function cintaRadio(texto) {
+  const c = $('#cinta'), sp = c.querySelector('span'), n = sp.cloneNode();
+  n.textContent = texto; n.style.setProperty('--dur', `${clamp(6 + texto.length * .11, 9, 26)}s`);
+  n.onanimationend = () => { c.hidden = true; }; sp.replaceWith(n); c.hidden = false;
+}
 function decir(quien, texto, resp) {
   if (quien === SOLO && !texto.startsWith('(')) return null;   // trabajando solo, solo se oyen tus pensamientos
   texto = TRAD(texto); if (resp) resp = resp.map(r => ({ ...r, t: TRAD(r.t) }));
+  if (quien === QUIEN_RADIO && !resp && !$('#hud').hidden) { cintaRadio(texto); tono(520, .05, .04, 'square'); return null; }
   const b = document.createElement('div'); b.className = 'burbuja' + (quien === 'gerente' ? ' de-gerente' : '');
   const col = quien === 'gerente' ? '#e9e9e9' : quien === 'rigo' ? '#b9a27a' : quien.color;
   const nom = quien === 'gerente' ? L('Gerente', 'Manager') : quien === 'rigo' ? 'Don Rigo' : TRAD(quien.n);
-  b.innerHTML = `<div class="cara" style="background:${col}">${esc(nom[0])}</div><div><b>${esc(nom)}</b>${esc(texto)}${resp ? `<div class="resp">${resp.map((r, i) => `<button class="btn peq" data-i="${i}">${esc(r.t)}</button>`).join('')}</div>` : ''}</div>`;
-  if (resp) b.querySelectorAll('[data-i]').forEach(x => x.onclick = () => { b.remove(); resp[+x.dataset.i].f(); });
+  b.innerHTML = `<div class="cara" style="background:${col}">${esc(nom[0])}</div><div><b>${esc(nom)}</b><span>${esc(texto)}</span>${resp ? `<div class="resp">${resp.map((r, i) => `<button class="btn peq" data-i="${i}">${esc(r.t)}</button>`).join('')}</div>` : ''}</div>`;
+  if (resp) { b.classList.add('pide'); b.querySelectorAll('[data-i]').forEach(x => x.onclick = e => { e.stopPropagation(); b.remove(); resp[+x.dataset.i].f(); }); }
+  else b.onclick = () => b.remove();
   chat.prepend(b);
-  while (chat.children.length > (M && M.etapa === 'pelar' ? 1 : 3)) chat.lastChild.remove();
+  // Un solo globo a la vez (y el que espera respuesta no se pierde).
+  const guarda = b.classList.contains('pide') ? null : chat.querySelector('.pide:not(:first-child)');
+  for (const x of [...chat.children].slice(1)) if (x !== guarda) x.remove();
   setTimeout(() => b.remove(), resp ? 7000 : clamp(texto.length * 55, 4500, 11000));   // los mensajes largos (las noticias) duran más
   tono(quien === 'gerente' ? 300 : 520, .05, .04, 'square');
   return b;
@@ -3567,14 +3656,14 @@ function furgo(nombre, color, et) {
 
 function cabecera() {
   const need = xpNivel(S.nivel), aprendiz = S.fase === 'aprendiz';
-  return `${aprendiz ? '<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>'
+  return `<div class="cab">${aprendiz ? '<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>'
       : `<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(S.empresa.nombre)}<span>${nEtapa(S.etapa)}</span></div></div>`}
     <div class="datos">
       <div class="dato"><i>${L('Noche', 'Night')}</i><b>${S.noche}</b>${aprendiz ? `<small>${L('Aprendiz', 'Apprentice')}: ${Math.min(S.noche, APRENDIZ)} ${L('de', 'of')} ${APRENDIZ}</small>` : ''}</div>
       <div class="dato"><i>${L('Tu dinero', 'Your money')}</i><b>${dinero(S.dinero)}</b></div>
       <div class="dato"><i>${L(`Reputación${aprendiz ? ' de Grasa Brava' : ''}`, `${aprendiz ? 'Grasa Brava ' : ''}Reputation`)}</i><b>${S.rep}</b><small>${fama(S.rep)} · ${L('pagos', 'pay')} ×${multPago().toFixed(2)}</small></div>
       <div class="dato"><i>${L('Nivel', 'Level')}</i><b>${S.nivel}</b><div class="barra" title="${L('Experiencia', 'Experience')}"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></div>
-    </div>`;
+    </div></div>`;
 }
 
 function pantallaCamioneta() {
@@ -3589,14 +3678,15 @@ function pantallaCamioneta() {
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
   const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros y álbum', 'Awards & album')]] : [['noche', L('Noche', 'Night')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
   if (!tabs.some(t => t[0] === tab)) tab = 'noche';
-  pantalla(`${cabecera()}
-    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b>${esc(TRAD(H.frase))}</div></div>
-    ${H.avisos.length ? `<div class="cita"><b>${L('Noticias del barrio', 'Neighborhood news')}</b>${esc(H.avisos.map(TRAD).join(' '))}</div>` : ''}
-    <nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
+  pantalla(`<div class="lado-cab">${cabecera()}
+    <button class="jefe corto" id="jefeCorto">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b><span>${esc(TRAD(H.frase))}</span></div></button>
+    ${H.avisos.length ? `<div class="cita corto"><b>${L('Noticias del barrio', 'Neighborhood news')}</b>${esc(H.avisos.map(TRAD).join(' '))}</div>` : ''}</div>
+    <div class="lado-main"><nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
     ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}
-    <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div>`);
+    <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div></div>`);
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
+  $('#jefeCorto').onclick = () => $('#jefeCorto').classList.toggle('abierto');   // la frase larga se abre al tocarla
   enlazar();
 }
 
@@ -3656,12 +3746,7 @@ function vNoche() {
   return `${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(TRAD(dia.t))}</h3><p>${esc(TRAD(dia.txt))}</p>
       ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(TRAD(H.dia.res))}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(TRAD(op.t))}<small>${esc(TRAD(op.d))}</small></button>`).join('')}</div>`}</div>` : ''}
     ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
-    ${aprendiz ? plegable('tablero', `🗓️ ${L('Horario de Grasa Brava', 'Grasa Brava schedule')}`, 'Angélica', tableroRigo(), S.noche <= 1) : plegable('retos', `🎯 ${L('Retos y metas', 'Challenges & goals')}`, [H.retos && H.retos.length ? `☆ ${H.retos.length}` : '', S.mis ? `📞 ${S.mis.lista.filter(x => x.hecho).length}/${S.mis.lista.length}` : '', S.finde ? `🏆 ${S.finde.paso + 1}/3` : '', sig ? `⬆ ${S.rep}/${sig.rep}` : ''].filter(Boolean).join(' · '),
-      (sig && S.rep < sig.rep ? tarjetaEtapa(sig) : '') + (H.retos && H.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${H.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}<small>${L(`Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.`, `Each one gives a star. You have ${S.estrellas || 0} ★.`)}</small></div>` : '') + tarjetaMisiones() + (H.findeOferta ? '' : tarjetaFinde()))}
-    ${!aprendiz && H.findeOferta ? tarjetaFinde() : ''}
-    ${aprendiz ? '' : plegable('mapa', `🗺️ ${L('La ciudad esta noche', 'The city tonight')}`, `${H.ordenes.length} ${L('trabajos', 'jobs')}`, mapaCiudad())}
-    <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}</h2>
-    ${!aprendiz ? `<p class="nota">${L(`${H.ordenes.length} trabajos esta noche. Toca uno para ver sus detalles. ¿Pocos? Busca más en «Clientes».`, `${H.ordenes.length} jobs tonight. Tap one to see its details. Too few? Find more in "Clients".`)}</p>` : ''}
+    <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
     ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
     <h2 class="sec">${aprendiz ? L('Tu compañero esta noche', 'Your partner tonight') : L('Con quién vas', 'Who goes with you')}</h2>
     <div class="companeros compacto">${(aprendiz ? Object.entries(COMPANEROS) : [['solo', SOLO], ...Object.entries(COMPANEROS)]).map(([id, c]) => {
@@ -3673,6 +3758,10 @@ function vNoche() {
     ${S.cuadrilla.length ? `<h2 class="sec">${L('Ayudantes en la camioneta', 'Helpers in the van')} · ${H.ayud.length} ${L('de', 'of')} ${plazas}</h2>
       <div class="companeros compacto">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${ESPECIAL[c.esp] ? L(ESPECIAL[c.esp], EN.esp[c.esp]) + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     ${vEquipoB()}
+    ${aprendiz ? plegable('tablero', `🗓️ ${L('Horario de Grasa Brava', 'Grasa Brava schedule')}`, 'Angélica', tableroRigo(), S.noche <= 1) : plegable('retos', `🎯 ${L('Retos y metas', 'Challenges & goals')}`, [H.retos && H.retos.length ? `☆ ${H.retos.length}` : '', S.mis ? `📞 ${S.mis.lista.filter(x => x.hecho).length}/${S.mis.lista.length}` : '', S.finde ? `🏆 ${S.finde.paso + 1}/3` : '', sig ? `⬆ ${S.rep}/${sig.rep}` : ''].filter(Boolean).join(' · '),
+      (sig && S.rep < sig.rep ? tarjetaEtapa(sig) : '') + (H.retos && H.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${H.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}<small>${L(`Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.`, `Each one gives a star. You have ${S.estrellas || 0} ★.`)}</small></div>` : '') + tarjetaMisiones() + (H.findeOferta ? '' : tarjetaFinde()))}
+    ${!aprendiz && H.findeOferta ? tarjetaFinde() : ''}
+    ${aprendiz ? '' : plegable('mapa', `🗺️ ${L('La ciudad esta noche', 'The city tonight')}`, `${H.ordenes.length} ${L('trabajos', 'jobs')}`, mapaCiudad())}
     ${o && !o.firmado ? `<p class="aviso">${L('Primero firma el contrato del trabajo que elegiste.', 'First sign the contract for the job you picked.')}</p>` : ''}
     <div class="barra-salir"><div><b>${o ? esc(o.nombre) : L('Elige un trabajo', 'Pick a job')}</b><span class="nota">${o ? `${dinero(o.pago)} · ${H.comp === 'solo' ? L('tú solo', 'just you') : esc((COMPANEROS[H.comp] || SOLO).n)}${H.ayud.length ? ` + ${H.ayud.length}` : ''}${hayB() ? ` · ${(H.equipos || []).filter(e => e.o !== null).length} ${L('equipos fuera', 'teams out')}` : ''}` : ''}</span></div><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>${L('Salir a trabajar', 'Go to work')}</button></div>
     ${dia && !H.dia.res ? `<p class="nota">${L('Si sales sin decidir lo de la camioneta, se resuelve solo. Más o menos.', 'If you leave without deciding about the van, it sorts itself out. More or less.')}</p>` : ''}
