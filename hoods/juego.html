@@ -189,6 +189,34 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .cita { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
 .cita b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); display: block; }
 .portada { min-height: 34vh; display: grid; align-content: end; gap: 10px; }
+.inicio { display: grid; gap: 18px; }
+.menu-inicio { display: grid; gap: 12px; align-content: start; }
+.letrero { display: flex; align-items: center; gap: 12px; }
+.letrero .logo { width: clamp(56px, 16vw, 78px); flex: none; filter: drop-shadow(0 0 10px #ff8a1f88); animation: logoGota 3.2s ease-in-out infinite; }
+@keyframes logoGota { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(2px); } }
+.neon { font-family: var(--f-display); font-size: clamp(36px, 11vw, 60px); line-height: .92; color: #fff4e6; text-shadow: 0 0 4px #fff, 0 0 12px #ff8a1f, 0 0 26px #ff8a1f, 0 0 44px #ff5a1f; animation: neon 6s linear infinite; }
+.neon-sub { font-family: var(--f-display); font-size: clamp(16px, 4.6vw, 24px); letter-spacing: .06em; color: #ffd8f0; margin-top: 6px; text-shadow: 0 0 4px #fff, 0 0 10px #ff5fa2, 0 0 22px #ff5fa2; animation: neon 7.5s linear infinite .8s; }
+@keyframes neon { 0%, 18%, 22%, 62%, 64%, 100% { opacity: 1; } 20%, 63% { opacity: .55; } }
+.lema { color: var(--acero); font-size: 16px; max-width: 34ch; opacity: .9; }
+.en-radio { display: inline-flex; align-items: center; gap: 8px; justify-self: start; background: #c6a0ff1a; border: 1px solid #c6a0ff55; border-radius: 999px; padding: 6px 12px 6px 10px; }
+.en-radio .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; font-style: normal; }
+.en-radio .eq b { width: 3px; height: 4px; background: #c6a0ff; border-radius: 1px; }
+.en-radio.suena .eq b { animation: eqb .5s ease-in-out infinite alternate; }
+.en-radio.suena .eq b:nth-child(2) { animation-delay: .15s; } .en-radio.suena .eq b:nth-child(3) { animation-delay: .3s; }
+@keyframes eqb { from { height: 3px; } to { height: 14px; } }
+.continuar { display: grid; grid-template-columns: 96px 1fr auto; gap: 12px; align-items: center; text-align: left; background: linear-gradient(135deg, #24384a, #1c2a35); border: 2px solid var(--hivis); border-radius: 14px; padding: 12px 14px; color: var(--acero); box-shadow: 0 6px 22px #0007, inset 0 1px 0 #ffffff14; cursor: pointer; }
+.continuar:active { transform: scale(.98); }
+.mini-furgo .furgo { width: 96px; }
+.cont-txt { display: grid; gap: 2px; min-width: 0; }
+.cont-txt small { font-family: var(--f-cond); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--hivis); font-size: 13px; }
+.cont-txt b { font-family: var(--f-display); font-size: 22px; line-height: 1.05; overflow-wrap: anywhere; }
+.cont-txt > span { color: var(--tenue); font-size: 14px; }
+.cont-datos { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+.cont-datos i { font-style: normal; font-family: var(--f-mono); font-size: 13px; color: var(--acero); }
+.cont-flecha { font-size: 22px; color: var(--hivis); }
+.botones-inicio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn.grande { min-height: 54px; font-size: 18px; }
+.pie { text-align: center; color: var(--tenue); font-size: 12px; font-family: var(--f-mono); opacity: .7; }
 .rotulo.grande { font-size: clamp(40px, 12vw, 64px); }
 .empresa { display: grid; grid-template-columns: minmax(0, 190px) 1fr; gap: 12px; align-items: center; }
 .furgo { width: 100%; height: auto; display: block; }
@@ -321,6 +349,15 @@ a.btn { display: inline-block; text-decoration: none; }
 .novedad { background: rgba(105,201,122,.14); border: 1px solid var(--ok); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
 /* Celular acostado: barras compactas, el chat a la derecha y los paneles a la izquierda para que se vea la escena. */
 @media (orientation: landscape) and (max-height: 560px) {
+  .hoja:has(.inicio) { max-width: 980px; }
+  .inicio { grid-template-columns: 1.1fr 1fr; align-items: center; gap: 28px; }
+  .inicio .portada { min-height: 0; }
+  .inicio .calle { height: 90px; }
+  .inicio .neon { font-size: clamp(30px, 5.6vw, 50px); }
+  .inicio .letrero .logo { width: 56px; }
+  .inicio .lema { font-size: 14px; }
+  .continuar { grid-template-columns: 1fr auto; }
+  .continuar .mini-furgo { display: none; }
   .barra-salir { padding: 6px 8px; } .barra-salir .btn { min-height: 40px; } .tabs button { min-height: 38px; padding: 8px 10px; }
   .hud-arriba { padding-top: max(6px, env(safe-area-inset-top, 0px)); gap: 4px; padding-bottom: 8px; }
   .reloj { font-size: 20px; }
@@ -1009,7 +1046,7 @@ function radioCancion(forzada) {
   RADIO.cancion = can; RADIO.est = est; RADIO.raiz = raiz; RADIO.a = frase(est, raiz); RADIO.b = frase(est, raiz);
   RADIO.paso = 0; RADIO.pasos = est.compas * 32;
   if (A.ctx) { const t = A.ctx.currentTime; golpe(1400, t, .5, .25, 'bandpass'); RADIO.prox = t + .55; }   // estática entre canciones
-  const er = document.getElementById('enRadio'); if (er) er.textContent = `📻 ♪ ${can.t} — ${can.de}`;
+  const er = document.getElementById('enRadio'); if (er) { er.classList.add('suena'); const sp = er.querySelector('span'); if (sp) sp.textContent = `♪ ${can.t} — ${can.de}`; }
   if (M && (M.fase === 'turno' || M.fase === 'prep')) {
     // La primera canción de la noche trae las noticias de madrugada; luego, a veces el locutor o un comercial.
     const noticia = S.noticiaRadio || null;
@@ -1845,7 +1882,10 @@ function empezarTurno(orden) {
   // El duelo: El Cuñado limpia la misma cocina a la vez. Gana quien deje todo bajo el límite primero.
   if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22) };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
-  if (orden.comp === 'beto' && azar(.75)) M.eventos.push({ tipo: 'tuberia', zona: 1, en: rnd(14, 26) });
+  // La tubería la puede romper cualquiera de la cuadrilla, salvo los más cuidadosos (Lupe y los serios). Beto, casi seguro.
+  const prob = e => e.principal ? ({ beto: .75, chuy: .25 })[orden.comp] || 0 : e.tipo === 'serio' ? 0 : e.tipo === 'lio' ? .45 : e.tipo === 'medio' ? .25 : Math.max(0, 3 - (e.cuidado || 3)) * .1;
+  const rompe = [...M.equipo].sort(() => Math.random() - .5).find(e => azar(prob(e)));
+  if (rompe) M.eventos.push({ tipo: 'tuberia', zona: 1, en: rnd(14, 26), quien: rompe });
   if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: iDucto(), en: rnd(8, 14) });
   if (orden.eventos.includes('alarma')) M.eventos.push({ tipo: 'alarma', zona: 1, en: rnd(25, 40) });
   if (orden.eventos.includes('techo')) M.eventos.push({ tipo: 'techo', zona: iDucto(), en: 1.2 });
@@ -2321,12 +2361,13 @@ function ensuciar(zona, cant) {
 }
 
 const EVENTOS = {
-  tuberia() {
+  tuberia(ev) {
+    const q = (ev && ev.quien) || M.equipo[0] || M.comp, esBeto = q.n === 'Beto';
     sAlarma(); M.chorroFuga = 5;
-    decir(M.comp, 'Ups.');
-    carta('¡Beto rompió la tubería!', 'Sale agua sucia a presión hacia la campana. ¡Toca tres veces la llave de paso antes de que se moje todo! (El reloj del turno se detiene.)', [], { limite: 5, bloquea: true, alAgotar: () => {
+    decir(q, uno(['Ups.', 'Yo no fui. Bueno, sí.', '¿Esto era importante?']));
+    carta(`¡${q.n} rompió la tubería!`, 'Sale agua sucia a presión hacia la campana. ¡Toca tres veces la llave de paso antes de que se moje todo! (El reloj del turno se detiene.)', [], { limite: 5, bloquea: true, alAgotar: () => {
       M.chorroFuga = 0; ensuciar(zonaAct(), .3); dano('Tubería rota (fontanero nocturno)', 90, 2);
-      resultado('Todo mojado', 'El agua con grasa salpicó la campana que ya habías limpiado. El fontanero cobra tarifa de madrugada.', M.comp, COMPANEROS.beto.desastre);
+      resultado('Todo mojado', 'El agua con grasa salpicó la campana que ya habías limpiado. El fontanero cobra tarifa de madrugada.', q, esBeto ? COMPANEROS.beto.desastre : uno(['Se me resbaló la llave inglesa. Y luego yo.', 'Juro que solo la toqué. Con el pie. Fuerte.', 'Ahora entiendo por qué Beto siempre dice que «ya venía así».']));
     } });
     let quedan = 3;
     const b = document.createElement('button'); b.className = 'blanco llave'; b.innerHTML = '¡CERRAR LA LLAVE!<small>3 toques</small>';
@@ -2334,7 +2375,7 @@ const EVENTOS = {
       tono(500 + (3 - quedan) * 150, .08, .1, 'square'); vibrar(30); b.style.transform = `rotate(${(4 - quedan) * 60}deg)`;
       if (--quedan > 0) { b.querySelector('small').textContent = `${quedan} ${quedan === 1 ? 'toque' : 'toques'}`; return; }
       b.remove(); M.chorroFuga = 0; rafaga(.3, 800, .08, 'lowpass');
-      resultado('Llave cerrada', 'Tres vueltas y el agua se detiene. Ni una gota en la campana. Beto aplaude como si lo hubiera hecho él.', M.comp, 'Ya venía así. Te lo juro por mi casco.');
+      resultado('Llave cerrada', `Tres vueltas y el agua se detiene. Ni una gota en la campana. ${q.n} aplaude como si lo hubiera hecho solo.`, q, esBeto ? 'Ya venía así. Te lo juro por mi casco.' : uno(['Yo la iba a cerrar. Estaba calentando.', 'Gracias, jefe. No le diga a nadie.', 'Ya venía así. Me lo enseñó Beto.']));
     };
     $('#blancos').appendChild(b);
   },
@@ -2511,7 +2552,7 @@ function mapacheDorado() {
   ], { bloquea: true });
 }
 const SVG_CUCA = '<svg viewBox="0 0 60 60" width="64" height="64"><g stroke="#2a1608" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M22 24 9 15M21 32 6 32M22 40 10 50M38 24 51 15M39 32 54 32M38 40 50 50"/><path d="M27 12 19 1M33 12 41 1" stroke-width="1.6"/></g><ellipse cx="30" cy="34" rx="11" ry="18" fill="#7a4314" stroke="#2a1608" stroke-width="2"/><ellipse cx="30" cy="15" rx="7.5" ry="5.5" fill="#4a250a"/><path d="M30 19v31" stroke="#2a1608" stroke-width="1.6"/><circle cx="26" cy="27" r="2.5" fill="#fff" opacity=".35"/></svg>';
-function lanzarEvento(e) { M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](); }
+function lanzarEvento(e) { M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](e); }
 const QUIEN_PERRO = { n: 'Grasita', color: '#c8a27a' };
 
 // ---- el gerente que te apura
@@ -4062,22 +4103,32 @@ function pantallaInicio() {
   if (!mundo) construirNoche(null);
   irVista(VISTA_GENERAL);
   const emp = S.fase === 'empresa' && S.empresa;
-  pantalla(`<div class="portada"><div class="calle" aria-hidden="true">${CIUDAD}<div class="furgo-anda">${furgo(emp ? S.empresa.nombre : 'Grasa Brava', emp ? S.empresa.color : '#e0a040', emp ? S.etapa : 0)}</div></div>
-      <div class="rotulo grande">Hood Cleaners<span>The Night Shift</span></div>
-      <p class="nota">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p>
-      <p class="en-radio" id="enRadio">📻 Toca la pantalla para encender Radio Grasa FM</p></div>
-    <div id="novedad"></div>
-    ${enIphone() ? `<div class="cita"><b>📱 Instálalo en tu iPhone</b>Toca <strong style="color:var(--hivis)">Compartir</strong> (el cuadrito con la flecha) y luego <strong style="color:var(--hivis)">«Agregar a inicio»</strong>. Así se juega en pantalla completa, funciona sin internet y Safari no borra tu partida.</div>` : ''}
-    ${guardada ? `<button class="orden" id="continuar"><h3>Continuar${S.jugador ? ', ' + esc(S.jugador) : ''}</h3>
-      <span class="nota">Noche ${S.noche} · ${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + ETAPAS[S.etapa].n : 'Aprendiz en Grasa Brava'} · ${dinero(S.dinero)}</span></button>` : ''}
-    <div class="acciones"><button class="btn ${guardada ? '' : 'prim'}" id="nuevaP">Nueva partida</button><button class="btn" id="ajustesIni">Ajustes</button></div>`);
+  // La portada: letrero de neón, la ciudad de noche con la camioneta llegando y, abajo, tu partida y los botones.
+  pantalla(`<div class="inicio">
+    <div class="portada"><div class="calle" aria-hidden="true">${CIUDAD}<div class="furgo-anda">${furgo(emp ? S.empresa.nombre : 'Grasa Brava', emp ? S.empresa.color : '#e0a040', emp ? S.etapa : 0)}</div></div>
+      <div class="letrero">${LOGO}<div><div class="neon">Hood Cleaners</div><div class="neon-sub">The Night Shift</div></div></div>
+      <p class="lema">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p>
+      <p class="en-radio" id="enRadio"><i class="eq" aria-hidden="true"><b></b><b></b><b></b></i><span>Toca la pantalla para encender Radio Grasa FM</span></p></div>
+    <div class="menu-inicio">
+      <div id="novedad"></div>
+      ${enIphone() ? `<div class="cita"><b>📱 Instálalo en tu iPhone</b>Toca <strong style="color:var(--hivis)">Compartir</strong> (el cuadrito con la flecha) y luego <strong style="color:var(--hivis)">«Agregar a inicio»</strong>. Así se juega en pantalla completa, funciona sin internet y Safari no borra tu partida.</div>` : ''}
+      ${guardada ? `<button class="continuar" id="continuar"><span class="mini-furgo" aria-hidden="true">${furgo(emp ? S.empresa.nombre : 'Grasa Brava', emp ? S.empresa.color : '#e0a040', emp ? S.etapa : 0)}</span>
+        <span class="cont-txt"><small>Continuar</small><b>${esc(S.jugador || 'Tu partida')}</b><span>${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + ETAPAS[S.etapa].n : 'Aprendiz en Grasa Brava'}</span>
+          <span class="cont-datos"><i>🌙 Noche ${S.noche}</i><i>💵 ${dinero(S.dinero)}</i><i>⭐ ${S.rep}</i>${S.estrellas ? `<i>★ ${S.estrellas}</i>` : ''}</span></span>
+        <span class="cont-flecha" aria-hidden="true">▶</span></button>` : ''}
+      <div class="botones-inicio"><button class="btn ${guardada ? '' : 'prim'} grande" id="nuevaP">${guardada ? 'Nueva partida' : '▶ Empezar a jugar'}</button><button class="btn grande" id="ajustesIni">⚙ Ajustes</button></div>
+      <p class="pie">${window.HC_VERSION ? `Versión ${window.HC_VERSION} · ` : ''}Hecho con grasa y cariño</p>
+    </div></div>`);
   const c = $('#continuar'); if (c) c.onclick = () => { audio(); if (S.jugador) pantallaCamioneta(); else pantallaNombre(false); };
   $('#nuevaP').onclick = () => { audio(); pantallaNombre(true); };
   $('#ajustesIni').onclick = () => pantallaAjustes(false, true);
   pintarNovedad(); buscarNovedad();
   P.addEventListener('pointerdown', () => { audio(); if (!M && $('#enRadio')) radioEncender(true); }, { once: true });
-  if (RADIO.on && RADIO.cancion) $('#enRadio').textContent = `📻 ♪ ${RADIO.cancion.t} — ${RADIO.cancion.de}`;
+  if (RADIO.on && RADIO.cancion) $('#enRadio span').textContent = `♪ ${RADIO.cancion.t} — ${RADIO.cancion.de}`;
+  $('#enRadio').classList.toggle('suena', !!RADIO.on);
 }
+const LOGO = `<svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect x="27" y="4" width="10" height="12" rx="2" fill="#9aa6b0"/><path d="M14 16h36l10 22H4z" fill="#d3dae0" stroke="#0b1117" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10 30h44" stroke="#e0a040" stroke-width="4" stroke-linecap="round"/><path d="M32 42c5 7 7 10 7 13a7 7 0 0 1-14 0c0-3 2-6 7-13z" fill="#ff8a1f" stroke="#0b1117" stroke-width="2.5"/></svg>`;
 const CIUDAD = `<svg class="ciudad" viewBox="0 0 400 120" preserveAspectRatio="xMidYMax slice"><g fill="#fff">${Array.from({ length: 22 }, (_, i) => `<circle class="estrella" cx="${(i * 37 + 11) % 400}" cy="${(i * 23) % 50 + 6}" r="${i % 3 ? 1 : 1.6}" style="animation-delay:${(i % 7) * .4}s"/>`).join('')}</g>
   <circle cx="340" cy="26" r="13" fill="#f4ecd0"/><circle cx="346" cy="22" r="12" fill="#131d26"/>
   <path d="M0 120V70h30V52h26v18h18V40h34v30h14V60h30v60zM166 120V48h40v20h16V30h30v38h22V56h28v64zM302 120V62h24V44h36v26h38v50z" fill="#1c2a35"/>
