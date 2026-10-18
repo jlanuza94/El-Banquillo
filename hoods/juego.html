@@ -56,7 +56,18 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .zonas button { pointer-events: auto; background: var(--panel); border: 1px solid var(--linea); border-radius: 6px; padding: 5px 8px; text-align: left; display: grid; min-width: 0; }
 .zonas button[aria-pressed="true"] { border-color: var(--hivis); }
 .zonas b { font-family: var(--f-cond); font-size: 14px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.zonas span { font-family: var(--f-mono); font-size: 12px; color: var(--tenue); font-variant-numeric: tabular-nums; }
+.zonas span { font-family: var(--f-mono); font-size: 12px; color: var(--tenue); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; min-width: 0; white-space: nowrap; }
+.zonas em { font-style: normal; flex: none; }
+.zonas em small { font-size: inherit; }
+.zonas .con-q em small { display: none; }   /* con etiqueta, el número solo: así cabe el nombre del equipo */
+.zonas .con-q span { font-size: 11px; gap: 3px; }
+.zonas .con-q i { font-size: 10px; padding: 0 4px; }
+.zonas button { padding-left: 6px; padding-right: 6px; }
+/* Quién trabaja la zona: una etiqueta corta de color en lugar del nombre completo del equipo. */
+.zonas i { font-style: normal; font-family: var(--f-cond); font-weight: 700; font-size: 11px; letter-spacing: .03em; padding: 0 5px; border-radius: 4px; background: var(--zq, #3a4652); color: #10161c; overflow: hidden; text-overflow: ellipsis; min-width: 0; line-height: 1.45; }
+.zonas i:empty { display: none; }
+.zonas i.rev { background: var(--grasa); }
+.zonas i.ok { background: none; color: var(--ok); padding: 0; }
 .zonas .listo span { color: var(--ok); }
 .zonas button:disabled { opacity: .4; }
 .botones-hud { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -71,6 +82,7 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .herr-btn small { font-family: var(--f-cond); font-weight: 700; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
 .info { display: grid; gap: 4px; justify-items: start; min-width: 0; }
 .ayuda { font-size: 13px; color: var(--acero); text-shadow: 0 1px 2px #000; min-height: 1.4em; }
+.ayuda:not(:empty) { background: rgba(10,16,22,.62); padding: 2px 8px; border-radius: 6px; }
 .pasos { display: flex; flex-wrap: wrap; gap: 4px; }
 /* Mientras mueves la vista, el HUD se aparta para ver la cocina. */
 .hud-arriba, .hud-abajo, #herrBtn { transition: opacity .2s; }
@@ -384,7 +396,8 @@ a.btn { display: inline-block; text-decoration: none; }
   .pasos span { font-size: 10px; padding: 1px 5px; }
   .duelo { max-width: 55vw; }
   .chat { position: fixed; right: var(--lado-d); top: 58px; width: min(36vw, 340px); justify-items: end; }
-  .chat .burbuja:nth-child(n+3) { display: none; }
+  .chat { max-height: calc(100vh - 58px - 130px); overflow: hidden; align-content: start; }
+  .chat .burbuja:nth-child(n+2) { display: none; }
   .burbuja { font-size: 12.5px; padding: 5px 8px; grid-template-columns: 22px 1fr; gap: 6px; max-width: 100%; }
   .burbuja .cara { width: 22px; height: 22px; font-size: 11px; }
   .burbuja b { font-size: 11px; }
@@ -400,7 +413,8 @@ a.btn { display: inline-block; text-decoration: none; }
   .herr-btn { width: 56px; height: 56px; border-width: 2px; }
   .herr-btn svg { width: 24px; height: 24px; }
   .herr-btn small { font-size: 9.5px; }
-  .zonas button { padding: 3px 8px; grid-auto-flow: column; justify-content: space-between; align-items: center; gap: 8px; }
+  .zonas { grid-template-columns: repeat(var(--nz, 4), minmax(0, 1fr)) !important; gap: 4px; }
+  .zonas button { padding: 3px 6px; }
   .zonas b { font-size: 12.5px; }
   .zonas span { font-size: 11px; }
   .marca { font-size: 12.5px; padding: 5px 9px; }
@@ -3099,14 +3113,19 @@ function pintarHud(todo) {
   $('#reloj').textContent = hora(clamp(M.t / M.dur, 0, 1) * 480);
   $('#tbar').style.width = `${clamp(1 - M.t / M.dur, 0, 1) * 100}%`;
   if (todo) {
-    const zs = $('#zonas'); zs.style.gridTemplateColumns = `repeat(${Math.min(Z.length, 4)}, minmax(0, 1fr))`;
-    zs.innerHTML = Z.map((z, i) => `<button data-z="${i}"><b>${z.n}</b><span></span></button>`).join(''); pintarHerrBtn();
+    const zs = $('#zonas'); zs.style.gridTemplateColumns = `repeat(${Math.min(Z.length, 4)}, minmax(0, 1fr))`; zs.style.setProperty('--nz', Z.length);
+    zs.innerHTML = Z.map((z, i) => `<button data-z="${i}"><b>${z.n}</b><span><em></em><i></i></span></button>`).join(''); pintarHerrBtn();
   }
   Z.forEach((z, i) => {
     const b = $('#zonas').children[i], m = micras(z), ok = m <= LIMITE;
     if (z.gotas) { const f = clamp(1 - pctZona(z) * 1.25, 0, 1); for (const g of z.gotas) { g.scale.y = Math.max(.01, f); g.position.y = z.labio.y - g.userData.largo * f / 2; g.visible = f > .02; } }
     b.setAttribute('aria-pressed', i === M.zona); b.classList.toggle('listo', ok);
-    b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}${z.revisar ? L(' · ¡revisar!', ' · check it!') : z.crew && !z.entregada ? ' · ' + z.crew.n.replace('Tu cuadrilla', 'tu cuadrilla').replace('Your crew', 'your crew') : z.rev ? L(' · revisada', ' · checked') : ''}`;
+    b.querySelector('em').innerHTML = `${m.toLocaleString('es-MX')}<small> µm</small>`;
+    const q = b.querySelector('i'), cr = z.crew && !z.entregada ? z.crew : null;
+    q.textContent = z.revisar ? L('¡revisar!', 'check!') : cr ? (cr.k ? cr.n.replace(/^(Equipo de |Las |Los |El |La |The )/, '').replace(/'s team$/, '').split(' ')[0].replace(/^./, c => c.toUpperCase()) : L('Tú', 'You')) : ok ? '✓' : z.rev ? L('revisada', 'checked') : '';
+    q.className = z.revisar ? 'rev' : cr ? '' : ok ? 'ok' : '';
+    q.style.setProperty('--zq', cr ? ['#ffb15c', '#7fd3e6', '#c6a0ff', '#8fdc9c'][cr.k % 4] : '');
+    b.title = cr ? cr.n : ''; b.classList.toggle('con-q', !!q.textContent && q.className !== 'ok');
     b.classList.toggle('revisar', !!z.revisar);
     if (ok && !M.listoAvisado.has(i)) {
       M.listoAvisado.add(i); sDing(); vibrar(30);
