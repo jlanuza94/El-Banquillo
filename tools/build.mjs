@@ -61,7 +61,20 @@ async function buildApp() {
   writeFileSync(join(DIST, 'artifact.html'), head + '\n\n' + body + '\n');
   // Hood Cleaners: juego aparte en una sola página (hoods/juego.html es el fragmento para claude.ai).
   mkdirSync(join(DIST, 'hoods'), { recursive: true });
-  writeFileSync(join(DIST, 'hoods', 'index.html'), '<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="theme-color" content="#131d26">\n</head>\n<body>\n' + read('hoods/juego.html') + '</body>\n</html>\n');
+  // En la web es instalable: en iPhone, Compartir → «Agregar a inicio» lo abre a pantalla completa y sin conexión.
+  const hc = read('hoods/juego.html'), hv = createHash('sha256').update(hc).digest('hex').slice(0, 10);
+  for (const f of readdirSync(join(ROOT, 'hoods', 'web'))) cpSync(join(ROOT, 'hoods', 'web', f), join(DIST, 'hoods', f));
+  writeFileSync(join(DIST, 'hoods', 'manifest.webmanifest'), JSON.stringify({
+    name: 'Hood Cleaners: The Night Shift', short_name: 'Hood Cleaners', lang: 'es', start_url: './', scope: './', display: 'fullscreen',
+    background_color: '#131d26', theme_color: '#131d26',
+    icons: [192, 512].map(n => ({ src: `icono-${n}.png`, sizes: `${n}x${n}`, type: 'image/png', purpose: 'any' })),
+  }, null, 2));
+  writeFileSync(join(DIST, 'hoods', 'sw.js'), read('hoods/sw.js').replace('__HV__', hv));
+  const hhead = ['<meta charset="utf-8">', '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">', '<meta name="theme-color" content="#131d26">',
+    '<meta name="apple-mobile-web-app-capable" content="yes">', '<meta name="mobile-web-app-capable" content="yes">', '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">',
+    '<meta name="apple-mobile-web-app-title" content="Hood Cleaners">', '<link rel="apple-touch-icon" href="icono-180.png">', '<link rel="icon" href="icono-192.png">', '<link rel="manifest" href="manifest.webmanifest">'].join('\n');
+  const sw = `<script>if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>`;
+  writeFileSync(join(DIST, 'hoods', 'index.html'), `<!doctype html>\n<html lang="es">\n<head>\n${hhead}\n</head>\n<body>\n${hc}${sw}\n</body>\n</html>\n`);
 
   const kb = f => Math.round(readFileSync(join(DIST, f)).length / 1024);
   console.log(`dist/ versión ${v}: app.js ${kb('app.js')} KB, worker.js ${kb('worker.js')} KB, app.css ${kb('app.css')} KB`);

@@ -28,7 +28,7 @@
   color-scheme: dark;
 }
 html, body { height: 100%; overflow: hidden; }
-body { background: var(--noche); color: var(--acero); font-family: var(--f-cuerpo); font-size: 15px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+body { background: var(--noche); color: var(--acero); font-family: var(--f-cuerpo); font-size: 15px; line-height: 1.4; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-text-size-adjust: 100%; }
 [hidden] { display: none !important; }
 input { font: inherit; -webkit-user-select: text; user-select: text; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -3660,6 +3660,7 @@ function pantallaInicio() {
       <p class="nota">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p>
       <p class="en-radio" id="enRadio">📻 Toca la pantalla para encender Radio Grasa FM</p></div>
     <div id="novedad"></div>
+    ${enIphone() ? `<div class="cita"><b>📱 Instálalo en tu iPhone</b>Toca <strong style="color:var(--hivis)">Compartir</strong> (el cuadrito con la flecha) y luego <strong style="color:var(--hivis)">«Agregar a inicio»</strong>. Así se juega en pantalla completa, funciona sin internet y Safari no borra tu partida.</div>` : ''}
     ${guardada ? `<button class="orden" id="continuar"><h3>Continuar${S.jugador ? ', ' + esc(S.jugador) : ''}</h3>
       <span class="nota">Noche ${S.noche} · ${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + ETAPAS[S.etapa].n : 'Aprendiz en Grasa Brava'} · ${dinero(S.dinero)}</span></button>` : ''}
     <div class="acciones"><button class="btn ${guardada ? '' : 'prim'}" id="nuevaP">Nueva partida</button><button class="btn" id="ajustesIni">Ajustes</button></div>`);
@@ -3675,6 +3676,16 @@ const CIUDAD = `<svg class="ciudad" viewBox="0 0 400 120" preserveAspectRatio="x
   <path d="M0 120V70h30V52h26v18h18V40h34v30h14V60h30v60zM166 120V48h40v20h16V30h30v38h22V56h28v64zM302 120V62h24V44h36v26h38v50z" fill="#1c2a35"/>
   <g fill="#ffd27a" opacity=".75"><rect x="40" y="58" width="5" height="6"/><rect x="86" y="50" width="5" height="6"/><rect x="96" y="64" width="5" height="6"/><rect x="178" y="58" width="5" height="6"/><rect x="232" y="40" width="5" height="6"/><rect x="242" y="54" width="5" height="6"/><rect x="314" y="72" width="5" height="6"/><rect x="338" y="54" width="5" height="6"/></g>
   <rect y="112" width="400" height="8" fill="#2b3238"/><g fill="#ffd23f">${Array.from({ length: 10 }, (_, i) => `<rect x="${i * 42 + 6}" y="115" width="20" height="2"/>`).join('')}</g></svg>`;
+// iPhone en Safari, todavía sin instalar en la pantalla de inicio (dentro de claude.ai no se puede instalar).
+function enIphone() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let arriba = true; try { arriba = window.top === window; } catch (e) { arriba = false; }
+  return ios && arriba && !navigator.standalone && !matchMedia('(display-mode: standalone)').matches;
+}
+// En iPhone, pellizcar hace zoom a toda la página aunque el juego ya use los gestos: se bloquea.
+document.addEventListener('gesturestart', e => e.preventDefault());
+// Que el navegador no borre la partida si pasa tiempo sin jugar.
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* no importa */ }
 // En el APK: avisa si en GitHub hay una versión más nueva para instalar encima (la partida se queda).
 const APK_URL = 'https://github.com/jlanuza94/El-Banquillo/releases/download/hood-cleaners-latest/Hood-Cleaners.apk';
 let novedad = null;
