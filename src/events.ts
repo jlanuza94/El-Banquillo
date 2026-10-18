@@ -172,8 +172,8 @@ document.addEventListener('click',e=>{
   case'pique':if(S.pique){S.pique.resp=d.v;toast(d.v==='r'?'Le respondes en la prensa. Ahora toca ganar.':'Prefieres no entrar al trapo.');}break;
   case'sp-prep':S.spPrep={opp:+d.id};toast('El equipo prepara la defensa a balón parado contra este rival.');break;
   case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
-  case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v);const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
-   toast(`Sistema cargado: ${PRESETS[d.v].n}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
+  case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v,d.k==='f');const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
+   toast(`Estilo cargado: ${PRESETS[d.v].n}${d.k==='f'?` con su formación (${t.formation})`:` con tu formación ${t.formation}: tu once no cambia`}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
   case'st-g':S.stG=d.v;break;
   case'n2d':S.n2d=!S.n2d;break;
   case'kit-pat':{const e=setKit({pat:d.v},S.kitEd==='a');if(e)toast(e);break;}
@@ -278,7 +278,8 @@ document.addEventListener('click',e=>{
   case'm-tab':S.mtab=d.v;break;
   case'm-side':S.mside=d.v;break;
   case'm-subout':m.subOut=d.id;m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
-  case'm-subs':m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
+  case'm-go':S.mw='par';if(d.v==='tac'||d.v==='jug')S.mtab=d.v;else S.mtab='com';if(m){m.paused=true;clearInterval(RT.timer);RT.timer=null;}render();setTimeout(()=>document.querySelector(d.v==='shout'?'.shouts':'.mtab')?.scrollIntoView({block:'center',behavior:'smooth'}),40);return;
+  case'm-subs':S.mw='par';setTimeout(()=>document.querySelector('.subs')?.scrollIntoView({block:'center',behavior:'smooth'}),40);m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-subclose':m.subOpen=false;break;
   case'm-dosub':{const o=document.getElementById('subOut').value,n=document.getElementById('subIn').value;if(o&&n&&doSub(m,m.us,o,n)){m.alert='';m.subOpen=false;toast('Cambio hecho.');}break;}
   case'm-sim':simToEnd();return;

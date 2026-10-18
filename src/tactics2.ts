@@ -49,9 +49,11 @@ export function presetFit(k){
  return{avg,weak:[...new Set(weak)]};
 }
 /** Carga un sistema famoso en tu equipo (formación, mentalidad, instrucciones, roles y cometidos). */
-export function applyPreset(k){
+/** Carga un estilo. Por defecto respeta tu formación y tu once: solo cambia mentalidad, instrucciones, roles y cometidos;
+ * con withF también pone la formación del estilo. */
+export function applyPreset(k,withF){
  const P=PRESETS[k];if(!P)return;const t=T(S.user);t.style=k;
- if(t.formation!==P.f)setFormation(P.f);
+ if(withF&&t.formation!==P.f)setFormation(P.f);
  t.ment=P.ment;t.tac=Object.assign({},TAC0,P.tac);
  const sl=slotsOf(t.formation);t.roles=sl.map(s=>{const r=P.roles[s];return r&&roleList(s).some(x=>x[0]===r)?r:roleList(s)[0][0];});
  userPos(sl);t.duty=sl.map(s=>P.du[s]||DEF_DUTY[s]||'apo');t.pi=sl.map(()=>[]);

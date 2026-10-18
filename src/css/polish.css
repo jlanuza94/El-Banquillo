@@ -1475,7 +1475,7 @@ html[data-cb="1"] .vs .vtile.su1{background:linear-gradient(180deg,#3fa0e0,#0072
 @media (max-width:700px){.ftgrid{grid-template-columns:1fr}}
 .dpib{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}.dpir{display:grid;grid-template-columns:70px 1fr;align-items:center;gap:8px;margin-top:5px;font-size:13px}.dpis{display:flex}.dpis button{flex:1}.dpir select{min-width:0;width:100%}
 /* Estado en la plantilla */
-.plf{margin:0 0 8px}.stc{white-space:nowrap}.sttag{display:inline-block;font-size:11px;font-weight:800;padding:1px 6px;border-radius:4px;margin-right:4px;color:#fff}
+.plf{margin:0 0 8px}td.stc{white-space:nowrap}.sttag{display:inline-block;font-size:11px;font-weight:800;padding:1px 6px;border-radius:4px;margin-right:4px;color:#fff}
 .sttag.stk{background:#c9a213}.sttag.stt{background:#2f9e48}.sttag.str{background:#4a7fd4}.sttag.stj{background:#9b5bd4}.sttag.sts{background:#7d847b}
 .stsel{font-size:12px;padding:1px 2px;max-width:110px}.stsel.on.list{border-color:var(--loss);color:var(--loss)}.stsel.on.loan{border-color:#e09a24}.stsel.on.no{border-color:var(--win);color:var(--win)}
 .shouts{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:6px 0}.shouts .eyebrow{margin-right:4px}
@@ -1521,3 +1521,20 @@ html[data-cb="1"] .vs .vtile.su1{background:linear-gradient(180deg,#3fa0e0,#0072
 .ctproj b.bad{color:var(--loss)}.ctmiss{margin:6px 0 0}
 .modrep{margin-top:8px}.modrep ul{margin:2px 0 8px;padding-left:18px}.modrep li{margin:2px 0}
 .tcost.alt{gap:2px 14px;color:var(--muted)}.tcost.alt b{color:var(--ink);font-weight:600}
+.ngwait{display:flex;flex-direction:column;gap:6px;padding:12px 14px;margin:6px 0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.ngwait>b{font:800 1.6em var(--f-num,inherit)}
+.mctlbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding:8px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+.mctlbar.hot{border-color:var(--gold,#e0a800);box-shadow:0 0 0 2px rgba(224,168,0,.35);animation:mctlp 1.6s ease-in-out 3}
+.mctlbar .mctlh{flex-basis:100%;font-weight:700;color:var(--gold,#b07a00)}
+@keyframes mctlp{50%{box-shadow:0 0 0 5px rgba(224,168,0,.15)}}
+/* estilos de juego: tarjetas más limpias */
+.stgrid .stc{white-space:normal;gap:6px;padding:12px}
+.stgrid .stn{font:900 20px/1.05 var(--f-display);text-transform:uppercase;letter-spacing:.01em}
+.stmeta{display:flex;gap:6px;flex-wrap:wrap}
+.stchip{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(127,127,127,.14)}
+.stchip.f{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.stgrid .std{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;flex:none;min-height:3.6em;font-size:12.5px;line-height:1.2}
+.stgrid .stt{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.stk2{display:flex;flex-direction:column;padding:4px 6px;border-radius:6px;background:rgba(127,127,127,.08)}
+.stk2 small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.stk2 b{font-size:12.5px}
+.stbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}.stbtns .btn{margin-top:4px}

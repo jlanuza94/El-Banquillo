@@ -392,7 +392,7 @@ const app = document.getElementById('app')!;
     const cp = phaseMods({ per: 'cpr' }, {}, 5, 'bal'), ct = phaseMods({ rec: 'cont' }, { lin: 'alt' }, 7, 'bal');
     ok(cp.opp < 1 && cp.drain > 1 && ct.own > 1.04, 'contrapresión y contraataque contra línea alta');
     const t = T(S.user), f0 = t.formation, tac0 = Object.assign({}, t.tac), m0 = t.ment, r0 = (t.roles || []).slice();
-    applyPreset('cate'); ok(t.formation === '5-3-2' && t.tac.per === 'rep' && t.ment === 'def', 'cargar el catenaccio');
+    applyPreset('cate', true); ok(t.formation === '5-3-2' && t.tac.per === 'rep' && t.ment === 'def', 'cargar el catenaccio');
     S.view = 'tacticas'; S.vt = { tac: 'est' }; render(); ok(app.textContent.includes('Gegenpress'), 'sistemas famosos en tácticas');
     const opp = S.teams.find(x => x.id !== S.user).id; ok(Array.isArray(rivalAdvice(opp)), 'consejos contra el rival');
     S.vt = { tac: 'rival' }; render();
@@ -677,6 +677,12 @@ const app = document.getElementById('app')!;
     ok(M.dpiMods(m, 'h')[1] < 1 && M.dpiMods(m, 'h')[2] > 1 && M.dpiCards(m, 'h') > 1 && M.dpiMark(m, 'a', ol[9]) < 1 && M.dpiMark(m, 'a', ol[8]) === 1, 'órdenes individuales sin balón: presión, entradas y marcaje cuentan'); t.dpi = d0;
     S.view = 'plantilla'; S.plTab = 'jug'; S.plF = 'all'; render(); ok(app.querySelectorAll('.plf button').length >= 3 && app.querySelectorAll('td.stc select[data-ts]').length >= 10, 'plantilla: filtros rápidos y estado de cada jugador'); S.plF = 'jo'; render(); S.plF = 'all'; S.view = 'inicio';
   }
+  { // estilo sin cambiar la formación ni el once; oferta enviada sin botón de enviar; barra de control del partido
+    const T2 = await import('../src/tactics2'), { T: T_ } = await import('../src/state'), t = T_(S.user), f0 = t.formation, lu0 = t.lineup.join();
+    const k = Object.keys(T2.PRESETS).find(x => T2.PRESETS[x].f !== f0); T2.applyPreset(k); ok(t.formation === f0 && t.lineup.join() === lu0 && t.style === k, 'usar un estilo respeta tu formación y tu once');
+    const { negState } = await import('../src/market'), p = Object.values(S.players).find(x => x.team !== null && x.team !== S.user); const n = negState(p.id); n.wait = { amt: 1, due: S.day + 1 };
+    S.modal = { type: 'neg', id: p.id }; render(); ok(!app.querySelector('.modal [data-a=bid]') && !!app.querySelector('.ngwait'), 'oferta enviada: desaparece «Enviar oferta» y se ve la espera'); n.wait = null; S.modal = null; render();
+  }
   { // ronda 12: avisos, decisiones, acciones en bloque, carga, coste/beneficio, 3 claves, IA que se adapta, plantillas a 3 años y validador de mods
     const { squad: sq_, T: T_, PL: PL_ } = await import('../src/state'), Z = await import('../src/r12'), Mo = await import('../src/mods'), me = sq_(S.user).filter(p => !p.loan);
     const gk = me.filter(p => p.pos === 'POR').sort((a, b) => b.ovr - a.ovr)[0], keep = me.filter(p => p.pos === 'POR' && p !== gk);
@@ -696,7 +702,7 @@ const app = document.getElementById('app')!;
     let sub = null; Z.aiAdapt(m, 'a', () => {}, false, (mm, s, o, i) => { sub = [o, i]; }, () => sq_(opp.id).filter(p => !ol.includes(p.id)));
     ok(m.aia.ht === 1 && (sub === null || (PL_(sub[1]).pos === 'DEL' || /DEL/.test(PL_(sub[1]).pos))), 'el rival revisa el partido en el descanso y cambia a por el empate');
     const old = S.teams.find(t => t.id !== S.user && !t.parent); const TG = { POR: 3, DEF: 8, MED: 8, DEL: 5 }; const grp = p => ({ POR: 'POR', DFC: 'DEF', LD: 'DEF', LI: 'DEF', MCD: 'MED', MC: 'MED', MCO: 'MED', MD: 'MED', MI: 'MED', ED: 'DEL', EI: 'DEL', DC: 'DEL' }[p.sp] || p.pos);
-    const ages = sq_(old.id).map(p => [p, p.age]); sq_(old.id).filter(p => grp(p) === 'DEL').forEach(p => p.age = 33); ok(Z.successionNeed(old.id, TG, grp) === 'DEL', 'la IA detecta una línea sin relevo'); { const Ec = await import('../src/economy'), c0 = old.cash; old.cash = 999; Ec.aiSummerPlan(old, Object.values(S.players)); const pl = old.plan && PL_(old.plan.p); ok(!!pl && pl.age <= 24 && pl.team === old.id, 'la IA ficha a un joven de relevo para esa línea: ' + (pl ? pl.name + ' (' + pl.age + ')' : 'ninguno')); old.cash = c0; } ages.forEach(([p, a]) => p.age = a);
+    const ages = sq_(old.id).map(p => [p, p.age]); sq_(old.id).filter(p => grp(p) === 'DEL').forEach(p => p.age = 33); ok(Z.successionNeed(old.id, TG, grp) === 'DEL', 'la IA detecta una línea sin relevo'); { const Ec = await import('../src/economy'), c0 = old.cash; old.cash = 999; let pl = null; for (let i = 0; i < 6 && !pl; i++) { const r = Ec.aiBuy(old, 'DEL', Object.values(S.players), true); pl = r && r.p; } ok(!!pl && pl.age <= 24 && pl.team === old.id, 'la IA ficha a un joven de relevo para esa línea: ' + (pl ? pl.name + ' (' + pl.age + ')' : 'ninguno')); old.cash = c0; } ages.forEach(([p, a]) => p.age = a);
     const V = Mo.validateData('id;nombre;posicion;edad\n' + me[0].id + ';Ok Nombre;DC;25\nNOEXISTE;X;ZZ;99');
     ok(V.errors.length >= 2 && V.errors.some(e => e.l === 3 && /posición/.test(e.m)) && V.warns.some(w => /edad/.test(w.m)), 'validador de mods: errores con su línea');
     ok(Mo.validateData('{"type":"el-banquillo-mod",').errors.length === 1, 'validador de mods: JSON roto');
@@ -921,7 +927,7 @@ const app = document.getElementById('app')!;
   { // estilos de juego, cansancio a decisión del técnico y ojeador de chollos
     const T2 = await import('../src/tactics2'); ok(Object.keys(T2.PRESETS).length >= 18, `muchos estilos (${Object.keys(T2.PRESETS).length})`);
     const t = T(S.user), keep = { f: t.formation, lu: t.lineup.slice(), tac: t.tac, ment: t.ment, roles: t.roles, duty: t.duty, pi: t.pi, style: t.style };
-    for (const k of Object.keys(T2.PRESETS)) { T2.applyPreset(k); const f = T2.presetFit(k); if (!(t.formation === T2.PRESETS[k].f && f.avg > 0)) ok(false, 'estilo ' + k); }
+    for (const k of Object.keys(T2.PRESETS)) { T2.applyPreset(k, true); const f = T2.presetFit(k); if (!(t.formation === T2.PRESETS[k].f && f.avg > 0)) ok(false, 'estilo ' + k); }
     ok(true, 'todos los estilos se cargan y se puntúan');
     S.view = 'tacticas'; S.vt = { tac: 'est' }; render(); ok(app.querySelectorAll('.stc').length >= 18 && !!app.querySelector('.stc.on'), 'pestaña Estilos con el estilo en uso');
     Object.assign(t, { formation: keep.f, lineup: keep.lu, tac: keep.tac, ment: keep.ment, roles: keep.roles, duty: keep.duty, pi: keep.pi, style: keep.style });
