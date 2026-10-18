@@ -53,7 +53,7 @@ export function yclWeekly(){
 }
 /** Panel en la cantera. */
 export function yclHTML(esc){
- const Y=S.ycl;if(!Y||Y.none||Y.s!==S.seasonN)return `<section class="panel"><div class="empty">${Y&&Y.none?'En tu continente no hay competición juvenil continental.':'La competición continental juvenil empieza tras las primeras jornadas. Juegan las canteras de los clubes que están en la Liga de Campeones (o la Copa Libertad) y el campeón de la liga sub-19 de tu país.'}</div></section>`;
+ const Y=S.ycl;if(!Y||Y.none||Y.s!==S.seasonN)return `<section class="panel"><div class="empty">${Y&&Y.none?'En tu continente no hay competición juvenil continental.':'La competición continental juvenil empieza tras las primeras jornadas. Juegan las canteras de los clubes que están en la Liga de Campeones (o la Copa Libertadores) y el campeón de la liga sub-19 de tu país.'}</div></section>`;
  const mine=Y.groups.findIndex(g=>g.includes(S.user));
  const tbH=k=>`<div class="tbl"><table><thead><tr><th>Grupo ${'ABCDEFGH'[k]}</th><th class="r">PJ</th><th class="r">DG</th><th class="r">Pts</th></tr></thead><tbody>${yclTable(k).map(r=>`<tr class="${r.id===S.user?'me':''}"><td>${esc(yclName(r.id))}</td><td class="n">${r.pj}</td><td class="n">${r.gf-r.gc>0?'+':''}${r.gf-r.gc}</td><td class="pts">${r.pts}</td></tr>`).join('')}</tbody></table></div>`;
  return `<section class="panel"><div class="panel-h"><h2>🏆 ${esc(Y.n)}</h2><span class="eyebrow">${Y.champ!=null?'Campeón: '+esc(yclName(Y.champ)):Y.gr<6?`Grupos · jornada ${Y.gr} de 6`:'Eliminatorias'}</span></div>

@@ -1,5 +1,6 @@
 /* El Banquillo · market.js — Mercado: ventanas, fichajes entre clubes, ofertas, negociación y ventas. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {wageProjHTML} from './r12';
 import {fansSell} from './fans';
 import {tlAdd} from './timeline';
 import {noteSigning} from './pressplus';
@@ -123,15 +124,22 @@ export const agentFee=(p,fee)=>r3(Math.max(.002,(fee>0?fee:p.value*.5)*(p.agc||.
 export function termsForm(p,mode){
  const D=termsDemand(p,mode),er=expRole(p),yOpts=[];
  if(mode==='renew')for(let n=p.contract+1;n<=Math.min(5,maxExtra(p)+1);n++)yOpts.push(n);else for(let n=1;n<=Math.min(5,maxExtra(p)+1);n++)yOpts.push(n);
- const wantsFree=p.per==='amb'||p.age<=22;
- return `<div class="kv"><span>Su agente</span><b>${esc(agentName(p))} · ${agentOf(p).n}</b><span>Sueldo que pide</span><b>${money(D)}/sem</b>${mode==='buy'?`<span>Comisión de su agente</span><b>${money(agentFee(p,negState(p.id).agreed||0))} (${Math.round((p.agc||.07)*100)}%)</b>`:''}<span>Rol que espera</span><b>${ROLES[er].n}</b><span>Cláusula</span><b>${wantsFree?'La quiere baja (menos de '+money(p.value*2)+')':'Le da igual'}</b><span>Carácter</span><b>${PERS[p.per].n}</b></div>
- ${yOpts.length?`<div class="filters" style="margin-top:14px"><label class="f"><span class="eyebrow">Sueldo (miles €/sem)</span><input type="number" id="tWage" min="0.5" step="0.5" value="${Math.round(D*2000)/2}"></label>
- <label class="f"><span class="eyebrow">Hasta</span><select id="tYears">${yOpts.map(n=>`<option value="${n}" ${n===yOpts[Math.min(yOpts.length-1,mode==='renew'?1:2)]?'selected':''}>Jun ${2025+S.seasonN+n}</option>`).join('')}</select></label>
- <label class="f"><span class="eyebrow">Rol</span><select id="tRole">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${k===er?'selected':''}>${v.n}</option>`).join('')}</select></label>
- <label class="f"><span class="eyebrow">Cláusula (M€)</span><input type="number" id="tClause" min="0.01" step="0.05" value="${r2(Math.max(.05,p.value*3)).toFixed(2)}"></label>
- <label class="f"><span class="eyebrow">Prima de fichaje (miles €)</span><input type="number" id="tBonus" min="0" step="1" value="0"></label></div>${bonusFields(p)}
- <p class="small muted" style="margin:6px 0 0">Prometer un rol mejor abarata el sueldo, pero si luego no juega lo que esperaba se enfadará. La prima se paga una vez y equivale a unas 40 semanas de sueldo extra. Una cláusula baja facilita que otro club se lo lleve pagándola.</p>`:'<div class="negmsg">Ya tiene el contrato más largo que está dispuesto a firmar.</div>'}`;
+ const wantsFree=p.per==='amb'||p.age<=22,w0=Math.round(D*2000)/2,y0=yOpts[Math.min(yOpts.length-1,mode==='renew'?1:2)],cl0=r2(Math.max(.05,p.value*3)),bud=mode==='buy'?S.budget-(negState(p.id).agreed||0):S.budget;
+ const step=(id,lbl,val,inp)=>`<div class="ctf"><span class="eyebrow">${lbl}</span><div class="ctstep"><button class="btn sm" data-a="tstep" data-k="${id}" data-v="-">−</button>${inp}<button class="btn sm" data-a="tstep" data-k="${id}" data-v="+">+</button></div></div>`;
+ return `<div class="ctgrid" data-dem="${D}" data-er="${er}">
+ <div class="ctf"><span class="eyebrow">Estado en la plantilla</span><select id="tRole">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${k===er?'selected':''}>${v.n}</option>`).join('')}</select></div>
+ ${yOpts.length?`${step('tWage','Sueldo (miles €/sem)',w0,`<input type="number" id="tWage" min="0.5" step="0.5" value="${w0}">`)}
+ <div class="ctf"><span class="eyebrow">Duración</span><div class="ctstep"><button class="btn sm" data-a="tstep" data-k="tYears" data-v="-">−</button><select id="tYears">${yOpts.map(n=>`<option value="${n}" ${n===y0?'selected':''}>${n} año${n>1?'s':''} · jun ${2025+S.seasonN+n}</option>`).join('')}</select><button class="btn sm" data-a="tstep" data-k="tYears" data-v="+">+</button></div></div>
+ ${step('tBonus','Prima de fichaje (miles €)',0,`<input type="number" id="tBonus" min="0" step="1" value="0">`)}
+ ${step('tClause','Cláusula de rescisión (M€)',cl0,`<input type="number" id="tClause" min="0.01" step="0.05" value="${cl0.toFixed(2)}">`)}
+ <div class="ctf"><span class="eyebrow">Salida si descendemos</span><label class="chk ctchk"><input type="checkbox" id="tRel" ${p.rel?'checked':''}> Activada</label></div></div>
+ <div class="ctbar"><span><span class="eyebrow">Presupuesto</span> <b>${money(bud)}</b></span><span><span class="eyebrow">Pide</span> <b>${money(D)}/sem</b></span><span><span class="eyebrow">Agente</span> <b>${esc(agentName(p))} · ${agentOf(p).n}</b>${mode==='buy'?` <small>(comisión ${money(agentFee(p,negState(p.id).agreed||0))})</small>`:''}</span><span class="ctmood"><span class="eyebrow">Ánimo</span><i class="ctm">${(v=>`<b id="tMood" class="${v>=70?'ok':v>=45?'mid':'low'}" style="width:${v}%"></b>`)(termsMood(D,w0,0,true))}</i></span></div>
+ <div id="tProj">${wageProjHTML(p,mode,w0,0,true,D)}</div>
+ <p class="small muted" style="margin:6px 0 0">Espera ser <b>${ROLES[er].n.toLowerCase()}</b>. Cláusula: ${wantsFree?'la quiere baja (menos de '+money(p.value*2)+')':'le da igual'}. Carácter: ${PERS[p.per].n.toLowerCase()}. Prometer un rol mejor abarata el sueldo, pero si no juega se enfadará. La prima se paga una vez.</p>
+ ${bonusFields(p).replace(/<label class="chk"[\s\S]*?<\/label>/,'')}`:'</div><div class="negmsg">Ya tiene el contrato más largo que está dispuesto a firmar.</div>'}`;
 }
+/** Ánimo del jugador con la oferta que estás preparando (0-100): sueldo frente a lo que pide, rol, años y prima. */
+export function termsMood(D,w,bonusK,roleOk){const r=(w/1000+(bonusK/1000)/40)/Math.max(.0005,D);return Math.max(3,Math.min(100,Math.round(55+(r-1)*140+(roleOk?8:-10))));}
 export function makeOffer(id){
  if(S.offers[id])return S.offers[id];const p=PL(id),my=LG(uLg()).rep;
  let teams=S.teams.filter(t=>t.id!==S.user&&Math.abs(t.rep-p.ovr)<8&&Math.abs(LG(t.lg).rep-my)<20);if(!teams.length)teams=S.teams.filter(t=>t.id!==S.user&&Math.abs(t.rep-p.ovr)<14);if(!teams.length)teams=S.teams.filter(t=>t.id!==S.user);

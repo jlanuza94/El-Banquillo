@@ -6,7 +6,10 @@ import {SPN} from '../data';
 import {PL,S,T,crest,crestStyle,lgName,seasonLabel} from '../state';
 import {faceSVG} from './pcard';
 import {contractLabel} from '../contracts';
-import {nf} from './common';
+import {keyAttrs,nf} from './common';
+import {AT_NAME,GRP} from '../data';
+import {grade,seen} from '../scouting';
+import {squad} from '../state';
 
 /** Tarjeta del jugador para el lateral de un mensaje: cara, dorsal, puesto, edad, valor, sueldo y contrato. */
 export function sideCard(p){if(!p)return '';const t=p.team!=null?T(p.team):null,s=p.st||{};
@@ -40,3 +43,13 @@ const CUP=`<svg class="cupsvg" viewBox="0 0 100 120" aria-hidden="true"><defs><l
 export function winnersHTML(tb,lgLabel){return `<section class="panel wboard"><div class="wbh">CAMPEONES · ${esc(lgLabel)}</div><div class="wbb"><div class="wbl">${tb.slice(0,6).map((r,i)=>`<div class="wbr ${i===0?'first':''} ${r.id===S.user?'me':''}"><span>${i+1}º</span>${crest(T(r.id),'sm')}<b>${esc(T(r.id).name)}</b><em>${r.pts}</em></div>`).join('')}</div>${CUP}</div></section>`;}
 /** Diploma de entrenador del año (si ganas la liga). */
 export function certHTML(lgLabel,season,name,club){return `<section class="cert"><div class="certin"><div class="certlg">${esc(lgLabel.toUpperCase())}</div><div class="certt">ENTRENADOR DEL AÑO</div><div class="certn">${esc((name||'Tú').toUpperCase())}</div><div class="certf"><span>${esc(season)}</span><i class="seal"></i><span class="sig">${esc(club)}</span></div></div></section>`;}
+
+/** Informe de ojeo como en el FMM: nota grande, puntos fuertes y débiles, y comparación con tu mejor jugador en su puesto. */
+export function scoutCard(sr){const p=PL(sr.pid);if(!p)return '';const sn=seen(p),gr=grade(p),ks=keyAttrs(p),v=k=>sn.exact?p.at[k]:(sn.at[k][0]+sn.at[k][1])/2;
+ const all=Object.keys(AT_NAME).filter(k=>p.at[k]!=null&&(k!=='por'||p.sp==='POR')).map(k=>[k,v(k)]).sort((a,b)=>b[1]-a[1]),pros=all.slice(0,3),cons=ks.map(k=>[k,v(k)]).sort((a,b)=>a[1]-b[1]).slice(0,2);
+ const g=GRP[p.sp]||p.pos,mine=squad(S.user).filter(x=>!x.loan&&(GRP[x.sp]||x.pos)===g).sort((a,b)=>b.ovr-a.ovr)[0],ovr=sn.exact?Math.round(p.ovr):`${Math.round(sn.ovr[0]*10)}–${Math.round(sn.ovr[1]*10)}`;
+ const cmp=mine?ks.map(k=>{const a=v(k),b=mine.at[k];return `<div class="scmp"><span>${esc(AT_NAME[k])}</span><b class="${a>b+.4?'up':a<b-.4?'dn':''}">${Math.round(a*10)}</b><i>vs</i><b>${Math.round(b*10)}</b></div>`;}).join(''):'';
+ return `<div class="scard"><div class="scg g${gr.g}">${gr.g}</div><div class="scb"><div class="sct"><b>${esc(p.name)}</b> · ${esc(SPN[p.sp]||p.sp)} · ${p.age} años${p.team!=null&&T(p.team)?' · '+esc(T(p.team).name):' · libre'}</div><p class="small" style="margin:2px 0 6px">${esc(gr.txt)}</p>
+ <div class="scpc"><div><div class="eyebrow">Puntos fuertes</div>${pros.map(([k,x])=>`<div class="scp up">▲ ${esc(AT_NAME[k])} <b>${Math.round(x*10)}</b></div>`).join('')}</div><div><div class="eyebrow">Puntos débiles</div>${cons.map(([k,x])=>`<div class="scp dn">▼ ${esc(AT_NAME[k])} <b>${Math.round(x*10)}</b></div>`).join('')}</div></div>
+ <div class="kv" style="margin-top:6px"><span>Media</span><b>${ovr}</b>${p.age<=23?`<span>Potencial</span><b>${sn.pot.map(x=>Math.round(x*10)).join('–')}</b>`:''}<span>Precio</span><b>${p.team==null?'Libre':money(p.value*1.2)}</b><span>Ojeador</span><b>${esc(sr.by||'')}</b></div>
+ ${mine?`<div class="eyebrow" style="margin-top:8px">Frente a ${esc(mine.name)} (tu mejor ${esc(g==='POR'?'portero':g==='DEF'?'defensa':g==='MED'?'medio':'delantero')})</div><div class="scmpw">${cmp}</div>`:''}</div></div>`;}

@@ -73,6 +73,10 @@ const natOf=v=>{v=String(v||'').trim().toLowerCase();if(v==='')return null;const
 const clubByName=n=>{n=String(n||'').trim().toLowerCase();return S.teams.find(t=>t.name.toLowerCase()===n);};
 /** Importa un mod (JSON) o un CSV de clubes o de jugadores. Devuelve un resumen. */
 export function importData(txt){
+ const V=validateData(txt),rep={errors:V.errors.slice(0,12),warns:V.warns.slice(0,8),nE:V.errors.length,nW:V.warns.length};
+ const r=importRaw(txt);return Object.assign(r,rep);
+}
+function importRaw(txt){
  txt=String(txt||'').replace(/^\uFEFF/,'').trim();if(!txt)return{ok:false,msg:'El archivo está vacío.'};
  let nc=0,np=0,nn=0,err=0;
  if(txt[0]==='{'){
@@ -99,4 +103,53 @@ export function importData(txt){
  }
  dirty();
  return{ok:true,msg:`Importado: ${nc} club${nc===1?'':'es'}, ${np} jugador${np===1?'':'es'}${nn?`, ${nn} nombre${nn===1?'':'s'} de ligas o países`:''}${err?` (${err} fila${err===1?'':'s'} sin aplicar)`:''}.`};
+}
+
+/* ---------- Validar ---------- */
+const ATR_N=()=>ATTRS.map(k=>AT_SH[k].toLowerCase());
+const lineOfPos=(txt,pos)=>txt.slice(0,pos).split('\n').length;
+/** Comprueba un mod (JSON) o un CSV sin aplicar nada. Devuelve los errores (filas que no se aplicarán) y avisos, con su línea. */
+export function validateData(txt){
+ txt=String(txt||'').replace(/^﻿/,'').trim();
+ const errors=[],warns=[],E=(l,m)=>errors.push({l,m}),W=(l,m)=>warns.push({l,m});
+ if(!txt){E(0,'El archivo está vacío.');return{kind:'?',rows:0,errors,warns};}
+ const badAttr=(v,k,l,who)=>{if(v==null||v==='')return;const n=+v;if(!isFinite(n))E(l,`${who}: «${k}» no es un número (${v}).`);else if(n<1||n>10)E(l,`${who}: «${k}» tiene que ir del 1 al 10 (pone ${v}).`);};
+ if(txt[0]==='{'){
+  let o;try{o=JSON.parse(txt);}catch(e){const m=/position (\d+)/.exec(e.message||'');E(m?lineOfPos(txt,+m[1]):0,'El JSON no es válido: '+String(e.message||'').replace(/^.*?:\s*/,'').slice(0,90));return{kind:'json',rows:0,errors,warns};}
+  if(o.type!=='el-banquillo-mod'){E(1,'Falta "type": "el-banquillo-mod": este archivo no es un mod de El Banquillo.');return{kind:'json',rows:0,errors,warns};}
+  if(o.v!=null&&o.v>1)W(1,`El mod es de una versión más nueva (v${o.v}); puede que algo no se aplique.`);
+  if(S&&o.seed!=null&&o.seed!==S.seed)W(1,`El mod se hizo para otro mundo (semilla ${o.seed}, la tuya es ${S.seed}): los clubes se buscarán por nombre y los jugadores por id.`);
+  const lines=txt.split('\n'),findLine=(needle)=>{const i=lines.findIndex(x=>x.includes(needle));return i<0?0:i+1;};
+  (o.clubs||[]).forEach((c,i)=>{const l=findLine(`"id": ${c.id},`)||findLine(`"name": ${JSON.stringify(c.name)}`),who=`Club ${c.name||'#'+i}`;
+   const t=(c.id!=null&&T(c.id)&&(o.seed==null||!S||o.seed===S.seed))?T(c.id):clubByName(c.name);
+   if(!t)E(l,`${who}: no existe en esta partida (ni por id ni por nombre).`);
+   if(clean(c.name).length<2)E(l,`${who}: el nombre es demasiado corto.`);
+   ['c1','c2'].forEach(k=>{if(c[k]&&!color(c[k]))W(l,`${who}: el color ${k} «${c[k]}» no es #rrggbb; se deja el actual.`);});});
+  (o.players||[]).forEach((x,i)=>{const l=findLine(`"id": ${JSON.stringify(x.id)}`),who=`Jugador ${x.name||x.id||'#'+i}`;
+   if(!PL(x.id))E(l,`${who}: no existe ningún jugador con id ${x.id} en esta partida.`);
+   if(clean(x.name).length<3)E(l,`${who}: el nombre es demasiado corto.`);
+   if(x.sp&&!SPN[x.sp])E(l,`${who}: la posición «${x.sp}» no existe (usa POR, DFC, LD, LI, MCD, MC, MD, MI, MCO, ED, EI, DC).`);
+   if(x.age!=null&&(+x.age<15||+x.age>45))W(l,`${who}: edad ${x.age} fuera de 15–45; se ajustará.`);
+   if(x.nat!=null&&!COUNTRIES[+x.nat])E(l,`${who}: la nacionalidad ${x.nat} no existe.`);
+   Object.entries(x.at||{}).forEach(([k,v])=>{if(!ATTRS.includes(k))W(l,`${who}: el atributo «${k}» no existe y se ignora.`);else badAttr(v,AT_SH[k],l,who);});});
+  return{kind:'json',rows:(o.clubs||[]).length+(o.players||[]).length,errors,warns};
+ }
+ const rows=parseCSV(txt);if(!rows.length){E(1,'El CSV no tiene filas.');return{kind:'csv',rows:0,errors,warns};}
+ const head=Object.keys(rows[0]),isPlayers='posicion' in rows[0]||'nombre' in rows[0]&&('edad' in rows[0]||'club' in rows[0]);
+ const known=isPlayers?['id','club_id','club','nombre','nacionalidad','posicion','edad','pie','potencial',...ATR_N()]:['id','pais','division','nombre','nombre_actual','abreviatura','color1','color2','escudo'];
+ head.filter(h=>!known.includes(h)).forEach(h=>W(1,`La columna «${h}» no se reconoce y se ignora.`));
+ if(!head.includes('nombre'))E(1,'Falta la columna «nombre».');
+ rows.forEach((r,i)=>{const l=i+2,who=`Fila ${l}`;
+  if(!isPlayers){if(!T(+r.id)&&!clubByName(r.nombre_actual||r.nombre))E(l,`${who}: el club «${r.nombre||r.id}» no existe en esta partida.`);
+   if(clean(r.nombre).length<2)E(l,`${who}: el nombre es demasiado corto.`);
+   ['color1','color2'].forEach(k=>{if(r[k]&&!color(r[k]))W(l,`${who}: ${k} «${r[k]}» no es #rrggbb.`);});return;}
+  if(!(r.id&&PL(r.id))&&!T(+r.club_id)&&!clubByName(r.club))E(l,`${who}: no encuentro al jugador (id ${r.id||'—'}) ni a su club «${r.club||r.club_id||'—'}».`);
+  if(clean(r.nombre).length<3)E(l,`${who}: el nombre es demasiado corto.`);
+  const sp=String(r.posicion||'').toUpperCase();if(sp&&!SPN[sp])E(l,`${who}: la posición «${r.posicion}» no existe.`);
+  if(r.edad&&(!isFinite(+r.edad)||+r.edad<15||+r.edad>45))W(l,`${who}: edad «${r.edad}» fuera de 15–45; se ajustará.`);
+  if(r.pie&&!'DIA'.includes(String(r.pie).toUpperCase()))W(l,`${who}: pie «${r.pie}» no es D, I ni A.`);
+  if(r.nacionalidad&&natOf(r.nacionalidad)==null)E(l,`${who}: nacionalidad «${r.nacionalidad}» desconocida.`);
+  ATTRS.forEach(k=>badAttr(r[AT_SH[k].toLowerCase()],AT_SH[k],l,who));
+  if(r.potencial)badAttr(r.potencial,'potencial',l,who);});
+ return{kind:isPlayers?'csv-jugadores':'csv-clubes',rows:rows.length,errors,warns};
 }

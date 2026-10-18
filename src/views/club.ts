@@ -3,7 +3,7 @@
 import {getA11y} from '../theme';
 import {h2hDots,h2hStreak,h2hTxt,rivalsOf} from '../rivals';
 import {wealthLabel} from './economy';
-import {finChart,negociosHTML} from './business';
+import {finBig,finChart,negociosHTML} from './business';
 import {MGR_AT,PROJ,mgrAt,nsCost,projOptions,projState} from '../extras2';
 import {wcs} from '../state';
 import {enciclopediaHTML,fameHTML} from './worldhist';
@@ -80,7 +80,7 @@ export function clubView(){
  <div class="eyebrow" style="margin-bottom:6px">Colores</div><div class="seg" style="margin-bottom:6px"><button data-a="a11y-cb" data-v="0" aria-pressed="${!getA11y().cb}">Normales</button><button data-a="a11y-cb" data-v="1" aria-pressed="${!!getA11y().cb}">Para daltónicos</button></div><p class="small muted" style="margin:0 0 12px">El modo para daltónicos cambia el verde y el rojo (notas, victorias y derrotas, encaje de posiciones) por azul y naranja. Se guarda en este dispositivo.</p>
  <h3 style="margin:4px 0 6px">Pasar la partida a otro móvil u ordenador</h3><p class="small muted" style="margin:0 0 8px">Descarga la partida (o compártela por WhatsApp, correo o Drive) y, en el otro dispositivo, ábrela con «Abrir partida desde archivo», aquí o en la pantalla de inicio.</p>
  <div class="row" style="margin-bottom:12px"><button class="btn primary" data-a="save-file">Descargar partida</button>${typeof navigator!=='undefined'&&navigator.share?'<button class="btn" data-a="save-share">Compartir partida</button>':''}<label class="btn" style="cursor:pointer">Abrir partida desde archivo<input type="file" id="saveFile" accept=".ebsave,.txt,text/plain" hidden></label></div>
- <div class="row"><button class="btn" data-a="backup">Copiar copia de seguridad</button><button class="btn" data-a="restore">Restaurar una copia</button><button class="btn" data-a="to-saves">Mis partidas</button><button class="btn" data-a="tut-again">Ver el tutorial</button>${typeof window!=='undefined'&&window.ElBanquillo?'':'<a class="btn" href="https://github.com/jlanuza94/El-Banquillo/releases/latest/download/El-Banquillo.apk" target="_blank" rel="noopener">Descargar APK (Android)</a>'}${installBtn()}</div></section>`;
+ <div class="row"><button class="btn" data-a="backup">Copiar copia de seguridad</button><button class="btn" data-a="restore">Restaurar una copia</button><button class="btn" data-a="to-saves">Mis partidas</button><button class="btn" data-a="tut-again">Ver el tutorial</button>${typeof window!=='undefined'&&window.ElBanquillo?'':'<a class="btn" href="https://github.com/jlanuza94/El-Banquillo/releases/download/android-latest/El-Banquillo.apk" target="_blank" rel="noopener">Descargar APK (Android)</a>'}${installBtn()}</div></section>`;
  const used=S.breq&&S.breq.s===S.seasonN?S.breq.used:{};
  const board=`<section class="panel"><div class="panel-h"><h2>Peticiones a la directiva</h2><span class="eyebrow">Una vez por temporada · confianza ${Math.round(M.conf)}</span></div>${Object.entries(BREQ).map(([k,v])=>`<div class="offer"><span class="t"><b>${v.n}</b><br><span class="small muted">${v.d}${v.min?' Confianza mínima: '+v.min+'.':''}</span></span><button class="btn sm" data-a="board" data-k="${k}" ${used[k]?'disabled':''}>${used[k]?'Ya pedido':'Pedir'}</button></div>`).join('')}${S.boardMsg?`<div class="negmsg ${S.boardMsg[1]}">${esc(S.boardMsg[0])}</div>`:''}</section>`;
  const wb=wageBill(),cap=S.wageCap??wb;
@@ -118,7 +118,7 @@ export function clubView(){
  const tb=vtab('club',[['dir','Directiva'],['fin','Finanzas'],['neg','Negocios'],['est','Estadio'],['fil','Filial y afiliados'],['ent','Mi carrera'],['par','Partida']],'dir');
  const two=(a,b)=>`${tb.bar}<div class="grid"><div class="stack">${a}</div><div class="stack">${b}</div></div>`;
  switch(tb.cur){
-  case'fin':return two(finChart()+finP+budP,spo+bankP);
+  case'fin':return two(finBig()+finChart()+finP+budP,spo+bankP);
   case'neg':return tb.bar+negociosHTML();
   case'est':return two(stadium,fac+nsP);
   case'fil':return two(filP,affP);

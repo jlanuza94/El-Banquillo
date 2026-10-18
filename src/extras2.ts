@@ -118,7 +118,7 @@ export function projState(sm){const P=S.proj;if(!P)return null;const sq=squad(S.
 /** Al terminar cada temporada: revisión anual del proyecto, premio, fracaso o siguiente paso más ambicioso. */
 export function projSeasonEnd(sm){
  const P=S.proj;if(!P)return;const M=S.mgr;
- if(sm){if(P.k==='eur'&&sm.pos<=P.need&&sm.L.lv===0)P.hit=1;if(P.k==='liga'&&sm.champ&&sm.L.lv===0)P.hit=1;if(P.k==='cont'&&(S.titles||[]).slice(P.titles).some(x=>/Champions|Copa Libertad|Liga de Campeones|Continental/i.test(x.name)))P.hit=1;if(P.k==='perm'&&sm.down)P.fail=1;}
+ if(sm){if(P.k==='eur'&&sm.pos<=P.need&&sm.L.lv===0)P.hit=1;if(P.k==='liga'&&sm.champ&&sm.L.lv===0)P.hit=1;if(P.k==='cont'&&(S.titles||[]).slice(P.titles).some(x=>/Champions|Copa Libertad|Libertadores|Liga de Campeones|Continental/i.test(x.name)))P.hit=1;if(P.k==='perm'&&sm.down)P.fail=1;}
  const st=projState(sm),last=S.seasonN>=P.end,early=st.done&&!['can','perm','eco'].includes(P.k);
  const close=(ok)=>{S.projHist=(S.projHist||[]).concat([{k:P.k,n:P.n,ok:ok?1:0,season:seasonLabel()}]);S.proj=null;S.projOff=null;};
  if(st.fail){M.conf=clamp(M.conf-20,0,100);news(`El proyecto «${P.n}» se ha roto: era el objetivo y no se ha cumplido. La directiva está muy decepcionada.`,'bad',{cat:'dir',subj:'Proyecto fallido'});close(0);return;}

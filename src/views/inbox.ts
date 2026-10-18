@@ -1,6 +1,6 @@
 /* El Banquillo · views/inbox.ts — Pantalla de la bandeja de entrada. */
 // @ts-nocheck — usa el estado heredado S.
-import {mailPlayer,sideCard,transferCard} from './fmmcards';
+import {mailPlayer,scoutCard,sideCard,transferCard} from './fmmcards';
 import {esc} from '../core';
 import {ptMailState} from '../preseason';
 import {S} from '../state';
@@ -20,7 +20,7 @@ export function buzonView(){
  const listP=`<section class="panel mlistp"><div class="panel-h"><h2>Bandeja de entrada</h2>${cnt(cat)?`<button class="btn sm" data-a="mail-all">Marcar todo como leído</button>`:`<span class="eyebrow">${list.length} mensaje${list.length===1?'':'s'}</span>`}</div>${chips}${rows}</section>`;
  const sp=sel?mailPlayer(sel):null;const detail=sel?`<section class="panel mdetail${sp?' hascard':''}"><div class="mdmain"><div class="row" style="margin-bottom:8px"><button class="btn sm" data-a="mail-back">← Volver</button><span class="spacer"></span><span class="eyebrow">${esc(CATS[sel.cat]?CATS[sel.cat].n:'')} · ${esc(sel.sn||'')} · jornada ${sel.wk}</span></div>
   <div class="eyebrow">De: ${esc(sel.from)}</div><h2 style="margin:4px 0 10px">${esc(sel.subj)}</h2>
-  ${sel.tr?transferCard(sel.tr):`<p style="margin:0;line-height:1.55" class="${sel.kind}">${esc(sel.txt)}</p>`}
+  ${sel.sr&&!sel.tr?scoutCard(sel.sr):''}${sel.tr?transferCard(sel.tr):sel.sr?'':`<p style="margin:0;line-height:1.55" class="${sel.kind}">${esc(sel.txt)}</p>`}
   ${(()=>{const st=sel.once==='pt'||(sel.act||[]).some(x=>x.a==='pt-join')?ptMailState():null;if(st)return `<div class="mdone ${st.ok?'ok':''}"><span>${esc(st.txt)}</span>${st.ok?'<button class="btn sm primary" data-a="pt-view">🏆 Ver el torneo</button>':''}</div>`;return sel.act&&sel.act.length?`<div class="acts" style="justify-content:flex-start">${sel.act.map((x,i)=>actBtn(x,i===0)).join('')}</div>`:'';})()}</div>${sp?sideCard(sp):''}</section>`
  :`<section class="panel mdetail mempty"><div class="empty">Elige un mensaje para leerlo.</div></section>`;
  return `<div class="grid inbox ${sel?'has-sel':''}">${listP}${detail}</div>`;

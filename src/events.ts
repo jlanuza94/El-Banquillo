@@ -1,5 +1,9 @@
 /* El Banquillo · events.js — Clics, cambios de formularios y teclado. */
 // @ts-nocheck — código heredado de la versión de scripts globales; se irá tipando por partes.
+import {autoDev,bulkList,bulkRenew,fitAdjust,wageProjHTML} from './r12';
+import {shout} from './r11match';
+import {termsMood} from './market';
+import {ROLES} from './data';
 import {parseChal,parseResult,chalCode,resultCode} from './r11chal';
 import {setA11y} from './theme';
 import {appeal,fightAct,negSponsor,pickSkill,pickSleeve} from './r11club';
@@ -59,7 +63,7 @@ import {applyNT,autoCall,leaveNT,takeNT,toggleCall} from './nations';
 import {meetAnswer,onOfferRejected} from './talks';
 import {cycleTheme,THEMES} from './theme';
 import {searchResults} from './views/search';
-import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData} from './mods';
+import {editClub,editNames,editPlayer,exportClubsCSV,exportMod,exportPlayersCSV,importData,validateData} from './mods';
 import {addAffiliate,createFilial,fromFilial,moveBudget,removeAffiliate,takeBankLoan,toFilial} from './clubplus';
 import {loadPlan,planInMatch,savePlan} from './plans';
 import {addPair,removePair} from './mentor';
@@ -101,6 +105,7 @@ export function placeInSlot(pid,i){
 /** Barra de probabilidad de la oferta (se actualiza al escribir o tocar +/−). */
 function oddsUpd(i){const o=document.getElementById('ngOdds');if(!o)return;const v=+i.value||0,ask=+i.dataset.ask||0,L=v>=ask?['Muy probable','hi']:v>=ask*.92?['Posible contraoferta','md']:v>=ask*.8?['Difícil','lo']:['Casi imposible','no'];o.className='ngodds '+L[1];o.querySelector('span').textContent=L[0];}
 document.addEventListener('click',e=>{
+ if(e.target.closest&&e.target.closest('select,input,label.chk')&&e.target.closest('tr[data-a=row],.dpib'))return;
  const el=e.target.closest('[data-a]');if(!el)return;
  const a=el.dataset.a,d=el.dataset;
  if(a==='bid-step'||a==='bid-set'){const i=document.getElementById('bidAmt');if(!i)return;const ask=+i.dataset.ask||0;let v=a==='bid-set'?+d.v:Math.max(0,(+i.value||0)+(+d.v)*Math.max(1,ask));i.value=(Math.round(v*1000)/1000).toFixed(3);oddsUpd(i);return;}
@@ -167,8 +172,8 @@ document.addEventListener('click',e=>{
   case'pique':if(S.pique){S.pique.resp=d.v;toast(d.v==='r'?'Le respondes en la prensa. Ahora toca ganar.':'Prefieres no entrar al trapo.');}break;
   case'sp-prep':S.spPrep={opp:+d.id};toast('El equipo prepara la defensa a balón parado contra este rival.');break;
   case'staff-club':{const err=hireFromClub(d.id,ST_ROLES);if(err)toast(err);break;}
-  case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v);const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
-   toast(`Sistema cargado: ${PRESETS[d.v].n}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
+  case'preset':{const t=T(S.user),b=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr;applyPreset(d.v,d.k==='f');const a=teamPower(t.lineup,t.formation,null,null,1,userRoles()).ovr,dp=Math.round((a/b-1)*100);
+   toast(`Estilo cargado: ${PRESETS[d.v].n}${d.k==='f'?` con su formación (${t.formation})`:` con tu formación ${t.formation}: tu once no cambia`}. `+(dp<=-3?`Ojo: tu once rinde un ${-dp}% menos en ${t.formation}. Pulsa «Alinear mejores» o busca jugadores para este sistema.`:dp>=3?`Tu once rinde un ${dp}% más en ${t.formation}.`:'Tu plantilla encaja bien en este sistema.'));break;}
   case'st-g':S.stG=d.v;break;
   case'n2d':S.n2d=!S.n2d;break;
   case'kit-pat':{const e=setKit({pat:d.v},S.kitEd==='a');if(e)toast(e);break;}
@@ -227,6 +232,12 @@ document.addEventListener('click',e=>{
   case'io-clubs':download('clubes.csv',exportClubsCSV(),'text/csv');break;
   case'io-squad':download('mi-plantilla.csv',exportPlayersCSV(S.user),'text/csv');break;
   case'io-players':download('jugadores.csv',exportPlayersCSV(null),'text/csv');break;
+  case'dec-pl':S.view='plantilla';S.plF=d.v||'all';S.plTab='jug';break;
+  case'bulk-renew':{const r=bulkRenew();toast(r.ok.length?`Renuevan ${r.ok.length} de ${r.ok.length+r.ko.length}.`:'Nadie ha renovado: mira la bandeja.');break;}
+  case'bulk-list':{const r=bulkList();toast(r.length?`En venta: ${r.slice(0,4).join(', ')}${r.length>4?'…':''}.`:'No sobra nadie claramente.');break;}
+  case'auto-dev':{const n=autoDev();toast(`Plan automático: ${n.pos} aprenden puesto, ${n.tr} un rasgo${n.load?`, ${n.load} con carga baja`:''}.`);break;}
+  case'fit-adjust':toast(fitAdjust());break;
+  case'io-check':{const V=validateData(document.getElementById('ioTxt')?.value||'');S.ioMsg={ok:!V.errors.length,check:1,msg:`Comprobado (${V.kind==='json'?'mod JSON':V.kind==='csv-jugadores'?'CSV de jugadores':V.kind==='csv-clubes'?'CSV de clubes':'?'}, ${V.rows} fila${V.rows===1?'':'s'}): nada se ha cambiado todavía.`,errors:V.errors.slice(0,12),warns:V.warns.slice(0,8),nE:V.errors.length,nW:V.warns.length};break;}
   case'io-paste':{S.ioMsg=importData(document.getElementById('ioTxt')?.value||'');break;}
   case'gsearch':S.modal={type:'search'};render();setTimeout(()=>document.getElementById('gsq')?.focus(),30);return;
   case'gs-lg':S.modal=null;S.view='mundo';S.ligaLg=+d.id;break;
@@ -260,13 +271,15 @@ document.addEventListener('click',e=>{
   case'm-play':if(m&&m.mom){toast('Primero decide qué hacer.');return;}stopReplay();matchFx(m);m.paused=false;m.alert='';m.subOpen=false;render();runTimer();return;
   case'm-pause':m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-speed':m.speed=+d.v;S.mSpeed=+d.v;render();runTimer();return;
+  case'm-shout':{const r=shout(m,d.v);addEv(m,'sys',null,r);toast(r);break;}
   case'm-ment':if(m.ment[m.us]!==d.v){m.ment[m.us]=d.v;addEv(m,'sys',null,`${T(m[m.us]).short} cambia a mentalidad ${MENT[d.v].label.toLowerCase()}`);}break;
   case'm-oi':{m.oi=m.oi||{};const o=m.oi[m.us]=m.oi[m.us]||{};o[d.v]=!o[d.v];addEv(m,'sys',null,`${o[d.v]?'Nueva instrucción':'Se retira la instrucción'}: ${OIS[d.v].n.toLowerCase()}.`);break;}
   case'oi':{const t=T(S.user);t.oi=t.oi||{};t.oi[d.v]=!t.oi[d.v];break;}
   case'm-tab':S.mtab=d.v;break;
   case'm-side':S.mside=d.v;break;
   case'm-subout':m.subOut=d.id;m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
-  case'm-subs':m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
+  case'm-go':S.mw='par';if(d.v==='tac'||d.v==='jug')S.mtab=d.v;else S.mtab='com';if(m){m.paused=true;clearInterval(RT.timer);RT.timer=null;}render();setTimeout(()=>document.querySelector(d.v==='shout'?'.shouts':'.mtab')?.scrollIntoView({block:'center',behavior:'smooth'}),40);return;
+  case'm-subs':S.mw='par';setTimeout(()=>document.querySelector('.subs')?.scrollIntoView({block:'center',behavior:'smooth'}),40);m.subOpen=true;m.paused=true;clearInterval(RT.timer);RT.timer=null;break;
   case'm-subclose':m.subOpen=false;break;
   case'm-dosub':{const o=document.getElementById('subOut').value,n=document.getElementById('subIn').value;if(o&&n&&doSub(m,m.us,o,n)){m.alert='';m.subOpen=false;toast('Cambio hecho.');}break;}
   case'm-sim':simToEnd();return;
@@ -306,6 +319,9 @@ document.addEventListener('click',e=>{
   case'a11y-fs':setA11y('fs',+d.v);break;
   case'a11y-cb':setA11y('cb',+d.v);break;
   case'mv-mine':S.mvMine=d.v==='1';break;
+  case'tstep':{const el2=document.getElementById(d.k);if(!el2)return;if(el2.tagName==='SELECT'){const n=el2.selectedIndex+(d.v==='+'?1:-1);if(n>=0&&n<el2.options.length)el2.selectedIndex=n;}else{const st=parseFloat(el2.step)||1,mn=parseFloat(el2.min)||0;el2.value=String(Math.max(mn,Math.round(((parseFloat(el2.value)||0)+(d.v==='+'?st:-st))*100)/100));}moodUpd();return;}
+  case'dpi':{const t=T(S.user);t.dpi=t.dpi||{};const x=t.dpi[d.id]=t.dpi[d.id]||{};x[d.k]=d.v==='n'?undefined:d.v;break;}
+  case'pl-f':S.plF=d.v;break;
   case'aw-k':S.awK=d.v;break;
   case'appeal':{toast(appeal(d.id));break;}
   case'fight':{toast(fightAct(d.v));break;}
@@ -441,6 +457,8 @@ document.addEventListener('keydown',e=>{
  if((e.key==='Enter'||e.key===' ')&&e.target.matches('tr[data-a]')){e.preventDefault();e.target.click();}
 });
 document.addEventListener('change',e=>{
+ if(S&&e.target&&e.target.dataset&&e.target.dataset.dpimk){const t=T(S.user);t.dpi=t.dpi||{};const x=t.dpi[e.target.dataset.dpimk]=t.dpi[e.target.dataset.dpimk]||{};x.mk=e.target.value||undefined;save();return;}
+ if(e.target&&(e.target.id==='tRole'||e.target.id==='tYears'))moodUpd();
  if(e.target.id==='saveFile'){const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{if(freeSlot()==null){toast('Ya tienes 5 partidas guardadas: borra una en «Mis partidas» para abrir otra.');return;}if(S&&S.user!=null)saveNow();if(importCode(String(rd.result),true))toast(`Partida «${f.name}» abierta.`);else toast('Ese archivo no es una partida válida de El Banquillo.');};rd.readAsText(f);return;}
  if(e.target.id==='ioFile'||e.target.id==='modFile'){const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{
    if(e.target.id==='modFile'){RT.mod=String(rd.result);try{const o=JSON.parse(RT.mod);if(o&&o.seed!=null)RT.seed=o.seed;}catch(err){}setS(null);render();toast(`Mod «${f.name}» cargado: se aplicará al mundo nuevo.`);return;}
@@ -485,7 +503,12 @@ document.addEventListener('change',e=>{
  else return;
  save();render();
 });
+/** Barra de ánimo del contrato: se mueve con lo que vas ofreciendo. */
+function moodUpd(){const g=document.querySelector('.ctgrid'),b=document.getElementById('tMood');if(!g||!b)return;const w=parseFloat(document.getElementById('tWage')?.value||'0')||0,bo=parseFloat(document.getElementById('tBonus')?.value||'0')||0,rv=document.getElementById('tRole')?.value,er=g.dataset.er;
+ const v=termsMood(+g.dataset.dem,w,bo,!rv||!ROLES[er]||ROLES[rv].l>=ROLES[er].l);b.style.width=v+'%';b.className=v>=70?'ok':v>=45?'mid':'low';
+ const pj=document.getElementById('tProj'),md=S.modal,pid=md&&(md.id||md.pid),p=pid!=null&&PL(pid);if(pj&&p)pj.innerHTML=wageProjHTML(p,md.type==='renew'?'renew':'buy',w,bo,!rv||!ROLES[er]||ROLES[rv].l>=ROLES[er].l,+g.dataset.dem);}
 document.addEventListener('input',e=>{
+ if(e.target.id==='tWage'||e.target.id==='tBonus'||e.target.id==='tClause'){moodUpd();return;}
  if(e.target.id==='bidAmt'){oddsUpd(e.target);return;}
  if(S&&e.target.id==='gsq'){const box=document.getElementById('gsres');if(box)box.innerHTML=searchResults(e.target.value);return;}
  if(!S||e.target.id!=='mkq')return;S.mk.q=e.target.value;S.mk.limit=40;
@@ -523,10 +546,10 @@ document.addEventListener('pointercancel',()=>{clearTimeout(LP.t);LP.t=0;},true)
 /* En algunos móviles (WebView de Android) el navegador intenta desplazar la página a mitad del arrastre y lo corta: mientras arrastras, se bloquea el desplazamiento. */
 document.addEventListener('touchmove',e=>{if(DG)e.preventDefault();},{passive:false});
 const dgMove=e=>{if(!DG)return;if(!DG.moved){if(Math.hypot(e.clientX-DG.x0,e.clientY-DG.y0)<7)return;DG.moved=true;
-  const p=PL(DG.pid);const g=document.createElement('div');if(DG.src==='slot'){g.className='dragghost vs dgchip';g.innerHTML=DG.el.innerHTML;DG.el.classList.add('dragging');}else{g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';}document.body.appendChild(g);DG.g=g;
-  document.body.classList.add('fmdrag');const fit=fitOf(DG.pid);document.querySelectorAll('.fmgrid .slot[data-i]').forEach(s=>s.classList.add('fit'+(fit[+s.dataset.i]||4)));
+  const p=PL(DG.pid);const g=document.createElement('div');if(DG.src==='slot'||DG.src==='eslot'||DG.src==='eoop'){g.className='dragghost vs dgchip';g.innerHTML=DG.el.innerHTML;DG.el.classList.add('dragging');}else{g.className='dragghost';g.textContent=p?p.name.split(' ').slice(1).join(' ')||p.name:'';}document.body.appendChild(g);DG.g=g;
+  document.body.classList.add('fmdrag');const fit=DG.pid?fitOf(DG.pid):'';document.querySelectorAll('.fmgrid .slot[data-i]').forEach(s=>s.classList.add('fit'+(fit[+s.dataset.i]||4)));
   try{DG.el.setPointerCapture(e.pointerId);}catch(err){}}
- e.preventDefault();DG.g.style.transform=DG.src==='slot'?`translate(${e.clientX}px,${e.clientY}px) translate(-50%,-60%)`:`translate(${e.clientX+10}px,${e.clientY-28}px)`;
+ e.preventDefault();DG.g.style.transform=(DG.src==='slot'||DG.src==='eslot'||DG.src==='eoop')?`translate(${e.clientX}px,${e.clientY}px) translate(-50%,-60%)`:`translate(${e.clientX+10}px,${e.clientY-28}px)`;
  const t=dropAt(e.clientX,e.clientY);if(t!==DG.over){DG.over&&DG.over.classList.remove('over');DG.over=t;t&&t.classList.add('over');}};
 document.addEventListener('pointermove',e=>{if(DG&&DG.lp&&DG.tch)return;dgMove(e);},{passive:false});
 // mantener pulsado en la lista: el arrastre sigue al dedo con los eventos táctiles (el navegador cancela los de puntero al intentar desplazar la lista)
@@ -537,7 +560,8 @@ const endDrag=e=>{if(!DG)return;const d=DG;DG=null;if(!d.moved)return;
  document.querySelectorAll('.fmgrid .slot').forEach(s=>s.classList.remove('fit1','fit2','fit3','fit4'));
  DG_T=Date.now();if(e.type==='pointercancel')return;
  const t=dropAt(e.clientX,e.clientY);if(!t)return;
- if(d.src==='oop'&&t.matches('.vcell')){if(oopMoveTo(T(S.user),+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy))S.oopSel=null;}
+ if(d.src==='eslot'||d.src==='eoop'){const tt=T(S.user),i=+d.el.dataset.i;if(t.matches('.vcell')){if(d.src==='eoop'){oopMoveTo(tt,i,+t.dataset.cx,+t.dataset.cy);}else if(moveSlotTo(i,+t.dataset.cx,+t.dataset.cy))afterMove(slotsOf(FREE),roleList);}else if(d.src==='eslot'&&t.matches('.slot[data-i]')&&!t.matches('.oopm')){const j=+t.dataset.i;if(i&&j&&i!==j){const x=tt.lineup[i];tt.lineup[i]=tt.lineup[j];tt.lineup[j]=x;}}}
+ else if(d.src==='oop'&&t.matches('.vcell')){if(oopMoveTo(T(S.user),+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy))S.oopSel=null;}
  else if(d.src==='oop'){if(t.matches('.slot[data-i]')&&+t.dataset.i!==+d.el.dataset.i){if(oopMap(T(S.user)))oopSwap(T(S.user),+d.el.dataset.i,+t.dataset.i);else placeInSlot(d.pid,+t.dataset.i);}else if(t.matches('.bslot[data-k]'))setSub(d.pid,+t.dataset.k);else if(t.matches('.fmlist'))removeFromTeam(d.pid);S.oopSel=null;}
  else if(t.matches('.vcell')){if(d.src==='slot'&&moveSlotTo(+d.el.dataset.i,+t.dataset.cx,+t.dataset.cy)){afterMove(slotsOf(FREE),roleList);}}
  else if(t.matches('.slot[data-i]'))placeInSlot(d.pid,t.matches('.oopm')?ipIdx(+t.dataset.i):+t.dataset.i);
