@@ -2079,7 +2079,8 @@ function avisoTipo(t, herr) {
   if (t === 3 && herr === 'rasqueta' && EQ().rasqueta < 3) txt = 'Sarro: sale despacio. La rasqueta de carburo del Taller se lo come.';
   if (!txt) return;
   M.avisosTipo[k] = true; ayuda(txt, 5);
-  decir(M.comp, uno(['Ojo con esa mancha, no es grasa normal.', 'Esa mancha tiene carácter.', 'Esa ya es grasa con antecedentes.']));
+  // El consejo lo dice alguien en el chat (trabajando solo, Don Rigo por la radio): así no se pierde en la línea de ayuda.
+  decir(M.comp.solo ? 'rigo' : M.comp, `¡Ojo! ${txt}`);
 }
 function aplicarTramo(a, b) {
   if (!a || !b || a.sf !== b.sf) return 0;
