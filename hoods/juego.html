@@ -59,6 +59,10 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .zonas span { font-family: var(--f-mono); font-size: 12px; color: var(--tenue); font-variant-numeric: tabular-nums; }
 .zonas .listo span { color: var(--ok); }
 .zonas button:disabled { opacity: .4; }
+.zonas button.revisar { border-color: var(--grasa); box-shadow: 0 0 0 1px var(--grasa); }
+.filas-reparto { display: grid; gap: 6px; max-height: 40vh; overflow-y: auto; }
+.filas-reparto label { display: grid; grid-template-columns: 1fr 1.2fr; gap: 8px; align-items: center; font-family: var(--f-cond); font-weight: 700; font-size: 15px; }
+.filas-reparto select, .evalua select { font: inherit; font-size: 14px; background: var(--panel-solido); color: var(--acero); border: 1px solid var(--linea); border-radius: 6px; padding: 6px; }
 .mandos { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
 .herr-btn { pointer-events: auto; width: 78px; height: 78px; border-radius: 50%; background: var(--panel-solido); border: 3px solid var(--hivis); display: grid; place-items: center; align-content: center; touch-action: none; flex: none; }
 .herr-btn svg { width: 34px; height: 34px; }
@@ -264,6 +268,10 @@ a.btn { display: inline-block; text-decoration: none; }
 #contra { pointer-events: auto; grid-column: 1 / -1; justify-self: center; padding: 3px 10px; font-size: 13px; }
 .cita.historia { border-color: #c6a0ff66; }
 .cita.equipo-b { border-left: 3px solid var(--ok); display: grid; gap: 6px; }
+.evalua { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.evalua b { font-family: var(--f-cond); font-size: 16px; }
+.nota-mini { font-family: var(--f-display); color: var(--c); border: 2px solid var(--c); border-radius: 6px; padding: 0 8px; }
+.respuesta-ev { margin: 0; font-style: italic; color: var(--grasa); }
 .eq-res { font-size: 14px; }
 .eq-res b { color: var(--acero) !important; letter-spacing: .03em !important; }
 .medidas { font-size: 12px; color: var(--grasa) !important; }
@@ -383,7 +391,7 @@ const ETAPAS = [
 ];
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
 const fama = r => FAMA.filter(f => r >= f[0]).pop()[1];
-const multPago = () => .85 + S.rep / 100 * .6;   // la reputación sube lo que paga cada cliente
+const multPago = () => (.85 + S.rep / 100 * .6) * (1 + .03 * ((S && S.eq.flota) || 0));   // reputación y tamaño de la empresa   // la reputación sube lo que paga cada cliente
 
 // Frecuencias de limpieza de la norma NFPA 96, en noches de juego.
 const FREC = { mensual: 3, trimestral: 5, semestral: 7, anual: 9 };
@@ -412,6 +420,10 @@ const COCINAS = {
     nombres: ['Panadería La Espiga', 'Conchas Doña Mary', 'El Bolillo Feliz'], eventos: ['techo', 'mapache'] },
   sushi: { n: 'Barra de sushi', frec: 'semestral', micras: [700, 1100], pago: [620, 820], filtros: [2, 3], etapa: 1, linea: 'sushi', siemprePedido: true,
     nombres: ['Sushi Kaito', 'Rollos del Pacífico', 'Nigiri Express'], eventos: ['gerente'] },
+  plaza: { n: 'Food court de centro comercial', frec: 'trimestral', micras: [2000, 2700], pago: [6000, 7800], filtros: [10, 12], etapa: 0, linea: 'plancha', campanas: 3, ductos: 3, gigante: true,
+    nombres: ['Plaza Galerías Norte', 'Centro Comercial Las Palmas', 'Mega Plaza del Sol'], eventos: ['gerente', 'alarma', 'mapache'] },
+  convenciones: { n: 'Centro de convenciones', frec: 'semestral', micras: [2200, 2900], pago: [6500, 8500], filtros: [9, 12], etapa: 0, linea: 'carbon', campanas: 3, ductos: 2, gigante: true,
+    nombres: ['Centro de Convenciones Expo Grasa', 'Salón de Eventos Los Candiles', 'Expo Banquetes Real'], eventos: ['gerente', 'techo', 'alarma'] },
   estadio: { n: 'Cocina de estadio', frec: 'semestral', micras: [2500, 3300], pago: [3800, 4800], filtros: [8, 10], etapa: 3, linea: 'carbon', campanas: 2, ayud: 2,
     nombres: ['Estadio Municipal', 'Arena Los Pumas'], eventos: ['mapache', 'techo', 'gerente', 'alarma'] },
 };
@@ -428,7 +440,7 @@ const LINEAS = {
 };
 // Suciedad especial de cada cocina (parte de la superficie): grasa quemada, aceite; el sarro sale en ductos viejos.
 const SUCIEDAD = { cafe: { aceite: .1 }, pizza: { quemada: .2 }, burger: { aceite: .3 }, wok: { quemada: .2, aceite: .15 }, asador: { quemada: .35 }, hotel: { aceite: .2 },
-  comedor: { aceite: .2, quemada: .1 }, estadio: { quemada: .2, aceite: .2 }, truck: { aceite: .3 }, fonda: { aceite: .15, quemada: .1 }, mariscos: { aceite: .25 }, panaderia: { quemada: .25 }, sushi: { aceite: .1 } };
+  comedor: { aceite: .2, quemada: .1 }, estadio: { quemada: .2, aceite: .2 }, truck: { aceite: .3 }, plaza: { aceite: .2, quemada: .15 }, convenciones: { quemada: .25, aceite: .1 }, fonda: { aceite: .15, quemada: .1 }, mariscos: { aceite: .25 }, panaderia: { quemada: .25 }, sushi: { aceite: .1 } };
 const NOMBRE_SUC = { quemada: 'Grasa quemada', aceite: 'Aceite', sarro: 'Sarro en el ducto' };
 const PISTAS = {
   gerente: 'El gerente dice que se queda «por si acaso».',
@@ -521,7 +533,7 @@ const TIENDA = [
   { id: 'bolsa', n: 'Bolsas de contención nuevas', d: 'Las viejas tienen más parches que bolsa.', p: 120, ok: s => !s.eq.bolsa, f: s => { s.eq.bolsa = true; } },
   { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro ancho y fuerte. Esta es tuya y nadie la vende para comprarse un karaoke.', p: 900, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
   { id: 'cam2', n: 'Camioneta con baca', d: 'Caben 2 ayudantes además del compañero.', p: 500, ok: s => s.eq.camioneta === 1 && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.camioneta = 2; } },
-  { id: 'flota', get n() { return S.eq.flota ? `Camioneta para el equipo ${S.eq.flota + 2}` : 'Segunda camioneta'; }, get d() { return `Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de ${maxFlota()} que permite tu etapa.`; },
+  { id: 'flota', get n() { return S.eq.flota ? `Camioneta para el equipo ${S.eq.flota + 2}` : 'Segunda camioneta'; }, get d() { return `Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`; },
     get p() { return 1200 + (S.eq.flota || 0) * 600; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
       s.eq.flota = (s.eq.flota || 0) + 1;
       // La camioneta nueva ya trae trabajo para esta misma noche.
@@ -531,8 +543,10 @@ const TIENDA = [
 ];
 const PLAZAS = [0, 1, 2, 4];
 // Camionetas extra que permite cada etapa: con la última, 9 equipos más el tuyo = 10.
-const FLOTA = [0, 1, 3, 6, 9];
-const maxFlota = () => S.fase === 'empresa' ? FLOTA[S.etapa] : 0;
+const maxFlota = () => S.fase === 'empresa' ? 9 : 0;   // las camionetas se compran con lo que vas ganando: con 9 son 10 equipos
+// Equipo de herramientas de cada camioneta extra: mejora cuánto y qué tan bien limpian sus equipos.
+const KITS = [{ n: 'Básico', d: 'Rasquetas viejas y una cubeta.' }, { n: 'Completo', d: 'Rasquetas buenas, espuma y escaleras.', p: 350 }, { n: 'Pro', d: 'Hidrolavadora y migdaleadora propias.', p: 800 }];
+const kit = k => (S.kits || [])[k] || 0;
 
 // Pedidos especiales: cada cliente tiene su manía. Cumplirla paga extra; fallarla, sale caro.
 const PEDIDOS = [
@@ -700,6 +714,7 @@ function nueva() {
 }
 // Lo que se añadió después (medallas, récords, estilo, radio): se rellena sin tocar la partida.
 function completar(s) {
+  s.kits = s.kits || [];
   if (s.eq && s.eq.segunda && !s.eq.flota) { s.eq.flota = 1; delete s.eq.segunda; }
   if (s.hoy && s.hoy.b && !s.hoy.equipos) { s.hoy.equipos = [s.hoy.b]; delete s.hoy.b; }
   if (!s.fijos) s.fijos = s.fase === 'empresa' ? Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= s.etapa) : [];   // partidas de antes: los que ya estaban
@@ -710,6 +725,7 @@ function completar(s) {
     if (!c.cuidado) c.cuidado = 2 + Math.floor(Math.random() * 3);
     if (!c.puntual) c.puntual = 2 + Math.floor(Math.random() * 3);
     if (!c.base) c.base = c.fuerza;
+    if (!c.animo) c.animo = 3;
     if (s.cuadrilla.includes(c)) c.entrevistado = true;
   }
   return s;
@@ -1226,6 +1242,8 @@ const AMBIENTE = {
   comedor: { pared: 0xd7e6da, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .4), cartel([['LÁVESE', 60], ['LAS MANOS', 60]], '#f4f4f4', '#2e7d4f', .75, .4, '#2e7d4f'), xd, 2.25, -.99) },
   fonda: { pared: 0xf7d9a8, deco: ({ add, xd }) => add(new T.PlaneGeometry(.85, .45), cartel([['COMIDA CORRIDA', 56], ['sopa · guisado · agua · $85', 32]], '#2e5d3a', '#fff7e0', .85, .45, '#ffd23f'), xd, 2.25, -.99) },
   mariscos: { pared: 0xcfeef0, deco: ({ add, xd }) => add(new T.PlaneGeometry(.85, .38), cartel([['¡HAY CAMARONES!', 60]], '#0f4c6b', '#ffd23f', .85, .38, '#ffffff'), xd, 2.3, -.99) },
+  plaza: { pared: 0xe9edf2, deco: ({ add, xd }) => { add(new T.PlaneGeometry(.95, .36), cartel([['FOOD COURT', 70]], '#2f6fd1', '#ffffff', .95, .36, '#ffd23f'), xd, 2.35, -.99); add(new T.PlaneGeometry(.95, .2), cartel([['Piso 2 · Baños al fondo', 40]], '#f4f4f4', '#2b3238', .95, .2), xd, 2.05, -.99); } },
+  convenciones: { pared: 0xece4d6, deco: ({ add, xd }) => { add(new T.BoxGeometry(8.9, .05, .02), new T.MeshStandardMaterial({ color: 0xd4af37, metalness: .9, roughness: .25 }), 0, 1.8, -.99); add(new T.PlaneGeometry(.95, .36), cartel([['BANQUETES', 60], ['para 2,000 personas', 34]], '#4a1d2c', '#ffe3b8', .95, .36, '#d4af37'), xd, 2.3, -.98); } },
   truck: { pared: 0xcfe8f5, deco: ({ add, xd }) => add(new T.PlaneGeometry(.8, .34), cartel([['¡TACOS!', 90]], '#ffd23f', '#d7382b', .8, .34, '#d7382b'), xd, 2.3, -.99) },
   panaderia: { pared: 0xf6e6cc, deco: ({ add, xd }) => add(new T.PlaneGeometry(.85, .4), cartel([['PAN CALIENTE', 64], ['conchas · bolillos · orejas', 34]], '#6b3d1f', '#ffe3b8', .85, .4, '#e0a040'), xd, 2.25, -.99) },
   sushi: { pared: 0xf4efe6, deco: ({ add, xd }) => { add(new T.CircleGeometry(.17, 24), new T.MeshBasicMaterial({ color: 0xc8102e }), xd, 2.45, -.985); add(new T.PlaneGeometry(.9, .2), cartel([['SUSHI · IRASSHAIMASE', 52]], '#1b1b1b', '#f4efe6', .9, .2), xd, 2.1, -.99); } },
@@ -1276,7 +1294,7 @@ function construirNoche(orden) {
     g.fillStyle = '#ffe3b8'; g.font = '700 46px "Barlow Condensed", "Arial Narrow", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nombre.toUpperCase(), w / 2, h / 2 + 2, w - 40);
   }));
   add(new T.PlaneGeometry(1.4, .35), new T.MeshBasicMaterial({ map: letrero }), clamp(-lineW / 2 - .9, -2.8, -1.6), 2.5, -.99);
-  const amb = AMBIENTE[orden ? orden.cocina : 'burger'];
+  const amb = AMBIENTE[orden ? orden.cocina : 'burger'] || AMBIENTE.burger;
   matPared.color.set(amb.pared);
   piezas.brillos = [];
   amb.deco({ add, lineW, xd: clamp(lineW / 2 + .95, 1.9, 3.1), brillos: piezas.brillos });
@@ -1352,51 +1370,64 @@ function construirNoche(orden) {
     campanas.push({ cx, sfs, gotas, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
   }
 
-  // Filtros sobre la lona, en el suelo
+  // Filtros sobre la lona, en el suelo (en trabajos con muchos filtros, varias lonas: una zona cada una)
   const nf = orden ? orden.filtros : 3;
-  const cols = retrato ? 2 : Math.min(nf, 4), filas = Math.ceil(nf / cols);
-  const lonaW = cols * .62 + .3, lonaH = filas * .62 + .3, lonaZ = 1.3 + lonaH / 2;
-  const lona = add(new T.PlaneGeometry(lonaW, lonaH), new T.MeshStandardMaterial({ map: TX.lona, roughness: .8 }), 0, .01, lonaZ); lona.rotation.x = -Math.PI / 2;
-  const filtros = [];
-  for (let i = 0; i < nf; i++) {
-    const c = i % cols, f = Math.floor(i / cols);
-    const x = (c - (cols - 1) / 2) * .62, z = lonaZ + (f - (filas - 1) / 2) * .62;
-    add(new T.BoxGeometry(.52, .04, .52), matOscuro, x, .03, z);
-    const s = superficie(.5, .5, TX.bafles, rel * 1.05, .025, null, null, tFiltro); colocar(s, new T.Vector3(x, .055, z), new T.Vector3(0, 1, 0)); mundo.add(s.mesh); filtros.push(s);
+  const grupos = nf > 6 ? Math.ceil(nf / 6) : 1, porG = Math.ceil(nf / grupos), gruposF = [];
+  for (let g = 0; g < grupos; g++) {
+    const n = Math.min(porG, nf - g * porG);
+    const cols = retrato ? 2 : Math.min(n, grupos > 1 ? 3 : 4), filas = Math.ceil(n / cols);
+    const lonaW = cols * .62 + .3, lonaH = filas * .62 + .3, lonaZ = 1.3 + lonaH / 2, lx = (g - (grupos - 1) / 2) * (lonaW + .35);
+    const lona = add(new T.PlaneGeometry(lonaW, lonaH), new T.MeshStandardMaterial({ map: TX.lona, roughness: .8 }), lx, .01, lonaZ); lona.rotation.x = -Math.PI / 2;
+    const sfs = [];
+    for (let i = 0; i < n; i++) {
+      const c = i % cols, f = Math.floor(i / cols);
+      const x = lx + (c - (cols - 1) / 2) * .62, z = lonaZ + (f - (filas - 1) / 2) * .62;
+      add(new T.BoxGeometry(.52, .04, .52), matOscuro, x, .03, z);
+      const sf = superficie(.5, .5, TX.bafles, rel * 1.05, .025, null, null, tFiltro); colocar(sf, new T.Vector3(x, .055, z), new T.Vector3(0, 1, 0)); mundo.add(sf.mesh); sfs.push(sf);
+    }
+    gruposF.push({ sfs, lonaW, lonaZ, lx });
   }
 
-  // Ducto: túnel sobre el techo; la cámara entra por el registro
+  // Ductos: túneles sobre el techo, uno por campana en los trabajos grandes; la cámara entra por el registro
   const duc = orden ? orden.ducto : { forma: 'cuadrado', largo: 2 };
   const dY = 3.7, dL = duc.largo, dZ0 = .5, dc = dZ0 - dL / 2;
-  const ducto = [];
+  const nD = orden ? clamp(orden.ductos || 1, 1, xs.length > 1 ? xs.length : 1) : 1;
+  const ductos = [];
   let mitadAlto = .36, mitadAncho = .36;
-  if (duc.forma === 'redondo') {
-    const r = .38, geo = new T.CylinderGeometry(r, r, dL, 40, 1, true);
-    const s = superficie(2 * Math.PI * r, dL, TX.acero, rel * 1.1, .045, geo, T.BackSide, tDucto);
-    s.mesh.rotation.x = Math.PI / 2; s.mesh.position.set(0, dY, dc); mundo.add(s.mesh); ducto.push(s);
-    mitadAlto = mitadAncho = r;
-  } else {
-    const an = duc.forma === 'ancho' ? 1.1 : .72, al = duc.forma === 'ancho' ? .5 : .72;
-    mitadAlto = al / 2; mitadAncho = an / 2;
-    const s1 = superficie(an, dL, TX.acero, rel * 1.15, .045, null, null, tDucto); colocar(s1, new T.Vector3(0, dY - al / 2, dc), new T.Vector3(0, 1, 0)); ducto.push(s1);
-    const s2 = superficie(an, dL, TX.acero, rel * .9, .045, null, null, tDucto); colocar(s2, new T.Vector3(0, dY + al / 2, dc), new T.Vector3(0, -1, 0)); ducto.push(s2);
-    const s3 = superficie(dL, al, TX.acero, rel, .045, null, null, tDucto); colocar(s3, new T.Vector3(-an / 2, dY, dc), new T.Vector3(1, 0, 0)); ducto.push(s3);
-    const s4 = superficie(dL, al, TX.acero, rel, .045, null, null, tDucto); colocar(s4, new T.Vector3(an / 2, dY, dc), new T.Vector3(-1, 0, 0)); ducto.push(s4);
-    ducto.forEach(s => mundo.add(s.mesh));
+  piezas.ventiladores = [];
+  for (let k = 0; k < nD; k++) {
+    const dx = nD > 1 ? xs[k] : 0, ducto = [];
+    if (duc.forma === 'redondo') {
+      const r = .38, geo = new T.CylinderGeometry(r, r, dL, 40, 1, true);
+      const sf = superficie(2 * Math.PI * r, dL, TX.acero, rel * 1.1, .045, geo, T.BackSide, tDucto);
+      sf.mesh.rotation.x = Math.PI / 2; sf.mesh.position.set(dx, dY, dc); mundo.add(sf.mesh); ducto.push(sf);
+      mitadAlto = mitadAncho = r;
+    } else {
+      const an = duc.forma === 'ancho' ? 1.1 : .72, al = duc.forma === 'ancho' ? .5 : .72;
+      mitadAlto = al / 2; mitadAncho = an / 2;
+      const s1 = superficie(an, dL, TX.acero, rel * 1.15, .045, null, null, tDucto); colocar(s1, new T.Vector3(dx, dY - al / 2, dc), new T.Vector3(0, 1, 0)); ducto.push(s1);
+      const s2 = superficie(an, dL, TX.acero, rel * .9, .045, null, null, tDucto); colocar(s2, new T.Vector3(dx, dY + al / 2, dc), new T.Vector3(0, -1, 0)); ducto.push(s2);
+      const s3 = superficie(dL, al, TX.acero, rel, .045, null, null, tDucto); colocar(s3, new T.Vector3(dx - an / 2, dY, dc), new T.Vector3(1, 0, 0)); ducto.push(s3);
+      const s4 = superficie(dL, al, TX.acero, rel, .045, null, null, tDucto); colocar(s4, new T.Vector3(dx + an / 2, dY, dc), new T.Vector3(-1, 0, 0)); ducto.push(s4);
+      ducto.forEach(sf => mundo.add(sf.mesh));
+    }
+    const ventilador = new T.Group(); ventilador.position.set(dx, dY, dZ0 - dL + .02); mundo.add(ventilador);
+    ventilador.add(new T.Mesh(new T.CircleGeometry(Math.min(mitadAlto, mitadAncho) * .9, 24), new T.MeshStandardMaterial({ color: 0x15191c })));
+    for (let i = 0; i < 5; i++) { const a = new T.Mesh(new T.BoxGeometry(.06, mitadAlto * .8, .02), new T.MeshStandardMaterial({ color: 0x8c969e, metalness: .8, roughness: .3 })); a.position.set(Math.cos(i * 1.256) * mitadAlto * .4, Math.sin(i * 1.256) * mitadAlto * .4, .02); a.rotation.z = i * 1.256; ventilador.add(a); }
+    piezas.ventiladores.push(ventilador);
+    ductos.push({ sfs: ducto, dx });
   }
-  const ventilador = new T.Group(); ventilador.position.set(0, dY, dZ0 - dL + .02); mundo.add(ventilador);
-  ventilador.add(new T.Mesh(new T.CircleGeometry(Math.min(mitadAlto, mitadAncho) * .9, 24), new T.MeshStandardMaterial({ color: 0x15191c })));
-  for (let i = 0; i < 5; i++) { const a = new T.Mesh(new T.BoxGeometry(.06, mitadAlto * .8, .02), new T.MeshStandardMaterial({ color: 0x8c969e, metalness: .8, roughness: .3 })); a.position.set(Math.cos(i * 1.256) * mitadAlto * .4, Math.sin(i * 1.256) * mitadAlto * .4, .02); a.rotation.z = i * 1.256; ventilador.add(a); }
-  piezas.ventilador = ventilador;
+  piezas.ventilador = piezas.ventiladores[0];
+  const d0 = ductos[0].dx;
   // Secreto: un casete viejo de Don Rigo, a veces, en el fondo del ducto.
   piezas.casete = null;
   if (orden && S.noche >= 3 && !S.secretos.casete && azar(.12)) {
-    const c = new T.Group(); c.position.set(rnd(-.15, .15), dY - mitadAlto + .02, dZ0 - dL * .55); c.rotation.y = rnd(-.6, .6);
+    const c = new T.Group(); c.position.set(d0 + rnd(-.15, .15), dY - mitadAlto + .02, dZ0 - dL * .55); c.rotation.y = rnd(-.6, .6);
     c.add(new T.Mesh(new T.BoxGeometry(.1, .016, .064), new T.MeshStandardMaterial({ color: 0x1b1b1b, roughness: .4 })));
     const et = new T.Mesh(new T.PlaneGeometry(.08, .03), new T.MeshBasicMaterial({ color: 0xffe3b8 })); et.rotation.x = -Math.PI / 2; et.position.y = .009; c.add(et);
     mundo.add(c); piezas.casete = c;
   }
-  piezas.mapache = mapache(); piezas.mapache.position.set(.1, dY - mitadAlto + .13, dZ0 - dL + .5); piezas.mapache.visible = false; mundo.add(piezas.mapache);
+  piezas.mapache = mapache(); piezas.mapache.position.set(d0 + .1, dY - mitadAlto + .13, dZ0 - dL + .5); piezas.mapache.visible = false; mundo.add(piezas.mapache);
 
   // Gente: el compañero, los ayudantes y, si toca, el gerente
   piezas.gente = [];
@@ -1411,10 +1442,10 @@ function construirNoche(orden) {
   VISTAS.linea = vista(new T.Vector3(-.3, 1.0, -.55), new T.Vector3(0, .5, 1.2), lineW + 1.2, 1.9, 3.2, 58);
   VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
   VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
-  Z = [{ id: 'filtros', n: 'Filtros', sfs: filtros, vista: vista(new T.Vector3(0, 0, lonaZ), new T.Vector3(0, 1.6, 1.0), lonaW + .2, 1.7, 3.2, 55) }];
+  Z = gruposF.map((g, i) => ({ id: 'filtros', n: gruposF.length > 1 ? `Filtros ${'ABCD'[i]}` : 'Filtros', sfs: g.sfs, vista: vista(new T.Vector3(g.lx, 0, g.lonaZ), new T.Vector3(0, 1.6, 1.0), g.lonaW + .2, 1.7, 3.2, 55) }));
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs, gotas: c.gotas, labio: c.labio,
     vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100 } } }));
-  Z.push({ id: 'ducto', n: 'Ducto', sfs: ducto, vista: { ...vista(new T.Vector3(0, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } });
+  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `Ducto ${i + 1}` : 'Ducto', sfs: d.sfs, vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } }));
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
 }
 
@@ -1551,6 +1582,8 @@ const zonaAct = () => Z[M.zona];
 const pctZona = z => clamp(1 - z.sfs.reduce((a, s) => a + s.d.reduce((x, y) => x + y, 0), 0) / z.inicial, 0, 1);
 const micras = z => Math.round(M.orden.micras * (1 - pctZona(z)) / 5) * 5;
 const ultZona = () => Z.length - 1;
+const iDucto = () => Z.findIndex(z => z.id === 'ducto');
+const zCampana = () => Z.find(z => z.id === 'campana');
 
 // Lavar: rasqueta, espuma e hidro. Migdalear: solo la migdaleadora (y solo en la campana).
 function herramientas() {
@@ -1569,7 +1602,7 @@ function empezarTurno(orden) {
   const faltan = orden.equipo.filter(e => !e.principal && azar((5 - (e.puntual || 3)) * .07));
   orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0; U.hl.value = S.aj.resaltar ? 1 : 0;
-  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
+  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 40 : 0) + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
     maxCombo: 0, combos3: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
@@ -1582,14 +1615,14 @@ function empezarTurno(orden) {
   if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74), tuyo: null, rivalFin: null, charlaT: rnd(14, 22) };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   if (orden.comp === 'beto' && azar(.75)) M.eventos.push({ tipo: 'tuberia', zona: 1, en: rnd(14, 26) });
-  if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: ultZona(), en: rnd(8, 14) });
+  if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: iDucto(), en: rnd(8, 14) });
   if (orden.eventos.includes('alarma')) M.eventos.push({ tipo: 'alarma', zona: 1, en: rnd(25, 40) });
-  if (orden.eventos.includes('techo')) M.eventos.push({ tipo: 'techo', zona: ultZona(), en: 1.2 });
+  if (orden.eventos.includes('techo')) M.eventos.push({ tipo: 'techo', zona: iDucto(), en: 1.2 });
   // Sorpresas que no avisan: como mucho dos por noche.
   if (S.noche >= 2) {
     const extra = [];
     if (azar(.3)) extra.push({ tipo: 'cucaracha', zona: 1, en: rnd(9, 20) });
-    if (azar(.3) && !M.comp.solo) extra.push({ tipo: 'atorado', zona: ultZona(), en: rnd(4, 10) });
+    if (azar(.3) && !M.comp.solo) extra.push({ tipo: 'atorado', zona: iDucto(), en: rnd(4, 10) });
     if (azar(.2)) extra.push({ tipo: 'apagon', zona: 1, en: rnd(14, 26) });
     if (azar(.2)) extra.push({ tipo: 'coche', zona: 0, en: rnd(8, 18) });
     M.eventos.push(...extra.sort(() => Math.random() - .5).slice(0, 2));
@@ -1654,7 +1687,78 @@ function escenaPrep(i) {
     decir(M.comp, uno(['Más cinta. Siempre más cinta.', 'El plástico es como un paraguas al revés. No preguntes.', 'Si queda un hueco, el agua lo encuentra. El agua siempre lo encuentra.']));
   } else {
     M.arrastrar = false; limpiarMarcas(); prepEl.hidden = true;
+    if (M.orden.gigante && !M.crews && armarCuadrillas().length) return escenaReparto();
     arrancarTurno();
+  }
+}
+// ---- trabajos gigantes: repartir las zonas entre tus equipos y revisar lo que entreguen
+
+const CUIDADO_COMP = { beto: 2, lupe: 5, chuy: 3 };
+function armarCuadrillas() {
+  const o = M.orden, out = [];
+  const mios = M.equipo.map(e => ({ n: e.n, fuerza: e.fuerza, cuidado: e.principal ? CUIDADO_COMP[o.comp] || 3 : e.cuidado || 3, animo: e.id ? (S.cuadrilla.find(c => c.id === e.id) || {}).animo : null, id: e.id || null }));
+  if (mios.length) out.push({ n: 'Tu cuadrilla', color: M.comp.color || '#ffd23f', gente: mios, kit: 0 });
+  for (const a of o.ayudan || []) {
+    const gente = [...(a.comp ? [{ n: COMPANEROS[a.comp].n, fuerza: COMPANEROS[a.comp].fuerza, cuidado: CUIDADO_COMP[a.comp] }] : []), ...a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
+    if (gente.length) out.push({ n: `Equipo ${a.k}`, color: '#69c97a', gente, kit: kit(a.k - 2), k: a.k, ayud: a.ayud });
+  }
+  return out;
+}
+function escenaReparto() {
+  const crews = armarCuadrillas(), yo = Z.indexOf(zCampana());
+  // Por defecto: tú la primera campana; el resto, por turnos entre tus equipos.
+  let r = 0; const reparto = Z.map((z, i) => i === yo ? -1 : (r++) % crews.length);
+  const pintar = () => {
+    prepEl.innerHTML = `<div class="carta reparto"><div class="pasos">${pasosHTML(0)}</div><div class="fila"><h3>Reparte el trabajo</h3><span class="reloj">${hora(M.prepMin)}</span></div>
+      <p class="txt">Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.</p>
+      <div class="filas-reparto">${Z.map((z, i) => `<label><span>${esc(z.n)}</span><select data-rz="${i}"><option value="-1" ${reparto[i] === -1 ? 'selected' : ''}>Yo</option>${crews.map((c, k) => `<option value="${k}" ${reparto[i] === k ? 'selected' : ''}>${esc(c.n)} (${c.gente.length})</option>`).join('')}</select></label>`).join('')}</div>
+      <div class="pie"><p class="nota">${crews.map(c => `${c.n}: ${c.gente.map(g => g.n).join(', ')}`).join(' · ')}</p><button class="btn prim" id="prepSig">Empezar a limpiar</button></div></div>`;
+    prepEl.hidden = false;
+    prepEl.querySelectorAll('[data-rz]').forEach(sel => sel.onchange = () => { reparto[+sel.dataset.rz] = +sel.value; });
+    $('#prepSig').onclick = () => {
+      audio();
+      M.crews = crews.map((c, k) => {
+        const cuid = c.gente.reduce((a, g) => a + (g.cuidado || 3), 0) / c.gente.length, con = c.gente.filter(g => g.animo), an = con.length ? con.reduce((a, g) => a + g.animo, 0) / con.length : 3;
+        return { ...c, zonas: Z.map((z, i) => reparto[i] === k ? i : -1).filter(i => i >= 0), zona: null, t: rnd(.2, .6), fallos: 0, ok: 0,
+          cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
+      });
+      for (const c of M.crews) for (const i of c.zonas) Z[i].crew = c;
+      prepEl.hidden = true; arrancarTurno();
+    };
+  };
+  irVista(VISTA_GENERAL); pintar();
+  decir(M.comp, 'Trabajo gigante. Repártenos bien, jefe. Y revisa, porque aquí nadie es perfecto. Bueno, Lupe sí.');
+}
+// Cada cuadrilla limpia su zona hasta donde le da su calidad, avisa y pasa a la siguiente.
+function tickCuadrillas(dt) {
+  for (const c of M.crews) {
+    if (c.zona === null) { const sig = c.zonas.find(i => !Z[i].entregada); if (sig === undefined) continue; c.zona = sig; }
+    if ((c.t -= dt) > 0) continue;
+    c.t = .5;
+    // Cada medio segundo, varias pasadas según su fuerza y su equipo: una cuadrilla de 3 deja una zona en un minuto y medio.
+    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit)));
+    for (let p = 0; p < pasadas; p++) {
+      const sf = uno(z.sfs); let mejor = -1, md = 0;
+      for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * sf.d.length); if (sf.d[i] > md) { md = sf.d[i]; mejor = i; } }
+      if (mejor >= 0) raspar(sf, mejor % sf.nx + .5, Math.floor(mejor / sf.nx) + .5, 3.2, .45, 'cuadrilla');
+    }
+    // Entregan cuando creen que está: un buen equipo deja la zona muy por debajo del límite; uno flojo, por encima.
+    if (micras(z) <= LIMITE * clamp(1 + (.88 - c.cal) * 8, .35, 1.6)) {
+      z.entregada = c.n; z.revisar = true; c.zona = null;
+      decir({ n: c.n, color: c.color }, uno([`Terminamos ${z.n.toLowerCase()}. Revísela, jefe.`, `${z.n} lista. Bueno, casi lista. Bueno, lista.`, `Ya quedó ${z.n.toLowerCase()}. ¿Nos da el visto bueno?`]));
+    }
+  }
+}
+// Revisar: entras a una zona entregada; si pasa, el equipo cumplió; si no, la terminas tú.
+function revisar(z) {
+  if (!z.revisar || M.enZona < 1.5) return;
+  if (micras(z) <= LIMITE) {
+    z.revisar = false; z.rev = z.corregir ? 'corregida' : 'ok';
+    if (!z.corregir) { z.crew.ok++; ayuda(`✓ ${z.crew.n} dejó ${z.n.toLowerCase()} bien. Revisada.`, 4); sDing(); }
+    else ayuda(`${z.n} corregida. ${z.crew.n} te debe una.`, 4);
+  } else if (!z.corregir) {
+    z.corregir = true; z.crew.fallos++;
+    ayuda(`${z.crew.n} dejó grasa en ${z.n.toLowerCase()}. Termínala tú.`, 5); tono(300, .2, .08, 'triangle', 200);
   }
 }
 // Arrastrar el dedo por los puntos de cinta los va pegando.
@@ -1672,8 +1776,8 @@ function arrancarTurno() {
   const cub = ap.filter(a => a.cubierto).length / ap.length, env = ci.filter(c => c.hecho).length / ci.length;
   const p = M.prep = { gas: piezas.pilotos.every(x => x.off), luz: piezas.luz.off, cubierto: cub, plastico: cub >= 1, envuelto: env, bolsa: env >= 1 && piezas.bolsas.every(b => b.hecho) };
   if (!p.gas && azar(.7)) M.eventos.push({ tipo: 'piloto', zona: 1, en: rnd(5, 10) });
-  if (!p.luz && azar(.8)) M.eventos.push({ tipo: 'extractor', zona: ultZona(), en: rnd(4, 9) });
-  if (p.bolsa && !S.eq.bolsa && azar(.25)) M.eventos.push({ tipo: 'bolsa', zona: ultZona(), en: rnd(14, 24) });
+  if (!p.luz && azar(.8)) M.eventos.push({ tipo: 'extractor', zona: iDucto(), en: rnd(4, 9) });
+  if (p.bolsa && !S.eq.bolsa && azar(.25)) M.eventos.push({ tipo: 'bolsa', zona: iDucto(), en: rnd(14, 24) });
   M.t = M.prepMin / 480 * M.dur;
   matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
   M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0;
@@ -1733,9 +1837,11 @@ function raspar(sf, gx, gy, rc, cant, herr) {
     const tp = sf.tipo ? sf.tipo[i] : 0;
     const m = tp === 3 ? 1 : multEspuma(sf.soak[i]);   // el sarro no se ablanda con espuma
     let duro = sf.d[i] > .6 && m === 1 ? (herr === 'hidro' ? .25 : .5) : 1;
-    if (tp === 1 && m === 1) duro *= herr === 'hidro' ? .4 : .3;                       // quemada: sin espuma casi no sale
-    if (tp === 2) duro *= herr === 'hidro' ? 2.2 : herr === 'rasqueta' ? .5 : 1;          // aceite: la hidro lo arrastra, la rasqueta lo embarra
-    if (tp === 3) duro *= herr === 'rasqueta' ? (S.eq.rasqueta >= 3 ? 1.1 : .4) : .2;     // sarro: rasqueta de carburo
+    if (herr !== 'cuadrilla') {   // las cuadrillas traen de todo: a ellas la suciedad especial no las frena
+      if (tp === 1 && m === 1) duro *= herr === 'hidro' ? .4 : .3;                       // quemada: sin espuma casi no sale
+      if (tp === 2) duro *= herr === 'hidro' ? 2.2 : herr === 'rasqueta' ? .5 : 1;          // aceite: la hidro lo arrastra, la rasqueta lo embarra
+      if (tp === 3) duro *= herr === 'rasqueta' ? (S.eq.rasqueta >= 3 ? 1.1 : .4) : .2;     // sarro: rasqueta de carburo
+    }
     if (tp) sf.ultTipo = tp + (m > 1 ? 10 : 0);
     const q = Math.min(sf.d[i], cant * f * m * duro);
     sf.d[i] -= q; quit += q;
@@ -2223,7 +2329,7 @@ function zonaCompa() {
   const id = M.orden.comp, aqui = zonaAct();
   if (M.etapa !== 'lavar') return aqui;
   if (id === 'beto') { const otras = Z.filter(x => x !== aqui && micras(x) > LIMITE); return otras.length ? otras.reduce((a, b) => pctZona(a) < pctZona(b) ? a : b) : aqui; }
-  if (id === 'chuy' && micras(Z[0]) > LIMITE) return Z[0];
+  if (id === 'chuy') { const f = Z.find(x => x.id === 'filtros' && micras(x) > LIMITE); if (f) return f; }
   return aqui;
 }
 function manias(dt, z) {
@@ -2300,7 +2406,7 @@ function tickTurno(dt) {
     if (!M.fotoAntes && M.etapa === 'lavar' && z.id === 'campana' && M.enZona > 1.3 && !M.ev) { M.fotoAntes = 'pendiente'; pedirFoto(0, img => { if (M) M.fotoAntes = img; }); }
     if (M.apagon > 0 && (M.apagon -= dt) <= 0) { sDing(); decir(M.comp, uno(['¡Volvió la luz! Ya extrañaba ver la grasa.', 'Luz. Por fin. Me estaba dando miedo mi propia sombra.'])); }
     if (M.coche > 0 && (M.coche -= dt) <= 0) { loop('coche', false); if (M.vecinos) { dano('Queja de los vecinos por la alarma (y una chancla)', 0, 2); decir(M.comp, 'Ya se calló. Una vecina le tiró una chancla al gato. Y luego a nosotros.'); } }
-    if (piezas.casete && !M.caseteMarca && z.id === 'ducto' && M.enZona > 2 && !M.ev) {
+    if (piezas.casete && !M.caseteMarca && M.zona === iDucto() && M.enZona > 2 && !M.ev) {
       M.caseteMarca = marca(piezas.casete.position.clone().add(new T.Vector3(0, .05, 0)), '¿Y esto?', () => {
         M.casete = true; S.secretos.casete = true; piezas.casete.visible = false; M.album.push('El casete de Don Rigo');
         [0, 7, 12].forEach((st, i) => tono(523 * Math.pow(2, st / 12), .25, .07, 'triangle', null, i * .12));
@@ -2316,8 +2422,9 @@ function tickTurno(dt) {
         M.ronqT = 7.5;
         decir(M.comp, uno(['Cinco minutitos… zzz', 'zzz… mmm… grasa… zzz', '(ronquido industrial)']), [{ t: '¡Chuy!', f: () => { if (!M) return; M.dormido = false; M.dormirT = rnd(35, 55); decir(M.comp, 'No estaba dormido, estaba escuchando el ducto.'); } }]);
       }
-      // La cuadrilla limpia sola, cada uno a su ritmo.
-      for (const e of M.equipo) {
+      // La cuadrilla limpia sola, cada uno a su ritmo (en un trabajo gigante, cada una en las zonas que le tocaron).
+      if (M.crews) { tickCuadrillas(dt); if (M.etapa === 'lavar') revisar(z); }
+      else for (const e of M.equipo) {
         if (e.principal && M.dormido) continue;
         if ((e.t -= dt) > 0) continue;
         e.t = .5;
@@ -2348,7 +2455,7 @@ function tickTurno(dt) {
   if (M.humo > 0) { M.humo -= dt; emitir(new T.Vector3(rnd(-.8, .4), 1.05, -.3), 3, 'humo', null, .3); }
   piezas.pilotos.forEach(p => { if (!p.off) p.mesh.scale.y = .8 + Math.random() * .4; });
   const vRapido = (M.ventiladorRapido || 0) > 0; if (vRapido) M.ventiladorRapido -= dt;
-  piezas.ventilador.rotation.z += dt * (vRapido ? 30 : M.prep.luz ? 0 : 1.5);
+  for (const v of piezas.ventiladores) v.rotation.z += dt * (vRapido ? 30 : M.prep.luz ? 0 : 1.5);
   const mp = piezas.mapache;
   if (mp.visible) { mp.rotation.y = Math.sin(performance.now() / 300) * .2; if (mp.userData.sale) { mp.position.x += dt * .6; if (mp.position.x > .5) mp.visible = false; } if (mp.userData.huye) { mp.position.z += dt * 3; if (mp.position.z > .6) mp.visible = false; } }
   if ((M.alarmaSuena || 0) > 0) { const antes = M.alarmaSuena; M.alarmaSuena -= dt; if (Math.floor(antes * 2) !== Math.floor(M.alarmaSuena * 2)) tono(980, .2, .05, 'square'); }
@@ -2362,17 +2469,18 @@ function pintarHud(todo) {
   $('#reloj').textContent = hora(clamp(M.t / M.dur, 0, 1) * 480);
   $('#tbar').style.width = `${clamp(1 - M.t / M.dur, 0, 1) * 100}%`;
   if (todo) {
-    const zs = $('#zonas'); zs.style.gridTemplateColumns = `repeat(${Z.length}, minmax(0, 1fr))`;
+    const zs = $('#zonas'); zs.style.gridTemplateColumns = `repeat(${Math.min(Z.length, 4)}, minmax(0, 1fr))`;
     zs.innerHTML = Z.map((z, i) => `<button data-z="${i}"><b>${z.n}</b><span></span></button>`).join(''); pintarHerrBtn();
   }
   Z.forEach((z, i) => {
     const b = $('#zonas').children[i], m = micras(z), ok = m <= LIMITE;
     if (z.gotas) { const f = clamp(1 - pctZona(z) * 1.25, 0, 1); for (const g of z.gotas) { g.scale.y = Math.max(.01, f); g.position.y = z.labio.y - g.userData.largo * f / 2; g.visible = f > .02; } }
     b.setAttribute('aria-pressed', i === M.zona); b.classList.toggle('listo', ok);
-    b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}`;
+    b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}${z.revisar ? ' · ¡revisar!' : z.crew && !z.entregada ? ' · ' + z.crew.n.replace('Tu cuadrilla', 'tu cuadrilla') : z.rev ? ' · revisada' : ''}`;
+    b.classList.toggle('revisar', !!z.revisar);
     if (ok && !M.listoAvisado.has(i)) {
       M.listoAvisado.add(i); sDing();
-      if (z.id === 'filtros' && M.tFiltros === null) M.tFiltros = clamp(M.t / M.dur, 0, 1) * 480;
+      if (z.id === 'filtros' && M.tFiltros === null && Z.filter(x => x.id === 'filtros').every(x => micras(x) <= LIMITE)) M.tFiltros = clamp(M.t / M.dur, 0, 1) * 480;
       if (M.listoAvisado.size === Z.length && M.etapa === 'lavar' && !M.danos.length) fanfarria();
       if (i === M.zona && M.etapa === 'lavar') { ayuda(`${z.n} pasa la inspección. Al final toca pelar y migdalear la campana.`); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
     }
@@ -2391,7 +2499,7 @@ $('#siguiente').addEventListener('click', () => {
 function irZona(i) {
   if (i === M.zona) return;
   M.zona = i; M.enZona = 0; M.combo = 0; M.trazo = null; irVista(Z[i].vista); pintarHud(false);
-  if (i === ultZona() && !M.eventos.some(e => e.tipo === 'techo')) decir(M.comp, 'Yo subo al techo. Tú métete en el ducto. Si ves luz al final, no vayas hacia ella.');
+  if (i === iDucto() && !M.eventos.some(e => e.tipo === 'techo')) decir(M.comp, 'Yo subo al techo. Tú métete en el ducto. Si ves luz al final, no vayas hacia ella.');
 }
 function confirmarFin() {
   const faltan = Z.filter(z => micras(z) > LIMITE).length;
@@ -2467,11 +2575,11 @@ function terminarTurno() {
   for (const id in A.loops) loop(id, false);
   radioEncender(false);
   $('#hud').hidden = true; chat.innerHTML = '';
-  irVista(Z[1].vista); Z[1].vista.pan = 0;
+  irVista(zCampana().vista); zCampana().vista.pan = 0;
   // La foto del después, con la campana recién terminada.
   const m = M; pedirFoto(.7, img => { m.fotoDespues = img || ''; fotoParte(m); });
   // Final de película: amanece y la cámara da la vuelta a la campana antes del parte.
-  const l = Z[1].labio; cine = { t: 0 };
+  const l = zCampana().labio; cine = { t: 0 };
   VISTA_FINAL.mira.set(l.cx, l.y + .2, (l.z0 + l.z1) / 2 + .15); VISTA_FINAL.ancho = l.hW + 1.2;
   tono(523, .3, .06, 'triangle', null, .2); tono(659, .3, .06, 'triangle', null, .45); tono(784, .6, .07, 'triangle', null, .7);
   setTimeout(pantallaParte, 2600);
@@ -2488,14 +2596,14 @@ function genOrden(k, cliente) {
   const suciedad = { ...SUCIEDAD[k] }; if (S.noche >= 3 && azar(.4)) suciedad.sarro = +rnd(.15, .3).toFixed(2);
   const diseno = cliente ? cliente.diseno : {
     filtros: Math.round(rnd(C.filtros[0], C.filtros[1])), campanas, ayud: C.ayud || 0,
-    hood: { tipo, ancho: +(C.chica ? rnd(1.2, 1.45) : tipo === 'larga' ? rnd(2.6, 3.0) : campanas > 1 ? rnd(1.7, 2.2) : rnd(1.6, 2.3)).toFixed(2), fondo: +rnd(.95, 1.3).toFixed(2), alto: +rnd(.55, .8).toFixed(2) },
+    hood: { tipo, ancho: +(C.chica ? rnd(1.2, 1.45) : tipo === 'larga' ? rnd(2.6, 3.0) : campanas > 2 ? rnd(1.45, 1.75) : campanas > 1 ? rnd(1.7, 2.2) : rnd(1.6, 2.3)).toFixed(2), fondo: +rnd(.95, 1.3).toFixed(2), alto: +rnd(.55, .8).toFixed(2) },
     ducto: { forma: uno(['cuadrado', 'redondo', 'ancho']), largo: +(C.chica ? rnd(1.1, 1.4) : rnd(1.5, campanas > 1 ? 2.6 : 2.3)).toFixed(1) }, suciedad,
     eventos: C.eventos.filter(() => azar(.5)),
   };
   const eventos = [...diseno.eventos];
   if ((k === 'hotel' || k === 'comedor') && !eventos.includes('alarma')) eventos.push('alarma');
   const base = cliente ? cliente.pagoBase : Math.round(rnd(C.pago[0], C.pago[1]) / 10) * 10;
-  return { id: S.sigId++, cocina: k, nombre: cliente ? cliente.nombre : uno(C.nombres), filtros: diseno.filtros, campanas: diseno.campanas, ayud: diseno.ayud,
+  return { id: S.sigId++, cocina: k, nombre: cliente ? cliente.nombre : uno(C.nombres), filtros: diseno.filtros, campanas: diseno.campanas, ayud: diseno.ayud, ductos: C.ductos || 1, gigante: !!C.gigante,
     hood: diseno.hood, ducto: diseno.ducto, eventos, micras: Math.round(rnd(C.micras[0], C.micras[1]) / 50) * 50,
     pagoBase: base, pago: Math.round(base * multPago() * (cliente ? 1.1 : 1) / 10) * 10, clienteId: cliente ? cliente.id : null, diseno, suciedad: diseno.suciedad || {}, pedido: genPedido(C.siemprePedido),
     caracter: !cliente && S.fase === 'empresa' ? uno(Object.keys(CARACTER)) : null };
@@ -2519,6 +2627,8 @@ function generarOrdenes() {
     out.push(genOrden(k));
   }
   if (S.etapa >= 2 && azar(.3)) out.push(genOrden(S.etapa >= 3 && azar(.4) ? 'estadio' : 'comedor'));
+  // Trabajos gigantes (3 campanas, muchos filtros, varios ductos): salen cuando ya tienes equipos para repartirlos.
+  if (S.fase === 'empresa' && (S.eq.flota || 0) >= 1 && azar(.45)) out.push(genOrden(uno(['plaza', 'convenciones'])));
   // Revancha: un cliente que se llevó El Cuñado; si le ganas el duelo, vuelve contigo.
   const perd = S.fase === 'empresa' && (S.perdidos || []).length && azar(.4) ? uno(S.perdidos) : null;
   if (perd && COCINAS[perd.cocina]) {
@@ -2526,7 +2636,7 @@ function generarOrdenes() {
     out.push(o);
   }
   // Duelo: El Cuñado también quiere este cliente y limpiará a la vez que tú.
-  const libres = out.filter(o => !o.clienteId && o.campanas === 1 && !o.duelo);
+  const libres = out.filter(o => !o.clienteId && o.campanas === 1 && !o.duelo && !o.gigante);
   if (S.noche >= S.abierta + 1 && libres.length && azar(.3)) { const o = uno(libres); o.duelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.4 / 10) * 10; }
   return out;
 }
@@ -2540,9 +2650,9 @@ function genCandidatos(n = 3) {
   const fijos = CANDIDATOS.filter(c => !usados.has(c[0])).sort(() => Math.random() - .5);
   const gen = NOMBRES_GEN.filter(x => !usados.has(x)).sort(() => Math.random() - .5).map(x => [x, ...uno(MANIAS_GEN)]);
   return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase]) => {
-    const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5);
+    const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5), animo = 3;
     // Los buenos piden más: el sueldo sale de las tres medidas.
-    return { id: S.sigId++, n, rasgo, frase, fuerza, base: fuerza, cuidado, puntual, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 };
+    return { id: S.sigId++, n, rasgo, frase, fuerza, base: fuerza, cuidado, puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 };
   });
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
@@ -2671,10 +2781,13 @@ function tarjetaOrden(o, i) {
     ${o.pedido ? `<span class="pedido"><b>${esc(pedido(o.pedido).quien)}:</b> «${esc(pedido(o.pedido).txt)}»${pedido(o.pedido).premio ? ` <i>Si cumples: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
     ${o.duelo ? `<span class="aviso">${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(PISTAS[e])}</span>`).join('') : '<span class="pista">Todo tranquilo. Sospechoso.</span>'}
+    <span class="nota">${o.gigante ? `Trabajo gigante: ${o.campanas} campanas, ${o.ductos} ductos y ${o.filtros} filtros. Manda equipos a ayudarte, repártelos y revisa lo que entreguen.` : `Gente sugerida: ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'}.`}</span>
     ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}</span>` : ''}
   </button>`;
 }
 
+// Cuánta gente le va bien a un trabajo (contando al compañero): el tamaño manda.
+const sugerido = o => clamp(Math.round(o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * 1.3), 1, 4);
 const hayB = () => S.fase === 'empresa' && (S.eq.flota || 0) > 0;
 function extrasOrden(o, i) {
   const H = S.hoy, b = [];
@@ -2776,7 +2889,7 @@ function ocupados(excepto) {   // quién ya va en otra camioneta
 }
 function vEquipoB() {
   const H = S.hoy;
-  if (S.fase !== 'empresa' || S.etapa < 1) return '';
+  if (S.fase !== 'empresa') return '';
   if (!hayB()) return '<p class="nota">Con más camionetas (en el Taller) puedes mandar otros equipos a otros trabajos la misma noche.</p>';
   const eqs = equiposHoy(), usadas = new Set([H.sel, ...eqs.map(e => e.o)]);
   return `<h2 class="sec">Tus otros equipos · ${eqs.length} ${eqs.length === 1 ? 'camioneta' : 'camionetas'}</h2>
@@ -2786,19 +2899,21 @@ function vEquipoB() {
       const libresP = [...(e.comp ? [] : S.fijos.filter(id => !comps.has(id))).map(id => [`c:${id}`, `${COMPANEROS[id].n} (compañero)`]),
         ...S.cuadrilla.filter(c => !ayud.has(c.id) && !e.ayud.includes(c.id)).map(c => [`a:${c.id}`, `${c.n} · fuerza ${Math.round(c.fuerza * 100)}`])];
       const gente = [...(e.comp ? [[`c:${e.comp}`, COMPANEROS[e.comp].n]] : []), ...e.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean).map(c => [`a:${c.id}`, c.n])];
-      const faltan = o && o.ayud > e.ayud.length;
+      const faltan = o && o.ayud > e.ayud.length, gen = e.ayud.length + (e.comp ? 1 : 0);
       return `<div class="equipo"><b>Equipo ${k + 2}</b>
-        <select data-teq="${k}" aria-label="Trabajo del equipo ${k + 2}"><option value="">— Sin trabajo —</option>${libresO.map(([x, i]) => `<option value="${i}" ${i === e.o ? 'selected' : ''}>${esc(x.nombre)} · ${dinero(x.pago)}</option>`).join('')}</select>
+        <select data-teq="${k}" aria-label="Trabajo del equipo ${k + 2}"><option value="">— Sin trabajo —</option>${H.ordenes[H.sel] && H.ordenes[H.sel].gigante ? `<option value="mio" ${e.o === 'mio' ? 'selected' : ''}>Ayudarme en ${esc(H.ordenes[H.sel].nombre)} (gigante)</option>` : ''}${libresO.map(([x, i]) => `<option value="${i}" ${i === e.o ? 'selected' : ''}>${esc(x.nombre)} · ${dinero(x.pago)}</option>`).join('')}</select>
         <div class="chips">${gente.map(([id, nm]) => `<button class="btn peq" data-quita="${k}|${id}">${esc(nm)} ✕</button>`).join('') || '<span class="nota">Nadie todavía.</span>'}</div>
         ${gente.length < 4 && libresP.length ? `<select data-pon="${k}" aria-label="Añadir gente al equipo ${k + 2}"><option value="">+ Añadir a alguien…</option>${libresP.map(([id, nm]) => `<option value="${id}">${esc(nm)}</option>`).join('')}</select>` : ''}
-        ${faltan ? `<span class="aviso">Ese trabajo pide ${o.ayud} ayudantes.</span>` : ''}</div>`;
+        ${o ? `<span class="${gen < sugerido(o) ? 'aviso' : 'nota'}">Sugerido para este trabajo: ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'} · llevas ${gen}.</span>` : e.o === 'mio' ? '<span class="nota">Al empezar el turno repartes las zonas entre tus equipos y luego revisas lo que entreguen.</span>' : ''}
+        ${faltan ? `<span class="aviso">Ese trabajo pide ${o.ayud} ayudantes.</span>` : ''} <span class="nota">Equipo de la camioneta: ${KITS[kit(k)].n.toLowerCase()}.</span></div>`;
     }).join('')}
     <p class="nota">Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.</p>`;
 }
 function resolverB(b) {
   const o = b.orden, gente = [...(b.comp ? [{ ...COMPANEROS[b.comp], id: null }] : []), ...b.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
   const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * (o.ayud > b.ayud.length ? 1.5 : 1);
-  let p = .2 + fuerza / dif * .45;
+  const ayudG = gente.filter(g => g.animo), animo = ayudG.length ? ayudG.reduce((a, g) => a + g.animo, 0) / ayudG.length : 3;
+  let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + (animo - 3) * .05;
   const cosas = []; let dano = 0;
   const torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08));
   if (torpe) { dano += uno([20, 40]); cosas.push(`${torpe.n} tiró algo que no debía.`); }
@@ -2812,7 +2927,7 @@ function resolverB(b) {
   const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1)), 0)], ['Equipo B: gasolina', -GASOLINA]];
   if (dano) lineas.push(['Equipo B: daños', -dano]);
   if (o.garantia && !notaA) lineas.push(['Equipo B: garantía de A incumplida', -r10(o.pago * .3)]);
-  return { o, aprobado, gente, lineas, cosas, rep: (aprobado ? 3 : -5) + (o.garantia ? (notaA ? 1 : -3) : 0) };
+  return { o, aprobado, notaA, gente, lineas, cosas, k: b.k, rep: (aprobado ? 3 : -5) + (o.garantia ? (notaA ? 1 : -3) : 0) };
 }
 
 function vClientes() {
@@ -2861,9 +2976,14 @@ function vCuadrilla() {
 
 function vTaller() {
   const items = TIENDA.filter(t => t.ok(S));
+  const kits = S.fase === 'empresa' && S.eq.flota ? `<h2 class="sec">Equipo de tus camionetas</h2>${Array.from({ length: S.eq.flota }, (_, k) => {
+    const nv = kit(k), sig = KITS[nv + 1];
+    return `<div class="persona"><div class="cara" style="background:#5d7180">${k + 2}</div><div><b>Camioneta del equipo ${k + 2}</b><span>Equipo ${KITS[nv].n.toLowerCase()}: ${esc(KITS[nv].d)}</span></div>
+      ${sig ? `<button class="btn prim peq" data-kit="${k}" ${S.dinero < sig.p ? 'disabled' : ''}>${sig.n} ${dinero(sig.p)}</button>` : '<span class="chip ok">Al máximo</span>'}</div>`;
+  }).join('')}<p class="nota">Con mejor equipo, sus equipos limpian más rápido y aprueban más fácil.</p>` : '';
   return `<p class="nota">Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas. Tienes ${dinero(S.dinero)}.</p>
     ${items.map(t => `<div class="orden"><h3>${esc(t.n)}</h3><span class="nota">${esc(t.d)}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>Comprar</button></div></div>`).join('') || '<p class="nota">Ya tienes todo el equipo.</p>'}
-    ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}`;
+    ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}${kits}`;
 }
 
 function vLogros() {
@@ -2892,9 +3012,9 @@ function vAlbum() {
 
 function enlazar() {
   const H = S.hoy;
-  P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; for (const e of H.equipos || []) if (e.o === H.sel) e.o = null; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; for (const e of H.equipos || []) if (e.o === H.sel || (e.o === 'mio' && !H.ordenes[H.sel].gigante)) e.o = null; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-neg]').forEach(b => b.onclick = () => { audio(); pantallaNegociar(+b.dataset.neg); });
-  P.querySelectorAll('[data-teq]').forEach(sel => sel.onchange = () => { H.equipos[+sel.dataset.teq].o = sel.value === '' ? null : +sel.value; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-teq]').forEach(sel => sel.onchange = () => { H.equipos[+sel.dataset.teq].o = sel.value === '' ? null : sel.value === 'mio' ? 'mio' : +sel.value; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-pon]').forEach(sel => sel.onchange = () => {
     const e = H.equipos[+sel.dataset.pon], [t, id] = sel.value.split(':'); if (!t) return;
     if (t === 'c') e.comp = id; else if (e.ayud.length < 3) e.ayud.push(+id);
@@ -2916,8 +3036,10 @@ function enlazar() {
     audio();
     const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
     const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3 }))];
-    const equipos = hayB() ? (H.equipos || []).filter(e => e.o !== null && e.o !== H.sel && H.ordenes[e.o] && (e.comp || e.ayud.length)).map(e => ({ orden: H.ordenes[e.o], comp: e.comp, ayud: [...e.ayud] })) : [];
-    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, retos: H.retos || [], equipos });
+    const conGente = e => e.comp || e.ayud.length, eqs = hayB() ? (H.equipos || []).map((e, idx) => ({ e, k: idx + 2 })) : [];
+    const equipos = eqs.filter(({ e }) => typeof e.o === 'number' && e.o !== H.sel && H.ordenes[e.o] && conGente(e)).map(({ e, k }) => ({ orden: H.ordenes[e.o], comp: e.comp, ayud: [...e.ayud], k }));
+    const ayudan = o.gigante ? eqs.filter(({ e }) => e.o === 'mio' && conGente(e)).map(({ e, k }) => ({ comp: e.comp, ayud: [...e.ayud], k })) : [];
+    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, retos: H.retos || [], equipos, ayudan });
   };
   P.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => {
     audio(); const dia = DIAS.find(x => x.id === H.dia.id);
@@ -2948,6 +3070,7 @@ function enlazar() {
     tono(660, .1, .06, 'triangle'); guardar(); pantallaCamioneta();
   });
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
+  P.querySelectorAll('[data-kit]').forEach(b => b.onclick = () => { const k = +b.dataset.kit; S.kits = S.kits || []; const sig = KITS[kit(k) + 1]; S.dinero -= sig.p; S.kits[k] = kit(k) + 1; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-fijo]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.fijo); c.prueba = false; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-contratar]').forEach(b => b.onclick = () => {
     const c = S.candidatos.find(x => x.id === +b.dataset.contratar);
@@ -3045,8 +3168,19 @@ function pantallaParte() {
   // El equipo B, en su propio trabajo
   // Los otros equipos, cada uno en su trabajo: una línea con lo que dejó cada uno.
   const BS = (o.equipos || (o.equipoB ? [o.equipoB] : [])).map(resolverB);
-  BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = k + 2; B.neto = v; lineas.push([`Equipo ${k + 2} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
+  BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = B.k || k + 2; B.neto = v; lineas.push([`Equipo ${B.k} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
   rep = clamp(rep, -15, 25);
+  // Equipos que te ayudaron en el trabajo gigante: sus sueldos y su gasolina.
+  for (const a of o.ayudan || []) {
+    const g = a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean), v = -(g.reduce((t, c) => t + r10(c.sueldo * (c.prueba ? .8 : 1)), 0) + (a.comp ? COMPANEROS[a.comp].sueldo : 0) + GASOLINA);
+    lineas.push([`Equipo ${a.k} (te ayudó): sueldos y gasolina`, v]); neto += v;
+    for (const c of g) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); }
+  }
+  // Para la evaluación: cómo trabajó cada equipo.
+  const evals = [...BS.map(B => ({ t: `Equipo ${B.k} · ${B.o.nombre}`, nota: B.aprobado ? (B.notaA ? 'A' : 'B') : 'D', bien: B.aprobado, gente: B.gente, txt: B.cosas.join(' ') })),
+    ...(M.crews || []).filter(c => c.zonas.length).map(c => { const entregadas = c.zonas.filter(i => Z[i].entregada).length;
+      return { t: `${c.n} · ${c.zonas.map(i => Z[i].n).join(', ')}`, nota: c.fallos === 0 && entregadas === c.zonas.length ? 'A' : c.fallos === 0 ? 'B' : c.fallos === 1 ? 'C' : 'D', bien: c.fallos === 0 && entregadas > 0,
+        gente: c.gente, txt: `Entregó ${entregadas} de ${c.zonas.length} zonas. ${c.ok} pasaron tu revisión a la primera${c.fallos ? `; ${c.fallos} las tuviste que terminar tú` : ''}.` }; })];
   S.racha = racha;
   // Retos de la noche
   const estrellasAntes = S.estrellas || 0;
@@ -3120,6 +3254,7 @@ function pantallaParte() {
   while (S.xp >= xpNivel(S.nivel)) { S.xp -= xpNivel(S.nivel); S.nivel++; subidas++; }
   for (let i = 0; i < subidas; i++) cola.push(elegirPerk);
   if (aprendiz && S.noche > APRENDIZ) cola.push(despido);
+  if (evals.length) cola.unshift(() => pantallaEvaluar(evals));
   guardar();
   M.nota = n; M.nombre = o.nombre; M.nocheParte = S.noche - 1;
   const desastre = M.danos.some(x => x.dinero >= 60);
@@ -3172,6 +3307,29 @@ const tarjetaFoto = f => `<figure class="foto"><div class="foto-par">${f.antes ?
   <figcaption><b>${esc(f.nombre)}</b> · Noche ${f.noche} · Nota ${esc(f.nota)}</figcaption></figure>`;
 const tarjetaMedalla = (m, nueva) => { const oculta = m.secreto && !nueva && !S.medallas[m.id];
   return `<div class="medalla ${nueva ? 'nueva' : ''} ${nueva || S.medallas[m.id] ? '' : 'bloq'}"><span class="ico">${oculta ? '?' : m.ico}</span><div><b>${nueva ? (m.secreto ? '¡Medalla secreta! ' : '¡Medalla! ') : ''}${oculta ? '???' : esc(m.n)}</b><small>${oculta ? 'Secreto. Sigue jugando…' : esc(m.d)}</small></div></div>`; };
+
+// Evaluar a los equipos: felicitar o regañar cambia su ánimo (y a veces su cuidado). Con el ánimo en cero, renuncian.
+function pantallaEvaluar(items) {
+  pantalla(`<div class="rotulo">Evalúa a tus equipos<span>Lo que hicieron esta noche</span></div>
+    ${items.map((it, i) => `<div class="evalua" data-ei="${i}"><div class="fila"><b>${esc(it.t)}</b><span class="nota-mini" style="--c:${COL_NOTA[it.nota]}">${it.nota}</span></div>
+      <span class="nota">${esc(it.gente.map(g => g.n + (g.animo ? ` (ánimo ${'●'.repeat(g.animo)})` : '')).join(', '))}</span><span>${esc(it.txt)}</span>
+      <div class="acciones"><button class="btn peq prim" data-ev="${i}|fel">Felicitar</button><button class="btn peq" data-ev="${i}|reg">Regañar</button><button class="btn peq" data-ev="${i}|nada">Dejarlo así</button></div><p class="respuesta-ev"></p></div>`).join('')}
+    <p class="nota">Felicitar sube el ánimo (y con buen ánimo trabajan mejor). Regañar por un mal trabajo les baja el ánimo pero a veces aprenden a tener más cuidado; regañar a quien lo hizo bien… mejor no.</p>
+    <div class="acciones"><button class="btn prim" id="seguirEv">Seguir</button></div>`);
+  P.querySelectorAll('[data-ev]').forEach(b => b.onclick = () => {
+    const [i, k] = b.dataset.ev.split('|'), it = items[+i], caja = P.querySelector(`[data-ei="${i}"]`);
+    caja.querySelectorAll('[data-ev]').forEach(x => x.disabled = true);
+    const ayud = it.gente.map(g => g.id && S.cuadrilla.find(c => c.id === g.id)).filter(Boolean), se = [];
+    let txt;
+    if (k === 'fel') { ayud.forEach(c => { c.animo = Math.min(5, (c.animo || 3) + 1); if (!it.bien && azar(.3)) c.cuidado = Math.max(1, c.cuidado - 1); }); txt = it.bien ? '«¡Gracias, jefe! Así da gusto.»' : '«¿En serio? ¡Gracias! (Se van muy relajados.)»'; tono(880, .12, .08, 'triangle'); }
+    else if (k === 'reg') { ayud.forEach(c => { c.animo = (c.animo || 3) - (it.bien ? 2 : 1); if (!it.bien && azar(.5)) c.cuidado = Math.min(5, c.cuidado + 1); }); txt = it.bien ? '«¿Y ahora qué hicimos? Si quedó bien…» (Se van ofendidos.)' : '«Tiene razón, jefe. No vuelve a pasar.»'; tono(300, .2, .08, 'triangle', 200); }
+    else txt = 'Asienten y se van a la camioneta.';
+    for (const c of ayud) if (c.animo <= 0) { S.cuadrilla = S.cuadrilla.filter(x => x !== c); se.push(c.n); }
+    if (se.length) txt += ` ${se.join(' y ')} ${se.length > 1 ? 'renunciaron' : 'renunció'}. Dejó la rasqueta en tu escritorio.`;
+    caja.querySelector('.respuesta-ev').textContent = txt; guardar();
+  });
+  $('#seguirEv').onclick = () => { guardar(); siguiente(); };
+}
 
 function ofertaContrato(o) {
   const C = COCINAS[o.cocina], cada = FREC[C.frec];
