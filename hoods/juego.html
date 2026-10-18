@@ -274,6 +274,7 @@ a.btn { display: inline-block; text-decoration: none; }
 .respuesta-ev { margin: 0; font-style: italic; color: var(--grasa); }
 .eq-res { font-size: 14px; }
 .eq-res b { color: var(--acero) !important; letter-spacing: .03em !important; }
+.persona .botones { display: grid; gap: 6px; justify-items: stretch; }
 .medidas { font-size: 12px; color: var(--grasa) !important; }
 .medidas i { font-style: normal; color: var(--tenue); font-family: var(--f-cond); text-transform: uppercase; letter-spacing: .05em; margin-left: 6px; }
 .medidas i:first-child { margin-left: 0; }
@@ -3016,9 +3017,9 @@ function vCuadrilla() {
       ${flota >= ANGELICA.minVans ? `<button class="btn prim peq" id="ficharAngelica" ${S.dinero < ANGELICA.adelanto ? 'disabled' : ''}>Contratar</button>` : '<span class="chip">4 camionetas</span>'}</div>`;
   if (S.etapa < 1) return `${companeros}<p class="nota">Los ayudantes (gente del barrio que limpia sola durante el turno) se contratan cuando tengas taller propio.</p>`;
   const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}</div>
-    ${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">Dejarlo fijo</button>` : ''}<button class="btn peq" data-despedir="${c.id}">Despedir</button></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
+    <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">Dejarlo fijo</button>` : ''}<button class="btn peq" data-despedir="${c.id}">Despedir</button></div></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
-    ${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
+    <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
   return `${companeros}<h2 class="sec">Coordinación</h2>${angelica}<h2 class="sec">Ayudantes · caben ${plazas} en la camioneta</h2>${mios}
     <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.</p>
     <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}
