@@ -263,11 +263,16 @@ a.btn { display: inline-block; text-decoration: none; }
 .retos small { color: var(--tenue); font-size: 12px; }
 #contra { pointer-events: auto; grid-column: 1 / -1; justify-self: center; padding: 3px 10px; font-size: 13px; }
 .cita.historia { border-color: #c6a0ff66; }
-.cita.equipo-b { border-left: 3px solid var(--ok); }
+.cita.equipo-b { border-left: 3px solid var(--ok); display: grid; gap: 6px; }
+.eq-res { font-size: 14px; }
+.eq-res b { color: var(--acero) !important; letter-spacing: .03em !important; }
 .medidas { font-size: 12px; color: var(--grasa) !important; }
 .medidas i { font-style: normal; color: var(--tenue); font-family: var(--f-cond); text-transform: uppercase; letter-spacing: .05em; margin-left: 6px; }
 .medidas i:first-child { margin-left: 0; }
 .respuesta { font-style: italic; color: var(--acero) !important; }
+.equipo { background: var(--panel); border: 1px solid var(--linea); border-left: 3px solid var(--ok); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.equipo b { font-family: var(--f-cond); font-size: 16px; letter-spacing: .04em; text-transform: uppercase; }
+.equipo select { font: inherit; font-size: 15px; background: var(--panel-solido); color: var(--acero); border: 1px solid var(--linea); border-radius: 6px; padding: 8px; width: 100%; }
 .tras-orden { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: -8px 0 4px 12px; }
 .opciones.neg { display: grid; gap: 6px; }
 .opciones.neg .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; }
@@ -516,10 +521,18 @@ const TIENDA = [
   { id: 'bolsa', n: 'Bolsas de contención nuevas', d: 'Las viejas tienen más parches que bolsa.', p: 120, ok: s => !s.eq.bolsa, f: s => { s.eq.bolsa = true; } },
   { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro ancho y fuerte. Esta es tuya y nadie la vende para comprarse un karaoke.', p: 900, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
   { id: 'cam2', n: 'Camioneta con baca', d: 'Caben 2 ayudantes además del compañero.', p: 500, ok: s => s.eq.camioneta === 1 && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.camioneta = 2; } },
-  { id: 'segunda', n: 'Segunda camioneta', d: 'Para mandar un equipo B a otro trabajo la misma noche. Usada, pero con radio.', p: 1200, ok: s => !s.eq.segunda && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.segunda = true; } },
+  { id: 'flota', get n() { return S.eq.flota ? `Camioneta para el equipo ${S.eq.flota + 2}` : 'Segunda camioneta'; }, get d() { return `Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de ${maxFlota()} que permite tu etapa.`; },
+    get p() { return 1200 + (S.eq.flota || 0) * 600; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
+      s.eq.flota = (s.eq.flota || 0) + 1;
+      // La camioneta nueva ya trae trabajo para esta misma noche.
+      if (s.hoy && s.hoy.noche === s.noche) s.hoy.ordenes.push(genOrden(uno(cocinasHasta(s.etapa))));
+    } },
   { id: 'cam3', n: 'Camión de la empresa', d: 'Caben 4 ayudantes. Y tiene radio que funciona.', p: 2200, ok: s => s.eq.camioneta === 2 && s.etapa >= 2, f: s => { s.eq.camioneta = 3; } },
 ];
 const PLAZAS = [0, 1, 2, 4];
+// Camionetas extra que permite cada etapa: con la última, 9 equipos más el tuyo = 10.
+const FLOTA = [0, 1, 3, 6, 9];
+const maxFlota = () => S.fase === 'empresa' ? FLOTA[S.etapa] : 0;
 
 // Pedidos especiales: cada cliente tiene su manía. Cumplirla paga extra; fallarla, sale caro.
 const PEDIDOS = [
@@ -687,6 +700,8 @@ function nueva() {
 }
 // Lo que se añadió después (medallas, récords, estilo, radio): se rellena sin tocar la partida.
 function completar(s) {
+  if (s.eq && s.eq.segunda && !s.eq.flota) { s.eq.flota = 1; delete s.eq.segunda; }
+  if (s.hoy && s.hoy.b && !s.hoy.equipos) { s.hoy.equipos = [s.hoy.b]; delete s.hoy.b; }
   if (!s.fijos) s.fijos = s.fase === 'empresa' ? Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= s.etapa) : [];   // partidas de antes: los que ya estaban
   s.medallas = s.medallas || {}; s.secretos = s.secretos || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
   if (s.aj.radio === undefined) s.aj.radio = true;
@@ -2495,12 +2510,12 @@ function generarOrdenes() {
   if (S.fase === 'aprendiz') return [genOrden(uno(cocinasHasta(0)))];   // Don Rigo elige
   const out = [];
   for (const c of S.clientes) if (c.proxima <= S.noche) out.push(genOrden(c.cocina, c));
-  const fijos = out.length, n = Math.min(5, 2 + S.etapa + (S.rep >= 15 ? 1 : 0));
+  const fijos = out.length, flota = S.eq.flota || 0, n = Math.min(5 + flota, 2 + S.etapa + (S.rep >= 15 ? 1 : 0) + flota);
   const permitidas = cocinasHasta(S.etapa);
   let intentos = 0;
   while (out.length < fijos + n && intentos++ < 50) {
     const k = uno(permitidas);
-    if (out.some(o => o.cocina === k && !o.clienteId)) continue;
+    if (out.filter(o => o.cocina === k && !o.clienteId).length > flota / 3) continue;
     out.push(genOrden(k));
   }
   if (S.etapa >= 2 && azar(.3)) out.push(genOrden(S.etapa >= 3 && azar(.4) ? 'estadio' : 'comedor'));
@@ -2515,9 +2530,16 @@ function generarOrdenes() {
   if (S.noche >= S.abierta + 1 && libres.length && azar(.3)) { const o = uno(libres); o.duelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.4 / 10) * 10; }
   return out;
 }
-function genCandidatos() {
-  const usados = new Set(S.cuadrilla.map(c => c.n));
-  return CANDIDATOS.filter(c => !usados.has(c[0])).sort(() => Math.random() - .5).slice(0, 3).map(([n, rasgo, frase]) => {
+// Más gente para cuando la empresa crece: nombres y manías combinados al azar.
+const NOMBRES_GEN = ['Lalo', 'Mari', 'Pepe', 'Chela', 'Toñita', 'Rulo', 'Gaby', 'Paco', 'Lucha', 'Neto', 'Fer', 'Juanita', 'Beto Jr.', 'Chabelo', 'Moni', 'Güicho', 'Lety', 'Rafa', 'Tere', 'El Chino', 'La Güera', 'Panchito', 'Doña Cuca', 'Kike'];
+const MANIAS_GEN = [['Trae su propia música. Mala.', 'Pongan algo bueno, ¿no?'], ['Fue campeón de lucha libre infantil.', '¡Yo con la grasa me rifo dos de tres caídas!'], ['Le tiene miedo a las alturas.', 'Yo el techo no. El suelo sí.'],
+  ['Habla con las campanas.', 'Tranquila, bonita, ya casi.'], ['Estudió química dos semanas.', 'Esto es pura saponificación, jefe.'], ['Siempre tiene hambre.', '¿Alguien trajo tortas?'], ['Es primo de alguien del ayuntamiento.', 'Si quieres te consigo un permiso. O dos.'],
+  ['Colecciona tapas de refresco.', 'Encontré una de 1998 en el ducto.'], ['Hace transmisiones en vivo.', '¡Ya somos catorce viendo!'], ['Muy supersticioso.', 'No raspes en sentido contrario, trae mala suerte.']];
+function genCandidatos(n = 3) {
+  const usados = new Set([...S.cuadrilla, ...(S.candidatos || [])].map(c => c.n));
+  const fijos = CANDIDATOS.filter(c => !usados.has(c[0])).sort(() => Math.random() - .5);
+  const gen = NOMBRES_GEN.filter(x => !usados.has(x)).sort(() => Math.random() - .5).map(x => [x, ...uno(MANIAS_GEN)]);
+  return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase]) => {
     const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5);
     // Los buenos piden más: el sueldo sale de las tres medidas.
     return { id: S.sigId++, n, rasgo, frase, fuerza, base: fuerza, cuidado, puntual, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 };
@@ -2558,7 +2580,7 @@ function prepararNoche() {
     }
     return true;
   });
-  if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos();
+  if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos(3 + (S.eq.flota || 0));
   const ordenes = generarOrdenes();
   rival(ordenes, avisos);
   const comp = S.fase === 'aprendiz' ? (S.noche <= 2 ? 'beto' : 'lupe') : S.fijos.includes(S.compPref) ? S.compPref : 'solo';
@@ -2653,13 +2675,14 @@ function tarjetaOrden(o, i) {
   </button>`;
 }
 
-const hayB = () => S.fase === 'empresa' && S.eq.segunda;
+const hayB = () => S.fase === 'empresa' && (S.eq.flota || 0) > 0;
 function extrasOrden(o, i) {
   const H = S.hoy, b = [];
   if (o.caracter && !o.negociado && !o.clienteId) b.push(`<button class="btn peq" data-neg="${i}">Negociar · ${CARACTER[o.caracter].n.toLowerCase()}</button>`);
   if (o.negociado) b.push(`<span class="chip ok">Precio cerrado</span>`);
   if (o.garantia) b.push(`<span class="chip naranja">Garantía de A</span>`);
-  if (hayB() && i !== H.sel && !o.duelo) b.push(H.b && H.b.o === i ? '<span class="chip ok">Va el equipo B</span> <button class="btn peq" data-bo="-1">Quitar</button>' : `<button class="btn peq" data-bo="${i}">Mandar al equipo B</button>`);
+  const k = (H.equipos || []).findIndex(e => e.o === i);
+  if (k >= 0) b.push(`<span class="chip ok">Va el equipo ${k + 2}</span>`);
   return b.length ? `<div class="tras-orden">${b.join(' ')}</div>` : '';
 }
 function tarjetaEtapa(sig) {
@@ -2727,7 +2750,7 @@ function pantallaNegociar(i, msg) {
     if (o.pac <= 0) {
       H.ordenes.splice(i, 1);
       if (H.sel >= i && H.sel > 0) H.sel--;
-      if (H.b && H.b.o !== null) H.b.o = H.b.o === i ? null : H.b.o > i ? H.b.o - 1 : H.b.o;
+      for (const e of H.equipos || []) if (e.o !== null) e.o = e.o === i ? null : e.o > i ? e.o - 1 : e.o;
       H.avisos.push(`${o.nombre} se cansó de regatear y llamó a ${RIVAL}.`);
       guardar();
       pantalla(`<div class="rotulo">Se fue<span>${esc(o.nombre)}</span></div><div class="cita"><b>${esc(o.nombre)}</b>${esc(uno(['¿Sabe qué? Ya llamé a El Cuñado. Cobra menos. Y contesta rápido.', 'Mejor lo dejamos. Me duele la cabeza.', 'No, no y no. Adiós.']))}</div>
@@ -2739,22 +2762,42 @@ function pantallaNegociar(i, msg) {
   });
 }
 
-// El equipo B: un compañero y ayudantes en la segunda camioneta, en otro trabajo la misma noche.
+// Los equipos extra: cada camioneta lleva un compañero (opcional) y hasta 3 ayudantes a otro trabajo la misma noche.
+function equiposHoy() {
+  const H = S.hoy, n = S.eq.flota || 0;
+  H.equipos = (H.equipos || []).slice(0, n);
+  while (H.equipos.length < n) H.equipos.push({ o: null, comp: null, ayud: [] });
+  return H.equipos;
+}
+function ocupados(excepto) {   // quién ya va en otra camioneta
+  const H = S.hoy, comps = new Set([H.comp]), ayud = new Set(H.ayud);
+  for (const e of H.equipos || []) if (e !== excepto) { if (e.comp) comps.add(e.comp); e.ayud.forEach(id => ayud.add(id)); }
+  return { comps, ayud };
+}
 function vEquipoB() {
   const H = S.hoy;
   if (S.fase !== 'empresa' || S.etapa < 1) return '';
-  if (!S.eq.segunda) return '<p class="nota">Con una segunda camioneta (en el Taller) puedes mandar un equipo B a otro trabajo la misma noche.</p>';
-  H.b = H.b || { o: null, comp: null, ayud: [] };
-  const comps = S.fijos.filter(id => id !== H.comp), ayud = S.cuadrilla.filter(c => !H.ayud.includes(c.id)), ob = H.b.o !== null ? H.ordenes[H.b.o] : null;
-  return `<h2 class="sec">Equipo B · segunda camioneta</h2>
-    <div class="companeros">${comps.map(id => { const c = COMPANEROS[id]; return `<button class="comp" data-bc="${id}" aria-pressed="${H.b.comp === id}">${cara(c.color, c.n[0])}<div><b>${c.n}</b><span>${esc(c.rasgo)}</span></div></button>`; }).join('')}
-      ${ayud.map(c => `<button class="comp" data-bay="${c.id}" aria-pressed="${H.b.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Ayudante · fuerza ${Math.round(c.fuerza * 100)}</span></div></button>`).join('')}</div>
-    ${!comps.length && !ayud.length ? '<p class="nota">No queda nadie libre: contrata más gente en «Cuadrilla».</p>' : ''}
-    <p class="nota">${ob ? `El equipo B va a <b>${esc(ob.nombre)}</b>.${H.b.comp || H.b.ayud.length ? '' : ' Elige quién va.'}` : 'Toca «Mandar al equipo B» en un trabajo.'} Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse. Cuanta más fuerza, más fácil que aprueben.</p>`;
+  if (!hayB()) return '<p class="nota">Con más camionetas (en el Taller) puedes mandar otros equipos a otros trabajos la misma noche.</p>';
+  const eqs = equiposHoy(), usadas = new Set([H.sel, ...eqs.map(e => e.o)]);
+  return `<h2 class="sec">Tus otros equipos · ${eqs.length} ${eqs.length === 1 ? 'camioneta' : 'camionetas'}</h2>
+    ${eqs.map((e, k) => {
+      const { comps, ayud } = ocupados(e), o = e.o !== null ? H.ordenes[e.o] : null;
+      const libresO = H.ordenes.map((x, i) => [x, i]).filter(([x, i]) => !x.duelo && (!usadas.has(i) || i === e.o));
+      const libresP = [...(e.comp ? [] : S.fijos.filter(id => !comps.has(id))).map(id => [`c:${id}`, `${COMPANEROS[id].n} (compañero)`]),
+        ...S.cuadrilla.filter(c => !ayud.has(c.id) && !e.ayud.includes(c.id)).map(c => [`a:${c.id}`, `${c.n} · fuerza ${Math.round(c.fuerza * 100)}`])];
+      const gente = [...(e.comp ? [[`c:${e.comp}`, COMPANEROS[e.comp].n]] : []), ...e.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean).map(c => [`a:${c.id}`, c.n])];
+      const faltan = o && o.ayud > e.ayud.length;
+      return `<div class="equipo"><b>Equipo ${k + 2}</b>
+        <select data-teq="${k}" aria-label="Trabajo del equipo ${k + 2}"><option value="">— Sin trabajo —</option>${libresO.map(([x, i]) => `<option value="${i}" ${i === e.o ? 'selected' : ''}>${esc(x.nombre)} · ${dinero(x.pago)}</option>`).join('')}</select>
+        <div class="chips">${gente.map(([id, nm]) => `<button class="btn peq" data-quita="${k}|${id}">${esc(nm)} ✕</button>`).join('') || '<span class="nota">Nadie todavía.</span>'}</div>
+        ${gente.length < 4 && libresP.length ? `<select data-pon="${k}" aria-label="Añadir gente al equipo ${k + 2}"><option value="">+ Añadir a alguien…</option>${libresP.map(([id, nm]) => `<option value="${id}">${esc(nm)}</option>`).join('')}</select>` : ''}
+        ${faltan ? `<span class="aviso">Ese trabajo pide ${o.ayud} ayudantes.</span>` : ''}</div>`;
+    }).join('')}
+    <p class="nota">Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.</p>`;
 }
 function resolverB(b) {
   const o = b.orden, gente = [...(b.comp ? [{ ...COMPANEROS[b.comp], id: null }] : []), ...b.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
-  const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8);
+  const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * (o.ayud > b.ayud.length ? 1.5 : 1);
   let p = .2 + fuerza / dif * .45;
   const cosas = []; let dano = 0;
   const torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08));
@@ -2811,7 +2854,9 @@ function vCuadrilla() {
     ${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
   return `${companeros}<h2 class="sec">Ayudantes · caben ${plazas} en la camioneta</h2>${mios}
     <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.</p>
-    <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}`;
+    <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}
+    <div class="acciones"><button class="btn" id="anuncioEmpleo" ${S.dinero < 60 ? 'disabled' : ''}>Poner anuncio de empleo (${dinero(60)})</button></div>
+    <p class="nota">El anuncio trae candidatos nuevos ya. Tienes ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'ayudante' : 'ayudantes'}${hayB() ? ` y ${(S.eq.flota || 0) + 1} camionetas: para llenarlas todas necesitas unos ${((S.eq.flota || 0) + 1) * 3}` : ''}.</p>`;
 }
 
 function vTaller() {
@@ -2847,24 +2892,32 @@ function vAlbum() {
 
 function enlazar() {
   const H = S.hoy;
-  P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; if (H.b && H.b.o === H.sel) H.b.o = null; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; for (const e of H.equipos || []) if (e.o === H.sel) e.o = null; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-neg]').forEach(b => b.onclick = () => { audio(); pantallaNegociar(+b.dataset.neg); });
-  P.querySelectorAll('[data-bo]').forEach(b => b.onclick = () => { H.b = H.b || { o: null, comp: null, ayud: [] }; H.b.o = +b.dataset.bo < 0 ? null : +b.dataset.bo; guardar(); pantallaCamioneta(); });
-  P.querySelectorAll('[data-bc]').forEach(b => b.onclick = () => { H.b.comp = H.b.comp === b.dataset.bc ? null : b.dataset.bc; guardar(); pantallaCamioneta(); });
-  P.querySelectorAll('[data-bay]').forEach(b => b.onclick = () => { const id = +b.dataset.bay; H.b.ayud = H.b.ayud.includes(id) ? H.b.ayud.filter(x => x !== id) : [...H.b.ayud, id].slice(-3); guardar(); pantallaCamioneta(); });
-  P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { H.comp = S.compPref = b.dataset.c; if (H.b && H.b.comp === H.comp) H.b.comp = null; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-teq]').forEach(sel => sel.onchange = () => { H.equipos[+sel.dataset.teq].o = sel.value === '' ? null : +sel.value; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-pon]').forEach(sel => sel.onchange = () => {
+    const e = H.equipos[+sel.dataset.pon], [t, id] = sel.value.split(':'); if (!t) return;
+    if (t === 'c') e.comp = id; else if (e.ayud.length < 3) e.ayud.push(+id);
+    guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-quita]').forEach(b => b.onclick = () => {
+    const [k, v] = b.dataset.quita.split('|'), e = H.equipos[+k], [t, id] = v.split(':');
+    if (t === 'c') e.comp = null; else e.ayud = e.ayud.filter(x => x !== +id);
+    guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { H.comp = S.compPref = b.dataset.c; for (const e of H.equipos || []) if (e.comp === H.comp) e.comp = null; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
     const id = +b.dataset.a;
     if (H.ayud.includes(id)) H.ayud = H.ayud.filter(x => x !== id);
-    else if (H.ayud.length < PLAZAS[S.eq.camioneta]) { H.ayud.push(id); if (H.b) H.b.ayud = H.b.ayud.filter(x => x !== id); }
+    else if (H.ayud.length < PLAZAS[S.eq.camioneta]) { H.ayud.push(id); for (const e of H.equipos || []) e.ayud = e.ayud.filter(x => x !== id); }
     guardar(); pantallaCamioneta();
   });
   const sal = $('#salir'); if (sal) sal.onclick = () => {
     audio();
     const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
     const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3 }))];
-    const b = H.b, equipoB = hayB() && b && b.o !== null && b.o !== H.sel && H.ordenes[b.o] && (b.comp || b.ayud.length) ? { orden: H.ordenes[b.o], comp: b.comp, ayud: [...b.ayud] } : null;
-    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, retos: H.retos || [], equipoB });
+    const equipos = hayB() ? (H.equipos || []).filter(e => e.o !== null && e.o !== H.sel && H.ordenes[e.o] && (e.comp || e.ayud.length)).map(e => ({ orden: H.ordenes[e.o], comp: e.comp, ayud: [...e.ayud] })) : [];
+    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, retos: H.retos || [], equipos });
   };
   P.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => {
     audio(); const dia = DIAS.find(x => x.id === H.dia.id);
@@ -2894,6 +2947,7 @@ function enlazar() {
     c.entrevistado = true; c.respuesta = `${RESPUESTAS.cuidado[c.cuidado - 1]} ${RESPUESTAS.puntual[c.puntual - 1]}`;
     tono(660, .1, .06, 'triangle'); guardar(); pantallaCamioneta();
   });
+  const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
   P.querySelectorAll('[data-fijo]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.fijo); c.prueba = false; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-contratar]').forEach(b => b.onclick = () => {
     const c = S.candidatos.find(x => x.id === +b.dataset.contratar);
@@ -2989,8 +3043,10 @@ function pantallaParte() {
     else { const dev = r10(o.pago * .3); lineas.push(['Garantía de A incumplida (devuelves el 30 %)', -dev]); neto -= dev; rep -= 3; }
   }
   // El equipo B, en su propio trabajo
-  const B = o.equipoB ? resolverB(o.equipoB) : null;
-  if (B) { for (const l of B.lineas) { lineas.push(l); neto += l[1]; } rep += B.rep; if (B.aprobado) S.aprobados++; }
+  // Los otros equipos, cada uno en su trabajo: una línea con lo que dejó cada uno.
+  const BS = (o.equipos || (o.equipoB ? [o.equipoB] : [])).map(resolverB);
+  BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = k + 2; B.neto = v; lineas.push([`Equipo ${k + 2} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
+  rep = clamp(rep, -15, 25);
   S.racha = racha;
   // Retos de la noche
   const estrellasAntes = S.estrellas || 0;
@@ -3031,8 +3087,8 @@ function pantallaParte() {
   S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
   for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }   // la experiencia se nota
-  if (B) {
-    for (const id of o.equipoB.ayud) { const c = S.cuadrilla.find(x => x.id === id); if (c) c.noches++; }
+  for (const B of BS) {
+    for (const g of B.gente) { const c = g.id && S.cuadrilla.find(x => x.id === g.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }
     const cb = B.o.clienteId && S.clientes.find(c => c.id === B.o.clienteId);
     if (cb) { if (B.aprobado) { cb.proxima = S.noche + FREC[COCINAS[cb.cocina].frec]; cb.visitas++; } else S.clientes = S.clientes.filter(c => c !== cb); }
   }
@@ -3057,7 +3113,7 @@ function pantallaParte() {
     const c = (S.perdidos || []).find(x => x.id === o.recupera);
     if (c) { S.perdidos = S.perdidos.filter(x => x !== c); c.proxima = S.noche + FREC[COCINAS[c.cocina].frec]; c.amenazado = false; S.clientes.push(c); notaCliente = `¡${c.nombre} vuelve contigo! Ya no quiere saber nada de ${RIVAL}.`; }
   }
-  if (B && B.aprobado && !B.o.clienteId && azar(.25 + S.rep / 300)) cola.push(() => ofertaContrato(B.o));
+  for (const B of BS) if (B.aprobado && !B.o.clienteId && azar(.25 + S.rep / 300)) cola.push(() => ofertaContrato(B.o));
   if (cli || o.recupera) { /* ya resuelto arriba */ } else if (!aprendiz && aprobado && (!d || ganaDuelo) && azar(.35 + S.rep / 250 + .1 * perk('gentes') + (ganaDuelo ? .3 : 0))) cola.push(() => ofertaContrato(o));
   // Experiencia y nivel
   S.xp += xp; let subidas = 0;
@@ -3083,7 +3139,7 @@ function pantallaParte() {
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(capitulo.t)}</b>${esc(capitulo.txt)}</div>` : ''}
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
-    ${B ? `<div class="cita equipo-b"><b>Equipo B en ${esc(B.o.nombre)} · ${B.aprobado ? 'aprobado' : 'no pasó'}</b>${esc(B.gente.map(g => g.n).join(', '))}: ${esc(B.cosas.join(' '))}</div>` : ''}
+    ${BS.length ? `<div class="cita equipo-b"><b>Tus otros equipos</b>${BS.map(B => `<div class="eq-res"><b>Equipo ${B.k} · ${esc(B.o.nombre)} · ${B.aprobado ? '✓ aprobado' : '✗ no pasó'} · ${dinero(B.neto)}</b>${esc(B.gente.map(g => g.n).join(', '))}: ${esc(B.cosas.join(' '))}</div>`).join('')}</div>` : ''}
     <div class="cuentas">
       ${lineas.filter(l => l[1] !== 0).map(l => `<span>${esc(l[0])}</span><span>${l[1] === null ? '—' : dinero(l[1])}</span>`).join('')}
       <span class="total">Te llevas</span><span class="total">${dinero(neto)}</span>
