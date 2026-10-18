@@ -59,6 +59,8 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .zonas span { font-family: var(--f-mono); font-size: 12px; color: var(--tenue); font-variant-numeric: tabular-nums; }
 .zonas .listo span { color: var(--ok); }
 .zonas button:disabled { opacity: .4; }
+.botones-hud { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn.robot { background: #2a3d4a; border-color: #7fd3e6; color: #bfeefa; }
 .zonas button.revisar { border-color: var(--grasa); box-shadow: 0 0 0 1px var(--grasa); }
 .filas-reparto { display: grid; gap: 6px; max-height: 40vh; overflow-y: auto; }
 .filas-reparto label { display: grid; grid-template-columns: 1fr 1.2fr; gap: 8px; align-items: center; font-family: var(--f-cond); font-weight: 700; font-size: 15px; }
@@ -344,7 +346,7 @@ a.btn { display: inline-block; text-decoration: none; }
     <div class="hud-abajo" id="hudAbajo">
       <div class="mandos">
         <div class="info"><div class="barra-herr" id="barraHerr"></div><span class="ayuda" id="ayuda">Elige la herramienta abajo y haz pasadas cortas sobre la grasa.</span>
-          <button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button></div>
+          <div class="botones-hud"><button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button><button class="btn peq robot" id="robotBtn" style="pointer-events:auto" hidden>🤖 Mandar el robot</button></div></div>
         <button class="herr-btn" id="herrBtn" aria-label="Herramienta: mantén pulsado para la rueda"></button>
       </div>
       <div class="zonas" id="zonas"></div>
@@ -539,6 +541,15 @@ const TIENDA = [
   { id: 'bolsa', n: 'Bolsas de contención nuevas', d: 'Las viejas tienen más parches que bolsa.', p: 120, ok: s => !s.eq.bolsa, f: s => { s.eq.bolsa = true; } },
   { id: 'hidro', n: 'Hidrolavadora de agua caliente propia', d: 'Chorro ancho y fuerte. Esta es tuya y nadie la vende para comprarse un karaoke.', p: 900, ok: s => !s.eq.hidro, f: s => { s.eq.hidro = true; } },
   { id: 'cam2', n: 'Camioneta con baca', d: 'Caben 2 ayudantes además del compañero.', p: 500, ok: s => s.eq.camioneta === 1 && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.camioneta = 2; } },
+  { id: 'uv', n: 'Linterna UV de grasa', d: 'La grasa que falta brilla un poco bajo la luz del casco. Ya no se te escapa ninguna mancha.', p: 300, ok: s => !s.eq.uv && s.fase === 'empresa', f: s => { s.eq.uv = true; } },
+  { id: 'cubiertas', n: 'Cubiertas a medida', d: 'Cubrir y destapar cada aparato tarda la mitad.', p: 200, ok: s => !s.eq.cubiertas && s.fase === 'empresa', f: s => { s.eq.cubiertas = true; } },
+  { id: 'pistola', n: 'Cinta con pistola', d: 'Encintar el plástico tarda la mitad. Suena como en las películas.', p: 150, ok: s => !s.eq.pistola && s.fase === 'empresa', f: s => { s.eq.pistola = true; } },
+  { id: 'mango', n: 'Rasqueta de mango largo', d: 'Las pasadas cubren un 25 % más de ancho.', p: 400, ok: s => !s.eq.mango && s.fase === 'empresa', f: s => { s.eq.mango = true; } },
+  { id: 'canon', n: 'Cañón de espuma', d: 'La espuma sale en una nube: cubre casi el doble y gasta menos botella.', p: 650, ok: s => !s.eq.canon && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.canon = true; } },
+  { id: 'electrica', n: 'Rasqueta eléctrica', d: 'Vibra sola: un 25 % más de fuerza en cada pasada. Hace cosquillas.', p: 1200, ok: s => !s.eq.electrica && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.electrica = true; } },
+  { id: 'vapor', n: 'Hidrolavadora de vapor', d: 'Agua a 140 °C: el chorro limpia un 40 % más y derrite la grasa quemada sin espuma.', p: 1800, ok: s => !s.eq.vapor && s.eq.hidro && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.vapor = true; } },
+  { id: 'robot', n: 'Robot de ductos «Ductobot 3000»', d: 'Lo metes en el ducto y lo limpia solo, de punta a punta. Las esquinas te las deja a ti.', p: 2500, ok: s => !s.eq.robot && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.robot = 1; } },
+  { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 1500, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
   { id: 'flota', get n() { return S.eq.flota ? `Camioneta para el equipo ${S.eq.flota + 2}` : 'Segunda camioneta'; }, get d() { return `Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`; },
     get p() { return 1200 + (S.eq.flota || 0) * 600; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
       s.eq.flota = (s.eq.flota || 0) + 1;
@@ -776,6 +787,7 @@ const perk = k => S.perks[k] || 0;
 // De aprendiz trabajas con el equipo de Don Rigo, al máximo: el trabajo se siente fácil. Con tu empresa, usas el tuyo (al principio, lo básico).
 const EQ_RIGO = { rasqueta: 3, conc: true, hidro: true, orbital: true, bolsa: true, xl: true };
 const EQ = () => S.fase === 'aprendiz' ? EQ_RIGO : S.eq;
+const hlBase = () => S.aj.resaltar ? 1 : M && EQ().uv ? .45 : 0;   // resaltar suciedad, o la linterna UV
 const jugador = () => S.jugador || 'chamaco';
 
 // ------------------------------------------------------------------ audio
@@ -810,7 +822,7 @@ function tono(freq, dur, vol = .12, tipo = 'sine', fin = null, cuando = 0) {
   o.connect(g); g.connect(A.salida); o.start(t0); o.stop(t0 + dur + .02);
 }
 // Sonidos continuos: el spray de la espuma (psssh), el chorro de la hidro con su bomba, la migdaleadora (bzzz).
-const VOL_LOOP = { spray: .11, agua: .16, pulidora: .07, coche: .05 };
+const VOL_LOOP = { spray: .11, agua: .16, pulidora: .07, coche: .05, robot: .06 };
 function crearLoop(id) {
   const c = A.ctx, g = c.createGain(), fuentes = [];
   g.gain.value = 0; g.connect(A.salida);
@@ -821,6 +833,7 @@ function crearLoop(id) {
   if (id === 'agua') { const a = ruido('bandpass', 850, .5, .9); const b = ruido('highpass', 3000, .7, .5); lfo(a.gg.gain, 9, .3); lfo(b.fl.frequency, 4, 700); const m = osc('sawtooth', 48, .06); lfo(m.o.frequency, 2.5, 2); }
   if (id === 'pulidora') { const m = osc('sawtooth', 112, .5); lfo(m.o.frequency, 8, 7); ruido('bandpass', 2600, 3, .5); }
   if (id === 'coche') { const m = osc('square', 800, .5); lfo(m.o.frequency, 2.2, 380); }
+  if (id === 'robot') { const m = osc('square', 72, .35); lfo(m.o.frequency, 5, 6); ruido('bandpass', 1500, 2.5, .6); }
   return { g, fuentes, apagado: false, t: null };
 }
 function loop(id, on) {
@@ -1455,7 +1468,8 @@ function construirNoche(orden) {
   Z = gruposF.map((g, i) => ({ id: 'filtros', n: gruposF.length > 1 ? `Filtros ${'ABCD'[i]}` : 'Filtros', sfs: g.sfs, vista: vista(new T.Vector3(g.lx, 0, g.lonaZ), new T.Vector3(0, 1.6, 1.0), g.lonaW + .2, 1.7, 3.2, 55) }));
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs, gotas: c.gotas, labio: c.labio,
     vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100 } } }));
-  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `Ducto ${i + 1}` : 'Ducto', sfs: d.sfs, vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } }));
+  piezas.robot = null;
+  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `Ducto ${i + 1}` : 'Ducto', sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } }));
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
 }
 
@@ -1623,7 +1637,7 @@ function empezarTurno(orden) {
   // Puntualidad: el que tiene poca a veces no llega (y esa noche no cobra).
   const faltan = orden.equipo.filter(e => !e.principal && azar((5 - (e.puntual || 3)) * .07));
   orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
-  construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0; U.hl.value = S.aj.resaltar ? 1 : 0;
+  construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0;
   M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 40 : 0) + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
@@ -1688,7 +1702,7 @@ function escenaPrep(i) {
     const ap = piezas.aparatos;
     const estado = () => `Cubiertos: ${ap.filter(a => a.cubierto).length} de ${ap.length}`;
     const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = ap.every(a => a.cubierto) ? 'Siguiente: el plástico de la campana' : 'Seguir sin terminar'; };
-    ap.forEach(a => marca(a.pos, 'Cubrir', () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
+    ap.forEach(a => marca(a.pos, 'Cubrir', () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(EQ().cubiertas ? 1 : 2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
     panelPrep('Cubrir la cocina', 'Toca cada aparato para taparlo con plástico. Lo que quede al aire se llena de agua con grasa y espuma.', estado(), 'Seguir sin terminar');
     actualizar();
     if (M.pedido && M.pedido.id === 'abuela') decir(M.cliente, '¡Esa plancha es la de mi abuela! Cúbranla bien. Y todo lo demás también.');
@@ -1702,7 +1716,7 @@ function escenaPrep(i) {
       if (ci.every(c => c.hecho) && !bo.some(b => b.marca)) bo.forEach(b => { b.marca = marca(b.pos, 'Colgar la bolsa', () => { b.hecho = true; b.mesh.visible = true; gastar(2); tono(500, .1, .08, 'triangle'); actualizar(); }); });
       const btn = $('#prepSig'); if (btn) btn.textContent = ci.every(c => c.hecho) && bo.every(b => b.hecho) ? 'Empezar a limpiar' : 'Empezar sin terminar';
     };
-    ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(.6); cinta(); actualizar(); }, true));
+    ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(EQ().pistola ? .3 : .6); cinta(); actualizar(); }, true));
     M.arrastrar = true;
     panelPrep('Envolver la campana', 'Pasa el dedo por los puntos del borde para pegar el plástico con cinta: forma un embudo. Luego cuelga la bolsa donde cae el agua.', estado(), 'Empezar sin terminar');
     actualizar();
@@ -1806,7 +1820,7 @@ function arrancarTurno() {
   if (p.bolsa && !EQ().bolsa && azar(.25)) M.eventos.push({ tipo: 'bolsa', zona: iDucto(), en: rnd(14, 24) });
   M.t = M.prepMin / 480 * M.dur;
   matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
-  M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0;
+  M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0; U.hl.value = hlBase();
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
   $('#duelo').hidden = !M.duelo; pintarRadio();
@@ -1864,7 +1878,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
     const m = tp === 3 ? 1 : multEspuma(sf.soak[i]);   // el sarro no se ablanda con espuma
     let duro = sf.d[i] > .6 && m === 1 ? (herr === 'hidro' ? .25 : .5) : 1;
     if (herr !== 'cuadrilla') {   // las cuadrillas traen de todo: a ellas la suciedad especial no las frena
-      if (tp === 1 && m === 1) duro *= herr === 'hidro' ? .4 : .3;                       // quemada: sin espuma casi no sale
+      if (tp === 1 && m === 1) duro *= herr === 'hidro' ? (EQ().vapor ? 1 : .4) : .3;                       // quemada: sin espuma casi no sale
       if (tp === 2) duro *= herr === 'hidro' ? 2.2 : herr === 'rasqueta' ? .5 : 1;          // aceite: la hidro lo arrastra, la rasqueta lo embarra
       if (tp === 3) duro *= herr === 'rasqueta' ? (EQ().rasqueta >= 3 ? 1.1 : .4) : .2;     // sarro: rasqueta de carburo
     }
@@ -1880,8 +1894,8 @@ function raspar(sf, gx, gy, rc, cant, herr) {
   sf.sucio = true;
   return quit;
 }
-const radioRasqueta = () => [0, .1, .12, .14][EQ().rasqueta];
-const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .15 * perk('brazo'));
+const radioRasqueta = () => [0, .1, .12, .14][EQ().rasqueta] * (EQ().mango ? 1.25 : 1);
+const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .15 * perk('brazo')) * (EQ().electrica ? 1.25 : 1);
 
 // La primera vez que tocas cada suciedad especial con la herramienta equivocada, alguien te avisa.
 function avisoTipo(t, herr) {
@@ -1910,7 +1924,7 @@ function aplicarTramo(a, b) {
     if (M.botella <= 0) { ayuda('Botella de espuma vacía. Te queda la rasqueta.'); return 0; }
     if (!M.avisoEspuma) { M.avisoEspuma = true; ayuda('La espuma no limpia: ablanda la grasa. Espera 2 segundos y pásale la rasqueta.', 6); decir(M.comp, 'Ojo: la espuma no quita nada, solo ablanda. Luego toca la rasqueta.'); }
     else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda('Esto ya está blando: cambia a la rasqueta y raspa.', 4); }
-    rc = .15 / sf.celda; cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (EQ().xl ? 1.5 : 1));
+    rc = .15 / sf.celda * (EQ().canon ? 1.8 : 1); cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (EQ().xl ? 1.5 : 1) * (EQ().canon ? .7 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = EQ().orbital ? .5 : .28; }
   else { rc = radioRasqueta() / sf.celda; cant = fuerzaRasqueta() * ef * multCombo; }
   const pasos = Math.ceil(dist / .4);
@@ -2243,6 +2257,59 @@ function explotaGerente() {
   ], { bloquea: true });
 }
 
+// ---- el robot de ductos: recorre el ducto de punta a punta limpiando el fondo y las paredes
+
+const QUIEN_ROBOT = { n: 'Ductobot 3000', color: '#7fd3e6' };
+function robotMalla() {
+  const g = new T.Group(), metal = new T.MeshStandardMaterial({ color: 0xd9dee2, metalness: .7, roughness: .3 }), negro = new T.MeshStandardMaterial({ color: 0x1b1f22, roughness: .6 });
+  const cuerpo = new T.Mesh(new T.BoxGeometry(.2, .08, .26), new T.MeshStandardMaterial({ color: 0xffb020, roughness: .4 })); cuerpo.position.y = .07; g.add(cuerpo);
+  const tapa = new T.Mesh(new T.BoxGeometry(.14, .04, .14), metal); tapa.position.set(0, .13, .02); g.add(tapa);
+  for (const x of [-.11, .11]) for (const z of [-.08, .08]) { const r = new T.Mesh(new T.CylinderGeometry(.035, .035, .03, 12), negro); r.rotation.z = Math.PI / 2; r.position.set(x, .035, z); g.add(r); }
+  const cepillo = new T.Mesh(new T.CylinderGeometry(.09, .09, .05, 16), new T.MeshStandardMaterial({ color: 0x3a6fd1, roughness: .9 })); cepillo.rotation.x = Math.PI / 2; cepillo.position.set(0, .07, -.16); g.add(cepillo);
+  const luz = new T.Mesh(new T.SphereGeometry(.018, 8, 6), new T.MeshBasicMaterial({ color: 0xff3a2a })); luz.position.set(0, .16, .06); g.add(luz);
+  const ojo = new T.Mesh(new T.CircleGeometry(.025, 12), new T.MeshBasicMaterial({ color: 0x9fe0ef })); ojo.position.set(0, .08, -.131); ojo.rotation.y = Math.PI; g.add(ojo);
+  g.userData = { cepillo, luz };
+  return g;
+}
+function mandarRobot() {
+  const z = zonaAct(); if (!z.duct || M.robot) return;
+  // Altura (a lo largo del ducto) de cada celda de cada superficie, para saber cuáles toca el robot al pasar.
+  for (const sf of z.sfs) if (!sf.zw) {
+    sf.mesh.updateMatrixWorld(); sf.zw = new Float32Array(sf.d.length); const v = new T.Vector3(), cil = sf.mesh.geometry.type === 'CylinderGeometry';
+    for (let y = 0; y < sf.ny; y++) for (let x = 0; x < sf.nx; x++) { v.set(cil ? 0 : (x / sf.nx - .5) * sf.w, (y / sf.ny - .5) * sf.h, 0); sf.mesh.localToWorld(v); sf.zw[y * sf.nx + x] = v.z; }
+    sf.largoX = Math.abs(sf.zw[sf.nx - 1] - sf.zw[0]) > Math.abs(sf.zw[(sf.ny - 1) * sf.nx] - sf.zw[0]);   // ¿el largo del ducto va a lo ancho de la textura?
+  }
+  if (!piezas.robot) { piezas.robot = robotMalla(); mundo.add(piezas.robot); }
+  const r = piezas.robot, d = z.duct;
+  r.visible = true; r.position.set(d.dx, d.piso + (z.redondo ? .03 : 0), d.z0 + .1);
+  M.robot = { z, t: 0, dur: (EQ().robot === 2 ? 14 : 28) * Math.abs(d.z0 - d.z1) / 2 };
+  loop('robot', true); tono(660, .1, .08, 'square'); tono(990, .12, .08, 'square', null, .12);
+  decir(QUIEN_ROBOT, uno(['Bip. Entrando al ducto. Bup.', 'Ductobot en posición. Iniciando protocolo «no tocar al mapache».', 'Bip bup. Grasa detectada. Mucha grasa. Demasiada grasa.']));
+}
+function tickRobot(dt) {
+  const R0 = M.robot, z = R0.z, d = z.duct, r = piezas.robot;
+  R0.t += dt;
+  const f = Math.min(1, R0.t / R0.dur), zr = d.z0 + (d.z1 - d.z0) * f, esquinas = EQ().robot === 2;
+  r.position.z = zr; r.position.y = d.piso + (z.redondo ? .03 : 0) + Math.abs(Math.sin(R0.t * 18)) * .004;
+  r.userData.cepillo.rotation.y += dt * 25; r.userData.luz.material.color.setHex(Math.floor(R0.t * 3) % 2 ? 0xff3a2a : 0x551010);
+  // Limpia lo que pasa por debajo y a los lados del cepillo; sin turbo, las esquinas quedan para ti.
+  for (const sf of z.sfs) {
+    let toco = false;
+    for (let i = 0; i < sf.d.length; i++) {
+      if (sf.d[i] <= 0 || Math.abs(sf.zw[i] - zr) > .14) continue;
+      if (!esquinas && !z.redondo) { const c = sf.largoX ? Math.floor(i / sf.nx) : i % sf.nx, n = sf.largoX ? sf.ny : sf.nx; if (c < 2 || c > n - 3) continue; }
+      sf.d[i] = Math.max(0, sf.d[i] - dt * 3); toco = true;
+    }
+    if (toco) sf.sucio = true;
+  }
+  if (azar(dt * 6) && M.zona === Z.indexOf(z)) emitir(r.position.clone().add(new T.Vector3(0, .08, -.16)), 2, 'grasa', new T.Vector3(0, .6, -1), .5);
+  if (f >= 1) {
+    loop('robot', false); r.visible = false; M.robot = null; sDing();
+    decir(QUIEN_ROBOT, esquinas ? 'Bip bup. Ducto limpio. Esquinas incluidas. De nada, humano.' : 'Bip bup. Ducto limpio. Las esquinas: tarea para el humano.');
+    pintarHud(false);
+  }
+}
+
 // ---- el duelo contra El Cuñado: limpia la misma cocina a la vez que tú
 
 const avanceTuyo = () => Z.reduce((a, z) => a + clamp(pctZona(z) / Math.max(.05, 1 - LIMITE / M.orden.micras), 0, 1), 0) / Z.length;
@@ -2381,7 +2448,7 @@ function manias(dt, z) {
     M.lupeT = rnd(18, 26);
     if (micras(z) > LIMITE) { M.lupeHl = 2.5; U.hl.value = 1; decir(M.comp, uno(['Te falta ahí. No, ahí. Donde brilla.', 'Te lo marco. De nada.', 'Esa esquina no se limpia sola. Te la marco.'])); }
   }
-  if (M.lupeHl > 0 && (M.lupeHl -= dt) <= 0) U.hl.value = S.aj.resaltar ? 1 : 0;
+  if (M.lupeHl > 0 && (M.lupeHl -= dt) <= 0) U.hl.value = hlBase();
 }
 
 // Tu contraataque: una vez por noche, según quién vaya contigo.
@@ -2413,7 +2480,7 @@ function tickTurno(dt) {
     // Hidrolavadora: mantener y apuntar.
     if (M.presionado && M.herr === 'hidro' && M.apuntado) {
       const a = M.apuntado;
-      const q = raspar(a.sf, a.gx, a.gy, .17 / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * dt, 'hidro');
+      const q = raspar(a.sf, a.gx, a.gy, .17 / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * (EQ().vapor ? 1.4 : 1) * dt, 'hidro');
       emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
@@ -2441,6 +2508,7 @@ function tickTurno(dt) {
     }
     if (M.pedido && M.pedido.id === 'antes3' && !M.aviso3 && M.t / M.dur * 480 >= 270) { M.aviso3 = true; decir(M.cliente, '¡Ya son las dos y media! El panadero llega a las tres, ¿eh?'); }
     if (M.duelo) tickDuelo(dt);
+    if (M.robot) tickRobot(dt);
     if (!M.ev) {
       // Chuy se duerme; hay que despertarlo.
       if (M.orden.comp === 'chuy' && !M.dormido && (M.dormirT -= dt) <= 0) { M.dormido = true; M.ronqT = 0; }
@@ -2513,9 +2581,12 @@ function pintarHud(todo) {
   });
   const g = $('#barraHerr .gasto'); if (g) g.textContent = `${Math.round(M.botella * 100)} %`;
   $('#siguiente').textContent = M.etapa === 'migdalear' ? 'Llamar al inspector' : M.zona < ultZona() ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar de lavar';
+  const z = zonaAct(), rb = $('#robotBtn');
+  rb.hidden = !(EQ().robot && M.etapa === 'lavar' && z.id === 'ducto' && !M.robot && micras(z) > LIMITE);
   const pa = pasoActual(); if (M.pasoPintado !== pa) { M.pasoPintado = pa; $('#pasos').innerHTML = pasosHTML(pa); }
   Z.forEach((z, i) => { $('#zonas').children[i].disabled = M.etapa === 'migdalear' && z.id !== 'campana'; });
 }
+$('#robotBtn').addEventListener('click', () => { if (M && M.fase === 'turno' && !M.ev) { audio(); mandarRobot(); } });
 $('#zonas').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b && !b.disabled && M && M.fase === 'turno' && M.etapa !== 'pelar' && !M.ev) irZona(+b.dataset.z); });
 $('#siguiente').addEventListener('click', () => {
   if (!M || M.fase !== 'turno' || M.ev) return;
@@ -2552,7 +2623,7 @@ function empezarPelado() {
     const b = $('#prepSig'); if (b) b.textContent = listo() ? 'Siguiente: migdalear la campana' : 'Seguir sin terminar';
   };
   faldas.forEach(f => marca(f.mesh.position.clone(), '', () => { f.pelada = true; f.mesh.userData.vuela = 1; rasgar(); sumarTiempo(.4); act(); }, true));
-  cubs.forEach(a => marca(a.pos, 'Quitar', () => { a.quitada = true; a.cubierta.userData.sube = .6; rafaga(.25, 900, .08, 'lowpass'); sumarTiempo(1); act(); }));
+  cubs.forEach(a => marca(a.pos, 'Quitar', () => { a.quitada = true; a.cubierta.userData.sube = .6; rafaga(.25, 900, .08, 'lowpass'); sumarTiempo(EQ().cubiertas ? .5 : 1); act(); }));
   bolsas.forEach(b => marca(b.pos, 'Bajar la bolsa', () => {
     b.bajada = true; b.mesh.visible = false; sumarTiempo(1.5);
     if (azar(EQ().bolsa ? .05 : .2)) { emitir(b.pos, 30, 'agua', null, 1.5); tono(200, .4, .1, 'sawtooth', 80); dano('Bolsa derramada al bajarla', 20, 1); decir(M.comp, '¡Chof! Bueno, el suelo también necesitaba agua.'); }
@@ -2596,9 +2667,10 @@ $('#radioBtn').addEventListener('click', () => {
 });
 
 function terminarTurno() {
-  M.finMin = clamp(M.t / M.dur, 0, 1) * 480; M.apagon = 0; U.mig.value = 0;
+  M.finMin = clamp(M.t / M.dur, 0, 1) * 480; M.apagon = 0; U.mig.value = 0; U.hl.value = 0;
   M.fase = 'parte'; M.pausa = false; M.arrastrar = false; cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true;
   for (const id in A.loops) loop(id, false);
+  if (M.robot) { M.robot = null; if (piezas.robot) piezas.robot.visible = false; }
   radioEncender(false);
   $('#hud').hidden = true; chat.innerHTML = '';
   irVista(zCampana().vista); zCampana().vista.pan = 0;
@@ -3028,6 +3100,7 @@ function vCuadrilla() {
 }
 
 function vTaller() {
+  const bloqueadas = S.fase === 'empresa' ? [['Cañón de espuma y rasqueta eléctrica', 1], ['Hidrolavadora de vapor y robot de ductos', 2], ['Turbo para el robot', 3]].filter(([, e]) => S.etapa < e) : [];
   if (S.fase === 'aprendiz') return '<div class="cita"><b>Don Rigo</b>Las herramientas son mías y son las mejores: rasqueta de carburo, hidrolavadora, migdaleadora orbital, de todo. Disfrútalas mientras trabajes conmigo. Cuando tengas tu empresa, te compras las tuyas.</div>';
   const items = TIENDA.filter(t => t.ok(S));
   const kits = S.fase === 'empresa' && S.eq.flota ? `<h2 class="sec">Equipo de tus camionetas</h2>${Array.from({ length: S.eq.flota }, (_, k) => {
@@ -3037,7 +3110,8 @@ function vTaller() {
   }).join('')}<p class="nota">Con mejor equipo, sus equipos limpian más rápido y aprueban más fácil.</p>` : '';
   return `<p class="nota">Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas. Tienes ${dinero(S.dinero)}.</p>
     ${items.map(t => `<div class="orden"><h3>${esc(t.n)}</h3><span class="nota">${esc(t.d)}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>Comprar</button></div></div>`).join('') || '<p class="nota">Ya tienes todo el equipo.</p>'}
-    ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}${kits}`;
+    ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}
+    ${bloqueadas.length ? `<p class="nota">Más adelante: ${bloqueadas.map(([n, e]) => `${n} (desde ${ETAPAS[e].n})`).join(' · ')}.</p>` : ''}${kits}`;
 }
 
 function vLogros() {
@@ -3162,7 +3236,7 @@ function pantallaAjustes(enTurno, desdeInicio) {
     <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, arrastra con dos dedos (o con uno sobre la pared o el suelo) para mover la vista. El aviso naranja del borde te dice si falta algo por ese lado: tócalo y te lleva. En ordenador, las flechas del teclado. En ordenador, teclas 1 a 4.</div>
     <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="menu">Menú principal</button>'}</div>`);
   P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
-    const k = b.dataset.k; S.aj[k] = !S.aj[k]; b.setAttribute('aria-pressed', S.aj[k]); U.hl.value = S.aj.resaltar ? 1 : 0; guardar();
+    const k = b.dataset.k; S.aj[k] = !S.aj[k]; b.setAttribute('aria-pressed', S.aj[k]); U.hl.value = M && M.fase === 'turno' ? hlBase() : 0; guardar();
     if (k === 'ahorro') { calidad(); redimensionar(); }
     if (k === 'sonido' || k === 'radio') { audio(); if (!S.aj.sonido) for (const id in A.loops) loop(id, false); if (M && !S.aj.radio) M.radioApagada = true; radioEncender(!!M && S.aj.radio); }
   });
