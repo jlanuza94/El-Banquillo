@@ -7,6 +7,8 @@ import android.content.pm.PackageInstaller;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
@@ -55,6 +57,21 @@ public class MainActivity extends Activity {
             if (descargando) return;
             descargando = true;
             new Thread(() -> instalar(url)).start();
+        }
+
+        // Vibración: "50" es un golpe de 50 ms; "100,50,100" vibra, pausa y vibra.
+        @JavascriptInterface
+        public void vibrar(String patron) {
+            try {
+                Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+                if (v == null || !v.hasVibrator()) return;
+                String[] p = patron.split(",");
+                long[] t = new long[p.length + 1];
+                for (int i = 0; i < p.length; i++) t[i + 1] = Long.parseLong(p[i].trim());
+                if (Build.VERSION.SDK_INT >= 26) {
+                    v.vibrate(p.length == 1 ? VibrationEffect.createOneShot(t[1], VibrationEffect.DEFAULT_AMPLITUDE) : VibrationEffect.createWaveform(t, -1));
+                } else if (p.length == 1) v.vibrate(t[1]); else v.vibrate(t, -1);
+            } catch (Exception e) { /* sin vibrador */ }
         }
     }
 
