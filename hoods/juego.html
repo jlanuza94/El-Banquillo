@@ -264,6 +264,10 @@ a.btn { display: inline-block; text-decoration: none; }
 #contra { pointer-events: auto; grid-column: 1 / -1; justify-self: center; padding: 3px 10px; font-size: 13px; }
 .cita.historia { border-color: #c6a0ff66; }
 .cita.equipo-b { border-left: 3px solid var(--ok); }
+.medidas { font-size: 12px; color: var(--grasa) !important; }
+.medidas i { font-style: normal; color: var(--tenue); font-family: var(--f-cond); text-transform: uppercase; letter-spacing: .05em; margin-left: 6px; }
+.medidas i:first-child { margin-left: 0; }
+.respuesta { font-style: italic; color: var(--acero) !important; }
 .tras-orden { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: -8px 0 4px 12px; }
 .opciones.neg { display: grid; gap: 6px; }
 .opciones.neg .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; }
@@ -686,7 +690,32 @@ function completar(s) {
   if (!s.fijos) s.fijos = s.fase === 'empresa' ? Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= s.etapa) : [];   // partidas de antes: los que ya estaban
   s.medallas = s.medallas || {}; s.secretos = s.secretos || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
   if (s.aj.radio === undefined) s.aj.radio = true;
+  // Ayudantes y candidatos de antes: se les ponen medidas (cuidado y puntualidad) y su fuerza de base.
+  for (const c of [...(s.cuadrilla || []), ...(s.candidatos || [])]) {
+    if (!c.cuidado) c.cuidado = 2 + Math.floor(Math.random() * 3);
+    if (!c.puntual) c.puntual = 2 + Math.floor(Math.random() * 3);
+    if (!c.base) c.base = c.fuerza;
+    if (s.cuadrilla.includes(c)) c.entrevistado = true;
+  }
   return s;
+}
+// Lo nuevo también llega a la noche que ya estaba preparada y a los clientes de antes.
+function ponerAlDia() {
+  const H = S.hoy;
+  if (H && H.noche === S.noche) {
+    if (!H.retos) H.retos = RETOS.filter(r => !r.si || r.si()).sort(() => Math.random() - .5).slice(0, 3).map(r => r.id);
+    for (const o of H.ordenes) {
+      if (!o.suciedad) o.suciedad = { ...(SUCIEDAD[o.cocina] || {}) };
+      if (o.caracter === undefined) o.caracter = !o.clienteId && S.fase === 'empresa' ? uno(Object.keys(CARACTER)) : null;
+    }
+    if (!('dia' in H) && S.noche >= 2 && azar(.5)) H.dia = { id: uno(DIAS.filter(d => !d.solo || d.solo(S))).id, res: '' };
+    if (!('dia' in H)) H.dia = null;
+  }
+  const usadas = new Set(S.clientes.map(c => c.historia).filter(Boolean));
+  for (const c of S.clientes) if (!('historia' in c)) {
+    const libres = Object.keys(HISTORIAS).filter(h => !usadas.has(h));
+    c.historia = libres.length && azar(.7) ? uno(libres) : null; c.cap = 0; if (c.historia) usadas.add(c.historia);
+  }
 }
 function migrar(s) {
   if (s.v === 2) Object.assign(s, { v: 3, nivel: 1, xp: 0, perks: {}, clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 1 }, { eq: Object.assign({ xl: false, camioneta: 1 }, s.eq) });
@@ -1521,6 +1550,9 @@ const pasosHTML = actual => PASOS.map((p, i) => `<span class="${i < actual ? 'he
 const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalear: 3 })[M.etapa];
 
 function empezarTurno(orden) {
+  // Puntualidad: el que tiene poca a veces no llega (y esa noche no cobra).
+  const faltan = orden.equipo.filter(e => !e.principal && azar((5 - (e.puntual || 3)) * .07));
+  orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0; U.hl.value = S.aj.resaltar ? 1 : 0;
   M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
@@ -1528,7 +1560,8 @@ function empezarTurno(orden) {
     maxCombo: 0, combos3: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
     pedido: orden.pedido ? pedido(orden.pedido) : null, cliente: { n: 'Cliente', color: '#e9e9e9' },
     equipo: orden.equipo.map(e => ({ ...e, fuerza: e.fuerza * (orden.animo ? 1.15 : 1), t: rnd(.2, .8) })) };
-  if (orden.donas) M.paciencia += 40;   // las donas de la clienta, para el gerente
+  if (orden.donas) M.paciencia += 40;
+  M.faltan = faltan;   // las donas de la clienta, para el gerente
   if (M.pedido) M.cliente = { n: M.pedido.quien, color: '#e9e9e9' };
   // El duelo: El Cuñado limpia la misma cocina a la vez. Gana quien deje todo bajo el límite primero.
   if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74), tuyo: null, rivalFin: null, charlaT: rnd(14, 22) };
@@ -1549,6 +1582,7 @@ function empezarTurno(orden) {
   P.hidden = true;
   escenaPrep(0);
   radioEncender(true);
+  for (const e of M.faltan) setTimeout(() => M && decir(M.comp, `${e.n} no llegó. Mandó mensaje: «${uno(['Se me poncharon las dos llantas. Y la de repuesto.', 'Me quedé dormido viendo un video de cómo limpiar campanas.', 'Mi gato se comió las llaves.', 'Estoy en camino. (No está en camino.)'])}»`), 1200);
   if (M.pedido) setTimeout(() => M && M.fase === 'prep' && decir(M.cliente, M.pedido.txt), 1800);
   if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
 }
@@ -2179,6 +2213,12 @@ function zonaCompa() {
 }
 function manias(dt, z) {
   const id = M.orden.comp;
+  // Los ayudantes poco cuidadosos tienen sus accidentes.
+  if ((M.ayudT = (M.ayudT ?? rnd(30, 45)) - dt) <= 0) {
+    M.ayudT = rnd(35, 55);
+    const torpe = uno(M.equipo.filter(e => !e.principal && azar((5 - (e.cuidado || 3)) * .09)));
+    if (torpe) { dano(`${torpe.n} tiró ${uno(['una charola de vasos', 'el bote de basura', 'la escalera contra la vitrina', 'una cubeta de agua con grasa'])}`, uno([15, 25, 40]), 0); rafaga(.3, 700, .2, 'lowpass'); decir(torpe, uno(['Yo no fui. Bueno, sí.', '¡Perdón, perdón, perdón!', 'Eso estaba mal puesto.'])); }
+  }
   if (id === 'beto' && (M.betoT = (M.betoT ?? rnd(35, 50)) - dt) <= 0) {
     M.betoT = rnd(40, 60);
     if (azar(.5)) {
@@ -2478,8 +2518,9 @@ function generarOrdenes() {
 function genCandidatos() {
   const usados = new Set(S.cuadrilla.map(c => c.n));
   return CANDIDATOS.filter(c => !usados.has(c[0])).sort(() => Math.random() - .5).slice(0, 3).map(([n, rasgo, frase]) => {
-    const fuerza = +rnd(.6, 1.3).toFixed(2);
-    return { id: S.sigId++, n, rasgo, frase, fuerza, sueldo: Math.round((50 + fuerza * 80) / 5) * 5, color: uno(COLORES), noches: 0 };
+    const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5);
+    // Los buenos piden más: el sueldo sale de las tres medidas.
+    return { id: S.sigId++, n, rasgo, frase, fuerza, base: fuerza, cuidado, puntual, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 };
   });
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
@@ -2578,6 +2619,7 @@ function cabecera() {
 
 function pantallaCamioneta() {
   if (RADIO.on) radioEncender(false);
+  ponerAlDia();
   M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true; aplicarLook();
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
@@ -2715,6 +2757,8 @@ function resolverB(b) {
   const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8);
   let p = .2 + fuerza / dif * .45;
   const cosas = []; let dano = 0;
+  const torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08));
+  if (torpe) { dano += uno([20, 40]); cosas.push(`${torpe.n} tiró algo que no debía.`); }
   if (b.comp === 'lupe') { p += .15; cosas.push('Lupe revisó cada esquina dos veces. Y a los ayudantes, tres.'); }
   if (b.comp === 'beto' && azar(.4)) { dano = uno([40, 80, 120]); cosas.push(uno(['Beto rompió una lámpara del techo con la escalera.', 'Beto confundió el desengrasante con el refresco del chef.', 'Beto se quedó encerrado en la cámara fría veinte minutos.'])); }
   if (b.comp === 'chuy' && azar(.35)) { p -= .25; cosas.push('Chuy se durmió en el ducto. Lo despertó el gerente a las cinco.'); }
@@ -2722,7 +2766,7 @@ function resolverB(b) {
   const aprobado = azar(p), notaA = aprobado && azar(p * .7);
   if (o.pedido) cosas.push(aprobado ? 'Cumplieron el pedido especial del cliente.' : 'Se les olvidó el pedido especial. El cliente no está contento.');
   if (!cosas.length) cosas.push(uno(['Trabajaron callados, como profesionales. Raro, pero bien.', 'Pusieron cumbia y limpiaron a buen ritmo.', 'El gerente les invitó un café. Dicen que estaba bueno.']));
-  const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + (g.sueldo || 0), 0)], ['Equipo B: gasolina', -GASOLINA]];
+  const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1)), 0)], ['Equipo B: gasolina', -GASOLINA]];
   if (dano) lineas.push(['Equipo B: daños', -dano]);
   if (o.garantia && !notaA) lineas.push(['Equipo B: garantía de A incumplida', -r10(o.pago * .3)]);
   return { o, aprobado, gente, lineas, cosas, rep: (aprobado ? 3 : -5) + (o.garantia ? (notaA ? 1 : -3) : 0) };
@@ -2744,6 +2788,13 @@ function vClientes() {
     <p class="nota">Ojo con ${RIVAL}: si te retrasas con un cliente que aún no es fiel (3 visitas), se lo lleva.</p>`;
 }
 
+// Las medidas de un ayudante: fuerza a la vista; cuidado y puntualidad solo tras la entrevista.
+const estrellas = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+const medidas = c => `<span class="medidas"><i>Fuerza</i> ${estrellas(clamp(Math.round(c.fuerza * 4 - 1), 1, 5))} <i>Cuidado</i> ${c.entrevistado ? estrellas(c.cuidado) : '¿?'} <i>Puntualidad</i> ${c.entrevistado ? estrellas(c.puntual) : '¿?'}</span>`;
+const RESPUESTAS = {
+  cuidado: ['Yo trato las campanas como si fueran de cristal.', 'Una vez rompí algo. Bueno, varias. Pero aprendí.', 'Si se rompe, es que ya venía rota.', '¿Cuidado? ¿Eso qué es?', 'Limpio con guantes de seda. Literal.'],
+  puntual: ['¿A qué hora era? ¿De la noche o de la mañana?', 'Llego. Tarde, pero llego.', 'Normalmente llego a la hora. Normalmente.', 'Llego diez minutos antes. Siempre.', 'Llego antes que el jefe. Y me voy después.'],
+};
 function vCuadrilla() {
   const plazas = PLAZAS[S.eq.camioneta];
   const comps = Object.entries(COMPANEROS).map(([id, c]) => {
@@ -2754,10 +2805,12 @@ function vCuadrilla() {
   const companeros = `<h2 class="sec">Compañeros · van contigo y limpian a tu lado</h2>
     ${S.fijos.length ? '' : `<div class="cita"><b>Beto, por teléfono</b>Jefe, cuando tengas para el adelanto, me llamas. Ya practiqué con el karaoke: rompo menos cosas que antes. Casi.</div>`}${comps}`;
   if (S.etapa < 1) return `${companeros}<p class="nota">Los ayudantes (gente del barrio que limpia sola durante el turno) se contratan cuando tengas taller propio.</p>`;
-  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} por noche · ${c.noches} noches</span></div><button class="btn peq" data-despedir="${c.id}">Despedir</button></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
-  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · pide ${dinero(c.sueldo)} por noche</span></div><button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
+  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}</div>
+    ${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">Dejarlo fijo</button>` : ''}<button class="btn peq" data-despedir="${c.id}">Despedir</button></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
+  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
+    ${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
   return `${companeros}<h2 class="sec">Ayudantes · caben ${plazas} en la camioneta</h2>${mios}
-    <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes.</p>
+    <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.</p>
     <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}`;
 }
 
@@ -2809,7 +2862,7 @@ function enlazar() {
   const sal = $('#salir'); if (sal) sal.onclick = () => {
     audio();
     const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
-    const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.sueldo }))];
+    const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3 }))];
     const b = H.b, equipoB = hayB() && b && b.o !== null && b.o !== H.sel && H.ordenes[b.o] && (b.comp || b.ayud.length) ? { orden: H.ordenes[b.o], comp: b.comp, ayud: [...b.ayud] } : null;
     empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, retos: H.retos || [], equipoB });
   };
@@ -2836,8 +2889,15 @@ function enlazar() {
     const id = b.dataset.fichar; S.dinero -= ADELANTO[id]; S.fijos.push(id); H.comp = S.compPref = id;
     sCaja(); guardar(); pantallaCamioneta();
   });
+  P.querySelectorAll('[data-entrevista]').forEach(b => b.onclick = () => {
+    const c = S.candidatos.find(x => x.id === +b.dataset.entrevista);
+    c.entrevistado = true; c.respuesta = `${RESPUESTAS.cuidado[c.cuidado - 1]} ${RESPUESTAS.puntual[c.puntual - 1]}`;
+    tono(660, .1, .06, 'triangle'); guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-fijo]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.fijo); c.prueba = false; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-contratar]').forEach(b => b.onclick = () => {
     const c = S.candidatos.find(x => x.id === +b.dataset.contratar);
+    c.prueba = true; c.noches = 0; c.entrevistado = true;
     S.cuadrilla.push(c); S.candidatos = S.candidatos.filter(x => x !== c);
     if (H.ayud.length < PLAZAS[S.eq.camioneta]) H.ayud.push(c.id);
     tono(880, .1, .08); guardar(); pantallaCamioneta();
@@ -2970,7 +3030,7 @@ function pantallaParte() {
   if (S.secretos.himno) dar('himno');
   S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
-  for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) c.noches++; }
+  for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }   // la experiencia se nota
   if (B) {
     for (const id of o.equipoB.ayud) { const c = S.cuadrilla.find(x => x.id === id); if (c) c.noches++; }
     const cb = B.o.clienteId && S.clientes.find(c => c.id === B.o.clienteId);
