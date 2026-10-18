@@ -261,7 +261,9 @@ a.btn { display: inline-block; text-decoration: none; }
 .retos span { font-size: 14px; }
 .retos .ok { color: var(--ok); }
 .retos small { color: var(--tenue); font-size: 12px; }
-#contra { pointer-events: auto; grid-column: 1 / -1; justify-self: center; }
+#contra { pointer-events: auto; grid-column: 1 / -1; justify-self: center; padding: 3px 10px; font-size: 13px; }
+.cita.historia { border-color: #c6a0ff66; }
+.cita.historia b { color: #c6a0ff; }
 .novedad { background: rgba(105,201,122,.14); border: 1px solid var(--ok); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -327,8 +329,8 @@ const ETAPAS = [
   { n: 'Camioneta vieja', txt: 'Tú solo y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías. Beto espera a que puedas pagarle.' },
   { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe busca trabajo, puedes contratar ayudantes y anunciarte en redes.' },
   { n: 'Oficina con fax', rep: 40, compra: 4000, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy busca trabajo (despierto, casi siempre).' },
-  { n: 'Contratista de confianza', rep: 60, compra: 8000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
-  { n: 'Leyenda de la grasa', rep: 85, compra: 15000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
+  { n: 'Contratista de confianza', rep: 60, compra: 7000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
+  { n: 'Leyenda de la grasa', rep: 85, compra: 12000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
 ];
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
 const fama = r => FAMA.filter(f => r >= f[0]).pop()[1];
@@ -487,6 +489,19 @@ const PEDIDOS = [
     ok: () => true, mal: '' },
 ];
 const pedido = id => PEDIDOS.find(p => p.id === id);
+// Clientes fijos con historia: un capítulo en cada visita aprobada. El último trae premio.
+const HISTORIAS = {
+  chela: { n: 'Doña Chela y la plancha', caps: ['Doña Chela te cuenta que la plancha era de su abuela, y la de su abuela era de su abuela. Es una plancha con árbol genealógico.',
+    'Su nieto quiere «modernizar» la cocina. Doña Chela amenaza con desheredarlo. Y con desheredarte a ti si dejas una mancha.',
+    'El nieto se rindió. Ahora quiere aprender a limpiar campanas contigo. Rompe dos vasos y una espátula. Tiene futuro.',
+    'Doña Chela te regala la receta secreta de sus chilaquiles. Dice: «ponle amor». Eso es todo. Lloras un poquito igual.'], premio: { dinero: 150, album: 'La receta de Doña Chela' } },
+  mario: { n: 'El sueño de Mario', caps: ['El dueño sueña con ganar el concurso de pizza del barrio. Te enseña una foto de la pizza perfecta. Es una pizza normal.',
+    'Quedó segundo. Culpa a la grasa del horno. Te mira fijamente.', 'Con la campana limpia, el horno tira mejor. Practica de noche mientras raspas. Pruebas siete pizzas. Por trabajo.',
+    '¡Ganó el concurso! Te dedica el trofeo en el periódico del barrio y te da pizza gratis de por vida (de por vida = un mes).'], premio: { dinero: 120, album: 'El trofeo de la pizza' } },
+  chef: { n: 'El chef de la tele', caps: ['El chef dice que un día saldrá en la tele. Practica su sonrisa en la campana que limpiaste.',
+    'Lo llamaron de un programa de cocina. Necesita la cocina impecable. Más impecable que impecable.', 'Grabaron el programa. Se te ve de fondo raspando. Tu mamá te reconoció por cómo agarras la rasqueta.',
+    'El programa fue un éxito. El chef dice en el aire: «mis campanas las limpia el mejor». Te llueven llamadas.'], premio: { rep: 4, album: 'Salir en la tele' } },
+};
 
 // Medallas: se ganan en el turno y desbloquean el estilo de la empresa.
 const MEDALLAS = [
@@ -505,6 +520,9 @@ const MEDALLAS = [
   { id: 'duelo', n: 'Adiós, Cuñado', d: 'Gánale un duelo a El Cuñado.', ico: '⚑' },
   { id: 'diez', n: 'Veterano', d: 'Aprueba 10 inspecciones.', ico: '10' },
   { id: 'fotos', n: 'Fotógrafo de grasa', d: 'Junta 6 fotos en el álbum.', ico: '▣' },
+  { id: 'dorado', n: 'El mapache dorado', d: 'Lo viste. Nadie te va a creer.', ico: '✪', secreto: true },
+  { id: 'casete', n: 'La cinta perdida', d: 'Encontraste el casete de Don Rigo en un ducto.', ico: '▭', secreto: true },
+  { id: 'himno', n: 'Oído absoluto', d: 'Encontraste la canción secreta de la radio.', ico: '♫', secreto: true },
 ];
 const medalla = id => MEDALLAS.find(m => m.id === id);
 const NOTAS = [[92, 'A+'], [82, 'A'], [70, 'B'], [58, 'C'], [45, 'D'], [0, 'F']];
@@ -580,6 +598,8 @@ const CANCIONES = [
   { t: 'Ranchera del Mapache', de: 'Mariachi Tres Micras', estilo: 'ranchera' },
   { t: 'El Corrido de Don Rigo', de: 'Los Jubilados del Lago', estilo: 'ranchera' },
   { t: 'Rata de Dos Patas (versión de Beto)', de: 'Beto y su Karaoke', estilo: 'ranchera' },
+  { t: 'El Corrido de Don Rigo (versión original, 1987)', de: 'Don Rigo y su guitarra desafinada', estilo: 'ranchera', secreto: 'casete' },
+  { t: 'Himno de la Grasa', de: 'Coro de Limpiadores Nocturnos', estilo: 'bolero', secreto: 'himno' },
 ];
 const LOCUTOR = ['Son las {h} y esto es Radio Grasa FM, la estación que no se despega.', 'Saludos a todos los que limpian campanas a estas horas. Ustedes son los verdaderos héroes. Y huelen a papas.',
   'Mensaje de un radioescucha: «Beto, devuélveme la licuadora». Firma: tu prima.', 'Recuerden: la espuma ablanda, la rasqueta quita y el mapache observa.',
@@ -609,7 +629,7 @@ function nueva() {
 // Lo que se añadió después (medallas, récords, estilo, radio): se rellena sin tocar la partida.
 function completar(s) {
   if (!s.fijos) s.fijos = s.fase === 'empresa' ? Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= s.etapa) : [];   // partidas de antes: los que ya estaban
-  s.medallas = s.medallas || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
+  s.medallas = s.medallas || {}; s.secretos = s.secretos || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
   if (s.aj.radio === undefined) s.aj.radio = true;
   return s;
 }
@@ -738,10 +758,10 @@ function frase(est, raiz) {
   }
   return out;
 }
-function radioCancion() {
+function radioCancion(forzada) {
   const estilos = S.fase === 'aprendiz' || S.eq.camioneta < 2 ? ['ranchera', 'cumbia'] : Object.keys(ESTILOS);   // la radio de Don Rigo casi solo agarra rancheras
-  const lista = CANCIONES.filter(c => estilos.includes(c.estilo) && c !== RADIO.cancion);
-  const can = uno(lista), est = ESTILOS[can.estilo], raiz = 50 + Math.floor(rnd(0, 7));
+  const lista = CANCIONES.filter(c => estilos.includes(c.estilo) && c !== RADIO.cancion && (!c.secreto || (c.secreto === 'casete' && S.secretos.casete)));
+  const can = forzada || uno(lista), est = ESTILOS[can.estilo], raiz = 50 + Math.floor(rnd(0, 7));
   RADIO.cancion = can; RADIO.est = est; RADIO.raiz = raiz; RADIO.a = frase(est, raiz); RADIO.b = frase(est, raiz);
   RADIO.paso = 0; RADIO.pasos = est.compas * 32;
   if (A.ctx) { const t = A.ctx.currentTime; golpe(1400, t, .5, .25, 'bandpass'); RADIO.prox = t + .55; }   // estática entre canciones
@@ -1267,6 +1287,14 @@ function construirNoche(orden) {
   ventilador.add(new T.Mesh(new T.CircleGeometry(Math.min(mitadAlto, mitadAncho) * .9, 24), new T.MeshStandardMaterial({ color: 0x15191c })));
   for (let i = 0; i < 5; i++) { const a = new T.Mesh(new T.BoxGeometry(.06, mitadAlto * .8, .02), new T.MeshStandardMaterial({ color: 0x8c969e, metalness: .8, roughness: .3 })); a.position.set(Math.cos(i * 1.256) * mitadAlto * .4, Math.sin(i * 1.256) * mitadAlto * .4, .02); a.rotation.z = i * 1.256; ventilador.add(a); }
   piezas.ventilador = ventilador;
+  // Secreto: un casete viejo de Don Rigo, a veces, en el fondo del ducto.
+  piezas.casete = null;
+  if (orden && S.noche >= 3 && !S.secretos.casete && azar(.12)) {
+    const c = new T.Group(); c.position.set(rnd(-.15, .15), dY - mitadAlto + .02, dZ0 - dL * .55); c.rotation.y = rnd(-.6, .6);
+    c.add(new T.Mesh(new T.BoxGeometry(.1, .016, .064), new T.MeshStandardMaterial({ color: 0x1b1b1b, roughness: .4 })));
+    const et = new T.Mesh(new T.PlaneGeometry(.08, .03), new T.MeshBasicMaterial({ color: 0xffe3b8 })); et.rotation.x = -Math.PI / 2; et.position.y = .009; c.add(et);
+    mundo.add(c); piezas.casete = c;
+  }
   piezas.mapache = mapache(); piezas.mapache.position.set(.1, dY - mitadAlto + .13, dZ0 - dL + .5); piezas.mapache.visible = false; mundo.add(piezas.mapache);
 
   // Gente: el compañero, los ayudantes y, si toca, el gerente
@@ -1284,8 +1312,8 @@ function construirNoche(orden) {
   VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
   Z = [{ id: 'filtros', n: 'Filtros', sfs: filtros, vista: vista(new T.Vector3(0, 0, lonaZ), new T.Vector3(0, 1.6, 1.0), lonaW + .2, 1.7, 3.2, 55) }];
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs, gotas: c.gotas, labio: c.labio,
-    vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dir: new T.Vector3(0, -.62, .78).normalize(), dMax: 2.3, hfMin: 52, fovMax: 96 } } }));
-  Z.push({ id: 'ducto', n: 'Ducto', sfs: ducto, vista: { ...vista(new T.Vector3(0, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108 } } });
+    vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100 } } }));
+  Z.push({ id: 'ducto', n: 'Ducto', sfs: ducto, vista: { ...vista(new T.Vector3(0, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } });
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
 }
 
@@ -1303,7 +1331,7 @@ function moverCamara(dt) {
   let fov = v.fov || 55;
   if (alt && alt.hfMin) fov = clamp(2 * Math.atan(Math.tan(alt.hfMin * Math.PI / 360) / cam.aspect) * 180 / Math.PI, fov, alt.fovMax || 100);
   const hf = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * cam.aspect);
-  const dist = clamp(v.ancho / 2 / Math.tan(hf / 2), v.dMin, alt && alt.dMax || v.dMax);
+  const dist = clamp(v.ancho / 2 / Math.tan(hf / 2), alt && alt.dMin || v.dMin, alt && alt.dMax || v.dMax);
   v.vis = 2 * dist * Math.tan(hf / 2);
   v.maxPan = Math.max(0, (v.ancho - v.vis) / 2);
   v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
@@ -1430,7 +1458,7 @@ const pasosHTML = actual => PASOS.map((p, i) => `<span class="${i < actual ? 'he
 const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalear: 3 })[M.etapa];
 
 function empezarTurno(orden) {
-  construirNoche(orden); U.mig.value = 0; cine = null;
+  construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0; U.hl.value = S.aj.resaltar ? 1 : 0;
   M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
@@ -1540,10 +1568,12 @@ function arrancarTurno() {
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
   $('#duelo').hidden = !M.duelo; pintarRadio();
-  if (M.duelo) $('#contra').textContent = '¡Contraataque! ' + (CONTRA[M.orden.comp] || CONTRA.solo)[0];
+  if (M.duelo) { $('#contra').textContent = '⚡ Contraataque'; $('#contra').title = (CONTRA[M.orden.comp] || CONTRA.solo)[0]; }
   irVista(Z[0].vista);
   pintarHud(true);
   if (M.retos.length) ayuda('Retos: ' + M.retos.map(id => reto(id).t).join(' · '), 8);
+  const plan = { beto: 'Yo me voy a lo más sucio de lo que no estés limpiando tú. Rápido y con estilo.', chuy: 'Yo cargo los filtros. Pesan poquito. Si me duermo, me despiertas.', lupe: 'Yo me quedo contigo y te voy marcando lo que te falta. Porque te va a faltar.' }[M.orden.comp];
+  if (plan) setTimeout(() => M && M.fase === 'turno' && decir(M.comp, plan), 2500);
   decir(M.comp, uno(['Vamos. Tú los filtros, yo vigilo.', 'Empezamos por los filtros. Como dice Don Rigo: de abajo hacia arriba y sin preguntar.', 'Filtros primero. Si ves algo que se mueve, no es grasa.']));
   for (const e of M.equipo) if (!e.principal && azar(.5)) setTimeout(() => M && M.fase === 'turno' && decir(e, e.frase), rnd(3000, 9000));
 }
@@ -1855,6 +1885,7 @@ const EVENTOS = {
     ], { bloquea: true });
   },
   mapache() {
+    if (azar(S.medallas.dorado ? .02 : .08)) return mapacheDorado();
     piezas.mapache.visible = true; tono(1200, .1, .07, 'square', 1800); tono(1500, .1, .07, 'square', 900, .15);
     carta('Algo se mueve en el ducto', 'Dos ojos brillan al fondo. Es un mapache. Siempre es un mapache.', [
       { t: 'Abrir el registro despacio', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5, f: () => { piezas.mapache.userData.sale = 1; M.mapacheAmigo = true; M.album.push('El mapache del ducto'); resultado('Desalojo amistoso', 'El mapache sale por el registro, te mira y se va con un trozo de pizza. Parece que asiente.', M.comp, 'Creo que nos hicimos amigos. Le voy a poner Rigoberto.'); } },
@@ -1917,6 +1948,16 @@ const EVENTOS = {
     ], { bloquea: true });
   },
 };
+// Secreto: a veces el mapache es DORADO.
+function mapacheDorado() {
+  const mp = piezas.mapache; mp.visible = true;
+  mp.traverse(o => { if (o.material && o.material.color && o.material.color.getHex() === 0x4a4744) o.material = new T.MeshStandardMaterial({ color: 0xffcc33, metalness: 1, roughness: .2, emissive: 0x553300 }); });
+  [0, 4, 7, 12, 16].forEach((st, i) => tono(784 * Math.pow(2, st / 12), .2, .06, 'triangle', null, i * .08));
+  carta('¿¡Un mapache DORADO!?', 'Brilla más que la campana migdaleada. Te mira, te guiña un ojo y deja algo en el suelo del ducto.', [
+    { t: 'Saludarlo con respeto', prim: true, f: () => { mp.userData.sale = 1; M.dorado = true; M.mapacheAmigo = true; M.propinaMod += .15; M.album.push('El mapache dorado'); sDing();
+      resultado('Leyenda viviente', 'Dejó una moneda antigua. El cliente dice que trae suerte y te sube la propina.', M.comp, 'Nadie nos va a creer. NADIE. ¿Le tomaste foto? ¿NO?'); } },
+  ], { bloquea: true });
+}
 const SVG_CUCA = '<svg viewBox="0 0 60 60" width="64" height="64"><g stroke="#2a1608" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M22 24 9 15M21 32 6 32M22 40 10 50M38 24 51 15M39 32 54 32M38 40 50 50"/><path d="M27 12 19 1M33 12 41 1" stroke-width="1.6"/></g><ellipse cx="30" cy="34" rx="11" ry="18" fill="#7a4314" stroke="#2a1608" stroke-width="2"/><ellipse cx="30" cy="15" rx="7.5" ry="5.5" fill="#4a250a"/><path d="M30 19v31" stroke="#2a1608" stroke-width="1.6"/><circle cx="26" cy="27" r="2.5" fill="#fff" opacity=".35"/></svg>';
 function lanzarEvento(e) { M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](); }
 const QUIEN_PERRO = { n: 'Grasita', color: '#c8a27a' };
@@ -2064,6 +2105,35 @@ function animarGente(dt) {
   }
 }
 
+// Cada compañero trabaja a su manera: Beto se va a la zona más sucia que no es la tuya, Chuy carga los filtros
+// (dos veces más rápido) y Lupe se queda contigo y te marca lo que te falta.
+function zonaCompa() {
+  const id = M.orden.comp, aqui = zonaAct();
+  if (M.etapa !== 'lavar') return aqui;
+  if (id === 'beto') { const otras = Z.filter(x => x !== aqui && micras(x) > LIMITE); return otras.length ? otras.reduce((a, b) => pctZona(a) < pctZona(b) ? a : b) : aqui; }
+  if (id === 'chuy' && micras(Z[0]) > LIMITE) return Z[0];
+  return aqui;
+}
+function manias(dt, z) {
+  const id = M.orden.comp;
+  if (id === 'beto' && (M.betoT = (M.betoT ?? rnd(35, 50)) - dt) <= 0) {
+    M.betoT = rnd(40, 60);
+    if (azar(.5)) {
+      const a = uno([
+        () => { dano('Cubeta pateada por Beto (agua por todo el suelo)', 15, 0); rafaga(.4, 500, .2, 'lowpass'); return '¡Ups! Pateé la cubeta. El suelo ya estaba sucio, ¿no?'; },
+        () => { ensuciar(z, .1); return 'Me resbalé y me agarré de la campana. Dejé la mano marcada. Como en Hollywood.'; },
+        () => { M.botella = Math.max(0, M.botella - .15); pintarHerrBtn(); return 'Confundí el desengrasante con mi refresco. Estoy bien. Huelo a limón.'; },
+      ]);
+      decir(M.comp, a());
+    }
+  }
+  if (id === 'lupe' && (M.lupeT = (M.lupeT ?? rnd(14, 20)) - dt) <= 0) {
+    M.lupeT = rnd(18, 26);
+    if (micras(z) > LIMITE) { M.lupeHl = 2.5; U.hl.value = 1; decir(M.comp, uno(['Te falta ahí. No, ahí. Donde brilla.', 'Te lo marco. De nada.', 'Esa esquina no se limpia sola. Te la marco.'])); }
+  }
+  if (M.lupeHl > 0 && (M.lupeHl -= dt) <= 0) U.hl.value = S.aj.resaltar ? 1 : 0;
+}
+
 // Tu contraataque: una vez por noche, según quién vaya contigo.
 const CONTRA = {
   beto: ['Beto le desinfla una llanta a su camioneta', 'Beto le cambió el desengrasante por agua de jamaica.', .13],
@@ -2075,7 +2145,7 @@ function contraataque() {
   const d = M && M.duelo; if (!d || d.contra) return;
   const [, txt, k] = CONTRA[M.orden.comp] || CONTRA.solo;
   d.contra = true; d.tRival += M.dur * k; sCombo(3);
-  ayuda(txt, 5); setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¡¿QUIÉN FUE?!', 'Esto es una guerra. Una guerra limpia. Bueno, sucia.', 'Me las van a pagar. En efectivo.'])), 600);
+  ayuda((CONTRA[M.orden.comp] || CONTRA.solo)[0] + '. ' + txt, 6); setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¡¿QUIÉN FUE?!', 'Esto es una guerra. Una guerra limpia. Bueno, sucia.', 'Me las van a pagar. En efectivo.'])), 600);
 }
 // Noche perfecta: todo limpio y sin daños antes de pelar.
 function fanfarria() {
@@ -2112,6 +2182,13 @@ function tickTurno(dt) {
     if (!M.fotoAntes && M.etapa === 'lavar' && z.id === 'campana' && M.enZona > 1.3 && !M.ev) { M.fotoAntes = 'pendiente'; pedirFoto(0, img => { if (M) M.fotoAntes = img; }); }
     if (M.apagon > 0 && (M.apagon -= dt) <= 0) { sDing(); decir(M.comp, uno(['¡Volvió la luz! Ya extrañaba ver la grasa.', 'Luz. Por fin. Me estaba dando miedo mi propia sombra.'])); }
     if (M.coche > 0 && (M.coche -= dt) <= 0) { loop('coche', false); if (M.vecinos) { dano('Queja de los vecinos por la alarma (y una chancla)', 0, 2); decir(M.comp, 'Ya se calló. Una vecina le tiró una chancla al gato. Y luego a nosotros.'); } }
+    if (piezas.casete && !M.caseteMarca && z.id === 'ducto' && M.enZona > 2 && !M.ev) {
+      M.caseteMarca = marca(piezas.casete.position.clone().add(new T.Vector3(0, .05, 0)), '¿Y esto?', () => {
+        M.casete = true; S.secretos.casete = true; piezas.casete.visible = false; M.album.push('El casete de Don Rigo');
+        [0, 7, 12].forEach((st, i) => tono(523 * Math.pow(2, st / 12), .25, .07, 'triangle', null, i * .12));
+        carta('Un casete viejo', '«Don Rigo · Grandes éxitos · 1987». Ahora Radio Grasa FM tiene una canción nueva: el corrido original, cantado por él mismo. Desafina con mucho sentimiento.', [{ t: 'Guardarlo', prim: true, f: () => { cerrarCarta(); limpiarMarcas(); M.caseteMarca = true; } }], { bloquea: true });
+      });
+    }
     if (M.pedido && M.pedido.id === 'antes3' && !M.aviso3 && M.t / M.dur * 480 >= 270) { M.aviso3 = true; decir(M.cliente, '¡Ya son las dos y media! El panadero llega a las tres, ¿eh?'); }
     if (M.duelo) tickDuelo(dt);
     if (!M.ev) {
@@ -2126,10 +2203,12 @@ function tickTurno(dt) {
         if (e.principal && M.dormido) continue;
         if ((e.t -= dt) > 0) continue;
         e.t = .5;
-        const s = uno(z.sfs); let mejor = -1, md = 0;
+        const zz = e.principal ? zonaCompa() : z, extra = e.principal && M.orden.comp === 'chuy' && zz.id === 'filtros' ? 1.6 : 1;
+        const s = uno(zz.sfs); let mejor = -1, md = 0;
         for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * s.d.length); if (s.d[i] > md) { md = s.d[i]; mejor = i; } }
-        if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * e.fuerza * (1 + .2 * perk('jefe')), 'rasqueta');
+        if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * e.fuerza * extra * (1 + .2 * perk('jefe')), 'rasqueta');
       }
+      if (M.etapa === 'lavar') manias(dt, z);
       if ((M.charlaT -= dt) <= 0) {
         M.charlaT = rnd(16, 26);
         const quien = uno(M.equipo);
@@ -2246,8 +2325,18 @@ function empezarMigdaleo() {
 $('#contra').addEventListener('click', () => { audio(); contraataque(); });
 $('#pausa').addEventListener('click', () => { if (M && M.fase === 'turno') { M.pausa = true; pantallaAjustes(true); } });
 function pintarRadio() { const b = $('#radioBtn'); b.setAttribute('aria-pressed', !!S.aj.radio); b.textContent = S.aj.radio ? 'FM' : 'FM ✕'; }
+const toquesFM = [];
 $('#radioBtn').addEventListener('click', () => {
   if (!M || M.fase !== 'turno') return;
+  // Secreto: cinco toques seguidos al botón de la radio.
+  const ahora = performance.now(); toquesFM.push(ahora); while (toquesFM.length && ahora - toquesFM[0] > 3000) toquesFM.shift();
+  if (toquesFM.length >= 5) {
+    toquesFM.length = 0; audio(); S.aj.radio = true; S.secretos.himno = true; guardar(); pintarRadio();
+    if (!RADIO.on) radioEncender(true);
+    if (RADIO.on) radioCancion(CANCIONES.find(c => c.secreto === 'himno'));
+    decir(QUIEN_RADIO, '¡Encontraste la frecuencia secreta! Para ti, el Himno de la Grasa. De pie, por favor.');
+    return;
+  }
   audio(); S.aj.radio = !S.aj.radio; guardar(); pintarRadio();
   if (!S.aj.radio) { M.radioApagada = true; radioEncender(false); if (M.pedido && M.pedido.id === 'musica') decir(M.cliente, '¡No! ¡La música! La campana se pone triste.'); }
   else if (!S.aj.sonido) ayuda('El sonido está apagado en Ajustes.');
@@ -2311,8 +2400,14 @@ function generarOrdenes() {
     out.push(genOrden(k));
   }
   if (S.etapa >= 2 && azar(.3)) out.push(genOrden(S.etapa >= 3 && azar(.4) ? 'estadio' : 'comedor'));
+  // Revancha: un cliente que se llevó El Cuñado; si le ganas el duelo, vuelve contigo.
+  const perd = S.fase === 'empresa' && (S.perdidos || []).length && azar(.4) ? uno(S.perdidos) : null;
+  if (perd && COCINAS[perd.cocina]) {
+    const o = genOrden(perd.cocina, perd); o.clienteId = null; o.recupera = perd.id; o.duelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.3 / 10) * 10; o.origen = 'Revancha';
+    out.push(o);
+  }
   // Duelo: El Cuñado también quiere este cliente y limpiará a la vez que tú.
-  const libres = out.filter(o => !o.clienteId && o.campanas === 1);
+  const libres = out.filter(o => !o.clienteId && o.campanas === 1 && !o.duelo);
   if (S.noche >= S.abierta + 1 && libres.length && azar(.3)) { const o = uno(libres); o.duelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.4 / 10) * 10; }
   return out;
 }
@@ -2325,7 +2420,18 @@ function genCandidatos() {
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
 function rival(ordenes, avisos) {
-  if (S.fase !== 'empresa' || S.noche < S.abierta + 2 || !azar(.25)) return;
+  if (S.fase !== 'empresa' || S.noche < S.abierta + 2 || !azar(.35)) return;
+  const tiro = Math.random();
+  if (tiro < .3) {   // reseña falsa: un cliente fiel te defiende
+    const fiel = S.clientes.find(c => c.visitas >= 3);
+    if (fiel) avisos.push(`${RIVAL} publicó una reseña falsa: «encontré un mapache en la sopa». Pero ${fiel.nombre} te defendió en los comentarios. No pasó nada.`);
+    else { S.rep = clamp(S.rep - 2, 0, 100); avisos.push(`${RIVAL} publicó una reseña falsa: «encontré un mapache en la sopa». −2 de reputación. Un cliente fiel te habría defendido.`); }
+    return;
+  }
+  if (tiro < .55) {   // le ofrece precio a un cliente fijo nuevo: en su próxima visita hay que lucirse
+    const c = uno(S.clientes.filter(x => x.visitas < 3 && !x.amenazado));
+    if (c) { c.amenazado = true; avisos.push(`${RIVAL} le ofreció precio a ${c.nombre}. En su próxima visita sácale una B o mejor y se queda contigo.`); return; }
+  }
   const libres = ordenes.filter(o => !o.clienteId);
   if (libres.length >= 2 && azar(.6)) {
     const o = uno(libres); ordenes.splice(ordenes.indexOf(o), 1);
@@ -2335,13 +2441,15 @@ function rival(ordenes, avisos) {
     avisos.push(`${RIVAL} bajó sus precios. Esta noche los clientes nuevos pagan un 10 % menos.`);
   }
 }
+// Los clientes que se lleva El Cuñado se pueden recuperar ganándole un duelo en su cocina.
+function perdido(c) { S.perdidos = [...(S.perdidos || []).filter(x => x.id !== c.id), c].slice(-5); }
 // Una noche nueva: órdenes, clientes que se van, candidatos, llamadas.
 function prepararNoche() {
   const avisos = [];
   S.clientes = S.clientes.filter(c => {
     // Un cliente fiel (3 visitas o más) espera; uno nuevo se deja tentar por el rival en cuanto te retrasas.
     if (S.noche > c.proxima + 2 || (S.noche > c.proxima && c.visitas < 3 && azar(.3))) {
-      S.rep = clamp(S.rep - 4, 0, 100); avisos.push(`${c.nombre} se fue con ${RIVAL}: no llegamos a tiempo. −4 de reputación.`); return false;
+      S.rep = clamp(S.rep - 4, 0, 100); avisos.push(`${c.nombre} se fue con ${RIVAL}: no llegamos a tiempo. −4 de reputación. Gánale un duelo para recuperarlo.`); perdido(c); return false;
     }
     return true;
   });
@@ -2429,8 +2537,8 @@ function tarjetaOrden(o, i) {
   const C = COCINAS[o.cocina], H = S.hoy;
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? '<span class="chip mal">Duelo con El Cuñado</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${NOMBRE_SUC[t]}</span>`).join('')}</div>
-    <h3>${esc(o.nombre)}</h3>
+    <div class="chips">${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? 'Revancha: recupera al cliente' : 'Duelo con El Cuñado'}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? '<span class="chip mal">El Cuñado lo tienta: saca B o mejor</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${NOMBRE_SUC[t]}</span>`).join('')}</div>
+    <h3>${esc(o.nombre)}</h3>${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(h.n)}: capítulo ${(c.cap || 0) + 1} de ${h.caps.length}</span>` : ''; })()}
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + ' campanas · ' : ''}${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
     ${o.pedido ? `<span class="pedido"><b>${esc(pedido(o.pedido).quien)}:</b> «${esc(pedido(o.pedido).txt)}»${pedido(o.pedido).premio ? ` <i>Si cumples: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
     ${o.duelo ? `<span class="aviso">${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.</span>` : ''}
@@ -2599,6 +2707,7 @@ function pantallaAjustes(enTurno, desdeInicio) {
     ['ahorro', 'Modo ahorro de batería', 'Menos resolución: el celular se calienta menos. Se activa solo si el juego va lento.'],
   ];
   pantalla(`<div class="rotulo">${enTurno ? 'Pausa' : 'Ajustes'}</div>
+    ${enTurno && M.retos.length ? `<div class="retos"><b>Retos de esta noche</b>${M.retos.map(id => `<span>☆ ${esc(reto(id).t)}</span>`).join('')}</div>` : ''}
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
     ${Object.keys(S.perks).length ? `<div class="cita"><b>Tus mejoras</b>${Object.entries(S.perks).map(([k, n]) => `${PERKS[k].n}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
     <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, arrastra con dos dedos (o con uno sobre la pared o el suelo) para mover la vista. El aviso naranja del borde te dice si falta algo por ese lado: tócalo y te lleva. En ordenador, las flechas del teclado. En ordenador, teclas 1 a 4.</div>
@@ -2695,16 +2804,32 @@ function pantallaParte() {
   if (ped && !ped.tacos && pedOk) dar('pedido');
   if (ganaDuelo) dar('duelo');
   if (S.aprobados >= 10) dar('diez');
+  if (M.dorado) dar('dorado');
+  if (M.casete) dar('casete');
+  if (S.secretos.himno) dar('himno');
   S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
   for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) c.noches++; }
   // Clientes fijos (solo con tu empresa: los de Don Rigo son suyos)
-  let notaCliente = '';
+  let notaCliente = '', capitulo = null;
   cola = [];
   const cli = o.clienteId ? S.clientes.find(c => c.id === o.clienteId) : null;
-  if (cli) {
-    if (aprobado) { cli.proxima = S.noche + FREC[COCINAS[cli.cocina].frec]; cli.visitas++; notaCliente = `${cli.nombre} te espera otra vez la noche ${cli.proxima}.`; }
+  if (cli && cli.amenazado && aprobado && !['A+', 'A', 'B'].includes(n)) {
+    S.clientes = S.clientes.filter(c => c !== cli); perdido(cli); notaCliente = `${cli.nombre} se va con ${RIVAL}: esperaba más que una ${n}. Gánale un duelo para recuperarlo.`;
+  } else if (cli) {
+    if (aprobado) {
+      cli.proxima = S.noche + FREC[COCINAS[cli.cocina].frec]; cli.visitas++; notaCliente = `${cli.nombre} te espera otra vez la noche ${cli.proxima}.${cli.amenazado ? ` Le dijo que no a ${RIVAL}.` : ''}`; cli.amenazado = false;
+      const h = HISTORIAS[cli.historia];
+      if (h && (cli.cap || 0) < h.caps.length) {
+        const i = cli.cap || 0; cli.cap = i + 1;
+        capitulo = { t: `${h.n} · capítulo ${i + 1} de ${h.caps.length}`, txt: h.caps[i] };
+        if (cli.cap === h.caps.length) { const pr = h.premio; if (pr.dinero) S.dinero += pr.dinero; if (pr.rep) S.rep = clamp(S.rep + pr.rep, 0, 100); if (!S.album.includes(pr.album)) S.album.push(pr.album); capitulo.txt += ` Final de la historia: ${pr.dinero ? '+' + dinero(pr.dinero) : '+' + pr.rep + ' de reputación'} y «${pr.album}» en el álbum.`; }
+      }
+    }
     else { S.clientes = S.clientes.filter(c => c !== cli); notaCliente = `${cli.nombre} cancela el contrato.`; }
+  } else if (o.recupera && ganaDuelo) {
+    const c = (S.perdidos || []).find(x => x.id === o.recupera);
+    if (c) { S.perdidos = S.perdidos.filter(x => x !== c); c.proxima = S.noche + FREC[COCINAS[c.cocina].frec]; c.amenazado = false; S.clientes.push(c); notaCliente = `¡${c.nombre} vuelve contigo! Ya no quiere saber nada de ${RIVAL}.`; }
   } else if (!aprendiz && aprobado && (!d || ganaDuelo) && azar(.35 + S.rep / 250 + .1 * perk('gentes') + (ganaDuelo ? .3 : 0))) cola.push(() => ofertaContrato(o));
   // Experiencia y nivel
   S.xp += xp; let subidas = 0;
@@ -2727,6 +2852,7 @@ function pantallaParte() {
       <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.</span></div>
     ${d ? `<div class="cita"><b>${ganaDuelo ? 'Duelo ganado' : 'Duelo perdido'}</b>${ganaDuelo ? `Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.` : `El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
+    ${capitulo ? `<div class="cita historia"><b>📖 ${esc(capitulo.t)}</b>${esc(capitulo.txt)}</div>` : ''}
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
     <div class="cuentas">
@@ -2759,7 +2885,8 @@ function fotoParte(m) {
 }
 const tarjetaFoto = f => `<figure class="foto"><div class="foto-par">${f.antes ? `<div><img src="${f.antes}" alt="Antes"><span>Antes</span></div>` : ''}<div><img src="${f.despues}" alt="Después"><span>Después</span></div></div>
   <figcaption><b>${esc(f.nombre)}</b> · Noche ${f.noche} · Nota ${esc(f.nota)}</figcaption></figure>`;
-const tarjetaMedalla = (m, nueva) => `<div class="medalla ${nueva ? 'nueva' : ''} ${nueva || S.medallas[m.id] ? '' : 'bloq'}"><span class="ico">${m.ico}</span><div><b>${nueva ? '¡Medalla! ' : ''}${esc(m.n)}</b><small>${esc(m.d)}</small></div></div>`;
+const tarjetaMedalla = (m, nueva) => { const oculta = m.secreto && !nueva && !S.medallas[m.id];
+  return `<div class="medalla ${nueva ? 'nueva' : ''} ${nueva || S.medallas[m.id] ? '' : 'bloq'}"><span class="ico">${oculta ? '?' : m.ico}</span><div><b>${nueva ? (m.secreto ? '¡Medalla secreta! ' : '¡Medalla! ') : ''}${oculta ? '???' : esc(m.n)}</b><small>${oculta ? 'Secreto. Sigue jugando…' : esc(m.d)}</small></div></div>`; };
 
 function ofertaContrato(o) {
   const C = COCINAS[o.cocina], cada = FREC[C.frec];
@@ -2767,7 +2894,7 @@ function ofertaContrato(o) {
     <div class="cita"><b>El dueño</b>${esc(uno(['Nunca vi mi campana así. ¿Me la limpian siempre ustedes?', `${RIVAL} cobraba menos, pero no limpiaba. ¿Firmamos?`, 'Quiero esto cada vez que toque. Y que venga el mismo chico, el que no rompe nada.']))}</div>
     <p>Te llamará cada ${cada} noches (NFPA 96: ${C.frec}) y paga un 10 % más. Misma cocina, misma campana, misma grasa de vuelta. Si no vas a tiempo, se va con ${RIVAL} y pierdes reputación.</p>
     <div class="acciones"><button class="btn prim" id="firmar">Firmar</button><button class="btn" id="noFirmar">Mejor no</button></div>`);
-  $('#firmar').onclick = () => { S.clientes.push({ id: S.sigId++, nombre: o.nombre, cocina: o.cocina, proxima: S.noche + cada - 1, visitas: 1, diseno: o.diseno, pagoBase: o.pagoBase }); guardar(); sCaja(); siguiente(); };
+  $('#firmar').onclick = () => { const usadas = S.clientes.map(c => c.historia); S.clientes.push({ id: S.sigId++, nombre: o.nombre, cocina: o.cocina, proxima: S.noche + cada - 1, visitas: 1, diseno: o.diseno, pagoBase: o.pagoBase, historia: azar(.6) ? uno(Object.keys(HISTORIAS).filter(h => !usadas.includes(h))) : undefined, cap: 0 }); guardar(); sCaja(); siguiente(); };
   $('#noFirmar').onclick = siguiente;
 }
 
