@@ -297,6 +297,8 @@ a.btn { display: inline-block; text-decoration: none; }
 .eq-res { font-size: 14px; }
 .eq-res b { color: var(--acero) !important; letter-spacing: .03em !important; }
 .persona .botones { display: grid; gap: 6px; justify-items: stretch; }
+.persona .chips-perfil { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.persona .chips-perfil .chip { display: inline-block; width: auto; font-size: 11px; padding: 1px 6px; }
 .medidas { font-size: 12px; color: var(--grasa) !important; }
 .medidas i { font-style: normal; color: var(--tenue); font-family: var(--f-cond); text-transform: uppercase; letter-spacing: .05em; margin-left: 6px; }
 .medidas i:first-child { margin-left: 0; }
@@ -498,18 +500,38 @@ const ADELANTO = { beto: 150, lupe: 300, chuy: 400 };
 const ANGELICA = { n: 'Angélica', color: '#e58fbf', adelanto: 500, sueldo: 150, minVans: 3,
   frases: ['Ya tengo a todos repartidos. Nadie se queja. Bueno, Beto sí, pero Beto siempre.', 'Equipos listos, jefe. Les puse la música que les gusta para que no se distraigan.', 'Listo. Y le quité a Kevin el celular hasta que termine.', 'Todo organizado. Si alguien llega tarde, tengo una hoja de cálculo para eso.'] };   // lo que piden para unirse a tu empresa
 // Gente que busca trabajo: cada uno con su manía.
+// [nombre, rasgo, frase, carácter, especialidad]. Carácter: lio (da problemas, como Beto), medio (a veces), serio (cumple y no sonríe), normal.
 const CANDIDATOS = [
-  ['Kevin', 'Graba todo para sus redes.', '¡Saluden a mis doce seguidores!'],
-  ['Doña Paty', 'Opina de la cocina ajena.', 'Con esta grasa yo hago tamales para un año.'],
-  ['El Flaco', 'Cabe en cualquier ducto.', 'Yo me meto. Siempre me meto.'],
-  ['Toño', 'Canta mientras raspa. Mal.', '♪ Grasa, grasa, dame tu grasa… ♪'],
-  ['Yesenia', 'Excampeona regional de limpiar ventanas.', 'Esto es como una ventana, pero con rencor.'],
-  ['Memo', 'Dice que es primo de Beto. Beto no lo conoce.', '¿Y Beto? Salúdenme a mi primo.'],
-  ['Brenda', 'Trae su propia rasqueta. Le puso nombre.', 'Vamos, Gertrudis. Tú puedes.'],
-  ['Nacho', 'Llega tarde, pero llega con tacos.', '¿Alguien quiere uno de pastor? Están fríos, pero con cariño.'],
-  ['Rosa', 'No habla. Limpia.', '…'],
-  ['Pancho', 'Les tiene miedo a los mapaches.', '¿Eso que se movió fue un mapache? Dime que no.'],
+  ['Kevin', 'Graba todo para sus redes.', '¡Saluden a mis doce seguidores!', 'medio', 'campana'],
+  ['Doña Paty', 'Opina de la cocina ajena.', 'Con esta grasa yo hago tamales para un año.', 'medio', 'filtros'],
+  ['El Flaco', 'Cabe en cualquier ducto.', 'Yo me meto. Siempre me meto.', 'normal', 'ducto'],
+  ['Toño', 'Canta mientras raspa. Mal.', '♪ Grasa, grasa, dame tu grasa… ♪', 'medio', 'filtros'],
+  ['Yesenia', 'Excampeona regional de limpiar ventanas.', 'Esto es como una ventana, pero con rencor.', 'normal', 'campana'],
+  ['Memo', 'Dice que es primo de Beto. Beto no lo conoce.', '¿Y Beto? Salúdenme a mi primo.', 'lio', 'filtros'],
+  ['Brenda', 'Trae su propia rasqueta. Le puso nombre.', 'Vamos, Gertrudis. Tú puedes.', 'normal', 'campana'],
+  ['Nacho', 'Llega tarde, pero llega con tacos.', '¿Alguien quiere uno de pastor? Están fríos, pero con cariño.', 'medio', 'filtros'],
+  ['Rosa', 'No habla. Limpia.', '…', 'serio', 'ducto'],
+  ['Pancho', 'Les tiene miedo a los mapaches.', '¿Eso que se movió fue un mapache? Dime que no.', 'medio', 'ducto'],
+  ['El Chicharrón', 'Todo lo que toca se resbala. Él incluido.', '¡Tranquilos! Caí con estilo.', 'lio', 'campana'],
+  ['Pánfilo «El Tornado»', 'Rápido como el viento. Igual de ordenado.', '¡Listo! ¿Qué era lo que había que limpiar?', 'lio', 'filtros'],
+  ['Wilfrido «El Wifi»', 'Se desconecta cada tanto. Luego vuelve solo.', '…perdón, ¿qué? Me fui un ratito.', 'medio', 'ducto'],
+  ['La Tía Chona', 'Trae comida para todos. A media limpieza.', '¡A comer, que se enfría! La grasa espera.', 'medio', 'filtros'],
+  ['Ingeniero Saldívar', 'Habla en normas NFPA. No sonríe nunca.', 'Norma 96, sección 11.4. Proceda.', 'serio', 'ducto'],
+  ['Don Teo', 'Cuarenta años raspando. Habla poco, deja todo brillando.', 'Mjm.', 'serio', 'campana'],
 ];
+const ESPECIAL = { filtros: 'filtros', campana: 'campanas', ducto: 'ductos' };
+const CARACTERES = { lio: ['Da problemas', 'mal'], medio: ['A veces se le va', 'naranja'], serio: ['Serio y cumplidor', 'ok'], normal: null };
+// Le pone carácter y especialidad a quien no tenga (los de partidas viejas y los nombres generados).
+function perfil(c) {
+  const f = CANDIDATOS.find(x => x[0] === c.n);
+  if (!c.tipo) {
+    c.tipo = f ? f[3] : uno(['normal', 'normal', 'normal', 'medio', 'medio', 'lio', 'serio']);
+    if (c.cuidado) c.cuidado = c.tipo === 'serio' ? Math.max(4, c.cuidado) : c.tipo === 'lio' ? Math.min(2, c.cuidado) : c.cuidado;
+  }
+  if (!c.esp) c.esp = f ? f[4] : uno(['filtros', 'campana', 'ducto']);
+  return c;
+}
+const chipsPerfil = c => `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span>${CARACTERES[c.tipo] ? `<span class="chip ${CARACTERES[c.tipo][1]}">${CARACTERES[c.tipo][0]}</span>` : ''}</span>`;
 const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
 // El gerente: su paciencia baja con cada visita, y mucho más si vas atrasado. Solo explota si de verdad tardas.
 const GERENTE_IMPACIENTE = ['Ya van tres horas, ¿eh?', '¿Esto siempre tarda tanto o es usted?', 'Mi suegra limpia más rápido. Y tiene 80 años.', 'Le aviso que a las seis llega el panadero.'];
@@ -766,6 +788,7 @@ function completar(s) {
     if (!c.puntual) c.puntual = 2 + Math.floor(Math.random() * 3);
     if (!c.base) c.base = c.fuerza;
     if (!c.animo) c.animo = 3;
+    perfil(c);
     if (s.cuadrilla.includes(c)) c.entrevistado = true;
   }
   return s;
@@ -1761,7 +1784,7 @@ function escenaPrep(i) {
 const CUIDADO_COMP = { beto: 2, lupe: 5, chuy: 3 };
 function armarCuadrillas() {
   const o = M.orden, out = [];
-  const mios = M.equipo.map(e => ({ n: e.n, fuerza: e.fuerza, cuidado: e.principal ? CUIDADO_COMP[o.comp] || 3 : e.cuidado || 3, animo: e.id ? (S.cuadrilla.find(c => c.id === e.id) || {}).animo : null, id: e.id || null }));
+  const mios = M.equipo.map(e => ({ n: e.n, esp: e.esp, fuerza: e.fuerza, cuidado: e.principal ? CUIDADO_COMP[o.comp] || 3 : e.cuidado || 3, animo: e.id ? (S.cuadrilla.find(c => c.id === e.id) || {}).animo : null, id: e.id || null }));
   if (mios.length) out.push({ n: 'Tu cuadrilla', color: M.comp.color || '#ffd23f', gente: mios, kit: 0 });
   (o.rigoEquipos || []).forEach((a, i) => out.push({ n: a.n, color: a.color, gente: a.gente.map(g => ({ ...g })), kit: 2, k: i + 2 }));
   for (const a of o.ayudan || []) {
@@ -1813,7 +1836,7 @@ function tickCuadrillas(dt) {
     if ((c.t -= dt) > 0) continue;
     c.t = .5;
     // Cada medio segundo, varias pasadas según su fuerza y su equipo: una cuadrilla de 3 deja una zona en un minuto y medio.
-    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit) * activos));
+    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit) * activos * (1 + .4 * c.gente.filter(g => g.esp === z.id).length / c.gente.length)));
     for (let p = 0; p < pasadas; p++) {
       const sf = uno(z.sfs); let mejor = -1, md = 0;
       for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * sf.d.length); if (sf.d[i] > md) { md = sf.d[i]; mejor = i; } }
@@ -2539,13 +2562,46 @@ function zonaCompa() {
   if (id === 'chuy') { const f = Z.find(x => x.id === 'filtros' && micras(x) > LIMITE); if (f) return f; }
   return aqui;
 }
+const LIOS = [
+  { txt: '¡Jefe! Me pegué con cinta a la campana. No sé cómo. Bueno, sí sé.', boton: 'Despegarlo', bien: 'Libre. Me quedó la cinta marcada en la frente. Me veo interesante.',
+    mal: e => { e.parado = 25; decir(e, 'Sigo pegado. Ya me acostumbré. Desde aquí se ve bonito.'); } },
+  { txt: 'Prendí la freidora para ver si funcionaba. Funciona. MUCHO.', boton: '¡Apágala!', bien: 'Apagada. Pero olía rico, ¿verdad?',
+    mal: (e, z) => { dano(`Aceite salpicado por toda la línea (la freidora que prendió ${e.n})`, 35, 1); ensuciar(z, .12); decir(e, 'Ya se apagó sola. Bueno, se acabó el aceite. Está en la campana.'); } },
+  { txt: 'Voy a grabar un video bailando arriba de la campana. Para las redes de la empresa.', boton: '¡Bájate de ahí!', bien: 'Ok, ok. Pero mañana me grabas tú.',
+    mal: e => { if (azar(.5)) { M.repExtra += 1; decir(e, '¡Ya va en mil vistas! Somos famosos. Y la campana sigue en pie.'); } else { dano(`Campana abollada: ${e.n} se cayó bailando`, 45, 2); decir(e, 'Estoy bien. La campana no tanto.'); } } },
+  { txt: 'Le dije al gerente que somos «casi profesionales». Creo que no le gustó el «casi».', boton: 'Arreglarlo con el gerente', bien: 'Le dijiste que era broma y se rió. Bueno, hizo un ruido.',
+    mal: e => { M.paciencia = Math.max(10, (M.paciencia || 100) - 25); decir('gerente', '¿Casi profesionales? Los estoy vigilando.'); } },
+  { txt: 'Me comí el queso que estaba en la barra. Era de muestra, ¿no? ¿NO?', boton: 'Reponer el queso (−$12)', arreglo: () => dano('Queso del cliente repuesto', 12, 0), bien: 'Queso repuesto. Nadie se enteró. Excepto yo, que sigo con hambre.',
+    mal: e => { M.propinaMod -= .05; decir('gerente', '¿Alguien vio mi queso? Era para el desayuno de mañana.'); } },
+  { txt: 'Guardé la rasqueta en el ducto para no perderla. Ahora no sé dónde está el ducto.', boton: 'Ayudarle a buscarla', arreglo: () => sumarTiempo(5), bien: 'Estaba en mi bolsillo. Siempre estuvo ahí.',
+    mal: e => { e.parado = 30; decir(e, 'Sigo buscando. Si alguien ve una rasqueta con calcomanía de unicornio, es mía.'); } },
+  { txt: 'Jefe, ¿este cable rojo es importante? Ya lo desconecté, pero pregunto.', boton: 'Volver a conectarlo', bien: 'Conectado. El refrigerador volvió a hacer ruido. Qué alivio.',
+    mal: e => { dano('Refrigerador desconectado: se echaron a perder unas cremas', 50, 1); decir(e, 'Ahora el refrigerador hace un ruido distinto. Uno triste.'); } },
+];
+const SERIO = ['Esquina inferior izquierda. Tres centímetros de grasa. Se la marqué.', 'Residuo a las seis en punto. Corríjalo antes de que lo vea el inspector.', 'Eso no pasa la norma ni en sueños. Ahí. Donde brilla.', 'Le marqué lo que falta. No me lo agradezca: corríjalo.'];
+const SERIO_CHISTE = ['Hoy sonreí una vez. Fue un error.', 'El Beto ese me cae bien. De lejos.', 'Me dijeron que me ría más. Lo estoy considerando para el próximo año.', 'Mjm.'];
 function manias(dt, z) {
   const id = M.orden.comp;
   // Los ayudantes poco cuidadosos tienen sus accidentes.
   if ((M.ayudT = (M.ayudT ?? rnd(30, 45)) - dt) <= 0) {
     M.ayudT = rnd(35, 55);
-    const torpe = uno(M.equipo.filter(e => !e.principal && azar((5 - (e.cuidado || 3)) * .09)));
+    const torpe = uno(M.equipo.filter(e => !e.principal && e.tipo !== 'serio' && azar((5 - (e.cuidado || 3)) * .09)));
     if (torpe) { dano(`${torpe.n} tiró ${uno(['una charola de vasos', 'el bote de basura', 'la escalera contra la vitrina', 'una cubeta de agua con grasa'])}`, uno([15, 25, 40]), 0); rafaga(.3, 700, .2, 'lowpass'); decir(torpe, uno(['Yo no fui. Bueno, sí.', '¡Perdón, perdón, perdón!', 'Eso estaba mal puesto.'])); }
+  }
+  // Los que dan problemas (como Beto, pero con nombre propio): un lío que hay que arreglar a tiempo.
+  if (!M.lio && (M.lioT = (M.lioT ?? rnd(22, 35)) - dt) <= 0) {
+    M.lioT = rnd(35, 55);
+    const e = uno(M.equipo.filter(x => !x.principal && !(x.parado > 0) && (x.tipo === 'lio' || (x.tipo === 'medio' && azar(.35)))));
+    if (e) {
+      const l = uno(LIOS); M.lio = { e, l, t: 7 };
+      decir(e, l.txt, [{ t: l.boton, f: () => { if (!M || !M.lio) return; M.lio = null; if (l.arreglo) l.arreglo(e); decir(e, l.bien); tono(880, .1, .07, 'triangle'); } }]);
+    }
+  }
+  if (M.lio && (M.lio.t -= dt) <= 0) { const { e, l } = M.lio; M.lio = null; l.mal(e, z); }
+  const serio = M.equipo.find(e => e.tipo === 'serio');
+  if (serio && (M.serioT = (M.serioT ?? rnd(18, 28)) - dt) <= 0) {
+    M.serioT = rnd(30, 45);
+    if (micras(z) > LIMITE) { M.lupeHl = 2.5; U.hl.value = 1; decir(serio, uno(SERIO)); } else if (azar(.3)) decir(serio, uno(SERIO_CHISTE));
   }
   if (id === 'beto' && (M.betoT = (M.betoT ?? rnd(35, 50)) - dt) <= 0) {
     M.betoT = rnd(40, 60);
@@ -2638,7 +2694,9 @@ function tickTurno(dt) {
         if (e.parado > 0) { if ((e.parado -= dt) <= 0) decir(e, uno(['Ya volví. ¿Me extrañaron?', 'Listo, jefe. Como nuevo.', 'Ya estoy. ¿Dónde me quedé?'])); continue; }
         if ((e.t -= dt) > 0) continue;
         e.t = .5;
-        const zz = e.principal ? zonaCompa() : z, extra = e.principal && M.orden.comp === 'chuy' && zz.id === 'filtros' ? 1.6 : 1;
+        // Cada ayudante se va a lo suyo: su especialidad, mientras quede grasa ahí; y ahí rinde más.
+        const suya = !e.principal && e.esp && M.etapa === 'lavar' ? Z.find(x => x.id === e.esp && micras(x) > LIMITE) : null;
+        const zz = e.principal ? zonaCompa() : suya || z, extra = (e.principal && M.orden.comp === 'chuy' && zz.id === 'filtros' ? 1.6 : 1) * (e.esp && zz.id === e.esp ? 1.5 : 1);
         const s = uno(zz.sfs); let mejor = -1, md = 0;
         for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * s.d.length); if (s.d[i] > md) { md = s.d[i]; mejor = i; } }
         if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * e.fuerza * extra * (1 + .2 * perk('jefe')), 'rasqueta');
@@ -2904,10 +2962,10 @@ function genCandidatos(n = 3) {
   const usados = new Set([...S.cuadrilla, ...(S.candidatos || [])].map(c => c.n));
   const fijos = CANDIDATOS.filter(c => !usados.has(c[0])).sort(() => Math.random() - .5);
   const gen = NOMBRES_GEN.filter(x => !usados.has(x)).sort(() => Math.random() - .5).map(x => [x, ...uno(MANIAS_GEN)]);
-  return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase]) => {
+  return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase, tipo, esp]) => {
     const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5), animo = 3;
     // Los buenos piden más: el sueldo sale de las tres medidas.
-    return { id: S.sigId++, n, rasgo, frase, fuerza, base: fuerza, cuidado, puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 };
+    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado, puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 });
   });
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
@@ -3151,7 +3209,7 @@ function vNoche() {
       return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${id === 'solo' ? 'Yo solo' : c.n}</b><span>${txt}</span></div></button>`;
     }).join('')}</div>
     ${S.cuadrilla.length ? `<h2 class="sec">Ayudantes en la camioneta · ${H.ayud.length} de ${plazas}</h2>
-      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
+      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${ESPECIAL[c.esp] ? 'bueno en ' + ESPECIAL[c.esp] + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     ${vEquipoB()}
     ${o && !o.firmado ? '<p class="aviso">Primero firma el contrato del trabajo que elegiste.</p>' : ''}
     <div class="barra-salir"><div><b>${o ? esc(o.nombre) : 'Elige un trabajo'}</b><span class="nota">${o ? `${dinero(o.pago)} · ${H.comp === 'solo' ? 'tú solo' : esc((COMPANEROS[H.comp] || SOLO).n)}${H.ayud.length ? ` + ${H.ayud.length}` : ''}${hayB() ? ` · ${(H.equipos || []).filter(e => e.o !== null).length} equipos fuera` : ''}` : ''}</span></div><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
@@ -3313,9 +3371,9 @@ function vCuadrilla() {
   const angelica = S.angelica ? `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>Organiza los equipos de cada noche (botón en «Noche») y con ella trabajan mejor. ${dinero(ANGELICA.sueldo)} por noche.</span></div><span class="chip ok">En tu equipo</span></div>`
     : `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>${flota >= ANGELICA.minVans ? `Organiza los equipos de cada noche y con ella trabajan mejor. Pide ${dinero(ANGELICA.adelanto)} de adelanto y ${dinero(ANGELICA.sueldo)} por noche.` : `Se une cuando tengas 4 camionetas (tienes ${flota + 1}). Dice que con menos no vale la pena organizarse.`}</span></div>
       ${flota >= ANGELICA.minVans ? `<button class="btn prim peq" id="ficharAngelica" ${S.dinero < ANGELICA.adelanto ? 'disabled' : ''}>Contratar</button>` : '<span class="chip">4 camionetas</span>'}</div>`;
-  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}</div>
+  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}${chipsPerfil(c)}</div>
     <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">Dejarlo fijo</button>` : ''}<button class="btn peq" data-despedir="${c.id}">Despedir</button></div></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
-  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
+  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span><span class="chip">Carácter: ¿? (entrevístalo)</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
     <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
   return `${companeros}<h2 class="sec">Coordinación</h2>${angelica}<h2 class="sec">Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta</h2>${mios}${S.etapa < 1 ? '<p class="pista">En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.</p>' : ''}
     <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.</p>
@@ -3391,7 +3449,7 @@ function enlazar() {
   const sal = $('#salir'); if (sal) sal.onclick = () => {
     audio();
     const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
-    const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3 }))];
+    const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3, esp: x.esp, tipo: x.tipo, rasgo: x.rasgo }))];
     // Una camioneta solo sale si lleva la gente que pide el trabajo.
     const gen = e => e.ayud.length + (e.comp ? 1 : 0), eqs = hayB() ? (H.equipos || []).map((e, idx) => ({ e, k: idx + 2 })) : [];
     const conGente = e => gen(e) >= 2;
@@ -3424,7 +3482,7 @@ function enlazar() {
   });
   P.querySelectorAll('[data-entrevista]').forEach(b => b.onclick = () => {
     const c = S.candidatos.find(x => x.id === +b.dataset.entrevista);
-    c.entrevistado = true; c.respuesta = `${RESPUESTAS.cuidado[c.cuidado - 1]} ${RESPUESTAS.puntual[c.puntual - 1]}`;
+    c.entrevistado = true; c.respuesta = `${RESPUESTAS.cuidado[c.cuidado - 1]} ${RESPUESTAS.puntual[c.puntual - 1]} ${({ lio: 'Conmigo nunca se aburre nadie. Los bomberos tampoco.', medio: 'Soy muy serio. Casi siempre. Bueno, a veces.', serio: 'Vengo a trabajar, no a hacer amigos.', normal: 'Yo hago lo que me digan, jefe.' })[c.tipo] || ''}`;
     tono(660, .1, .06, 'triangle'); guardar(); pantallaCamioneta();
   });
   const fa = $('#ficharAngelica'); if (fa) fa.onclick = () => { S.dinero -= ANGELICA.adelanto; S.angelica = true; sCaja(); guardar(); pantallaCamioneta(); };
