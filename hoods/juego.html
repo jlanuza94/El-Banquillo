@@ -72,6 +72,10 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .info { display: grid; gap: 4px; justify-items: start; min-width: 0; }
 .ayuda { font-size: 13px; color: var(--acero); text-shadow: 0 1px 2px #000; min-height: 1.4em; }
 .pasos { display: flex; flex-wrap: wrap; gap: 4px; }
+.tuto { pointer-events: none; background: #ffd23f; color: #1a1004; border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: 15px; line-height: 1.3; box-shadow: 0 4px 14px #0008; }
+.tuto small { display: block; font-family: var(--f-cond); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; opacity: .7; }
+@keyframes tutoBrilla { 0%, 100% { box-shadow: 0 0 0 0 #ffd23f00; } 50% { box-shadow: 0 0 0 5px #ffd23f; } }
+body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas button, body[data-tuto="siguiente"] #siguiente { animation: tutoBrilla 1.1s ease-in-out infinite; border-radius: 10px; }
 .pasos span { font-family: var(--f-cond); font-weight: 700; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; background: var(--panel-2); color: var(--tenue); }
 .pasos .hecho { color: var(--ok); }
 .pasos .act { background: var(--hivis); color: var(--hivis-tinta); }
@@ -124,11 +128,19 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .barra-salir b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .barra-salir .btn { flex: none; min-height: 48px; }
 .mapa { display: grid; gap: 6px; }
+.tablero { display: grid; gap: 6px; background: var(--panel); border: 1px solid #e58fbf55; border-radius: 10px; padding: 10px; }
+.fila-tab { display: grid; grid-template-columns: auto auto auto 1fr; gap: 2px 8px; align-items: center; font-size: 14px; padding: 4px 6px; border-radius: 6px; }
+.fila-tab.tuya { background: #ff8a1f22; outline: 1px solid var(--hivis); }
+.fila-tab .hora { font-family: var(--f-mono); color: var(--tenue); font-size: 12px; }
+.fila-tab i { width: 10px; height: 10px; border-radius: 3px; }
+.fila-tab .dest { grid-column: 2 / -1; color: var(--tenue); font-size: 13px; }
 .mapa svg { width: 100%; height: auto; border-radius: 10px; border: 2px solid var(--linea); display: block; }
 .mapa .pin:active circle { stroke: #fff; }
 .leyenda { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--tenue); }
 .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
 .orden.finde { border-color: var(--hivis); }
+.misiones i { font-style: normal; font-family: var(--f-mono); font-size: 12px; color: var(--hivis); }
+.misiones em { font-style: normal; font-size: 12px; color: var(--tenue); }
 .tabs button { background: none; border: 0; padding: 12px 10px; min-height: 44px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
 .tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); }
 .tabs .cuenta { font-family: var(--f-mono); font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; margin-left: 4px; }
@@ -287,6 +299,8 @@ a.btn { display: inline-block; text-decoration: none; }
 .eq-res { font-size: 14px; }
 .eq-res b { color: var(--acero) !important; letter-spacing: .03em !important; }
 .persona .botones { display: grid; gap: 6px; justify-items: stretch; }
+.persona .chips-perfil { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.persona .chips-perfil .chip { display: inline-block; width: auto; font-size: 11px; padding: 1px 6px; }
 .medidas { font-size: 12px; color: var(--grasa) !important; }
 .medidas i { font-style: normal; color: var(--tenue); font-family: var(--f-cond); text-transform: uppercase; letter-spacing: .05em; margin-left: 6px; }
 .medidas i:first-child { margin-left: 0; }
@@ -351,6 +365,7 @@ a.btn { display: inline-block; text-decoration: none; }
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
       <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
       <div class="pasos" id="pasos"></div>
+      <div class="tuto" id="tuto" hidden></div>
       <div class="chat" id="chat"></div>
     </div>
     <div class="combo" id="combo"></div>
@@ -407,52 +422,59 @@ const ETAPAS = [
 ];
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
 const fama = r => FAMA.filter(f => r >= f[0]).pop()[1];
-const multPago = () => (.85 + S.rep / 100 * .6) * (1 + .03 * ((S && S.eq.flota) || 0));   // reputación y tamaño de la empresa   // la reputación sube lo que paga cada cliente
+const tun = id => !!(S && S.tuneo && S.tuneo[id]);
+const multPago = () => (.85 + S.rep / 100 * .6) * (1 + .03 * ((S && S.eq.flota) || 0)) * (tun('rines') ? 1.03 : 1);   // reputación y tamaño de la empresa   // la reputación sube lo que paga cada cliente
 
 // Frecuencias de limpieza de la norma NFPA 96, en noches de juego.
 const FREC = { mensual: 3, trimestral: 5, semestral: 7, anual: 9 };
 const COCINAS = {
-  cafe: { n: 'Cafetería', frec: 'anual', micras: [900, 1300], pago: [380, 480], filtros: [2, 3], etapa: 0, linea: 'cafe',
+  cafe: { n: 'Cafetería', tipos: ['caja'], frec: 'anual', micras: [900, 1300], pago: [380, 480], filtros: [2, 3], etapa: 0, linea: 'cafe',
     nombres: ['Café La Esquina', 'Desayunos Lupita', 'Cafetería El Andén', 'Café Con Calma', 'El Cafecito de la Abuela'], eventos: [] },
-  pizza: { n: 'Pizzería de leña', frec: 'mensual', micras: [1500, 2100], pago: [520, 680], filtros: [2, 4], etapa: 0, linea: 'horno',
+  pizza: { n: 'Pizzería de leña', tipos: ['inclinada'], frec: 'mensual', micras: [1500, 2100], pago: [520, 680], filtros: [2, 4], etapa: 0, linea: 'horno',
     nombres: ['Pizzería Napoli', 'Horno Bella Vista', 'La Leña de Mario', 'Pizzas El Italiano de Iztapalapa', 'Don Peperoni'], eventos: ['mapache', 'gerente'] },
   burger: { n: 'Hamburguesería', frec: 'trimestral', micras: [1800, 2500], pago: [560, 760], filtros: [3, 4], etapa: 0, linea: 'plancha',
     nombres: ['Burger Barrio', 'Hamburguesas El Gordo', 'Freidora Feliz', 'Smash Bros Burgers', 'La Doble con Queso'], eventos: ['gerente', 'techo'] },
   wok: { n: 'Cocina de wok', frec: 'trimestral', micras: [2200, 2900], pago: [640, 880], filtros: [3, 5], etapa: 1, linea: 'wok',
     nombres: ['Wok Dragón Dorado', 'Jardín de Jade', 'Fideos Hermanos Li'], eventos: ['gerente', 'mapache'] },
-  asador: { n: 'Asador al carbón', frec: 'mensual', micras: [2600, 3400], pago: [760, 1050], filtros: [3, 5], etapa: 1, linea: 'carbon',
+  asador: { n: 'Asador al carbón', tipos: ['caja', 'larga'], frec: 'mensual', micras: [2600, 3400], pago: [760, 1050], filtros: [3, 5], etapa: 1, linea: 'carbon',
     nombres: ['Tacos El Güero', 'Asadero Los Compadres', 'Pollos Doña Rosa'], eventos: ['techo', 'gerente', 'mapache'] },
-  hotel: { n: 'Cocina de hotel', frec: 'semestral', micras: [2000, 2700], pago: [1500, 2100], filtros: [5, 6], etapa: 2, linea: 'plancha',
+  hotel: { n: 'Cocina de hotel', tipos: ['larga', 'caja'], frec: 'semestral', micras: [2000, 2700], pago: [1500, 2100], filtros: [5, 6], etapa: 2, linea: 'hotel',
     nombres: ['Hotel Miramar', 'Gran Hotel Sol', 'Hotel Costa Azul'], eventos: ['alarma', 'techo', 'gerente'] },
-  comedor: { n: 'Comedor industrial', frec: 'trimestral', micras: [2200, 2900], pago: [2300, 2900], filtros: [6, 8], etapa: 2, linea: 'plancha', campanas: 2, ayud: 1,
+  comedor: { n: 'Comedor industrial', frec: 'trimestral', micras: [2200, 2900], pago: [2300, 2900], filtros: [6, 8], etapa: 2, linea: 'comedor', campanas: 2, ayud: 1,
     nombres: ['Comedor Textil La Hilandera', 'Comedor Universitario', 'Cocina del Hospital San José'], eventos: ['gerente', 'alarma', 'techo'] },
   fonda: { n: 'Fonda', frec: 'trimestral', micras: [1500, 2000], pago: [420, 560], filtros: [2, 3], etapa: 0, linea: 'fonda',
     nombres: ['Fonda Doña Licha', 'Comida Corrida El Buen Sazón', 'Cocina Económica La Güera', 'Fonda Los Tres Chiles'], eventos: ['gerente', 'mapache'] },
-  mariscos: { n: 'Marisquería', frec: 'trimestral', micras: [1900, 2600], pago: [620, 860], filtros: [3, 4], etapa: 1, linea: 'plancha',
+  mariscos: { n: 'Marisquería', frec: 'trimestral', micras: [1900, 2600], pago: [620, 860], filtros: [3, 4], etapa: 1, linea: 'mariscos',
     nombres: ['Mariscos El Capitán', 'La Sirena Gorda', 'Ostionería Puerto Escondido', 'El Camarón Feliz'], eventos: ['gerente', 'techo'] },
   truck: { n: 'Food truck', frec: 'mensual', micras: [1300, 1800], pago: [300, 400], filtros: [1, 2], etapa: 0, linea: 'truck', chica: true,
     nombres: ['Tacos Sobre Ruedas', 'El Trokita Gourmet', 'Hot Dogs El Güero Jr.'], eventos: ['gerente'] },
-  panaderia: { n: 'Panadería', frec: 'trimestral', micras: [1600, 2200], pago: [500, 660], filtros: [2, 3], etapa: 1, linea: 'pan',
+  panaderia: { n: 'Panadería', tipos: ['larga', 'larga', 'caja'], frec: 'trimestral', micras: [1600, 2200], pago: [500, 660], filtros: [2, 3], etapa: 1, linea: 'pan',
     nombres: ['Panadería La Espiga', 'Conchas Doña Mary', 'El Bolillo Feliz'], eventos: ['techo', 'mapache'] },
-  sushi: { n: 'Barra de sushi', frec: 'semestral', micras: [700, 1100], pago: [620, 820], filtros: [2, 3], etapa: 1, linea: 'sushi', siemprePedido: true,
+  sushi: { n: 'Barra de sushi', tipos: ['inclinada'], frec: 'semestral', micras: [700, 1100], pago: [620, 820], filtros: [2, 3], etapa: 1, linea: 'sushi', siemprePedido: true,
     nombres: ['Sushi Kaito', 'Rollos del Pacífico', 'Nigiri Express'], eventos: ['gerente'] },
-  plaza: { n: 'Food court de centro comercial', frec: 'trimestral', micras: [2000, 2700], pago: [6000, 7800], filtros: [10, 12], etapa: 0, linea: 'plancha', campanas: 3, ductos: 3, gigante: true,
+  plaza: { n: 'Food court de centro comercial', frec: 'trimestral', micras: [2000, 2700], pago: [6000, 7800], filtros: [10, 12], etapa: 0, linea: 'plaza', campanas: 3, ductos: 3, gigante: true,
     nombres: ['Plaza Galerías Norte', 'Centro Comercial Las Palmas', 'Mega Plaza del Sol'], eventos: ['gerente', 'alarma', 'mapache'] },
-  convenciones: { n: 'Centro de convenciones', frec: 'semestral', micras: [2200, 2900], pago: [6500, 8500], filtros: [9, 12], etapa: 0, linea: 'carbon', campanas: 3, ductos: 2, gigante: true,
+  convenciones: { n: 'Centro de convenciones', frec: 'semestral', micras: [2200, 2900], pago: [6500, 8500], filtros: [9, 12], etapa: 0, linea: 'banquete', campanas: 3, ductos: 2, gigante: true,
     nombres: ['Centro de Convenciones Expo Grasa', 'Salón de Eventos Los Candiles', 'Expo Banquetes Real'], eventos: ['gerente', 'techo', 'alarma'] },
-  estadio: { n: 'Cocina de estadio', frec: 'semestral', micras: [2500, 3300], pago: [3800, 4800], filtros: [8, 10], etapa: 3, linea: 'carbon', campanas: 2, ayud: 2,
+  estadio: { n: 'Cocina de estadio', frec: 'semestral', micras: [2500, 3300], pago: [3800, 4800], filtros: [8, 10], etapa: 3, linea: 'estadio', campanas: 2, ayud: 2,
     nombres: ['Estadio Municipal', 'Arena Los Pumas'], eventos: ['mapache', 'techo', 'gerente', 'alarma'] },
 };
 const LINEAS = {
-  plancha: ['plancha', 'freidora', 'mesa', 'freidora', 'plancha', 'mesa'],
-  wok: ['wok', 'wok', 'mesa', 'wok'],
-  horno: ['horno', 'mesa', 'mesa'],
-  carbon: ['carbon', 'mesa', 'freidora', 'carbon'],
-  cafe: ['cafetera', 'plancha', 'mesa'],
-  truck: ['plancha', 'freidora'],
-  fonda: ['plancha', 'mesa', 'freidora', 'mesa'],
-  pan: ['horno', 'mesa', 'horno'],
-  sushi: ['mesa', 'plancha', 'mesa'],
+  plancha: ['plancha', 'freidora', 'salamandra', 'freidora', 'plancha', 'mesa'],
+  wok: ['wok', 'vapor', 'wok', 'mesa', 'wok', 'arrocera'],
+  horno: ['horno', 'mesa', 'lena'],
+  carbon: ['carbon', 'trompo', 'comal', 'carbon'],
+  cafe: ['cafetera', 'pasteles', 'plancha'],
+  truck: ['trompo', 'plancha'],
+  fonda: ['ollas', 'comal', 'mesa', 'ollas'],
+  pan: ['pisos', 'rack', 'batidora', 'pisos'],
+  sushi: ['vitrina', 'arrocera', 'plancha', 'vitrina'],
+  hotel: ['marmita', 'plancha', 'salamandra', 'freidora', 'marmita', 'mesa'],
+  comedor: ['marmita', 'charolas', 'marmita', 'plancha', 'charolas'],
+  mariscos: ['pecera', 'plancha', 'freidora', 'mesa'],
+  banquete: ['marmita', 'salamandra', 'charolas', 'plancha'],
+  estadio: ['freidora', 'plancha', 'freidora', 'salamandra'],
+  plaza: ['plancha', 'trompo', 'wok', 'freidora', 'pasteles', 'salamandra', 'comal'],
 };
 // Suciedad especial de cada cocina (parte de la superficie): grasa quemada, aceite; el sarro sale en ductos viejos.
 const SUCIEDAD = { cafe: { aceite: .1 }, pizza: { quemada: .2 }, burger: { aceite: .3 }, wok: { quemada: .2, aceite: .15 }, asador: { quemada: .35 }, hotel: { aceite: .2 },
@@ -487,18 +509,38 @@ const ADELANTO = { beto: 150, lupe: 300, chuy: 400 };
 const ANGELICA = { n: 'Angélica', color: '#e58fbf', adelanto: 500, sueldo: 150, minVans: 3,
   frases: ['Ya tengo a todos repartidos. Nadie se queja. Bueno, Beto sí, pero Beto siempre.', 'Equipos listos, jefe. Les puse la música que les gusta para que no se distraigan.', 'Listo. Y le quité a Kevin el celular hasta que termine.', 'Todo organizado. Si alguien llega tarde, tengo una hoja de cálculo para eso.'] };   // lo que piden para unirse a tu empresa
 // Gente que busca trabajo: cada uno con su manía.
+// [nombre, rasgo, frase, carácter, especialidad]. Carácter: lio (da problemas, como Beto), medio (a veces), serio (cumple y no sonríe), normal.
 const CANDIDATOS = [
-  ['Kevin', 'Graba todo para sus redes.', '¡Saluden a mis doce seguidores!'],
-  ['Doña Paty', 'Opina de la cocina ajena.', 'Con esta grasa yo hago tamales para un año.'],
-  ['El Flaco', 'Cabe en cualquier ducto.', 'Yo me meto. Siempre me meto.'],
-  ['Toño', 'Canta mientras raspa. Mal.', '♪ Grasa, grasa, dame tu grasa… ♪'],
-  ['Yesenia', 'Excampeona regional de limpiar ventanas.', 'Esto es como una ventana, pero con rencor.'],
-  ['Memo', 'Dice que es primo de Beto. Beto no lo conoce.', '¿Y Beto? Salúdenme a mi primo.'],
-  ['Brenda', 'Trae su propia rasqueta. Le puso nombre.', 'Vamos, Gertrudis. Tú puedes.'],
-  ['Nacho', 'Llega tarde, pero llega con tacos.', '¿Alguien quiere uno de pastor? Están fríos, pero con cariño.'],
-  ['Rosa', 'No habla. Limpia.', '…'],
-  ['Pancho', 'Les tiene miedo a los mapaches.', '¿Eso que se movió fue un mapache? Dime que no.'],
+  ['Kevin', 'Graba todo para sus redes.', '¡Saluden a mis doce seguidores!', 'medio', 'campana'],
+  ['Doña Paty', 'Opina de la cocina ajena.', 'Con esta grasa yo hago tamales para un año.', 'medio', 'filtros'],
+  ['El Flaco', 'Cabe en cualquier ducto.', 'Yo me meto. Siempre me meto.', 'normal', 'ducto'],
+  ['Toño', 'Canta mientras raspa. Mal.', '♪ Grasa, grasa, dame tu grasa… ♪', 'medio', 'filtros'],
+  ['Yesenia', 'Excampeona regional de limpiar ventanas.', 'Esto es como una ventana, pero con rencor.', 'normal', 'campana'],
+  ['Memo', 'Dice que es primo de Beto. Beto no lo conoce.', '¿Y Beto? Salúdenme a mi primo.', 'lio', 'filtros'],
+  ['Brenda', 'Trae su propia rasqueta. Le puso nombre.', 'Vamos, Gertrudis. Tú puedes.', 'normal', 'campana'],
+  ['Nacho', 'Llega tarde, pero llega con tacos.', '¿Alguien quiere uno de pastor? Están fríos, pero con cariño.', 'medio', 'filtros'],
+  ['Rosa', 'No habla. Limpia.', '…', 'serio', 'ducto'],
+  ['Pancho', 'Les tiene miedo a los mapaches.', '¿Eso que se movió fue un mapache? Dime que no.', 'medio', 'ducto'],
+  ['El Chicharrón', 'Todo lo que toca se resbala. Él incluido.', '¡Tranquilos! Caí con estilo.', 'lio', 'campana'],
+  ['Pánfilo «El Tornado»', 'Rápido como el viento. Igual de ordenado.', '¡Listo! ¿Qué era lo que había que limpiar?', 'lio', 'filtros'],
+  ['Wilfrido «El Wifi»', 'Se desconecta cada tanto. Luego vuelve solo.', '…perdón, ¿qué? Me fui un ratito.', 'medio', 'ducto'],
+  ['La Tía Chona', 'Trae comida para todos. A media limpieza.', '¡A comer, que se enfría! La grasa espera.', 'medio', 'filtros'],
+  ['Ingeniero Saldívar', 'Habla en normas NFPA. No sonríe nunca.', 'Norma 96, sección 11.4. Proceda.', 'serio', 'ducto'],
+  ['Don Teo', 'Cuarenta años raspando. Habla poco, deja todo brillando.', 'Mjm.', 'serio', 'campana'],
 ];
+const ESPECIAL = { filtros: 'filtros', campana: 'campanas', ducto: 'ductos' };
+const CARACTERES = { lio: ['Da problemas', 'mal'], medio: ['A veces se le va', 'naranja'], serio: ['Serio y cumplidor', 'ok'], normal: null };
+// Le pone carácter y especialidad a quien no tenga (los de partidas viejas y los nombres generados).
+function perfil(c) {
+  const f = CANDIDATOS.find(x => x[0] === c.n);
+  if (!c.tipo) {
+    c.tipo = f ? f[3] : uno(['normal', 'normal', 'normal', 'medio', 'medio', 'lio', 'serio']);
+    if (c.cuidado) c.cuidado = c.tipo === 'serio' ? Math.max(4, c.cuidado) : c.tipo === 'lio' ? Math.min(2, c.cuidado) : c.cuidado;
+  }
+  if (!c.esp) c.esp = f ? f[4] : uno(['filtros', 'campana', 'ducto']);
+  return c;
+}
+const chipsPerfil = c => `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span>${CARACTERES[c.tipo] ? `<span class="chip ${CARACTERES[c.tipo][1]}">${CARACTERES[c.tipo][0]}</span>` : ''}</span>`;
 const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
 // El gerente: su paciencia baja con cada visita, y mucho más si vas atrasado. Solo explota si de verdad tardas.
 const GERENTE_IMPACIENTE = ['Ya van tres horas, ¿eh?', '¿Esto siempre tarda tanto o es usted?', 'Mi suegra limpia más rápido. Y tiene 80 años.', 'Le aviso que a las seis llega el panadero.'];
@@ -543,6 +585,19 @@ const ICONOS = {
 };
 const RUEDA = ['rasqueta', 'espuma', 'hidro', 'pulidor'];
 
+// Tunear la camioneta: lujos graciosos, cada uno con su pequeño efecto (o ninguno, pero con mucho estilo).
+const TUNEO = [
+  { id: 'bigotes', ico: '🥸', n: 'Bigotes en el frente', d: '+100 % de estilo. Efecto en el trabajo: ninguno. Efecto en tu autoestima: enorme.', p: 90 },
+  { id: 'dados', ico: '🎲', n: 'Dados de peluche', d: 'Cuelgan del espejo. Dicen que dan suerte. Probablemente.', p: 60 },
+  { id: 'bocina', ico: '📯', n: 'Bocina de «La Cucaracha»', d: 'Suena al llegar. Los clientes sonríen: un poquito más de propina.', p: 120 },
+  { id: 'rines', ico: '💿', n: 'Rines cromados', d: 'Los clientes creen que cobras caro: te pagan un 3 % más.', p: 300 },
+  { id: 'neon', ico: '💡', n: 'Luces neón por debajo', d: 'Tu gente la ve desde lejos y llega a tiempo: faltan menos.', p: 250 },
+  { id: 'aleron', ico: '🏁', n: 'Alerón de carreras', d: 'No sirve de nada en una camioneta. Salvo en los arrancones contra El Cuñado.', p: 200 },
+  { id: 'escape', ico: '💨', n: 'Escape ruidoso', d: 'Los vecinos lo odian. Los mapaches también: huyen antes de que llegues.', p: 150 },
+  { id: 'masaje', ico: '💺', n: 'Asientos con masaje', d: 'Tu cuadrilla llega relajada y limpia un 5 % más rápido.', p: 400 },
+  { id: 'cafetera', ico: '☕', n: 'Cafetera en el tablero', d: 'Chuy se duerme la mitad de veces. Beto se pone intenso.', p: 180 },
+  { id: 'megafono', ico: '📣', n: 'Megáfono en el techo', d: 'Anuncias tu llegada. El Cuñado se pone nervioso en los duelos.', p: 220 },
+];
 const TIENDA = [
   { id: 'r2', n: 'Rasqueta de acero templado', d: 'Más ancha y un 30 % más fuerte.', p: 250, ok: s => s.eq.rasqueta === 1, f: s => { s.eq.rasqueta = 2; } },
   { id: 'r3', n: 'Rasqueta de carburo', d: 'La hoja definitiva. La costra le tiene miedo.', p: 700, ok: s => s.eq.rasqueta === 2, f: s => { s.eq.rasqueta = 3; } },
@@ -560,6 +615,9 @@ const TIENDA = [
   { id: 'electrica', n: 'Rasqueta eléctrica', d: 'Vibra sola: un 25 % más de fuerza en cada pasada. Hace cosquillas.', p: 1200, ok: s => !s.eq.electrica && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.electrica = true; } },
   { id: 'vapor', n: 'Hidrolavadora de vapor', d: 'Agua a 140 °C: el chorro limpia un 40 % más y derrite la grasa quemada sin espuma.', p: 1800, ok: s => !s.eq.vapor && s.eq.hidro && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.vapor = true; } },
   { id: 'robot', n: 'Robot de ductos «Ductobot 3000»', d: 'Lo metes en el ducto y lo limpia solo, de punta a punta. Las esquinas te las deja a ti.', p: 2500, ok: s => !s.eq.robot && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.robot = 1; } },
+  { id: 'robotCam', n: 'Cámara para el Ductobot', d: 'Ves el ducto desde los ojos del robot mientras trabaja. Hipnótico.', p: 600, ok: s => s.eq.robot >= 1 && !s.eq.robotCam, f: s => { s.eq.robotCam = true; } },
+  { id: 'orugas', n: 'Orugas todoterreno para el Ductobot', d: 'Ya no se atora en las costras: pasa por encima de todo.', p: 800, ok: s => s.eq.robot >= 1 && !s.eq.orugas, f: s => { s.eq.orugas = true; } },
+  { id: 'robotVoz', n: 'Voz de Don Rigo para el Ductobot', d: 'El robot habla como Don Rigo. No limpia mejor, pero regaña igual.', p: 150, ok: s => s.eq.robot >= 1 && !s.eq.robotVoz, f: s => { s.eq.robotVoz = true; } },
   { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 1500, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
   { id: 'flota', get n() { return S.eq.flota ? `Camioneta para el equipo ${S.eq.flota + 2}` : 'Segunda camioneta'; }, get d() { return `Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`; },
     get p() { return 1200 + (S.eq.flota || 0) * 600; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
@@ -697,7 +755,7 @@ const DIAS = [
     { t: 'Adoptarlo', d: 'Se llamará Grasita', f: () => { S.perro = true; return 'Grasita ya es parte de la empresa. Ladra a los ductos. A todos.'; } },
     { t: 'Darle un taco y despedirlo', d: 'Con dolor', f: () => 'Se comió el taco, te miró con desprecio y se fue. Lloraste un poquito.' }] },
   { id: 'arrancon', t: 'Semáforo en rojo', txt: `La camioneta de ${RIVAL} se para junto a la tuya. El Cuñado acelera dos veces y te guiña un ojo.`, ops: [
-    { t: '¡Arrancón!', d: 'Por el honor de la empresa', f: () => { if (azar(.5)) { S.rep = clamp(S.rep + 2, 0, 100); return '¡Ganaste! La camioneta vieja tiene más corazón que motor. +2 de reputación.'; } S.dinero -= 30; return 'La camioneta se apagó a media calle. El Cuñado se rió. Empujarla costó $30 en refrescos.'; } },
+    { t: '¡Arrancón!', d: 'Por el honor de la empresa', f: () => { if (azar(tun('aleron') ? .85 : .5)) { S.rep = clamp(S.rep + 2, 0, 100); return tun('aleron') ? '¡Ganaste! El alerón hizo su trabajo. Nadie sabe cómo. +2 de reputación.' : '¡Ganaste! La camioneta vieja tiene más corazón que motor. +2 de reputación.'; } S.dinero -= 30; return 'La camioneta se apagó a media calle. El Cuñado se rió. Empujarla costó $30 en refrescos.'; } },
     { t: 'Ignorarlo con dignidad', d: 'Mirada al frente', f: () => 'Lo ignoras. Por el retrovisor, ves que El Cuñado se cala en la siguiente esquina. Justicia divina.' }] },
   { id: 'donas', t: 'Regalo de una clienta', txt: 'Una clienta te deja una caja de donas: «Por la campana de la otra vez, quedó preciosa».', ops: [
     { t: 'Guardarlas para el gerente', d: 'Esta noche tendrá más paciencia', f: H => { H.donas = true; return 'Las donas viajan en el asiento del copiloto, con el cinturón puesto.'; } },
@@ -755,6 +813,7 @@ function completar(s) {
     if (!c.puntual) c.puntual = 2 + Math.floor(Math.random() * 3);
     if (!c.base) c.base = c.fuerza;
     if (!c.animo) c.animo = 3;
+    perfil(c);
     if (s.cuadrilla.includes(c)) c.entrevistado = true;
   }
   return s;
@@ -819,6 +878,7 @@ function audio() {
   if (A.ctx && A.ctx.state === 'suspended') A.ctx.resume();
 }
 const suena = () => A.ctx && S.aj.sonido;
+function bocina() { [392, 392, 392, 523, 659, 392, 392, 392, 523, 659].forEach((f, i) => tono(f, .13, .07, 'square', null, [0, .14, .28, .42, .7, 1.1, 1.24, 1.38, 1.52, 1.8][i])); }
 function rafaga(dur, freq, vol, tipo = 'bandpass', q = 1.2, hasta = null, cuando = 0) {
   if (!suena()) return;
   const c = A.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t0 = c.currentTime + cuando;
@@ -1018,9 +1078,10 @@ TX.azulejo = texCanvas(lienzo(256, 256, (g, w, h) => {
   for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(120,90,40,${Math.random() * .12})`; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, Math.random() * 18, 0, 7); g.fill(); }
 }), 6, 2);
 TX.suelo = texCanvas(lienzo(256, 256, (g, w, h) => {
-  g.fillStyle = '#7b2f2a'; g.fillRect(0, 0, w, h); g.fillStyle = '#6a2723';
+  // En gris: cada cocina le pone su color (rojo de fonda, madera de sushi, gris de hotel…).
+  g.fillStyle = '#b8b8b8'; g.fillRect(0, 0, w, h); g.fillStyle = '#9e9e9e';
   for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) if ((x + y) % 2) g.fillRect(x * 64, y * 64, 64, 64);
-  g.strokeStyle = '#3d1714'; g.lineWidth = 3; for (let i = 0; i <= 256; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.moveTo(0, i); g.lineTo(w, i); g.stroke(); }
+  g.strokeStyle = '#5a5a5a'; g.lineWidth = 3; for (let i = 0; i <= 256; i += 64) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, h); g.moveTo(0, i); g.lineTo(w, i); g.stroke(); }
 }), 6, 6);
 TX.lona = texCanvas(lienzo(128, 128, (g, w, h) => {
   g.fillStyle = '#2f5fa8'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.12)';
@@ -1245,6 +1306,68 @@ function aparato(tipo, x, ancho) {
   if (tipo === 'carbon') { add(new T.BoxGeometry(ancho, .05, .6), new T.MeshStandardMaterial({ color: 0x111111, roughness: .6 }), 0, .03, 0); for (let i = 0; i < 8; i++) { const m = new T.MeshStandardMaterial({ color: 0x220a02, emissive: 0xff5a10, emissiveIntensity: rnd(.4, 1.2) }); add(new T.SphereGeometry(.05, 6, 4), m, rnd(-ancho / 2.4, ancho / 2.4), .07, rnd(-.22, .22)); piezas.brillos.push({ m, brasa: true, base: m.emissiveIntensity }); } gas = 'Apagar las brasas'; }
   if (tipo === 'cafetera') { add(new T.BoxGeometry(ancho * .8, .45, .4), new T.MeshStandardMaterial({ color: 0xa83a2a, metalness: .4, roughness: .3 }), 0, .225, -.05); alto = .46; }
   if (tipo === 'mesa') { add(new T.BoxGeometry(ancho * .7, .03, .35), new T.MeshStandardMaterial({ color: 0xe8e2d0, roughness: .7 }), 0, .015, 0); for (let i = 0; i < 3; i++) add(new T.SphereGeometry(.04, 8, 6), new T.MeshStandardMaterial({ color: [0xd9442b, 0x5a9e3a, 0xf0c419][i] }), rnd(-.15, .15), .06, rnd(-.1, .1)); alto = .1; }
+  // Equipos propios de cada tipo de cocina: así una panadería no se parece a una taquería.
+  const est = (c, extra = {}) => new T.MeshStandardMaterial({ color: c, roughness: .6, ...extra });
+  const brilla = (c) => { const m = new T.MeshBasicMaterial({ color: c, toneMapped: false }); piezas.brillos.push({ m, fuego: true }); return m; };
+  if (tipo === 'trompo') {
+    add(new T.CylinderGeometry(.16, .16, .03, 16), matAcero, 0, .015, 0);
+    add(new T.CylinderGeometry(.012, .012, .72, 6), matAcero, 0, .37, 0);
+    const carne = add(new T.CylinderGeometry(.09, .14, .42, 14), est(0xb4441c, { emissive: 0x3a0e00 }), 0, .33, 0); piezas.brillos.push({ o: carne, gira: true });
+    add(new T.SphereGeometry(.065, 10, 8), est(0xe8c547), 0, .6, 0); add(new T.ConeGeometry(.05, .12, 6), est(0x4f8a2b), 0, .7, 0);
+    add(new T.BoxGeometry(.3, .5, .03), brilla(0xff6a1a), 0, .32, -.2); alto = .76; gas = 'Apagar el trompo';
+  }
+  if (tipo === 'comal') { add(new T.CylinderGeometry(Math.min(.26, ancho / 2), Math.min(.26, ancho / 2), .025, 24), est(0x1a1a1a, { metalness: .6, roughness: .5 }), 0, .02, 0); for (let i = 0; i < 3; i++) add(new T.CylinderGeometry(.05, .05, .006, 12), est(0xe9d9a6), rnd(-.12, .12), .036, rnd(-.12, .12)); alto = .05; gas = 'Cerrar el piloto'; }
+  if (tipo === 'pisos') {
+    add(new T.BoxGeometry(ancho * .92, .82, .58), est(0xb9c0c6, { metalness: .6, roughness: .35 }), 0, .41, 0);
+    for (let k = 0; k < 3; k++) { add(new T.BoxGeometry(ancho * .75, .17, .01), brilla(0xff8a3a), 0, .14 + k * .26, .295); add(new T.BoxGeometry(ancho * .8, .025, .03), matOscuro, 0, .25 + k * .26, .31); }
+    alto = .82; gas = 'Apagar el horno';
+  }
+  if (tipo === 'rack') {
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(new T.BoxGeometry(.02, .72, .02), matAcero, sx * ancho * .38, .36, sz * .2);
+    for (let k = 0; k < 4; k++) { add(new T.BoxGeometry(ancho * .78, .015, .42), matAcero, 0, .1 + k * .19, 0);
+      for (let j = 0; j < 4; j++) { const p = add(new T.SphereGeometry(.05, 10, 6), est(k % 2 ? 0xc98a4b : 0xf3c6d3), -ancho * .27 + j * ancho * .18, .14 + k * .19, rnd(-.08, .08)); p.scale.y = .55; } }
+    alto = .72;
+  }
+  if (tipo === 'batidora') {
+    add(new T.BoxGeometry(.24, .06, .3), est(0xe0e4e8, { metalness: .4 }), 0, .03, 0); add(new T.BoxGeometry(.08, .42, .08), est(0xe0e4e8, { metalness: .4 }), 0, .27, -.11);
+    add(new T.BoxGeometry(.12, .1, .3), est(0xe0e4e8, { metalness: .4 }), 0, .46, 0); add(new T.CylinderGeometry(.12, .09, .18, 16, 1, true), matAcero, 0, .15, .03);
+    alto = .52;
+  }
+  if (tipo === 'vapor') { for (let k = 0; k < 3; k++) add(new T.CylinderGeometry(.15, .15, .08, 16), est(0xc9a46a), 0, .05 + k * .085, 0); add(new T.ConeGeometry(.15, .06, 16), est(0xb8925a), 0, .3, 0); alto = .33; gas = 'Cerrar el piloto'; }
+  if (tipo === 'arrocera') { add(new T.CylinderGeometry(.14, .14, .2, 18), est(0xf2f2ee), 0, .1, 0); add(new T.SphereGeometry(.14, 16, 6, 0, 6.3, 0, Math.PI / 2), est(0xf2f2ee), 0, .2, 0); add(new T.BoxGeometry(.05, .03, .02), brilla(0xff4a2a), 0, .08, .14); alto = .3; }
+  if (tipo === 'vitrina' || tipo === 'pasteles') {
+    add(new T.BoxGeometry(ancho * .85, .05, .4), matOscuro, 0, .025, 0);
+    const vid = add(new T.BoxGeometry(ancho * .85, .3, .4), new T.MeshStandardMaterial({ color: 0xcfe9ff, transparent: true, opacity: .25, roughness: .05, metalness: .1 }), 0, .2, 0);
+    const cols = tipo === 'vitrina' ? [0xf28a5b, 0xc8102e, 0xf6efe6, 0x2e7d4f] : [0x6b3d1f, 0xf3c6d3, 0xfff1d6, 0xc8102e];
+    for (let j = 0; j < 5; j++) add(tipo === 'vitrina' ? new T.BoxGeometry(.09, .03, .06) : new T.CylinderGeometry(.06, .06, .07, 14), est(cols[j % 4]), -ancho * .32 + j * ancho * .16, .08, 0);
+    vid.renderOrder = 2; alto = .36;
+  }
+  if (tipo === 'pecera') {
+    add(new T.BoxGeometry(ancho * .85, .05, .42), matOscuro, 0, .025, 0);
+    const agua = add(new T.BoxGeometry(ancho * .82, .42, .4), new T.MeshStandardMaterial({ color: 0x3aa6d0, transparent: true, opacity: .45, roughness: .05 }), 0, .26, 0); agua.renderOrder = 2;
+    for (let j = 0; j < 3; j++) { const l = add(new T.BoxGeometry(.12, .04, .06), est(0xd03a22), rnd(-ancho * .25, ancho * .25), .09, rnd(-.1, .1)); l.rotation.y = rnd(0, 3); }
+    alto = .48;
+  }
+  if (tipo === 'marmita') {
+    for (const sx of [-1, 1]) add(new T.BoxGeometry(.05, .3, .3), matAcero, sx * .26, .15, 0);
+    const olla = add(new T.CylinderGeometry(.24, .19, .3, 20), est(0xc5ccd2, { metalness: .8, roughness: .3 }), 0, .26, 0);
+    add(new T.CylinderGeometry(.21, .21, .01, 20), est(0xe08a2b), 0, .4, 0); olla.rotation.z = .05; alto = .42; gas = 'Cerrar el gas';
+  }
+  if (tipo === 'salamandra') {
+    for (const sx of [-1, 1]) add(new T.BoxGeometry(.03, .38, .03), matAcero, sx * ancho * .35, .19, -.2);
+    add(new T.BoxGeometry(ancho * .78, .14, .4), est(0xb9c0c6, { metalness: .6, roughness: .35 }), 0, .45, -.05);
+    add(new T.BoxGeometry(ancho * .68, .015, .3), brilla(0xff4a1a), 0, .375, -.05); alto = .53; gas = 'Apagar la salamandra';
+  }
+  if (tipo === 'charolas') {
+    add(new T.BoxGeometry(ancho * .9, .1, .5), matAcero, 0, .05, 0);
+    [0xe8a33a, 0x6b3d1f, 0x5a9e3a, 0xd9442b].forEach((c, j) => add(new T.BoxGeometry(ancho * .19, .02, .36), est(c), -ancho * .32 + j * ancho * .215, .105, 0));
+    alto = .12; gas = 'Apagar el baño maría';
+  }
+  if (tipo === 'ollas') {
+    [[-.16, .2, .13], [.12, .26, .16], [.0, .16, .1]].forEach(([dx, h, r], j) => { add(new T.CylinderGeometry(r, r * .85, h, 16), est(0x9b4a2c, { roughness: .9 }), dx, h / 2, j === 2 ? .17 : -.05); add(new T.CylinderGeometry(r * .9, r * .9, .015, 16), est(0x7a3a20), dx, h + .01, j === 2 ? .17 : -.05); });
+    alto = .28; gas = 'Cerrar el piloto';
+  }
+  if (tipo === 'lena') { for (let j = 0; j < 9; j++) { const t = add(new T.CylinderGeometry(.035, .035, .34, 7), est(0x7a4a24, { roughness: .95 }), -.1 + (j % 3) * .08, .04 + Math.floor(j / 3) * .065, 0); t.rotation.x = Math.PI / 2; } alto = .22; }
   const cubierta = new T.Mesh(new T.BoxGeometry(ancho + .06, alto + .1, .7), matCubierta); cubierta.position.set(x, .9 + (alto + .1) / 2, -.55); cubierta.visible = false; mundo.add(cubierta);
   const ap = { tipo, x, alto, cubierta, cubierto: false, pos: new T.Vector3(x, .95 + alto, -.4) };
   if (gas) {
@@ -1264,26 +1387,39 @@ function cartel(lineas, fondo, tinta, w, h, borde) {
   })), transparent: fondo === 'transparent' });
 }
 const AMBIENTE = {
-  cafe: { pared: 0xf3e2c4, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .62), cartel([['MENÚ', 58], ['Café de olla · $25', 34], ['Conchas · $12', 34], ['Chilaquiles · $60', 34]], '#22382c', '#f1f1e6', .75, .62, '#8a5a2b'), xd, 2.2, -.99) },
-  pizza: { pared: 0xeed3c0, deco: ({ add, xd }) => { [0x2e9e5b, 0xf4f4f4, 0xd7382b].forEach((c, i) => add(new T.PlaneGeometry(.18, .5), new T.MeshBasicMaterial({ color: c }), xd - .18 + i * .18, 2.25, -.99)); } },
-  burger: { pared: 0xfaf7f2, deco: ({ add, xd, brillos }) => { const m = cartel([['BURGERS', 92]], 'transparent', '#ff5fa2', .9, .32); add(new T.PlaneGeometry(.9, .32), m, xd, 2.3, -.98); brillos.push({ m, neon: true }); } },
-  wok: { pared: 0xf1cdbd, deco: ({ add, lineW, brillos }) => {
+  cafe: { pared: 0xbcd8b0, suelo: 0x8fae8a, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .62), cartel([['MENÚ', 58], ['Café de olla · $25', 34], ['Conchas · $12', 34], ['Chilaquiles · $60', 34]], '#22382c', '#f1f1e6', .75, .62, '#8a5a2b'), xd, 2.2, -.99) },
+  pizza: { pared: 0xe0a47a, suelo: 0xab413a, deco: ({ add, xd }) => { [0x2e9e5b, 0xf4f4f4, 0xd7382b].forEach((c, i) => add(new T.PlaneGeometry(.18, .5), new T.MeshBasicMaterial({ color: c }), xd - .18 + i * .18, 2.25, -.99));
+    for (let j = 0; j < 15; j++) { const t = add(new T.CylinderGeometry(.05, .05, .42, 7), new T.MeshStandardMaterial({ color: 0x7a4a24, roughness: .95 }), xd - .25 + (j % 5) * .12, .05 + Math.floor(j / 5) * .095, -.7); t.rotation.z = Math.PI / 2; t.rotation.y = Math.PI / 2; }
+    const pala = add(new T.BoxGeometry(.04, 1.3, .02), new T.MeshStandardMaterial({ color: 0x9b6a3a }), xd + .45, .9, -.97); pala.rotation.z = .12; add(new T.CircleGeometry(.16, 18), new T.MeshStandardMaterial({ color: 0xb9c0c6, metalness: .6 }), xd + .53, 1.6, -.955); } },
+  burger: { pared: 0xfaf7f2, suelo: 0x55555c, deco: ({ add, xd, brillos }) => { const m = cartel([['BURGERS', 92]], 'transparent', '#ff5fa2', .9, .32); add(new T.PlaneGeometry(.9, .32), m, xd, 2.3, -.98); brillos.push({ m, neon: true }); } },
+  wok: { pared: 0xe39a86, suelo: 0x9a3a2a, deco: ({ add, lineW, brillos }) => {
     for (const x of [-lineW / 2 + .2, 0, lineW / 2 - .2]) {
       add(new T.CylinderGeometry(.003, .003, .5, 4), new T.MeshBasicMaterial({ color: 0x222222 }), x, 2.75, 1.5);
       const m = new T.MeshBasicMaterial({ color: 0xd0261a, toneMapped: false });
       const f = add(new T.SphereGeometry(.13, 14, 10), m, x, 2.45, 1.5); f.scale.y = 1.25; brillos.push({ m, farol: true });
     } } },
-  asador: { pared: 0xdcc3a2, deco: ({ add, xd }) => add(new T.PlaneGeometry(.9, .36), cartel([['¡AL CARBÓN!', 80]], '#3a1a0a', '#ff9a3c', .9, .36, '#ff9a3c'), xd, 2.3, -.99) },
-  hotel: { pared: 0xeef0f3, deco: ({ add, xd }) => { add(new T.BoxGeometry(8.9, .05, .02), new T.MeshStandardMaterial({ color: 0xd4af37, metalness: .9, roughness: .25 }), 0, 1.8, -.99); add(new T.PlaneGeometry(.8, .3), cartel([['SOLO PERSONAL', 46], ['AUTORIZADO', 46]], '#1b2a33', '#d4af37', .8, .3, '#d4af37'), xd, 2.3, -.98); } },
-  comedor: { pared: 0xd7e6da, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .4), cartel([['LÁVESE', 60], ['LAS MANOS', 60]], '#f4f4f4', '#2e7d4f', .75, .4, '#2e7d4f'), xd, 2.25, -.99) },
-  fonda: { pared: 0xf7d9a8, deco: ({ add, xd }) => add(new T.PlaneGeometry(.85, .45), cartel([['COMIDA CORRIDA', 56], ['sopa · guisado · agua · $85', 32]], '#2e5d3a', '#fff7e0', .85, .45, '#ffd23f'), xd, 2.25, -.99) },
-  mariscos: { pared: 0xcfeef0, deco: ({ add, xd }) => add(new T.PlaneGeometry(.85, .38), cartel([['¡HAY CAMARONES!', 60]], '#0f4c6b', '#ffd23f', .85, .38, '#ffffff'), xd, 2.3, -.99) },
-  plaza: { pared: 0xe9edf2, deco: ({ add, xd }) => { add(new T.PlaneGeometry(.95, .36), cartel([['FOOD COURT', 70]], '#2f6fd1', '#ffffff', .95, .36, '#ffd23f'), xd, 2.35, -.99); add(new T.PlaneGeometry(.95, .2), cartel([['Piso 2 · Baños al fondo', 40]], '#f4f4f4', '#2b3238', .95, .2), xd, 2.05, -.99); } },
-  convenciones: { pared: 0xece4d6, deco: ({ add, xd }) => { add(new T.BoxGeometry(8.9, .05, .02), new T.MeshStandardMaterial({ color: 0xd4af37, metalness: .9, roughness: .25 }), 0, 1.8, -.99); add(new T.PlaneGeometry(.95, .36), cartel([['BANQUETES', 60], ['para 2,000 personas', 34]], '#4a1d2c', '#ffe3b8', .95, .36, '#d4af37'), xd, 2.3, -.98); } },
-  truck: { pared: 0xcfe8f5, deco: ({ add, xd }) => add(new T.PlaneGeometry(.8, .34), cartel([['¡TACOS!', 90]], '#ffd23f', '#d7382b', .8, .34, '#d7382b'), xd, 2.3, -.99) },
-  panaderia: { pared: 0xf6e6cc, deco: ({ add, xd }) => add(new T.PlaneGeometry(.85, .4), cartel([['PAN CALIENTE', 64], ['conchas · bolillos · orejas', 34]], '#6b3d1f', '#ffe3b8', .85, .4, '#e0a040'), xd, 2.25, -.99) },
-  sushi: { pared: 0xf4efe6, deco: ({ add, xd }) => { add(new T.CircleGeometry(.17, 24), new T.MeshBasicMaterial({ color: 0xc8102e }), xd, 2.45, -.985); add(new T.PlaneGeometry(.9, .2), cartel([['SUSHI · IRASSHAIMASE', 52]], '#1b1b1b', '#f4efe6', .9, .2), xd, 2.1, -.99); } },
-  estadio: { pared: 0xdde3f0, deco: ({ add, xd }) => {
+  asador: { pared: 0xd09a62, suelo: 0x8a5a3a, deco: ({ add, xd }) => { add(new T.PlaneGeometry(.9, .36), cartel([['¡AL CARBÓN!', 80]], '#3a1a0a', '#ff9a3c', .9, .36, '#ff9a3c'), xd, 2.3, -.99);
+    // Papel picado de lado a lado
+    const cols = [0xff5fa2, 0x2f6fd1, 0xffd23f, 0x2e9e5b, 0xff8a1f];
+    for (let i = 0; i < 26; i++) { const b = add(new T.PlaneGeometry(.22, .2), new T.MeshBasicMaterial({ color: cols[i % 5], side: T.DoubleSide }), -3.5 + i * .28, 2.82, .9); b.rotation.x = .2; } } },
+  hotel: { pared: 0xf4f6f8, suelo: 0xd4dade, deco: ({ add, xd }) => { add(new T.BoxGeometry(8.9, .05, .02), new T.MeshStandardMaterial({ color: 0xd4af37, metalness: .9, roughness: .25 }), 0, 1.8, -.99); add(new T.PlaneGeometry(.8, .3), cartel([['SOLO PERSONAL', 46], ['AUTORIZADO', 46]], '#1b2a33', '#d4af37', .8, .3, '#d4af37'), xd, 2.3, -.98); } },
+  comedor: { pared: 0xc6e3cf, suelo: 0x9fb0a4, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .4), cartel([['LÁVESE', 60], ['LAS MANOS', 60]], '#f4f4f4', '#2e7d4f', .75, .4, '#2e7d4f'), xd, 2.25, -.99) },
+  fonda: { pared: 0xf2b672, suelo: 0xc0583a, deco: ({ add, xd }) => add(new T.PlaneGeometry(.85, .45), cartel([['COMIDA CORRIDA', 56], ['sopa · guisado · agua · $85', 32]], '#2e5d3a', '#fff7e0', .85, .45, '#ffd23f'), xd, 2.25, -.99) },
+  mariscos: { pared: 0x93d6da, suelo: 0x5e9cb0, deco: ({ add, xd }) => { add(new T.PlaneGeometry(.85, .38), cartel([['¡HAY CAMARONES!', 60]], '#0f4c6b', '#ffd23f', .85, .38, '#ffffff'), xd, 2.3, -.99);
+    const aro = add(new T.TorusGeometry(.2, .06, 10, 24), new T.MeshStandardMaterial({ color: 0xf4f4f4 }), xd, 1.55, -.95); for (let k = 0; k < 4; k++) add(new T.BoxGeometry(.07, .13, .13), new T.MeshStandardMaterial({ color: 0xd7382b }), xd + Math.cos(k * 1.57) * .2, 1.55 + Math.sin(k * 1.57) * .2, -.95).rotation.z = k * 1.57;
+    const red = add(new T.PlaneGeometry(.9, .6), new T.MeshBasicMaterial({ color: 0x8a6b3a, wireframe: true }), -3.0, 1.35, -.97); red.rotation.z = .08; } },
+  plaza: { pared: 0xe9edf2, suelo: 0xc8ccd0, deco: ({ add, xd }) => { add(new T.PlaneGeometry(.95, .36), cartel([['FOOD COURT', 70]], '#2f6fd1', '#ffffff', .95, .36, '#ffd23f'), xd, 2.35, -.99); add(new T.PlaneGeometry(.95, .2), cartel([['Piso 2 · Baños al fondo', 40]], '#f4f4f4', '#2b3238', .95, .2), xd, 2.05, -.99); } },
+  convenciones: { pared: 0xe8dcc6, suelo: 0x7a2a2a, deco: ({ add, xd }) => { add(new T.BoxGeometry(8.9, .05, .02), new T.MeshStandardMaterial({ color: 0xd4af37, metalness: .9, roughness: .25 }), 0, 1.8, -.99); add(new T.PlaneGeometry(.95, .36), cartel([['BANQUETES', 60], ['para 2,000 personas', 34]], '#4a1d2c', '#ffe3b8', .95, .36, '#d4af37'), xd, 2.3, -.98); } },
+  truck: { pared: 0xc3ccd3, suelo: 0x8e979e, deco: ({ add, xd }) => add(new T.PlaneGeometry(.8, .34), cartel([['¡TACOS!', 90]], '#ffd23f', '#d7382b', .8, .34, '#d7382b'), xd, 2.3, -.99) },
+  panaderia: { pared: 0xf2d48e, suelo: 0xd8b98a, deco: ({ add, xd }) => { add(new T.PlaneGeometry(.85, .4), cartel([['PAN CALIENTE', 64], ['conchas · bolillos · orejas', 34]], '#6b3d1f', '#ffe3b8', .85, .4, '#e0a040'), xd, 2.25, -.99);
+    // Costales de harina
+    for (let j = 0; j < 4; j++) { const c = add(new T.CylinderGeometry(.2, .23, .5, 12), new T.MeshStandardMaterial({ color: 0xece4d2, roughness: 1 }), xd - .3 + (j % 2) * .44, .25 + Math.floor(j / 2) * .42, -.6 + (j % 2) * .1); c.rotation.z = j > 1 ? Math.PI / 2 : 0; c.scale.z = .7; }
+    add(new T.PlaneGeometry(.3, .16), cartel([['HARINA', 60]], '#ece4d2', '#6b3d1f', .3, .16), xd - .3, .3, -.43); } },
+  sushi: { pared: 0xdcc6a0, suelo: 0x8a6648, deco: ({ add, xd, lineW }) => {
+    // Cortina noren en la entrada y linternas de papel
+    for (let k = 0; k < 4; k++) add(new T.PlaneGeometry(.24, .55), new T.MeshStandardMaterial({ color: 0x1f3d6b, side: T.DoubleSide }), 3.58, 1.85, 1.05 + k * .26).rotation.y = -Math.PI / 2;
+    for (const x of [-lineW / 2 + .3, lineW / 2 - .3]) { const m = new T.MeshBasicMaterial({ color: 0xf6e7c8, toneMapped: false }); const f = add(new T.CylinderGeometry(.11, .11, .3, 14), m, x, 2.5, 1.4); add(new T.CylinderGeometry(.115, .115, .03, 14), new T.MeshBasicMaterial({ color: 0x1b1b1b }), x, 2.66, 1.4); f.userData.l = 1; } add(new T.CircleGeometry(.17, 24), new T.MeshBasicMaterial({ color: 0xc8102e }), xd, 2.45, -.985); add(new T.PlaneGeometry(.9, .2), cartel([['SUSHI · IRASSHAIMASE', 52]], '#1b1b1b', '#f4efe6', .9, .2), xd, 2.1, -.99); } },
+  estadio: { pared: 0xc8d4ec, suelo: 0x5a6a80, deco: ({ add, xd }) => {
     for (let i = 0; i < 14; i++) { const b = add(new T.ConeGeometry(.09, .2, 3), new T.MeshBasicMaterial({ color: [0x2f6fd1, 0xffd23f][i % 2] }), -4.1 + i * .62, 2.8, -.97); b.rotation.z = Math.PI; }
     add(new T.PlaneGeometry(.9, .32), cartel([['¡VAMOS PUMAS!', 74]], '#2f6fd1', '#ffd23f', .9, .32), xd, 2.3, -.99); } },
 };
@@ -1332,6 +1468,7 @@ function construirNoche(orden) {
   add(new T.PlaneGeometry(1.4, .35), new T.MeshBasicMaterial({ map: letrero }), clamp(-lineW / 2 - .9, -2.8, -1.6), 2.5, -.99);
   const amb = AMBIENTE[orden ? orden.cocina : 'burger'] || AMBIENTE.burger;
   matPared.color.set(amb.pared);
+  suelo.material.color.set(amb.suelo || 0xab413a);
   piezas.brillos = [];
   amb.deco({ add, lineW, xd: clamp(lineW / 2 + .95, 1.9, 3.1), brillos: piezas.brillos });
   piezas.reloj = texCanvas(RELOJ_TX); pintarRelojPared(0);
@@ -1513,6 +1650,10 @@ function moverCamara(dt) {
   cam.position.lerp(camT.objPos, k); camT.mira.lerp(camT.objMira, k);
   if (M && M.fase === 'turno') { const t = performance.now() / 1000; cam.position.x += Math.sin(t * .5) * .004; cam.position.y += Math.sin(t * .7) * .003; }
   cam.lookAt(camT.mira);
+  if (M && M.robotCam && M.robot && piezas.robot && M.robot.z === zonaAct()) {
+    const r = piezas.robot.position, d = M.robot.z.duct, sg = Math.sign(d.z1 - d.z0) || -1;
+    cam.position.set(r.x, r.y + .13, r.z + sg * .16); cam.lookAt(r.x, r.y + .1, r.z + sg * 1.5);
+  }
   // Con el panel de preparación abierto, la escena se sube al hueco libre para que no quede nada tapado.
   let off = 0, offX = 0;
   if (lado) {
@@ -1648,27 +1789,30 @@ const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalea
 
 function empezarTurno(orden) {
   // Puntualidad: el que tiene poca a veces no llega (y esa noche no cobra).
-  const faltan = orden.equipo.filter(e => !e.principal && azar((5 - (e.puntual || 3)) * .07));
+  const faltan = orden.equipo.filter(e => !e.principal && azar((5 - (e.puntual || 3)) * .07 * (tun('neon') ? .5 : 1)));
+  if (tun('escape')) orden.eventos = orden.eventos.filter(e => e !== 'mapache' || azar(.4));
   orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0;
-  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
+  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
     maxCombo: 0, combos3: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
     pedido: orden.pedido ? pedido(orden.pedido) : null, cliente: { n: 'Cliente', color: '#e9e9e9' },
-    equipo: orden.equipo.map(e => ({ ...e, fuerza: e.fuerza * (orden.animo ? 1.15 : 1), t: rnd(.2, .8) })) };
+    equipo: orden.equipo.map(e => ({ ...e, fuerza: e.fuerza * (orden.animo ? 1.15 : 1) * (tun('masaje') ? 1.05 : 1), t: rnd(.2, .8) })) };
+  if (tun('bocina')) { M.propinaMod += .02; setTimeout(bocina, 600); }
+  if (tun('cafetera')) M.dormirT *= 2;
   if (orden.donas) M.paciencia += 40;
   M.faltan = faltan;   // las donas de la clienta, para el gerente
   if (M.pedido) M.cliente = { n: M.pedido.quien, color: '#e9e9e9' };
   // El duelo: El Cuñado limpia la misma cocina a la vez. Gana quien deje todo bajo el límite primero.
-  if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74), tuyo: null, rivalFin: null, charlaT: rnd(14, 22) };
+  if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22) };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   if (orden.comp === 'beto' && azar(.75)) M.eventos.push({ tipo: 'tuberia', zona: 1, en: rnd(14, 26) });
   if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: iDucto(), en: rnd(8, 14) });
   if (orden.eventos.includes('alarma')) M.eventos.push({ tipo: 'alarma', zona: 1, en: rnd(25, 40) });
   if (orden.eventos.includes('techo')) M.eventos.push({ tipo: 'techo', zona: iDucto(), en: 1.2 });
   // Sorpresas que no avisan: como mucho dos por noche.
-  if (S.noche >= 2) {
+  if (S.noche >= 2 && !(orden.leccion && orden.leccion < 3)) {
     const extra = [];
     if (azar(.3)) extra.push({ tipo: 'cucaracha', zona: 1, en: rnd(9, 20) });
     if (azar(.3) && !M.comp.solo) extra.push({ tipo: 'atorado', zona: iDucto(), en: rnd(4, 10) });
@@ -1677,7 +1821,7 @@ function empezarTurno(orden) {
     M.eventos.push(...extra.sort(() => Math.random() - .5).slice(0, 2));
   }
   // Crisis con la gente: le pasa algo a alguien de tu cuadrilla (o a un equipo, en un gigante). Salta en cualquier zona.
-  if ((M.equipo.length || (orden.ayudan || []).length) && S.noche >= 2) {
+  if ((M.equipo.length || (orden.ayudan || []).length) && S.noche >= 2 && !(orden.leccion && orden.leccion < 3)) {
     const n = orden.gigante ? 2 : azar(.45) ? 1 : 0;
     for (let i = 0; i < n; i++) M.eventos.push({ tipo: 'crisis', zona: -1, en: M.dur * rnd(.18 + i * .3, .4 + i * .3) });
   }
@@ -1750,8 +1894,9 @@ function escenaPrep(i) {
 const CUIDADO_COMP = { beto: 2, lupe: 5, chuy: 3 };
 function armarCuadrillas() {
   const o = M.orden, out = [];
-  const mios = M.equipo.map(e => ({ n: e.n, fuerza: e.fuerza, cuidado: e.principal ? CUIDADO_COMP[o.comp] || 3 : e.cuidado || 3, animo: e.id ? (S.cuadrilla.find(c => c.id === e.id) || {}).animo : null, id: e.id || null }));
+  const mios = M.equipo.map(e => ({ n: e.n, esp: e.esp, fuerza: e.fuerza, cuidado: e.principal ? CUIDADO_COMP[o.comp] || 3 : e.cuidado || 3, animo: e.id ? (S.cuadrilla.find(c => c.id === e.id) || {}).animo : null, id: e.id || null }));
   if (mios.length) out.push({ n: 'Tu cuadrilla', color: M.comp.color || '#ffd23f', gente: mios, kit: 0 });
+  (o.rigoEquipos || []).forEach((a, i) => out.push({ n: a.n, color: a.color, gente: a.gente.map(g => ({ ...g })), kit: 2, k: i + 2 }));
   for (const a of o.ayudan || []) {
     const gente = [...(a.comp ? [{ n: COMPANEROS[a.comp].n, fuerza: COMPANEROS[a.comp].fuerza, cuidado: CUIDADO_COMP[a.comp] }] : []), ...a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
     if (gente.length) out.push({ n: `Equipo ${a.k}`, color: '#69c97a', gente, kit: kit(a.k - 2), k: a.k, ayud: a.ayud });
@@ -1762,13 +1907,13 @@ function escenaReparto() {
   const crews = armarCuadrillas(), yo = Z.indexOf(zCampana());
   // Por defecto: tú la primera campana; el resto, por turnos entre tus equipos.
   let r = 0; const reparto = Z.map((z, i) => i === yo ? -1 : (r++) % crews.length);
-  if (S.angelica) {   // Angélica propone: las zonas más grandes, para los equipos más fuertes. Tú decides.
+  if (S.angelica || M.orden.leccion === 4) {   // Angélica propone: las zonas más grandes, para los equipos más fuertes. Tú decides.
     const orden = Z.map((z, i) => i).filter(i => i !== yo).sort((a, b) => Z[b].inicial - Z[a].inicial), carga = crews.map(() => 0);
     for (const i of orden) { const k = carga.map((c, k) => [c / crews[k].gente.reduce((a, g) => a + g.fuerza, 0), k]).sort((a, b) => a[0] - b[0])[0][1]; reparto[i] = k; carga[k] += Z[i].inicial; }
   }
   const pintar = () => {
     prepEl.innerHTML = `<div class="carta reparto"><div class="pasos">${pasosHTML(0)}</div><div class="fila"><h3>Reparte el trabajo</h3><span class="reloj">${hora(M.prepMin)}</span></div>
-      <p class="txt">El reloj no corre mientras repartes. ${S.angelica ? 'Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ' : ''}Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.</p>
+      <p class="txt">El reloj no corre mientras repartes. ${M.orden.leccion === 4 ? `<b>Angélica:</b> «${esc(planAngelica())}» ` : ''}${S.angelica ? 'Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ' : ''}Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.</p>
       <div class="filas-reparto">${Z.map((z, i) => `<label><span>${esc(z.n)}</span><select data-rz="${i}"><option value="-1" ${reparto[i] === -1 ? 'selected' : ''}>Yo</option>${crews.map((c, k) => `<option value="${k}" ${reparto[i] === k ? 'selected' : ''}>${esc(c.n)} (${c.gente.length})</option>`).join('')}</select></label>`).join('')}</div>
       <div class="pie"><p class="nota">${crews.map(c => `${c.n}: ${c.gente.map(g => g.n).join(', ')}`).join(' · ')}</p><button class="btn prim" id="prepSig">Empezar a limpiar</button></div></div>`;
     prepEl.hidden = false;
@@ -1784,7 +1929,12 @@ function escenaReparto() {
       prepEl.hidden = true; arrancarTurno();
     };
   };
+  function planAngelica() {
+    const de = k => Z.filter((z, i) => reparto[i] === k).map(z => z.n.toLowerCase()).join(', ') || 'nada';
+    return `Tú: ${de(-1)}. ${crews.map((c, k) => `${c.n}: ${de(k)}`).join('. ')}. Cuando terminen, te avisan y tú revisas. Nadie se va hasta que el inspector firme.`;
+  }
   irVista(VISTA_GENERAL); pintar();
+  if (M.orden.leccion === 4) { decir(ANGELICA, 'Ya tengo a todos repartidos. Tú haces tu parte y revisas la de los demás. Don Rigo confía en ti. Bueno, un poco.'); return; }
   decir(M.comp, 'Trabajo gigante. Repártenos bien, jefe. Y revisa, porque aquí nadie es perfecto. Bueno, Lupe sí.');
 }
 // Cada cuadrilla limpia su zona hasta donde le da su calidad, avisa y pasa a la siguiente.
@@ -1796,7 +1946,7 @@ function tickCuadrillas(dt) {
     if ((c.t -= dt) > 0) continue;
     c.t = .5;
     // Cada medio segundo, varias pasadas según su fuerza y su equipo: una cuadrilla de 3 deja una zona en un minuto y medio.
-    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit) * activos));
+    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit) * activos * (1 + .4 * c.gente.filter(g => g.esp === z.id).length / c.gente.length)));
     for (let p = 0; p < pasadas; p++) {
       const sf = uno(z.sfs); let mejor = -1, md = 0;
       for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * sf.d.length); if (sf.d[i] > md) { md = sf.d[i]; mejor = i; } }
@@ -1835,12 +1985,13 @@ function arrancarTurno() {
   const ap = piezas.aparatos, ci = piezas.cintas;
   const cub = ap.filter(a => a.cubierto).length / ap.length, env = ci.filter(c => c.hecho).length / ci.length;
   const p = M.prep = { gas: piezas.pilotos.every(x => x.off), luz: piezas.luz.off, cubierto: cub, plastico: cub >= 1, envuelto: env, bolsa: env >= 1 && piezas.bolsas.every(b => b.hecho) };
-  if (!p.gas && azar(.7)) M.eventos.push({ tipo: 'piloto', zona: 1, en: rnd(5, 10) });
-  if (!p.luz && azar(.8)) M.eventos.push({ tipo: 'extractor', zona: iDucto(), en: rnd(4, 9) });
+  if (!p.gas && azar(.7) && !M.orden.tuto) M.eventos.push({ tipo: 'piloto', zona: 1, en: rnd(5, 10) });
+  if (!p.luz && azar(.8) && !M.orden.tuto) M.eventos.push({ tipo: 'extractor', zona: iDucto(), en: rnd(4, 9) });
   if (p.bolsa && !EQ().bolsa && azar(.25)) M.eventos.push({ tipo: 'bolsa', zona: iDucto(), en: rnd(14, 24) });
   M.t = M.prepMin / 480 * M.dur;
   matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
   M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0; U.hl.value = hlBase();
+  if (M.orden.tuto) { M.tuto = 1; M.tutoZona = M.zona; decir(M.comp, 'Primera noche, ¿eh? Tranquilo. Te voy diciendo. Arriba sale lo que toca.'); }
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
   $('#duelo').hidden = !M.duelo; pintarRadio();
@@ -1928,7 +2079,8 @@ function avisoTipo(t, herr) {
   if (t === 3 && herr === 'rasqueta' && EQ().rasqueta < 3) txt = 'Sarro: sale despacio. La rasqueta de carburo del Taller se lo come.';
   if (!txt) return;
   M.avisosTipo[k] = true; ayuda(txt, 5);
-  decir(M.comp, uno(['Ojo con esa mancha, no es grasa normal.', 'Esa mancha tiene carácter.', 'Esa ya es grasa con antecedentes.']));
+  // El consejo lo dice alguien en el chat (trabajando solo, Don Rigo por la radio): así no se pierde en la línea de ayuda.
+  decir(M.comp.solo ? 'rigo' : M.comp, `¡Ojo! ${txt}`);
 }
 function aplicarTramo(a, b) {
   if (!a || !b || a.sf !== b.sf) return 0;
@@ -2356,6 +2508,13 @@ function explotaGerente() {
 // ---- el robot de ductos: recorre el ducto de punta a punta limpiando el fondo y las paredes
 
 const QUIEN_ROBOT = { n: 'Ductobot 3000', color: '#7fd3e6' };
+// Lo que dice el robot; con la voz de Don Rigo, lo dice como él.
+const ROBOT_DICE = {
+  entra: [['Bip. Entrando al ducto. Bup.', 'Ductobot en posición. Iniciando protocolo «no tocar al mapache».', 'Bip bup. Grasa detectada. Mucha grasa. Demasiada grasa.'], ['A ver, a ver. Este ducto no se limpia solo. Bueno, sí: yo.', 'Ahí voy. Y no me toquen la radio.', 'En mis tiempos esto se hacía a mano. Bip.']],
+  atora: [['Bip… bip… ¡BUP! Atorado en una costra. Necesito un humano.', 'Error 404: ducto no encontrado. Bueno, sí lo encuentro. No me puedo mover.'], ['¡Me atoré! Esto me pasa por no desayunar. Ayúdame.', 'Ya no estoy para estos trotes. Sácame de aquí, chamaco.']],
+  fin: [['Bip bup. Ducto limpio. Las esquinas: tarea para el humano.', 'Bip bup. Ducto limpio. Esquinas incluidas. De nada, humano.'], ['Listo. Las esquinas te tocan a ti, que para eso te pago.', 'Listo, y con esquinas. Así se trabaja, ¿eh? Aprende.']],
+};
+const robotDice = k => ROBOT_DICE[k][EQ().robotVoz ? 1 : 0];
 function robotMalla() {
   const g = new T.Group(), metal = new T.MeshStandardMaterial({ color: 0xd9dee2, metalness: .7, roughness: .3 }), negro = new T.MeshStandardMaterial({ color: 0x1b1f22, roughness: .6 });
   const cuerpo = new T.Mesh(new T.BoxGeometry(.2, .08, .26), new T.MeshStandardMaterial({ color: 0xffb020, roughness: .4 })); cuerpo.position.y = .07; g.add(cuerpo);
@@ -2378,12 +2537,29 @@ function mandarRobot() {
   if (!piezas.robot) { piezas.robot = robotMalla(); mundo.add(piezas.robot); }
   const r = piezas.robot, d = z.duct;
   r.visible = true; r.position.set(d.dx, d.piso + (z.redondo ? .03 : 0), d.z0 + .1);
-  M.robot = { z, t: 0, dur: (EQ().robot === 2 ? 14 : 28) * Math.abs(d.z0 - d.z1) / 2 };
+  // Sin orugas, a veces se atora en una costra a medio camino y hay que rescatarlo.
+  M.robot = { z, t: 0, dur: (EQ().robot === 2 ? 14 : 28) * Math.abs(d.z0 - d.z1) / 2, atasco: !EQ().orugas && azar(EQ().robot === 2 ? .25 : .4) ? rnd(.25, .7) : null };
   loop('robot', true); tono(660, .1, .08, 'square'); tono(990, .12, .08, 'square', null, .12);
-  decir(QUIEN_ROBOT, uno(['Bip. Entrando al ducto. Bup.', 'Ductobot en posición. Iniciando protocolo «no tocar al mapache».', 'Bip bup. Grasa detectada. Mucha grasa. Demasiada grasa.']));
+  decir(QUIEN_ROBOT, uno(robotDice('entra')));
+  pintarHud(false);
+}
+// Rescatar al robot atorado.
+function rescatarRobot() {
+  const R0 = M.robot; if (!R0 || !R0.atorado) return;
+  const listo = (txt, frase) => { R0.atorado = false; loop('robot', true); resultado('Robot rescatado', txt, QUIEN_ROBOT, frase); pintarHud(false); };
+  carta('El Ductobot se atoró', 'Se quedó trabado en una costra de grasa del tamaño de un ladrillo. Hace «bip» cada vez más triste.', [
+    { t: 'Darle un golpecito', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5, prim: true, f: () => { rafaga(.15, 300, .15, 'lowpass'); listo('Un golpe preciso y el robot sigue su camino como si nada.', 'Bip. Gracias. No vuelvas a hacer eso. Bup.'); } },
+    { t: 'Jalarlo con la cuerda', d: 'Seguro, pero pierdes 5 minutos', f: () => { sumarTiempo(5); listo('Lo jalas despacito, le quitas la costra y lo vuelves a soltar.', 'Bip bup. Me siento como un perrito con correa.'); } },
+    { t: 'Echarle espuma', d: 'Gasta un poco de espuma, pero luego va más rápido', f: () => { M.botella = Math.max(0, M.botella - .15); pintarHerrBtn(); R0.dur *= .8; listo('La costra se ablanda y el robot sale disparado, resbalando con estilo.', '¡Wiiiii! Bip. Perdón. Bup.'); } },
+  ], { bloquea: true });
 }
 function tickRobot(dt) {
   const R0 = M.robot, z = R0.z, d = z.duct, r = piezas.robot;
+  if (R0.atorado) { r.userData.luz.material.color.setHex(Math.floor(performance.now() / 150) % 2 ? 0xff3a2a : 0x220505); return; }
+  if (R0.atasco && R0.t / R0.dur >= R0.atasco) {
+    R0.atasco = null; R0.atorado = true; loop('robot', false); tono(300, .3, .1, 'square', 120);
+    decir(QUIEN_ROBOT, uno(robotDice('atora'))); pintarHud(false); return;
+  }
   R0.t += dt;
   const f = Math.min(1, R0.t / R0.dur), zr = d.z0 + (d.z1 - d.z0) * f, esquinas = EQ().robot === 2;
   r.position.z = zr; r.position.y = d.piso + (z.redondo ? .03 : 0) + Math.abs(Math.sin(R0.t * 18)) * .004;
@@ -2400,8 +2576,8 @@ function tickRobot(dt) {
   }
   if (azar(dt * 6) && M.zona === Z.indexOf(z)) emitir(r.position.clone().add(new T.Vector3(0, .08, -.16)), 2, 'grasa', new T.Vector3(0, .6, -1), .5);
   if (f >= 1) {
-    loop('robot', false); r.visible = false; M.robot = null; sDing();
-    decir(QUIEN_ROBOT, esquinas ? 'Bip bup. Ducto limpio. Esquinas incluidas. De nada, humano.' : 'Bip bup. Ducto limpio. Las esquinas: tarea para el humano.');
+    loop('robot', false); r.visible = false; M.robot = null; M.robotCam = false; sDing();
+    decir(QUIEN_ROBOT, robotDice('fin')[esquinas ? 1 : 0]);
     pintarHud(false);
   }
 }
@@ -2521,13 +2697,46 @@ function zonaCompa() {
   if (id === 'chuy') { const f = Z.find(x => x.id === 'filtros' && micras(x) > LIMITE); if (f) return f; }
   return aqui;
 }
+const LIOS = [
+  { txt: '¡Jefe! Me pegué con cinta a la campana. No sé cómo. Bueno, sí sé.', boton: 'Despegarlo', bien: 'Libre. Me quedó la cinta marcada en la frente. Me veo interesante.',
+    mal: e => { e.parado = 25; decir(e, 'Sigo pegado. Ya me acostumbré. Desde aquí se ve bonito.'); } },
+  { txt: 'Prendí la freidora para ver si funcionaba. Funciona. MUCHO.', boton: '¡Apágala!', bien: 'Apagada. Pero olía rico, ¿verdad?',
+    mal: (e, z) => { dano(`Aceite salpicado por toda la línea (la freidora que prendió ${e.n})`, 35, 1); ensuciar(z, .12); decir(e, 'Ya se apagó sola. Bueno, se acabó el aceite. Está en la campana.'); } },
+  { txt: 'Voy a grabar un video bailando arriba de la campana. Para las redes de la empresa.', boton: '¡Bájate de ahí!', bien: 'Ok, ok. Pero mañana me grabas tú.',
+    mal: e => { if (azar(.5)) { M.repExtra += 1; decir(e, '¡Ya va en mil vistas! Somos famosos. Y la campana sigue en pie.'); } else { dano(`Campana abollada: ${e.n} se cayó bailando`, 45, 2); decir(e, 'Estoy bien. La campana no tanto.'); } } },
+  { txt: 'Le dije al gerente que somos «casi profesionales». Creo que no le gustó el «casi».', boton: 'Arreglarlo con el gerente', bien: 'Le dijiste que era broma y se rió. Bueno, hizo un ruido.',
+    mal: e => { M.paciencia = Math.max(10, (M.paciencia || 100) - 25); decir('gerente', '¿Casi profesionales? Los estoy vigilando.'); } },
+  { txt: 'Me comí el queso que estaba en la barra. Era de muestra, ¿no? ¿NO?', boton: 'Reponer el queso (−$12)', arreglo: () => dano('Queso del cliente repuesto', 12, 0), bien: 'Queso repuesto. Nadie se enteró. Excepto yo, que sigo con hambre.',
+    mal: e => { M.propinaMod -= .05; decir('gerente', '¿Alguien vio mi queso? Era para el desayuno de mañana.'); } },
+  { txt: 'Guardé la rasqueta en el ducto para no perderla. Ahora no sé dónde está el ducto.', boton: 'Ayudarle a buscarla', arreglo: () => sumarTiempo(5), bien: 'Estaba en mi bolsillo. Siempre estuvo ahí.',
+    mal: e => { e.parado = 30; decir(e, 'Sigo buscando. Si alguien ve una rasqueta con calcomanía de unicornio, es mía.'); } },
+  { txt: 'Jefe, ¿este cable rojo es importante? Ya lo desconecté, pero pregunto.', boton: 'Volver a conectarlo', bien: 'Conectado. El refrigerador volvió a hacer ruido. Qué alivio.',
+    mal: e => { dano('Refrigerador desconectado: se echaron a perder unas cremas', 50, 1); decir(e, 'Ahora el refrigerador hace un ruido distinto. Uno triste.'); } },
+];
+const SERIO = ['Esquina inferior izquierda. Tres centímetros de grasa. Se la marqué.', 'Residuo a las seis en punto. Corríjalo antes de que lo vea el inspector.', 'Eso no pasa la norma ni en sueños. Ahí. Donde brilla.', 'Le marqué lo que falta. No me lo agradezca: corríjalo.'];
+const SERIO_CHISTE = ['Hoy sonreí una vez. Fue un error.', 'El Beto ese me cae bien. De lejos.', 'Me dijeron que me ría más. Lo estoy considerando para el próximo año.', 'Mjm.'];
 function manias(dt, z) {
   const id = M.orden.comp;
   // Los ayudantes poco cuidadosos tienen sus accidentes.
   if ((M.ayudT = (M.ayudT ?? rnd(30, 45)) - dt) <= 0) {
     M.ayudT = rnd(35, 55);
-    const torpe = uno(M.equipo.filter(e => !e.principal && azar((5 - (e.cuidado || 3)) * .09)));
+    const torpe = uno(M.equipo.filter(e => !e.principal && e.tipo !== 'serio' && azar((5 - (e.cuidado || 3)) * .09)));
     if (torpe) { dano(`${torpe.n} tiró ${uno(['una charola de vasos', 'el bote de basura', 'la escalera contra la vitrina', 'una cubeta de agua con grasa'])}`, uno([15, 25, 40]), 0); rafaga(.3, 700, .2, 'lowpass'); decir(torpe, uno(['Yo no fui. Bueno, sí.', '¡Perdón, perdón, perdón!', 'Eso estaba mal puesto.'])); }
+  }
+  // Los que dan problemas (como Beto, pero con nombre propio): un lío que hay que arreglar a tiempo.
+  if (!M.lio && (M.lioT = (M.lioT ?? rnd(22, 35)) - dt) <= 0) {
+    M.lioT = rnd(35, 55);
+    const e = uno(M.equipo.filter(x => !x.principal && !(x.parado > 0) && (x.tipo === 'lio' || (x.tipo === 'medio' && azar(.35)))));
+    if (e) {
+      const l = uno(LIOS); M.lio = { e, l, t: 7 };
+      decir(e, l.txt, [{ t: l.boton, f: () => { if (!M || !M.lio) return; M.lio = null; if (l.arreglo) l.arreglo(e); decir(e, l.bien); tono(880, .1, .07, 'triangle'); } }]);
+    }
+  }
+  if (M.lio && (M.lio.t -= dt) <= 0) { const { e, l } = M.lio; M.lio = null; l.mal(e, z); }
+  const serio = M.equipo.find(e => e.tipo === 'serio');
+  if (serio && (M.serioT = (M.serioT ?? rnd(18, 28)) - dt) <= 0) {
+    M.serioT = rnd(30, 45);
+    if (micras(z) > LIMITE) { M.lupeHl = 2.5; U.hl.value = 1; decir(serio, uno(SERIO)); } else if (azar(.3)) decir(serio, uno(SERIO_CHISTE));
   }
   if (id === 'beto' && (M.betoT = (M.betoT ?? rnd(35, 50)) - dt) <= 0) {
     M.betoT = rnd(40, 60);
@@ -2605,12 +2814,13 @@ function tickTurno(dt) {
     if (M.pedido && M.pedido.id === 'antes3' && !M.aviso3 && M.t / M.dur * 480 >= 270) { M.aviso3 = true; decir(M.cliente, '¡Ya son las dos y media! El panadero llega a las tres, ¿eh?'); }
     if (M.duelo) tickDuelo(dt);
     if (M.robot) tickRobot(dt);
+    if (M.tuto) tickTuto();
     if (!M.ev) {
       // Chuy se duerme; hay que despertarlo.
       if (M.orden.comp === 'chuy' && !M.dormido && (M.dormirT -= dt) <= 0) { M.dormido = true; M.ronqT = 0; }
       if (M.dormido && (M.ronqT -= dt) <= 0) {
         M.ronqT = 7.5;
-        decir(M.comp, uno(['Cinco minutitos… zzz', 'zzz… mmm… grasa… zzz', '(ronquido industrial)']), [{ t: '¡Chuy!', f: () => { if (!M) return; M.dormido = false; M.dormirT = rnd(35, 55); decir(M.comp, 'No estaba dormido, estaba escuchando el ducto.'); } }]);
+        decir(M.comp, uno(['Cinco minutitos… zzz', 'zzz… mmm… grasa… zzz', '(ronquido industrial)']), [{ t: '¡Chuy!', f: () => { if (!M) return; M.dormido = false; M.dormirT = rnd(35, 55) * (tun('cafetera') ? 2 : 1); decir(M.comp, 'No estaba dormido, estaba escuchando el ducto.'); } }]);
       }
       // La cuadrilla limpia sola, cada uno a su ritmo (en un trabajo gigante, cada una en las zonas que le tocaron).
       if (M.crews) { tickCuadrillas(dt); if (M.etapa === 'lavar') revisar(z); }
@@ -2619,7 +2829,9 @@ function tickTurno(dt) {
         if (e.parado > 0) { if ((e.parado -= dt) <= 0) decir(e, uno(['Ya volví. ¿Me extrañaron?', 'Listo, jefe. Como nuevo.', 'Ya estoy. ¿Dónde me quedé?'])); continue; }
         if ((e.t -= dt) > 0) continue;
         e.t = .5;
-        const zz = e.principal ? zonaCompa() : z, extra = e.principal && M.orden.comp === 'chuy' && zz.id === 'filtros' ? 1.6 : 1;
+        // Cada ayudante se va a lo suyo: su especialidad, mientras quede grasa ahí; y ahí rinde más.
+        const suya = !e.principal && e.esp && M.etapa === 'lavar' ? Z.find(x => x.id === e.esp && micras(x) > LIMITE) : null;
+        const zz = e.principal ? zonaCompa() : suya || z, extra = (e.principal && M.orden.comp === 'chuy' && zz.id === 'filtros' ? 1.6 : 1) * (e.esp && zz.id === e.esp ? 1.5 : 1);
         const s = uno(zz.sfs); let mejor = -1, md = 0;
         for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * s.d.length); if (s.d[i] > md) { md = s.d[i]; mejor = i; } }
         if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * e.fuerza * extra * (1 + .2 * perk('jefe')), 'rasqueta');
@@ -2679,11 +2891,18 @@ function pintarHud(todo) {
   const g = $('#barraHerr .gasto'); if (g) g.textContent = `${Math.round(M.botella * 100)} %`;
   $('#siguiente').textContent = M.etapa === 'migdalear' ? 'Llamar al inspector' : M.zona < ultZona() ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar de lavar';
   const z = zonaAct(), rb = $('#robotBtn');
-  rb.hidden = !(EQ().robot && M.etapa === 'lavar' && z.id === 'ducto' && !M.robot && micras(z) > LIMITE);
+  const aqui = M.robot && M.robot.z === z;
+  rb.hidden = !(EQ().robot && M.etapa === 'lavar' && z.id === 'ducto' && (aqui ? M.robot.atorado || EQ().robotCam : !M.robot && micras(z) > LIMITE));
+  rb.textContent = !aqui ? '🤖 Mandar el robot' : M.robot.atorado ? '🔧 ¡Se atoró! Rescatarlo' : M.robotCam ? '🎥 Vista normal' : '🎥 Cámara del robot';
   const pa = pasoActual(); if (M.pasoPintado !== pa) { M.pasoPintado = pa; $('#pasos').innerHTML = pasosHTML(pa); }
   Z.forEach((z, i) => { $('#zonas').children[i].disabled = M.etapa === 'migdalear' && z.id !== 'campana'; });
 }
-$('#robotBtn').addEventListener('click', () => { if (M && M.fase === 'turno' && !M.ev) { audio(); mandarRobot(); } });
+$('#robotBtn').addEventListener('click', () => {
+  if (!M || M.fase !== 'turno' || M.ev) return;
+  audio();
+  if (!M.robot) mandarRobot(); else if (M.robot.atorado) rescatarRobot(); else { M.robotCam = !M.robotCam; tono(M.robotCam ? 990 : 660, .06, .06, 'square'); }
+  pintarHud(false);
+});
 $('#zonas').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b && !b.disabled && M && M.fase === 'turno' && M.etapa !== 'pelar' && !M.ev) irZona(+b.dataset.z); });
 $('#siguiente').addEventListener('click', () => {
   if (!M || M.fase !== 'turno' || M.ev) return;
@@ -2704,6 +2923,30 @@ function confirmarFin() {
     { t: 'Pasar a pelar', f: () => { M.pausa = false; cerrarCarta(); empezarPelado(); } },
   ], { bloquea: true });
 }
+
+// ---- la primera noche: Beto te dice qué hacer, paso por paso
+const TUTO = [
+  { t: 'Pon el dedo sobre la grasa y arrástralo, con pasadas cortas: así raspa la rasqueta.', ok: () => pctZona(zonaAct()) > .12 },
+  { t: 'La grasa oscura es más dura. Toca la espuma, rocíala encima, espera 2 segundos y vuelve a la rasqueta: sale el triple de rápido.', brilla: 'espuma', ok: () => M.usoEspuma },
+  { t: 'Sigue hasta que esta zona baje de 250 µm. Abajo ves cuánto le queda a cada zona.', brilla: 'zonas', ok: () => micras(zonaAct()) <= LIMITE },
+  { t: '¡Esta zona ya pasa la inspección! Cambia a otra con los botones de abajo.', brilla: 'zonas', ok: () => M.zona !== M.tutoZona },
+  { t: 'Limpia todas las zonas. Cuando estén en verde, toca «Terminar de lavar».', brilla: 'siguiente', ok: () => M.etapa !== 'lavar' },
+  { t: 'Ahora pela: arrastra por los puntos para arrancar el plástico, quita las cubiertas y baja la bolsa.', ok: () => M.etapa === 'migdalear' },
+  { t: 'Último paso: migdalea la campana (pasadas sobre el metal limpio) hasta que brille, y luego llama al inspector.', brilla: 'siguiente', ok: () => false },
+];
+function tickTuto() {
+  let paso = TUTO[M.tuto - 1];
+  if (paso.ok()) {
+    M.tuto++; paso = TUTO[M.tuto - 1]; M.tutoZona = M.zona; sDing();
+    if (M.tuto === 3) decir(M.comp, '¿Viste? La espuma es magia. Magia que pica en los ojos, pero magia.');
+    if (M.tuto === 5) decir(M.comp, 'Vas bien. Mejor que yo en mi primera noche. Yo me pegué a la campana con cinta.');
+  }
+  const el = $('#tuto'); el.hidden = false;
+  const txt = `<small>Paso ${M.tuto} de ${TUTO.length}</small>${esc(paso.t)}`;
+  if (el.dataset.paso !== String(M.tuto)) { el.innerHTML = txt; el.dataset.paso = M.tuto; }
+  document.body.dataset.tuto = paso.brilla || '';
+}
+function quitarTuto() { $('#tuto').hidden = true; delete document.body.dataset.tuto; }
 
 // ---- pelar: quitar el plástico de la campana, las cubiertas y bajar la bolsa
 
@@ -2765,7 +3008,7 @@ $('#radioBtn').addEventListener('click', () => {
 
 function terminarTurno() {
   M.finMin = clamp(M.t / M.dur, 0, 1) * 480; M.apagon = 0; U.mig.value = 0; U.hl.value = 0;
-  M.fase = 'parte'; M.pausa = false; M.arrastrar = false; cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true;
+  M.fase = 'parte'; M.pausa = false; M.arrastrar = false; cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true; quitarTuto(); M.tuto = 0;
   for (const id in A.loops) loop(id, false);
   if (M.robot) { M.robot = null; if (piezas.robot) piezas.robot.visible = false; }
   radioEncender(false);
@@ -2786,7 +3029,7 @@ const etapa = () => S.fase === 'aprendiz' ? 0 : S.etapa;
 const cocinasHasta = e => Object.keys(COCINAS).filter(k => COCINAS[k].etapa <= e && !COCINAS[k].campanas);
 function genOrden(k, cliente) {
   const C = COCINAS[k], campanas = C.campanas || 1;
-  const tipos = campanas > 1 || C.chica ? ['caja', 'inclinada'] : ['caja', 'inclinada', 'caja', 'larga'];
+  const tipos = C.tipos && campanas === 1 ? C.tipos : campanas > 1 || C.chica ? ['caja', 'inclinada'] : ['caja', 'inclinada', 'caja', 'larga'];
   const tipo = uno(tipos);
   const suciedad = { ...SUCIEDAD[k] }; if (S.noche >= 3 && azar(.4)) suciedad.sarro = +rnd(.15, .3).toFixed(2);
   const diseno = cliente ? cliente.diseno : {
@@ -2809,8 +3052,25 @@ function genPedido(siempre) {
   const hidro = EQ().hidro || S.fase === 'aprendiz';
   return uno(PEDIDOS.filter(p => (hidro || !p.hidro) && !(p.tacos && S.fase === 'aprendiz'))).id;
 }
+// Las cuatro noches con Don Rigo: aprender, practicar sin ayuda, una difícil y la grande con toda Grasa Brava.
+const LECCIONES = [null,
+  { chip: 'Noche 1 · Aprende con Beto', txt: 'Una cafetería tranquila para aprender. Te iré diciendo qué hacer paso por paso.' },
+  { chip: 'Noche 2 · Ahora tú solito', txt: 'Otra fácil, pero ya sin instrucciones. A ver qué aprendiste.' },
+  { chip: 'Noche 3 · Se pone difícil', txt: 'Grasa quemada, sarro, un gerente con prisa y menos tiempo. Hoy va Lupe contigo.' },
+  { chip: 'Noche 4 · El trabajo grande', txt: 'Un food court entero: tres campanas, varios ductos y media empresa trabajando contigo. Angélica reparte.' }];
+const RIGO_EQUIPOS = [{ n: 'Equipo de Nacho', color: '#ffb36b', gente: [{ n: 'Nacho', fuerza: 1.1, cuidado: 3 }, { n: 'Pepa', fuerza: .9, cuidado: 4 }] },
+  { n: 'Las gemelas Rendón', color: '#f497b5', gente: [{ n: 'Rosa Rendón', fuerza: 1, cuidado: 4 }, { n: 'Rita Rendón', fuerza: 1, cuidado: 2 }] }];
+function ordenAprendiz(n) {
+  const leccion = clamp(n, 1, 4), o = genOrden(leccion === 4 ? 'plaza' : leccion === 3 ? uno(['burger', 'pizza']) : leccion === 2 ? uno(['cafe', 'pizza']) : 'cafe');
+  o.leccion = leccion; o.pedido = null;
+  if (leccion === 1) { o.micras = 800; o.filtros = 2; o.eventos = []; o.suciedad = {}; o.campanas = 1; o.tuto = true; }
+  if (leccion === 2) { o.micras = 1100; o.filtros = Math.min(o.filtros, 3); o.eventos = []; o.suciedad = {}; }
+  if (leccion === 3) { o.micras = 2400; o.eventos = ['gerente', 'techo']; o.suciedad = { quemada: .35, sarro: .2 }; }
+  if (leccion === 4) { o.rigoEquipos = RIGO_EQUIPOS; o.eventos = ['gerente']; }
+  return o;
+}
 function generarOrdenes() {
-  if (S.fase === 'aprendiz') return [genOrden(uno(cocinasHasta(0)))];   // Don Rigo elige
+  if (S.fase === 'aprendiz') return [ordenAprendiz(S.noche)];   // Don Rigo elige
   const out = [];
   for (const c of S.clientes) if (c.proxima <= S.noche) out.push(genOrden(c.cocina, c));
   const fijos = out.length, flota = S.eq.flota || 0, n = clamp(1 + Math.floor(S.rep / 15), 1, 4 + flota);   // con poca reputación casi nadie llama: hay que salir a buscar clientes
@@ -2844,10 +3104,10 @@ function genCandidatos(n = 3) {
   const usados = new Set([...S.cuadrilla, ...(S.candidatos || [])].map(c => c.n));
   const fijos = CANDIDATOS.filter(c => !usados.has(c[0])).sort(() => Math.random() - .5);
   const gen = NOMBRES_GEN.filter(x => !usados.has(x)).sort(() => Math.random() - .5).map(x => [x, ...uno(MANIAS_GEN)]);
-  return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase]) => {
+  return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase, tipo, esp]) => {
     const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5), animo = 3;
     // Los buenos piden más: el sueldo sale de las tres medidas.
-    return { id: S.sigId++, n, rasgo, frase, fuerza, base: fuerza, cuidado, puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 };
+    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado, puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 });
   });
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
@@ -2894,11 +3154,54 @@ function prepararNoche() {
     : (S.noche === S.abierta ? `Primera noche de ${S.empresa.nombre}. Yo estaré pescando. No me llames. Bueno, llámame si hay mapache.` : uno(RIGO_CONSEJOS));
   for (const o of ordenes) o.firmado = S.fase === 'aprendiz' || !!o.clienteId;   // los de Don Rigo y los clientes fijos ya tienen contrato
   S.hoy = { noche: S.noche, ordenes, sel: 0, comp, ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2 + Math.floor((S.eq.flota || 0) / 2), avisos, frase, resultado: '' };
-  S.hoy.retos = RETOS.filter(r => !r.si || r.si()).sort(() => Math.random() - .5).slice(0, 3).map(r => r.id);
+  S.hoy.retos = S.fase === 'aprendiz' && S.noche === 1 ? [] : RETOS.filter(r => !r.si || r.si()).sort(() => Math.random() - .5).slice(0, 3).map(r => r.id);
   // Lo que pasa de día: una de cada dos noches, algo en la camioneta.
   const dias = DIAS.filter(d => !d.solo || d.solo(S));
   if (S.noche >= 2 && azar(.5)) S.hoy.dia = { id: uno(dias).id, res: '' };
   guardar();
+}
+
+// Retos de Don Rigo: aunque ya no es tu jefe, cada semana llama desde el lago con tres retos. Dan reputación y dinero.
+const MISIONES = [
+  { id: 'aprob', t: n => `Aprueba ${n} trabajos tú mismo`, metas: [3, 4], cuenta: c => c.aprobado ? 1 : 0 },
+  { id: 'notaA', t: n => `Saca ${n} notas A o mejor`, metas: [2, 3], cuenta: c => c.n === 'A' || c.n === 'A+' ? 1 : 0 },
+  { id: 'cocina', t: (n, k) => `Aprueba ${n} trabajos en una ${COCINAS[k].n.toLowerCase()}`, metas: [2], cocina: true, cuenta: (c, m) => c.aprobado && c.o.cocina === m.k ? 1 : 0 },
+  { id: 'equipos', t: n => `Que tus otros equipos aprueben ${n} trabajos`, metas: [3, 5], si: () => (S.eq.flota || 0) >= 1, cuenta: c => c.BS.filter(B => B.aprobado).length },
+  { id: 'sinDanos', t: n => `${n} noches aprobadas sin ningún daño`, metas: [2], cuenta: c => c.aprobado && !c.danos ? 1 : 0 },
+  { id: 'duelo', t: () => 'Gánale un duelo a El Cuñado', metas: [1], cuenta: c => c.gana ? 1 : 0 },
+  { id: 'espejo', t: () => 'Deja una cocina en metal desnudo (todo a 50 µm o menos)', metas: [1], cuenta: c => c.espejo ? 1 : 0 },
+  { id: 'temprano', t: () => 'Llama al inspector antes de las 3:00 y aprueba', metas: [1], cuenta: c => c.aprobado && c.finMin <= 300 ? 1 : 0 },
+  { id: 'pedidos', t: n => `Cumple ${n} pedidos especiales de clientes`, metas: [2], cuenta: c => c.pedOk ? 1 : 0 },
+];
+const RIGO_RETO = ['Te tengo tres retos para esta semana. Si los cumples, te recomiendo con mis compadres. Si no, también, pero con menos ganas.', 'Aquí en el lago no pica nada, así que pensé en ti. Tres retos. Ándale.', 'Beto me dijo que estás muy cómodo. Te mando tres retos para que se te quite.', 'Esta semana quiero ver de qué estás hecho. Te dejo tres retos y me voy a pescar.'];
+function misionesHoy() {
+  if (S.fase !== 'empresa') return;
+  const sem = Math.floor((S.noche - S.abierta) / 7);
+  if (S.mis && S.mis.semana === sem) return;
+  const ks = cocinasHasta(S.etapa).filter(k => !COCINAS[k].gigante);
+  const pool = MISIONES.filter(m => !m.si || m.si()).sort(() => Math.random() - .5).slice(0, 3);
+  const premio = r10(250 + 150 * S.etapa);
+  S.mis = { semana: sem, frase: uno(RIGO_RETO), lista: pool.map(m => ({ id: m.id, meta: uno(m.metas), prog: 0, k: m.cocina ? uno(ks) : null, rep: 3, dinero: premio })) };
+}
+function avanzarMisiones(ctx) {
+  const hechos = [];
+  if (!S.mis) return hechos;
+  for (const x of S.mis.lista) {
+    if (x.hecho) continue;
+    const m = MISIONES.find(y => y.id === x.id); if (!m) continue;
+    x.prog = Math.min(x.meta, x.prog + m.cuenta(ctx, x));
+    if (x.prog >= x.meta) { x.hecho = true; hechos.push(x); }
+  }
+  if (hechos.length && S.mis.lista.every(x => x.hecho) && !S.mis.todo) { S.mis.todo = true; hechos.push({ todo: true, rep: 5, dinero: r10(300 + 200 * S.etapa) }); }
+  return hechos;
+}
+const textoMision = x => { const m = MISIONES.find(y => y.id === x.id); return m ? m.t(x.meta, x.k) : ''; };
+function tarjetaMisiones() {
+  if (!S.mis) return '';
+  const quedan = 7 - (S.noche - S.abierta) % 7;
+  return `<div class="retos misiones"><b>📞 Retos de Don Rigo · ${quedan === 1 ? 'última noche' : `quedan ${quedan} noches`}</b><small>«${esc(S.mis.frase)}»</small>
+    ${S.mis.lista.map(x => `<span class="${x.hecho ? 'ok' : ''}">${x.hecho ? '★' : '☆'} ${esc(textoMision(x))} <i>${x.prog}/${x.meta}</i> <em>+${x.rep} rep · ${dinero(x.dinero)}</em></span>`).join('')}
+    <small>Los tres: +5 de reputación extra${S.mis.todo ? ' (¡conseguido!)' : ''}.</small></div>`;
 }
 
 // Reto de fin de semana: viernes, sábado y domingo, tres cocinas gigantes seguidas con solo dos equipos de apoyo.
@@ -2926,6 +3229,23 @@ function tarjetaFinde() {
     <div class="acciones"><button class="btn prim peq" id="findeSi">Aceptar el reto</button><button class="btn peq" id="findeNo">Este fin no</button></div></div>`;
   if (S.finde) return `<div class="retos finde"><b>Reto de fin de semana · ${FINDE_DIAS[Math.min(2, S.finde.paso)]} (${S.finde.paso + 1} de 3)</b>${FINDE_DIAS.map((d, i) => `<span class="${S.finde.notas[i] ? 'ok' : ''}">${S.finde.notas[i] ? '★ ' + d + ': ' + S.finde.notas[i] : '☆ ' + d}</span>`).join('')}<small>Solo dos equipos pueden ayudarte. Si hoy haces otro trabajo, pierdes el reto.</small></div>`;
   return '';
+}
+
+// Grasa Brava es una empresa grande: Angélica tiene el horario de todas las camionetas de Don Rigo.
+const RIGO_VANS = [['La Bestia', '#e0a040'], ['La Tortuga', '#69c97a'], ['El Pato', '#8ad4ff'], ['La Abuela', '#c6a0ff'], ['El Tsuru Volador', '#f497b5']];
+const RIGO_GENTE = ['Nacho y Pepa', 'Las gemelas Rendón', 'El Profe y Chabelo', 'Doña Cuca y su nieto Kike', 'Toñito «El Huracán» y Memo'];
+const ANGELICA_DICE = [null, 'Hoy vas con Beto a una cafetería tranquila. Si rompe algo, me mandas foto. Para el expediente.', 'Otra fácil. Ya no te voy a explicar nada: confío en ti. Bueno, confío en Beto todavía menos.',
+  'Hoy te mando con Lupe: la cocina viene quemada y el gerente es de los que miran el reloj. Suerte.', 'Hoy es la grande. Te pongo a dos equipos más contigo. Yo reparto, tú haces tu parte y revisas la de ellos.'];
+function tableroRigo() {
+  const H = S.hoy, o = H.ordenes[0], n = S.noche, filas = [];
+  const rest = k => { const ks = Object.keys(COCINAS).filter(c => !COCINAS[c].gigante); const c = COCINAS[ks[hashTxt('r' + n + k) % ks.length]]; return c.nombres[hashTxt('n' + n + k) % c.nombres.length]; };
+  RIGO_VANS.forEach(([van, col], i) => {
+    const tuya = i === 0, quien = tuya ? `Tú y ${COMPANEROS[H.comp] ? COMPANEROS[H.comp].n : 'Beto'}` : RIGO_GENTE[(i - 1 + n) % RIGO_GENTE.length];
+    const dest = tuya ? o.nombre : o.gigante && i <= 2 ? o.nombre + ' (contigo)' : rest(i);
+    filas.push(`<div class="fila-tab ${tuya ? 'tuya' : ''}"><span class="hora">${hora(i * 20)}</span><i style="background:${col}"></i><b>${van}</b><span>${esc(quien)}</span><span class="dest">→ ${esc(dest)}</span></div>`);
+  });
+  return `<div class="tablero"><div class="jefe">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora de Grasa Brava</b>${esc(ANGELICA_DICE[clamp(n, 1, 4)])}</div></div>
+    <div class="fila"><b>Horario de esta noche</b><span class="nota">5 camionetas · 12 trabajadores · ${o.gigante ? 4 : 5} restaurantes</span></div>${filas.join('')}</div>`;
 }
 
 // El mapa de la ciudad: dónde están esta noche tu camioneta y las de tus equipos.
@@ -2975,9 +3295,16 @@ function furgo(nombre, color, et) {
     ${et >= 3 ? '<rect x="40" y="18" width="70" height="8" rx="3" fill="#d3dae0" stroke="#0b1117" stroke-width="2"/>' : ''}
     ${et >= 4 ? '<path d="M200 22l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.5"/>' : ''}
     ${PEGATINAS[look('pegatina').id] || ''}
+    ${tun('neon') ? '<rect x="18" y="86" width="196" height="7" rx="3.5" fill="#ff5fa2" opacity=".55"/><rect x="30" y="88" width="172" height="3" rx="1.5" fill="#ffb3d6"/>' : ''}
+    ${tun('aleron') ? '<path d="M14 22h24v4H24l-2 6h-4l2-6h-6z" fill="#2b3238" stroke="#0b1117" stroke-width="1.5"/>' : ''}
+    ${tun('megafono') ? '<g transform="translate(118 12)"><path d="M0 6l14-6v14L0 8z" fill="#d3dae0" stroke="#0b1117" stroke-width="1.5"/><rect x="-4" y="5" width="5" height="4" fill="#2b3238"/><path d="M-2 9v6" stroke="#0b1117" stroke-width="2"/></g>' : ''}
+    ${tun('escape') ? '<rect x="2" y="70" width="12" height="5" rx="2" fill="#8f9aa3" stroke="#0b1117" stroke-width="1.5"/><circle class="humo" cx="-3" cy="68" r="4" fill="#9aa4ab" opacity=".5"/>' : ''}
+    ${tun('bigotes') ? '<path d="M208 64q8-8 14 0q-6-3-14 0zM208 64q-8-8-14 0q6-3 14 0z" fill="#2a1608"/>' : ''}
+    ${tun('dados') ? '<path d="M158 30v8" stroke="#0b1117" stroke-width="1"/><rect x="153" y="37" width="6" height="6" fill="#ff5fa2" stroke="#0b1117"/><rect x="159" y="39" width="6" height="6" fill="#fff" stroke="#0b1117"/>' : ''}
+    ${tun('bocina') ? '<path d="M176 40l8-4v10z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.2"/>' : ''}
     ${S.perro ? '<g transform="translate(150 33)"><path d="M0 12q0-10 9-10t9 10z" fill="#c8a27a" stroke="#0b1117" stroke-width="1.5"/><path d="M1 6l-3 7M17 6l3 7" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><circle cx="6" cy="7" r="1.3" fill="#0b1117"/><circle cx="12" cy="7" r="1.3" fill="#0b1117"/><ellipse cx="9" cy="10" rx="2" ry="1.3" fill="#0b1117"/></g>' : ''}
     <rect x="10" y="74" width="212" height="8" rx="3" fill="#2b3238"/>
-    ${[52, 182].map(x => `<g class="rueda" style="transform-origin:${x}px 84px"><circle cx="${x}" cy="84" r="14" fill="#1c1c1c" stroke="#8f9aa3" stroke-width="4"/><path d="M${x} 74v20M${x - 10} 84h20" stroke="#5d6870" stroke-width="2.5"/></g>`).join('')}
+    ${[52, 182].map(x => `<g class="rueda" style="transform-origin:${x}px 84px"><circle cx="${x}" cy="84" r="14" fill="#1c1c1c" stroke="${tun('rines') ? '#f4f8fb' : '#8f9aa3'}" stroke-width="4"/>${tun('rines') ? `<circle cx="${x}" cy="84" r="8" fill="#dfe6ec" stroke="#8f9aa3"/>` : ''}<path d="M${x} 74v20M${x - 10} 84h20" stroke="${tun('rines') ? '#9aa6b0' : '#5d6870'}" stroke-width="2.5"/></g>`).join('')}
     <text x="77" y="53" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="17" fill="#fff" stroke="#0b1117" stroke-width="3" paint-order="stroke"${largo ? ' textLength="122" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(nombre.toUpperCase())}</text>
   </svg>`;
 }
@@ -3001,7 +3328,7 @@ function pantallaCamioneta() {
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
   else if (!mundo) construirNoche(null);
-  findeHoy();
+  findeHoy(); misionesHoy();
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
   const tabs = S.fase === 'aprendiz' ? [['noche', 'Esta noche'], ['taller', 'Taller'], ['logros', 'Logros y álbum']] : [['noche', 'Noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller'], ['logros', 'Logros']];
@@ -3021,8 +3348,8 @@ function tarjetaOrden(o, i) {
   const C = COCINAS[o.cocina], H = S.hoy;
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.finde ? `<span class="chip naranja">🏆 Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]}</span>` : ''}${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? 'Revancha: recupera al cliente' : 'Duelo con El Cuñado'}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? '<span class="chip mal">El Cuñado lo tienta: saca B o mejor</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${NOMBRE_SUC[t]}</span>`).join('')}</div>
-    <h3>${esc(o.nombre)}</h3>${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(h.n)}: capítulo ${(c.cap || 0) + 1} de ${h.caps.length}</span>` : ''; })()}
+    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(LECCIONES[o.leccion].chip)}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]}</span>` : ''}${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? 'Revancha: recupera al cliente' : 'Duelo con El Cuñado'}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? '<span class="chip mal">El Cuñado lo tienta: saca B o mejor</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${NOMBRE_SUC[t]}</span>`).join('')}</div>
+    <h3>${esc(o.nombre)}</h3>${o.leccion ? `<span class="pista">${esc(LECCIONES[o.leccion].txt)}</span>` : ''}${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(h.n)}: capítulo ${(c.cap || 0) + 1} de ${h.caps.length}</span>` : ''; })()}
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + ' campanas · ' : ''}${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
     ${o.pedido ? `<span class="pedido"><b>${esc(pedido(o.pedido).quien)}:</b> «${esc(pedido(o.pedido).txt)}»${pedido(o.pedido).premio ? ` <i>Si cumples: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
     ${o.duelo ? `<span class="aviso">${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.</span>` : ''}
@@ -3060,8 +3387,8 @@ function vNoche() {
   return `${dia ? `<div class="orden dia"><span class="chip naranja">Antes de salir</span><h3>${esc(dia.t)}</h3><p>${esc(dia.txt)}</p>
       ${H.dia.res ? `<div class="cita"><b>Qué pasó</b>${esc(H.dia.res)}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(op.t)}<small>${esc(op.d)}</small></button>`).join('')}</div>`}</div>` : ''}
     ${sig ? tarjetaEtapa(sig) : ''}
-    ${H.retos ? `<div class="retos"><b>Retos de esta noche</b>${H.retos.map(id => `<span>☆ ${esc(reto(id).t)}</span>`).join('')}<small>Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.</small></div>` : ''}
-    ${aprendiz ? '' : tarjetaFinde()}
+    ${H.retos && H.retos.length ? `<div class="retos"><b>Retos de esta noche</b>${H.retos.map(id => `<span>☆ ${esc(reto(id).t)}</span>`).join('')}<small>Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.</small></div>` : ''}
+    ${aprendiz ? tableroRigo() : tarjetaMisiones() + tarjetaFinde()}
     ${aprendiz ? '' : mapaCiudad()}
     <h2 class="sec">${aprendiz ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
     ${!aprendiz ? `<p class="nota">Solicitudes de esta noche: ${H.ordenes.filter(x => !x.clienteId).length}. Con más reputación te llaman más; si no, sal a buscar clientes en «Clientes». Cada trabajo se hace con contrato firmado.</p>` : ''}
@@ -3074,7 +3401,7 @@ function vNoche() {
       return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${id === 'solo' ? 'Yo solo' : c.n}</b><span>${txt}</span></div></button>`;
     }).join('')}</div>
     ${S.cuadrilla.length ? `<h2 class="sec">Ayudantes en la camioneta · ${H.ayud.length} de ${plazas}</h2>
-      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
+      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${ESPECIAL[c.esp] ? 'bueno en ' + ESPECIAL[c.esp] + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     ${vEquipoB()}
     ${o && !o.firmado ? '<p class="aviso">Primero firma el contrato del trabajo que elegiste.</p>' : ''}
     <div class="barra-salir"><div><b>${o ? esc(o.nombre) : 'Elige un trabajo'}</b><span class="nota">${o ? `${dinero(o.pago)} · ${H.comp === 'solo' ? 'tú solo' : esc((COMPANEROS[H.comp] || SOLO).n)}${H.ayud.length ? ` + ${H.ayud.length}` : ''}${hayB() ? ` · ${(H.equipos || []).filter(e => e.o !== null).length} equipos fuera` : ''}` : ''}</span></div><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
@@ -3236,9 +3563,9 @@ function vCuadrilla() {
   const angelica = S.angelica ? `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>Organiza los equipos de cada noche (botón en «Noche») y con ella trabajan mejor. ${dinero(ANGELICA.sueldo)} por noche.</span></div><span class="chip ok">En tu equipo</span></div>`
     : `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>${flota >= ANGELICA.minVans ? `Organiza los equipos de cada noche y con ella trabajan mejor. Pide ${dinero(ANGELICA.adelanto)} de adelanto y ${dinero(ANGELICA.sueldo)} por noche.` : `Se une cuando tengas 4 camionetas (tienes ${flota + 1}). Dice que con menos no vale la pena organizarse.`}</span></div>
       ${flota >= ANGELICA.minVans ? `<button class="btn prim peq" id="ficharAngelica" ${S.dinero < ANGELICA.adelanto ? 'disabled' : ''}>Contratar</button>` : '<span class="chip">4 camionetas</span>'}</div>`;
-  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}</div>
+  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}${chipsPerfil(c)}</div>
     <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">Dejarlo fijo</button>` : ''}<button class="btn peq" data-despedir="${c.id}">Despedir</button></div></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
-  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
+  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span><span class="chip">Carácter: ¿? (entrevístalo)</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
     <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
   return `${companeros}<h2 class="sec">Coordinación</h2>${angelica}<h2 class="sec">Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta</h2>${mios}${S.etapa < 1 ? '<p class="pista">En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.</p>' : ''}
     <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.</p>
@@ -3259,7 +3586,9 @@ function vTaller() {
   return `<p class="nota">Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas. Tienes ${dinero(S.dinero)}.</p>
     ${items.map(t => `<div class="orden"><h3>${esc(t.n)}</h3><span class="nota">${esc(t.d)}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>Comprar</button></div></div>`).join('') || '<p class="nota">Ya tienes todo el equipo.</p>'}
     ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}
-    ${bloqueadas.length ? `<p class="nota">Más adelante: ${bloqueadas.map(([n, e]) => `${n} (desde ${ETAPAS[e].n})`).join(' · ')}.</p>` : ''}${kits}`;
+    ${bloqueadas.length ? `<p class="nota">Más adelante: ${bloqueadas.map(([n, e]) => `${n} (desde ${ETAPAS[e].n})`).join(' · ')}.</p>` : ''}${kits}
+    ${S.fase === 'empresa' ? `<h2 class="sec">Tunear la camioneta</h2><div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}</div>
+      ${TUNEO.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(t.n)}</b><span>${esc(t.d)}</span></div>${tun(t.id) ? '<span class="chip ok">Puesto</span>' : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')}` : ''}`;
 }
 
 function vLogros() {
@@ -3314,7 +3643,7 @@ function enlazar() {
   const sal = $('#salir'); if (sal) sal.onclick = () => {
     audio();
     const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
-    const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3 }))];
+    const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3, esp: x.esp, tipo: x.tipo, rasgo: x.rasgo }))];
     // Una camioneta solo sale si lleva la gente que pide el trabajo.
     const gen = e => e.ayud.length + (e.comp ? 1 : 0), eqs = hayB() ? (H.equipos || []).map((e, idx) => ({ e, k: idx + 2 })) : [];
     const conGente = e => gen(e) >= 2;
@@ -3347,7 +3676,7 @@ function enlazar() {
   });
   P.querySelectorAll('[data-entrevista]').forEach(b => b.onclick = () => {
     const c = S.candidatos.find(x => x.id === +b.dataset.entrevista);
-    c.entrevistado = true; c.respuesta = `${RESPUESTAS.cuidado[c.cuidado - 1]} ${RESPUESTAS.puntual[c.puntual - 1]}`;
+    c.entrevistado = true; c.respuesta = `${RESPUESTAS.cuidado[c.cuidado - 1]} ${RESPUESTAS.puntual[c.puntual - 1]} ${({ lio: 'Conmigo nunca se aburre nadie. Los bomberos tampoco.', medio: 'Soy muy serio. Casi siempre. Bueno, a veces.', serio: 'Vengo a trabajar, no a hacer amigos.', normal: 'Yo hago lo que me digan, jefe.' })[c.tipo] || ''}`;
     tono(660, .1, .06, 'triangle'); guardar(); pantallaCamioneta();
   });
   const fa = $('#ficharAngelica'); if (fa) fa.onclick = () => { S.dinero -= ANGELICA.adelanto; S.angelica = true; sCaja(); guardar(); pantallaCamioneta(); };
@@ -3366,6 +3695,10 @@ function enlazar() {
     const id = +b.dataset.despedir;
     S.cuadrilla = S.cuadrilla.filter(x => x.id !== id); H.ayud = H.ayud.filter(x => x !== id);
     guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-tun]').forEach(b => b.onclick = () => {
+    const t = TUNEO.find(x => x.id === b.dataset.tun); S.dinero -= t.p; S.tuneo = { ...(S.tuneo || {}), [t.id]: true };
+    if (t.id === 'bocina') bocina(); else tono(880, .1, .08); guardar(); pantallaCamioneta();
   });
   P.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const t = TIENDA.find(x => x.id === b.dataset.t); S.dinero -= t.p; t.f(S); guardar(); tono(880, .1, .08); pantallaCamioneta(); });
 }
@@ -3484,6 +3817,9 @@ function pantallaParte() {
     prepPerfecta: M.prep.gas && M.prep.luz && M.prep.cubierto >= 1 && M.prep.bolsa };
   const retosHechos = M.retos.map(id => [reto(id), reto(id).ok(ctxR)]);
   S.estrellas = estrellasAntes + retosHechos.filter(r => r[1]).length;
+  // Retos de Don Rigo
+  const misHechas = aprendiz ? [] : avanzarMisiones({ aprobado, n, o, BS, danos: M.danos.length, gana: !!ganaDuelo, espejo, finMin, pedOk: !!(ped && !ped.tacos && pedOk) });
+  for (const x of misHechas) { lineas.push([x.todo ? 'Don Rigo: ¡los tres retos de la semana!' : `Reto de Don Rigo: ${textoMision(x)}`, x.dinero]); neto += x.dinero; rep += x.rep; }
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
   // Récords
   const records = [];
@@ -3568,6 +3904,7 @@ function pantallaParte() {
       <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.</span></div>
     ${d ? `<div class="cita"><b>${ganaDuelo ? 'Duelo ganado' : 'Duelo perdido'}</b>${ganaDuelo ? `Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.` : `El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
+    ${misHechas.length ? `<div class="cita"><b>📞 Don Rigo, desde el lago</b>${misHechas.some(x => x.todo) ? '¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.' : uno(['¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'Reto cumplido. Se me cayó la caña de la emoción.', 'Así se hace. Beto dice que él te enseñó. Yo no dije nada.'])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
     ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(capitulo.t)}</b>${esc(capitulo.txt)}</div>` : ''}
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
@@ -3747,6 +4084,7 @@ function despido() {
       <div class="cita"><b>Don Rigo</b>${esc(resp)} Total, que cierro Grasa Brava y me voy a pescar. Ya estoy viejo para mapaches.</div>
       <div class="cita"><b>Don Rigo</b>Llévate la camioneta. No arranca en subida y la radio solo agarra rancheras. Aquí tienes ${dinero(300)} de finiquito. Beto se queda conmigo a pescar… hasta que tengas con qué pagarle.</div>
       <div class="cita"><b>Beto</b>${esc(jugador())}… digo, jefe. Cuando puedas pagarme, me llamas. Yo me voy contigo. Con el karaoke.</div>
+      <div class="cita"><b>Angélica</b>Yo también me quedo sin chamba. Cuando tengas cuatro camionetas, llámame: te armo el horario como el de Grasa Brava. Ya te guardé la hoja de cálculo.</div>
       <p class="nota">Tu nivel y tus mejoras se vienen contigo. Las herramientas buenas eran de Don Rigo: tú empiezas con una rasqueta vieja y una botella de espuma. Los clientes son suyos: tu reputación empieza en cero. Y empiezas tú solo.</p>
       <div class="acciones"><button class="btn prim" id="abrir">Abrir mi propia empresa</button></div>`);
     tono(220, .6, .08, 'triangle', 110);
@@ -3841,6 +4179,7 @@ function titilar(ahora) {
     else if (b.brasa) b.m.emissiveIntensity = b.base * (.75 + Math.random() * .5);
     else if (b.neon) b.m.opacity = Math.random() < .015 ? .3 : 1;
     else if (b.farol) b.m.color.setHSL(.01, .85, .4 + Math.sin(ahora / 700) * .04);
+    else if (b.gira) b.o.rotation.y += .012;
   }
   const min = M && M.fase === 'turno' ? Math.floor(clamp(M.t / M.dur, 0, 1) * 480) : M && M.fase === 'prep' ? Math.floor(M.prepMin) : 0;
   if (min !== relojMin) { relojMin = min; pintarRelojPared(min); }
