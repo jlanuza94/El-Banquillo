@@ -216,6 +216,8 @@ button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inse
 .cont-flecha { font-size: 22px; color: var(--hivis); }
 .botones-inicio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .btn.grande { min-height: 54px; font-size: 18px; }
+.idioma { display: inline-flex; gap: 6px; justify-self: center; }
+.idioma .btn[aria-pressed="true"] { background: var(--hivis); color: var(--hivis-tinta); border-color: var(--hivis); }
 .pie { text-align: center; color: var(--tenue); font-size: 12px; font-family: var(--f-mono); opacity: .7; }
 .rotulo.grande { font-size: clamp(40px, 12vw, 64px); }
 .empresa { display: grid; grid-template-columns: minmax(0, 190px) 1fr; gap: 12px; align-items: center; }
@@ -403,7 +405,7 @@ a.btn { display: inline-block; text-decoration: none; }
   <div id="marcas"></div>
   <div id="hud" hidden>
     <div class="hud-arriba">
-      <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="pausa" aria-label="Pausa y ajustes">❚❚</button></div>
+      <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="pausa" aria-label="Pausa / Pause">❚❚</button></div>
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
       <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
       <div class="pasos" id="pasos"></div>
@@ -439,6 +441,75 @@ const KEY = 'hood-cleaners-v2';
 const TURNO_S = 240;      // segundos reales de 22:00 a 06:00
 const LIMITE = 150;       // micras que deja pasar el inspector por zona
 const $ = s => document.querySelector(s);
+// Idioma: español o inglés. Por defecto, el del celular. L('texto', 'text') elige según el idioma.
+let IDIOMA = (() => { try { const g = localStorage.getItem('hood-cleaners-idioma'); if (g) return g; } catch (e) { /* sin almacenamiento */ } return /^es/i.test(navigator.language || 'es') ? 'es' : 'en'; })();
+const L = (es, en) => IDIOMA === 'en' && en !== undefined ? en : es;
+function ponerIdioma(i) { IDIOMA = i; try { localStorage.setItem('hood-cleaners-idioma', i); } catch (e) { /* no importa */ } document.documentElement.lang = i; }
+document.documentElement.lang = IDIOMA;
+const selectorIdioma = () => `<div class="idioma" role="group" aria-label="Idioma / Language">${[['es', 'Español'], ['en', 'English']].map(([k, n]) => `<button class="btn peq" data-idioma="${k}" aria-pressed="${IDIOMA === k}">${n}</button>`).join('')}</div>`;
+function enlazarIdioma(rehacer) { P.querySelectorAll('[data-idioma]').forEach(b => b.onclick = () => { ponerIdioma(b.dataset.idioma); rehacer(); }); }
+// Traducciones al inglés de los datos del juego (por id). Lo que no está aquí sale en español.
+const EN = {
+  etapa: [['Old van', 'Just you and a van that stalls going uphill. Coffee shops, pizzerias and burger joints. Beto is waiting until you can pay him, and there is room for one helper from the neighborhood.'],
+    ['Own workshop', 'You rent a workshop. Wok kitchens and grills start calling, Lupe is looking for work, you buy bigger vans (and more vans) for more helpers and you advertise online.'],
+    ['Office with a fax', 'A real office. Hotels, industrial cafeterias and public tenders. Chuy is looking for work (awake, most of the time).'],
+    ['Trusted contractor', 'Stadiums call you directly. The mayor\'s brother-in-law no longer says hi.'],
+    ['Grease legend', 'Your van makes the news. You are the most famous hood cleaning company in town.']],
+  fama: ['Unknown', 'Local', 'Recommended', 'Trusted', 'Grease legend'],
+  frec: { mensual: 'monthly', trimestral: 'quarterly', semestral: 'twice a year', anual: 'yearly' },
+  cocina: { cafe: 'Coffee shop', pizza: 'Wood-fired pizzeria', burger: 'Burger joint', wok: 'Wok kitchen', asador: 'Charcoal grill', hotel: 'Hotel kitchen', comedor: 'Industrial cafeteria',
+    fonda: 'Mexican diner', mariscos: 'Seafood place', truck: 'Food truck', panaderia: 'Bakery', sushi: 'Sushi bar', plaza: 'Mall food court', convenciones: 'Convention center', estadio: 'Stadium kitchen' },
+  suc: { quemada: 'Burnt grease', aceite: 'Oil', sarro: 'Scale in the duct' },
+  pista: { gerente: 'The manager says he is staying "just in case".', techo: 'Fan on the roof. "The key is around here somewhere," says the owner.', mapache: 'Old place. They say the duct "makes noises".', alarma: 'Very sensitive smoke detectors. Careful with the steam.' },
+  campana: { caja: 'Box hood', inclinada: 'Sloped hood', larga: 'Long hood' },
+  ducto: { cuadrado: 'square duct', redondo: 'round duct', ancho: 'wide, low duct' },
+  comp: { beto: ['the Cousin', 'Fast. Breaks things with total confidence.'], lupe: ['the Veteran', 'Perfect work. Trusts no one.'], chuy: ['the Big Guy', 'Brute strength. Falls asleep on any flat surface.'] },
+  esp: { filtros: 'filters', campana: 'hoods', ducto: 'ducts' },
+  caracter: { lio: 'Trouble', medio: 'Sometimes goofs off', serio: 'Serious and reliable' },
+  perk: { brazo: ['Arm of steel', 'The scraper removes 15% more.'], pulmones: ['Diver\'s lungs', 'Every shift lasts 15 seconds longer.'], labia: ['Silver tongue', '+5% tips, and the manager asks fewer questions.'],
+    botella: ['Foam hand', 'Foam lasts 40% longer.'], jefe: ['Born boss', 'Your crew cleans 20% faster.'], gentes: ['People person', 'Clients offer you regular contracts more often.'], ojo: ['Inspector\'s eye', 'Aim assist reaches twice as far.'] },
+  herr: { rasqueta: ['Scraper', 'Short strokes: it removes the crust.'], espuma: ['Foam', 'Spread it on the grease and wait 2 seconds: then it comes off three times faster.'], hidro: ['Pressure washer', 'Hold and aim. Without foam, the crust splatters.'], pulidor: ['Polish', 'Polish the clean metal: mirror finish and bigger tips.'] },
+  kit: [['Basic', 'Old scrapers and a bucket.'], ['Complete', 'Good scrapers, foam and ladders.'], ['Pro', 'Their own pressure washer and polisher.']],
+  tienda: { r2: ['Tempered steel scraper', 'Wider and 30% stronger.'], r3: ['Carbide scraper', 'The ultimate blade. Crust is scared of it.'], xl: ['XL foam bottle', 'Your foam lasts 50% longer each night.'], conc: ['Concentrated degreaser', 'Foam softens 4× instead of 3×.'],
+    orb: ['Orbital polisher', 'Mirror finish in half the strokes.'], bolsa: ['New containment bags', 'The old ones have more patches than bag.'], hidro: ['Your own hot water pressure washer', 'Wide, strong jet. This one is yours, and nobody will sell it to buy a karaoke machine.'],
+    cam2: ['Van with roof rack', 'Room for 2 helpers besides your partner.'], uv: ['UV grease flashlight', 'Leftover grease glows a little under your helmet light. No spot gets past you.'], cubiertas: ['Custom covers', 'Covering and uncovering each appliance takes half the time.'],
+    pistola: ['Tape gun', 'Taping the plastic takes half the time. Sounds like the movies.'], mango: ['Long-handle scraper', 'Strokes cover 25% more width.'], canon: ['Foam cannon', 'Foam comes out as a cloud: covers almost twice as much and uses less bottle.'],
+    electrica: ['Electric scraper', 'It vibrates by itself: 25% more power on every stroke. It tickles.'], vapor: ['Steam pressure washer', 'Water at 140 °C: the jet cleans 40% more and melts burnt grease without foam.'],
+    robot: ['"Ductobot 3000" duct robot', 'Put it in the duct and it cleans it end to end by itself. It leaves the corners for you.'], robotCam: ['Ductobot camera', 'See the duct through the robot\'s eyes while it works. Hypnotic.'],
+    orugas: ['All-terrain tracks for the Ductobot', 'It no longer gets stuck on crust: it rolls over everything.'], seguro: ['Damage insurance', 'The insurance company pays half of every damage: yours, your crew\'s or your other teams\'. Pay once, keep it forever.'],
+    robotVoz: ['Don Rigo voice for the Ductobot', 'The robot talks like Don Rigo. It doesn\'t clean better, but it scolds just the same.'], robot2: ['Ductobot turbo', 'Twice as fast, with side brushes: it cleans the corners too.'], cam3: ['Company truck', 'Room for 4 helpers. And the radio actually works.'],
+    flota: ['Another van', 'One more team that can go out to another job on the same night.'] },
+  tuneo: { bigotes: ['Mustache on the front', '+100% style. Effect on the job: none. Effect on your self-esteem: huge.'], dados: ['Fuzzy dice', 'Hanging from the mirror. They say they bring luck. Probably.'],
+    bocina: ['"La Cucaracha" horn', 'Plays when you arrive. Clients smile: a little more tip.'], rines: ['Chrome rims', 'Clients think you are expensive: they pay you 3% more.'], neon: ['Underglow neon', 'Your crew sees the van from far away and shows up on time: fewer no-shows.'],
+    aleron: ['Racing spoiler', 'Useless on a van. Except in street races against El Cuñado.'], escape: ['Loud exhaust', 'The neighbors hate it. So do the raccoons: they run before you arrive.'], masaje: ['Massage seats', 'Your crew arrives relaxed and cleans 5% faster.'],
+    cafetera: ['Dashboard coffee maker', 'Chuy falls asleep half as often. Beto gets intense.'], megafono: ['Roof megaphone', 'You announce your arrival. El Cuñado gets nervous in duels.'] },
+  medalla: { primera: ['First of many', 'Pass your first inspection.'], notaA: ['Honor roll', 'Get an A on a shift.'], espejo: ['Bare metal', 'Every zone at 50 µm or less.'], rapido: ['Lightning', 'Pass before 3:00.'], limpio: ['Not a scratch', 'Pass with no damage at all.'],
+    combo: ['Elite scraper', 'Reach a ×3 combo.'], migdal: ['Master polisher', 'Polish 90% of the hood.'], gerente: ['Manager tamer', 'Pass with the manager there without him blowing up.'], mapache: ['Raccoon friend', 'Get the raccoon out the nice way.'],
+    cuca: ['Roach hunter', 'Catch the giant cockroach.'], apagon: ['Cat eyes', 'Pass a night with a blackout.'], pedido: ['Picky client', 'Fulfill a special request.'], duelo: ['Bye, Cuñado', 'Win a duel against El Cuñado.'], diez: ['Veteran', 'Pass 10 inspections.'],
+    fotos: ['Grease photographer', 'Collect 6 photos in the album.'], finde: ['Legendary weekend', 'Beat the weekend challenge: three giant jobs in a row.'], dorado: ['The golden raccoon', 'You saw it. Nobody will believe you.'], casete: ['The lost tape', 'You found Don Rigo\'s cassette in a duct.'], himno: ['Perfect pitch', 'You found the radio\'s secret song.'] },
+  reto: { sinHidro: 'No pressure washer', sinEspuma: 'No foam', combo2: 'Reach a ×3 combo twice', antes4: 'Inspector before 4:00, passed', espejo: 'Polish 80% of the hood', sinDanos: 'Not a single damage', prep: 'Perfect prep (gas, power, covers and plastic)', filtros: 'Filters done before 11:30 pm', notaA: 'Get an A or better', metal: 'Everything at 50 µm or less' },
+  look: { espuma: 'Foam color', casco: 'Partner\'s helmet', pegatina: 'Van sticker', linterna: 'Helmet light', combo: 'Combo sound',
+    blanca: 'White', rosa: 'Pink', menta: 'Mint green', oro: 'Gold', azul: 'Pool blue', normal: 'Their own', negro: 'Matte black', militar: 'Army green', nada: 'None', llamas: 'Flames', mapache: 'Raccoon', estrella: 'Star', cuca: 'Cockroach', rayo: 'Lightning',
+    calida: 'Warm', fria: 'Cold', disco: 'Disco', verde: 'Neon green', clasico: 'Classic', corneta: 'Bugle', cumbia: 'Güiro', mariachi: 'Mariachi' },
+  pasos: ['Prep', 'Wash', 'Peel', 'Polish', 'Inspector'],
+  leccion: [null, ['Night 1 · Learn with Beto', 'A quiet coffee shop to learn the ropes. I will tell you what to do step by step.'], ['Night 2 · On your own', 'Another easy one, but no instructions this time. Let\'s see what you learned.'],
+    ['Night 3 · Getting tough', 'Burnt grease, scale, a manager in a hurry and less time. Lupe comes with you today.'], ['Night 4 · The big job', 'A whole food court: three hoods, several ducts and half the company working with you. Angélica assigns the work.']],
+  dias: ['Friday', 'Saturday', 'Sunday'],
+  trato: { tacano: ['Cheapskate', 'Counts the coins twice. And then again.'], regateador: ['Haggler', 'Loves to haggle: if you say no, he comes back with another offer.'], rico: ['Wealthy', 'Pays well, but doesn\'t like being treated like an ATM.'],
+    apurado: ['In a hurry', 'Wants everything yesterday. Pays more if you don\'t waste his time.'], desconfiado: ['Distrustful', 'Got burned before. Loves guarantees and pays more for them.'] },
+  mkt: { volantes: ['Hand out flyers in the neighborhood', 'One more job tonight, a simple one.'], donas: ['Visit restaurants with donuts', 'Sometimes you land a better-paying job. Sometimes they just eat the donuts.'],
+    redes: ['Social media ad', 'Two more jobs. A weird client who pays double might show up.'], licitacion: ['Bid on a public tender', 'A big two-hood job. Winning depends on your reputation.'] },
+  gas: { 'Cerrar el piloto': 'Shut off the pilot', 'Apagar las brasas': 'Put out the coals', 'Apagar el trompo': 'Turn off the spit', 'Apagar el horno': 'Turn off the oven', 'Cerrar el gas': 'Shut off the gas', 'Apagar la salamandra': 'Turn off the broiler', 'Apagar el baño maría': 'Turn off the steam table' },
+  pedidoChip: { antes3: 'Before 3 am', espejo: 'Wants a mirror', sinHidro: 'Sleeping baby', sinEspuma: 'Allergic', abuela: 'Sacred griddle', musica: 'With music', tacos: 'Pays in tacos' },
+  origen: { Volante: 'Flyer', Donas: 'Donuts', Redes: 'Social media', 'Licitación': 'Tender', Revancha: 'Rematch', 'Lo trajo Grasita': 'Grasita brought it' },
+};
+const nEtapa = i => L(ETAPAS[i].n, EN.etapa[i] && EN.etapa[i][0]);
+const tEtapa = i => L(ETAPAS[i].txt, EN.etapa[i] && EN.etapa[i][1]);
+const nCocina = k => L(COCINAS[k].n, EN.cocina[k]);
+const tReto = r => L(r.t, EN.reto[r.id]);
+const nMed = m => L(m.n, (EN.medalla[m.id] || [])[0]), dMed = m => L(m.d, (EN.medalla[m.id] || [])[1]);
+const nTienda = t => L(t.n, (EN.tienda[t.id] || [])[0]), dTienda = t => L(t.d, (EN.tienda[t.id] || [])[1]);
+const nHerr = h => L(HERR[h].n, EN.herr[h][0]), dHerr = h => L(HERR[h].d, EN.herr[h][1]);
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const dinero = n => (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('es-MX');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -463,7 +534,7 @@ const ETAPAS = [
   { n: 'Leyenda de la grasa', rep: 85, compra: 12000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
 ];
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
-const fama = r => FAMA.filter(f => r >= f[0]).pop()[1];
+const fama = r => { const i = FAMA.filter(f => r >= f[0]).length - 1; return L(FAMA[i][1], EN.fama[i]); };
 const tun = id => !!(S && S.tuneo && S.tuneo[id]);
 const multPago = () => (.85 + S.rep / 100 * .6) * (1 + .03 * ((S && S.eq.flota) || 0)) * (tun('rines') ? 1.03 : 1);   // reputación y tamaño de la empresa   // la reputación sube lo que paga cada cliente
 
@@ -582,7 +653,7 @@ function perfil(c) {
   if (!c.esp) c.esp = f ? f[4] : uno(['filtros', 'campana', 'ducto']);
   return c;
 }
-const chipsPerfil = c => `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span>${CARACTERES[c.tipo] ? `<span class="chip ${CARACTERES[c.tipo][1]}">${CARACTERES[c.tipo][0]}</span>` : ''}${S.cuadrilla.includes(c) ? `<span class="chip ${(c.animo || 3) <= 1 ? 'mal' : (c.animo || 3) >= 4 ? 'ok' : ''}">Ánimo ${'●'.repeat(Math.max(0, c.animo || 3))}${'○'.repeat(Math.max(0, 5 - (c.animo || 3)))}${(c.animo || 3) <= 1 ? ' · llega tarde' : ''}</span>` : ''}</span>`;
+const chipsPerfil = c => `<span class="chips-perfil"><span class="chip">${L('Bueno en', 'Good at')} ${L(ESPECIAL[c.esp], EN.esp[c.esp])}</span>${CARACTERES[c.tipo] ? `<span class="chip ${CARACTERES[c.tipo][1]}">${L(CARACTERES[c.tipo][0], EN.caracter[c.tipo])}</span>` : ''}${S.cuadrilla.includes(c) ? `<span class="chip ${(c.animo || 3) <= 1 ? 'mal' : (c.animo || 3) >= 4 ? 'ok' : ''}">${L('Ánimo', 'Morale')} ${'●'.repeat(Math.max(0, c.animo || 3))}${'○'.repeat(Math.max(0, 5 - (c.animo || 3)))}${(c.animo || 3) <= 1 ? L(' · llega tarde', ' · shows up late') : ''}</span>` : ''}</span>`;
 const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
 // El gerente: su paciencia baja con cada visita, y mucho más si vas atrasado. Solo explota si de verdad tardas.
 const GERENTE_IMPACIENTE = ['Ya van tres horas, ¿eh?', '¿Esto siempre tarda tanto o es usted?', 'Mi suegra limpia más rápido. Y tiene 80 años.', 'Le aviso que a las seis llega el panadero.'];
@@ -662,7 +733,7 @@ const TIENDA = [
   { id: 'seguro', n: 'Seguro contra daños', d: 'La aseguradora paga la mitad de cada daño: lo que rompas tú, tu gente o tus equipos. Una sola vez, para siempre.', p: 1500, ok: s => s.fase === 'empresa' && s.etapa >= 2 && !s.eq.seguro, f: s => { s.eq.seguro = true; } },
   { id: 'robotVoz', n: 'Voz de Don Rigo para el Ductobot', d: 'El robot habla como Don Rigo. No limpia mejor, pero regaña igual.', p: 150, ok: s => s.eq.robot >= 1 && !s.eq.robotVoz, f: s => { s.eq.robotVoz = true; } },
   { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 1500, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
-  { id: 'flota', get n() { return S.eq.flota ? `Camioneta para el equipo ${S.eq.flota + 2}` : 'Segunda camioneta'; }, get d() { return `Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`; },
+  { id: 'flota', get n() { return S.eq.flota ? L(`Camioneta para el equipo ${S.eq.flota + 2}`, `Van for team ${S.eq.flota + 2}`) : L('Segunda camioneta', 'Second van'); }, get d() { return L(`Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`, `One more team working the same night. You have ${S.eq.flota || 0} of 9. Each team raises what all your jobs pay by 3%.`); },
     get p() { return 1200 + (S.eq.flota || 0) * 600; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
       s.eq.flota = (s.eq.flota || 0) + 1;
       // La camioneta nueva ya trae trabajo para esta misma noche.
@@ -1688,11 +1759,11 @@ function construirNoche(orden) {
   VISTAS.linea = vista(new T.Vector3(-.3, 1.0, -.55), new T.Vector3(0, .5, 1.2), lineW + 1.2, 1.9, 3.2, 58);
   VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
   VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
-  Z = gruposF.map((g, i) => ({ id: 'filtros', n: gruposF.length > 1 ? `Filtros ${'ABCD'[i]}` : 'Filtros', sfs: g.sfs, vista: vista(new T.Vector3(g.lx, 0, g.lonaZ), new T.Vector3(0, 1.6, 1.0), g.lonaW + .2, 1.7, 3.2, 55) }));
-  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `Campana ${i + 1}` : 'Campana', sfs: c.sfs, gotas: c.gotas, labio: c.labio,
+  Z = gruposF.map((g, i) => ({ id: 'filtros', n: gruposF.length > 1 ? `${L('Filtros', 'Filters')} ${'ABCD'[i]}` : L('Filtros', 'Filters'), sfs: g.sfs, vista: vista(new T.Vector3(g.lx, 0, g.lonaZ), new T.Vector3(0, 1.6, 1.0), g.lonaW + .2, 1.7, 3.2, 55) }));
+  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, labio: c.labio,
     vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100 } } }));
   piezas.robot = null;
-  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `Ducto ${i + 1}` : 'Ducto', sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } }));
+  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 } } }));
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
 }
 
@@ -1857,7 +1928,7 @@ function herramientas() {
 }
 // Los pasos del trabajo, como en la vida real.
 const PASOS = ['Preparar', 'Lavar', 'Pelar', 'Migdalear', 'Inspector'];
-const pasosHTML = actual => PASOS.map((p, i) => `<span class="${i < actual ? 'hecho' : i === actual ? 'act' : ''}">${i < actual ? '✓' : i + 1 + '.'} ${p}</span>`).join('');
+const pasosHTML = actual => PASOS.map((p, i) => `<span class="${i < actual ? 'hecho' : i === actual ? 'act' : ''}">${i < actual ? '✓' : i + 1 + '.'} ${L(p, EN.pasos[i])}</span>`).join('');
 const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalear: 3 })[M.etapa];
 
 function empezarTurno(orden) {
@@ -1915,7 +1986,7 @@ function empezarTurno(orden) {
 
 const prepEl = $('#prep');
 function panelPrep(titulo, texto, estado, boton, alPulsar) {
-  if (M.orden.campanas > 1 || innerWidth / innerHeight < .9) texto += ' Para ver el resto de la cocina, arrastra con dos dedos o toca el aviso naranja del borde.';
+  if (M.orden.campanas > 1 || innerWidth / innerHeight < .9) texto += L(' Para ver el resto de la cocina, arrastra con dos dedos o toca el aviso naranja del borde.', ' To see the rest of the kitchen, drag with two fingers or tap the orange tab on the edge.');
   const reloj = M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480);
   // Compacto, para que no tape lo que hay que tocar: la explicación ocupa dos líneas y se abre al tocarla.
   prepEl.innerHTML = `<div class="carta">${M.fase === 'prep' ? `<div class="pasos">${pasosHTML(0)}</div>` : ''}<div class="fila"><h3>${esc(titulo)}</h3><span class="reloj">${reloj}</span></div><p class="txt">${esc(texto)}</p>
@@ -1930,35 +2001,35 @@ function escenaPrep(i) {
   if (i === 0) {
     irVista(VISTAS.linea);
     const pil = piezas.pilotos, luz = piezas.luz;
-    const estado = () => `Pilotos cerrados: ${pil.filter(p => p.off).length} de ${pil.length} · Luz del extractor: ${luz.off ? 'cortada' : 'encendida'}`;
-    const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = pil.every(p => p.off) && luz.off ? 'Siguiente: cubrir la cocina' : 'Seguir sin terminar'; };
-    pil.forEach(p => marca(p.pos, p.txt, () => { p.off = true; p.mesh.visible = false; gastar(2); tono(300, .15, .08, 'sawtooth', 120); actualizar(); }));
-    marca(luz.pos, 'Cortar la luz', () => { luz.off = true; luz.palanca.rotation.z = 2.6; gastar(2); tono(180, .1, .12, 'square'); actualizar(); });
-    panelPrep('Seguridad primero', pil.length ? 'Toca cada piloto para cerrar el gas y baja la palanca de la luz del extractor. Cada cosa cuesta un par de minutos.' : 'Esta cocina no tiene pilotos de gas. Solo falta bajar la palanca de la luz del extractor.', estado(), 'Seguir sin terminar');
+    const estado = () => L(`Pilotos cerrados: ${pil.filter(p => p.off).length} de ${pil.length} · Luz del extractor: ${luz.off ? 'cortada' : 'encendida'}`, `Pilots off: ${pil.filter(p => p.off).length} of ${pil.length} · Exhaust fan power: ${luz.off ? 'cut' : 'on'}`);
+    const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = pil.every(p => p.off) && luz.off ? L('Siguiente: cubrir la cocina', 'Next: cover the kitchen') : L('Seguir sin terminar', 'Skip the rest'); };
+    pil.forEach(p => marca(p.pos, L(p.txt, EN.gas[p.txt]), () => { p.off = true; p.mesh.visible = false; gastar(2); tono(300, .15, .08, 'sawtooth', 120); actualizar(); }));
+    marca(luz.pos, L('Cortar la luz', 'Cut the power'), () => { luz.off = true; luz.palanca.rotation.z = 2.6; gastar(2); tono(180, .1, .12, 'square'); actualizar(); });
+    panelPrep(L('Seguridad primero', 'Safety first'), pil.length ? L('Toca cada piloto para cerrar el gas y baja la palanca de la luz del extractor. Cada cosa cuesta un par de minutos.', 'Tap each pilot to shut off the gas and pull down the exhaust fan\'s power lever. Each one takes a couple of minutes.') : L('Esta cocina no tiene pilotos de gas. Solo falta bajar la palanca de la luz del extractor.', 'This kitchen has no gas pilots. You only need to pull down the exhaust fan\'s power lever.'), estado(), L('Seguir sin terminar', 'Skip the rest'));
     actualizar();
     decir(M.comp, uno(['Yo te ilumino. Bueno, mi casco te ilumina.', 'Primero el gas. Lo dice Don Rigo y lo dicen los bomberos.', '¿Cerramos el gas o vivimos peligrosamente?']));
   } else if (i === 1) {
     irVista(VISTAS.linea);
     const ap = piezas.aparatos;
-    const estado = () => `Cubiertos: ${ap.filter(a => a.cubierto).length} de ${ap.length}`;
-    const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = ap.every(a => a.cubierto) ? 'Siguiente: el plástico de la campana' : 'Seguir sin terminar'; };
-    ap.forEach(a => marca(a.pos, 'Cubrir', () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(EQ().cubiertas ? 1 : 2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
-    panelPrep('Cubrir la cocina', 'Toca cada aparato para taparlo con plástico. Lo que quede al aire se llena de agua con grasa y espuma.', estado(), 'Seguir sin terminar');
+    const estado = () => L(`Cubiertos: ${ap.filter(a => a.cubierto).length} de ${ap.length}`, `Covered: ${ap.filter(a => a.cubierto).length} of ${ap.length}`);
+    const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = ap.every(a => a.cubierto) ? L('Siguiente: el plástico de la campana', 'Next: wrap the hood') : L('Seguir sin terminar', 'Skip the rest'); };
+    ap.forEach(a => marca(a.pos, L('Cubrir', 'Cover'), () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(EQ().cubiertas ? 1 : 2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
+    panelPrep(L('Cubrir la cocina', 'Cover the kitchen'), L('Toca cada aparato para taparlo con plástico. Lo que quede al aire se llena de agua con grasa y espuma.', 'Tap each appliance to cover it with plastic. Anything left uncovered gets soaked in greasy water and foam.'), estado(), L('Seguir sin terminar', 'Skip the rest'));
     actualizar();
     if (M.pedido && M.pedido.id === 'abuela') decir(M.cliente, '¡Esa plancha es la de mi abuela! Cúbranla bien. Y todo lo demás también.');
   } else if (i === 2) {
     irVista(VISTAS.frente);
     const ci = piezas.cintas, bo = piezas.bolsas;
-    const estado = () => `Borde encintado: ${ci.filter(c => c.hecho).length} de ${ci.length} · Bolsas colgadas: ${bo.filter(b => b.hecho).length} de ${bo.length}`;
+    const estado = () => L(`Borde encintado: ${ci.filter(c => c.hecho).length} de ${ci.length} · Bolsas colgadas: ${bo.filter(b => b.hecho).length} de ${bo.length}`, `Edge taped: ${ci.filter(c => c.hecho).length} of ${ci.length} · Bags hung: ${bo.filter(b => b.hecho).length} of ${bo.length}`);
     const actualizar = () => {
       for (const f of piezas.faldas) f.mesh.visible = ci[f.a].hecho && ci[f.b].hecho;
       const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado();
-      if (ci.every(c => c.hecho) && !bo.some(b => b.marca)) bo.forEach(b => { b.marca = marca(b.pos, 'Colgar la bolsa', () => { b.hecho = true; b.mesh.visible = true; gastar(2); tono(500, .1, .08, 'triangle'); actualizar(); }); });
-      const btn = $('#prepSig'); if (btn) btn.textContent = ci.every(c => c.hecho) && bo.every(b => b.hecho) ? 'Empezar a limpiar' : 'Empezar sin terminar';
+      if (ci.every(c => c.hecho) && !bo.some(b => b.marca)) bo.forEach(b => { b.marca = marca(b.pos, L('Colgar la bolsa', 'Hang the bag'), () => { b.hecho = true; b.mesh.visible = true; gastar(2); tono(500, .1, .08, 'triangle'); actualizar(); }); });
+      const btn = $('#prepSig'); if (btn) btn.textContent = ci.every(c => c.hecho) && bo.every(b => b.hecho) ? L('Empezar a limpiar', 'Start cleaning') : L('Empezar sin terminar', 'Start anyway');
     };
     ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(EQ().pistola ? .3 : .6); cinta(); actualizar(); }, true));
     M.arrastrar = true;
-    panelPrep('Envolver la campana', 'Pasa el dedo por los puntos del borde para pegar el plástico con cinta: forma un embudo. Luego cuelga la bolsa donde cae el agua.', estado(), 'Empezar sin terminar');
+    panelPrep(L('Envolver la campana', 'Wrap the hood'), L('Pasa el dedo por los puntos del borde para pegar el plástico con cinta: forma un embudo. Luego cuelga la bolsa donde cae el agua.', 'Swipe across the dots on the edge to tape the plastic: it makes a funnel. Then hang the bag where the water drips.'), estado(), L('Empezar sin terminar', 'Start anyway'));
     actualizar();
     decir(M.comp, uno(['Más cinta. Siempre más cinta.', 'El plástico es como un paraguas al revés. No preguntes.', 'Si queda un hueco, el agua lo encuentra. El agua siempre lo encuentra.']));
   } else {
@@ -1973,11 +2044,11 @@ const CUIDADO_COMP = { beto: 2, lupe: 5, chuy: 3 };
 function armarCuadrillas() {
   const o = M.orden, out = [];
   const mios = M.equipo.map(e => ({ n: e.n, esp: e.esp, fuerza: e.fuerza, cuidado: e.principal ? CUIDADO_COMP[o.comp] || 3 : e.cuidado || 3, animo: e.id ? (S.cuadrilla.find(c => c.id === e.id) || {}).animo : null, id: e.id || null }));
-  if (mios.length) out.push({ n: 'Tu cuadrilla', color: M.comp.color || '#ffd23f', gente: mios, kit: 0 });
-  (o.rigoEquipos || []).forEach((a, i) => out.push({ n: a.n, color: a.color, gente: a.gente.map(g => ({ ...g })), kit: 2, k: i + 2 }));
+  if (mios.length) out.push({ n: L('Tu cuadrilla', 'Your crew'), color: M.comp.color || '#ffd23f', gente: mios, kit: 0 });
+  (o.rigoEquipos || []).forEach((a, i) => out.push({ n: L(a.n, a.en), color: a.color, gente: a.gente.map(g => ({ ...g })), kit: 2, k: i + 2 }));
   for (const a of o.ayudan || []) {
     const gente = [...(a.comp ? [{ n: COMPANEROS[a.comp].n, fuerza: COMPANEROS[a.comp].fuerza, cuidado: CUIDADO_COMP[a.comp] }] : []), ...a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
-    if (gente.length) out.push({ n: `Equipo ${a.k}`, color: '#69c97a', gente, kit: kit(a.k - 2), k: a.k, ayud: a.ayud });
+    if (gente.length) out.push({ n: `${L('Equipo', 'Team')} ${a.k}`, color: '#69c97a', gente, kit: kit(a.k - 2), k: a.k, ayud: a.ayud });
   }
   return out;
 }
@@ -1990,10 +2061,10 @@ function escenaReparto() {
     for (const i of orden) { const k = carga.map((c, k) => [c / crews[k].gente.reduce((a, g) => a + g.fuerza, 0), k]).sort((a, b) => a[0] - b[0])[0][1]; reparto[i] = k; carga[k] += Z[i].inicial; }
   }
   const pintar = () => {
-    prepEl.innerHTML = `<div class="carta reparto"><div class="pasos">${pasosHTML(0)}</div><div class="fila"><h3>Reparte el trabajo</h3><span class="reloj">${hora(M.prepMin)}</span></div>
-      <p class="txt">El reloj no corre mientras repartes. ${M.orden.leccion === 4 ? `<b>Angélica:</b> «${esc(planAngelica())}» ` : ''}${S.angelica ? 'Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ' : ''}Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.</p>
-      <div class="filas-reparto">${Z.map((z, i) => `<label><span>${esc(z.n)}</span><select data-rz="${i}"><option value="-1" ${reparto[i] === -1 ? 'selected' : ''}>Yo</option>${crews.map((c, k) => `<option value="${k}" ${reparto[i] === k ? 'selected' : ''}>${esc(c.n)} (${c.gente.length})</option>`).join('')}</select></label>`).join('')}</div>
-      <div class="pie"><p class="nota">${crews.map(c => `${c.n}: ${c.gente.map(g => g.n).join(', ')}`).join(' · ')}</p><button class="btn prim" id="prepSig">Empezar a limpiar</button></div></div>`;
+    prepEl.innerHTML = `<div class="carta reparto"><div class="pasos">${pasosHTML(0)}</div><div class="fila"><h3>${L('Reparte el trabajo', 'Assign the work')}</h3><span class="reloj">${hora(M.prepMin)}</span></div>
+      <p class="txt">${L('El reloj no corre mientras repartes.', 'The clock stops while you assign.')} ${M.orden.leccion === 4 ? `<b>Angélica:</b> «${esc(planAngelica())}» ` : ''}${S.angelica ? L('Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ', 'Angélica suggests this plan (big zones for the strong teams), but you decide. ') : ''}${L('Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.', 'Each team cleans only its zones and tells you when it is done. Then you check them: if grease is left, you finish it and it shows in their review.')}</p>
+      <div class="filas-reparto">${Z.map((z, i) => `<label><span>${esc(z.n)}</span><select data-rz="${i}"><option value="-1" ${reparto[i] === -1 ? 'selected' : ''}>${L('Yo', 'Me')}</option>${crews.map((c, k) => `<option value="${k}" ${reparto[i] === k ? 'selected' : ''}>${esc(c.n)} (${c.gente.length})</option>`).join('')}</select></label>`).join('')}</div>
+      <div class="pie"><p class="nota">${crews.map(c => `${c.n}: ${c.gente.map(g => g.n).join(', ')}`).join(' · ')}</p><button class="btn prim" id="prepSig">${L('Empezar a limpiar', 'Start cleaning')}</button></div></div>`;
     prepEl.hidden = false;
     prepEl.querySelectorAll('[data-rz]').forEach(sel => sel.onchange = () => { reparto[+sel.dataset.rz] = +sel.value; });
     $('#prepSig').onclick = () => {
@@ -2008,8 +2079,8 @@ function escenaReparto() {
     };
   };
   function planAngelica() {
-    const de = k => Z.filter((z, i) => reparto[i] === k).map(z => z.n.toLowerCase()).join(', ') || 'nada';
-    return `Tú: ${de(-1)}. ${crews.map((c, k) => `${c.n}: ${de(k)}`).join('. ')}. Cuando terminen, te avisan y tú revisas. Nadie se va hasta que el inspector firme.`;
+    const de = k => Z.filter((z, i) => reparto[i] === k).map(z => z.n.toLowerCase()).join(', ') || L('nada', 'nothing');
+    return L(`Tú: ${de(-1)}. ${crews.map((c, k) => `${c.n}: ${de(k)}`).join('. ')}. Cuando terminen, te avisan y tú revisas. Nadie se va hasta que el inspector firme.`, `You: ${de(-1)}. ${crews.map((c, k) => `${c.n}: ${de(k)}`).join('. ')}. When they finish, they tell you and you check. Nobody leaves until the inspector signs.`);
   }
   irVista(VISTA_GENERAL); pintar();
   if (M.orden.leccion === 4) { decir(ANGELICA, 'Ya tengo a todos repartidos. Tú haces tu parte y revisas la de los demás. Don Rigo confía en ti. Bueno, un poco.'); return; }
@@ -2048,11 +2119,11 @@ function revisar(z) {
   if (!z.revisar || M.enZona < 1.5) return;
   if (micras(z) <= LIMITE) {
     z.revisar = false; z.rev = z.corregir ? 'corregida' : 'ok';
-    if (!z.corregir) { z.crew.ok++; ayuda(`✓ ${z.crew.n} dejó ${z.n.toLowerCase()} bien. Revisada.`, 4); sDing(); }
-    else ayuda(`${z.n} corregida. ${z.crew.n} te debe una.`, 4);
+    if (!z.corregir) { z.crew.ok++; ayuda(L(`✓ ${z.crew.n} dejó ${z.n.toLowerCase()} bien. Revisada.`, `✓ ${z.crew.n} did ${z.n.toLowerCase()} right. Checked.`), 4); sDing(); }
+    else ayuda(L(`${z.n} corregida. ${z.crew.n} te debe una.`, `${z.n} fixed. ${z.crew.n} owes you one.`), 4);
   } else if (!z.corregir) {
     z.corregir = true; z.crew.fallos++;
-    ayuda(`${z.crew.n} dejó grasa en ${z.n.toLowerCase()}. Termínala tú.`, 5); tono(300, .2, .08, 'triangle', 200);
+    ayuda(L(`${z.crew.n} dejó grasa en ${z.n.toLowerCase()}. Termínala tú.`, `${z.crew.n} left grease on ${z.n.toLowerCase()}. Finish it yourself.`), 5); tono(300, .2, .08, 'triangle', 200);
   }
 }
 // Arrastrar el dedo por los puntos de cinta los va pegando.
@@ -2075,14 +2146,15 @@ function arrancarTurno() {
   M.t = M.prepMin / 480 * M.dur;
   matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
   M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0; U.hl.value = hlBase();
-  if (M.orden.tuto) { M.tuto = 1; M.tutoZona = M.zona; decir(M.comp, 'Primera noche, ¿eh? Tranquilo. Te voy diciendo. Arriba sale lo que toca.'); }
+  ayuda(L('Elige la herramienta abajo y haz pasadas cortas sobre la grasa.', 'Pick a tool below and make short strokes over the grease.'), 5);
+  if (M.orden.tuto) { M.tuto = 1; M.tutoZona = M.zona; decir(M.comp, L('Primera noche, ¿eh? Tranquilo. Te voy diciendo. Arriba sale lo que toca.', 'First night, huh? Relax. I\'ll walk you through it. What to do shows up at the top.')); }
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
   $('#duelo').hidden = !M.duelo; pintarRadio();
   if (M.duelo) { $('#contra').textContent = '⚡ Contraataque'; $('#contra').title = (CONTRA[M.orden.comp] || CONTRA.solo)[0]; }
   irVista(Z[0].vista);
   pintarHud(true);
-  if (M.retos.length) ayuda('Retos: ' + M.retos.map(id => reto(id).t).join(' · '), 8);
+  if (M.retos.length) ayuda(L('Retos: ', 'Challenges: ') + M.retos.map(id => tReto(reto(id))).join(' · '), 8);
   const plan = { beto: 'Yo me voy a lo más sucio de lo que no estés limpiando tú. Rápido y con estilo.', chuy: 'Yo cargo los filtros. Pesan poquito. Si me duermo, me despiertas.', lupe: 'Yo me quedo contigo y te voy marcando lo que te falta. Porque te va a faltar.' }[M.orden.comp];
   if (plan) setTimeout(() => M && M.fase === 'turno' && decir(M.comp, plan), 2500);
   decir(M.comp, uno(['Vamos. Tú los filtros, yo vigilo.', 'Empezamos por los filtros. Como dice Don Rigo: de abajo hacia arriba y sin preguntar.', 'Filtros primero. Si ves algo que se mueve, no es grasa.']));
@@ -2157,14 +2229,14 @@ function avisoTipo(t, herr) {
   const blanda = t > 10; t %= 10;
   const k = t + herr; if (M.avisosTipo[k]) return;
   let txt = null;
-  if (t === 1 && herr === 'rasqueta' && !blanda) txt = 'Grasa quemada: así no sale. Échale espuma, espera y luego raspa.';
-  if (t === 2 && herr === 'rasqueta') txt = 'Aceite: la rasqueta lo embarra. Mejor la hidro o espuma.';
-  if (t === 3 && herr !== 'rasqueta') txt = 'Sarro: ni la espuma ni el agua lo quitan. Rasqueta, y mejor la de carburo.';
-  if (t === 3 && herr === 'rasqueta' && EQ().rasqueta < 3) txt = 'Sarro: sale despacio. La rasqueta de carburo del Taller se lo come.';
+  if (t === 1 && herr === 'rasqueta' && !blanda) txt = L('Grasa quemada: así no sale. Échale espuma, espera y luego raspa.', 'Burnt grease: it won\'t come off like that. Foam it, wait, then scrape.');
+  if (t === 2 && herr === 'rasqueta') txt = L('Aceite: la rasqueta lo embarra. Mejor la hidro o espuma.', 'Oil: the scraper just smears it. Use the pressure washer or foam.');
+  if (t === 3 && herr !== 'rasqueta') txt = L('Sarro: ni la espuma ni el agua lo quitan. Rasqueta, y mejor la de carburo.', 'Scale: neither foam nor water removes it. Scraper, ideally the carbide one.');
+  if (t === 3 && herr === 'rasqueta' && EQ().rasqueta < 3) txt = L('Sarro: sale despacio. La rasqueta de carburo del Taller se lo come.', 'Scale: it comes off slowly. The carbide scraper from the Shop eats it up.');
   if (!txt) return;
   M.avisosTipo[k] = true; ayuda(txt, 5);
   // El consejo lo dice alguien en el chat (trabajando solo, Don Rigo por la radio): así no se pierde en la línea de ayuda.
-  decir(M.comp.solo ? 'rigo' : M.comp, `¡Ojo! ${txt}`);
+  decir(M.comp.solo ? 'rigo' : M.comp, `${L('¡Ojo!', 'Careful!')} ${txt}`);
 }
 function aplicarTramo(a, b) {
   if (!a || !b || a.sf !== b.sf) return 0;
@@ -2177,9 +2249,9 @@ function aplicarTramo(a, b) {
   const multCombo = M.combo >= 6 ? 3 : M.combo >= 3 ? 2 : 1;
   let rc, cant;
   if (herr === 'espuma') {
-    if (M.botella <= 0) { ayuda('Botella de espuma vacía. Te queda la rasqueta.'); return 0; }
-    if (!M.avisoEspuma) { M.avisoEspuma = true; ayuda('La espuma no limpia: ablanda la grasa. Espera 2 segundos y pásale la rasqueta.', 6); decir(M.comp, 'Ojo: la espuma no quita nada, solo ablanda. Luego toca la rasqueta.'); }
-    else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda('Esto ya está blando: cambia a la rasqueta y raspa.', 4); }
+    if (M.botella <= 0) { ayuda(L('Botella de espuma vacía. Te queda la rasqueta.', 'Foam bottle empty. You still have the scraper.')); return 0; }
+    if (!M.avisoEspuma) { M.avisoEspuma = true; ayuda(L('La espuma no limpia: ablanda la grasa. Espera 2 segundos y pásale la rasqueta.', 'Foam doesn\'t clean: it softens the grease. Wait 2 seconds and go over it with the scraper.'), 6); decir(M.comp, L('Ojo: la espuma no quita nada, solo ablanda. Luego toca la rasqueta.', 'Careful: foam doesn\'t remove anything, it just softens. Then use the scraper.')); }
+    else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda(L('Esto ya está blando: cambia a la rasqueta y raspa.', 'This is soft now: switch to the scraper and scrape.'), 4); }
     rc = .15 / sf.celda * (EQ().canon ? 1.8 : 1); cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (EQ().xl ? 1.5 : 1) * (EQ().canon ? .7 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = EQ().orbital ? .5 : .28; }
   else { rc = radioRasqueta() / sf.celda; cant = fuerzaRasqueta() * ef * multCombo; }
@@ -2192,7 +2264,7 @@ function aplicarTramo(a, b) {
   if (herr === 'pulidor') {
     pulso('pulidora', .2);
     if (q > 0) { if (azar(.3)) emitir(b.punto, 1, 'chispa', b.normal, .4); }
-    else if (azar(.05)) ayuda('Solo se migdalea el metal limpio. Primero quita la grasa.');
+    else if (azar(.05)) ayuda(L('Solo se migdalea el metal limpio. Primero quita la grasa.', 'You can only polish clean metal. Remove the grease first.'));
   }
   if (sf.ultTipo && M.etapa === 'lavar') { avisoTipo(sf.ultTipo, herr); sf.ultTipo = 0; }
   M.trazo.quitado += q;
@@ -2260,12 +2332,12 @@ function verCombo(t, tal) { const c = $('#combo'); c.textContent = tal ? t : 'CO
 const hb = $('#herrBtn');
 let ruedaT = null, ruedaAbierta = false, ruedaSel = null;
 function pintarHerrBtn() {
-  hb.innerHTML = ICONOS[M.herr] + `<small>${HERR[M.herr].n}</small>`;
-  $('#barraHerr').innerHTML = herramientas().map(h => `<button data-hb="${h}" aria-pressed="${h === M.herr}" aria-label="${HERR[h].n}">${ICONOS[h]}${h === 'espuma' ? `<small class="gasto">${Math.round(M.botella * 100)} %</small>` : `<small>${HERR[h].n}</small>`}</button>`).join('');
+  hb.innerHTML = ICONOS[M.herr] + `<small>${nHerr(M.herr)}</small>`;
+  $('#barraHerr').innerHTML = herramientas().map(h => `<button data-hb="${h}" aria-pressed="${h === M.herr}" aria-label="${nHerr(h)}">${ICONOS[h]}${h === 'espuma' ? `<small class="gasto">${Math.round(M.botella * 100)} %</small>` : `<small>${nHerr(h)}</small>`}</button>`).join('');
 }
 $('#barraHerr').addEventListener('click', e => { const b = e.target.closest('[data-hb]'); if (b && M && M.fase === 'turno' && !(M.ev && M.ev.bloquea)) { audio(); cambiarHerr(b.dataset.hb); } });
 function cambiarHerr(h) {
-  if (h === M.herr) return; M.prevHerr = M.herr; M.herr = h; pintarHerrBtn(); tono(660, .06, .06, 'triangle'); ayuda(HERR[h].d);
+  if (h === M.herr) return; M.prevHerr = M.herr; M.herr = h; pintarHerrBtn(); tono(660, .06, .06, 'triangle'); ayuda(dHerr(h));
   const p = M.pedido && M.pedido.id;
   if ((p === 'sinHidro' && h === 'hidro') || (p === 'sinEspuma' && h === 'espuma')) { ayuda(`Ojo: ${M.pedido.quien.toLowerCase()} pidió ${h === 'hidro' ? 'nada de hidrolavadora' : 'ni una gota de espuma'}.`, 5); decir(M.comp, 'Psst… acuérdate de lo que pidió el cliente.'); }
 }
@@ -2290,7 +2362,7 @@ function abrirRueda() {
   const hs = herramientas();
   w.innerHTML = '<div class="centro"></div>' + RUEDA.map((h, i) => {
     const a = -Math.PI / 2 + i * Math.PI / 2, x = 125 + Math.cos(a) * 84, y = 125 + Math.sin(a) * 84;
-    return `<div class="sector ${hs.includes(h) ? '' : 'off'} ${h === M.herr ? 'sel' : ''}" data-h="${h}" style="left:${x}px;top:${y}px">${ICONOS[h]}<small>${HERR[h].n}</small></div>`;
+    return `<div class="sector ${hs.includes(h) ? '' : 'off'} ${h === M.herr ? 'sel' : ''}" data-h="${h}" style="left:${x}px;top:${y}px">${ICONOS[h]}<small>${nHerr(h)}</small></div>`;
   }).join('');
   w.hidden = false; tono(440, .08, .05, 'triangle');
 }
@@ -2339,7 +2411,7 @@ function carta(titulo, texto, opciones, opts = {}) {
       // Cuenta el tiempo real pulsado, aunque el temporizador llegue tarde en un móvil lento.
       let tm = null, t0 = 0; const txt = b.innerHTML, ms = o.mantener * 1000;
       const hecho = () => { clearTimeout(tm); tm = null; o.f(); };
-      b.addEventListener('pointerdown', e => { b.setPointerCapture(e.pointerId); b.textContent = 'Despacio… despacio…'; t0 = performance.now(); tm = setTimeout(hecho, ms); });
+      b.addEventListener('pointerdown', e => { b.setPointerCapture(e.pointerId); b.textContent = L('Despacio… despacio…', 'Easy… easy…'); t0 = performance.now(); tm = setTimeout(hecho, ms); });
       b.addEventListener('pointerup', () => { if (!tm) return; if (performance.now() - t0 >= ms) hecho(); else { clearTimeout(tm); tm = null; b.innerHTML = txt; } });
       b.addEventListener('pointercancel', () => { if (tm) { clearTimeout(tm); tm = null; b.innerHTML = txt; } });
     } else b.onclick = () => o.f();
@@ -2347,7 +2419,7 @@ function carta(titulo, texto, opciones, opts = {}) {
 }
 function cerrarCarta() { evEl.hidden = true; evEl.innerHTML = ''; $('#blancos').innerHTML = ''; if (M) M.ev = null; }
 function resultado(titulo, texto, quien, frase) {
-  carta(titulo, texto, [{ t: 'Seguir', prim: true, f: cerrarCarta }], { bloquea: true });
+  carta(titulo, texto, [{ t: L('Seguir', 'Continue'), prim: true, f: cerrarCarta }], { bloquea: true });
   if (quien) setTimeout(() => decir(quien, frase), 300);
 }
 function dano(t, dinero, rep) { M.danos.push({ t, dinero }); M.repExtra -= rep || 0; }
@@ -2876,7 +2948,7 @@ function tickTurno(dt) {
       emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
-      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5)) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda('¡Salpica! Echa espuma antes en la costra.'); }
+      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5)) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda(L('¡Salpica! Echa espuma antes en la costra.', 'It splatters! Foam the crust first.')); }
       const al = M.eventos.find(x => x.tipo === 'alarma' && !M.hechos.has(x));
       if (q > 0 && al && z.id === 'campana' && azar(dt * .3)) lanzarEvento(al);
     } else if (!M.presionado) chorro(false);
@@ -2967,22 +3039,22 @@ function pintarHud(todo) {
     const b = $('#zonas').children[i], m = micras(z), ok = m <= LIMITE;
     if (z.gotas) { const f = clamp(1 - pctZona(z) * 1.25, 0, 1); for (const g of z.gotas) { g.scale.y = Math.max(.01, f); g.position.y = z.labio.y - g.userData.largo * f / 2; g.visible = f > .02; } }
     b.setAttribute('aria-pressed', i === M.zona); b.classList.toggle('listo', ok);
-    b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}${z.revisar ? ' · ¡revisar!' : z.crew && !z.entregada ? ' · ' + z.crew.n.replace('Tu cuadrilla', 'tu cuadrilla') : z.rev ? ' · revisada' : ''}`;
+    b.lastChild.textContent = `${m.toLocaleString('es-MX')} µm${ok ? ' ✓' : ''}${z.revisar ? L(' · ¡revisar!', ' · check it!') : z.crew && !z.entregada ? ' · ' + z.crew.n.replace('Tu cuadrilla', 'tu cuadrilla').replace('Your crew', 'your crew') : z.rev ? L(' · revisada', ' · checked') : ''}`;
     b.classList.toggle('revisar', !!z.revisar);
     if (ok && !M.listoAvisado.has(i)) {
       M.listoAvisado.add(i); sDing(); vibrar(30);
       if (z.id === 'filtros' && M.tFiltros === null && Z.filter(x => x.id === 'filtros').every(x => micras(x) <= LIMITE)) M.tFiltros = clamp(M.t / M.dur, 0, 1) * 480;
       if (M.listoAvisado.size === Z.length && M.etapa === 'lavar' && !M.danos.length) fanfarria();
-      if (i === M.zona && M.etapa === 'lavar') { ayuda(`${z.n} pasa la inspección. Al final toca pelar y migdalear la campana.`); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
+      if (i === M.zona && M.etapa === 'lavar') { ayuda(L(`${z.n} pasa la inspección. Al final toca pelar y migdalear la campana.`, `${z.n} passes inspection. At the end you peel and polish the hood.`)); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
     }
     if (m <= 50 && !z.espejo && M.etapa === 'lavar') brilloEspejo(z);   // después del aviso de «pasa»: el del espejo es el que se queda
   });
   const g = $('#barraHerr .gasto'); if (g) g.textContent = `${Math.round(M.botella * 100)} %`;
-  $('#siguiente').textContent = M.etapa === 'migdalear' ? 'Llamar al inspector' : M.zona < ultZona() ? `Ir a ${Z[M.zona + 1].n.toLowerCase()}` : 'Terminar de lavar';
+  $('#siguiente').textContent = M.etapa === 'migdalear' ? L('Llamar al inspector', 'Call the inspector') : M.zona < ultZona() ? `${L('Ir a', 'Go to')} ${Z[M.zona + 1].n.toLowerCase()}` : L('Terminar de lavar', 'Finish washing');
   const z = zonaAct(), rb = $('#robotBtn');
   const aqui = M.robot && M.robot.z === z;
   rb.hidden = !(EQ().robot && M.etapa === 'lavar' && z.id === 'ducto' && (aqui ? M.robot.atorado || EQ().robotCam : !M.robot && micras(z) > LIMITE));
-  rb.textContent = !aqui ? '🤖 Mandar el robot' : M.robot.atorado ? '🔧 ¡Se atoró! Rescatarlo' : M.robotCam ? '🎥 Vista normal' : '🎥 Cámara del robot';
+  rb.textContent = !aqui ? L('🤖 Mandar el robot', '🤖 Send the robot') : M.robot.atorado ? L('🔧 ¡Se atoró! Rescatarlo', '🔧 Stuck! Rescue it') : M.robotCam ? L('🎥 Vista normal', '🎥 Normal view') : L('🎥 Cámara del robot', '🎥 Robot camera');
   const pa = pasoActual(); if (M.pasoPintado !== pa) { M.pasoPintado = pa; $('#pasos').innerHTML = pasosHTML(pa); }
   Z.forEach((z, i) => { $('#zonas').children[i].disabled = M.etapa === 'migdalear' && z.id !== 'campana'; });
 }
@@ -3015,23 +3087,23 @@ function confirmarFin() {
 
 // ---- la primera noche: Beto te dice qué hacer, paso por paso
 const TUTO = [
-  { t: 'Pon el dedo sobre la grasa y arrástralo, con pasadas cortas: así raspa la rasqueta.', ok: () => pctZona(zonaAct()) > .12 },
-  { t: 'La grasa oscura es más dura. Toca la espuma, rocíala encima, espera 2 segundos y vuelve a la rasqueta: sale el triple de rápido.', brilla: 'espuma', ok: () => M.usoEspuma },
-  { t: 'Sigue hasta que esta zona baje de 250 µm. Abajo ves cuánto le queda a cada zona.', brilla: 'zonas', ok: () => micras(zonaAct()) <= LIMITE },
-  { t: '¡Esta zona ya pasa la inspección! Cambia a otra con los botones de abajo.', brilla: 'zonas', ok: () => M.zona !== M.tutoZona },
-  { t: 'Limpia todas las zonas. Cuando estén en verde, toca «Terminar de lavar».', brilla: 'siguiente', ok: () => M.etapa !== 'lavar' },
-  { t: 'Ahora pela: arrastra por los puntos para arrancar el plástico, quita las cubiertas y baja la bolsa.', ok: () => M.etapa === 'migdalear' },
-  { t: 'Último paso: migdalea la campana (pasadas sobre el metal limpio) hasta que brille, y luego llama al inspector.', brilla: 'siguiente', ok: () => false },
+  { t: 'Pon el dedo sobre la grasa y arrástralo, con pasadas cortas: así raspa la rasqueta.', en: 'Put your finger on the grease and drag it in short strokes: that is how the scraper works.', ok: () => pctZona(zonaAct()) > .12 },
+  { t: 'La grasa oscura es más dura. Toca la espuma, rocíala encima, espera 2 segundos y vuelve a la rasqueta: sale el triple de rápido.', en: 'Dark grease is harder. Tap the foam, spray it on, wait 2 seconds and go back to the scraper: it comes off three times faster.', brilla: 'espuma', ok: () => M.usoEspuma },
+  { get t() { return `Sigue hasta que esta zona baje de ${LIMITE} µm. Abajo ves cuánto le queda a cada zona.`; }, get en() { return `Keep going until this zone is below ${LIMITE} µm. Below you can see what is left in each zone.`; }, brilla: 'zonas', ok: () => micras(zonaAct()) <= LIMITE },
+  { t: '¡Esta zona ya pasa la inspección! Cambia a otra con los botones de abajo.', en: 'This zone passes inspection now! Switch to another one with the buttons below.', brilla: 'zonas', ok: () => M.zona !== M.tutoZona },
+  { t: 'Limpia todas las zonas. Cuando estén en verde, toca «Terminar de lavar».', en: 'Clean every zone. When they are all green, tap "Finish washing".', brilla: 'siguiente', ok: () => M.etapa !== 'lavar' },
+  { t: 'Ahora pela: arrastra por los puntos para arrancar el plástico, quita las cubiertas y baja la bolsa.', en: 'Now peel: swipe across the dots to tear off the plastic, remove the covers and take down the bag.', ok: () => M.etapa === 'migdalear' },
+  { t: 'Último paso: migdalea la campana (pasadas sobre el metal limpio) hasta que brille, y luego llama al inspector.', en: 'Last step: polish the hood (strokes over the clean metal) until it shines, then call the inspector.', brilla: 'siguiente', ok: () => false },
 ];
 function tickTuto() {
   let paso = TUTO[M.tuto - 1];
   if (paso.ok()) {
     M.tuto++; paso = TUTO[M.tuto - 1]; M.tutoZona = M.zona; sDing();
-    if (M.tuto === 3) decir(M.comp, '¿Viste? La espuma es magia. Magia que pica en los ojos, pero magia.');
-    if (M.tuto === 5) decir(M.comp, 'Vas bien. Mejor que yo en mi primera noche. Yo me pegué a la campana con cinta.');
+    if (M.tuto === 3) decir(M.comp, L('¿Viste? La espuma es magia. Magia que pica en los ojos, pero magia.', 'See? Foam is magic. Magic that stings your eyes, but magic.'));
+    if (M.tuto === 5) decir(M.comp, L('Vas bien. Mejor que yo en mi primera noche. Yo me pegué a la campana con cinta.', 'You are doing great. Better than me on my first night. I taped myself to the hood.'));
   }
   const el = $('#tuto'); el.hidden = false;
-  const txt = `<small>Paso ${M.tuto} de ${TUTO.length}</small>${esc(paso.t)}`;
+  const txt = `<small>${L('Paso', 'Step')} ${M.tuto} ${L('de', 'of')} ${TUTO.length}</small>${esc(L(paso.t, paso.en))}`;
   if (el.dataset.paso !== String(M.tuto)) { el.innerHTML = txt; el.dataset.paso = M.tuto; }
   document.body.dataset.tuto = paso.brilla || '';
 }
@@ -3045,22 +3117,22 @@ function empezarPelado() {
   irVista(VISTAS.pelar); pintarHud(false);
   const faldas = piezas.faldas.filter(f => f.mesh.visible), cubs = piezas.aparatos.filter(a => a.cubierto), bolsas = piezas.bolsas.filter(b => b.hecho);
   const listo = () => faldas.every(f => f.pelada) && cubs.every(a => a.quitada) && bolsas.every(b => b.bajada);
-  const estado = () => `Plástico: ${faldas.filter(f => f.pelada).length} de ${faldas.length} · Cubiertas: ${cubs.filter(a => a.quitada).length} de ${cubs.length} · Bolsas: ${bolsas.filter(b => b.bajada).length} de ${bolsas.length}`;
+  const estado = () => L(`Plástico: ${faldas.filter(f => f.pelada).length} de ${faldas.length} · Cubiertas: ${cubs.filter(a => a.quitada).length} de ${cubs.length} · Bolsas: ${bolsas.filter(b => b.bajada).length} de ${bolsas.length}`, `Plastic: ${faldas.filter(f => f.pelada).length} of ${faldas.length} · Covers: ${cubs.filter(a => a.quitada).length} of ${cubs.length} · Bags: ${bolsas.filter(b => b.bajada).length} of ${bolsas.length}`);
   const act = () => {
     const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado();
     const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(clamp(M.t / M.dur, 0, 1) * 480);
-    const b = $('#prepSig'); if (b) b.textContent = listo() ? 'Siguiente: migdalear la campana' : 'Seguir sin terminar';
+    const b = $('#prepSig'); if (b) b.textContent = listo() ? L('Siguiente: migdalear la campana', 'Next: polish the hood') : L('Seguir sin terminar', 'Skip the rest');
   };
   faldas.forEach(f => marca(f.mesh.position.clone(), '', () => { f.pelada = true; f.mesh.userData.vuela = 1; rasgar(); sumarTiempo(.4); act(); }, true));
-  cubs.forEach(a => marca(a.pos, 'Quitar', () => { a.quitada = true; a.cubierta.userData.sube = .6; rafaga(.25, 900, .08, 'lowpass'); sumarTiempo(EQ().cubiertas ? .5 : 1); act(); }));
-  bolsas.forEach(b => marca(b.pos, 'Bajar la bolsa', () => {
+  cubs.forEach(a => marca(a.pos, L('Quitar', 'Remove'), () => { a.quitada = true; a.cubierta.userData.sube = .6; rafaga(.25, 900, .08, 'lowpass'); sumarTiempo(EQ().cubiertas ? .5 : 1); act(); }));
+  bolsas.forEach(b => marca(b.pos, L('Bajar la bolsa', 'Take down the bag'), () => {
     b.bajada = true; b.mesh.visible = false; sumarTiempo(1.5);
-    if (azar(EQ().bolsa ? .05 : .2)) { emitir(b.pos, 30, 'agua', null, 1.5); tono(200, .4, .1, 'sawtooth', 80); dano('Bolsa derramada al bajarla', 20, 1); decir(M.comp, '¡Chof! Bueno, el suelo también necesitaba agua.'); }
+    if (azar(EQ().bolsa ? .05 : .2)) { emitir(b.pos, 30, 'agua', null, 1.5); tono(200, .4, .1, 'sawtooth', 80); dano(L('Bolsa derramada al bajarla', 'Bag spilled while taking it down'), 20, 1); decir(M.comp, '¡Chof! Bueno, el suelo también necesitaba agua.'); }
     else tono(500, .1, .08, 'triangle');
     act();
   }));
   M.arrastrar = true;
-  panelPrep('Pelar', 'Arrastra el dedo por los puntos para arrancar el plástico, quita las cubiertas y baja la bolsa con cuidado.', estado(), 'Seguir sin terminar', empezarMigdaleo);
+  panelPrep(L('Pelar', 'Peel'), L('Arrastra el dedo por los puntos para arrancar el plástico, quita las cubiertas y baja la bolsa con cuidado.', 'Swipe across the dots to tear off the plastic, remove the covers and take the bag down carefully.'), estado(), L('Seguir sin terminar', 'Skip the rest'), empezarMigdaleo);
   act();
   decir(M.comp, uno(['Lo más satisfactorio de la noche: pelar el plástico.', 'Pela despacito, como un plátano de acero.', 'Si el plástico sale entero, pide un deseo.']));
 }
@@ -3071,7 +3143,7 @@ function empezarMigdaleo() {
   $('#hudAbajo').hidden = false;
   M.zona = Z.findIndex(z => z.id === 'campana'); M.enZona = 0; irVista(Z[M.zona].vista);
   pintarHud(true);
-  ayuda('Migdalea la campana: pasadas sobre el metal limpio hasta que brille como espejo. Cuando acabes, llama al inspector.', 7);
+  ayuda(L('Migdalea la campana: pasadas sobre el metal limpio hasta que brille como espejo. Cuando acabes, llama al inspector.', 'Polish the hood: strokes over the clean metal until it shines like a mirror. When you are done, call the inspector.'), 7);
   decir(M.comp, uno(['Ahora a migdalear. Que se vea hasta el alma.', 'Migdalea bonito, que el dueño se quiere peinar ahí.', 'El toque final. Migdalea como si fuera tu camioneta.']));
 }
 $('#contra').addEventListener('click', () => { audio(); contraataque(); });
@@ -3091,7 +3163,7 @@ $('#radioBtn').addEventListener('click', () => {
   }
   audio(); S.aj.radio = !S.aj.radio; guardar(); pintarRadio();
   if (!S.aj.radio) { M.radioApagada = true; radioEncender(false); if (M.pedido && M.pedido.id === 'musica') decir(M.cliente, '¡No! ¡La música! La campana se pone triste.'); }
-  else if (!S.aj.sonido) ayuda('El sonido está apagado en Ajustes.');
+  else if (!S.aj.sonido) ayuda(L('El sonido está apagado en Ajustes.', 'Sound is off in Settings.'));
   else radioEncender(true);
 });
 
@@ -3147,8 +3219,8 @@ const LECCIONES = [null,
   { chip: 'Noche 2 · Ahora tú solito', txt: 'Otra fácil, pero ya sin instrucciones. A ver qué aprendiste.' },
   { chip: 'Noche 3 · Se pone difícil', txt: 'Grasa quemada, sarro, un gerente con prisa y menos tiempo. Hoy va Lupe contigo.' },
   { chip: 'Noche 4 · El trabajo grande', txt: 'Un food court entero: tres campanas, varios ductos y media empresa trabajando contigo. Angélica reparte.' }];
-const RIGO_EQUIPOS = [{ n: 'Equipo de Nacho', color: '#ffb36b', gente: [{ n: 'Nacho', fuerza: 1.1, cuidado: 3 }, { n: 'Pepa', fuerza: .9, cuidado: 4 }] },
-  { n: 'Las gemelas Rendón', color: '#f497b5', gente: [{ n: 'Rosa Rendón', fuerza: 1, cuidado: 4 }, { n: 'Rita Rendón', fuerza: 1, cuidado: 2 }] }];
+const RIGO_EQUIPOS = [{ n: 'Equipo de Nacho', en: 'Nacho\'s team', color: '#ffb36b', gente: [{ n: 'Nacho', fuerza: 1.1, cuidado: 3 }, { n: 'Pepa', fuerza: .9, cuidado: 4 }] },
+  { n: 'Las gemelas Rendón', en: 'The Rendón twins', color: '#f497b5', gente: [{ n: 'Rosa Rendón', fuerza: 1, cuidado: 4 }, { n: 'Rita Rendón', fuerza: 1, cuidado: 2 }] }];
 function ordenAprendiz(n) {
   const leccion = clamp(n, 1, 4), o = genOrden(leccion === 4 ? 'plaza' : leccion === 3 ? uno(['burger', 'pizza']) : leccion === 2 ? uno(['cafe', 'pizza']) : 'cafe');
   o.leccion = leccion; o.pedido = null;
@@ -3261,15 +3333,15 @@ function prepararNoche() {
 
 // Retos de Don Rigo: aunque ya no es tu jefe, cada semana llama desde el lago con tres retos. Dan reputación y dinero.
 const MISIONES = [
-  { id: 'aprob', t: n => `Aprueba ${n} trabajos tú mismo`, metas: [3, 4], cuenta: c => c.aprobado ? 1 : 0 },
-  { id: 'notaA', t: n => `Saca ${n} notas A o mejor`, metas: [2, 3], cuenta: c => c.n === 'A' || c.n === 'A+' ? 1 : 0 },
-  { id: 'cocina', t: (n, k) => `Aprueba ${n} trabajos en una ${COCINAS[k].n.toLowerCase()}`, metas: [2], cocina: true, cuenta: (c, m) => c.aprobado && c.o.cocina === m.k ? 1 : 0 },
-  { id: 'equipos', t: n => `Que tus otros equipos aprueben ${n} trabajos`, metas: [3, 5], si: () => (S.eq.flota || 0) >= 1, cuenta: c => c.BS.filter(B => B.aprobado).length },
-  { id: 'sinDanos', t: n => `${n} noches aprobadas sin ningún daño`, metas: [2], cuenta: c => c.aprobado && !c.danos ? 1 : 0 },
-  { id: 'duelo', t: () => 'Gánale un duelo a El Cuñado', metas: [1], cuenta: c => c.gana ? 1 : 0 },
-  { id: 'espejo', t: () => 'Deja una cocina en metal desnudo (todo a 50 µm o menos)', metas: [1], cuenta: c => c.espejo ? 1 : 0 },
-  { id: 'temprano', t: () => 'Llama al inspector antes de las 3:00 y aprueba', metas: [1], cuenta: c => c.aprobado && c.finMin <= 300 ? 1 : 0 },
-  { id: 'pedidos', t: n => `Cumple ${n} pedidos especiales de clientes`, metas: [2], cuenta: c => c.pedOk ? 1 : 0 },
+  { id: 'aprob', t: n => L(`Aprueba ${n} trabajos tú mismo`, `Pass ${n} jobs yourself`), metas: [3, 4], cuenta: c => c.aprobado ? 1 : 0 },
+  { id: 'notaA', t: n => L(`Saca ${n} notas A o mejor`, `Get ${n} grades of A or better`), metas: [2, 3], cuenta: c => c.n === 'A' || c.n === 'A+' ? 1 : 0 },
+  { id: 'cocina', t: (n, k) => L(`Aprueba ${n} trabajos en una ${COCINAS[k].n.toLowerCase()}`, `Pass ${n} jobs at a ${EN.cocina[k].toLowerCase()}`), metas: [2], cocina: true, cuenta: (c, m) => c.aprobado && c.o.cocina === m.k ? 1 : 0 },
+  { id: 'equipos', t: n => L(`Que tus otros equipos aprueben ${n} trabajos`, `Have your other teams pass ${n} jobs`), metas: [3, 5], si: () => (S.eq.flota || 0) >= 1, cuenta: c => c.BS.filter(B => B.aprobado).length },
+  { id: 'sinDanos', t: n => L(`${n} noches aprobadas sin ningún daño`, `${n} passed nights without any damage`), metas: [2], cuenta: c => c.aprobado && !c.danos ? 1 : 0 },
+  { id: 'duelo', t: () => L('Gánale un duelo a El Cuñado', 'Win a duel against El Cuñado'), metas: [1], cuenta: c => c.gana ? 1 : 0 },
+  { id: 'espejo', t: () => L('Deja una cocina en metal desnudo (todo a 50 µm o menos)', 'Leave a kitchen at bare metal (everything at 50 µm or less)'), metas: [1], cuenta: c => c.espejo ? 1 : 0 },
+  { id: 'temprano', t: () => L('Llama al inspector antes de las 3:00 y aprueba', 'Call the inspector before 3:00 and pass'), metas: [1], cuenta: c => c.aprobado && c.finMin <= 300 ? 1 : 0 },
+  { id: 'pedidos', t: n => L(`Cumple ${n} pedidos especiales de clientes`, `Fulfill ${n} special client requests`), metas: [2], cuenta: c => c.pedOk ? 1 : 0 },
 ];
 const RIGO_RETO = ['Te tengo tres retos para esta semana. Si los cumples, te recomiendo con mis compadres. Si no, también, pero con menos ganas.', 'Aquí en el lago no pica nada, así que pensé en ti. Tres retos. Ándale.', 'Beto me dijo que estás muy cómodo. Te mando tres retos para que se te quite.', 'Esta semana quiero ver de qué estás hecho. Te dejo tres retos y me voy a pescar.'];
 function misionesHoy() {
@@ -3297,9 +3369,9 @@ const textoMision = x => { const m = MISIONES.find(y => y.id === x.id); return m
 function tarjetaMisiones() {
   if (!S.mis) return '';
   const quedan = 7 - (S.noche - S.abierta) % 7;
-  return `<div class="retos misiones"><b>📞 Retos de Don Rigo · ${quedan === 1 ? 'última noche' : `quedan ${quedan} noches`}</b><small>«${esc(S.mis.frase)}»</small>
+  return `<div class="retos misiones"><b>📞 ${L('Retos de Don Rigo', 'Don Rigo\'s challenges')} · ${quedan === 1 ? L('última noche', 'last night') : L(`quedan ${quedan} noches`, `${quedan} nights left`)}</b><small>«${esc(S.mis.frase)}»</small>
     ${S.mis.lista.map(x => `<span class="${x.hecho ? 'ok' : ''}">${x.hecho ? '★' : '☆'} ${esc(textoMision(x))} <i>${x.prog}/${x.meta}</i> <em>+${x.rep} rep · ${dinero(x.dinero)}</em></span>`).join('')}
-    <small>Los tres: +5 de reputación extra${S.mis.todo ? ' (¡conseguido!)' : ''}.</small></div>`;
+    <small>${L('Los tres: +5 de reputación extra', 'All three: +5 bonus reputation')}${S.mis.todo ? L(' (¡conseguido!)', ' (done!)') : ''}.</small></div>`;
 }
 
 // Reto de fin de semana: viernes, sábado y domingo, tres cocinas gigantes seguidas con solo dos equipos de apoyo.
@@ -3322,10 +3394,10 @@ function aceptarFinde() {
 }
 function tarjetaFinde() {
   const H = S.hoy;
-  if (H.findeOferta) return `<div class="orden finde"><span class="chip naranja">Reto de fin de semana</span><h3>Tres gigantes, dos equipos</h3>
-    <p class="nota">Viernes, sábado y domingo: una cocina gigante cada noche, seguidas, y solo puedes llevar <b>dos equipos</b> de apoyo. Si apruebas las tres: ${dinero(FINDE_PREMIO)} de premio, +10 de reputación y una medalla. Si fallas una, se acaba el reto (lo cobrado se queda).</p>
-    <div class="acciones"><button class="btn prim peq" id="findeSi">Aceptar el reto</button><button class="btn peq" id="findeNo">Este fin no</button></div></div>`;
-  if (S.finde) return `<div class="retos finde"><b>Reto de fin de semana · ${FINDE_DIAS[Math.min(2, S.finde.paso)]} (${S.finde.paso + 1} de 3)</b>${FINDE_DIAS.map((d, i) => `<span class="${S.finde.notas[i] ? 'ok' : ''}">${S.finde.notas[i] ? '★ ' + d + ': ' + S.finde.notas[i] : '☆ ' + d}</span>`).join('')}<small>Solo dos equipos pueden ayudarte. Si hoy haces otro trabajo, pierdes el reto.</small></div>`;
+  if (H.findeOferta) return `<div class="orden finde"><span class="chip naranja">${L('Reto de fin de semana', 'Weekend challenge')}</span><h3>${L('Tres gigantes, dos equipos', 'Three giants, two teams')}</h3>
+    <p class="nota">${L(`Viernes, sábado y domingo: una cocina gigante cada noche, seguidas, y solo puedes llevar <b>dos equipos</b> de apoyo. Si apruebas las tres: ${dinero(FINDE_PREMIO)} de premio, +10 de reputación y una medalla. Si fallas una, se acaba el reto (lo cobrado se queda).`, `Friday, Saturday and Sunday: one giant kitchen each night, in a row, and you can only bring <b>two support teams</b>. Pass all three: ${dinero(FINDE_PREMIO)} prize, +10 reputation and a medal. Fail one and the challenge is over (you keep what you earned).`)}</p>
+    <div class="acciones"><button class="btn prim peq" id="findeSi">${L('Aceptar el reto', 'Accept the challenge')}</button><button class="btn peq" id="findeNo">${L('Este fin no', 'Not this weekend')}</button></div></div>`;
+  if (S.finde) return `<div class="retos finde"><b>${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[Math.min(2, S.finde.paso)], EN.dias[Math.min(2, S.finde.paso)])} (${S.finde.paso + 1} ${L('de', 'of')} 3)</b>${FINDE_DIAS.map((d0, i) => L(d0, EN.dias[i])).map((d, i) => `<span class="${S.finde.notas[i] ? 'ok' : ''}">${S.finde.notas[i] ? '★ ' + d + ': ' + S.finde.notas[i] : '☆ ' + d}</span>`).join('')}<small>${L('Solo dos equipos pueden ayudarte. Si hoy haces otro trabajo, pierdes el reto.', 'Only two teams can help you. If you do another job tonight, you lose the challenge.')}</small></div>`;
   return '';
 }
 
@@ -3338,12 +3410,12 @@ function tableroRigo() {
   const H = S.hoy, o = H.ordenes[0], n = S.noche, filas = [];
   const rest = k => { const ks = Object.keys(COCINAS).filter(c => !COCINAS[c].gigante); const c = COCINAS[ks[hashTxt('r' + n + k) % ks.length]]; return c.nombres[hashTxt('n' + n + k) % c.nombres.length]; };
   RIGO_VANS.forEach(([van, col], i) => {
-    const tuya = i === 0, quien = tuya ? `Tú y ${COMPANEROS[H.comp] ? COMPANEROS[H.comp].n : 'Beto'}` : RIGO_GENTE[(i - 1 + n) % RIGO_GENTE.length];
-    const dest = tuya ? o.nombre : o.gigante && i <= 2 ? o.nombre + ' (contigo)' : rest(i);
+    const tuya = i === 0, quien = tuya ? `${L('Tú y', 'You and')} ${COMPANEROS[H.comp] ? COMPANEROS[H.comp].n : 'Beto'}` : RIGO_GENTE[(i - 1 + n) % RIGO_GENTE.length];
+    const dest = tuya ? o.nombre : o.gigante && i <= 2 ? o.nombre + L(' (contigo)', ' (with you)') : rest(i);
     filas.push(`<div class="fila-tab ${tuya ? 'tuya' : ''}"><span class="hora">${hora(i * 20)}</span><i style="background:${col}"></i><b>${van}</b><span>${esc(quien)}</span><span class="dest">→ ${esc(dest)}</span></div>`);
   });
-  return `<div class="tablero"><div class="jefe">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora de Grasa Brava</b>${esc(ANGELICA_DICE[clamp(n, 1, 4)])}</div></div>
-    <div class="fila"><b>Horario de esta noche</b><span class="nota">5 camionetas · 12 trabajadores · ${o.gigante ? 4 : 5} restaurantes</span></div>${filas.join('')}</div>`;
+  return `<div class="tablero"><div class="jefe">${cara(ANGELICA.color, 'A')}<div><b>Angélica · ${L('coordinadora de Grasa Brava', 'Grasa Brava coordinator')}</b>${esc(ANGELICA_DICE[clamp(n, 1, 4)])}</div></div>
+    <div class="fila"><b>${L('Horario de esta noche', 'Tonight\'s schedule')}</b><span class="nota">${L(`5 camionetas · 12 trabajadores · ${o.gigante ? 4 : 5} restaurantes`, `5 vans · 12 workers · ${o.gigante ? 4 : 5} restaurants`)}</span></div>${filas.join('')}</div>`;
 }
 
 // El mapa de la ciudad: dónde están esta noche tu camioneta y las de tus equipos.
@@ -3357,15 +3429,15 @@ function mapaCiudad() {
   const ayudan = (H.equipos || []).map((e, k) => e.o === 'mio' ? k + 1 : 0).filter(Boolean);
   const calles = [...[30, 64, 98, 132].map(y => `<path d="M0 ${y}H${W}"/>`), ...[40, 100, 160, 220, 280].map(x => `<path d="M${x} 0V${Hh}"/>`)].join('');
   const van = (k, [x, y]) => `<g class="van"><rect x="-7" y="-4" width="14" height="8" rx="2" fill="${COL_EQ[k]}" stroke="#0b1117" stroke-width="1"/><animateMotion dur="${(3 + k * .4).toFixed(1)}s" fill="freeze" path="M${base[0]} ${base[1]}L${x} ${y}"/></g>`;
-  return `<div class="mapa"><div class="fila"><b>La ciudad esta noche</b><span class="nota">Toca un trabajo para elegirlo</span></div>
-    <svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Mapa de la ciudad con tus trabajos">
+  return `<div class="mapa"><div class="fila"><b>${L('La ciudad esta noche', 'The city tonight')}</b><span class="nota">${L('Toca un trabajo para elegirlo', 'Tap a job to pick it')}</span></div>
+    <svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${L('Mapa de la ciudad con tus trabajos', 'City map with your jobs')}">
       <rect width="${W}" height="${Hh}" fill="#141e27"/><g stroke="#24313d" stroke-width="5">${calles}</g><path d="M0 150Q120 128 200 156T${W} 146" stroke="#1d3a52" stroke-width="9" fill="none"/>
-      <g transform="translate(${base[0]} ${base[1]})"><rect x="-13" y="-10" width="26" height="20" rx="3" fill="#2a3946" stroke="#ffd23f" stroke-width="1.5"/><text y="4" text-anchor="middle" font-size="9" fill="#ffd23f">TALLER</text></g>
+      <g transform="translate(${base[0]} ${base[1]})"><rect x="-13" y="-10" width="26" height="20" rx="3" fill="#2a3946" stroke="#ffd23f" stroke-width="1.5"/><text y="4" text-anchor="middle" font-size="9" fill="#ffd23f">${L('TALLER', 'SHOP')}</text></g>
       ${H.ordenes.map((o, i) => { const [x, y] = pos[i], q = quien[i], col = q >= 0 ? COL_EQ[q] : o.firmado ? '#9aa7b2' : '#56636e';
         return `<g data-o="${i}" class="pin" style="cursor:pointer"><circle cx="${x}" cy="${y}" r="${o.gigante ? 11 : 8}" fill="${col}" stroke="#0b1117" stroke-width="2" ${q >= 0 ? '' : 'opacity=".75"'}/><text x="${x}" y="${y + 3.5}" text-anchor="middle" font-size="${o.gigante ? 11 : 9}" fill="#0b1117" font-weight="700">${o.finde ? '★' : o.gigante ? 'G' : o.clienteId ? 'F' : i + 1}</text></g>`; }).join('')}
       ${quien.map((q, i) => q >= 0 ? van(q, [pos[i][0], pos[i][1] + 15]) : '').join('')}${ayudan.map((k, j) => van(k, pos[H.sel] ? [pos[H.sel][0] + (j % 2 ? 1 : -1) * (16 + 14 * Math.floor(j / 2)), pos[H.sel][1] + 15] : base)).join('')}
     </svg>
-    <div class="leyenda"><span><i style="background:${COL_EQ[0]}"></i>Tú</span>${(H.equipos || []).map((e, k) => e.o !== null && e.o !== undefined ? `<span><i style="background:${COL_EQ[k + 1]}"></i>Equipo ${k + 2}${e.o === 'mio' ? ' (contigo)' : ''}</span>` : '').join('')}<span><i style="background:#56636e"></i>Sin firmar</span><span>G gigante · F cliente fijo</span></div></div>`;
+    <div class="leyenda"><span><i style="background:${COL_EQ[0]}"></i>${L('Tú', 'You')}</span>${(H.equipos || []).map((e, k) => e.o !== null && e.o !== undefined ? `<span><i style="background:${COL_EQ[k + 1]}"></i>${L('Equipo', 'Team')} ${k + 2}${e.o === 'mio' ? L(' (contigo)', ' (with you)') : ''}</span>` : '').join('')}<span><i style="background:#56636e"></i>${L('Sin firmar', 'Not signed')}</span><span>${L('G gigante · F cliente fijo', 'G giant · F regular client')}</span></div></div>`;
 }
 
 // ------------------------------------------------------------------ pantallas
@@ -3410,12 +3482,12 @@ function furgo(nombre, color, et) {
 function cabecera() {
   const need = xpNivel(S.nivel), aprendiz = S.fase === 'aprendiz';
   return `${aprendiz ? '<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>'
-      : `<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(S.empresa.nombre)}<span>${ETAPAS[S.etapa].n}</span></div></div>`}
+      : `<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(S.empresa.nombre)}<span>${nEtapa(S.etapa)}</span></div></div>`}
     <div class="datos">
-      <div class="dato"><i>Noche</i><b>${S.noche}</b>${aprendiz ? `<small>Aprendiz: ${Math.min(S.noche, APRENDIZ)} de ${APRENDIZ}</small>` : ''}</div>
-      <div class="dato"><i>Tu dinero</i><b>${dinero(S.dinero)}</b></div>
-      <div class="dato"><i>Reputación${aprendiz ? ' de Grasa Brava' : ''}</i><b>${S.rep}</b><small>${fama(S.rep)} · pagos ×${multPago().toFixed(2)}</small></div>
-      <div class="dato"><i>Nivel</i><b>${S.nivel}</b><div class="barra" title="Experiencia"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></div>
+      <div class="dato"><i>${L('Noche', 'Night')}</i><b>${S.noche}</b>${aprendiz ? `<small>${L('Aprendiz', 'Apprentice')}: ${Math.min(S.noche, APRENDIZ)} ${L('de', 'of')} ${APRENDIZ}</small>` : ''}</div>
+      <div class="dato"><i>${L('Tu dinero', 'Your money')}</i><b>${dinero(S.dinero)}</b></div>
+      <div class="dato"><i>${L(`Reputación${aprendiz ? ' de Grasa Brava' : ''}`, `${aprendiz ? 'Grasa Brava ' : ''}Reputation`)}</i><b>${S.rep}</b><small>${fama(S.rep)} · ${L('pagos', 'pay')} ×${multPago().toFixed(2)}</small></div>
+      <div class="dato"><i>${L('Nivel', 'Level')}</i><b>${S.nivel}</b><div class="barra" title="${L('Experiencia', 'Experience')}"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></div>
     </div>`;
 }
 
@@ -3429,14 +3501,14 @@ function pantallaCamioneta() {
   findeHoy(); misionesHoy();
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
-  const tabs = S.fase === 'aprendiz' ? [['noche', 'Esta noche'], ['taller', 'Taller'], ['logros', 'Logros y álbum']] : [['noche', 'Noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller'], ['logros', 'Logros']];
+  const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros y álbum', 'Awards & album')]] : [['noche', L('Noche', 'Night')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
   if (!tabs.some(t => t[0] === tab)) tab = 'noche';
   pantalla(`${cabecera()}
-    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? 'Don Rigo, por la radio' : 'Don Rigo, desde el lago'}</b>${esc(H.frase)}</div></div>
-    ${H.avisos.length ? `<div class="cita"><b>Noticias del barrio</b>${esc(H.avisos.join(' '))}</div>` : ''}
+    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b>${esc(H.frase)}</div></div>
+    ${H.avisos.length ? `<div class="cita"><b>${L('Noticias del barrio', 'Neighborhood news')}</b>${esc(H.avisos.join(' '))}</div>` : ''}
     <nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
     ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}
-    <div class="acciones"><button class="btn" id="ajustes">Ajustes</button></div>`);
+    <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div>`);
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
   enlazar();
@@ -3446,14 +3518,14 @@ function tarjetaOrden(o, i) {
   const C = COCINAS[o.cocina], H = S.hoy;
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(LECCIONES[o.leccion].chip)}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]}</span>` : ''}${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? 'Revancha: recupera al cliente' : 'Duelo con El Cuñado'}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? '<span class="chip mal">El Cuñado lo tienta: saca B o mejor</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${NOMBRE_SUC[t]}</span>`).join('')}</div>
-    <h3>${esc(o.nombre)}</h3>${o.leccion ? `<span class="pista">${esc(LECCIONES[o.leccion].txt)}</span>` : ''}${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(h.n)}: capítulo ${(c.cap || 0) + 1} de ${h.caps.length}</span>` : ''; })()}
-    <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + ' campanas · ' : ''}${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
-    ${o.pedido ? `<span class="pedido"><b>${esc(pedido(o.pedido).quien)}:</b> «${esc(pedido(o.pedido).txt)}»${pedido(o.pedido).premio ? ` <i>Si cumples: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
-    ${o.duelo ? `<span class="aviso">${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.</span>` : ''}
-    ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(PISTAS[e])}</span>`).join('') : '<span class="pista">Todo tranquilo. Sospechoso.</span>'}
-    <span class="nota">${o.gigante ? `Trabajo gigante: ${o.campanas} campanas, ${o.ductos} ductos y ${o.filtros} filtros. Manda equipos a ayudarte, repártelos y revisa lo que entreguen.` : `Gente sugerida: ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'}.`}</span>
-    ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}</span>` : ''}
+    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
+    <h3>${esc(o.nombre)}</h3>${o.leccion ? `<span class="pista">${esc(L(LECCIONES[o.leccion].txt, EN.leccion[o.leccion][1]))}</span>` : ''}${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(h.n)}: ${L('capítulo', 'chapter')} ${(c.cap || 0) + 1} ${L('de', 'of')} ${h.caps.length}</span>` : ''; })()}
+    <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + L(' campanas · ', ' hoods · ') : ''}${L(`${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros`, `${EN.campana[o.hood.tipo]}, ${o.hood.ancho.toFixed(1)} m · ${EN.ducto[o.ducto.forma]}, ${o.ducto.largo} m · ${o.filtros} filters`)} · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
+    ${o.pedido ? `<span class="pedido"><b>${esc(pedido(o.pedido).quien)}:</b> «${esc(pedido(o.pedido).txt)}»${pedido(o.pedido).premio ? ` <i>${L('Si cumples', 'If you deliver')}: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
+    ${o.duelo ? `<span class="aviso">${L(`${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.`, `${RIVAL} wants this client too: he will clean the same kitchen at the same time as you. If he finishes first, you get paid half.`)}</span>` : ''}
+    ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(L(PISTAS[e], EN.pista[e]))}</span>`).join('') : `<span class="pista">${L('Todo tranquilo. Sospechoso.', 'All quiet. Suspicious.')}</span>`}
+    <span class="nota">${o.gigante ? L(`Trabajo gigante: ${o.campanas} campanas, ${o.ductos} ductos y ${o.filtros} filtros. Manda equipos a ayudarte, repártelos y revisa lo que entreguen.`, `Giant job: ${o.campanas} hoods, ${o.ductos} ducts and ${o.filtros} filters. Send teams to help you, assign the zones and check what they deliver.`) : L(`Gente sugerida: ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'}.`, `Suggested crew: ${sugerido(o)} ${sugerido(o) === 1 ? 'person' : 'people'}.`)}</span>
+    ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">${L(`Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}`, `Needs ${o.ayud} ${o.ayud === 1 ? 'helper' : 'helpers'} besides your partner.${faltanAyud > 0 ? ' You are ' + faltanAyud + ' short.' : ''}`)}</span>` : ''}
   </button>`;
 }
 
@@ -3462,19 +3534,20 @@ const sugerido = o => clamp(Math.round(o.micras / 1800 * o.campanas * (1 + o.fil
 const hayB = () => S.fase === 'empresa' && (S.eq.flota || 0) > 0;
 function extrasOrden(o, i) {
   const H = S.hoy, b = [];
-  if (!o.firmado) { b.push(`<button class="btn prim peq" data-firmar="${i}">Firmar contrato · ${dinero(o.pago)}</button>`); if (o.caracter) b.push(`<button class="btn peq" data-neg="${i}">Negociar · ${CARACTER[o.caracter].n.toLowerCase()}</button>`); }
-  else if (!o.clienteId && S.fase === 'empresa') b.push(`<span class="chip ok">Contrato firmado${o.negociado ? ' · precio negociado' : ''}</span>`);
-  if (o.garantia) b.push(`<span class="chip naranja">Garantía de A</span>`);
+  if (!o.firmado) { b.push(`<button class="btn prim peq" data-firmar="${i}">${L('Firmar contrato', 'Sign contract')} · ${dinero(o.pago)}</button>`); if (o.caracter) b.push(`<button class="btn peq" data-neg="${i}">${L('Negociar', 'Negotiate')} · ${L(CARACTER[o.caracter].n, EN.trato[o.caracter][0]).toLowerCase()}</button>`); }
+  else if (!o.clienteId && S.fase === 'empresa') b.push(`<span class="chip ok">${L('Contrato firmado', 'Contract signed')}${o.negociado ? L(' · precio negociado', ' · negotiated price') : ''}</span>`);
+  if (o.garantia) b.push(`<span class="chip naranja">${L('Garantía de A', 'A guaranteed')}</span>`);
   const k = (H.equipos || []).findIndex(e => e.o === i);
-  if (k >= 0) b.push(`<span class="chip ok">Va el equipo ${k + 2}</span>`);
+  if (k >= 0) b.push(`<span class="chip ok">${L(`Va el equipo ${k + 2}`, `Team ${k + 2} goes`)}</span>`);
   return b.length ? `<div class="tras-orden">${b.join(' ')}</div>` : '';
 }
 function tarjetaEtapa(sig) {
   const listo = S.rep >= sig.rep, falta = sig.compra - S.dinero;
-  return `<div class="rango"><div class="fila"><b>Siguiente etapa: ${sig.n}</b><span class="pago">${dinero(sig.compra)}</span></div>
-    <span class="nota">${esc(sig.txt)}</span>
-    ${listo ? `<div class="acciones"><button class="btn prim" id="saltar" ${falta > 0 ? 'disabled' : ''}>Dar el salto</button></div>${falta > 0 ? `<span class="nota">Te faltan ${dinero(falta)}.</span>` : ''}`
-      : `<span class="aviso">Necesitas reputación ${sig.rep} (tienes ${S.rep}).</span>`}</div>`;
+  const i = ETAPAS.indexOf(sig);
+  return `<div class="rango"><div class="fila"><b>${L('Siguiente etapa', 'Next stage')}: ${nEtapa(i)}</b><span class="pago">${dinero(sig.compra)}</span></div>
+    <span class="nota">${esc(tEtapa(i))}</span>
+    ${listo ? `<div class="acciones"><button class="btn prim" id="saltar" ${falta > 0 ? 'disabled' : ''}>${L('Dar el salto', 'Level up')}</button></div>${falta > 0 ? `<span class="nota">${L('Te faltan', 'You need')} ${dinero(falta)}${L('.', ' more.')}</span>` : ''}`
+      : `<span class="aviso">${L(`Necesitas reputación ${sig.rep} (tienes ${S.rep}).`, `You need ${sig.rep} reputation (you have ${S.rep}).`)}</span>`}</div>`;
 }
 
 function vNoche() {
@@ -3482,48 +3555,48 @@ function vNoche() {
   const o = H.ordenes[H.sel], bloqueada = o && (o.ayud > H.ayud.length || !o.firmado);
   const sig = !aprendiz && ETAPAS[S.etapa + 1];
   const dia = H.dia && DIAS.find(x => x.id === H.dia.id);
-  return `${dia ? `<div class="orden dia"><span class="chip naranja">Antes de salir</span><h3>${esc(dia.t)}</h3><p>${esc(dia.txt)}</p>
-      ${H.dia.res ? `<div class="cita"><b>Qué pasó</b>${esc(H.dia.res)}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(op.t)}<small>${esc(op.d)}</small></button>`).join('')}</div>`}</div>` : ''}
+  return `${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(dia.t)}</h3><p>${esc(dia.txt)}</p>
+      ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(H.dia.res)}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(op.t)}<small>${esc(op.d)}</small></button>`).join('')}</div>`}</div>` : ''}
     ${sig ? tarjetaEtapa(sig) : ''}
-    ${H.retos && H.retos.length ? `<div class="retos"><b>Retos de esta noche</b>${H.retos.map(id => `<span>☆ ${esc(reto(id).t)}</span>`).join('')}<small>Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.</small></div>` : ''}
+    ${H.retos && H.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${H.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}<small>${L(`Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.`, `Each one gives a star. You have ${S.estrellas || 0} ★.`)}</small></div>` : ''}
     ${aprendiz ? tableroRigo() : tarjetaMisiones() + tarjetaFinde()}
     ${aprendiz ? '' : mapaCiudad()}
-    <h2 class="sec">${aprendiz ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
-    ${!aprendiz ? `<p class="nota">Solicitudes de esta noche: ${H.ordenes.filter(x => !x.clienteId).length}. Con más reputación te llaman más; si no, sal a buscar clientes en «Clientes». Cada trabajo se hace con contrato firmado.</p>` : ''}
-    ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || '<p class="nota">No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.</p>'}
-    <h2 class="sec">${aprendiz ? 'Tu compañero esta noche' : 'Con quién vas'}</h2>
+    <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}</h2>
+    ${!aprendiz ? `<p class="nota">${L(`Solicitudes de esta noche: ${H.ordenes.filter(x => !x.clienteId).length}. Con más reputación te llaman más; si no, sal a buscar clientes en «Clientes». Cada trabajo se hace con contrato firmado.`, `Requests tonight: ${H.ordenes.filter(x => !x.clienteId).length}. More reputation brings more calls; otherwise, go find clients in "Clients". Every job needs a signed contract.`)}</p>` : ''}
+    ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
+    <h2 class="sec">${aprendiz ? L('Tu compañero esta noche', 'Your partner tonight') : L('Con quién vas', 'Who goes with you')}</h2>
     <div class="companeros">${(aprendiz ? Object.entries(COMPANEROS) : [['solo', SOLO], ...Object.entries(COMPANEROS)]).map(([id, c]) => {
       const falta = !aprendiz && id !== 'solo' && !S.fijos.includes(id);
-      const txt = id === 'solo' ? 'Sin compañero: no hay sueldo que pagar, pero todo lo limpias tú. El turno dura un poco más.'
-        : falta ? (etapa() < c.etapa ? 'Busca trabajo desde la etapa ' + ETAPAS[c.etapa].n + '.' : 'Contrátalo en «Cuadrilla».') : esc(c.rasgo) + (aprendiz ? '' : ` ${dinero(c.sueldo)} por noche.`);
-      return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${id === 'solo' ? 'Yo solo' : c.n}</b><span>${txt}</span></div></button>`;
+      const txt = id === 'solo' ? L('Sin compañero: no hay sueldo que pagar, pero todo lo limpias tú. El turno dura un poco más.', 'No partner: no wages to pay, but you clean everything yourself. The shift lasts a bit longer.')
+        : falta ? (etapa() < c.etapa ? L('Busca trabajo desde la etapa ', 'Looking for work from the stage ') + nEtapa(c.etapa) + '.' : L('Contrátalo en «Cuadrilla».', 'Hire them in "Crew".')) : esc(L(c.rasgo, (EN.comp[id] || [])[1])) + (aprendiz ? '' : ` ${dinero(c.sueldo)} ${L('por noche', 'per night')}.`);
+      return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${id === 'solo' ? L('Yo solo', 'Just me') : c.n}</b><span>${txt}</span></div></button>`;
     }).join('')}</div>
-    ${S.cuadrilla.length ? `<h2 class="sec">Ayudantes en la camioneta · ${H.ayud.length} de ${plazas}</h2>
-      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${ESPECIAL[c.esp] ? 'bueno en ' + ESPECIAL[c.esp] + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
+    ${S.cuadrilla.length ? `<h2 class="sec">${L('Ayudantes en la camioneta', 'Helpers in the van')} · ${H.ayud.length} ${L('de', 'of')} ${plazas}</h2>
+      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${L('Fuerza', 'Strength')} ${Math.round(c.fuerza * 100)} · ${ESPECIAL[c.esp] ? L('bueno en ', 'good at ') + L(ESPECIAL[c.esp], EN.esp[c.esp]) + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     ${vEquipoB()}
-    ${o && !o.firmado ? '<p class="aviso">Primero firma el contrato del trabajo que elegiste.</p>' : ''}
-    <div class="barra-salir"><div><b>${o ? esc(o.nombre) : 'Elige un trabajo'}</b><span class="nota">${o ? `${dinero(o.pago)} · ${H.comp === 'solo' ? 'tú solo' : esc((COMPANEROS[H.comp] || SOLO).n)}${H.ayud.length ? ` + ${H.ayud.length}` : ''}${hayB() ? ` · ${(H.equipos || []).filter(e => e.o !== null).length} equipos fuera` : ''}` : ''}</span></div><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
-    ${dia && !H.dia.res ? '<p class="nota">Si sales sin decidir lo de la camioneta, se resuelve solo. Más o menos.</p>' : ''}
-    <p class="nota">${aprendiz ? `Don Rigo te paga ${dinero(SUELDO_APRENDIZ)} por noche, ${dinero(40)} más si apruebas, y la propina es tuya. Los daños los paga él (y te los recuerda).` : 'Cobras el trabajo entero, pero pagas gasolina, sueldos y daños.'}${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}</p>`;
+    ${o && !o.firmado ? `<p class="aviso">${L('Primero firma el contrato del trabajo que elegiste.', 'First sign the contract for the job you picked.')}</p>` : ''}
+    <div class="barra-salir"><div><b>${o ? esc(o.nombre) : L('Elige un trabajo', 'Pick a job')}</b><span class="nota">${o ? `${dinero(o.pago)} · ${H.comp === 'solo' ? L('tú solo', 'just you') : esc((COMPANEROS[H.comp] || SOLO).n)}${H.ayud.length ? ` + ${H.ayud.length}` : ''}${hayB() ? ` · ${(H.equipos || []).filter(e => e.o !== null).length} ${L('equipos fuera', 'teams out')}` : ''}` : ''}</span></div><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>${L('Salir a trabajar', 'Go to work')}</button></div>
+    ${dia && !H.dia.res ? `<p class="nota">${L('Si sales sin decidir lo de la camioneta, se resuelve solo. Más o menos.', 'If you leave without deciding about the van, it sorts itself out. More or less.')}</p>` : ''}
+    <p class="nota">${aprendiz ? L(`Don Rigo te paga ${dinero(SUELDO_APRENDIZ)} por noche, ${dinero(40)} más si apruebas, y la propina es tuya. Los daños los paga él (y te los recuerda).`, `Don Rigo pays you ${dinero(SUELDO_APRENDIZ)} a night, ${dinero(40)} more if you pass, and you keep the tips. He pays for the damage (and reminds you about it).`) : L('Cobras el trabajo entero, pero pagas gasolina, sueldos y daños.', 'You get paid for the whole job, but you pay for gas, wages and damage.')}${S.mejor ? ` ${L('Mejor noche', 'Best night')}: ${dinero(S.mejor)}.` : ''}</p>`;
 }
 
 // Negociar el precio antes de aceptar un trabajo. Si insistes de más, el cliente se va con El Cuñado.
 function pantallaNegociar(i, msg) {
   const H = S.hoy, o = H.ordenes[i], C = CARACTER[o.caracter];
   if (o.pac === undefined) o.pac = C.pac;
-  const prob = p => p >= .7 ? 'Seguramente acepta' : p >= .4 ? 'Puede que sí, puede que no' : 'Difícil';
+  const prob = p => p >= .7 ? L('Seguramente acepta', 'Will probably accept') : p >= .4 ? L('Puede que sí, puede que no', 'Maybe yes, maybe no') : L('Difícil', 'Unlikely');
   const intento = (o.intentos || 0) * .1, gar = C.garantia || 1.3;
-  pantalla(`<div class="rotulo">Negociar<span>${esc(o.nombre)}</span></div>
-    <div class="jefe">${cara('#e9e9e9', o.nombre[0])}<div><b>${C.n} · paciencia ${'●'.repeat(Math.max(0, o.pac))}${'○'.repeat(Math.max(0, C.pac - o.pac))}</b>${esc(msg || C.hola)}</div></div>
-    <p class="nota">${esc(C.txt)}</p>
-    <div class="fila"><span>Oferta de ahora</span><span class="pago">${dinero(o.pago)}</span></div>
+  pantalla(`<div class="rotulo">${L('Negociar', 'Negotiate')}<span>${esc(o.nombre)}</span></div>
+    <div class="jefe">${cara('#e9e9e9', o.nombre[0])}<div><b>${L(C.n, EN.trato[o.caracter][0])} · ${L('paciencia', 'patience')} ${'●'.repeat(Math.max(0, o.pac))}${'○'.repeat(Math.max(0, C.pac - o.pac))}</b>${esc(msg || C.hola)}</div></div>
+    <p class="nota">${esc(L(C.txt, EN.trato[o.caracter][1]))}</p>
+    <div class="fila"><span>${L('Oferta de ahora', 'Current offer')}</span><span class="pago">${dinero(o.pago)}</span></div>
     <div class="opciones neg">
-      <button class="btn prim" data-n="ok">Firmar por ${dinero(o.pago)}<small>Trato hecho. Apretón de manos con grasa.</small></button>
-      ${o.contra ? `<button class="btn" data-n="contra">Aceptar su contraoferta: ${dinero(o.contra)}<small>Ni tú ni yo.</small></button>` : ''}
-      <button class="btn" data-n="15">Pedir un 15 % más: ${dinero(r10(o.pago * 1.15))}<small>${prob(C.p15 - intento)}. Si dice que no, pierde paciencia.</small></button>
-      <button class="btn" data-n="30">Pedir un 30 % más: ${dinero(r10(o.pago * 1.3))}<small>${prob(C.p30 - intento)}. Arriesgado.</small></button>
-      ${o.garantia ? '' : `<button class="btn" data-n="gar">Garantizar una A: ${dinero(r10(o.pago * gar))}<small>Si el inspector no pone A o A+, devuelves el 30 % y pierdes reputación.</small></button>`}
-      <button class="btn" data-n="volver">Pensarlo<small>Volver sin decidir.</small></button>
+      <button class="btn prim" data-n="ok">${L('Firmar por', 'Sign for')} ${dinero(o.pago)}<small>${L('Trato hecho. Apretón de manos con grasa.', 'Deal. A greasy handshake.')}</small></button>
+      ${o.contra ? `<button class="btn" data-n="contra">${L('Aceptar su contraoferta', 'Accept the counteroffer')}: ${dinero(o.contra)}<small>${L('Ni tú ni yo.', 'Meet in the middle.')}</small></button>` : ''}
+      <button class="btn" data-n="15">${L('Pedir un 15 % más', 'Ask for 15% more')}: ${dinero(r10(o.pago * 1.15))}<small>${prob(C.p15 - intento)}. ${L('Si dice que no, pierde paciencia.', 'If they say no, they lose patience.')}</small></button>
+      <button class="btn" data-n="30">${L('Pedir un 30 % más', 'Ask for 30% more')}: ${dinero(r10(o.pago * 1.3))}<small>${prob(C.p30 - intento)}. ${L('Arriesgado.', 'Risky.')}</small></button>
+      ${o.garantia ? '' : `<button class="btn" data-n="gar">${L('Garantizar una A', 'Guarantee an A')}: ${dinero(r10(o.pago * gar))}<small>${L('Si el inspector no pone A o A+, devuelves el 30 % y pierdes reputación.', 'If the inspector doesn\'t give an A or A+, you refund 30% and lose reputation.')}</small></button>`}
+      <button class="btn" data-n="volver">${L('Pensarlo', 'Think about it')}<small>${L('Volver sin decidir.', 'Go back without deciding.')}</small></button>
     </div>`);
   P.querySelectorAll('[data-n]').forEach(b => b.onclick = () => {
     const k = b.dataset.n; audio();
@@ -3565,25 +3638,25 @@ function ocupados(excepto) {   // quién ya va en otra camioneta
 function vEquipoB() {
   const H = S.hoy;
   if (S.fase !== 'empresa' || (S.etapa < 1 && !hayB())) return '';
-  if (!hayB()) return S.etapa >= 1 ? '<p class="nota">Con más camionetas (en el Taller) puedes mandar otros equipos a otros trabajos la misma noche.</p>' : '';
+  if (!hayB()) return S.etapa >= 1 ? `<p class="nota">${L('Con más camionetas (en el Taller) puedes mandar otros equipos a otros trabajos la misma noche.', 'With more vans (in the Shop) you can send other teams to other jobs on the same night.')}</p>` : '';
   const eqs = equiposHoy(), usadas = new Set([H.sel, ...eqs.map(e => e.o)]);
-  return `<h2 class="sec">Tus otros equipos · ${eqs.length} ${eqs.length === 1 ? 'camioneta' : 'camionetas'}</h2>
-    ${S.angelica ? `<div class="jefe">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b>${esc(H.angelica || 'Firma los contratos y yo armo los equipos con la gente que haga falta para cada trabajo.')}<div class="acciones" style="margin-top:6px"><button class="btn prim peq" id="organizar">Que Angélica organice</button></div></div></div>` : ''}
+  return `<h2 class="sec">${L('Tus otros equipos', 'Your other teams')} · ${eqs.length} ${eqs.length === 1 ? L('camioneta', 'van') : L('camionetas', 'vans')}</h2>
+    ${S.angelica ? `<div class="jefe">${cara(ANGELICA.color, 'A')}<div><b>Angélica · ${L('coordinadora', 'coordinator')}</b>${esc(H.angelica || L('Firma los contratos y yo armo los equipos con la gente que haga falta para cada trabajo.', 'Sign the contracts and I\'ll put together teams with the people each job needs.'))}<div class="acciones" style="margin-top:6px"><button class="btn prim peq" id="organizar">${L('Que Angélica organice', 'Let Angélica organize')}</button></div></div></div>` : ''}
     ${eqs.map((e, k) => {
       const { comps, ayud } = ocupados(e), o = e.o !== null ? H.ordenes[e.o] : null;
       const libresO = H.ordenes.map((x, i) => [x, i]).filter(([x, i]) => !x.duelo && x.firmado && (!usadas.has(i) || i === e.o));
-      const libresP = [...(e.comp ? [] : S.fijos.filter(id => !comps.has(id))).map(id => [`c:${id}`, `${COMPANEROS[id].n} (compañero)`]),
-        ...S.cuadrilla.filter(c => !ayud.has(c.id) && !e.ayud.includes(c.id)).map(c => [`a:${c.id}`, `${c.n} · fuerza ${Math.round(c.fuerza * 100)}`])];
+      const libresP = [...(e.comp ? [] : S.fijos.filter(id => !comps.has(id))).map(id => [`c:${id}`, `${COMPANEROS[id].n} (${L('compañero', 'partner')})`]),
+        ...S.cuadrilla.filter(c => !ayud.has(c.id) && !e.ayud.includes(c.id)).map(c => [`a:${c.id}`, `${c.n} · ${L('fuerza', 'strength')} ${Math.round(c.fuerza * 100)}`])];
       const gente = [...(e.comp ? [[`c:${e.comp}`, COMPANEROS[e.comp].n]] : []), ...e.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean).map(c => [`a:${c.id}`, c.n])];
       const faltan = o && o.ayud > e.ayud.length, gen = e.ayud.length + (e.comp ? 1 : 0);
-      return `<div class="equipo"><b>Equipo ${k + 2}</b>
-        <select data-teq="${k}" aria-label="Trabajo del equipo ${k + 2}"><option value="">— Sin trabajo —</option>${H.ordenes[H.sel] && H.ordenes[H.sel].gigante && (e.o === 'mio' || !H.ordenes[H.sel].finde || eqs.filter(x => x.o === 'mio').length < 2) ? `<option value="mio" ${e.o === 'mio' ? 'selected' : ''}>Ayudarme en ${esc(H.ordenes[H.sel].nombre)} (gigante)</option>` : ''}${libresO.map(([x, i]) => `<option value="${i}" ${i === e.o ? 'selected' : ''}>${esc(x.nombre)} · ${dinero(x.pago)}</option>`).join('')}</select>
-        <div class="chips">${gente.map(([id, nm]) => `<button class="btn peq" data-quita="${k}|${id}">${esc(nm)} ✕</button>`).join('') || '<span class="nota">Nadie todavía.</span>'}</div>
-        ${gente.length < 4 && libresP.length ? `<select data-pon="${k}" aria-label="Añadir gente al equipo ${k + 2}"><option value="">+ Añadir a alguien…</option>${libresP.map(([id, nm]) => `<option value="${id}">${esc(nm)}</option>`).join('')}</select>` : ''}
-        ${o ? `<span class="${gen < sugerido(o) ? 'aviso' : 'nota'}">Necesita ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'} · llevas ${gen}.${gen < sugerido(o) ? ` Así no sale: le ${sugerido(o) - gen === 1 ? 'falta 1' : 'faltan ' + (sugerido(o) - gen)}.` : ' ¡Listo para salir!'}</span>` : e.o === 'mio' ? `<span class="${gen < 2 ? 'aviso' : 'nota'}">${gen < 2 ? 'Para ayudarte necesita al menos 2 personas.' : 'Al empezar el turno tú repartes las zonas y luego revisas lo que entreguen.'}</span>` : ''}
-        ${faltan ? `<span class="aviso">Ese trabajo pide ${o.ayud} ayudantes.</span>` : ''} <span class="nota">Equipo de la camioneta: ${KITS[kit(k)].n.toLowerCase()}.</span></div>`;
+      return `<div class="equipo"><b>${L('Equipo', 'Team')} ${k + 2}</b>
+        <select data-teq="${k}" aria-label="${L('Trabajo del equipo', 'Job for team')} ${k + 2}"><option value="">— ${L('Sin trabajo', 'No job')} —</option>${H.ordenes[H.sel] && H.ordenes[H.sel].gigante && (e.o === 'mio' || !H.ordenes[H.sel].finde || eqs.filter(x => x.o === 'mio').length < 2) ? `<option value="mio" ${e.o === 'mio' ? 'selected' : ''}>${L('Ayudarme en', 'Help me at')} ${esc(H.ordenes[H.sel].nombre)} (${L('gigante', 'giant')})</option>` : ''}${libresO.map(([x, i]) => `<option value="${i}" ${i === e.o ? 'selected' : ''}>${esc(x.nombre)} · ${dinero(x.pago)}</option>`).join('')}</select>
+        <div class="chips">${gente.map(([id, nm]) => `<button class="btn peq" data-quita="${k}|${id}">${esc(nm)} ✕</button>`).join('') || `<span class="nota">${L('Nadie todavía.', 'Nobody yet.')}</span>`}</div>
+        ${gente.length < 4 && libresP.length ? `<select data-pon="${k}" aria-label="${L('Añadir gente al equipo', 'Add people to team')} ${k + 2}"><option value="">+ ${L('Añadir a alguien…', 'Add someone…')}</option>${libresP.map(([id, nm]) => `<option value="${id}">${esc(nm)}</option>`).join('')}</select>` : ''}
+        ${o ? `<span class="${gen < sugerido(o) ? 'aviso' : 'nota'}">${L(`Necesita ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'} · llevas ${gen}.${gen < sugerido(o) ? ` Así no sale: le ${sugerido(o) - gen === 1 ? 'falta 1' : 'faltan ' + (sugerido(o) - gen)}.` : ' ¡Listo para salir!'}`, `Needs ${sugerido(o)} ${sugerido(o) === 1 ? 'person' : 'people'} · you have ${gen}.${gen < sugerido(o) ? ` It can't go out: ${sugerido(o) - gen} short.` : ' Ready to go!'}`)}</span>` : e.o === 'mio' ? `<span class="${gen < 2 ? 'aviso' : 'nota'}">${gen < 2 ? L('Para ayudarte necesita al menos 2 personas.', 'It needs at least 2 people to help you.') : L('Al empezar el turno tú repartes las zonas y luego revisas lo que entreguen.', 'When the shift starts you assign the zones and then check what they deliver.')}</span>` : ''}
+        ${faltan ? `<span class="aviso">${L(`Ese trabajo pide ${o.ayud} ayudantes.`, `That job needs ${o.ayud} helpers.`)}</span>` : ''} <span class="nota">${L('Equipo de la camioneta', 'Van equipment')}: ${L(KITS[kit(k)].n, EN.kit[kit(k)][0]).toLowerCase()}.</span></div>`;
     }).join('')}
-    <p class="nota">Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.</p>`;
+    <p class="nota">${L('Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.', 'Each team takes one partner and up to 3 helpers. Lupe does fine work, Beto breaks things, Chuy may fall asleep; helpers count for their strength and care.')}</p>`;
 }
 // Angélica arma los equipos: a cada trabajo firmado, la gente que pide (los más fuertes primero). En un gigante tuyo, dos equipos para ayudarte.
 function organizar() {
@@ -3629,22 +3702,22 @@ function resolverB(b) {
 function vClientes() {
   const H = S.hoy;
   const acciones = MARKETING.map(m => {
-    const bloq = etapa() < m.etapa ? `Desde la etapa ${ETAPAS[m.etapa].n}` : m.id === 'licitacion' && S.rep < 50 ? 'Necesitas reputación 50' : '';
-    return `<div class="orden"><div class="fila"><h3>${esc(m.n)}</h3><span class="pago">${dinero(m.p)}</span></div><span class="nota">${esc(m.d)}</span>
-      ${bloq ? `<span class="aviso">${bloq}</span>` : `<div class="acciones"><button class="btn prim" data-m="${m.id}" ${H.llamadas <= 0 || S.dinero < m.p ? 'disabled' : ''}>Hacerlo</button></div>`}</div>`;
+    const bloq = etapa() < m.etapa ? `${L('Desde la etapa', 'From the stage')} ${nEtapa(m.etapa)}` : m.id === 'licitacion' && S.rep < 50 ? L('Necesitas reputación 50', 'You need 50 reputation') : '';
+    return `<div class="orden"><div class="fila"><h3>${esc(L(m.n, EN.mkt[m.id][0]))}</h3><span class="pago">${dinero(m.p)}</span></div><span class="nota">${esc(L(m.d, EN.mkt[m.id][1]))}</span>
+      ${bloq ? `<span class="aviso">${bloq}</span>` : `<div class="acciones"><button class="btn prim" data-m="${m.id}" ${H.llamadas <= 0 || S.dinero < m.p ? 'disabled' : ''}>${L('Hacerlo', 'Do it')}</button></div>`}</div>`;
   }).join('');
-  const lista = S.clientes.length ? S.clientes.map(c => { const C = COCINAS[c.cocina], hoy = c.proxima <= S.noche; return `<div class="persona">${cara(hoy ? '#69c97a' : '#5d7180', c.nombre[0])}<div><b>${esc(c.nombre)}</b><span>${C.n} · NFPA 96 ${C.frec} · ${c.visitas} ${c.visitas === 1 ? 'visita' : 'visitas'}${c.visitas >= 3 ? ' · fiel' : ''}</span></div><span class="chip ${hoy ? 'ok' : ''}">${hoy ? (S.noche > c.proxima ? 'Atrasado' : 'Le toca hoy') : 'Noche ' + c.proxima}</span></div>`; }).join('')
-    : '<p class="nota">Todavía no hay clientes fijos. Aprueba la inspección y a veces te ofrecen contrato: vuelven solos cada pocas noches y pagan un 10 % más.</p>';
-  return `<h2 class="sec">Buscar clientes · te quedan ${H.llamadas} ${H.llamadas === 1 ? 'llamada' : 'llamadas'} esta noche</h2>
-    ${H.resultado ? `<div class="cita"><b>Resultado</b>${esc(H.resultado)}</div>` : ''}
+  const lista = S.clientes.length ? S.clientes.map(c => { const C = COCINAS[c.cocina], hoy = c.proxima <= S.noche; return `<div class="persona">${cara(hoy ? '#69c97a' : '#5d7180', c.nombre[0])}<div><b>${esc(c.nombre)}</b><span>${nCocina(c.cocina)} · NFPA 96 ${L(C.frec, EN.frec[C.frec])} · ${c.visitas} ${c.visitas === 1 ? L('visita', 'visit') : L('visitas', 'visits')}${c.visitas >= 3 ? L(' · fiel', ' · loyal') : ''}</span></div><span class="chip ${hoy ? 'ok' : ''}">${hoy ? (S.noche > c.proxima ? L('Atrasado', 'Overdue') : L('Le toca hoy', 'Due today')) : L('Noche ', 'Night ') + c.proxima}</span></div>`; }).join('')
+    : `<p class="nota">${L('Todavía no hay clientes fijos. Aprueba la inspección y a veces te ofrecen contrato: vuelven solos cada pocas noches y pagan un 10 % más.', 'No regular clients yet. Pass the inspection and sometimes they offer you a contract: they come back on their own every few nights and pay 10% more.')}</p>`;
+  return `<h2 class="sec">${L(`Buscar clientes · te quedan ${H.llamadas} ${H.llamadas === 1 ? 'llamada' : 'llamadas'} esta noche`, `Find clients · ${H.llamadas} ${H.llamadas === 1 ? 'call' : 'calls'} left tonight`)}</h2>
+    ${H.resultado ? `<div class="cita"><b>${L('Resultado', 'Result')}</b>${esc(H.resultado)}</div>` : ''}
     ${acciones}
-    <h2 class="sec">Clientes fijos</h2>${lista}
-    <p class="nota">Ojo con ${RIVAL}: si te retrasas con un cliente que aún no es fiel (3 visitas), se lo lleva.</p>`;
+    <h2 class="sec">${L('Clientes fijos', 'Regular clients')}</h2>${lista}
+    <p class="nota">${L(`Ojo con ${RIVAL}: si te retrasas con un cliente que aún no es fiel (3 visitas), se lo lleva.`, `Watch out for ${RIVAL}: if you are late with a client who isn't loyal yet (3 visits), he steals them.`)}</p>`;
 }
 
 // Las medidas de un ayudante: fuerza a la vista; cuidado y puntualidad solo tras la entrevista.
 const estrellas = n => '★'.repeat(n) + '☆'.repeat(5 - n);
-const medidas = c => `<span class="medidas"><i>Fuerza</i> ${estrellas(clamp(Math.round(c.fuerza * 4 - 1), 1, 5))} <i>Cuidado</i> ${c.entrevistado ? estrellas(c.cuidado) : '¿?'} <i>Puntualidad</i> ${c.entrevistado ? estrellas(c.puntual) : '¿?'}</span>`;
+const medidas = c => `<span class="medidas"><i>${L('Fuerza', 'Strength')}</i> ${estrellas(clamp(Math.round(c.fuerza * 4 - 1), 1, 5))} <i>${L('Cuidado', 'Care')}</i> ${c.entrevistado ? estrellas(c.cuidado) : '?'} <i>${L('Puntualidad', 'Punctuality')}</i> ${c.entrevistado ? estrellas(c.puntual) : '?'}</span>`;
 const RESPUESTAS = {
   cuidado: ['Yo trato las campanas como si fueran de cristal.', 'Una vez rompí algo. Bueno, varias. Pero aprendí.', 'Si se rompe, es que ya venía rota.', '¿Cuidado? ¿Eso qué es?', 'Limpio con guantes de seda. Literal.'],
   puntual: ['¿A qué hora era? ¿De la noche o de la mañana?', 'Llego. Tarde, pero llego.', 'Normalmente llego a la hora. Normalmente.', 'Llego diez minutos antes. Siempre.', 'Llego antes que el jefe. Y me voy después.'],
@@ -3653,65 +3726,65 @@ function vCuadrilla() {
   const plazas = PLAZAS[S.eq.camioneta];
   const comps = Object.entries(COMPANEROS).map(([id, c]) => {
     const mio = S.fijos.includes(id), pronto = S.etapa < c.etapa, precio = ADELANTO[id];
-    return `<div class="persona">${cara(c.color, c.n[0])}<div><b>${c.n} ${esc(c.apodo)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} por noche que sale contigo.${mio || pronto ? '' : ` Pide ${dinero(precio)} de adelanto.`}</span></div>
-      ${mio ? '<span class="chip ok">En tu equipo</span>' : pronto ? `<span class="chip">🔒 Llega con: ${ETAPAS[c.etapa].n}</span>` : `<button class="btn prim peq" data-fichar="${id}" ${S.dinero < precio ? 'disabled' : ''}>Contratar</button>`}</div>`;
+    return `<div class="persona">${cara(c.color, c.n[0])}<div><b>${c.n} ${esc(L(c.apodo, EN.comp[id][0]))}</b><span>${esc(L(c.rasgo, EN.comp[id][1]))} ${L('Fuerza', 'Strength')} ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} ${L('por noche que sale contigo.', 'per night they go out with you.')}${mio || pronto ? '' : ` ${L('Pide', 'Asks for')} ${dinero(precio)} ${L('de adelanto.', 'up front.')}`}</span></div>
+      ${mio ? `<span class="chip ok">${L('En tu equipo', 'On your team')}</span>` : pronto ? `<span class="chip">🔒 ${L('Llega con', 'Arrives with')}: ${nEtapa(c.etapa)}</span>` : `<button class="btn prim peq" data-fichar="${id}" ${S.dinero < precio ? 'disabled' : ''}>${L('Contratar', 'Hire')}</button>`}</div>`;
   }).join('');
-  const companeros = `<h2 class="sec">Compañeros · van contigo y limpian a tu lado</h2>
-    ${S.fijos.length ? '' : `<div class="cita"><b>Beto, por teléfono</b>Jefe, cuando tengas para el adelanto, me llamas. Ya practiqué con el karaoke: rompo menos cosas que antes. Casi.</div>`}${comps}`;
+  const companeros = `<h2 class="sec">${L('Compañeros · van contigo y limpian a tu lado', 'Partners · they ride with you and clean by your side')}</h2>
+    ${S.fijos.length ? '' : `<div class="cita"><b>${L('Beto, por teléfono', 'Beto, on the phone')}</b>${L('Jefe, cuando tengas para el adelanto, me llamas. Ya practiqué con el karaoke: rompo menos cosas que antes. Casi.', 'Boss, when you have the money for my advance, call me. I\'ve been practicing with the karaoke: I break fewer things now. Almost.')}</div>`}${comps}`;
   const flota = S.eq.flota || 0;
-  const angelica = S.angelica ? `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>Organiza los equipos de cada noche (botón en «Noche») y con ella trabajan mejor. ${dinero(ANGELICA.sueldo)} por noche.</span></div><span class="chip ok">En tu equipo</span></div>`
-    : `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>${flota >= ANGELICA.minVans ? `Organiza los equipos de cada noche y con ella trabajan mejor. Pide ${dinero(ANGELICA.adelanto)} de adelanto y ${dinero(ANGELICA.sueldo)} por noche.` : `Se une cuando tengas 4 camionetas (tienes ${flota + 1}). Dice que con menos no vale la pena organizarse.`}</span></div>
-      ${flota >= ANGELICA.minVans ? `<button class="btn prim peq" id="ficharAngelica" ${S.dinero < ANGELICA.adelanto ? 'disabled' : ''}>Contratar</button>` : '<span class="chip">4 camionetas</span>'}</div>`;
-  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}${chipsPerfil(c)}</div>
-    <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">Dejarlo fijo</button>` : ''}<button class="btn peq" data-despedir="${c.id}">Despedir</button></div></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
-  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span><span class="chip">Carácter: ¿? (entrevístalo)</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
-    <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
-  return `${companeros}<h2 class="sec">Coordinación</h2>${angelica}<h2 class="sec">Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta</h2>${mios}${S.etapa < 1 ? '<p class="pista">En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.</p>' : ''}
-    <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.</p>
-    <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}
-    <div class="acciones"><button class="btn" id="anuncioEmpleo" ${S.dinero < 60 ? 'disabled' : ''}>Poner anuncio de empleo (${dinero(60)})</button></div>
-    <p class="nota">El anuncio trae candidatos nuevos ya. Tienes ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'ayudante' : 'ayudantes'}${hayB() ? ` y ${(S.eq.flota || 0) + 1} camionetas: para llenarlas todas necesitas unos ${((S.eq.flota || 0) + 1) * 3}` : ''}.</p>`;
+  const angelica = S.angelica ? `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · ${L('coordinadora', 'coordinator')}</b><span>${L('Organiza los equipos de cada noche (botón en «Noche») y con ella trabajan mejor.', 'She organizes the teams every night (button in "Night") and they work better with her.')} ${dinero(ANGELICA.sueldo)} ${L('por noche', 'per night')}.</span></div><span class="chip ok">${L('En tu equipo', 'On your team')}</span></div>`
+    : `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · ${L('coordinadora', 'coordinator')}</b><span>${flota >= ANGELICA.minVans ? L(`Organiza los equipos de cada noche y con ella trabajan mejor. Pide ${dinero(ANGELICA.adelanto)} de adelanto y ${dinero(ANGELICA.sueldo)} por noche.`, `She organizes the teams every night and they work better with her. Asks for ${dinero(ANGELICA.adelanto)} up front and ${dinero(ANGELICA.sueldo)} per night.`) : L(`Se une cuando tengas 4 camionetas (tienes ${flota + 1}). Dice que con menos no vale la pena organizarse.`, `She joins when you have 4 vans (you have ${flota + 1}). She says with fewer it isn't worth organizing.`)}</span></div>
+      ${flota >= ANGELICA.minVans ? `<button class="btn prim peq" id="ficharAngelica" ${S.dinero < ANGELICA.adelanto ? 'disabled' : ''}>${L('Contratar', 'Hire')}</button>` : `<span class="chip">${L('4 camionetas', '4 vans')}</span>`}</div>`;
+  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? L('Pasó la prueba', 'Passed the trial') : L(`A prueba · ${c.noches} de 3 noches`, `On trial · ${c.noches} of 3 nights`)}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} ${L('por noche', 'per night')}${c.prueba ? L(' (a prueba cobra el 80 %)', ' (80% pay while on trial)') : ''} · ${c.noches} ${L('noches', 'nights')}${c.fuerza > c.base + .01 ? ` · ${L('con experiencia', 'experience')}: +${Math.round((c.fuerza - c.base) * 100)} ${L('de fuerza', 'strength')}` : ''}</span>${medidas(c)}${chipsPerfil(c)}</div>
+    <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div></div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
+  const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} ${L('Pide', 'Asks for')} ${dinero(c.sueldo)} ${L('por noche', 'per night')}.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">${L('Bueno en', 'Good at')} ${L(ESPECIAL[c.esp], EN.esp[c.esp])}</span><span class="chip">${L('Carácter: ¿? (entrevístalo)', 'Personality: ? (interview them)')}</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
+    <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">${L('Entrevistar', 'Interview')}</button>`}<button class="btn prim peq" data-contratar="${c.id}">${L('Contratar', 'Hire')}</button></div></div>`).join('') || `<p class="nota">${L('Nadie por ahora. Vuelve en un par de noches.', 'Nobody right now. Check back in a couple of nights.')}</p>`;
+  return `${companeros}<h2 class="sec">${L('Coordinación', 'Coordination')}</h2>${angelica}<h2 class="sec">${L(`Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta`, `Helpers · ${plazas} ${plazas === 1 ? 'fits' : 'fit'} in the van`)}</h2>${mios}${S.etapa < 1 ? `<p class="pista">${L('En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.', 'Only one helper fits in the old van. With your own workshop you can buy bigger vans and more vans, and then you can fill whole teams.')}</p>` : ''}
+    <p class="nota">${L('Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.', 'Helpers clean on their own during the shift and only get paid on the nights they go out. Big jobs need helpers. <b>Strength</b>: how much they clean (it grows with experience). <b>Care</b>: fewer accidents. <b>Punctuality</b>: whether they show up. Interview before hiring: until then you don\'t know their care or punctuality. New hires start with a 3-night trial at 80% pay.')}</p>
+    <h2 class="sec">${L('Buscan trabajo · cambian cada 3 noches', 'Looking for work · changes every 3 nights')}</h2>${cand}
+    <div class="acciones"><button class="btn" id="anuncioEmpleo" ${S.dinero < 60 ? 'disabled' : ''}>${L('Poner anuncio de empleo', 'Post a job ad')} (${dinero(60)})</button></div>
+    <p class="nota">${L(`El anuncio trae candidatos nuevos ya. Tienes ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'ayudante' : 'ayudantes'}${hayB() ? ` y ${(S.eq.flota || 0) + 1} camionetas: para llenarlas todas necesitas unos ${((S.eq.flota || 0) + 1) * 3}` : ''}.`, `The ad brings new candidates right away. You have ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'helper' : 'helpers'}${hayB() ? ` and ${(S.eq.flota || 0) + 1} vans: to fill them all you need about ${((S.eq.flota || 0) + 1) * 3}` : ''}.`)}</p>`;
 }
 
 function vTaller() {
-  const bloqueadas = S.fase === 'empresa' ? [['Cañón de espuma y rasqueta eléctrica', 1], ['Hidrolavadora de vapor y robot de ductos', 2], ['Turbo para el robot', 3]].filter(([, e]) => S.etapa < e) : [];
-  if (S.fase === 'aprendiz') return '<div class="cita"><b>Don Rigo</b>Las herramientas son mías y son las mejores: rasqueta de carburo, hidrolavadora, migdaleadora orbital, de todo. Disfrútalas mientras trabajes conmigo. Cuando tengas tu empresa, te compras las tuyas.</div>';
+  const bloqueadas = S.fase === 'empresa' ? [[L('Cañón de espuma y rasqueta eléctrica', 'Foam cannon and electric scraper'), 1], [L('Hidrolavadora de vapor y robot de ductos', 'Steam pressure washer and duct robot'), 2], [L('Turbo para el robot', 'Robot turbo'), 3]].filter(([, e]) => S.etapa < e) : [];
+  if (S.fase === 'aprendiz') return `<div class="cita"><b>Don Rigo</b>${L('Las herramientas son mías y son las mejores: rasqueta de carburo, hidrolavadora, migdaleadora orbital, de todo. Disfrútalas mientras trabajes conmigo. Cuando tengas tu empresa, te compras las tuyas.', 'The tools are mine and they are the best: carbide scraper, pressure washer, orbital polisher, everything. Enjoy them while you work for me. When you have your own company, you buy your own.')}</div>`;
   const items = TIENDA.filter(t => t.ok(S));
-  const kits = S.fase === 'empresa' && S.eq.flota ? `<h2 class="sec">Equipo de tus camionetas</h2>${Array.from({ length: S.eq.flota }, (_, k) => {
+  const kits = S.fase === 'empresa' && S.eq.flota ? `<h2 class="sec">${L('Equipo de tus camionetas', 'Your vans\' equipment')}</h2>${Array.from({ length: S.eq.flota }, (_, k) => {
     const nv = kit(k), sig = KITS[nv + 1];
-    return `<div class="persona"><div class="cara" style="background:#5d7180">${k + 2}</div><div><b>Camioneta del equipo ${k + 2}</b><span>Equipo ${KITS[nv].n.toLowerCase()}: ${esc(KITS[nv].d)}</span></div>
-      ${sig ? `<button class="btn prim peq" data-kit="${k}" ${S.dinero < sig.p ? 'disabled' : ''}>${sig.n} ${dinero(sig.p)}</button>` : '<span class="chip ok">Al máximo</span>'}</div>`;
-  }).join('')}<p class="nota">Con mejor equipo, sus equipos limpian más rápido y aprueban más fácil.</p>` : '';
-  return `<p class="nota">Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas. Tienes ${dinero(S.dinero)}.</p>
-    ${items.map(t => `<div class="orden"><h3>${esc(t.n)}</h3><span class="nota">${esc(t.d)}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>Comprar</button></div></div>`).join('') || '<p class="nota">Ya tienes todo el equipo.</p>'}
-    ${S.eq.camioneta === 1 && etapa() < 1 ? '<p class="nota">Las camionetas más grandes, cuando tengas taller propio.</p>' : ''}
-    ${bloqueadas.length ? `<p class="nota">Más adelante: ${bloqueadas.map(([n, e]) => `${n} (desde ${ETAPAS[e].n})`).join(' · ')}.</p>` : ''}${kits}
-    ${S.fase === 'empresa' ? `<h2 class="sec">Tunear la camioneta</h2><div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}</div>
-      ${TUNEO.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(t.n)}</b><span>${esc(t.d)}</span></div>${tun(t.id) ? '<span class="chip ok">Puesto</span>' : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')}` : ''}`;
+    return `<div class="persona"><div class="cara" style="background:#5d7180">${k + 2}</div><div><b>${L('Camioneta del equipo', 'Van for team')} ${k + 2}</b><span>${L(`Equipo ${KITS[nv].n.toLowerCase()}`, `${EN.kit[nv][0]} equipment`)}: ${esc(L(KITS[nv].d, EN.kit[nv][1]))}</span></div>
+      ${sig ? `<button class="btn prim peq" data-kit="${k}" ${S.dinero < sig.p ? 'disabled' : ''}>${L(sig.n, EN.kit[nv + 1][0])} ${dinero(sig.p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`;
+  }).join('')}<p class="nota">${L('Con mejor equipo, sus equipos limpian más rápido y aprueban más fácil.', 'With better equipment, your teams clean faster and pass more easily.')}</p>` : '';
+  return `<p class="nota">${L('Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas.', 'You pay for tools with your money and they are yours: you take them wherever you go.')} ${L('Tienes', 'You have')} ${dinero(S.dinero)}.</p>
+    ${items.map(t => `<div class="orden"><h3>${esc(nTienda(t))}</h3><span class="nota">${esc(dTienda(t))}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${L('Comprar', 'Buy')}</button></div></div>`).join('') || `<p class="nota">${L('Ya tienes todo el equipo.', 'You already have all the equipment.')}</p>`}
+    ${S.eq.camioneta === 1 && etapa() < 1 ? `<p class="nota">${L('Las camionetas más grandes, cuando tengas taller propio.', 'Bigger vans come with your own workshop.')}</p>` : ''}
+    ${bloqueadas.length ? `<p class="nota">${L('Más adelante', 'Coming later')}: ${bloqueadas.map(([n, e]) => `${n} (${L('desde', 'from')} ${nEtapa(e)})`).join(' · ')}.</p>` : ''}${kits}
+    ${S.fase === 'empresa' ? `<h2 class="sec">${L('Tunear la camioneta', 'Pimp your van')}</h2><div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}</div>
+      ${TUNEO.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(L(t.n, EN.tuneo[t.id][0]))}</b><span>${esc(L(t.d, EN.tuneo[t.id][1]))}</span></div>${tun(t.id) ? `<span class="chip ok">${L('Puesto', 'Installed')}</span>` : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')}` : ''}`;
 }
 
 function vLogros() {
   const ganadas = MEDALLAS.filter(m => S.medallas[m.id]).length, r = S.rec;
   const dato = (i, b, sm) => `<div class="dato"><i>${i}</i><b>${b}</b>${sm ? `<small>${sm}</small>` : ''}</div>`;
-  return `<h2 class="sec">Récords</h2>
-    <div class="datos">${dato('Mejor nota', r.nota || '—', r.pts ? r.pts + ' pts' : '')}${dato('Mejor noche', S.mejor ? dinero(S.mejor) : '—')}${dato('Inspector más temprano', r.fin !== undefined ? hora(r.fin) : '—')}${dato('Combo más largo', r.combo || 0)}${dato('Aprobadas', S.aprobados)}${r.duelos ? dato('Duelos ganados', r.duelos) : ''}</div>
+  return `<h2 class="sec">${L('Récords', 'Records')}</h2>
+    <div class="datos">${dato(L('Mejor nota', 'Best grade'), r.nota || '—', r.pts ? r.pts + ' pts' : '')}${dato(L('Mejor noche', 'Best night'), S.mejor ? dinero(S.mejor) : '—')}${dato(L('Inspector más temprano', 'Earliest inspector'), r.fin !== undefined ? hora(r.fin) : '—')}${dato(L('Combo más largo', 'Longest combo'), r.combo || 0)}${dato(L('Aprobadas', 'Passed'), S.aprobados)}${r.duelos ? dato(L('Duelos ganados', 'Duels won'), r.duelos) : ''}</div>
     ${S.notas.length ? `<div class="notas">${S.notas.slice(-12).map(n => `<span style="--c:${COL_NOTA[n]}">${n}</span>`).join('')}</div>` : ''}
     ${vAlbum()}
-    <h2 class="sec">Medallas · ${ganadas} de ${MEDALLAS.length}</h2>
+    <h2 class="sec">${L('Medallas', 'Medals')} · ${ganadas} ${L('de', 'of')} ${MEDALLAS.length}</h2>
     <div class="medallas">${MEDALLAS.map(m => tarjetaMedalla(m)).join('')}</div>
-    <h2 class="sec">Estilo de la empresa · ${S.estrellas || 0} ★</h2>
-    <p class="nota">Las medallas desbloquean colores y detalles. Se ven durante el turno${S.fase === 'empresa' ? ' y en tu camioneta' : ''}.</p>
-    ${Object.entries(LOOK).map(([k, g]) => `<div class="estilo"><b>${g.n}</b><div class="chips">${g.ops.map(op => {
+    <h2 class="sec">${L('Estilo de la empresa', 'Company style')} · ${S.estrellas || 0} ★</h2>
+    <p class="nota">${L(`Las medallas desbloquean colores y detalles. Se ven durante el turno${S.fase === 'empresa' ? ' y en tu camioneta' : ''}.`, `Medals unlock colors and details. You see them during the shift${S.fase === 'empresa' ? ' and on your van' : ''}.`)}</p>
+    ${Object.entries(LOOK).map(([k, g]) => `<div class="estilo"><b>${L(g.n, EN.look[k])}</b><div class="chips">${g.ops.map(op => {
       const libre = libreLook(op), sel = look(k).id === op.id;
-      return `<button class="btn peq ${sel ? 'prim' : ''}" data-look="${k}:${op.id}" aria-pressed="${sel}" ${libre ? '' : 'disabled'} title="${libre ? '' : op.m ? 'Medalla: ' + esc(medalla(op.m).n) : op.e + ' estrellas'}">${op.c && typeof op.c !== 'number' ? `<i class="muestra" style="background:${Array.isArray(op.c) ? `rgb(${op.c.map(v => Math.round(v * 255)).join(',')})` : op.c}"></i>` : ''}${esc(op.n)}${libre ? '' : ' 🔒'}</button>`;
-    }).join('')}</div>${g.ops.some(op => !libreLook(op)) ? `<small class="nota">${g.ops.filter(op => !libreLook(op)).map(op => op.m ? `${esc(op.n)}: medalla «${esc(medalla(op.m).n)}»` : `${esc(op.n)}: ${op.e} ★`).join(' · ')}</small>` : ''}</div>`).join('')}`;
+      return `<button class="btn peq ${sel ? 'prim' : ''}" data-look="${k}:${op.id}" aria-pressed="${sel}" ${libre ? '' : 'disabled'} title="${libre ? '' : op.m ? L('Medalla: ', 'Medal: ') + esc(nMed(medalla(op.m))) : op.e + L(' estrellas', ' stars')}">${op.c && typeof op.c !== 'number' ? `<i class="muestra" style="background:${Array.isArray(op.c) ? `rgb(${op.c.map(v => Math.round(v * 255)).join(',')})` : op.c}"></i>` : ''}${esc(L(op.n, EN.look[op.id]))}${libre ? '' : ' 🔒'}</button>`;
+    }).join('')}</div>${g.ops.some(op => !libreLook(op)) ? `<small class="nota">${g.ops.filter(op => !libreLook(op)).map(op => op.m ? `${esc(L(op.n, EN.look[op.id]))}: ${L('medalla', 'medal')} «${esc(nMed(medalla(op.m)))}»` : `${esc(L(op.n, EN.look[op.id]))}: ${op.e} ★`).join(' · ')}</small>` : ''}</div>`).join('')}`;
 }
 
 function vAlbum() {
   const l = fotos();
-  return `<h2 class="sec">Álbum</h2><p class="nota">Cada noche se guarda la foto de la campana antes y después de limpiarla. Caben las últimas 12.</p>
-    ${l.length ? `<div class="album">${l.map(tarjetaFoto).join('')}</div>` : '<p class="nota">Todavía no hay fotos. Termina un turno y aparece la primera.</p>'}
-    ${S.album.length ? `<h2 class="sec">Momentos</h2><div class="cita">${esc(S.album.join(' · '))}</div>` : ''}`;
+  return `<h2 class="sec">${L('Álbum', 'Album')}</h2><p class="nota">${L('Cada noche se guarda la foto de la campana antes y después de limpiarla. Caben las últimas 12.', 'Every night saves a before-and-after photo of the hood. The last 12 are kept.')}</p>
+    ${l.length ? `<div class="album">${l.map(tarjetaFoto).join('')}</div>` : `<p class="nota">${L('Todavía no hay fotos. Termina un turno y aparece la primera.', 'No photos yet. Finish a shift and the first one shows up.')}</p>`}
+    ${S.album.length ? `<h2 class="sec">${L('Momentos', 'Moments')}</h2><div class="cita">${esc(S.album.join(' · '))}</div>` : ''}`;
 }
 
 function enlazar() {
@@ -3804,20 +3877,22 @@ function enlazar() {
 
 function pantallaAjustes(enTurno, desdeInicio) {
   const op = [
-    ['asist', 'Asistencia de apuntado', 'La pasada se acerca sola a la mancha más cercana.'],
-    ['resaltar', 'Resaltar suciedad', 'Lo que falta parpadea en naranja.'],
-    ['comodo', 'Modo cómodo', 'El reloj corre a la mitad de velocidad.'],
-    ['sonido', 'Sonido', 'Raspados, chorros, spray y alarmas.'],
-    ['radio', 'Radio Grasa FM', 'Música inventada y un locutor nocturno durante el turno.'],
-    ['vibrar', 'Vibración', 'El celular vibra con los combos, al migdalear, con el espejo y con la nota del inspector. En iPhone no se puede.'],
-    ['ahorro', 'Modo ahorro de batería', 'Menos resolución: el celular se calienta menos. Se activa solo si el juego va lento.'],
+    ['asist', L('Asistencia de apuntado', 'Aim assist'), L('La pasada se acerca sola a la mancha más cercana.', 'Your stroke snaps to the nearest grease spot.')],
+    ['resaltar', L('Resaltar suciedad', 'Highlight dirt'), L('Lo que falta parpadea en naranja.', 'What is left blinks orange.')],
+    ['comodo', L('Modo cómodo', 'Relaxed mode'), L('El reloj corre a la mitad de velocidad.', 'The clock runs at half speed.')],
+    ['sonido', L('Sonido', 'Sound'), L('Raspados, chorros, spray y alarmas.', 'Scraping, water jets, spray and alarms.')],
+    ['radio', 'Radio Grasa FM', L('Música inventada y un locutor nocturno durante el turno.', 'Made-up music and a late-night DJ during your shift.')],
+    ['vibrar', L('Vibración', 'Vibration'), L('El celular vibra con los combos, al migdalear, con el espejo y con la nota del inspector. En iPhone no se puede.', 'The phone vibrates on combos, while polishing, on mirror finishes and with the inspector\'s grade. Not available on iPhone.')],
+    ['ahorro', L('Modo ahorro de batería', 'Battery saver'), L('Menos resolución: el celular se calienta menos. Se activa solo si el juego va lento.', 'Lower resolution so the phone runs cooler. Turns on by itself if the game is slow.')],
   ];
-  pantalla(`<div class="rotulo">${enTurno ? 'Pausa' : 'Ajustes'}</div>
-    ${enTurno && M.retos.length ? `<div class="retos"><b>Retos de esta noche</b>${M.retos.map(id => `<span>☆ ${esc(reto(id).t)}</span>`).join('')}</div>` : ''}
+  pantalla(`<div class="rotulo">${enTurno ? L('Pausa', 'Paused') : L('Ajustes', 'Settings')}</div>
+    ${selectorIdioma()}
+    ${enTurno && M.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${M.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}</div>` : ''}
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
-    ${Object.keys(S.perks).length ? `<div class="cita"><b>Tus mejoras</b>${Object.entries(S.perks).map(([k, n]) => `${PERKS[k].n}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
-    <div class="cita"><b>Cómo se juega</b>Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, arrastra con dos dedos (o con uno sobre la pared o el suelo) para mover la vista. El aviso naranja del borde te dice si falta algo por ese lado: tócalo y te lleva. En ordenador, las flechas del teclado. En ordenador, teclas 1 a 4.</div>
-    <div class="acciones">${enTurno ? '<button class="btn prim" id="volver">Seguir el turno</button><button class="btn" id="abandonar">Llamar al inspector ya</button>' : '<button class="btn prim" id="volver">Volver</button><button class="btn" id="menu">Menú principal</button>'}</div>`);
+    ${Object.keys(S.perks).length ? `<div class="cita"><b>${L('Tus mejoras', 'Your perks')}</b>${Object.entries(S.perks).map(([k, n]) => `${L(PERKS[k].n, PERKS[k].en)}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
+    <div class="cita"><b>${L('Cómo se juega', 'How to play')}</b>${L('Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, arrastra con dos dedos (o con uno sobre la pared o el suelo) para mover la vista. El aviso naranja del borde te dice si falta algo por ese lado: tócalo y te lleva. En ordenador, las flechas del teclado y las teclas 1 a 4.', 'Before cleaning: shut off the pilot lights, cut the power, cover the kitchen and wrap the hood in plastic. Then make short strokes with the scraper; several in a row in the same direction make a combo. Foam softens the crust if you wait a couple of seconds. Hold the round button to open the tool wheel. If the hood does not fit on screen, drag with two fingers (or with one on the wall or floor) to move the view. The orange tab on the edge tells you something is left on that side: tap it to go there. On a computer, use the arrow keys and keys 1 to 4.')}</div>
+    <div class="acciones">${enTurno ? `<button class="btn prim" id="volver">${L('Seguir el turno', 'Back to work')}</button><button class="btn" id="abandonar">${L('Llamar al inspector ya', 'Call the inspector now')}</button>` : `<button class="btn prim" id="volver">${L('Volver', 'Back')}</button><button class="btn" id="menu">${L('Menú principal', 'Main menu')}</button>`}</div>`);
+  enlazarIdioma(() => { pantallaAjustes(enTurno, desdeInicio); if (M) pintarHud(true); });
   P.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
     const k = b.dataset.k; S.aj[k] = !S.aj[k]; b.setAttribute('aria-pressed', S.aj[k]); U.hl.value = M && M.fase === 'turno' ? hlBase() : 0; guardar();
     if (k === 'ahorro') { calidad(); redimensionar(); }
@@ -3840,12 +3915,12 @@ function pantallaParte() {
   for (const z of Z) if (z.id === 'campana') for (const s of z.sfs) for (let i = 0; i < s.pol.length; i++) { celdas++; if (s.pol[i] > .6) pulidas++; }
   const pulido = pulidas / celdas;
   const sinPelar = piezas.faldas.filter(f => f.mesh.visible && !f.pelada).length;
-  if (sinPelar) dano(`Plástico olvidado en la campana (${sinPelar} ${sinPelar === 1 ? 'tira' : 'tiras'}): el chef lo encontró al abrir`, sinPelar * 8, 2);
-  if (piezas.aparatos.some(a => a.cubierto && !a.quitada)) dano('Cubiertas sin quitar: el chef las quitó él, y se nota que no le gustó', 0, 1);
-  if (piezas.bolsas.some(b => b.hecho && !b.bajada)) dano('Bolsa llena olvidada colgando de la campana', 30, 2);
+  if (sinPelar) dano(L(`Plástico olvidado en la campana (${sinPelar} ${sinPelar === 1 ? 'tira' : 'tiras'}): el chef lo encontró al abrir`, `Plastic left on the hood (${sinPelar} ${sinPelar === 1 ? 'strip' : 'strips'}): the chef found it when opening`), sinPelar * 8, 2);
+  if (piezas.aparatos.some(a => a.cubierto && !a.quitada)) dano(L('Cubiertas sin quitar: el chef las quitó él, y se nota que no le gustó', 'Covers left on: the chef took them off himself, and he was not happy'), 0, 1);
+  if (piezas.bolsas.some(b => b.hecho && !b.bajada)) dano(L('Bolsa llena olvidada colgando de la campana', 'Full bag left hanging from the hood'), 30, 2);
   const sinCubrir = piezas.aparatos.filter(a => !a.cubierto).length;
-  if (sinCubrir && azar(Math.min(1, sinCubrir / piezas.aparatos.length * 1.4))) dano(`Espuma y grasa en ${sinCubrir} ${sinCubrir === 1 ? 'aparato sin cubrir' : 'aparatos sin cubrir'}`, sinCubrir * 25, sinCubrir > 2 ? 4 : 2);
-  if (!M.prep.bolsa) dano('Agua con grasa en el suelo (plástico o bolsa incompletos)', Math.round(90 * (1 - M.prep.envuelto * .6)), 2);
+  if (sinCubrir && azar(Math.min(1, sinCubrir / piezas.aparatos.length * 1.4))) dano(L(`Espuma y grasa en ${sinCubrir} ${sinCubrir === 1 ? 'aparato sin cubrir' : 'aparatos sin cubrir'}`, `Foam and grease on ${sinCubrir} uncovered ${sinCubrir === 1 ? 'appliance' : 'appliances'}`), sinCubrir * 25, sinCubrir > 2 ? 4 : 2);
+  if (!M.prep.bolsa) dano(L('Agua con grasa en el suelo (plástico o bolsa incompletos)', 'Greasy water on the floor (plastic or bag incomplete)'), Math.round(90 * (1 - M.prep.envuelto * .6)), 2);
   const limpio = zonas.reduce((a, z) => a + z.pct, 0) / zonas.length;
   // El pedido especial del cliente y el duelo con El Cuñado
   const ped = M.pedido, finMin = M.finMin;
@@ -3864,10 +3939,10 @@ function pantallaParte() {
   const sueldos = M.equipo.reduce((a, e) => a + (e.sueldo || 0), 0);
   // De aprendiz cobras sueldo y Don Rigo paga los daños; con tu empresa cobras todo y lo pagas todo.
   const lineas = aprendiz
-    ? [['Sueldo de la noche', SUELDO_APRENDIZ], ['Bono por aprobar', aprobado ? 40 : 0], ['Propina', propina], ['Propina extra por el pedido especial', extraPed], ...M.danos.map(x => [x.t + (x.dinero ? ' (lo paga Don Rigo)' : ''), null])]
-    : [[`${aprobado ? 'Pago del trabajo' : 'Pago parcial'}${M.descuento ? ' (con el descuento prometido al gerente)' : ''}${tacos < 1 ? ' (la otra mitad, en tacos)' : ''}${d && !ganaDuelo ? ' (la mitad: ganó El Cuñado)' : ''}`, cobro],
-      ...(tacos < 1 ? [['120 tacos de pastor', null]] : []), [`Bono de racha (${racha} noches aprobadas seguidas)`, bonoRacha], ['Propina', propina], [pedOk ? 'Extra por cumplir el pedido especial' : 'Descuento por no cumplir el pedido', extraPed],
-      ...M.danos.map(x => [x.t + (x.dinero && EQ().seguro ? ' (el seguro paga la mitad)' : ''), x.dinero ? -conSeguro(x.dinero) : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
+    ? [[L('Sueldo de la noche', 'Night\'s wage'), SUELDO_APRENDIZ], [L('Bono por aprobar', 'Passing bonus'), aprobado ? 40 : 0], [L('Propina', 'Tip'), propina], [L('Propina extra por el pedido especial', 'Extra tip for the special request'), extraPed], ...M.danos.map(x => [x.t + (x.dinero ? L(' (lo paga Don Rigo)', ' (Don Rigo pays)') : ''), null])]
+    : [[`${aprobado ? L('Pago del trabajo', 'Job payment') : L('Pago parcial', 'Partial payment')}${M.descuento ? L(' (con el descuento prometido al gerente)', ' (with the discount promised to the manager)') : ''}${tacos < 1 ? L(' (la otra mitad, en tacos)', ' (the other half, in tacos)') : ''}${d && !ganaDuelo ? L(' (la mitad: ganó El Cuñado)', ' (half: El Cuñado won)') : ''}`, cobro],
+      ...(tacos < 1 ? [[L('120 tacos de pastor', '120 al pastor tacos'), null]] : []), [L(`Bono de racha (${racha} noches aprobadas seguidas)`, `Streak bonus (${racha} passed nights in a row)`), bonoRacha], [L('Propina', 'Tip'), propina], [pedOk ? L('Extra por cumplir el pedido especial', 'Bonus for the special request') : L('Descuento por no cumplir el pedido', 'Discount for missing the request'), extraPed],
+      ...M.danos.map(x => [x.t + (x.dinero && EQ().seguro ? L(' (el seguro paga la mitad)', ' (insurance pays half)') : ''), x.dinero ? -conSeguro(x.dinero) : null]), [L('Sueldos de la cuadrilla', 'Crew wages'), -sueldos], [L('Gasolina', 'Gas'), -GASOLINA]];
   let neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
@@ -3879,37 +3954,37 @@ function pantallaParte() {
   // Garantía de A negociada con el cliente
   if (o.garantia && !aprendiz) {
     if (n === 'A' || n === 'A+') rep += 1;
-    else { const dev = r10(o.pago * .3); lineas.push(['Garantía de A incumplida (devuelves el 30 %)', -dev]); neto -= dev; rep -= 3; }
+    else { const dev = r10(o.pago * .3); lineas.push([L('Garantía de A incumplida (devuelves el 30 %)', 'Missed A guarantee (you refund 30%)'), -dev]); neto -= dev; rep -= 3; }
   }
   // Reto de fin de semana
   let finde = null;
   if (o.finde && S.finde && !aprendiz) {
     S.finde.notas[o.finde - 1] = aprobado ? n : '✗'; S.finde.paso = o.finde; S.finde.ultima = S.noche;
-    if (!aprobado) { finde = { t: 'Reto de fin de semana perdido', txt: `El ${FINDE_DIAS[o.finde - 1].toLowerCase()} no pasó la inspección. Lo cobrado se queda; el premio, no. La próxima semana hay revancha.` }; S.finde = null; }
+    if (!aprobado) { finde = { t: L('Reto de fin de semana perdido', 'Weekend challenge lost'), txt: L(`El ${FINDE_DIAS[o.finde - 1].toLowerCase()} no pasó la inspección. Lo cobrado se queda; el premio, no. La próxima semana hay revancha.`, `${EN.dias[o.finde - 1]} didn't pass inspection. You keep what you earned, not the prize. Rematch next week.`) }; S.finde = null; }
     else if (o.finde === 3) {
       const extraA = S.finde.notas.filter(x => x === 'A' || x === 'A+').length * 500;
-      lineas.push(['Premio del reto de fin de semana' + (extraA ? ` (+${dinero(extraA)} por las A)` : ''), FINDE_PREMIO + extraA]); neto += FINDE_PREMIO + extraA; rep += 10;
-      finde = { t: '¡Reto de fin de semana superado!', txt: `Tres gigantes en tres noches: ${S.finde.notas.join(', ')}. Don Rigo llamó desde el lago solo para decir «no está mal». Viniendo de él, es un abrazo.` };
+      lineas.push([L('Premio del reto de fin de semana', 'Weekend challenge prize') + (extraA ? ` (+${dinero(extraA)} ${L('por las A', 'for the As')})` : ''), FINDE_PREMIO + extraA]); neto += FINDE_PREMIO + extraA; rep += 10;
+      finde = { t: L('¡Reto de fin de semana superado!', 'Weekend challenge complete!'), txt: L(`Tres gigantes en tres noches: ${S.finde.notas.join(', ')}. Don Rigo llamó desde el lago solo para decir «no está mal». Viniendo de él, es un abrazo.`, `Three giants in three nights: ${S.finde.notas.join(', ')}. Don Rigo called from the lake just to say "not bad". Coming from him, that's a hug.`) };
       S.findes = (S.findes || 0) + 1; S.finde = null;
-    } else finde = { t: `Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]} superado`, txt: `Nota ${n}. Mañana, ${FINDE_DIAS[o.finde].toLowerCase()}: otra cocina gigante.` };
-  } else if (S.finde && !aprendiz && S.finde.noche === S.noche) { finde = { t: 'Reto de fin de semana perdido', txt: 'Esta noche hiciste otro trabajo y la cocina gigante del reto se quedó esperando.' }; S.finde = null; }
+    } else finde = { t: L(`Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]} superado`, `Weekend challenge · ${EN.dias[o.finde - 1]} done`), txt: L(`Nota ${n}. Mañana, ${FINDE_DIAS[o.finde].toLowerCase()}: otra cocina gigante.`, `Grade ${n}. Tomorrow, ${EN.dias[o.finde]}: another giant kitchen.`) };
+  } else if (S.finde && !aprendiz && S.finde.noche === S.noche) { finde = { t: L('Reto de fin de semana perdido', 'Weekend challenge lost'), txt: L('Esta noche hiciste otro trabajo y la cocina gigante del reto se quedó esperando.', 'You did another job tonight and the challenge\'s giant kitchen was left waiting.') }; S.finde = null; }
   // El equipo B, en su propio trabajo
   // Los otros equipos, cada uno en su trabajo: una línea con lo que dejó cada uno.
   const BS = (o.equipos || (o.equipoB ? [o.equipoB] : [])).map(resolverB);
-  BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = B.k || k + 2; B.neto = v; lineas.push([`Equipo ${B.k} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
+  BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = B.k || k + 2; B.neto = v; lineas.push([L(`Equipo ${B.k} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, `Team ${B.k} at ${B.o.nombre} · ${B.aprobado ? 'passed' : 'failed'}`), v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
   rep = clamp(rep, -15, 25);
-  if (S.angelica && !aprendiz) { lineas.push(['Angélica (coordinación)', -ANGELICA.sueldo]); neto -= ANGELICA.sueldo; }
+  if (S.angelica && !aprendiz) { lineas.push([L('Angélica (coordinación)', 'Angélica (coordination)'), -ANGELICA.sueldo]); neto -= ANGELICA.sueldo; }
   // Equipos que te ayudaron en el trabajo gigante: sus sueldos y su gasolina.
   for (const a of o.ayudan || []) {
     const g = a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean), v = -(g.reduce((t, c) => t + r10(c.sueldo * (c.prueba ? .8 : 1)), 0) + (a.comp ? COMPANEROS[a.comp].sueldo : 0) + GASOLINA);
-    lineas.push([`Equipo ${a.k} (te ayudó): sueldos y gasolina`, v]); neto += v;
+    lineas.push([L(`Equipo ${a.k} (te ayudó): sueldos y gasolina`, `Team ${a.k} (helped you): wages and gas`), v]); neto += v;
     for (const c of g) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); }
   }
   // Para la evaluación: cómo trabajó cada equipo.
-  const evals = [...BS.map(B => ({ t: `Equipo ${B.k} · ${B.o.nombre}`, nota: B.aprobado ? (B.notaA ? 'A' : 'B') : 'D', bien: B.aprobado, gente: B.gente, txt: B.cosas.join(' ') })),
+  const evals = [...BS.map(B => ({ t: `${L('Equipo', 'Team')} ${B.k} · ${B.o.nombre}`, nota: B.aprobado ? (B.notaA ? 'A' : 'B') : 'D', bien: B.aprobado, gente: B.gente, txt: B.cosas.join(' ') })),
     ...(M.crews || []).filter(c => c.zonas.length).map(c => { const entregadas = c.zonas.filter(i => Z[i].entregada).length;
       return { t: `${c.n} · ${c.zonas.map(i => Z[i].n).join(', ')}`, nota: c.fallos === 0 && entregadas === c.zonas.length ? 'A' : c.fallos === 0 ? 'B' : c.fallos === 1 ? 'C' : 'D', bien: c.fallos === 0 && entregadas > 0,
-        gente: c.gente, txt: `Entregó ${entregadas} de ${c.zonas.length} zonas. ${c.ok} pasaron tu revisión a la primera${c.fallos ? `; ${c.fallos} las tuviste que terminar tú` : ''}.` }; })];
+        gente: c.gente, txt: L(`Entregó ${entregadas} de ${c.zonas.length} zonas. ${c.ok} pasaron tu revisión a la primera${c.fallos ? `; ${c.fallos} las tuviste que terminar tú` : ''}.`, `Delivered ${entregadas} of ${c.zonas.length} zones. ${c.ok} passed your check the first time${c.fallos ? `; you had to finish ${c.fallos} yourself` : ''}.`) }; })];
   S.racha = racha;
   // Retos de la noche
   const estrellasAntes = S.estrellas || 0;
@@ -3919,14 +3994,14 @@ function pantallaParte() {
   S.estrellas = estrellasAntes + retosHechos.filter(r => r[1]).length;
   // Retos de Don Rigo
   const misHechas = aprendiz ? [] : avanzarMisiones({ aprobado, n, o, BS, danos: M.danos.length, gana: !!ganaDuelo, espejo, finMin, pedOk: !!(ped && !ped.tacos && pedOk) });
-  for (const x of misHechas) { lineas.push([x.todo ? 'Don Rigo: ¡los tres retos de la semana!' : `Reto de Don Rigo: ${textoMision(x)}`, x.dinero]); neto += x.dinero; rep += x.rep; }
+  for (const x of misHechas) { lineas.push([x.todo ? L('Don Rigo: ¡los tres retos de la semana!', 'Don Rigo: all three weekly challenges!') : `${L('Reto de Don Rigo', 'Don Rigo challenge')}: ${textoMision(x)}`, x.dinero]); neto += x.dinero; rep += x.rep; }
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
   // Récords
   const records = [];
-  if (neto > S.mejor && S.noche > 1) records.push('Noche con más dinero');
+  if (neto > S.mejor && S.noche > 1) records.push(L('Noche con más dinero', 'Most money in a night'));
   S.mejor = Math.max(S.mejor, neto);
-  if (pts > (S.rec.pts || 0)) { if (S.rec.pts !== undefined) records.push('Mejor nota'); S.rec.pts = pts; S.rec.nota = n; }
-  if (aprobado && finMin < (S.rec.fin || 481)) { if (S.rec.fin !== undefined) records.push('Inspector más temprano'); S.rec.fin = finMin; }
+  if (pts > (S.rec.pts || 0)) { if (S.rec.pts !== undefined) records.push(L('Mejor nota', 'Best grade')); S.rec.pts = pts; S.rec.nota = n; }
+  if (aprobado && finMin < (S.rec.fin || 481)) { if (S.rec.fin !== undefined) records.push(L('Inspector más temprano', 'Earliest inspector')); S.rec.fin = finMin; }
   if (M.maxCombo > (S.rec.combo || 0)) S.rec.combo = M.maxCombo;
   if (d && ganaDuelo) S.rec.duelos = (S.rec.duelos || 0) + 1;
   S.notas.push(n); if (S.notas.length > 30) S.notas.shift();
@@ -3993,35 +4068,36 @@ function pantallaParte() {
   S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
   setTimeout(() => vibrar(n === 'F' ? 350 : n === 'A+' || n === 'A' ? [100, 50, 100, 50, 160] : [100, 50, 100]), 250);
   const desastre = M.danos.some(x => x.dinero >= 60);
-  const desbloq = [...nuevas.flatMap(id => Object.values(LOOK).flatMap(g => g.ops.filter(op => op.m === id).map(op => `${g.n}: ${op.n}`))),
-    ...Object.values(LOOK).flatMap(g => g.ops.filter(op => op.e && op.e > estrellasAntes && op.e <= S.estrellas).map(op => `${g.n}: ${op.n}`))];
+  const nLook = (k, g, op) => `${L(g.n, EN.look[k])}: ${L(op.n, EN.look[op.id])}`;
+  const desbloq = [...nuevas.flatMap(id => Object.entries(LOOK).flatMap(([k, g]) => g.ops.filter(op => op.m === id).map(op => nLook(k, g, op)))),
+    ...Object.entries(LOOK).flatMap(([k, g]) => g.ops.filter(op => op.e && op.e > estrellasAntes && op.e <= S.estrellas).map(op => nLook(k, g, op)))];
   pantalla(`<div class="parte-cab"><div class="nota-grande" style="--c:${COL_NOTA[n]}" aria-label="Nota ${n}">${n}</div>
-      <div class="rotulo">${aprobado ? (espejo ? 'Metal desnudo' : 'Aprobado') : 'No pasa'}<span>Parte de ${esc(o.nombre)}</span></div></div>
-    ${records.length ? `<div class="chips">${records.map(r => `<span class="chip naranja">¡Récord! ${esc(r)}</span>`).join('')}</div>` : ''}
-    ${nuevas.length ? `<div class="medallas">${nuevas.map(id => tarjetaMedalla(medalla(id), true)).join('')}</div>${desbloq.length ? `<p class="pista">Desbloqueaste: ${esc(desbloq.join(' · '))}. Cámbialo en «Logros».</p>` : ''}` : ''}
-    ${retosHechos.length ? `<div class="retos"><b>Retos · +${S.estrellas - estrellasAntes} ★ (llevas ${S.estrellas})</b>${retosHechos.map(([r, ok]) => `<span class="${ok ? 'ok' : ''}">${ok ? '★' : '☆'} ${esc(r.t)}</span>`).join('')}</div>` : ''}
-    ${racha > 2 ? `<p class="pista">¡Racha de ${racha} noches aprobadas!${aprendiz ? '' : ' Cada noche seguida paga un poco más.'}</p>` : ''}
+      <div class="rotulo">${aprobado ? (espejo ? L('Metal desnudo', 'Bare metal') : L('Aprobado', 'Passed')) : L('No pasa', 'Failed')}<span>${L('Parte de', 'Report for')} ${esc(o.nombre)}</span></div></div>
+    ${records.length ? `<div class="chips">${records.map(r => `<span class="chip naranja">${L('¡Récord!', 'Record!')} ${esc(r)}</span>`).join('')}</div>` : ''}
+    ${nuevas.length ? `<div class="medallas">${nuevas.map(id => tarjetaMedalla(medalla(id), true)).join('')}</div>${desbloq.length ? `<p class="pista">${L('Desbloqueaste', 'You unlocked')}: ${esc(desbloq.join(' · '))}. ${L('Cámbialo en «Logros».', 'Change it in "Awards".')}</p>` : ''}` : ''}
+    ${retosHechos.length ? `<div class="retos"><b>${L('Retos', 'Challenges')} · +${S.estrellas - estrellasAntes} ★ (${L('llevas', 'total')} ${S.estrellas})</b>${retosHechos.map(([r, ok]) => `<span class="${ok ? 'ok' : ''}">${ok ? '★' : '☆'} ${esc(tReto(r))}</span>`).join('')}</div>` : ''}
+    ${racha > 2 ? `<p class="pista">${L(`¡Racha de ${racha} noches aprobadas!${aprendiz ? '' : ' Cada noche seguida paga un poco más.'}`, `${racha}-night passing streak!${aprendiz ? '' : ' Each night in a row pays a little more.'}`)}</p>` : ''}
     <div id="fotoParte"></div>
-    <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % limpio</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
-      <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.</span></div>
-    ${d ? `<div class="cita"><b>${ganaDuelo ? 'Duelo ganado' : 'Duelo perdido'}</b>${ganaDuelo ? `Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.` : `El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`}</div>` : ''}
+    <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % ${L('limpio', 'clean')}</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
+      <span class="nota">${L(`El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.`, `The inspector measures with a grease comb: it passes at ${LIMITE} µm or less in each zone. Mirror polish: ${Math.round(pulido * 100)}%. Inspector at ${hora(finMin)}.`)}</span></div>
+    ${d ? `<div class="cita"><b>${ganaDuelo ? L('Duelo ganado', 'Duel won') : L('Duelo perdido', 'Duel lost')}</b>${ganaDuelo ? L(`Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.`, `You finished at ${hora(d.tuyo / M.dur * 480)}. El Cuñado left without saying goodbye and forgot his scraper. It's yours now, as a souvenir.`) : L(`El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`, `El Cuñado finished at ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` and you at ${hora(d.tuyo / M.dur * 480)}` : ''}. The client stays with him and pays you half "for your trouble".`)}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
-    ${misHechas.length ? `<div class="cita"><b>📞 Don Rigo, desde el lago</b>${misHechas.some(x => x.todo) ? '¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.' : uno(['¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'Reto cumplido. Se me cayó la caña de la emoción.', 'Así se hace. Beto dice que él te enseñó. Yo no dije nada.'])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
+    ${misHechas.length ? `<div class="cita"><b>📞 ${L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b>${misHechas.some(x => x.todo) ? '¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.' : uno(['¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'Reto cumplido. Se me cayó la caña de la emoción.', 'Así se hace. Beto dice que él te enseñó. Yo no dije nada.'])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
     ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(capitulo.t)}</b>${esc(capitulo.txt)}</div>` : ''}
-    <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
+    <div class="cita"><b>${L('El cliente', 'The client')}</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
-    ${BS.length ? `<div class="cita equipo-b"><b>Tus otros equipos</b>${BS.map(B => `<div class="eq-res"><b>Equipo ${B.k} · ${esc(B.o.nombre)} · ${B.aprobado ? '✓ aprobado' : '✗ no pasó'} · ${dinero(B.neto)}</b>${esc(B.gente.map(g => g.n).join(', '))}: ${esc(B.cosas.join(' '))}</div>`).join('')}</div>` : ''}
+    ${BS.length ? `<div class="cita equipo-b"><b>${L('Tus otros equipos', 'Your other teams')}</b>${BS.map(B => `<div class="eq-res"><b>${L('Equipo', 'Team')} ${B.k} · ${esc(B.o.nombre)} · ${B.aprobado ? L('✓ aprobado', '✓ passed') : L('✗ no pasó', '✗ failed')} · ${dinero(B.neto)}</b>${esc(B.gente.map(g => g.n).join(', '))}: ${esc(B.cosas.join(' '))}</div>`).join('')}</div>` : ''}
     <div class="cuentas">
       ${lineas.filter(l => l[1] !== 0).map(l => `<span>${esc(l[0])}</span><span>${l[1] === null ? '—' : dinero(l[1])}</span>`).join('')}
-      <span class="total">Te llevas</span><span class="total">${dinero(neto)}</span>
-      <span>Reputación${aprendiz ? ' de Grasa Brava' : ''}</span><span>${rep >= 0 ? '+' : ''}${rep}</span>
-      <span>Experiencia</span><span>+${xp}</span>
-      <span>Nota</span><span>${n} · ${pts} pts</span>
+      <span class="total">${L('Te llevas', 'You take home')}</span><span class="total">${dinero(neto)}</span>
+      <span>${L(`Reputación${aprendiz ? ' de Grasa Brava' : ''}`, `${aprendiz ? 'Grasa Brava r' : 'R'}eputation`)}</span><span>${rep >= 0 ? '+' : ''}${rep}</span>
+      <span>${L('Experiencia', 'Experience')}</span><span>+${xp}</span>
+      <span>${L('Nota', 'Grade')}</span><span>${n} · ${pts} pts</span>
     </div>
-    ${aprendiz && danos ? '<p class="nota">Don Rigo paga los daños. Te los va a recordar en tu boda.</p>' : ''}
-    ${M.album.length ? `<p class="nota">Nuevo momento para el álbum: ${esc(M.album.join(', '))}.</p>` : ''}
-    <div class="acciones"><button class="btn prim" id="seguir">Seguir</button></div>`);
+    ${aprendiz && danos ? `<p class="nota">${L('Don Rigo paga los daños. Te los va a recordar en tu boda.', 'Don Rigo pays for the damage. He\'ll bring it up at your wedding.')}</p>` : ''}
+    ${M.album.length ? `<p class="nota">${L('Nuevo momento para el álbum', 'New moment for the album')}: ${esc(M.album.join(', '))}.</p>` : ''}
+    <div class="acciones"><button class="btn prim" id="seguir">${L('Seguir', 'Continue')}</button></div>`);
   $('#seguir').onclick = siguiente;
   tono(aprobado ? 660 : 300, .3, .1, 'triangle', aprobado ? 990 : 200);
   if (nuevas.length) setTimeout(sDing, 400);
@@ -4040,19 +4116,19 @@ function fotoParte(m) {
   const el = $('#fotoParte'); if (el) el.innerHTML = tarjetaFoto(f);
   if (fotos().length >= 6 && !S.medallas.fotos) { S.medallas.fotos = S.noche; guardar(); if (el) el.insertAdjacentHTML('beforeend', `<div class="medallas">${tarjetaMedalla(medalla('fotos'), true)}</div>`); }
 }
-const tarjetaFoto = f => `<figure class="foto"><div class="foto-par">${f.antes ? `<div><img src="${f.antes}" alt="Antes"><span>Antes</span></div>` : ''}<div><img src="${f.despues}" alt="Después"><span>Después</span></div></div>
-  <figcaption><b>${esc(f.nombre)}</b> · Noche ${f.noche} · Nota ${esc(f.nota)}</figcaption></figure>`;
+const tarjetaFoto = f => `<figure class="foto"><div class="foto-par">${f.antes ? `<div><img src="${f.antes}" alt="${L('Antes', 'Before')}"><span>${L('Antes', 'Before')}</span></div>` : ''}<div><img src="${f.despues}" alt="${L('Después', 'After')}"><span>${L('Después', 'After')}</span></div></div>
+  <figcaption><b>${esc(f.nombre)}</b> · ${L('Noche', 'Night')} ${f.noche} · ${L('Nota', 'Grade')} ${esc(f.nota)}</figcaption></figure>`;
 const tarjetaMedalla = (m, nueva) => { const oculta = m.secreto && !nueva && !S.medallas[m.id];
-  return `<div class="medalla ${nueva ? 'nueva' : ''} ${nueva || S.medallas[m.id] ? '' : 'bloq'}"><span class="ico">${oculta ? '?' : m.ico}</span><div><b>${nueva ? (m.secreto ? '¡Medalla secreta! ' : '¡Medalla! ') : ''}${oculta ? '???' : esc(m.n)}</b><small>${oculta ? 'Secreto. Sigue jugando…' : esc(m.d)}</small></div></div>`; };
+  return `<div class="medalla ${nueva ? 'nueva' : ''} ${nueva || S.medallas[m.id] ? '' : 'bloq'}"><span class="ico">${oculta ? '?' : m.ico}</span><div><b>${nueva ? (m.secreto ? L('¡Medalla secreta! ', 'Secret medal! ') : L('¡Medalla! ', 'Medal! ')) : ''}${oculta ? '???' : esc(nMed(m))}</b><small>${oculta ? L('Secreto. Sigue jugando…', 'Secret. Keep playing…') : esc(dMed(m))}</small></div></div>`; };
 
 // Evaluar a los equipos: felicitar o regañar cambia su ánimo (y a veces su cuidado). Con el ánimo en cero, renuncian.
 function pantallaEvaluar(items) {
-  pantalla(`<div class="rotulo">Evalúa a tus equipos<span>Lo que hicieron esta noche</span></div>
+  pantalla(`<div class="rotulo">${L('Evalúa a tus equipos<span>Lo que hicieron esta noche</span>', 'Review your teams<span>What they did tonight</span>')}</div>
     ${items.map((it, i) => `<div class="evalua" data-ei="${i}"><div class="fila"><b>${esc(it.t)}</b><span class="nota-mini" style="--c:${COL_NOTA[it.nota]}">${it.nota}</span></div>
-      <span class="nota">${esc(it.gente.map(g => g.n + (g.animo ? ` (ánimo ${'●'.repeat(g.animo)})` : '')).join(', '))}</span><span>${esc(it.txt)}</span>
-      <div class="acciones"><button class="btn peq prim" data-ev="${i}|fel">Felicitar</button><button class="btn peq" data-ev="${i}|reg">Regañar</button><button class="btn peq" data-ev="${i}|nada">Dejarlo así</button></div><p class="respuesta-ev"></p></div>`).join('')}
-    <p class="nota">Felicitar sube el ánimo (y con buen ánimo trabajan mejor). Regañar por un mal trabajo les baja el ánimo pero a veces aprenden a tener más cuidado; regañar a quien lo hizo bien… mejor no.</p>
-    <div class="acciones"><button class="btn prim" id="seguirEv">Seguir</button></div>`);
+      <span class="nota">${esc(it.gente.map(g => g.n + (g.animo ? ` (${L('ánimo', 'morale')} ${'●'.repeat(g.animo)})` : '')).join(', '))}</span><span>${esc(it.txt)}</span>
+      <div class="acciones"><button class="btn peq prim" data-ev="${i}|fel">${L('Felicitar', 'Praise')}</button><button class="btn peq" data-ev="${i}|reg">${L('Regañar', 'Scold')}</button><button class="btn peq" data-ev="${i}|nada">${L('Dejarlo así', 'Leave it')}</button></div><p class="respuesta-ev"></p></div>`).join('')}
+    <p class="nota">${L('Felicitar sube el ánimo (y con buen ánimo trabajan mejor). Regañar por un mal trabajo les baja el ánimo pero a veces aprenden a tener más cuidado; regañar a quien lo hizo bien… mejor no.', 'Praise raises morale (and good morale means better work). Scolding bad work lowers morale but sometimes they learn to be more careful; scolding people who did well… better not.')}</p>
+    <div class="acciones"><button class="btn prim" id="seguirEv">${L('Seguir', 'Continue')}</button></div>`);
   P.querySelectorAll('[data-ev]').forEach(b => b.onclick = () => {
     const [i, k] = b.dataset.ev.split('|'), it = items[+i], caja = P.querySelector(`[data-ei="${i}"]`);
     caja.querySelectorAll('[data-ev]').forEach(x => x.disabled = true);
@@ -4079,10 +4155,10 @@ function pantallaEvaluar(items) {
 
 function ofertaContrato(o) {
   const C = COCINAS[o.cocina], cada = FREC[C.frec];
-  pantalla(`<div class="rotulo">¿Contrato fijo?<span>${esc(o.nombre)}</span></div>
-    <div class="cita"><b>El dueño</b>${esc(uno(['Nunca vi mi campana así. ¿Me la limpian siempre ustedes?', `${RIVAL} cobraba menos, pero no limpiaba. ¿Firmamos?`, 'Quiero esto cada vez que toque. Y que venga el mismo chico, el que no rompe nada.']))}</div>
-    <p>Te llamará cada ${cada} noches (NFPA 96: ${C.frec}) y paga un 10 % más. Misma cocina, misma campana, misma grasa de vuelta. Si no vas a tiempo, se va con ${RIVAL} y pierdes reputación.</p>
-    <div class="acciones"><button class="btn prim" id="firmar">Firmar</button><button class="btn" id="noFirmar">Mejor no</button></div>`);
+  pantalla(`<div class="rotulo">${L('¿Contrato fijo?', 'Regular contract?')}<span>${esc(o.nombre)}</span></div>
+    <div class="cita"><b>${L('El dueño', 'The owner')}</b>${esc(uno(['Nunca vi mi campana así. ¿Me la limpian siempre ustedes?', `${RIVAL} cobraba menos, pero no limpiaba. ¿Firmamos?`, 'Quiero esto cada vez que toque. Y que venga el mismo chico, el que no rompe nada.']))}</div>
+    <p>${L(`Te llamará cada ${cada} noches (NFPA 96: ${C.frec}) y paga un 10 % más. Misma cocina, misma campana, misma grasa de vuelta. Si no vas a tiempo, se va con ${RIVAL} y pierdes reputación.`, `They will call you every ${cada} nights (NFPA 96: ${EN.frec[C.frec]}) and pay 10% more. Same kitchen, same hood, same grease all over again. If you are not on time, they go to ${RIVAL} and you lose reputation.`)}</p>
+    <div class="acciones"><button class="btn prim" id="firmar">${L('Firmar', 'Sign')}</button><button class="btn" id="noFirmar">${L('Mejor no', 'No thanks')}</button></div>`);
   $('#firmar').onclick = () => { const usadas = S.clientes.map(c => c.historia); S.clientes.push({ id: S.sigId++, nombre: o.nombre, cocina: o.cocina, proxima: S.noche + cada - 1, visitas: 1, diseno: o.diseno, pagoBase: o.pagoBase, historia: azar(.6) ? uno(Object.keys(HISTORIAS).filter(h => !usadas.includes(h))) : undefined, cap: 0 }); guardar(); sCaja(); siguiente(); };
   $('#noFirmar').onclick = siguiente;
 }
@@ -4090,8 +4166,8 @@ function ofertaContrato(o) {
 function elegirPerk() {
   const libres = Object.keys(PERKS).filter(k => perk(k) < 3).sort(() => Math.random() - .5).slice(0, 3);
   if (!libres.length) return siguiente();
-  pantalla(`<div class="rotulo">¡Nivel ${S.nivel}!<span>Elige una mejora</span></div>
-    ${libres.map(k => `<button class="orden" data-p="${k}"><h3>${PERKS[k].n}${perk(k) ? ' ' + 'I'.repeat(perk(k) + 1) : ''}</h3><span class="nota">${PERKS[k].d}</span></button>`).join('')}`);
+  pantalla(`<div class="rotulo">${L(`¡Nivel ${S.nivel}!<span>Elige una mejora</span>`, `Level ${S.nivel}!<span>Pick a perk</span>`)}</div>
+    ${libres.map(k => `<button class="orden" data-p="${k}"><h3>${L(PERKS[k].n, EN.perk[k][0])}${perk(k) ? ' ' + 'I'.repeat(perk(k) + 1) : ''}</h3><span class="nota">${L(PERKS[k].d, EN.perk[k][1])}</span></button>`).join('')}`);
   sDing();
   P.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { S.perks[b.dataset.p] = perk(b.dataset.p) + 1; guardar(); siguiente(); });
 }
@@ -4107,21 +4183,23 @@ function pantallaInicio() {
   pantalla(`<div class="inicio">
     <div class="portada"><div class="calle" aria-hidden="true">${CIUDAD}<div class="furgo-anda">${furgo(emp ? S.empresa.nombre : 'Grasa Brava', emp ? S.empresa.color : '#e0a040', emp ? S.etapa : 0)}</div></div>
       <div class="letrero">${LOGO}<div><div class="neon">Hood Cleaners</div><div class="neon-sub">The Night Shift</div></div></div>
-      <p class="lema">Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.</p>
-      <p class="en-radio" id="enRadio"><i class="eq" aria-hidden="true"><b></b><b></b><b></b></i><span>Toca la pantalla para encender Radio Grasa FM</span></p></div>
+      <p class="lema">${L('Raspa grasa de noche, sobrevive a Beto y levanta tu propia empresa de limpieza de campanas.', 'Scrape grease all night, survive Beto and build your own kitchen hood cleaning company.')}</p>
+      <p class="en-radio" id="enRadio"><i class="eq" aria-hidden="true"><b></b><b></b><b></b></i><span>${L('Toca la pantalla para encender Radio Grasa FM', 'Tap the screen to turn on Radio Grasa FM')}</span></p></div>
     <div class="menu-inicio">
       <div id="novedad"></div>
-      ${enIphone() ? `<div class="cita"><b>📱 Instálalo en tu iPhone</b>Toca <strong style="color:var(--hivis)">Compartir</strong> (el cuadrito con la flecha) y luego <strong style="color:var(--hivis)">«Agregar a inicio»</strong>. Así se juega en pantalla completa, funciona sin internet y Safari no borra tu partida.</div>` : ''}
+      ${enIphone() ? L(`<div class="cita"><b>📱 Instálalo en tu iPhone</b>Toca <strong style="color:var(--hivis)">Compartir</strong> (el cuadrito con la flecha) y luego <strong style="color:var(--hivis)">«Agregar a inicio»</strong>. Así se juega en pantalla completa, funciona sin internet y Safari no borra tu partida.</div>`, `<div class="cita"><b>📱 Install it on your iPhone</b>Tap <strong style="color:var(--hivis)">Share</strong> (the square with the arrow) and then <strong style="color:var(--hivis)">"Add to Home Screen"</strong>. It plays full screen, works offline and Safari won't delete your save.</div>`) : ''}
       ${guardada ? `<button class="continuar" id="continuar"><span class="mini-furgo" aria-hidden="true">${furgo(emp ? S.empresa.nombre : 'Grasa Brava', emp ? S.empresa.color : '#e0a040', emp ? S.etapa : 0)}</span>
-        <span class="cont-txt"><small>Continuar</small><b>${esc(S.jugador || 'Tu partida')}</b><span>${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + ETAPAS[S.etapa].n : 'Aprendiz en Grasa Brava'}</span>
-          <span class="cont-datos"><i>🌙 Noche ${S.noche}</i><i>💵 ${dinero(S.dinero)}</i><i>⭐ ${S.rep}</i>${S.estrellas ? `<i>★ ${S.estrellas}</i>` : ''}</span></span>
+        <span class="cont-txt"><small>${L('Continuar', 'Continue')}</small><b>${esc(S.jugador || L('Tu partida', 'Your game'))}</b><span>${S.fase === 'empresa' ? esc(S.empresa.nombre) + ' · ' + nEtapa(S.etapa) : L('Aprendiz en Grasa Brava', 'Apprentice at Grasa Brava')}</span>
+          <span class="cont-datos"><i>🌙 ${L('Noche', 'Night')} ${S.noche}</i><i>💵 ${dinero(S.dinero)}</i><i>⭐ ${S.rep}</i>${S.estrellas ? `<i>★ ${S.estrellas}</i>` : ''}</span></span>
         <span class="cont-flecha" aria-hidden="true">▶</span></button>` : ''}
-      <div class="botones-inicio"><button class="btn ${guardada ? '' : 'prim'} grande" id="nuevaP">${guardada ? 'Nueva partida' : '▶ Empezar a jugar'}</button><button class="btn grande" id="ajustesIni">⚙ Ajustes</button></div>
-      <p class="pie">${window.HC_VERSION ? `Versión ${window.HC_VERSION} · ` : ''}Hecho con grasa y cariño</p>
+      <div class="botones-inicio"><button class="btn ${guardada ? '' : 'prim'} grande" id="nuevaP">${guardada ? L('Nueva partida', 'New game') : L('▶ Empezar a jugar', '▶ Start playing')}</button><button class="btn grande" id="ajustesIni">⚙ ${L('Ajustes', 'Settings')}</button></div>
+      ${selectorIdioma()}
+      <p class="pie">${window.HC_VERSION ? `${L('Versión', 'Version')} ${window.HC_VERSION} · ` : ''}${L('Hecho con grasa y cariño', 'Made with grease and love')}</p>
     </div></div>`);
   const c = $('#continuar'); if (c) c.onclick = () => { audio(); if (S.jugador) pantallaCamioneta(); else pantallaNombre(false); };
   $('#nuevaP').onclick = () => { audio(); pantallaNombre(true); };
   $('#ajustesIni').onclick = () => pantallaAjustes(false, true);
+  enlazarIdioma(pantallaInicio);
   pintarNovedad(); buscarNovedad();
   P.addEventListener('pointerdown', () => { audio(); if (!M && $('#enRadio')) radioEncender(true); }, { once: true });
   if (RADIO.on && RADIO.cancion) $('#enRadio span').textContent = `♪ ${RADIO.cancion.t} — ${RADIO.cancion.de}`;
@@ -4159,25 +4237,25 @@ function buscarNovedad() {
 function pintarNovedad() {
   const el = $('#novedad'); if (!el || !novedad) return;
   const app = window.HoodApp && window.HoodApp.actualizar;   // el APK descarga e instala sin salir del juego
-  el.innerHTML = `<div class="novedad"><b>¡Hay una versión nueva del juego!</b><span class="nota" id="novedadTxt">${app ? 'Se instala encima de esta: tu partida se queda donde está. Android te pedirá confirmar.' : 'Descárgala e instálala encima de esta: tu partida se queda donde está.'}</span>
-    <div class="acciones">${app ? '<button class="btn prim" id="actualizar">Actualizar ahora</button>' : `<a class="btn prim" href="${APK_URL}">Descargar la versión nueva</a>`}</div></div>`;
-  const b = $('#actualizar'); if (b) b.onclick = () => { b.disabled = true; b.textContent = 'Descargando…'; window.HoodApp.actualizar(APK_URL); };
+  el.innerHTML = `<div class="novedad"><b>${L('¡Hay una versión nueva del juego!', 'A new version of the game is out!')}</b><span class="nota" id="novedadTxt">${app ? L('Se instala encima de esta: tu partida se queda donde está. Android te pedirá confirmar.', 'It installs over this one: your save stays where it is. Android will ask you to confirm.') : L('Descárgala e instálala encima de esta: tu partida se queda donde está.', 'Download it and install it over this one: your save stays where it is.')}</span>
+    <div class="acciones">${app ? `<button class="btn prim" id="actualizar">${L('Actualizar ahora', 'Update now')}</button>` : `<a class="btn prim" href="${APK_URL}">${L('Descargar la versión nueva', 'Download the new version')}</a>`}</div></div>`;
+  const b = $('#actualizar'); if (b) b.onclick = () => { b.disabled = true; b.textContent = L('Descargando…', 'Downloading…'); window.HoodApp.actualizar(APK_URL); };
 }
 // La app avisa de cómo va: descargando (con %), instalando o error (entonces, por el navegador).
 window.hcActualizacion = (estado, pct) => {
   const b = $('#actualizar'), t = $('#novedadTxt'); if (!b) return;
-  if (estado === 'descargando') b.textContent = pct >= 0 ? `Descargando… ${pct} %` : 'Descargando…';
-  else if (estado === 'instalando') { b.textContent = 'Instalando…'; if (t) t.textContent = 'Confirma en la pantalla de Android. Si te pide permiso para instalar apps de Hood Cleaners, actívalo y vuelve.'; }
-  else { b.disabled = false; b.textContent = 'Reintentar'; if (t) t.innerHTML = `No se pudo instalar desde aquí. <a href="${APK_URL}">Descárgala con el navegador</a> e instálala encima.`; }
+  if (estado === 'descargando') b.textContent = pct >= 0 ? `${L('Descargando…', 'Downloading…')} ${pct} %` : L('Descargando…', 'Downloading…');
+  else if (estado === 'instalando') { b.textContent = L('Instalando…', 'Installing…'); if (t) t.textContent = L('Confirma en la pantalla de Android. Si te pide permiso para instalar apps de Hood Cleaners, actívalo y vuelve.', 'Confirm on the Android screen. If it asks for permission to install apps from Hood Cleaners, turn it on and come back.'); }
+  else { b.disabled = false; b.textContent = L('Reintentar', 'Try again'); if (t) t.innerHTML = L(`No se pudo instalar desde aquí. <a href="${APK_URL}">Descárgala con el navegador</a> e instálala encima.`, `Couldn't install from here. <a href="${APK_URL}">Download it with the browser</a> and install it over this one.`); }
 };
 
 // nueva = true empieza otra partida; false solo pone nombre a la que ya hay.
 function pantallaNombre(nueva_) {
-  pantalla(`<div class="rotulo">${nueva_ ? 'Nueva partida' : 'Tu nombre'}</div>
-    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>¿Y tú quién eres? Habla fuerte, que el extractor hace ruido.</div></div>
-    <label class="campo"><span>Tu nombre</span><input id="nombreJug" maxlength="18" autocomplete="off" spellcheck="false" value="${nueva_ ? '' : esc(S.jugador || '')}"></label>
-    ${nueva_ && guardada ? `<p class="aviso">Se borra la partida guardada${S.jugador ? ' de ' + esc(S.jugador) : ''} (noche ${S.noche}).</p>` : ''}
-    <div class="acciones"><button class="btn prim" id="empezarJ">${nueva_ ? 'Empezar' : 'Seguir'}</button><button class="btn" id="volverJ">Volver</button></div>`);
+  pantalla(`<div class="rotulo">${nueva_ ? L('Nueva partida', 'New game') : L('Tu nombre', 'Your name')}</div>
+    <div class="jefe">${cara('#b9a27a', 'R')}<div><b>Don Rigo</b>${L('¿Y tú quién eres? Habla fuerte, que el extractor hace ruido.', 'And who are you? Speak up, the exhaust fan is loud.')}</div></div>
+    <label class="campo"><span>${L('Tu nombre', 'Your name')}</span><input id="nombreJug" maxlength="18" autocomplete="off" spellcheck="false" value="${nueva_ ? '' : esc(S.jugador || '')}"></label>
+    ${nueva_ && guardada ? `<p class="aviso">${L(`Se borra la partida guardada${S.jugador ? ' de ' + esc(S.jugador) : ''} (noche ${S.noche}).`, `This deletes the saved game${S.jugador ? ' of ' + esc(S.jugador) : ''} (night ${S.noche}).`)}</p>` : ''}
+    <div class="acciones"><button class="btn prim" id="empezarJ">${nueva_ ? L('Empezar', 'Start') : L('Seguir', 'Continue')}</button><button class="btn" id="volverJ">${L('Volver', 'Back')}</button></div>`);
   const inp = $('#nombreJug'), ok = $('#empezarJ');
   const val = () => { ok.disabled = !inp.value.trim(); };
   inp.oninput = val; val();
@@ -4217,16 +4295,16 @@ function nombrarEmpresa() {
   const NOMBRES = ['Grasa Cero', 'Campanas Relucientes', 'Los Limpiadores de Hoods', ...(S.jugador ? [`Limpiezas ${S.jugador}`, `${S.jugador} e Hijos`] : []), 'Ductos Felices', 'Brillo Nocturno'];
   const PINTURAS = [['#ff8a1f', 'naranja'], ['#2f6fd1', 'azul'], ['#d7382b', 'rojo'], ['#2e9e5b', 'verde'], ['#e8e3d6', 'blanco'], ['#7b4fd1', 'morado']];
   let nombre = uno(NOMBRES), color = PINTURAS[0][0];
-  pantalla(`<div class="rotulo">Tu empresa<span>desde cero</span></div>
+  pantalla(`<div class="rotulo">${L('Tu empresa<span>desde cero</span>', 'Your company<span>from scratch</span>')}</div>
     <div id="vistaFurgo"></div>
-    <label class="campo"><span>Nombre de la empresa</span><input id="nombreEmp" maxlength="26" autocomplete="off" spellcheck="false"></label>
+    <label class="campo"><span>${L('Nombre de la empresa', 'Company name')}</span><input id="nombreEmp" maxlength="26" autocomplete="off" spellcheck="false"></label>
     <div class="chips">${NOMBRES.map(n => `<button class="btn peq" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
-    <h2 class="sec">Pintura de la camioneta</h2>
-    <div class="chips">${PINTURAS.map(([c, n]) => `<button class="color" data-col="${c}" style="background:${c}" aria-label="Pintura ${n}" aria-pressed="${c === color}"></button>`).join('')}</div>
-    <p class="nota">Empiezas tú solo, con ${dinero(300)} de finiquito más lo que ahorraste, la camioneta vieja y reputación cero. Cuando juntes para el adelanto, contrata a Beto en «Cuadrilla».</p>
-    <div class="acciones"><button class="btn prim" id="fundar">Abrir la empresa</button></div>`);
+    <h2 class="sec">${L('Pintura de la camioneta', 'Van paint')}</h2>
+    <div class="chips">${PINTURAS.map(([c, n]) => `<button class="color" data-col="${c}" style="background:${c}" aria-label="${L('Pintura', 'Paint')} ${n}" aria-pressed="${c === color}"></button>`).join('')}</div>
+    <p class="nota">${L(`Empiezas tú solo, con ${dinero(300)} de finiquito más lo que ahorraste, la camioneta vieja y reputación cero. Cuando juntes para el adelanto, contrata a Beto en «Cuadrilla».`, `You start alone, with ${dinero(300)} of severance plus your savings, the old van and zero reputation. When you can afford his advance, hire Beto in "Crew".`)}</p>
+    <div class="acciones"><button class="btn prim" id="fundar">${L('Abrir la empresa', 'Open the company')}</button></div>`);
   const inp = $('#nombreEmp'), fundar = $('#fundar');
-  const pintar = () => { $('#vistaFurgo').innerHTML = furgo(nombre || 'Sin nombre', color, 0); fundar.disabled = !nombre; };
+  const pintar = () => { $('#vistaFurgo').innerHTML = furgo(nombre || L('Sin nombre', 'No name'), color, 0); fundar.disabled = !nombre; };
   inp.value = nombre; pintar();
   inp.oninput = () => { nombre = inp.value.trim(); pintar(); };
   P.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { nombre = inp.value = b.dataset.n; pintar(); });
@@ -4243,11 +4321,11 @@ function nombrarEmpresa() {
 function subirEtapa() {
   const e = ETAPAS[S.etapa];
   const frases = ['', ['Don Rigo', 'Un taller propio. Con baño y todo. Lupe me llamó: busca trabajo y solo pide su propia taza. Contrátala en «Cuadrilla».'], ['Don Rigo', 'Oficina con fax. Nadie sabe usar el fax. Chuy ya se durmió en el sofá de la entrada: dice que si lo contratas, se despierta.'], ['Radio Grasa FM', 'Última hora: a esta empresa la llaman de un estadio. ¡De un estadio! El cuñado del alcalde pasó por delante y no los saludó. Eso es que van bien.'], ['Don Rigo', `Saliste en el noticiero de las seis. Siempre supe que valías, ${jugador()}. Mentira, pero se agradece. Ahora, ¿me das trabajo? Es broma. Bueno, medio broma.`]][S.etapa];
-  pantalla(`<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(e.n)}<span>${esc(S.empresa.nombre)}</span></div></div>
+  pantalla(`<div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(nEtapa(S.etapa))}<span>${esc(S.empresa.nombre)}</span></div></div>
     <div class="cita"><b>${esc(frases[0])}</b>${esc(frases[1])}</div>
-    <p>${esc(e.txt)}</p>
-    ${S.etapa === ETAPAS.length - 1 ? '<p class="pista">Llegaste a lo más alto. Puedes seguir jugando: la grasa nunca se acaba.</p>' : ''}
-    <div class="acciones"><button class="btn prim" id="ok">Seguir</button></div>`);
+    <p>${esc(tEtapa(S.etapa))}</p>
+    ${S.etapa === ETAPAS.length - 1 ? `<p class="pista">${L('Llegaste a lo más alto. Puedes seguir jugando: la grasa nunca se acaba.', 'You made it to the top. Keep playing: grease never runs out.')}</p>` : ''}
+    <div class="acciones"><button class="btn prim" id="ok">${L('Seguir', 'Continue')}</button></div>`);
   sDing(); tono(1760, .5, .08, 'sine', null, .3);
   $('#ok').onclick = siguiente;
 }
@@ -4297,7 +4375,7 @@ function brilloEspejo(z) {
   z.espejo = true;
   for (const sf of z.sfs) { const m = sf.mesh.material; m.roughness = .14; (piezas.destellos = piezas.destellos || []).push({ m, t0: performance.now() }); }
   vibrar([40, 40, 80]); tono(1568, .25, .05, 'sine', 2093); tono(2093, .3, .04, 'sine', null, .12);
-  if (zonaAct() === z) ayuda(`¡${z.n} quedó como espejo!`, 3);
+  if (zonaAct() === z) ayuda(L(`¡${z.n} quedó como espejo!`, `${z.n} is a mirror now!`), 3);
 }
 // Fuego del horno, brasas, neón y farolitos; el reloj de la pared sigue la hora del turno.
 let relojMin = -1;
@@ -4322,7 +4400,7 @@ function medirFps(ahora) {
   if (ahora - FPS.t0 < 3000) return;
   const fps = FPS.n * 1000 / (ahora - FPS.t0); FPS.t0 = ahora; FPS.n = 0;
   FPS.lentos = fps < 25 ? FPS.lentos + 1 : 0;
-  if (FPS.lentos >= 2 && !S.ahorroAuto) { S.aj.ahorro = true; S.ahorroAuto = true; calidad(); redimensionar(); guardar(); ayuda('Modo ahorro activado: el celular iba lento. Puedes quitarlo en Ajustes.', 6); }
+  if (FPS.lentos >= 2 && !S.ahorroAuto) { S.aj.ahorro = true; S.ahorroAuto = true; calidad(); redimensionar(); guardar(); ayuda(L('Modo ahorro activado: el celular iba lento. Puedes quitarlo en Ajustes.', 'Battery saver on: the phone was running slow. You can turn it off in Settings.'), 6); }
 }
 let ult = performance.now(), faltaT = 0;
 function bucle(ahora) {
@@ -4338,7 +4416,7 @@ function bucle(ahora) {
   if ((faltaT -= dt) <= 0) {
     faltaT = .35;
     const [izq, der] = M && (M.fase === 'turno' || M.fase === 'prep') ? faltaFuera() : [false, false];
-    const txt = !M ? '' : M.fase === 'prep' || M.etapa === 'pelar' ? 'falta' : M.etapa === 'migdalear' ? 'falta migdalear' : 'falta grasa';
+    const txt = !M ? '' : M.fase === 'prep' || M.etapa === 'pelar' ? L('falta', 'more') : M.etapa === 'migdalear' ? L('falta migdalear', 'polish left') : L('falta grasa', 'grease left');
     $('#faltaI').hidden = !izq; $('#faltaD').hidden = !der; $('#faltaI').textContent = txt + ' ›'; $('#faltaD').textContent = txt + ' ›';
   }
   moverCamara(dt);
