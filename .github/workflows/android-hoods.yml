@@ -1,0 +1,74 @@
+# Compila el APK de Hood Cleaners (el juego y three.js van dentro de la app: funciona sin conexión) y lo publica en
+# https://github.com/jlanuza94/El-Banquillo/releases/download/hood-cleaners-latest/Hood-Cleaners.apk
+# Se compila al subir cambios del juego o de la app a cualquier rama, o a mano desde la pestaña Actions.
+name: APK de Hood Cleaners
+on:
+  push:
+    paths: ['hoods/**', 'android-hoods/**', 'tools/build.mjs', 'tools/hoods-apk.mjs', '.github/workflows/android-hoods.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: apk-hood-cleaners
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+      KEYSTORE_FILE: ${{ github.workspace }}/android-hoods/app/release.keystore
+      KEY_ALIAS: elbanquillo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Juego dentro de la app
+        run: node tools/build.mjs && node tools/hoods-apk.mjs
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.10.2' }
+      - name: Clave de firma
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          # Con los secretos ANDROID_KEYSTORE_B64 y ANDROID_KEYSTORE_PASSWORD se firma con la clave de El Banquillo.
+          if [ -n "$KS_B64" ] && [ -n "$KS_PW" ]; then
+            echo "$KS_B64" | base64 -d > "$KEYSTORE_FILE"; PW="$KS_PW"
+            echo "::add-mask::$PW"
+          else
+            # Sin secretos: la clave fija de Hood Cleaners que está en el repositorio. Es pública (cualquiera podría
+            # firmar con ella), pero garantiza que cada APK nuevo se instale encima del anterior sin perder la partida.
+            cp android-hoods/hood-cleaners.jks "$KEYSTORE_FILE"; PW=hoodcleaners
+            echo "KEY_ALIAS=hoodcleaners" >> "$GITHUB_ENV"
+          fi
+          echo "KEYSTORE_PASSWORD=$PW" >> "$GITHUB_ENV"; echo "KEY_PASSWORD=$PW" >> "$GITHUB_ENV"
+      - name: Compilar
+        run: |
+          set -o pipefail
+          gradle -p android-hoods assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log || {
+            echo "::error title=Gradle::$(grep -E 'error:|What went wrong|FAILURE|Could not' -A4 build.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')"
+            echo "::error title=Final del registro::$(tail -30 build.log | sed ':a;N;$!ba;s/\n/%0A/g')"
+            exit 1; }
+      - name: Comprobar APK
+        run: |
+          APK=android-hoods/app/build/outputs/apk/release/app-release.apk
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --verbose $APK | head -5 > check.txt
+          "$BT/aapt2" dump badging $APK | grep -E "^package|^sdkVersion|^targetSdk|^application-label:|launchable" >> check.txt
+          unzip -l $APK | grep -E "assets/(index.html|three.min.js)" >> check.txt
+          grep -q "assets/three.min.js" check.txt
+          echo "::notice title=APK comprobado::$(sed ':a;N;$!ba;s/\n/%0A/g' check.txt)"
+      - name: Publicar
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          cp android-hoods/app/build/outputs/apk/release/app-release.apk Hood-Cleaners.apk
+          gh release view hood-cleaners-latest >/dev/null 2>&1 || gh release create hood-cleaners-latest --title "Hood Cleaners para Android" --notes "APK de Hood Cleaners: The Night Shift. Descárgalo en el móvil e instálalo (Android te pedirá permiso para instalar apps de este origen). El juego va dentro de la app y funciona sin conexión."
+          gh release upload hood-cleaners-latest Hood-Cleaners.apk --clobber
+          # El juego lee «Versión: N» de las notas para avisar dentro de la app de que hay una versión nueva.
+          gh release edit hood-cleaners-latest --notes "APK de Hood Cleaners: The Night Shift. Descárgalo en el móvil e instálalo (Android te pedirá permiso para instalar apps de este origen). Para actualizar, instala el nuevo encima: la partida se queda. El juego va dentro de la app y funciona sin conexión.
+
+          Versión: $VERSION_CODE"
+          echo "::notice title=APK::Versión $VERSION_CODE publicada"
