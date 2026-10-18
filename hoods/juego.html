@@ -118,8 +118,18 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 .jefe { background: var(--panel); border-left: 3px solid var(--grasa); padding: 10px 12px; border-radius: 0 6px 6px 0; display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; }
 .cara { width: 40px; height: 40px; border-radius: 50% 50% 8px 8px; display: grid; place-items: center; font-family: var(--f-display); color: var(--hivis-tinta); }
 .jefe b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); display: block; }
-.tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 2px solid var(--linea); }
-.tabs button { background: none; border: 0; padding: 9px 10px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; border-bottom: 2px solid var(--linea); position: sticky; top: 0; z-index: 4; background: rgb(13,20,27); margin-top: -4px; padding-top: 4px; }
+.barra-salir { position: sticky; bottom: 0; z-index: 4; display: flex; align-items: center; gap: 10px; justify-content: space-between; background: rgba(13,20,27,.97); border-top: 2px solid var(--hivis); margin: 0 -8px; padding: 10px 8px max(10px, env(safe-area-inset-bottom, 0px)); }
+.barra-salir > div { display: grid; min-width: 0; }
+.barra-salir b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.barra-salir .btn { flex: none; min-height: 48px; }
+.mapa { display: grid; gap: 6px; }
+.mapa svg { width: 100%; height: auto; border-radius: 10px; border: 2px solid var(--linea); display: block; }
+.mapa .pin:active circle { stroke: #fff; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--tenue); }
+.leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+.orden.finde { border-color: var(--hivis); }
+.tabs button { background: none; border: 0; padding: 12px 10px; min-height: 44px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
 .tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); }
 .tabs .cuenta { font-family: var(--f-mono); font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; margin-left: 4px; }
 h2.sec { margin: 4px 0 0; font-family: var(--f-cond); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); font-weight: 700; }
@@ -292,6 +302,7 @@ a.btn { display: inline-block; text-decoration: none; }
 .novedad { background: rgba(105,201,122,.14); border: 1px solid var(--ok); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
 /* Celular acostado: barras compactas, el chat a la derecha y los paneles a la izquierda para que se vea la escena. */
 @media (orientation: landscape) and (max-height: 560px) {
+  .barra-salir { padding: 6px 8px; } .barra-salir .btn { min-height: 40px; } .tabs button { min-height: 38px; padding: 8px 10px; }
   .hud-arriba { padding-top: max(6px, env(safe-area-inset-top, 0px)); gap: 4px; padding-bottom: 8px; }
   .reloj { font-size: 20px; }
   .btn-ico { width: 34px; height: 34px; }
@@ -623,6 +634,7 @@ const MEDALLAS = [
   { id: 'duelo', n: 'Adiós, Cuñado', d: 'Gánale un duelo a El Cuñado.', ico: '⚑' },
   { id: 'diez', n: 'Veterano', d: 'Aprueba 10 inspecciones.', ico: '10' },
   { id: 'fotos', n: 'Fotógrafo de grasa', d: 'Junta 6 fotos en el álbum.', ico: '▣' },
+  { id: 'finde', n: 'Fin de semana de leyenda', d: 'Supera el reto de fin de semana: tres gigantes seguidos.', ico: '🏆' },
   { id: 'dorado', n: 'El mapache dorado', d: 'Lo viste. Nadie te va a creer.', ico: '✪', secreto: true },
   { id: 'casete', n: 'La cinta perdida', d: 'Encontraste el casete de Don Rigo en un ducto.', ico: '▭', secreto: true },
   { id: 'himno', n: 'Oído absoluto', d: 'Encontraste la canción secreta de la radio.', ico: '♫', secreto: true },
@@ -1638,7 +1650,7 @@ function empezarTurno(orden) {
   const faltan = orden.equipo.filter(e => !e.principal && azar((5 - (e.puntual || 3)) * .07));
   orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0;
-  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 40 : 0) + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
+  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
     maxCombo: 0, combos3: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
@@ -1662,6 +1674,11 @@ function empezarTurno(orden) {
     if (azar(.2)) extra.push({ tipo: 'apagon', zona: 1, en: rnd(14, 26) });
     if (azar(.2)) extra.push({ tipo: 'coche', zona: 0, en: rnd(8, 18) });
     M.eventos.push(...extra.sort(() => Math.random() - .5).slice(0, 2));
+  }
+  // Crisis con la gente: le pasa algo a alguien de tu cuadrilla (o a un equipo, en un gigante). Salta en cualquier zona.
+  if ((M.equipo.length || (orden.ayudan || []).length) && S.noche >= 2) {
+    const n = orden.gigante ? 2 : azar(.45) ? 1 : 0;
+    for (let i = 0; i < n; i++) M.eventos.push({ tipo: 'crisis', zona: -1, en: M.dur * rnd(.18 + i * .3, .4 + i * .3) });
   }
   P.hidden = true;
   escenaPrep(0);
@@ -1750,7 +1767,7 @@ function escenaReparto() {
   }
   const pintar = () => {
     prepEl.innerHTML = `<div class="carta reparto"><div class="pasos">${pasosHTML(0)}</div><div class="fila"><h3>Reparte el trabajo</h3><span class="reloj">${hora(M.prepMin)}</span></div>
-      <p class="txt">${S.angelica ? 'Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ' : ''}Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.</p>
+      <p class="txt">El reloj no corre mientras repartes. ${S.angelica ? 'Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ' : ''}Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.</p>
       <div class="filas-reparto">${Z.map((z, i) => `<label><span>${esc(z.n)}</span><select data-rz="${i}"><option value="-1" ${reparto[i] === -1 ? 'selected' : ''}>Yo</option>${crews.map((c, k) => `<option value="${k}" ${reparto[i] === k ? 'selected' : ''}>${esc(c.n)} (${c.gente.length})</option>`).join('')}</select></label>`).join('')}</div>
       <div class="pie"><p class="nota">${crews.map(c => `${c.n}: ${c.gente.map(g => g.n).join(', ')}`).join(' · ')}</p><button class="btn prim" id="prepSig">Empezar a limpiar</button></div></div>`;
     prepEl.hidden = false;
@@ -1773,10 +1790,12 @@ function escenaReparto() {
 function tickCuadrillas(dt) {
   for (const c of M.crews) {
     if (c.zona === null) { const sig = c.zonas.find(i => !Z[i].entregada); if (sig === undefined) continue; c.zona = sig; }
+    let activos = 1;
+    if (!c.k) { M.equipo.forEach(e => { if (e.parado > 0) e.parado -= dt; }); activos = M.equipo.length ? M.equipo.filter(e => !(e.parado > 0)).length / M.equipo.length : 1; }
     if ((c.t -= dt) > 0) continue;
     c.t = .5;
     // Cada medio segundo, varias pasadas según su fuerza y su equipo: una cuadrilla de 3 deja una zona en un minuto y medio.
-    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit)));
+    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit) * activos));
     for (let p = 0; p < pasadas; p++) {
       const sf = uno(z.sfs); let mejor = -1, md = 0;
       for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * sf.d.length); if (sf.d[i] > md) { md = sf.d[i]; mejor = i; } }
@@ -2206,6 +2225,82 @@ const EVENTOS = {
     ], { bloquea: true });
   },
 };
+// ---- crisis con la gente: el turno también se complica por las personas
+function victima() { const a = M.equipo.filter(e => !e.principal && !(e.parado > 0)); return a.length ? uno(a) : M.equipo.find(e => e.principal && !(e.parado > 0)) || null; }
+const CRISIS = {
+  alucina() {
+    const e = victima(); if (!e) return false;
+    tono(660, .4, .06, 'sine', 990); tono(990, .4, .05, 'sine', 660, .3);
+    decir(e, uno(['La campana me está hablando… dice que me quiere.', '¿Ustedes también ven al unicornio de acero inoxidable?', 'Shhh… el extractor está cantando cumbia.']));
+    carta(`¡${e.n} olió el desengrasante!`, 'Destapó el bidón «para ver si olía a limón» y ahora ve cosas. Está abrazando el extractor y le canta. Así no puede trabajar.', [
+      { t: 'Sacar a tomar aire', d: 'Mantén pulsado 1,5 s · vuelve en un minuto', mantener: 1.5, f: () => { e.parado = 60; resultado('Aire fresco', `${e.n} se sienta en la banqueta a mirar las estrellas. Dice que una le guiñó. En un rato vuelve.`, e, 'Ya estoy bien. Creo. ¿Por qué hay tres de ti?'); } },
+      { t: 'Agua de jamaica y un taco', d: '−$15 · vuelve más rápido', f: () => { dano('Taco y agua de jamaica de emergencia', 15, 0); e.parado = 25; resultado('Taco medicinal', `El taco hace milagros. ${e.n} ya solo ve un unicornio, y chiquito.`, e, 'Nunca había probado un taco tan… tridimensional.'); } },
+      { t: 'Dejarlo, ya se le pasará', d: 'Mmm…', f: () => {
+        const zz = uno(Z.filter(x => x !== zonaAct())) || zonaAct();
+        if (azar(.5)) { ensuciar(zz, .25); dano(`${e.n} «decoró» con grasa una zona que ya estaba limpia`, 0, 2); e.parado = 40; resultado('Arte moderno', `${e.n} le pintó una carita feliz con grasa a ${zz.n.toLowerCase()}. Toca repasarla.`, e, '¡Mira, sonríe! Como nosotros.'); }
+        else resultado('Se le pasó solo', `A los dos minutos ${e.n} parpadea, suelta el extractor y sigue raspando como si nada.`, e, '¿Qué me perdí? ¿Por qué me están grabando?');
+      } },
+    ], { bloquea: true });
+  },
+  dormido() {
+    const e = victima(); if (!e) return false;
+    tono(110, .8, .06, 'sawtooth', 90);
+    let golpes = 4;
+    carta(`¡${e.n} se durmió dentro del ducto!`, 'Se metió a raspar «un ratito» y ahora ronca allá adentro. El eco suena como un oso. Golpea el ducto cuatro veces para despertarlo.', [], { limite: 6, alAgotar: () => {
+      e.parado = 45; resultado('Sigue roncando', `${e.n} no se despierta ni con la radio. Sale solo en un rato, con la marca de la rejilla en la cara.`, e, 'zzz… cinco minutitos… zzz');
+    } });
+    for (let i = 0; i < 4; i++) {
+      const b = document.createElement('button'); b.className = 'blanco'; b.textContent = '¡Toc!';
+      b.style.left = rnd(18, 82) + '%'; b.style.top = rnd(24, 54) + '%';
+      b.onclick = () => { b.remove(); rafaga(.12, 400, .12, 'lowpass'); tono(180, .1, .1, 'square'); if (--golpes === 0) resultado('¡Despierto!', `${e.n} se levanta de golpe, se pega en la cabeza con el ducto y dice que estaba «inspeccionando el techo por dentro».`, e, 'No estaba dormido. Estaba escuchando la grasa.'); };
+      $('#blancos').appendChild(b);
+    }
+  },
+  pelea() {
+    const dos = M.equipo.filter(e => !(e.parado > 0)).sort(() => Math.random() - .5).slice(0, 2); if (dos.length < 2) return false;
+    const [a, b] = dos, por = uno(['quién usa la hidrolavadora', 'la estación de la radio', 'el último taco', 'quién raspó mejor la esquina']);
+    tono(300, .15, .08, 'square', 260); tono(340, .15, .08, 'square', 300, .18);
+    decir(a, `¡${b.n}, eso es mío!`); setTimeout(() => M && decir(b, '¡Ni lo sueñes!'), 600);
+    const animo = d => [a, b].forEach(e => { const c = e.id && S.cuadrilla.find(x => x.id === e.id); if (c) c.animo = clamp((c.animo || 3) + d, 1, 5); });
+    carta(`¡${a.n} y ${b.n} se están peleando!`, `Discuten por ${por}. Ya nadie raspa y el gerente se asomó dos veces.`, [
+      { t: 'Piedra, papel o tijera', d: 'Que decida el destino', f: () => { const g = uno([a, b]); resultado('Ganó ' + g.n, `${g.n} gana con tijera y se pone a bailar. El otro dice que fue trampa, pero vuelve a trabajar.`, g, '¡Invicto! Como mi abuela en la lotería.'); } },
+      { t: 'Refrescos para los dos', d: '−$20 · se contentan', f: () => { dano('Refrescos para hacer las paces', 20, 0); animo(1); resultado('Paz con burbujas', 'Brindan con refresco de toronja. Ahora son mejores amigos. Por un rato.', a, 'Te quiero, compa. Pero la hidro es mía.'); } },
+      { t: 'Regañarlos a los dos', d: 'Trabajan más… y te quieren menos', f: () => { animo(-1); [a, b].forEach(e => e.fuerza *= 1.1); resultado('Silencio', 'Los dos raspan furiosos sin hablarse. La campana nunca había estado tan limpia tan rápido.', b, 'Sí, jefe. Perdón, jefe. (Él empezó.)'); } },
+    ], { bloquea: true });
+  },
+  corte() {
+    const e = victima(); if (!e) return false;
+    tono(800, .1, .1, 'square', 400);
+    carta(`¡${e.n} se cortó con la rasqueta!`, 'Un corte en el dedo. Grita más por el susto que por el dolor, pero hay que curarlo antes de que toque la grasa.', [
+      { t: 'Botiquín: limpiar y vendar', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5, prim: true, f: () => { e.parado = 15; resultado('Vendado', `Gasa, agua oxigenada y una curita de dinosaurios. ${e.n} la enseña con orgullo.`, e, 'Es mi primera herida de guerra. Le voy a poner nombre.'); } },
+      { t: 'Cinta americana y a seguir', d: 'Lo arregla todo… ¿no?', f: () => { if (azar(.5)) resultado('Aguantó', 'La cinta aguanta. La cinta siempre aguanta.', e, 'Ya no siento el dedo. Eso es bueno, ¿verdad?'); else { e.parado = 90; dano('Urgencias: el corte se ensució con grasa', 80, 1); resultado('A urgencias', `El dedo se ensució y ${e.n} tiene que ir a que lo vean. Vuelve en un buen rato, con vacuna del tétanos.`, e, 'La doctora me regañó más que tú.'); } } },
+    ], { bloquea: true });
+  },
+  llamada() {
+    const e = victima(); if (!e) return false;
+    [0, .25, .5].forEach(d => tono(1300, .12, .05, 'square', null, d));
+    carta(`Llaman a ${e.n}`, `Es su mamá. Son las ${hora(clamp(M.t / M.dur, 0, 1) * 480)} y quiere saber si ya cenó, si trae suéter y por qué no contesta. Lleva doce llamadas.`, [
+      { t: 'Que conteste', d: 'Se va un rato a hablar', f: () => { e.parado = 30; resultado('«Sí, ma. Sí, ma.»', `${e.n} habla bajito en un rincón. Se le oye decir «sí, ma» unas cuarenta veces.`, e, 'Dice que le mandes saludos. Y que me pagues más.'); } },
+      { t: 'Contestar tú', d: 'Con voz de jefe responsable', f: () => { if (azar(.6)) { M.propinaMod += .03; resultado('Señora encantada', `Le explicas que ${e.n} trabaja muy bien y que sí trae suéter. Te manda bendiciones y tamales para la próxima.`, e, '¿Qué le dijiste? Me mandó un corazón. A mí nunca.'); } else { e.parado = 20; resultado('Error', 'La señora pide hablar con «el encargado de verdad». Tardas veinte minutos en convencerla.', e, 'Ja. Bienvenido a mi vida.'); } } },
+      { t: 'Que apague el teléfono', d: 'Aquí se viene a trabajar', f: () => { const c = e.id && S.cuadrilla.find(x => x.id === e.id); if (c) c.animo = clamp((c.animo || 3) - 1, 1, 5); resultado('Apagado', `${e.n} apaga el teléfono con cara de que mañana va a haber problemas. Para ti.`, e, 'Si me desheredan, te adopto como mamá.'); } },
+    ], { bloquea: true });
+  },
+  // En un gigante: un equipo entero se mete en un lío.
+  extraviado() {
+    const cs = (M.crews || []).filter(c => c.k && c.zonas.some(i => !Z[i].entregada)); if (!cs.length) return false;
+    const c = uno(cs), lio = uno([['se metió al ducto equivocado', 'Estaban limpiando el ducto de la cafetería de al lado. Muy limpio, eso sí.'], ['se fue por tortas', 'Dicen que «era urgente». Las tortas, sí, se ven urgentes.'], ['se quedó encerrado en la cámara fría', 'La puerta se cerró sola. Están bien, pero tiritando.']]);
+    tono(400, .2, .08, 'triangle', 300);
+    carta(`¡El ${c.n} ${lio[0]}!`, lio[1] + ' Su zona se quedó parada.', [
+      { t: 'Llamarlos por la radio', d: 'Vuelven solos, pero tardan', f: () => { c.t = 35; resultado('Ya vienen', `El ${c.n} contesta «copiado, cambio» cuatro veces y por fin regresa.`, { n: c.n, color: c.color }, 'Copiado. Cambio. ¿Cambio? Cambio.'); } },
+      { t: 'Ir por ellos', d: 'Pierdes 10 minutos tú', f: () => { sumarTiempo(10); resultado('Rescate', `Vas por el ${c.n} y regresan todos juntos${lio[0].includes('tortas') ? ', con una torta para ti' : ''}.`, { n: c.n, color: c.color }, 'Gracias, jefe. No le diga a Angélica.'); } },
+    ], { bloquea: true });
+  },
+};
+EVENTOS.crisis = () => {
+  const ops = Object.keys(CRISIS).filter(k => k !== 'extraviado' || M.crews).sort(() => Math.random() - .5);
+  if (M.crews && azar(.5)) ops.unshift('extraviado');
+  for (const k of ops) if (CRISIS[k]() !== false) return;
+};
 // Secreto: a veces el mapache es DORADO.
 function mapacheDorado() {
   const mp = piezas.mapache; mp.visible = true;
@@ -2520,6 +2615,7 @@ function tickTurno(dt) {
       if (M.crews) { tickCuadrillas(dt); if (M.etapa === 'lavar') revisar(z); }
       else for (const e of M.equipo) {
         if (e.principal && M.dormido) continue;
+        if (e.parado > 0) { if ((e.parado -= dt) <= 0) decir(e, uno(['Ya volví. ¿Me extrañaron?', 'Listo, jefe. Como nuevo.', 'Ya estoy. ¿Dónde me quedé?'])); continue; }
         if ((e.t -= dt) > 0) continue;
         e.t = .5;
         const zz = e.principal ? zonaCompa() : z, extra = e.principal && M.orden.comp === 'chuy' && zz.id === 'filtros' ? 1.6 : 1;
@@ -2537,7 +2633,7 @@ function tickTurno(dt) {
       if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) visitaGerente();
     }
     // Desastres programados
-    if (!M.ev && M.etapa === 'lavar') for (const e of M.eventos) if (!M.hechos.has(e) && e.zona === M.zona && M.enZona >= e.en) { lanzarEvento(e); break; }
+    if (!M.ev && M.etapa === 'lavar') for (const e of M.eventos) if (!M.hechos.has(e) && (e.zona === -1 ? M.t >= e.en : e.zona === M.zona && M.enZona >= e.en)) { lanzarEvento(e); break; }
     if (M.ev && M.ev.limite) {
       M.ev.t += dt; const c = $('#cuenta'); if (c) c.style.width = `${Math.max(0, 1 - M.ev.t / M.ev.limite) * 100}%`;
       if (M.ev.t >= M.ev.limite) { const f = M.ev.alAgotar; $('#blancos').innerHTML = ''; M.ev = null; f(); }
@@ -2804,6 +2900,55 @@ function prepararNoche() {
   guardar();
 }
 
+// Reto de fin de semana: viernes, sábado y domingo, tres cocinas gigantes seguidas con solo dos equipos de apoyo.
+const FINDE_DIAS = ['Viernes', 'Sábado', 'Domingo'], FINDE_PREMIO = 6000;
+const findeListo = () => S.fase === 'empresa' && (S.eq.flota || 0) >= 2;
+function findeHoy() {
+  const H = S.hoy; if (!H || S.fase !== 'empresa') return;
+  if (S.finde && S.finde.noche !== S.noche && !H.ordenes.some(o => o.finde)) {
+    if (S.finde.ultima !== S.noche - 1) { H.avisos.push('Reto de fin de semana perdido: no te presentaste a la siguiente cocina.'); S.finde = null; }
+    else { const o = genOrden(uno(['plaza', 'convenciones'])); o.finde = S.finde.paso + 1; o.firmado = true; o.pago = r10(o.pago * 1.3); o.duelo = false; H.ordenes.unshift(o); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++; S.finde.noche = S.noche; }
+  }
+  // Se ofrece cada semana (y la primera vez que tienes con qué).
+  if (!S.finde && findeListo() && !H.findeVisto && (S.noche % 7 === 5 || !S.findeOfrecido)) { H.findeOferta = true; H.findeVisto = true; S.findeOfrecido = true; }
+}
+function aceptarFinde() {
+  const H = S.hoy; H.findeOferta = false;
+  S.finde = { paso: 0, notas: [], noche: S.noche, ultima: null };
+  const o = genOrden(uno(['plaza', 'convenciones'])); o.finde = 1; o.firmado = true; o.pago = r10(o.pago * 1.3); o.duelo = false;
+  H.ordenes.unshift(o); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++;
+}
+function tarjetaFinde() {
+  const H = S.hoy;
+  if (H.findeOferta) return `<div class="orden finde"><span class="chip naranja">Reto de fin de semana</span><h3>Tres gigantes, dos equipos</h3>
+    <p class="nota">Viernes, sábado y domingo: una cocina gigante cada noche, seguidas, y solo puedes llevar <b>dos equipos</b> de apoyo. Si apruebas las tres: ${dinero(FINDE_PREMIO)} de premio, +10 de reputación y una medalla. Si fallas una, se acaba el reto (lo cobrado se queda).</p>
+    <div class="acciones"><button class="btn prim peq" id="findeSi">Aceptar el reto</button><button class="btn peq" id="findeNo">Este fin no</button></div></div>`;
+  if (S.finde) return `<div class="retos finde"><b>Reto de fin de semana · ${FINDE_DIAS[Math.min(2, S.finde.paso)]} (${S.finde.paso + 1} de 3)</b>${FINDE_DIAS.map((d, i) => `<span class="${S.finde.notas[i] ? 'ok' : ''}">${S.finde.notas[i] ? '★ ' + d + ': ' + S.finde.notas[i] : '☆ ' + d}</span>`).join('')}<small>Solo dos equipos pueden ayudarte. Si hoy haces otro trabajo, pierdes el reto.</small></div>`;
+  return '';
+}
+
+// El mapa de la ciudad: dónde están esta noche tu camioneta y las de tus equipos.
+const COL_EQ = ['#ff8a1f', '#69c97a', '#8ad4ff', '#c6a0ff', '#f497b5', '#f2e86d', '#ffb36b', '#9be38a', '#e9e9e9', '#ff6a5c', '#7fd6c2'];
+function hashTxt(t) { let h = 7; for (const ch of t) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
+function mapaCiudad() {
+  const H = S.hoy; if (S.fase !== 'empresa' || !H.ordenes.length) return '';
+  const W = 320, Hh = 170, base = [160, 88];
+  const pos = H.ordenes.map(o => { const h = hashTxt(o.nombre + o.id); let x = 22 + h % 276, y = 18 + (h >>> 9) % 136; if (Math.hypot(x - base[0], y - base[1]) < 34) x = x < base[0] ? x - 36 : x + 36; return [clamp(x, 16, W - 16), y]; });
+  const quien = H.ordenes.map((o, i) => i === H.sel ? 0 : (H.equipos || []).findIndex(e => e.o === i) + 1 || -1);
+  const ayudan = (H.equipos || []).map((e, k) => e.o === 'mio' ? k + 1 : 0).filter(Boolean);
+  const calles = [...[30, 64, 98, 132].map(y => `<path d="M0 ${y}H${W}"/>`), ...[40, 100, 160, 220, 280].map(x => `<path d="M${x} 0V${Hh}"/>`)].join('');
+  const van = (k, [x, y]) => `<g class="van"><rect x="-7" y="-4" width="14" height="8" rx="2" fill="${COL_EQ[k]}" stroke="#0b1117" stroke-width="1"/><animateMotion dur="${(3 + k * .4).toFixed(1)}s" fill="freeze" path="M${base[0]} ${base[1]}L${x} ${y}"/></g>`;
+  return `<div class="mapa"><div class="fila"><b>La ciudad esta noche</b><span class="nota">Toca un trabajo para elegirlo</span></div>
+    <svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Mapa de la ciudad con tus trabajos">
+      <rect width="${W}" height="${Hh}" fill="#141e27"/><g stroke="#24313d" stroke-width="5">${calles}</g><path d="M0 150Q120 128 200 156T${W} 146" stroke="#1d3a52" stroke-width="9" fill="none"/>
+      <g transform="translate(${base[0]} ${base[1]})"><rect x="-13" y="-10" width="26" height="20" rx="3" fill="#2a3946" stroke="#ffd23f" stroke-width="1.5"/><text y="4" text-anchor="middle" font-size="9" fill="#ffd23f">TALLER</text></g>
+      ${H.ordenes.map((o, i) => { const [x, y] = pos[i], q = quien[i], col = q >= 0 ? COL_EQ[q] : o.firmado ? '#9aa7b2' : '#56636e';
+        return `<g data-o="${i}" class="pin" style="cursor:pointer"><circle cx="${x}" cy="${y}" r="${o.gigante ? 11 : 8}" fill="${col}" stroke="#0b1117" stroke-width="2" ${q >= 0 ? '' : 'opacity=".75"'}/><text x="${x}" y="${y + 3.5}" text-anchor="middle" font-size="${o.gigante ? 11 : 9}" fill="#0b1117" font-weight="700">${o.finde ? '★' : o.gigante ? 'G' : o.clienteId ? 'F' : i + 1}</text></g>`; }).join('')}
+      ${quien.map((q, i) => q >= 0 ? van(q, [pos[i][0], pos[i][1] + 15]) : '').join('')}${ayudan.map((k, j) => van(k, pos[H.sel] ? [pos[H.sel][0] + (j % 2 ? 1 : -1) * (16 + 14 * Math.floor(j / 2)), pos[H.sel][1] + 15] : base)).join('')}
+    </svg>
+    <div class="leyenda"><span><i style="background:${COL_EQ[0]}"></i>Tú</span>${(H.equipos || []).map((e, k) => e.o !== null && e.o !== undefined ? `<span><i style="background:${COL_EQ[k + 1]}"></i>Equipo ${k + 2}${e.o === 'mio' ? ' (contigo)' : ''}</span>` : '').join('')}<span><i style="background:#56636e"></i>Sin firmar</span><span>G gigante · F cliente fijo</span></div></div>`;
+}
+
 // ------------------------------------------------------------------ pantallas
 
 const P = $('#pantalla');
@@ -2855,6 +3000,7 @@ function pantallaCamioneta() {
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
   else if (!mundo) construirNoche(null);
+  findeHoy();
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
   const tabs = S.fase === 'aprendiz' ? [['noche', 'Esta noche'], ['taller', 'Taller'], ['logros', 'Logros y álbum']] : [['noche', 'Noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller'], ['logros', 'Logros']];
@@ -2874,7 +3020,7 @@ function tarjetaOrden(o, i) {
   const C = COCINAS[o.cocina], H = S.hoy;
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? 'Revancha: recupera al cliente' : 'Duelo con El Cuñado'}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? '<span class="chip mal">El Cuñado lo tienta: saca B o mejor</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${NOMBRE_SUC[t]}</span>`).join('')}</div>
+    <div class="chips">${o.finde ? `<span class="chip naranja">🏆 Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]}</span>` : ''}${o.clienteId ? '<span class="chip ok">Cliente fijo · le toca hoy</span>' : ''}${o.origen ? `<span class="chip">${esc(o.origen)}</span>` : ''}${o.raro ? '<span class="chip naranja">Cliente raro</span>' : ''}${o.campanas > 1 ? '<span class="chip naranja">Trabajo grande</span>' : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? 'Revancha: recupera al cliente' : 'Duelo con El Cuñado'}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? '<span class="chip mal">El Cuñado lo tienta: saca B o mejor</span>' : ''}${o.pedido ? `<span class="chip naranja">${esc(pedido(o.pedido).chip)}</span>` : ''}<span class="chip">${C.n}</span><span class="chip">NFPA 96: ${C.frec}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${NOMBRE_SUC[t]}</span>`).join('')}</div>
     <h3>${esc(o.nombre)}</h3>${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(h.n)}: capítulo ${(c.cap || 0) + 1} de ${h.caps.length}</span>` : ''; })()}
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + ' campanas · ' : ''}${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
     ${o.pedido ? `<span class="pedido"><b>${esc(pedido(o.pedido).quien)}:</b> «${esc(pedido(o.pedido).txt)}»${pedido(o.pedido).premio ? ` <i>Si cumples: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
@@ -2914,6 +3060,8 @@ function vNoche() {
       ${H.dia.res ? `<div class="cita"><b>Qué pasó</b>${esc(H.dia.res)}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(op.t)}<small>${esc(op.d)}</small></button>`).join('')}</div>`}</div>` : ''}
     ${sig ? tarjetaEtapa(sig) : ''}
     ${H.retos ? `<div class="retos"><b>Retos de esta noche</b>${H.retos.map(id => `<span>☆ ${esc(reto(id).t)}</span>`).join('')}<small>Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.</small></div>` : ''}
+    ${aprendiz ? '' : tarjetaFinde()}
+    ${aprendiz ? '' : mapaCiudad()}
     <h2 class="sec">${aprendiz ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
     ${!aprendiz ? `<p class="nota">Solicitudes de esta noche: ${H.ordenes.filter(x => !x.clienteId).length}. Con más reputación te llaman más; si no, sal a buscar clientes en «Clientes». Cada trabajo se hace con contrato firmado.</p>` : ''}
     ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || '<p class="nota">No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.</p>'}
@@ -2928,7 +3076,7 @@ function vNoche() {
       <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     ${vEquipoB()}
     ${o && !o.firmado ? '<p class="aviso">Primero firma el contrato del trabajo que elegiste.</p>' : ''}
-    <div class="acciones"><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
+    <div class="barra-salir"><div><b>${o ? esc(o.nombre) : 'Elige un trabajo'}</b><span class="nota">${o ? `${dinero(o.pago)} · ${H.comp === 'solo' ? 'tú solo' : esc((COMPANEROS[H.comp] || SOLO).n)}${H.ayud.length ? ` + ${H.ayud.length}` : ''}${hayB() ? ` · ${(H.equipos || []).filter(e => e.o !== null).length} equipos fuera` : ''}` : ''}</span></div><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>Salir a trabajar</button></div>
     ${dia && !H.dia.res ? '<p class="nota">Si sales sin decidir lo de la camioneta, se resuelve solo. Más o menos.</p>' : ''}
     <p class="nota">${aprendiz ? `Don Rigo te paga ${dinero(SUELDO_APRENDIZ)} por noche, ${dinero(40)} más si apruebas, y la propina es tuya. Los daños los paga él (y te los recuerda).` : 'Cobras el trabajo entero, pero pagas gasolina, sueldos y daños.'}${S.mejor ? ` Mejor noche: ${dinero(S.mejor)}.` : ''}</p>`;
 }
@@ -3003,7 +3151,7 @@ function vEquipoB() {
       const gente = [...(e.comp ? [[`c:${e.comp}`, COMPANEROS[e.comp].n]] : []), ...e.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean).map(c => [`a:${c.id}`, c.n])];
       const faltan = o && o.ayud > e.ayud.length, gen = e.ayud.length + (e.comp ? 1 : 0);
       return `<div class="equipo"><b>Equipo ${k + 2}</b>
-        <select data-teq="${k}" aria-label="Trabajo del equipo ${k + 2}"><option value="">— Sin trabajo —</option>${H.ordenes[H.sel] && H.ordenes[H.sel].gigante ? `<option value="mio" ${e.o === 'mio' ? 'selected' : ''}>Ayudarme en ${esc(H.ordenes[H.sel].nombre)} (gigante)</option>` : ''}${libresO.map(([x, i]) => `<option value="${i}" ${i === e.o ? 'selected' : ''}>${esc(x.nombre)} · ${dinero(x.pago)}</option>`).join('')}</select>
+        <select data-teq="${k}" aria-label="Trabajo del equipo ${k + 2}"><option value="">— Sin trabajo —</option>${H.ordenes[H.sel] && H.ordenes[H.sel].gigante && (e.o === 'mio' || !H.ordenes[H.sel].finde || eqs.filter(x => x.o === 'mio').length < 2) ? `<option value="mio" ${e.o === 'mio' ? 'selected' : ''}>Ayudarme en ${esc(H.ordenes[H.sel].nombre)} (gigante)</option>` : ''}${libresO.map(([x, i]) => `<option value="${i}" ${i === e.o ? 'selected' : ''}>${esc(x.nombre)} · ${dinero(x.pago)}</option>`).join('')}</select>
         <div class="chips">${gente.map(([id, nm]) => `<button class="btn peq" data-quita="${k}|${id}">${esc(nm)} ✕</button>`).join('') || '<span class="nota">Nadie todavía.</span>'}</div>
         ${gente.length < 4 && libresP.length ? `<select data-pon="${k}" aria-label="Añadir gente al equipo ${k + 2}"><option value="">+ Añadir a alguien…</option>${libresP.map(([id, nm]) => `<option value="${id}">${esc(nm)}</option>`).join('')}</select>` : ''}
         ${o ? `<span class="${gen < sugerido(o) ? 'aviso' : 'nota'}">Necesita ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'} · llevas ${gen}.${gen < sugerido(o) ? ` Así no sale: le ${sugerido(o) - gen === 1 ? 'falta 1' : 'faltan ' + (sugerido(o) - gen)}.` : ' ¡Listo para salir!'}</span>` : e.o === 'mio' ? `<span class="${gen < 2 ? 'aviso' : 'nota'}">${gen < 2 ? 'Para ayudarte necesita al menos 2 personas.' : 'Al empezar el turno tú repartes las zonas y luego revisas lo que entreguen.'}</span>` : ''}
@@ -3161,6 +3309,8 @@ function enlazar() {
     else if (H.ayud.length < PLAZAS[S.eq.camioneta]) { H.ayud.push(id); for (const e of H.equipos || []) e.ayud = e.ayud.filter(x => x !== id); }
     guardar(); pantallaCamioneta();
   });
+  const fs = $('#findeSi'); if (fs) fs.onclick = () => { audio(); aceptarFinde(); sCaja(); guardar(); pantallaCamioneta(); };
+  const fn = $('#findeNo'); if (fn) fn.onclick = () => { H.findeOferta = false; guardar(); pantallaCamioneta(); };
   const sal = $('#salir'); if (sal) sal.onclick = () => {
     audio();
     const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
@@ -3169,7 +3319,7 @@ function enlazar() {
     const gen = e => e.ayud.length + (e.comp ? 1 : 0), eqs = hayB() ? (H.equipos || []).map((e, idx) => ({ e, k: idx + 2 })) : [];
     const conGente = e => gen(e) >= 2;
     const equipos = eqs.filter(({ e }) => typeof e.o === 'number' && e.o !== H.sel && H.ordenes[e.o] && H.ordenes[e.o].firmado && gen(e) >= sugerido(H.ordenes[e.o])).map(({ e, k }) => ({ orden: H.ordenes[e.o], comp: e.comp, ayud: [...e.ayud], k }));
-    const ayudan = o.gigante ? eqs.filter(({ e }) => e.o === 'mio' && conGente(e)).map(({ e, k }) => ({ comp: e.comp, ayud: [...e.ayud], k })) : [];
+    const ayudan = o.gigante ? eqs.filter(({ e }) => e.o === 'mio' && conGente(e)).map(({ e, k }) => ({ comp: e.comp, ayud: [...e.ayud], k })).slice(0, o.finde ? 2 : 99) : [];
     empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, retos: H.retos || [], equipos, ayudan });
   };
   P.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => {
@@ -3298,6 +3448,18 @@ function pantallaParte() {
     if (n === 'A' || n === 'A+') rep += 1;
     else { const dev = r10(o.pago * .3); lineas.push(['Garantía de A incumplida (devuelves el 30 %)', -dev]); neto -= dev; rep -= 3; }
   }
+  // Reto de fin de semana
+  let finde = null;
+  if (o.finde && S.finde && !aprendiz) {
+    S.finde.notas[o.finde - 1] = aprobado ? n : '✗'; S.finde.paso = o.finde; S.finde.ultima = S.noche;
+    if (!aprobado) { finde = { t: 'Reto de fin de semana perdido', txt: `El ${FINDE_DIAS[o.finde - 1].toLowerCase()} no pasó la inspección. Lo cobrado se queda; el premio, no. La próxima semana hay revancha.` }; S.finde = null; }
+    else if (o.finde === 3) {
+      const extraA = S.finde.notas.filter(x => x === 'A' || x === 'A+').length * 500;
+      lineas.push(['Premio del reto de fin de semana' + (extraA ? ` (+${dinero(extraA)} por las A)` : ''), FINDE_PREMIO + extraA]); neto += FINDE_PREMIO + extraA; rep += 10;
+      finde = { t: '¡Reto de fin de semana superado!', txt: `Tres gigantes en tres noches: ${S.finde.notas.join(', ')}. Don Rigo llamó desde el lago solo para decir «no está mal». Viniendo de él, es un abrazo.` };
+      S.findes = (S.findes || 0) + 1; S.finde = null;
+    } else finde = { t: `Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]} superado`, txt: `Nota ${n}. Mañana, ${FINDE_DIAS[o.finde].toLowerCase()}: otra cocina gigante.` };
+  } else if (S.finde && !aprendiz && S.finde.noche === S.noche) { finde = { t: 'Reto de fin de semana perdido', txt: 'Esta noche hiciste otro trabajo y la cocina gigante del reto se quedó esperando.' }; S.finde = null; }
   // El equipo B, en su propio trabajo
   // Los otros equipos, cada uno en su trabajo: una línea con lo que dejó cada uno.
   const BS = (o.equipos || (o.equipoB ? [o.equipoB] : [])).map(resolverB);
@@ -3352,6 +3514,7 @@ function pantallaParte() {
   if (M.dorado) dar('dorado');
   if (M.casete) dar('casete');
   if (S.secretos.himno) dar('himno');
+  if (finde && finde.t.startsWith('¡Reto')) dar('finde');
   S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
   for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }   // la experiencia se nota
@@ -3405,6 +3568,7 @@ function pantallaParte() {
       <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.</span></div>
     ${d ? `<div class="cita"><b>${ganaDuelo ? 'Duelo ganado' : 'Duelo perdido'}</b>${ganaDuelo ? `Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.` : `El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
+    ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(capitulo.t)}</b>${esc(capitulo.txt)}</div>` : ''}
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal)}</div>
