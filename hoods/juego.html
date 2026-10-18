@@ -139,6 +139,8 @@ body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas butt
 .leyenda { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--tenue); }
 .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
 .orden.finde { border-color: var(--hivis); }
+.misiones i { font-style: normal; font-family: var(--f-mono); font-size: 12px; color: var(--hivis); }
+.misiones em { font-style: normal; font-size: 12px; color: var(--tenue); }
 .tabs button { background: none; border: 0; padding: 12px 10px; min-height: 44px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
 .tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); }
 .tabs .cuenta { font-family: var(--f-mono); font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; margin-left: 4px; }
@@ -3019,6 +3021,49 @@ function prepararNoche() {
   guardar();
 }
 
+// Retos de Don Rigo: aunque ya no es tu jefe, cada semana llama desde el lago con tres retos. Dan reputación y dinero.
+const MISIONES = [
+  { id: 'aprob', t: n => `Aprueba ${n} trabajos tú mismo`, metas: [3, 4], cuenta: c => c.aprobado ? 1 : 0 },
+  { id: 'notaA', t: n => `Saca ${n} notas A o mejor`, metas: [2, 3], cuenta: c => c.n === 'A' || c.n === 'A+' ? 1 : 0 },
+  { id: 'cocina', t: (n, k) => `Aprueba ${n} trabajos en una ${COCINAS[k].n.toLowerCase()}`, metas: [2], cocina: true, cuenta: (c, m) => c.aprobado && c.o.cocina === m.k ? 1 : 0 },
+  { id: 'equipos', t: n => `Que tus otros equipos aprueben ${n} trabajos`, metas: [3, 5], si: () => (S.eq.flota || 0) >= 1, cuenta: c => c.BS.filter(B => B.aprobado).length },
+  { id: 'sinDanos', t: n => `${n} noches aprobadas sin ningún daño`, metas: [2], cuenta: c => c.aprobado && !c.danos ? 1 : 0 },
+  { id: 'duelo', t: () => 'Gánale un duelo a El Cuñado', metas: [1], cuenta: c => c.gana ? 1 : 0 },
+  { id: 'espejo', t: () => 'Deja una cocina en metal desnudo (todo a 50 µm o menos)', metas: [1], cuenta: c => c.espejo ? 1 : 0 },
+  { id: 'temprano', t: () => 'Llama al inspector antes de las 3:00 y aprueba', metas: [1], cuenta: c => c.aprobado && c.finMin <= 300 ? 1 : 0 },
+  { id: 'pedidos', t: n => `Cumple ${n} pedidos especiales de clientes`, metas: [2], cuenta: c => c.pedOk ? 1 : 0 },
+];
+const RIGO_RETO = ['Te tengo tres retos para esta semana. Si los cumples, te recomiendo con mis compadres. Si no, también, pero con menos ganas.', 'Aquí en el lago no pica nada, así que pensé en ti. Tres retos. Ándale.', 'Beto me dijo que estás muy cómodo. Te mando tres retos para que se te quite.', 'Esta semana quiero ver de qué estás hecho. Te dejo tres retos y me voy a pescar.'];
+function misionesHoy() {
+  if (S.fase !== 'empresa') return;
+  const sem = Math.floor((S.noche - S.abierta) / 7);
+  if (S.mis && S.mis.semana === sem) return;
+  const ks = cocinasHasta(S.etapa).filter(k => !COCINAS[k].gigante);
+  const pool = MISIONES.filter(m => !m.si || m.si()).sort(() => Math.random() - .5).slice(0, 3);
+  const premio = r10(250 + 150 * S.etapa);
+  S.mis = { semana: sem, frase: uno(RIGO_RETO), lista: pool.map(m => ({ id: m.id, meta: uno(m.metas), prog: 0, k: m.cocina ? uno(ks) : null, rep: 3, dinero: premio })) };
+}
+function avanzarMisiones(ctx) {
+  const hechos = [];
+  if (!S.mis) return hechos;
+  for (const x of S.mis.lista) {
+    if (x.hecho) continue;
+    const m = MISIONES.find(y => y.id === x.id); if (!m) continue;
+    x.prog = Math.min(x.meta, x.prog + m.cuenta(ctx, x));
+    if (x.prog >= x.meta) { x.hecho = true; hechos.push(x); }
+  }
+  if (hechos.length && S.mis.lista.every(x => x.hecho) && !S.mis.todo) { S.mis.todo = true; hechos.push({ todo: true, rep: 5, dinero: r10(300 + 200 * S.etapa) }); }
+  return hechos;
+}
+const textoMision = x => { const m = MISIONES.find(y => y.id === x.id); return m ? m.t(x.meta, x.k) : ''; };
+function tarjetaMisiones() {
+  if (!S.mis) return '';
+  const quedan = 7 - (S.noche - S.abierta) % 7;
+  return `<div class="retos misiones"><b>📞 Retos de Don Rigo · ${quedan === 1 ? 'última noche' : `quedan ${quedan} noches`}</b><small>«${esc(S.mis.frase)}»</small>
+    ${S.mis.lista.map(x => `<span class="${x.hecho ? 'ok' : ''}">${x.hecho ? '★' : '☆'} ${esc(textoMision(x))} <i>${x.prog}/${x.meta}</i> <em>+${x.rep} rep · ${dinero(x.dinero)}</em></span>`).join('')}
+    <small>Los tres: +5 de reputación extra${S.mis.todo ? ' (¡conseguido!)' : ''}.</small></div>`;
+}
+
 // Reto de fin de semana: viernes, sábado y domingo, tres cocinas gigantes seguidas con solo dos equipos de apoyo.
 const FINDE_DIAS = ['Viernes', 'Sábado', 'Domingo'], FINDE_PREMIO = 6000;
 const findeListo = () => S.fase === 'empresa' && (S.eq.flota || 0) >= 2;
@@ -3136,7 +3181,7 @@ function pantallaCamioneta() {
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
   else if (!mundo) construirNoche(null);
-  findeHoy();
+  findeHoy(); misionesHoy();
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
   const tabs = S.fase === 'aprendiz' ? [['noche', 'Esta noche'], ['taller', 'Taller'], ['logros', 'Logros y álbum']] : [['noche', 'Noche'], ['clientes', 'Clientes'], ['cuadrilla', 'Cuadrilla'], ['taller', 'Taller'], ['logros', 'Logros']];
@@ -3196,7 +3241,7 @@ function vNoche() {
       ${H.dia.res ? `<div class="cita"><b>Qué pasó</b>${esc(H.dia.res)}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(op.t)}<small>${esc(op.d)}</small></button>`).join('')}</div>`}</div>` : ''}
     ${sig ? tarjetaEtapa(sig) : ''}
     ${H.retos && H.retos.length ? `<div class="retos"><b>Retos de esta noche</b>${H.retos.map(id => `<span>☆ ${esc(reto(id).t)}</span>`).join('')}<small>Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.</small></div>` : ''}
-    ${aprendiz ? tableroRigo() : tarjetaFinde()}
+    ${aprendiz ? tableroRigo() : tarjetaMisiones() + tarjetaFinde()}
     ${aprendiz ? '' : mapaCiudad()}
     <h2 class="sec">${aprendiz ? 'Don Rigo te manda a' : 'Elige el trabajo de esta noche'}</h2>
     ${!aprendiz ? `<p class="nota">Solicitudes de esta noche: ${H.ordenes.filter(x => !x.clienteId).length}. Con más reputación te llaman más; si no, sal a buscar clientes en «Clientes». Cada trabajo se hace con contrato firmado.</p>` : ''}
@@ -3619,6 +3664,9 @@ function pantallaParte() {
     prepPerfecta: M.prep.gas && M.prep.luz && M.prep.cubierto >= 1 && M.prep.bolsa };
   const retosHechos = M.retos.map(id => [reto(id), reto(id).ok(ctxR)]);
   S.estrellas = estrellasAntes + retosHechos.filter(r => r[1]).length;
+  // Retos de Don Rigo
+  const misHechas = aprendiz ? [] : avanzarMisiones({ aprobado, n, o, BS, danos: M.danos.length, gana: !!ganaDuelo, espejo, finMin, pedOk: !!(ped && !ped.tacos && pedOk) });
+  for (const x of misHechas) { lineas.push([x.todo ? 'Don Rigo: ¡los tres retos de la semana!' : `Reto de Don Rigo: ${textoMision(x)}`, x.dinero]); neto += x.dinero; rep += x.rep; }
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
   // Récords
   const records = [];
@@ -3703,6 +3751,7 @@ function pantallaParte() {
       <span class="nota">El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.</span></div>
     ${d ? `<div class="cita"><b>${ganaDuelo ? 'Duelo ganado' : 'Duelo perdido'}</b>${ganaDuelo ? `Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.` : `El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(ped.quien)} · ${esc(ped.chip)}</b>${ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : esc(ped.mal)}</div>` : ''}
+    ${misHechas.length ? `<div class="cita"><b>📞 Don Rigo, desde el lago</b>${misHechas.some(x => x.todo) ? '¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.' : uno(['¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'Reto cumplido. Se me cayó la caña de la emoción.', 'Así se hace. Beto dice que él te enseñó. Yo no dije nada.'])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
     ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(capitulo.t)}</b>${esc(capitulo.txt)}</div>` : ''}
     <div class="cita"><b>El cliente</b>${esc(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL))}${notaCliente ? ' ' + esc(notaCliente) : ''}</div>
