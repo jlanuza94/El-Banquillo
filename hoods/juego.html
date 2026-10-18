@@ -399,8 +399,8 @@ const RIVAL = 'Limpiezas El Cuñado';
 const QUIEN_CUNADO = { n: 'El Cuñado', color: '#d7382b' };
 // Las etapas de tu empresa: se pasa a la siguiente con reputación y pagando el salto.
 const ETAPAS = [
-  { n: 'Camioneta vieja', txt: 'Tú solo y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías. Beto espera a que puedas pagarle.' },
-  { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe busca trabajo, puedes contratar ayudantes y anunciarte en redes.' },
+  { n: 'Camioneta vieja', txt: 'Tú solo y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías. Beto espera a que puedas pagarle y cabe un ayudante del barrio.' },
+  { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe busca trabajo, compras camionetas más grandes (y más camionetas) para más ayudantes y te anuncias en redes.' },
   { n: 'Oficina con fax', rep: 40, compra: 4000, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy busca trabajo (despierto, casi siempre).' },
   { n: 'Contratista de confianza', rep: 60, compra: 7000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
   { n: 'Leyenda de la grasa', rep: 85, compra: 12000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
@@ -762,6 +762,7 @@ function completar(s) {
 // Lo nuevo también llega a la noche que ya estaba preparada y a los clientes de antes.
 function ponerAlDia() {
   const H = S.hoy;
+  if (S.fase === 'empresa' && !(S.candidatos || []).length) S.candidatos = genCandidatos(3 + (S.eq.flota || 0));   // partidas viejas: ya hay gente buscando trabajo
   if (H && H.noche === S.noche) {
     if (!H.retos) H.retos = RETOS.filter(r => !r.si || r.si()).sort(() => Math.random() - .5).slice(0, 3).map(r => r.id);
     for (const o of H.ordenes) {
@@ -3227,7 +3228,7 @@ function vCuadrilla() {
   const comps = Object.entries(COMPANEROS).map(([id, c]) => {
     const mio = S.fijos.includes(id), pronto = S.etapa < c.etapa, precio = ADELANTO[id];
     return `<div class="persona">${cara(c.color, c.n[0])}<div><b>${c.n} ${esc(c.apodo)}</b><span>${esc(c.rasgo)} Fuerza ${Math.round(c.fuerza * 100)} · ${dinero(c.sueldo)} por noche que sale contigo.${mio || pronto ? '' : ` Pide ${dinero(precio)} de adelanto.`}</span></div>
-      ${mio ? '<span class="chip ok">En tu equipo</span>' : pronto ? `<span class="chip">Etapa ${ETAPAS[c.etapa].n}</span>` : `<button class="btn prim peq" data-fichar="${id}" ${S.dinero < precio ? 'disabled' : ''}>Contratar</button>`}</div>`;
+      ${mio ? '<span class="chip ok">En tu equipo</span>' : pronto ? `<span class="chip">🔒 Llega con: ${ETAPAS[c.etapa].n}</span>` : `<button class="btn prim peq" data-fichar="${id}" ${S.dinero < precio ? 'disabled' : ''}>Contratar</button>`}</div>`;
   }).join('');
   const companeros = `<h2 class="sec">Compañeros · van contigo y limpian a tu lado</h2>
     ${S.fijos.length ? '' : `<div class="cita"><b>Beto, por teléfono</b>Jefe, cuando tengas para el adelanto, me llamas. Ya practiqué con el karaoke: rompo menos cosas que antes. Casi.</div>`}${comps}`;
@@ -3235,12 +3236,11 @@ function vCuadrilla() {
   const angelica = S.angelica ? `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>Organiza los equipos de cada noche (botón en «Noche») y con ella trabajan mejor. ${dinero(ANGELICA.sueldo)} por noche.</span></div><span class="chip ok">En tu equipo</span></div>`
     : `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · coordinadora</b><span>${flota >= ANGELICA.minVans ? `Organiza los equipos de cada noche y con ella trabajan mejor. Pide ${dinero(ANGELICA.adelanto)} de adelanto y ${dinero(ANGELICA.sueldo)} por noche.` : `Se une cuando tengas 4 camionetas (tienes ${flota + 1}). Dice que con menos no vale la pena organizarse.`}</span></div>
       ${flota >= ANGELICA.minVans ? `<button class="btn prim peq" id="ficharAngelica" ${S.dinero < ANGELICA.adelanto ? 'disabled' : ''}>Contratar</button>` : '<span class="chip">4 camionetas</span>'}</div>`;
-  if (S.etapa < 1) return `${companeros}<p class="nota">Los ayudantes (gente del barrio que limpia sola durante el turno) se contratan cuando tengas taller propio.</p>`;
   const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? 'Pasó la prueba' : `A prueba · ${c.noches} de 3 noches`}</span>` : ''}<span>${esc(c.rasgo)} ${dinero(c.sueldo)} por noche${c.prueba ? ' (a prueba cobra el 80 %)' : ''} · ${c.noches} noches${c.fuerza > c.base + .01 ? ` · con experiencia: +${Math.round((c.fuerza - c.base) * 100)} de fuerza` : ''}</span>${medidas(c)}</div>
     <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">Dejarlo fijo</button>` : ''}<button class="btn peq" data-despedir="${c.id}">Despedir</button></div></div>`).join('') || '<p class="nota">Aún no tienes ayudantes.</p>';
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(c.rasgo)} Pide ${dinero(c.sueldo)} por noche.</span>${medidas(c)}${c.respuesta ? `<span class="respuesta">«${esc(c.respuesta)}»</span>` : ''}</div>
     <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">Entrevistar</button>`}<button class="btn prim peq" data-contratar="${c.id}">Contratar</button></div></div>`).join('') || '<p class="nota">Nadie por ahora. Vuelve en un par de noches.</p>';
-  return `${companeros}<h2 class="sec">Coordinación</h2>${angelica}<h2 class="sec">Ayudantes · caben ${plazas} en la camioneta</h2>${mios}
+  return `${companeros}<h2 class="sec">Coordinación</h2>${angelica}<h2 class="sec">Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta</h2>${mios}${S.etapa < 1 ? '<p class="pista">En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.</p>' : ''}
     <p class="nota">Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.</p>
     <h2 class="sec">Buscan trabajo · cambian cada 3 noches</h2>${cand}
     <div class="acciones"><button class="btn" id="anuncioEmpleo" ${S.dinero < 60 ? 'disabled' : ''}>Poner anuncio de empleo (${dinero(60)})</button></div>
