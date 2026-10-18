@@ -150,6 +150,22 @@ body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas butt
 h2.sec { margin: 4px 0 0; font-family: var(--f-cond); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); font-weight: 700; }
 .orden { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 12px 14px; display: grid; gap: 7px; text-align: left; width: 100%; }
 button.orden[aria-pressed="true"] { border-color: var(--hivis); box-shadow: inset 0 0 0 1px var(--hivis); }
+.orden.corta { padding: 9px 12px; gap: 3px; }
+.orden.corta h3 { font-size: 18px; }
+.orden.corta .nota { font-size: 13px; }
+.chip-txt { color: var(--hivis); font-weight: 600; }
+.chip-txt.mal { color: var(--mal); }
+details.plegable { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; }
+details.plegable > summary { list-style: none; cursor: pointer; padding: 11px 14px; display: flex; justify-content: space-between; gap: 8px; align-items: center; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .03em; }
+details.plegable > summary::-webkit-details-marker { display: none; }
+details.plegable > summary::after { content: '▾'; color: var(--tenue); transition: transform .2s; }
+details.plegable[open] > summary::after { transform: rotate(180deg); }
+details.plegable > summary small { font-family: var(--f-mono); font-weight: 500; font-size: 12px; color: var(--tenue); margin-left: auto; }
+details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
+.companeros.compacto { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
+.companeros.compacto .comp { padding: 7px; grid-template-columns: 30px 1fr; gap: 6px; align-items: center; }
+.companeros.compacto .cara { width: 30px; height: 30px; font-size: 14px; }
+.companeros.compacto .comp b { font-size: 15px; }
 .orden h3 { margin: 0; font-family: var(--f-cond); font-size: 21px; line-height: 1.1; color: var(--acero); }
 .orden.fijo { border-left: 4px solid var(--ok); }
 .fila { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
@@ -656,9 +672,38 @@ function perfil(c) {
 const chipsPerfil = c => `<span class="chips-perfil"><span class="chip">${L('Bueno en', 'Good at')} ${L(ESPECIAL[c.esp], EN.esp[c.esp])}</span>${CARACTERES[c.tipo] ? `<span class="chip ${CARACTERES[c.tipo][1]}">${L(CARACTERES[c.tipo][0], EN.caracter[c.tipo])}</span>` : ''}${S.cuadrilla.includes(c) ? `<span class="chip ${(c.animo || 3) <= 1 ? 'mal' : (c.animo || 3) >= 4 ? 'ok' : ''}">${L('Ánimo', 'Morale')} ${'●'.repeat(Math.max(0, c.animo || 3))}${'○'.repeat(Math.max(0, 5 - (c.animo || 3)))}${(c.animo || 3) <= 1 ? L(' · llega tarde', ' · shows up late') : ''}</span>` : ''}</span>`;
 const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
 // El gerente: su paciencia baja con cada visita, y mucho más si vas atrasado. Solo explota si de verdad tardas.
-const GERENTE_IMPACIENTE = ['Ya van tres horas, ¿eh?', '¿Esto siempre tarda tanto o es usted?', 'Mi suegra limpia más rápido. Y tiene 80 años.', 'Le aviso que a las seis llega el panadero.'];
-const GERENTE_FURIOSO = ['¿Es en serio? ¡Mañana abrimos!', '¡Les pago por limpiar, no por mirar la grasa!', 'Estoy a esto de llamar a su jefe. A ESTO.'];
+const GERENTE_IMPACIENTE = ['Ya van tres horas, ¿eh?', '¿Esto siempre tarda tanto o es usted?', 'Mi suegra limpia más rápido. Y tiene 80 años.', 'Le aviso que a las seis llega el panadero.',
+  'Llevo cuatro cafés esperándolos. Cuatro.', '¿Les puedo cobrar renta? Ya casi viven aquí.', 'El de antes tardaba menos. Bueno, también dejaba la grasa, pero tardaba menos.', 'Mi reloj dice que es tardísimo. Y mi reloj no miente. Es suizo. Bueno, de Tepito.',
+  'Ya le mandé mensaje a mi esposa que llego tarde. Por ustedes.', '¿Eso que hacen se llama limpiar o meditar?', 'Pensé que esto era un trabajo de una hora. Como en los videos.', 'Ya me vi dos capítulos de mi novela y ustedes siguen en la misma campana.'];
+const GERENTE_FURIOSO = ['¿Es en serio? ¡Mañana abrimos!', '¡Les pago por limpiar, no por mirar la grasa!', 'Estoy a esto de llamar a su jefe. A ESTO.',
+  '¡Ya amaneció en Japón y ustedes siguen aquí!', '¡Voy a poner una reseña con CERO estrellas! ¿Existe cero? ¡La invento!', '¡Mi mamá limpia más rápido y está de vacaciones en Acapulco!',
+  '¡Si no terminan, el desayuno lo sirvo yo en la campana!', '¡Ya no grito porque me quedé sin voz! (Grita igual.)', '¡Les voy a cobrar la luz, el agua y mi paciencia!', '¡Me están envejeciendo! ¡Mire, una cana nueva!'];
+// Cada noche el gerente tiene su forma de ser; dice cosas suyas y no repite hasta que se le acaban.
+const GERENTES = {
+  nervioso: { n: 'Nervioso', frases: ['¿Ese ruido es normal? Dígame que es normal.', '¿Y si se cae la campana? ¿Tienen seguro? ¿YO tengo seguro?', 'No toquen ese botón. Ni ese. Mejor no toquen nada. Bueno, sí, la grasa.', 'Perdón que pregunte tanto, es que me pongo nervioso. ¿Ya casi?'] },
+  chismoso: { n: 'Chismoso', frases: ['Oiga, ¿y es cierto que El Cuñado limpia con una escoba? Cuénteme todo.', '¿Ya supo que el de la taquería de enfrente se divorció? Bueno, sigan, sigan.', 'Aquí entre nos: la campana del chef de la esquina está PEOR que esta.', '¿Y usted es casado? Pregunto para un primo. Que no existe. Bueno, sigan.'] },
+  foodie: { n: 'Gourmet', frases: ['Esa grasa tiene notas de chorizo de 2021. Una buena cosecha.', '¿Saben que con esto se podría hacer un caldo? No lo voy a hacer. Pero se podría.', 'Mañana estrenamos platillo. Si queda limpio, se los invito. Si no, se los cobro.', 'Huelan eso. ¿Huelen? Es historia. Historia frita.'] },
+  techie: { n: 'Influencer', frases: ['¿Puedo hacer un video? Sonrían. No, mejor no sonrían, que se vea que trabajan.', 'Esto en cámara rápida va a ser viral. ¿Pueden ir más lento para que se note?', 'Ya tengo tres likes de mi mamá. Sigan así.', '¿Me firman la campana cuando terminen? Para el contenido.'] },
+  filosofo: { n: 'Filósofo', frases: ['¿La grasa nos ensucia a nosotros o nosotros ensuciamos a la grasa?', 'Limpiar una campana es como la vida: nunca termina, solo cambia de mancha.', 'Si una campana se limpia y nadie la ve, ¿quedó limpia?', 'Yo antes era chef. Ahora soy gerente. Los dos lloramos con la cebolla.'] },
+};
+// Lo que hace a veces en lugar de preguntar (y le sube la paciencia a él o a ti).
+const GERENTE_ACCIONES = [['(Se asoma, te toma una foto con el celular y se va sin decir nada.)', 0], ['(Te deja un vaso de horchata en la mesa. Qué amable. Sospechoso, pero amable.)', 10],
+  ['(Pasa por detrás, mira la campana, asiente muy serio y se va.)', 5], ['(Se queda mirando cómo raspas. Mucho rato. Demasiado rato.)', -4], ['(Te pregunta si quieres una torta. No hay torta. Solo preguntaba.)', 3],
+  ['(Prende la radio de la cocina a todo volumen y se va a su oficina.)', 0]];
+function dichoGerente(lista) {
+  M.gerenteDicho = M.gerenteDicho || new Set();
+  const libres = lista.filter(x => !M.gerenteDicho.has(x)), f = uno(libres.length ? libres : lista);
+  if (!libres.length) lista.forEach(x => M.gerenteDicho.delete(x));
+  M.gerenteDicho.add(f); return f;
+}
 const RESPUESTAS_GERENTE = [
+  { t: 'Es grasa artesanal, jefe', paciencia: 6, gerente: '¿Artesanal? Entonces sí vale lo que cobran.' },
+  { t: 'Le dejo la campana como espejo', paciencia: 12, gerente: 'Más le vale. Me quiero peinar ahí mañana.' },
+  { t: '¿Quiere ayudar a raspar?', paciencia: -2, gerente: 'Raspa dos segundos, se cansa, dice «ya entendí el proceso» y se va.' },
+  { t: 'Shhh… estoy escuchando la grasa', paciencia: 4, gerente: '…¿Y qué dice? (Se aleja muy despacio.)' },
+  { t: 'Si se va, acabo en 10 minutos', paciencia: -8, gerente: 'Me voy, me voy. Pero son 10, ¿eh? Los cuento.', calma: 20 },
+  { t: 'Le canto algo para que espere', paciencia: 14, gerente: '(Te aplaude por compromiso y vuelve a su oficina.)', comp: 'Por favor no vuelvas a cantar.' },
+  { t: 'Ya casi, ya casi, ya casi', paciencia: -3, gerente: '«Ya casi» lo dijeron hace una hora.' },
   { t: 'Ya casi, jefe', paciencia: 8 },
   { t: 'Falta poquito. Desde 2009.', paciencia: -12, propina: -.03, comp: 'JAJA. Desde 2009.' },
   { t: '¿Me trae un cafecito?', paciencia: 18, gerente: 'Bueno… ¿con azúcar? (Se va a la máquina y tarda un buen rato.)', calma: 30 },
@@ -667,7 +712,9 @@ const RESPUESTAS_GERENTE = [
   { t: 'Esta grasa es de 2019, jefe.', paciencia: 10, gerente: '…Sí, es que el anterior gerente… bueno. Sigan.' },
   { t: 'Si me deja trabajar, acabo antes', paciencia: -4, gerente: 'Está bien, está bien. Me callo. (No se calla.)' },
 ];
-const GERENTE = ['¿Ya casi?', '¿Cuánto falta? Es que mañana abrimos.', 'Yo lo habría hecho con un trapito.', '¿Eso es grasa o es el diseño?', '¿Y eso brilla así siempre o es la luz?'];
+const GERENTE = ['¿Ya casi?', '¿Cuánto falta? Es que mañana abrimos.', 'Yo lo habría hecho con un trapito.', '¿Eso es grasa o es el diseño?', '¿Y eso brilla así siempre o es la luz?',
+  '¿Necesitan algo? ¿Agua? ¿Un aplauso?', 'Nomás vengo a ver. No me hagan caso. (Se queda.)', '¿Esa espuma no le hace daño a las ollas? Pregunto porque son de mi abuela.', '¿Ustedes también limpian coches? Es que el mío…',
+  'Qué bonito ruido hace la rasqueta. Relaja. Bueno, ya no.', 'Mi hijo quiere ser limpiador de campanas. Yo le digo que estudie. ¿Usted estudió?', '¿Y cómo saben dónde hay grasa? ¿Por el olor?', 'Aquí se cocinaron diez mil hamburguesas. Más o menos. Bueno, cinco mil.'];
 const RIGO_CONSEJOS = ['Consejo de Don Rigo: si el cliente no paga, límpiale solo la mitad. No, espera, no hagas eso.', 'Desde el lago: pesqué una bota. Igual que mi primer cliente. ¿Cómo va la empresa?', 'Consejo de Don Rigo: nunca le prestes la camioneta a Beto. Nunca.', 'Consejo de Don Rigo: los mapaches respetan a quien les habla de usted.', `Desde el lago: ${RIVAL} me ofreció trabajo. Les dije que estoy jubilado. Y que sus campanas dan pena.`, 'Consejo de Don Rigo: cobra antes de raspar. O después. Pero cobra.'];
 const RIGO = ['Hoy te toca una fácil. Mentira, ninguna es fácil.', 'Si te preguntan, la camioneta siempre hizo ese ruido.', 'El seguro no cubre mapaches. Lo pregunté.', 'Si algo explota, tú no estabas.', 'Recuerda: el cliente siempre tiene razón, hasta que paga.', 'Los clientes no se consiguen solos. Bueno, a veces sí, pero no cuentes con eso.'];
 const CLIENTE_BIEN = ['El dueño se mira en la campana y se peina.', 'El chef pasa el dedo por el ducto y no dice nada. Es lo más cerca de un elogio que vas a recibir.', 'El gerente le saca una foto a la campana. «Para mi mamá», dice.', 'El dueño te ofrece un café. Está frío, pero es un gesto.'];
@@ -2641,9 +2688,13 @@ function visitaGerente() {
   M.paciencia -= tarde ? 22 : 8;
   if (!tarde) M.paciencia = Math.max(25, M.paciencia);   // si vas a buen ritmo, como mucho se impacienta
   if (M.paciencia <= 0 && !M.enojado) return explotaGerente();
-  const frase = M.paciencia > 60 ? uno(GERENTE) : M.paciencia > 30 ? uno(GERENTE_IMPACIENTE) : uno(GERENTE_FURIOSO);
+  // A veces no pregunta: hace algo.
+  if (M.paciencia > 45 && azar(.25)) { const [a, p] = dichoGerente(GERENTE_ACCIONES); M.paciencia = Math.min(110, M.paciencia + p); decir('gerente', a); return; }
+  if (!M.gerentePers) M.gerentePers = uno(Object.keys(GERENTES));
+  const propias = GERENTES[M.gerentePers].frases;
+  const frase = M.paciencia > 60 ? dichoGerente([...GERENTE, ...propias]) : M.paciencia > 30 ? dichoGerente([...GERENTE_IMPACIENTE, ...propias.slice(2)]) : dichoGerente(GERENTE_FURIOSO);
   let resp = false;
-  const ops = [RESPUESTAS_GERENTE[0], ...RESPUESTAS_GERENTE.slice(1).sort(() => Math.random() - .5).slice(0, 2)];
+  const ops = [RESPUESTAS_GERENTE.find(r => r.t === 'Ya casi, jefe'), ...RESPUESTAS_GERENTE.filter(r => r.t !== 'Ya casi, jefe').sort(() => Math.random() - .5).slice(0, 2)];
   chat.querySelectorAll('.de-gerente').forEach(x => x.remove());
   const b = decir('gerente', frase, ops.map(o => ({ t: o.t, f: () => {
     resp = true; if (!M) return;
@@ -2653,7 +2704,7 @@ function visitaGerente() {
     if (o.gerente) setTimeout(() => M && decir('gerente', o.gerente), 400);
     if (o.comp) setTimeout(() => M && decir(M.comp, o.comp), 400);
   } })));
-  setTimeout(() => { if (!resp && M && M.fase === 'turno' && b.isConnected) { M.paciencia -= 8; decir('gerente', M.paciencia > 30 ? '¿Hola? ¿Me escucha? ¿¿YA CASI??' : '¡¿ME ESTÁ IGNORANDO?!'); } }, 6800);
+  setTimeout(() => { if (!resp && M && M.fase === 'turno' && b.isConnected) { M.paciencia -= 8; decir('gerente', M.paciencia > 30 ? uno(['¿Hola? ¿Me escucha? ¿¿YA CASI??', '¿Me está dejando en visto? ¿En persona?', 'Ah, ¿no me contesta? Muy bien. Muy bien.']) : uno(['¡¿ME ESTÁ IGNORANDO?!', '¡Hablo con usted, el de la rasqueta!', '¡Ni mi exesposa me ignoraba así!'])); } }, 6800);
 }
 function explotaGerente() {
   M.enojado = true; sAlarma();
@@ -3429,7 +3480,7 @@ function mapaCiudad() {
   const ayudan = (H.equipos || []).map((e, k) => e.o === 'mio' ? k + 1 : 0).filter(Boolean);
   const calles = [...[30, 64, 98, 132].map(y => `<path d="M0 ${y}H${W}"/>`), ...[40, 100, 160, 220, 280].map(x => `<path d="M${x} 0V${Hh}"/>`)].join('');
   const van = (k, [x, y]) => `<g class="van"><rect x="-7" y="-4" width="14" height="8" rx="2" fill="${COL_EQ[k]}" stroke="#0b1117" stroke-width="1"/><animateMotion dur="${(3 + k * .4).toFixed(1)}s" fill="freeze" path="M${base[0]} ${base[1]}L${x} ${y}"/></g>`;
-  return `<div class="mapa"><div class="fila"><b>${L('La ciudad esta noche', 'The city tonight')}</b><span class="nota">${L('Toca un trabajo para elegirlo', 'Tap a job to pick it')}</span></div>
+  return `<div class="mapa"><span class="nota">${L('Toca un trabajo para elegirlo', 'Tap a job to pick it')}</span>
     <svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${L('Mapa de la ciudad con tus trabajos', 'City map with your jobs')}">
       <rect width="${W}" height="${Hh}" fill="#141e27"/><g stroke="#24313d" stroke-width="5">${calles}</g><path d="M0 150Q120 128 200 156T${W} 146" stroke="#1d3a52" stroke-width="9" fill="none"/>
       <g transform="translate(${base[0]} ${base[1]})"><rect x="-13" y="-10" width="26" height="20" rx="3" fill="#2a3946" stroke="#ffd23f" stroke-width="1.5"/><text y="4" text-anchor="middle" font-size="9" fill="#ffd23f">${L('TALLER', 'SHOP')}</text></g>
@@ -3514,8 +3565,17 @@ function pantallaCamioneta() {
   enlazar();
 }
 
+// Los trabajos que no eliges se ven en una tarjeta corta; el elegido se abre con todos sus detalles.
+function tarjetaCorta(o, i) {
+  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.gigante ? L('Gigante', 'Giant') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
+  return `<button class="orden corta ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="false">
+    <div class="fila"><h3>${esc(o.nombre)}</h3><span class="pago">${dinero(o.pago)}</span></div>
+    <span class="nota">${chip ? `<b class="chip-txt ${o.duelo ? 'mal' : ''}">${esc(chip)}</b> · ` : ''}${nCocina(o.cocina)}${o.campanas > 1 ? ` · ${o.campanas} ${L('campanas', 'hoods')}` : ''} · ${o.micras.toLocaleString('es-MX')} µm${o.firmado ? '' : ` · <i>${L('sin firmar', 'not signed')}</i>`}</span>
+  </button>`;
+}
 function tarjetaOrden(o, i) {
   const C = COCINAS[o.cocina], H = S.hoy;
+  if (i !== H.sel) return tarjetaCorta(o, i);
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
     <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
@@ -3534,6 +3594,7 @@ const sugerido = o => clamp(Math.round(o.micras / 1800 * o.campanas * (1 + o.fil
 const hayB = () => S.fase === 'empresa' && (S.eq.flota || 0) > 0;
 function extrasOrden(o, i) {
   const H = S.hoy, b = [];
+  if (i !== H.sel) { const k = (H.equipos || []).findIndex(e => e.o === i); return k >= 0 ? `<div class="tras-orden"><span class="chip ok">${L(`Va el equipo ${k + 2}`, `Team ${k + 2} goes`)}</span></div>` : ''; }
   if (!o.firmado) { b.push(`<button class="btn prim peq" data-firmar="${i}">${L('Firmar contrato', 'Sign contract')} · ${dinero(o.pago)}</button>`); if (o.caracter) b.push(`<button class="btn peq" data-neg="${i}">${L('Negociar', 'Negotiate')} · ${L(CARACTER[o.caracter].n, EN.trato[o.caracter][0]).toLowerCase()}</button>`); }
   else if (!o.clienteId && S.fase === 'empresa') b.push(`<span class="chip ok">${L('Contrato firmado', 'Contract signed')}${o.negociado ? L(' · precio negociado', ' · negotiated price') : ''}</span>`);
   if (o.garantia) b.push(`<span class="chip naranja">${L('Garantía de A', 'A guaranteed')}</span>`);
@@ -3550,6 +3611,8 @@ function tarjetaEtapa(sig) {
       : `<span class="aviso">${L(`Necesitas reputación ${sig.rep} (tienes ${S.rep}).`, `You need ${sig.rep} reputation (you have ${S.rep}).`)}</span>`}</div>`;
 }
 
+const PLEG = {};   // qué secciones plegables tienes abiertas
+const plegable = (id, titulo, resumen, html, abierto = false) => html ? `<details class="plegable" data-pl="${id}" ${(PLEG[id] ?? abierto) ? 'open' : ''}><summary>${titulo}${resumen ? `<small>${resumen}</small>` : ''}</summary><div class="dentro">${html}</div></details>` : '';
 function vNoche() {
   const H = S.hoy, aprendiz = S.fase === 'aprendiz', plazas = PLAZAS[S.eq.camioneta];
   const o = H.ordenes[H.sel], bloqueada = o && (o.ayud > H.ayud.length || !o.firmado);
@@ -3557,22 +3620,23 @@ function vNoche() {
   const dia = H.dia && DIAS.find(x => x.id === H.dia.id);
   return `${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(dia.t)}</h3><p>${esc(dia.txt)}</p>
       ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(H.dia.res)}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(op.t)}<small>${esc(op.d)}</small></button>`).join('')}</div>`}</div>` : ''}
-    ${sig ? tarjetaEtapa(sig) : ''}
-    ${H.retos && H.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${H.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}<small>${L(`Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.`, `Each one gives a star. You have ${S.estrellas || 0} ★.`)}</small></div>` : ''}
-    ${aprendiz ? tableroRigo() : tarjetaMisiones() + tarjetaFinde()}
-    ${aprendiz ? '' : mapaCiudad()}
+    ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
+    ${aprendiz ? plegable('tablero', `🗓️ ${L('Horario de Grasa Brava', 'Grasa Brava schedule')}`, 'Angélica', tableroRigo(), S.noche <= 1) : plegable('retos', `🎯 ${L('Retos y metas', 'Challenges & goals')}`, [H.retos && H.retos.length ? `☆ ${H.retos.length}` : '', S.mis ? `📞 ${S.mis.lista.filter(x => x.hecho).length}/${S.mis.lista.length}` : '', S.finde ? `🏆 ${S.finde.paso + 1}/3` : '', sig ? `⬆ ${S.rep}/${sig.rep}` : ''].filter(Boolean).join(' · '),
+      (sig && S.rep < sig.rep ? tarjetaEtapa(sig) : '') + (H.retos && H.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${H.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}<small>${L(`Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.`, `Each one gives a star. You have ${S.estrellas || 0} ★.`)}</small></div>` : '') + tarjetaMisiones() + (H.findeOferta ? '' : tarjetaFinde()))}
+    ${!aprendiz && H.findeOferta ? tarjetaFinde() : ''}
+    ${aprendiz ? '' : plegable('mapa', `🗺️ ${L('La ciudad esta noche', 'The city tonight')}`, `${H.ordenes.length} ${L('trabajos', 'jobs')}`, mapaCiudad())}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}</h2>
-    ${!aprendiz ? `<p class="nota">${L(`Solicitudes de esta noche: ${H.ordenes.filter(x => !x.clienteId).length}. Con más reputación te llaman más; si no, sal a buscar clientes en «Clientes». Cada trabajo se hace con contrato firmado.`, `Requests tonight: ${H.ordenes.filter(x => !x.clienteId).length}. More reputation brings more calls; otherwise, go find clients in "Clients". Every job needs a signed contract.`)}</p>` : ''}
+    ${!aprendiz ? `<p class="nota">${L(`${H.ordenes.length} trabajos esta noche. Toca uno para ver sus detalles. ¿Pocos? Busca más en «Clientes».`, `${H.ordenes.length} jobs tonight. Tap one to see its details. Too few? Find more in "Clients".`)}</p>` : ''}
     ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
     <h2 class="sec">${aprendiz ? L('Tu compañero esta noche', 'Your partner tonight') : L('Con quién vas', 'Who goes with you')}</h2>
-    <div class="companeros">${(aprendiz ? Object.entries(COMPANEROS) : [['solo', SOLO], ...Object.entries(COMPANEROS)]).map(([id, c]) => {
+    <div class="companeros compacto">${(aprendiz ? Object.entries(COMPANEROS) : [['solo', SOLO], ...Object.entries(COMPANEROS)]).map(([id, c]) => {
       const falta = !aprendiz && id !== 'solo' && !S.fijos.includes(id);
       const txt = id === 'solo' ? L('Sin compañero: no hay sueldo que pagar, pero todo lo limpias tú. El turno dura un poco más.', 'No partner: no wages to pay, but you clean everything yourself. The shift lasts a bit longer.')
         : falta ? (etapa() < c.etapa ? L('Busca trabajo desde la etapa ', 'Looking for work from the stage ') + nEtapa(c.etapa) + '.' : L('Contrátalo en «Cuadrilla».', 'Hire them in "Crew".')) : esc(L(c.rasgo, (EN.comp[id] || [])[1])) + (aprendiz ? '' : ` ${dinero(c.sueldo)} ${L('por noche', 'per night')}.`);
-      return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${id === 'solo' ? L('Yo solo', 'Just me') : c.n}</b><span>${txt}</span></div></button>`;
+      return `<button class="comp" data-c="${id}" aria-pressed="${H.comp === id}" ${aprendiz ? (id !== H.comp ? 'disabled' : '') : falta ? 'disabled' : ''}>${cara(c.color, c.n[0])}<div><b>${id === 'solo' ? L('Yo solo', 'Just me') : c.n}</b><span>${H.comp === id && (falta || id === 'solo') ? txt : falta ? '🔒' : id === 'solo' ? L('sin sueldo', 'no wages') : aprendiz ? '' : `${dinero(c.sueldo)}/${L('noche', 'night')}`}</span></div></button>`;
     }).join('')}</div>
     ${S.cuadrilla.length ? `<h2 class="sec">${L('Ayudantes en la camioneta', 'Helpers in the van')} · ${H.ayud.length} ${L('de', 'of')} ${plazas}</h2>
-      <div class="companeros">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${L('Fuerza', 'Strength')} ${Math.round(c.fuerza * 100)} · ${ESPECIAL[c.esp] ? L('bueno en ', 'good at ') + L(ESPECIAL[c.esp], EN.esp[c.esp]) + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
+      <div class="companeros compacto">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${ESPECIAL[c.esp] ? L(ESPECIAL[c.esp], EN.esp[c.esp]) + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     ${vEquipoB()}
     ${o && !o.firmado ? `<p class="aviso">${L('Primero firma el contrato del trabajo que elegiste.', 'First sign the contract for the job you picked.')}</p>` : ''}
     <div class="barra-salir"><div><b>${o ? esc(o.nombre) : L('Elige un trabajo', 'Pick a job')}</b><span class="nota">${o ? `${dinero(o.pago)} · ${H.comp === 'solo' ? L('tú solo', 'just you') : esc((COMPANEROS[H.comp] || SOLO).n)}${H.ayud.length ? ` + ${H.ayud.length}` : ''}${hayB() ? ` · ${(H.equipos || []).filter(e => e.o !== null).length} ${L('equipos fuera', 'teams out')}` : ''}` : ''}</span></div><button class="btn prim" id="salir" ${!o || bloqueada ? 'disabled' : ''}>${L('Salir a trabajar', 'Go to work')}</button></div>
@@ -3640,7 +3704,8 @@ function vEquipoB() {
   if (S.fase !== 'empresa' || (S.etapa < 1 && !hayB())) return '';
   if (!hayB()) return S.etapa >= 1 ? `<p class="nota">${L('Con más camionetas (en el Taller) puedes mandar otros equipos a otros trabajos la misma noche.', 'With more vans (in the Shop) you can send other teams to other jobs on the same night.')}</p>` : '';
   const eqs = equiposHoy(), usadas = new Set([H.sel, ...eqs.map(e => e.o)]);
-  return `<h2 class="sec">${L('Tus otros equipos', 'Your other teams')} · ${eqs.length} ${eqs.length === 1 ? L('camioneta', 'van') : L('camionetas', 'vans')}</h2>
+  const conTrabajo = eqs.filter(e => e.o !== null && e.o !== undefined).length;
+  return plegable('equipos', `🚐 ${L('Tus otros equipos', 'Your other teams')}`, `${conTrabajo}/${eqs.length} ${L('con trabajo', 'assigned')}`, `
     ${S.angelica ? `<div class="jefe">${cara(ANGELICA.color, 'A')}<div><b>Angélica · ${L('coordinadora', 'coordinator')}</b>${esc(H.angelica || L('Firma los contratos y yo armo los equipos con la gente que haga falta para cada trabajo.', 'Sign the contracts and I\'ll put together teams with the people each job needs.'))}<div class="acciones" style="margin-top:6px"><button class="btn prim peq" id="organizar">${L('Que Angélica organice', 'Let Angélica organize')}</button></div></div></div>` : ''}
     ${eqs.map((e, k) => {
       const { comps, ayud } = ocupados(e), o = e.o !== null ? H.ordenes[e.o] : null;
@@ -3656,7 +3721,7 @@ function vEquipoB() {
         ${o ? `<span class="${gen < sugerido(o) ? 'aviso' : 'nota'}">${L(`Necesita ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'} · llevas ${gen}.${gen < sugerido(o) ? ` Así no sale: le ${sugerido(o) - gen === 1 ? 'falta 1' : 'faltan ' + (sugerido(o) - gen)}.` : ' ¡Listo para salir!'}`, `Needs ${sugerido(o)} ${sugerido(o) === 1 ? 'person' : 'people'} · you have ${gen}.${gen < sugerido(o) ? ` It can't go out: ${sugerido(o) - gen} short.` : ' Ready to go!'}`)}</span>` : e.o === 'mio' ? `<span class="${gen < 2 ? 'aviso' : 'nota'}">${gen < 2 ? L('Para ayudarte necesita al menos 2 personas.', 'It needs at least 2 people to help you.') : L('Al empezar el turno tú repartes las zonas y luego revisas lo que entreguen.', 'When the shift starts you assign the zones and then check what they deliver.')}</span>` : ''}
         ${faltan ? `<span class="aviso">${L(`Ese trabajo pide ${o.ayud} ayudantes.`, `That job needs ${o.ayud} helpers.`)}</span>` : ''} <span class="nota">${L('Equipo de la camioneta', 'Van equipment')}: ${L(KITS[kit(k)].n, EN.kit[kit(k)][0]).toLowerCase()}.</span></div>`;
     }).join('')}
-    <p class="nota">${L('Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.', 'Each team takes one partner and up to 3 helpers. Lupe does fine work, Beto breaks things, Chuy may fall asleep; helpers count for their strength and care.')}</p>`;
+    <p class="nota">${L('Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.', 'Each team takes one partner and up to 3 helpers. Lupe does fine work, Beto breaks things, Chuy may fall asleep; helpers count for their strength and care.')}</p>`, conTrabajo > 0 || !!S.angelica);
 }
 // Angélica arma los equipos: a cada trabajo firmado, la gente que pide (los más fuertes primero). En un gigante tuyo, dos equipos para ayudarte.
 function organizar() {
@@ -3789,6 +3854,7 @@ function vAlbum() {
 
 function enlazar() {
   const H = S.hoy;
+  P.querySelectorAll('[data-pl]').forEach(d => d.addEventListener('toggle', () => { PLEG[d.dataset.pl] = d.open; }));
   P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; for (const e of H.equipos || []) if (e.o === H.sel || (e.o === 'mio' && !H.ordenes[H.sel].gigante)) e.o = null; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-firmar]').forEach(b => b.onclick = () => { const o = H.ordenes[+b.dataset.firmar]; o.firmado = true; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-neg]').forEach(b => b.onclick = () => { audio(); pantallaNegociar(+b.dataset.neg); });
