@@ -543,7 +543,7 @@ function perfil(c) {
   if (!c.esp) c.esp = f ? f[4] : uno(['filtros', 'campana', 'ducto']);
   return c;
 }
-const chipsPerfil = c => `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span>${CARACTERES[c.tipo] ? `<span class="chip ${CARACTERES[c.tipo][1]}">${CARACTERES[c.tipo][0]}</span>` : ''}</span>`;
+const chipsPerfil = c => `<span class="chips-perfil"><span class="chip">Bueno en ${ESPECIAL[c.esp]}</span>${CARACTERES[c.tipo] ? `<span class="chip ${CARACTERES[c.tipo][1]}">${CARACTERES[c.tipo][0]}</span>` : ''}${S.cuadrilla.includes(c) ? `<span class="chip ${(c.animo || 3) <= 1 ? 'mal' : (c.animo || 3) >= 4 ? 'ok' : ''}">Ánimo ${'●'.repeat(Math.max(0, c.animo || 3))}${'○'.repeat(Math.max(0, 5 - (c.animo || 3)))}${(c.animo || 3) <= 1 ? ' · llega tarde' : ''}</span>` : ''}</span>`;
 const COLORES = ['#f497b5', '#c6a0ff', '#ffb36b', '#9be38a', '#f2e86d', '#8ad4ff'];
 // El gerente: su paciencia baja con cada visita, y mucho más si vas atrasado. Solo explota si de verdad tardas.
 const GERENTE_IMPACIENTE = ['Ya van tres horas, ¿eh?', '¿Esto siempre tarda tanto o es usted?', 'Mi suegra limpia más rápido. Y tiene 80 años.', 'Le aviso que a las seis llega el panadero.'];
@@ -620,6 +620,7 @@ const TIENDA = [
   { id: 'robot', n: 'Robot de ductos «Ductobot 3000»', d: 'Lo metes en el ducto y lo limpia solo, de punta a punta. Las esquinas te las deja a ti.', p: 2500, ok: s => !s.eq.robot && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.robot = 1; } },
   { id: 'robotCam', n: 'Cámara para el Ductobot', d: 'Ves el ducto desde los ojos del robot mientras trabaja. Hipnótico.', p: 600, ok: s => s.eq.robot >= 1 && !s.eq.robotCam, f: s => { s.eq.robotCam = true; } },
   { id: 'orugas', n: 'Orugas todoterreno para el Ductobot', d: 'Ya no se atora en las costras: pasa por encima de todo.', p: 800, ok: s => s.eq.robot >= 1 && !s.eq.orugas, f: s => { s.eq.orugas = true; } },
+  { id: 'seguro', n: 'Seguro contra daños', d: 'La aseguradora paga la mitad de cada daño: lo que rompas tú, tu gente o tus equipos. Una sola vez, para siempre.', p: 1500, ok: s => s.fase === 'empresa' && s.etapa >= 2 && !s.eq.seguro, f: s => { s.eq.seguro = true; } },
   { id: 'robotVoz', n: 'Voz de Don Rigo para el Ductobot', d: 'El robot habla como Don Rigo. No limpia mejor, pero regaña igual.', p: 150, ok: s => s.eq.robot >= 1 && !s.eq.robotVoz, f: s => { s.eq.robotVoz = true; } },
   { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 1500, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
   { id: 'flota', get n() { return S.eq.flota ? `Camioneta para el equipo ${S.eq.flota + 2}` : 'Segunda camioneta'; }, get d() { return `Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`; },
@@ -1803,7 +1804,8 @@ const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalea
 
 function empezarTurno(orden) {
   // Puntualidad: el que tiene poca a veces no llega (y esa noche no cobra).
-  const faltan = orden.equipo.filter(e => !e.principal && azar((5 - (e.puntual || 3)) * .07 * (tun('neon') ? .5 : 1)));
+  const animoDe = e => (e.id && (S.cuadrilla.find(c => c.id === e.id) || {}).animo) || 3;
+  const faltan = orden.equipo.filter(e => !e.principal && azar((5 - Math.max(1, (e.puntual || 3) - (animoDe(e) <= 1 ? 2 : 0))) * .07 * (tun('neon') ? .5 : 1)));
   if (tun('escape')) orden.eventos = orden.eventos.filter(e => e !== 'mapache' || azar(.4));
   orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0;
@@ -1969,7 +1971,13 @@ function tickCuadrillas(dt) {
     // Entregan cuando creen que está: un buen equipo deja la zona muy por debajo del límite; uno flojo, por encima.
     if (micras(z) <= LIMITE * clamp(1 + (.88 - c.cal) * 8, .35, 1.6)) {
       z.entregada = c.n; z.revisar = true; c.zona = null;
-      decir({ n: c.n, color: c.color }, uno([`Terminamos ${z.n.toLowerCase()}. Revísela, jefe.`, `${z.n} lista. Bueno, casi lista. Bueno, lista.`, `Ya quedó ${z.n.toLowerCase()}. ¿Nos da el visto bueno?`]));
+      // Con Angélica, si en el equipo va alguien de confianza (Lupe, Chuy o un ayudante serio), revisan ellos: si pasa, te ahorras ir.
+      const confia = S.angelica && c.gente.find(g => g.n === 'Lupe' || g.n === 'Chuy' || g.tipo === 'serio');
+      if (confia && micras(z) <= LIMITE) {
+        z.revisar = false; z.rev = 'ok'; c.ok++;
+        decir(ANGELICA, `${confia.n} ya revisó ${z.n.toLowerCase()} del ${c.n}: pasa. Una zona menos para ti.`);
+      } else if (confia) decir(ANGELICA, `${confia.n} dice que ${z.n.toLowerCase()} del ${c.n} todavía no pasa. Esa sí revísala tú.`);
+      else decir({ n: c.n, color: c.color }, uno([`Terminamos ${z.n.toLowerCase()}. Revísela, jefe.`, `${z.n} lista. Bueno, casi lista. Bueno, lista.`, `Ya quedó ${z.n.toLowerCase()}. ¿Nos da el visto bueno?`]));
     }
   }
 }
@@ -3521,6 +3529,7 @@ function organizar() {
   const quedan = plan.length;
   return `${uno(ANGELICA.frases)} ${armados} ${armados === 1 ? 'equipo sale' : 'equipos salen'} esta noche.${sinGente ? ` Me falta gente para ${sinGente} ${sinGente === 1 ? 'equipo' : 'equipos'}: contrata más.` : ''}${quedan && !sinGente ? ` Hay ${quedan} ${quedan === 1 ? 'trabajo firmado' : 'trabajos firmados'} sin camioneta: compra más camionetas.` : ''}`;
 }
+const conSeguro = d => S.fase === 'empresa' && EQ().seguro ? r10(d / 2) : d;   // con seguro, cada daño cuesta la mitad
 function resolverB(b) {
   const o = b.orden, gente = [...(b.comp ? [{ ...COMPANEROS[b.comp], id: null }] : []), ...b.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
   const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * (o.ayud > b.ayud.length ? 1.5 : 1);
@@ -3537,7 +3546,7 @@ function resolverB(b) {
   if (o.pedido) cosas.push(aprobado ? 'Cumplieron el pedido especial del cliente.' : 'Se les olvidó el pedido especial. El cliente no está contento.');
   if (!cosas.length) cosas.push(uno(['Trabajaron callados, como profesionales. Raro, pero bien.', 'Pusieron cumbia y limpiaron a buen ritmo.', 'El gerente les invitó un café. Dicen que estaba bueno.']));
   const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1)), 0)], ['Equipo B: gasolina', -GASOLINA]];
-  if (dano) lineas.push(['Equipo B: daños', -dano]);
+  if (dano) lineas.push([`Equipo B: daños${EQ().seguro ? ' (el seguro paga la mitad)' : ''}`, -conSeguro(dano)]);
   if (o.garantia && !notaA) lineas.push(['Equipo B: garantía de A incumplida', -r10(o.pago * .3)]);
   return { o, aprobado, notaA, gente, lineas, cosas, k: b.k, rep: (aprobado ? 3 : -5) + (o.garantia ? (notaA ? 1 : -3) : 0) };
 }
@@ -3783,7 +3792,7 @@ function pantallaParte() {
     ? [['Sueldo de la noche', SUELDO_APRENDIZ], ['Bono por aprobar', aprobado ? 40 : 0], ['Propina', propina], ['Propina extra por el pedido especial', extraPed], ...M.danos.map(x => [x.t + (x.dinero ? ' (lo paga Don Rigo)' : ''), null])]
     : [[`${aprobado ? 'Pago del trabajo' : 'Pago parcial'}${M.descuento ? ' (con el descuento prometido al gerente)' : ''}${tacos < 1 ? ' (la otra mitad, en tacos)' : ''}${d && !ganaDuelo ? ' (la mitad: ganó El Cuñado)' : ''}`, cobro],
       ...(tacos < 1 ? [['120 tacos de pastor', null]] : []), [`Bono de racha (${racha} noches aprobadas seguidas)`, bonoRacha], ['Propina', propina], [pedOk ? 'Extra por cumplir el pedido especial' : 'Descuento por no cumplir el pedido', extraPed],
-      ...M.danos.map(x => [x.t, x.dinero ? -x.dinero : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
+      ...M.danos.map(x => [x.t + (x.dinero && EQ().seguro ? ' (el seguro paga la mitad)' : ''), x.dinero ? -conSeguro(x.dinero) : null]), ['Sueldos de la cuadrilla', -sueldos], ['Gasolina', -GASOLINA]];
   let neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
@@ -3974,10 +3983,19 @@ function pantallaEvaluar(items) {
     const ayud = it.gente.map(g => g.id && S.cuadrilla.find(c => c.id === g.id)).filter(Boolean), se = [];
     let txt;
     if (k === 'fel') { ayud.forEach(c => { c.animo = Math.min(5, (c.animo || 3) + 1); if (!it.bien && azar(.3)) c.cuidado = Math.max(1, c.cuidado - 1); }); txt = it.bien ? '«¡Gracias, jefe! Así da gusto.»' : '«¿En serio? ¡Gracias! (Se van muy relajados.)»'; tono(880, .12, .08, 'triangle'); }
-    else if (k === 'reg') { ayud.forEach(c => { c.animo = (c.animo || 3) - (it.bien ? 2 : 1); if (!it.bien && azar(.5)) c.cuidado = Math.min(5, c.cuidado + 1); }); txt = it.bien ? '«¿Y ahora qué hicimos? Si quedó bien…» (Se van ofendidos.)' : '«Tiene razón, jefe. No vuelve a pasar.»'; tono(300, .2, .08, 'triangle', 200); }
+    else if (k === 'reg') {
+      // Regañar a quien hizo bien su trabajo duele el doble (y el triple si sacó A); y a veces lo van contando por ahí.
+      ayud.forEach(c => { c.animo = (c.animo || 3) - (it.bien ? (it.nota === 'A' ? 3 : 2) : 1); if (!it.bien && azar(.5)) c.cuidado = Math.min(5, c.cuidado + 1); });
+      txt = it.bien ? '«¿Y ahora qué hicimos? Si quedó bien…» (Se van ofendidos.)' : '«Tiene razón, jefe. No vuelve a pasar.»'; tono(300, .2, .08, 'triangle', 200);
+      if (it.bien && S.fase === 'empresa' && S.clientes.length && azar(it.nota === 'A' ? .2 : .1)) {
+        const cl = uno(S.clientes); S.clientes = S.clientes.filter(x => x !== cl); perdido(cl);
+        txt += ` Se fueron quejando de ti por todo el barrio. ${RIVAL} se enteró y le dijo a ${cl.nombre} que tu empresa «trata mal a su gente». ${cl.nombre} se fue con él. Gánale un duelo para recuperarlo.`;
+      }
+    }
     else txt = 'Asienten y se van a la camioneta.';
     for (const c of ayud) if (c.animo <= 0) { S.cuadrilla = S.cuadrilla.filter(x => x !== c); se.push(c.n); }
-    if (se.length) txt += ` ${se.join(' y ')} ${se.length > 1 ? 'renunciaron' : 'renunció'}. Dejó la rasqueta en tu escritorio.`;
+    if (k === 'reg' && ayud.some(c => c.animo === 1 && !se.includes(c.n))) txt += ' Con el ánimo por los suelos van a llegar tarde más seguido.';
+    if (se.length) txt += ` ${se.join(' y ')} ${se.length > 1 ? 'renunciaron' : 'renunció'}. ${se.length > 1 ? 'Dejaron sus rasquetas' : 'Dejó la rasqueta'} en tu escritorio.`;
     caja.querySelector('.respuesta-ev').textContent = txt; guardar();
   });
   $('#seguirEv').onclick = () => { guardar(); siguiente(); };
