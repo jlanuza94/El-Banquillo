@@ -99,7 +99,7 @@ button:focus-visible { outline: 2px solid var(--hivis); outline-offset: 2px; }
 /* Marcas sobre la escena 3D (preparación) */
 .marca { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); background: var(--hivis); color: var(--hivis-tinta); border: 2px solid rgba(255,255,255,.4); border-radius: 999px; padding: 6px 11px; font-family: var(--f-cond); font-weight: 700; font-size: 14px; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,.5); animation: marca .7s ease-in-out infinite alternate; }
 .marca.punto { width: 30px; height: 30px; padding: 0; }
-.marca.hecha { background: var(--ok); animation: none; }
+.marca.hecha { background: var(--ok); animation: none; pointer-events: none; }
 @keyframes marca { to { transform: translate(-50%, -50%) scale(1.1); } }
 
 /* Pantallas (camioneta, taller, parte…) */
@@ -315,6 +315,8 @@ a.btn { display: inline-block; text-decoration: none; }
   .zonas button { padding: 3px 8px; grid-auto-flow: column; justify-content: space-between; align-items: center; gap: 8px; }
   .zonas b { font-size: 12.5px; }
   .zonas span { font-size: 11px; }
+  .marca { font-size: 12.5px; padding: 5px 9px; }
+  .marca.punto { width: 26px; height: 26px; padding: 0; }
   .evento { justify-items: start; padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
   .evento .carta { max-width: min(46vw, 440px); max-height: 92vh; overflow-y: auto; padding: 10px 12px; gap: 6px; }
   .evento h3 { font-size: 16px; }
@@ -1439,7 +1441,7 @@ function construirNoche(orden) {
   // Gente: el compañero, los ayudantes y, si toca, el gerente
   piezas.gente = [];
   const equipo = orden ? orden.equipo : [{ color: COMPANEROS.beto.color }];
-  equipo.forEach((m, i) => { const p = persona(m.principal && look('casco').c ? look('casco').c : m.color, false); p.position.set(-lineW / 2 - .5 + (i % 2) * .5, 0, .5 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
+  equipo.forEach((m, i) => { const p = persona(m.principal && look('casco').c ? look('casco').c : m.color, false); p.position.set(-lineW / 2 - .8 + (i % 2) * .5, 0, .2 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
   piezas.gerente = persona(0, true); piezas.gerente.position.set(2.9, 0, 1.3); piezas.gerente.rotation.y = -1; piezas.gerente.visible = !!(orden && orden.eventos.includes('gerente')); mundo.add(piezas.gerente);
   piezas.rival = null;
   if (orden && orden.duelo) { piezas.rival = persona('#b3261e', 'cunado'); piezas.rival.position.set(Math.min(lineW / 2 + .7, 3.1), 0, .45); mundo.add(piezas.rival); }
@@ -1573,12 +1575,24 @@ function marca(pos, texto, alTocar, punto) {
 function tocarMarca(m) { if (m.hecho) return; m.hecho = true; m.el.classList.add('hecha'); if (!m.el.classList.contains('punto')) m.el.textContent = '✓'; m.alTocar(); }
 function limpiarMarcas() { MARCAS = []; marcasEl.innerHTML = ''; }
 function moverMarcas() {
+  const puestas = [];
   for (const m of MARCAS) {
     proy.copy(m.pos).project(cam);
     const vis = proy.z < 1 && Math.abs(proy.x) < 1.1 && Math.abs(proy.y) < 1.1;
     m.el.style.display = vis ? '' : 'none';
     m.sx = (proy.x + 1) / 2 * innerWidth; m.sy = (1 - proy.y) / 2 * innerHeight;
-    m.el.style.left = m.sx + 'px'; m.el.style.top = m.sy + 'px';
+    // Si dos marcas grandes caen juntas, la de después sube para que las dos se puedan tocar.
+    let y = m.sy;
+    if (vis && !m.el.classList.contains('punto')) {
+      const w = m.w || (m.w = m.el.offsetWidth || 120), h = m.h || (m.h = m.el.offsetHeight || 36);
+      for (let k = 0; k < 6; k++) {
+        const choca = puestas.find(o => Math.abs(o.x - m.sx) < (o.w + w) / 2 + 6 && Math.abs(o.y - y) < (o.h + h) / 2 + 6);
+        if (!choca) break;
+        y = choca.y - (choca.h + h) / 2 - 8;
+      }
+      puestas.push({ x: m.sx, y, w, h });
+    }
+    m.el.style.left = m.sx + 'px'; m.el.style.top = y + 'px';
   }
 }
 
