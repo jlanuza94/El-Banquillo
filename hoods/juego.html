@@ -339,6 +339,30 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .pedido i { font-style: normal; color: var(--ok); }
 .orden.dia { border-color: var(--grasa); }
 .orden.dia { padding: 10px 12px; gap: 5px; box-sizing: border-box; }
+/* Árbol de habilidades */
+.dato.nivel { color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.dato.nivel .puntos { font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; vertical-align: 2px; animation: falta 1s ease-in-out infinite alternate; }
+.ramas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ramas button { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 6px 4px; display: grid; justify-items: center; gap: 1px; color: inherit; }
+.ramas button[aria-pressed="true"] { border-color: var(--hivis); background: var(--panel-2); }
+.ramas i { font-style: normal; font-size: 20px; }
+.ramas b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+.ramas small { font-family: var(--f-mono); font-size: 11px; color: var(--tenue); }
+.camino { display: grid; gap: 10px; position: relative; }
+.camino::before { content: ""; position: absolute; left: 21px; top: 22px; bottom: 22px; width: 3px; background: var(--linea); border-radius: 2px; }
+.nodo { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; position: relative; }
+.nodo .bola { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: var(--panel-solido); border: 3px solid var(--linea); z-index: 1; }
+.nodo .txt { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 8px 10px; display: grid; gap: 4px; min-width: 0; }
+.nodo .txt b { font-family: var(--f-cond); font-size: 17px; }
+.nodo .rangos { color: var(--hivis); letter-spacing: 2px; font-size: 13px; }
+.nodo .pide { color: var(--tenue); font-size: 12px; }
+.nodo .btn { justify-self: start; }
+.nodo.cerrado { opacity: .5; }
+.nodo.abierto .bola { border-color: var(--hivis); }
+.nodo.parte .bola { border-color: var(--hivis); background: rgba(255,138,31,.2); }
+.nodo.lleno .bola { border-color: var(--ok); background: rgba(105,201,122,.25); color: var(--ok); }
+.nodo.maestro .txt { border-color: #c6a0ff88; }
+.nodo.maestro .bola { box-shadow: 0 0 0 3px #c6a0ff44; }
 .orden.dia > .chip { justify-self: start; }
 .orden.dia h3 { font-size: 18px; }
 .orden.dia p { font-size: 14px; }
@@ -535,8 +559,6 @@ const EN = {
   comp: { beto: ['the Cousin', 'Fast. Breaks things with total confidence.'], lupe: ['the Veteran', 'Perfect work. Trusts no one.'], chuy: ['the Big Guy', 'Brute strength. Falls asleep on any flat surface.'] },
   esp: { filtros: 'filters', campana: 'hoods', ducto: 'ducts' },
   caracter: { lio: 'Trouble', medio: 'Sometimes goofs off', serio: 'Serious and reliable' },
-  perk: { brazo: ['Arm of steel', 'The scraper removes 15% more.'], pulmones: ['Diver\'s lungs', 'Every shift lasts 15 seconds longer.'], labia: ['Silver tongue', '+5% tips, and the manager asks fewer questions.'],
-    botella: ['Foam hand', 'Foam lasts 40% longer.'], jefe: ['Born boss', 'Your crew cleans 20% faster.'], gentes: ['People person', 'Clients offer you regular contracts more often.'], ojo: ['Inspector\'s eye', 'Aim assist reaches twice as far.'] },
   herr: { rasqueta: ['Scraper', 'Short strokes: it removes the crust.'], espuma: ['Foam', 'Spread it on the grease and wait 2 seconds: then it comes off three times faster.'], hidro: ['Pressure washer', 'Hold and aim. Without foam, the crust splatters.'], pulidor: ['Polish', 'Polish the clean metal: mirror finish and bigger tips.'] },
   kit: [['Basic', 'Old scrapers and a bucket.'], ['Complete', 'Good scrapers, foam and ladders.'], ['Pro', 'Their own pressure washer and polisher.']],
   tienda: { r2: ['Tempered steel scraper', 'Wider and 30% stronger.'], r3: ['Carbide scraper', 'The ultimate blade. Crust is scared of it.'], xl: ['XL foam bottle', 'Your foam lasts 50% longer each night.'], conc: ['Concentrated degreaser', 'Foam softens 4× instead of 3×.'],
@@ -787,15 +809,38 @@ const RIGO = ['Hoy te toca una fácil. Mentira, ninguna es fácil.', 'Si te preg
 const CLIENTE_BIEN = ['El dueño se mira en la campana y se peina.', 'El chef pasa el dedo por el ducto y no dice nada. Es lo más cerca de un elogio que vas a recibir.', 'El gerente le saca una foto a la campana. «Para mi mamá», dice.', 'El dueño te ofrece un café. Está frío, pero es un gesto.'];
 const CLIENTE_MAL = ['El gerente te enseña una mancha con la linterna del móvil. Durante cuatro minutos.', 'El chef suspira tan fuerte que se apaga un piloto.', 'El dueño dice que la próxima vez llama a su cuñado.', '«¿Esto es lo limpio?», pregunta el dueño. Nadie contesta.'];
 
-const PERKS = {
-  brazo: { n: 'Brazo de acero', d: 'La rasqueta quita un 15 % más.' },
-  pulmones: { n: 'Pulmones de buzo', d: 'Cada turno dura 15 segundos más.' },
-  labia: { n: 'Labia de vendedor', d: '+5 % de propina, y el gerente pregunta menos.' },
-  botella: { n: 'Mano para la espuma', d: 'La espuma rinde un 40 % más.' },
-  jefe: { n: 'Jefe nato', d: 'Tu cuadrilla limpia un 20 % más rápido.' },
-  gentes: { n: 'Don de gentes', d: 'Los clientes te ofrecen contrato fijo más a menudo.' },
-  ojo: { n: 'Ojo de inspector', d: 'La asistencia de apuntado llega el doble de lejos.' },
-};
+// Árbol de habilidades: un punto por nivel. Cada rama pide puntos gastados en ella para abrir lo de más arriba.
+const ARBOL = [
+  { id: 'limpieza', ico: '🧽', n: ['Limpieza', 'Cleaning'], hab: [
+    { id: 'brazo', max: 3, pide: 0, n: ['Brazo de acero', 'Arm of steel'], d: ['La rasqueta quita un 10 % más por rango.', 'The scraper removes 10% more per rank.'] },
+    { id: 'espuma', max: 2, pide: 1, n: ['Mano para la espuma', 'Foam hand'], d: ['La espuma rinde un 25 % más por rango y ablanda antes.', 'Foam lasts 25% longer per rank and softens sooner.'] },
+    { id: 'pulso', max: 1, pide: 3, n: ['Pulso de cirujano', 'Surgeon\'s hand'], d: ['La hidro sin espuma salpica un 60 % menos.', 'The washer splatters 60% less without foam.'] },
+    { id: 'ojo', max: 2, pide: 4, n: ['Ojo de inspector', 'Inspector\'s eye'], d: ['La ayuda para apuntar llega el doble de lejos (con II, el triple).', 'Aim assist reaches twice as far (three times with II).'] },
+    { id: 'espejo', max: 1, pide: 8, n: ['Maestro del espejo', 'Mirror master'], d: ['Migdalear avanza un 50 % más rápido y el espejo da un 10 % más de propina.', 'Polishing goes 50% faster and a mirror finish gives 10% more tip.'] },
+  ] },
+  { id: 'negocio', ico: '💼', n: ['Negocio', 'Business'], hab: [
+    { id: 'labia', max: 3, pide: 0, n: ['Labia de vendedor', 'Silver tongue'], d: ['Un 4 % más de propina por rango.', '4% more tip per rank.'] },
+    { id: 'regateo', max: 2, pide: 1, n: ['Regateador', 'Haggler'], d: ['Al negociar, un 10 % más de probabilidad de que acepten, por rango.', 'When negotiating, 10% more chance they accept, per rank.'] },
+    { id: 'gentes', max: 2, pide: 3, n: ['Don de gentes', 'People person'], d: ['Un 15 % más de clientes te ofrecen contrato fijo, por rango.', '15% more clients offer you a regular contract, per rank.'] },
+    { id: 'tarjeta', max: 1, pide: 4, n: ['Tarjeta de presentación', 'Business card'], d: ['Cada noche aparece un trabajo más en el mapa.', 'One more job shows up on the map every night.'] },
+    { id: 'contrato', max: 1, pide: 8, n: ['Maestro del contrato', 'Contract master'], d: ['Si fallas una garantía de A solo devuelves el dinero: no pierdes reputación.', 'If you miss an A guarantee you only refund the money: no reputation lost.'] },
+  ] },
+  { id: 'cuadrilla', ico: '👷', n: ['Cuadrilla', 'Crew'], hab: [
+    { id: 'jefe', max: 3, pide: 0, n: ['Jefe nato', 'Born boss'], d: ['Tu cuadrilla limpia un 8 % más rápido por rango.', 'Your crew cleans 8% faster per rank.'] },
+    { id: 'ambiente', max: 2, pide: 1, n: ['Buen ambiente', 'Good vibes'], d: ['Regañar baja la mitad de ánimo; con II, felicitar sube uno extra.', 'Scolding costs half the morale; with II, praise gives one extra.'] },
+    { id: 'puntual', max: 1, pide: 3, n: ['Puntualidad', 'Punctuality'], d: ['Faltan la mitad de veces.', 'Half as many no-shows.'] },
+    { id: 'capacita', max: 2, pide: 4, n: ['Capacitación', 'Training'], d: ['Los equipos que mandas solos trabajan mejor, por rango.', 'Teams you send out on their own do better work, per rank.'] },
+    { id: 'cuadrillas', max: 1, pide: 8, n: ['Maestro de cuadrillas', 'Crew master'], d: ['Los candidatos nuevos llegan con +1 de cuidado y pagas un 10 % menos de sueldos.', 'New candidates come with +1 care and you pay 10% less in wages.'] },
+  ] },
+  { id: 'aguante', ico: '🛡️', n: ['Aguante', 'Grit'], hab: [
+    { id: 'pulmones', max: 3, pide: 0, n: ['Pulmones de buzo', 'Diver\'s lungs'], d: ['El turno dura 10 segundos más por rango.', 'The shift lasts 10 seconds longer per rank.'] },
+    { id: 'sangre', max: 2, pide: 1, n: ['Sangre fría', 'Cool head'], d: ['1,5 segundos más para reaccionar en los imprevistos, por rango.', '1.5 more seconds to react to surprises, per rank.'] },
+    { id: 'domador', max: 1, pide: 3, n: ['Domador de mapaches', 'Raccoon tamer'], d: ['Mapaches, cucarachas y compañeros dormidos se resuelven con un toque menos.', 'Raccoons, cockroaches and sleeping coworkers take one tap less.'] },
+    { id: 'santo', max: 2, pide: 4, n: ['Paciencia de santo', 'Saint\'s patience'], d: ['El gerente aguanta un 20 % más antes de enojarse, por rango.', 'The manager lasts 20% longer before getting angry, per rank.'] },
+    { id: 'madrugada', max: 1, pide: 8, n: ['Maestro de la madrugada', 'Night master'], d: ['El primer daño de cada noche no te cuesta dinero.', 'The first damage each night costs you no money.'] },
+  ] },
+];
+const HAB = Object.fromEntries(ARBOL.flatMap(r => r.hab.map(h => [h.id, { ...h, rama: r }])));
 const xpNivel = n => Math.round(120 * Math.pow(n, 1.35));
 
 const HERR = {
@@ -1049,6 +1094,13 @@ function completar(s) {
   if (s.eq && s.eq.segunda && !s.eq.flota) { s.eq.flota = 1; delete s.eq.segunda; }
   if (s.hoy && s.hoy.b && !s.hoy.equipos) { s.hoy.equipos = [s.hoy.b]; delete s.hoy.b; }
   if (!s.fijos) s.fijos = s.fase === 'empresa' ? Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= s.etapa) : [];   // partidas de antes: los que ya estaban
+  // Partidas de antes: las mejoras sueltas pasan al árbol y los niveles ya ganados se convierten en puntos.
+  if (!s.hab) {
+    const de = { brazo: 'brazo', pulmones: 'pulmones', labia: 'labia', botella: 'espuma', jefe: 'jefe', gentes: 'gentes', ojo: 'ojo' };
+    s.hab = {};
+    for (const [k, n] of Object.entries(s.perks || {})) if (de[k]) s.hab[de[k]] = Math.min(n, HAB[de[k]].max);
+    s.puntos = Math.max(0, (s.nivel || 1) - 1 - Object.values(s.hab).reduce((a, n) => a + n, 0));
+  }
   s.medallas = s.medallas || {}; s.secretos = s.secretos || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
   if (s.aj.radio === undefined) s.aj.radio = true;
   if (s.aj.vibrar === undefined) s.aj.vibrar = true;
@@ -1100,7 +1152,9 @@ function guardarFoto(f) {
 let guardada = false;   // hay una partida guardada que se puede continuar
 function guardar() { guardada = true; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
 function cargar() { try { const t = localStorage.getItem(KEY); if (t) { const s = migrar(JSON.parse(t)); if (s) { S = s; return true; } } } catch (e) { /* nueva */ } return false; }
-const perk = k => S.perks[k] || 0;
+const hab = k => (S.hab && S.hab[k]) || 0;
+const enRama = r => r.hab.reduce((a, h) => a + hab(h.id), 0);   // puntos gastados en una rama
+const sueldoMult = () => hab('cuadrillas') ? .9 : 1;
 // De aprendiz trabajas con el equipo de Don Rigo, al máximo: el trabajo se siente fácil. Con tu empresa, usas el tuyo (al principio, lo básico).
 const EQ_RIGO = { rasqueta: 3, conc: true, hidro: true, orbital: true, bolsa: true, xl: true };
 const EQ = () => S.fase === 'aprendiz' ? EQ_RIGO : S.eq;
@@ -2089,12 +2143,12 @@ const pasoActual = () => M.fase === 'prep' ? 0 : ({ lavar: 1, pelar: 2, migdalea
 function empezarTurno(orden) {
   // Puntualidad: el que tiene poca a veces no llega (y esa noche no cobra).
   const animoDe = e => (e.id && (S.cuadrilla.find(c => c.id === e.id) || {}).animo) || 3;
-  const faltan = orden.equipo.filter(e => !e.principal && azar((5 - Math.max(1, (e.puntual || 3) - (animoDe(e) <= 1 ? 2 : 0))) * .07 * (tun('neon') ? .5 : 1)));
+  const faltan = orden.equipo.filter(e => !e.principal && azar((5 - Math.max(1, (e.puntual || 3) - (animoDe(e) <= 1 ? 2 : 0))) * .07 * (tun('neon') ? .5 : 1) * (hab('puntual') ? .5 : 1)));
   if (tun('escape')) orden.eventos = orden.eventos.filter(e => e !== 'mapache' || azar(.4));
   orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0;
-  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 15 * perk('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
-    trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .3 * perk('labia')), paciencia: 100 + 15 * perk('labia'), enojado: false, descuento: 0,
+  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 10 * hab('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
+    trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .2 * hab('santo')), paciencia: 100 * (1 + .2 * hab('santo')), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
     maxCombo: 0, combos3: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
     pedido: orden.pedido ? pedido(orden.pedido) : null, cliente: { n: 'Cliente', color: '#e9e9e9' },
@@ -2227,7 +2281,7 @@ function escenaReparto() {
       M.crews = crews.map((c, k) => {
         const cuid = c.gente.reduce((a, g) => a + (g.cuidado || 3), 0) / c.gente.length, con = c.gente.filter(g => g.animo), an = con.length ? con.reduce((a, g) => a + g.animo, 0) / con.length : 3;
         return { ...c, zonas: Z.map((z, i) => reparto[i] === k ? i : -1).filter(i => i >= 0), zona: null, t: rnd(.2, .6), fallos: 0, ok: 0,
-          cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
+          cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + .03 * hab('capacita') + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
       });
       for (const c of M.crews) for (const i of c.zonas) Z[i].crew = c;
       prepEl.hidden = true; arrancarTurno();
@@ -2331,7 +2385,7 @@ function apuntar(cx, cy) {
   if (S.aj.asist && M.herr !== 'pulidor') {
     const i0 = clamp(Math.floor(gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(gx), 0, sf.nx - 1);
     if (sf.d[i0] < .05) {
-      let mejor = null, md = 1e9; const R0 = 5 * (1 + perk('ojo'));
+      let mejor = null, md = 1e9; const R0 = 5 * (1 + hab('ojo'));
       for (let y = Math.max(0, Math.floor(gy) - R0); y <= Math.min(sf.ny - 1, Math.floor(gy) + R0); y++)
         for (let x = Math.max(0, Math.floor(gx) - R0); x <= Math.min(sf.nx - 1, Math.floor(gx) + R0); x++) {
           if (sf.d[y * sf.nx + x] < .1) continue; const dd = (x - gx) ** 2 + (y - gy) ** 2; if (dd < md) { md = dd; mejor = [x + .5, y + .5]; }
@@ -2344,7 +2398,7 @@ function apuntar(cx, cy) {
   return { sf, gx, gy, punto: hit.point, normal };
 }
 
-function multEspuma(a) { return a >= 1.5 && a < 30 ? (EQ().conc ? 4 : 3) : 1; }
+function multEspuma(a) { return a >= 1.5 - .3 * hab('espuma') && a < 30 ? (EQ().conc ? 4 : 3) : 1; }
 function raspar(sf, gx, gy, rc, cant, herr) {
   let quit = 0;
   const x0 = Math.max(0, Math.floor(gx - rc)), x1 = Math.min(sf.nx - 1, Math.floor(gx + rc));
@@ -2353,7 +2407,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
     const dist = Math.hypot(x + .5 - gx, y + .5 - gy); if (dist > rc) continue;
     const i = y * sf.nx + x, f = 1 - dist / rc;
     if (herr === 'espuma') { if (sf.d[i] > .02 && (sf.soak[i] < 0 || sf.soak[i] > 20)) sf.soak[i] = 0; continue; }
-    if (herr === 'pulidor') { if (sf.d[i] < .02 && sf.pol[i] < 1) { sf.pol[i] = Math.min(1, sf.pol[i] + cant * f); quit += cant * f; pulsoVib(8, 140); } continue; }
+    if (herr === 'pulidor') { if (sf.d[i] < .02 && sf.pol[i] < 1) { sf.pol[i] = Math.min(1, sf.pol[i] + cant * f * (1 + .5 * hab('espejo'))); quit += cant * f; pulsoVib(8, 140); } continue; }
     if (herr === 'hidro') { sf.wet[i] = 1; sf.mojado = true; }
     if (sf.d[i] <= 0) continue;
     const tp = sf.tipo ? sf.tipo[i] : 0;
@@ -2377,7 +2431,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
   return quit;
 }
 const radioRasqueta = () => [0, .1, .12, .14][EQ().rasqueta] * (EQ().mango ? 1.25 : 1);
-const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .15 * perk('brazo')) * (EQ().electrica ? 1.25 : 1);
+const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .1 * hab('brazo')) * (EQ().electrica ? 1.25 : 1);
 
 // La primera vez que tocas cada suciedad especial con la herramienta equivocada, alguien te avisa.
 function avisoTipo(t, herr) {
@@ -2407,7 +2461,7 @@ function aplicarTramo(a, b) {
     if (M.botella <= 0) { ayuda(L('Botella de espuma vacía. Te queda la rasqueta.', 'Foam bottle empty. You still have the scraper.')); return 0; }
     if (!M.avisoEspuma) { M.avisoEspuma = true; ayuda(L('La espuma no limpia: ablanda la grasa. Espera 2 segundos y pásale la rasqueta.', 'Foam doesn\'t clean: it softens the grease. Wait 2 seconds and go over it with the scraper.'), 6); decir(M.comp, L('Ojo: la espuma no quita nada, solo ablanda. Luego toca la rasqueta.', 'Careful: foam doesn\'t remove anything, it just softens. Then use the scraper.')); }
     else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda(L('Esto ya está blando: cambia a la rasqueta y raspa.', 'This is soft now: switch to the scraper and scrape.'), 4); }
-    rc = .15 / sf.celda * (EQ().canon ? 1.8 : 1); cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .4 * perk('botella')) / (EQ().xl ? 1.5 : 1) * (EQ().canon ? .7 : 1));
+    rc = .15 / sf.celda * (EQ().canon ? 1.8 : 1); cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .25 * hab('espuma')) / (EQ().xl ? 1.5 : 1) * (EQ().canon ? .7 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = EQ().orbital ? .5 : .28; }
   else { rc = radioRasqueta() / sf.celda; cant = fuerzaRasqueta() * ef * multCombo; }
   const pasos = Math.ceil(dist / .4);
@@ -2568,7 +2622,7 @@ function ayuda(t, seg = 3.5) { $('#ayuda').textContent = TRAD(t); if (M) M.ayuda
 const evEl = $('#evento');
 function carta(titulo, texto, opciones, opts = {}) {
   titulo = TRAD(titulo); texto = TRAD(texto); opciones = opciones.map(o => ({ ...o, t: TRAD(o.t), d: TRAD(o.d) }));
-  M.ev = { bloquea: !!opts.bloquea, limite: opts.limite || 0, t: 0, alAgotar: opts.alAgotar };
+  M.ev = { bloquea: !!opts.bloquea, limite: opts.limite ? opts.limite + 1.5 * hab('sangre') : 0, t: 0, alAgotar: opts.alAgotar };
   evEl.innerHTML = `<div class="carta" role="dialog"><h3>${esc(titulo)}</h3><p>${esc(texto)}</p>${opts.limite ? '<div class="cuenta-atras"><div id="cuenta" style="width:100%"></div></div>' : ''}<div class="opciones">${opciones.map((o, i) => `<button class="btn ${o.prim ? 'prim' : ''}" data-i="${i}">${esc(o.t)}${o.d ? `<small>${esc(o.d)}</small>` : ''}</button>`).join('')}</div></div>`;
   evEl.hidden = false;
   evEl.querySelectorAll('[data-i]').forEach(b => {
@@ -2588,7 +2642,10 @@ function resultado(titulo, texto, quien, frase) {
   carta(titulo, texto, [{ t: L('Seguir', 'Continue'), prim: true, f: cerrarCarta }], { bloquea: true });
   if (quien) setTimeout(() => decir(quien, frase), 300);
 }
-function dano(t, dinero, rep) { M.danos.push({ t, dinero }); M.repExtra -= rep || 0; }
+function dano(t, dinero, rep) {
+  if (dinero > 0 && hab('madrugada') && !M.perdonado) { M.perdonado = true; t += L(' (Maestro de la madrugada: no cuesta)', ' (Night master: free)'); dinero = 0; }
+  M.danos.push({ t, dinero }); M.repExtra -= rep || 0;
+}
 function sumarTiempo(min) { M.t += min / 480 * M.dur; }
 function ensuciar(zona, cant) {
   for (const sf of zona.sfs) {
@@ -2643,7 +2700,7 @@ const EVENTOS = {
     if (azar(S.medallas.dorado ? .02 : .08)) return mapacheDorado();
     piezas.mapache.visible = true; tono(1200, .1, .07, 'square', 1800); tono(1500, .1, .07, 'square', 900, .15);
     carta('Algo se mueve en el ducto', 'Dos ojos brillan al fondo. Es un mapache. Siempre es un mapache.', [
-      { t: 'Abrir el registro despacio', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5, f: () => { piezas.mapache.userData.sale = 1; M.mapacheAmigo = true; M.album.push('El mapache del ducto'); resultado('Desalojo amistoso', 'El mapache sale por el registro, te mira y se va con un trozo de pizza. Parece que asiente.', M.comp, 'Creo que nos hicimos amigos. Le voy a poner Rigoberto.'); } },
+      { t: 'Abrir el registro despacio', d: 'Mantén pulsado 1,5 segundos', mantener: 1.5 - .7 * hab('domador'), f: () => { piezas.mapache.userData.sale = 1; M.mapacheAmigo = true; M.album.push('El mapache del ducto'); resultado('Desalojo amistoso', 'El mapache sale por el registro, te mira y se va con un trozo de pizza. Parece que asiente.', M.comp, 'Creo que nos hicimos amigos. Le voy a poner Rigoberto.'); } },
       { t: 'Golpear el ducto', d: 'Que se asuste y salga', f: () => { piezas.mapache.userData.huye = 1; dano('Mapache suelto en la cocina', 60, 3); resultado('Mapache en la cocina', 'Sale disparado hacia la cocina, tira una torre de bandejas y desaparece por la puerta del almacén.', M.comp, '¡Se llevó un pan! ¡SE LLEVÓ UN PAN!'); } },
     ], { bloquea: true });
   },
@@ -2669,7 +2726,7 @@ const EVENTOS = {
   cucaracha() {
     tono(2000, .08, .05, 'square', 2600); tono(2300, .08, .05, 'square', 1800, .1);
     decir(M.comp, uno(['¡¿QUÉ ES ESO?!', '¡Una cucaracha del tamaño de un taco!', 'No grites. No grites. ¡AAAH!']));
-    let quedan = 3;
+    let quedan = 3 - hab('domador');
     carta('¡Cucaracha gigante!', 'Salió de detrás de la campana y corre por la pared. Atrápala tres veces antes de que se meta en la cafetera.', [], { limite: 7, alAgotar: () => {
       dano('Fumigación de emergencia (la cucaracha se metió en la cafetera)', 70, 2);
       resultado('Se escapó', 'Se metió en la cafetera. Mañana alguien va a pedir un capuchino muy crujiente.', M.comp, 'Yo no vuelvo a tomar café. Nunca.');
@@ -2723,7 +2780,7 @@ const CRISIS = {
   dormido() {
     const e = victima(); if (!e) return false;
     tono(110, .8, .06, 'sawtooth', 90);
-    let golpes = 4;
+    let golpes = 4 - hab('domador');
     carta(`¡${e.n} se durmió dentro del ducto!`, 'Se metió a raspar «un ratito» y ahora ronca allá adentro. El eco suena como un oso. Golpea el ducto cuatro veces para despertarlo.', [], { limite: 6, alAgotar: () => {
       e.parado = 45; resultado('Sigue roncando', `${e.n} no se despierta ni con la radio. Sale solo en un rato, con la marca de la rejilla en la cara.`, e, 'zzz… cinco minutitos… zzz');
     } });
@@ -2802,7 +2859,7 @@ function atrasado() {
   return f > .3 && hecho < f * 1.15;
 }
 function visitaGerente() {
-  M.gerenteT = rnd(22, 32) * (1 + .3 * perk('labia'));
+  M.gerenteT = rnd(22, 32) * (1 + .2 * hab('santo'));
   const tarde = atrasado();
   M.paciencia -= tarde ? 22 : 8;
   if (!tarde) M.paciencia = Math.max(25, M.paciencia);   // si vas a buen ritmo, como mucho se impacienta
@@ -3118,7 +3175,7 @@ function tickTurno(dt) {
       emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
-      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5)) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda(L('¡Salpica! Echa espuma antes en la costra.', 'It splatters! Foam the crust first.')); }
+      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5 * (1 - .6 * hab('pulso')))) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda(L('¡Salpica! Echa espuma antes en la costra.', 'It splatters! Foam the crust first.')); }
       const al = M.eventos.find(x => x.tipo === 'alarma' && !M.hechos.has(x));
       if (q > 0 && al && z.id === 'campana' && azar(dt * .3)) lanzarEvento(al);
     } else if (!M.presionado) chorro(false);
@@ -3163,7 +3220,7 @@ function tickTurno(dt) {
         const zz = e.principal ? zonaCompa() : suya || z, extra = (e.principal && M.orden.comp === 'chuy' && zz.id === 'filtros' ? 1.6 : 1) * (e.esp && zz.id === e.esp ? 1.5 : 1);
         const s = uno(zz.sfs); let mejor = -1, md = 0;
         for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * s.d.length); if (s.d[i] > md) { md = s.d[i]; mejor = i; } }
-        if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * e.fuerza * extra * (1 + .2 * perk('jefe')), 'rasqueta');
+        if (mejor >= 0) raspar(s, mejor % s.nx + .5, Math.floor(mejor / s.nx) + .5, 2.6, .3 * e.fuerza * extra * (1 + .08 * hab('jefe')), 'rasqueta');
       }
       if (M.etapa === 'lavar') manias(dt, z);
       if ((M.charlaT -= dt) <= 0) {
@@ -3412,7 +3469,7 @@ function generarOrdenes() {
   const fijos = out.length, flota = S.eq.flota || 0, n = clamp(1 + Math.floor(S.rep / 15), 1, 4 + flota);   // con poca reputación casi nadie llama: hay que salir a buscar clientes
   const permitidas = cocinasHasta(S.etapa);
   let intentos = 0;
-  while (out.length < fijos + n && intentos++ < 50) {
+  while (out.length < fijos + n + hab('tarjeta') && intentos++ < 50) {
     const k = uno(permitidas);
     if (out.filter(o => o.cocina === k && !o.clienteId).length > flota / 3) continue;
     out.push(genOrden(k));
@@ -3443,7 +3500,7 @@ function genCandidatos(n = 3) {
   return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase, tipo, esp]) => {
     const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5), animo = 3;
     // Los buenos piden más: el sueldo sale de las tres medidas.
-    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado, puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 });
+    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: Math.min(5, (tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado) + hab('cuadrillas')), puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 });
   });
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
@@ -3662,7 +3719,7 @@ function cabecera() {
       <div class="dato"><i>${L('Noche', 'Night')}</i><b>${S.noche}</b>${aprendiz ? `<small>${L('Aprendiz', 'Apprentice')}: ${Math.min(S.noche, APRENDIZ)} ${L('de', 'of')} ${APRENDIZ}</small>` : ''}</div>
       <div class="dato"><i>${L('Tu dinero', 'Your money')}</i><b>${dinero(S.dinero)}</b></div>
       <div class="dato"><i>${L(`Reputación${aprendiz ? ' de Grasa Brava' : ''}`, `${aprendiz ? 'Grasa Brava ' : ''}Reputation`)}</i><b>${S.rep}</b><small>${fama(S.rep)} · ${L('pagos', 'pay')} ×${multPago().toFixed(2)}</small></div>
-      <div class="dato"><i>${L('Nivel', 'Level')}</i><b>${S.nivel}</b><div class="barra" title="${L('Experiencia', 'Experience')}"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></div>
+      <button class="dato nivel" id="abrirArbol"><i>${L('Nivel', 'Level')}</i><b>${S.nivel}${S.puntos ? ` <span class="puntos">⭐${S.puntos}</span>` : ''}</b><div class="barra" title="${L('Experiencia', 'Experience')}"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></button>
     </div></div>`;
 }
 
@@ -3686,7 +3743,8 @@ function pantallaCamioneta() {
     <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div></div>`);
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
-  $('#jefeCorto').onclick = () => $('#jefeCorto').classList.toggle('abierto');   // la frase larga se abre al tocarla
+  $('#jefeCorto').onclick = () => $('#jefeCorto').classList.toggle('abierto');
+  $('#abrirArbol').onclick = () => pantallaArbol(pantallaCamioneta);   // la frase larga se abre al tocarla
   enlazar();
 }
 
@@ -3781,8 +3839,8 @@ function pantallaNegociar(i, msg) {
     <div class="opciones neg">
       <button class="btn prim" data-n="ok">${L('Firmar por', 'Sign for')} ${dinero(o.pago)}<small>${L('Trato hecho. Apretón de manos con grasa.', 'Deal. A greasy handshake.')}</small></button>
       ${o.contra ? `<button class="btn" data-n="contra">${L('Aceptar su contraoferta', 'Accept the counteroffer')}: ${dinero(o.contra)}<small>${L('Ni tú ni yo.', 'Meet in the middle.')}</small></button>` : ''}
-      <button class="btn" data-n="15">${L('Pedir un 15 % más', 'Ask for 15% more')}: ${dinero(r10(o.pago * 1.15))}<small>${prob(C.p15 - intento)}. ${L('Si dice que no, pierde paciencia.', 'If they say no, they lose patience.')}</small></button>
-      <button class="btn" data-n="30">${L('Pedir un 30 % más', 'Ask for 30% more')}: ${dinero(r10(o.pago * 1.3))}<small>${prob(C.p30 - intento)}. ${L('Arriesgado.', 'Risky.')}</small></button>
+      <button class="btn" data-n="15">${L('Pedir un 15 % más', 'Ask for 15% more')}: ${dinero(r10(o.pago * 1.15))}<small>${prob(C.p15 - intento + .1 * hab('regateo'))}. ${L('Si dice que no, pierde paciencia.', 'If they say no, they lose patience.')}</small></button>
+      <button class="btn" data-n="30">${L('Pedir un 30 % más', 'Ask for 30% more')}: ${dinero(r10(o.pago * 1.3))}<small>${prob(C.p30 - intento + .1 * hab('regateo'))}. ${L('Arriesgado.', 'Risky.')}</small></button>
       ${o.garantia ? '' : `<button class="btn" data-n="gar">${L('Garantizar una A', 'Guarantee an A')}: ${dinero(r10(o.pago * gar))}<small>${L('Si el inspector no pone A o A+, devuelves el 30 % y pierdes reputación.', 'If the inspector doesn\'t give an A or A+, you refund 30% and lose reputation.')}</small></button>`}
       <button class="btn" data-n="volver">${L('Pensarlo', 'Think about it')}<small>${L('Volver sin decidir.', 'Go back without deciding.')}</small></button>
     </div>`);
@@ -3792,7 +3850,7 @@ function pantallaNegociar(i, msg) {
     if (k === 'ok') { o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
     if (k === 'contra') { o.pago = o.contra; o.contra = null; o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
     if (k === 'gar') { o.pago = r10(o.pago * gar); o.garantia = true; o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
-    const sube = k === '15' ? 1.15 : 1.3, p = (k === '15' ? C.p15 : C.p30) - intento;
+    const sube = k === '15' ? 1.15 : 1.3, p = (k === '15' ? C.p15 : C.p30) - intento + .1 * hab('regateo');
     o.intentos = (o.intentos || 0) + 1;
     if (azar(p)) { o.pago = r10(o.pago * sube); o.contra = null; tono(880, .12, .08, 'triangle'); guardar(); return pantallaNegociar(i, uno(['Está bien, está bien. Pero que brille.', 'Ándale pues. Me caíste bien.', 'Trato. Pero si veo una mancha, te llamo a las tres de la mañana.'])); }
     o.pac--; tono(300, .2, .08, 'triangle', 200);
@@ -3871,7 +3929,7 @@ function resolverB(b) {
   const o = b.orden, gente = [...(b.comp ? [{ ...COMPANEROS[b.comp], id: null }] : []), ...b.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
   const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * (o.ayud > b.ayud.length ? 1.5 : 1);
   const ayudG = gente.filter(g => g.animo), animo = ayudG.length ? ayudG.reduce((a, g) => a + g.animo, 0) / ayudG.length : 3;
-  let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + (animo - 3) * .05 + (S.angelica ? .05 : 0);
+  let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + (animo - 3) * .05 + (S.angelica ? .05 : 0) + .05 * hab('capacita');
   const cosas = []; let dano = 0;
   const torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08));
   if (torpe) { dano += uno([20, 40]); cosas.push(`${torpe.n} tiró algo que no debía.`); }
@@ -3882,7 +3940,7 @@ function resolverB(b) {
   const aprobado = azar(p), notaA = aprobado && azar(p * .7);
   if (o.pedido) cosas.push(aprobado ? 'Cumplieron el pedido especial del cliente.' : 'Se les olvidó el pedido especial. El cliente no está contento.');
   if (!cosas.length) cosas.push(uno(['Trabajaron callados, como profesionales. Raro, pero bien.', 'Pusieron cumbia y limpiaron a buen ritmo.', 'El gerente les invitó un café. Dicen que estaba bueno.']));
-  const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1)), 0)], ['Equipo B: gasolina', -GASOLINA]];
+  const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1) * sueldoMult()), 0)], ['Equipo B: gasolina', -GASOLINA]];
   if (dano) lineas.push([`Equipo B: daños${EQ().seguro ? ' (el seguro paga la mitad)' : ''}`, -conSeguro(dano)]);
   if (o.garantia && !notaA) lineas.push(['Equipo B: garantía de A incumplida', -r10(o.pago * .3)]);
   return { o, aprobado, notaA, gente, lineas, cosas, k: b.k, rep: (aprobado ? 3 : -5) + (o.garantia ? (notaA ? 1 : -3) : 0) };
@@ -4079,7 +4137,7 @@ function pantallaAjustes(enTurno, desdeInicio) {
     ${selectorIdioma()}
     ${enTurno && M.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${M.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}</div>` : ''}
     ${op.map(([k, n, d]) => `<button class="ajuste" data-k="${k}" aria-pressed="${!!S.aj[k]}"><span><b>${n}</b><small>${d}</small></span><span class="interruptor"></span></button>`).join('')}
-    ${Object.keys(S.perks).length ? `<div class="cita"><b>${L('Tus mejoras', 'Your perks')}</b>${Object.entries(S.perks).map(([k, n]) => `${L(PERKS[k].n, PERKS[k].en)}${n > 1 ? ' ×' + n : ''}`).join(' · ')}</div>` : ''}
+    ${Object.keys(S.hab || {}).length ? `<div class="cita"><b>${L('Tus habilidades', 'Your skills')}</b>${Object.entries(S.hab).filter(([, n]) => n).map(([k, n]) => `${L(...HAB[k].n)}${HAB[k].max > 1 ? ' ' + 'I'.repeat(n) : ''}`).join(' · ')}</div>` : ''}
     <div class="cita"><b>${L('Cómo se juega', 'How to play')}</b>${L('Antes de limpiar: cierra pilotos, corta la luz, cubre la cocina y envuelve la campana con plástico. Luego, pasadas cortas con la rasqueta; varias seguidas en la misma dirección hacen combo. La espuma ablanda la costra si esperas un par de segundos. Mantén el botón redondo para abrir la rueda de herramientas. Si la campana no cabe en la pantalla, arrastra con dos dedos (o con uno sobre la pared o el suelo) para mover la vista. El aviso naranja del borde te dice si falta algo por ese lado: tócalo y te lleva. En ordenador, las flechas del teclado y las teclas 1 a 4.', 'Before cleaning: shut off the pilot lights, cut the power, cover the kitchen and wrap the hood in plastic. Then make short strokes with the scraper; several in a row in the same direction make a combo. Foam softens the crust if you wait a couple of seconds. Hold the round button to open the tool wheel. If the hood does not fit on screen, drag with two fingers (or with one on the wall or floor) to move the view. The orange tab on the edge tells you something is left on that side: tap it to go there. On a computer, use the arrow keys and keys 1 to 4.')}</div>
     <div class="acciones">${enTurno ? `<button class="btn prim" id="volver">${L('Seguir el turno', 'Back to work')}</button><button class="btn" id="abandonar">${L('Llamar al inspector ya', 'Call the inspector now')}</button>` : `<button class="btn prim" id="volver">${L('Volver', 'Back')}</button><button class="btn" id="menu">${L('Menú principal', 'Main menu')}</button>`}</div>`);
   enlazarIdioma(() => { pantallaAjustes(enTurno, desdeInicio); if (M) pintarHud(true); });
@@ -4120,13 +4178,13 @@ function pantallaParte() {
   const ganaDuelo = d ? d.tuyo !== null && d.tuyo <= d.tRival : null;
   const tacos = ped && ped.tacos ? .5 : 1, mitadDuelo = d && !ganaDuelo ? .5 : 1;
   const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) * tacos * mitadDuelo / 10) * 10;
-  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 : 0) + .05 * perk('labia') + M.propinaMod, 0, .3) / 5) * 5);
+  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 + .1 * hab('espejo') : 0) + .04 * hab('labia') + M.propinaMod, 0, .3 + .1 * hab('espejo')) / 5) * 5);
   const extraPed = ped && !ped.tacos ? (pedOk ? Math.round(o.pago * ped.premio * (aprendiz ? .25 : 1) / 10) * 10 : aprendiz ? 0 : -Math.round(o.pago * .1 / 10) * 10) : 0;
   const danos = M.danos.reduce((a, x) => a + x.dinero, 0);
   // Racha: cada noche aprobada seguida suma un 5 % más (hasta un 25 %). Premia jugar bien sin castigar de más.
   const racha = aprobado ? (S.racha || 0) + 1 : 0;
   const bonoRacha = !aprendiz && racha > 1 ? Math.round(cobro * Math.min(.25, .05 * (racha - 1)) / 10) * 10 : 0;
-  const sueldos = M.equipo.reduce((a, e) => a + (e.sueldo || 0), 0);
+  const sueldos = r10(M.equipo.reduce((a, e) => a + (e.sueldo || 0), 0) * sueldoMult());
   // De aprendiz cobras sueldo y Don Rigo paga los daños; con tu empresa cobras todo y lo pagas todo.
   const lineas = aprendiz
     ? [[L('Sueldo de la noche', 'Night\'s wage'), SUELDO_APRENDIZ], [L('Bono por aprobar', 'Passing bonus'), aprobado ? 40 : 0], [L('Propina', 'Tip'), propina], [L('Propina extra por el pedido especial', 'Extra tip for the special request'), extraPed], ...M.danos.map(x => [TRAD(x.t) + (x.dinero ? L(' (lo paga Don Rigo)', ' (Don Rigo pays)') : ''), null])]
@@ -4144,7 +4202,7 @@ function pantallaParte() {
   // Garantía de A negociada con el cliente
   if (o.garantia && !aprendiz) {
     if (n === 'A' || n === 'A+') rep += 1;
-    else { const dev = r10(o.pago * .3); lineas.push([L('Garantía de A incumplida (devuelves el 30 %)', 'Missed A guarantee (you refund 30%)'), -dev]); neto -= dev; rep -= 3; }
+    else { const dev = r10(o.pago * .3); lineas.push([L('Garantía de A incumplida (devuelves el 30 %)', 'Missed A guarantee (you refund 30%)'), -dev]); neto -= dev; if (!hab('contrato')) rep -= 3; }
   }
   // Reto de fin de semana
   let finde = null;
@@ -4166,7 +4224,7 @@ function pantallaParte() {
   if (S.angelica && !aprendiz) { lineas.push([L('Angélica (coordinación)', 'Angélica (coordination)'), -ANGELICA.sueldo]); neto -= ANGELICA.sueldo; }
   // Equipos que te ayudaron en el trabajo gigante: sus sueldos y su gasolina.
   for (const a of o.ayudan || []) {
-    const g = a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean), v = -(g.reduce((t, c) => t + r10(c.sueldo * (c.prueba ? .8 : 1)), 0) + (a.comp ? COMPANEROS[a.comp].sueldo : 0) + GASOLINA);
+    const g = a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean), v = -(g.reduce((t, c) => t + r10(c.sueldo * (c.prueba ? .8 : 1) * sueldoMult()), 0) + r10((a.comp ? COMPANEROS[a.comp].sueldo : 0) * sueldoMult()) + GASOLINA);
     lineas.push([L(`Equipo ${a.k} (te ayudó): sueldos y gasolina`, `Team ${a.k} (helped you): wages and gas`), v]); neto += v;
     for (const c of g) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); }
   }
@@ -4246,11 +4304,11 @@ function pantallaParte() {
     if (c) { S.perdidos = S.perdidos.filter(x => x !== c); c.proxima = S.noche + FREC[COCINAS[c.cocina].frec]; c.amenazado = false; S.clientes.push(c); notaCliente = `¡${c.nombre} vuelve contigo! Ya no quiere saber nada de ${RIVAL}.`; }
   }
   for (const B of BS) if (B.aprobado && !B.o.clienteId && azar(.25 + S.rep / 300)) cola.push(() => ofertaContrato(B.o));
-  if (cli || o.recupera) { /* ya resuelto arriba */ } else if (!aprendiz && aprobado && (!d || ganaDuelo) && azar(.35 + S.rep / 250 + .1 * perk('gentes') + (ganaDuelo ? .3 : 0))) cola.push(() => ofertaContrato(o));
+  if (cli || o.recupera) { /* ya resuelto arriba */ } else if (!aprendiz && aprobado && (!d || ganaDuelo) && azar((.35 + S.rep / 250 + (ganaDuelo ? .3 : 0)) * (1 + .15 * hab('gentes')))) cola.push(() => ofertaContrato(o));
   // Experiencia y nivel
   S.xp += xp; let subidas = 0;
   while (S.xp >= xpNivel(S.nivel)) { S.xp -= xpNivel(S.nivel); S.nivel++; subidas++; }
-  for (let i = 0; i < subidas; i++) cola.push(elegirPerk);
+  if (subidas) { S.puntos = (S.puntos || 0) + subidas; cola.push(() => avisoNivel(subidas)); }
   if (aprendiz && S.noche > APRENDIZ) cola.push(despido);
   if (evals.length) cola.unshift(() => pantallaEvaluar(evals));
   guardar();
@@ -4324,10 +4382,10 @@ function pantallaEvaluar(items) {
     caja.querySelectorAll('[data-ev]').forEach(x => x.disabled = true);
     const ayud = it.gente.map(g => g.id && S.cuadrilla.find(c => c.id === g.id)).filter(Boolean), se = [];
     let txt;
-    if (k === 'fel') { ayud.forEach(c => { c.animo = Math.min(5, (c.animo || 3) + 1); if (!it.bien && azar(.3)) c.cuidado = Math.max(1, c.cuidado - 1); }); txt = it.bien ? L('«¡Gracias, jefe! Así da gusto.»', '«Thanks, boss! That\'s how you do it.»') : L('«¿En serio? ¡Gracias! (Se van muy relajados.)»', '«Really? Thanks! (They leave very relaxed.)»'); tono(880, .12, .08, 'triangle'); }
+    if (k === 'fel') { ayud.forEach(c => { c.animo = Math.min(5, (c.animo || 3) + 1 + (hab('ambiente') >= 2 ? 1 : 0)); if (!it.bien && azar(.3)) c.cuidado = Math.max(1, c.cuidado - 1); }); txt = it.bien ? L('«¡Gracias, jefe! Así da gusto.»', '«Thanks, boss! That\'s how you do it.»') : L('«¿En serio? ¡Gracias! (Se van muy relajados.)»', '«Really? Thanks! (They leave very relaxed.)»'); tono(880, .12, .08, 'triangle'); }
     else if (k === 'reg') {
       // Regañar a quien hizo bien su trabajo duele el doble (y el triple si sacó A); y a veces lo van contando por ahí.
-      ayud.forEach(c => { c.animo = (c.animo || 3) - (it.bien ? (it.nota === 'A' ? 3 : 2) : 1); if (!it.bien && azar(.5)) c.cuidado = Math.min(5, c.cuidado + 1); });
+      ayud.forEach(c => { const baja = it.bien ? (it.nota === 'A' ? 3 : 2) : 1; c.animo = (c.animo || 3) - (hab('ambiente') ? Math.ceil(baja / 2) : baja); if (!it.bien && azar(.5)) c.cuidado = Math.min(5, c.cuidado + 1); });
       txt = it.bien ? L('«¿Y ahora qué hicimos? Si quedó bien…» (Se van ofendidos.)', '«What did we do now? It turned out fine…» (They leave offended.)') : L('«Tiene razón, jefe. No vuelve a pasar.»', '«You\'re right, boss. It won\'t happen again.»'); tono(300, .2, .08, 'triangle', 200);
       if (it.bien && S.fase === 'empresa' && S.clientes.length && azar(it.nota === 'A' ? .2 : .1)) {
         const cl = uno(S.clientes); S.clientes = S.clientes.filter(x => x !== cl); perdido(cl);
@@ -4353,13 +4411,41 @@ function ofertaContrato(o) {
   $('#noFirmar').onclick = siguiente;
 }
 
-function elegirPerk() {
-  const libres = Object.keys(PERKS).filter(k => perk(k) < 3).sort(() => Math.random() - .5).slice(0, 3);
-  if (!libres.length) return siguiente();
-  pantalla(`<div class="rotulo">${L(`¡Nivel ${S.nivel}!<span>Elige una mejora</span>`, `Level ${S.nivel}!<span>Pick a perk</span>`)}</div>
-    ${libres.map(k => `<button class="orden" data-p="${k}"><h3>${L(PERKS[k].n, EN.perk[k][0])}${perk(k) ? ' ' + 'I'.repeat(perk(k) + 1) : ''}</h3><span class="nota">${L(PERKS[k].d, EN.perk[k][1])}</span></button>`).join('')}`);
+function avisoNivel(n) {
+  pantalla(`<div class="rotulo">${L(`¡Nivel ${S.nivel}!`, `Level ${S.nivel}!`)}<span>${n > 1 ? L(`+${n} puntos de habilidad`, `+${n} skill points`) : L('+1 punto de habilidad', '+1 skill point')}</span></div>
+    <p>${L('Gástalo en el árbol de habilidades: limpieza, negocio, cuadrilla o aguante. También puedes guardarlo para después (toca tu nivel en la camioneta).', 'Spend it in the skill tree: cleaning, business, crew or grit. You can also save it for later (tap your level in the van).')}</p>
+    <div class="acciones"><button class="btn prim" id="verArbol">${L('Ver el árbol', 'Open the tree')}</button><button class="btn" id="luego">${L('Más tarde', 'Later')}</button></div>`);
   sDing();
-  P.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { S.perks[b.dataset.p] = perk(b.dataset.p) + 1; guardar(); siguiente(); });
+  $('#verArbol').onclick = () => pantallaArbol(siguiente);
+  $('#luego').onclick = siguiente;
+}
+
+// El árbol: una rama a la vez, de abajo (lo básico) hacia arriba (el maestro).
+let ramaVista = 'limpieza', reinicioPend = false;
+function pantallaArbol(volver) {
+  S.hab = S.hab || {}; S.puntos = S.puntos || 0;
+  const r = ARBOL.find(x => x.id === ramaVista) || ARBOL[0], gastado = enRama(r), costo = 500 * S.nivel, total = Object.values(S.hab).reduce((a, n) => a + n, 0);
+  pantalla(`<div class="rotulo">${L('Habilidades', 'Skills')}<span>${S.puntos ? `⭐ ${S.puntos} ${S.puntos === 1 ? L('punto para gastar', 'point to spend') : L('puntos para gastar', 'points to spend')}` : L('Sin puntos: sube de nivel para ganar más', 'No points: level up to earn more')}</span></div>
+    <div class="ramas">${ARBOL.map(x => `<button data-rama="${x.id}" aria-pressed="${x.id === r.id}"><i>${x.ico}</i><b>${L(...x.n)}</b><small>${enRama(x)}/${x.hab.reduce((a, h) => a + h.max, 0)}</small></button>`).join('')}</div>
+    <div class="camino">${[...r.hab].reverse().map(h => {
+      const n = hab(h.id), lleno = n >= h.max, abierto = gastado >= h.pide || n > 0, puede = !lleno && abierto && S.puntos > 0;
+      return `<div class="nodo ${lleno ? 'lleno' : n ? 'parte' : abierto ? 'abierto' : 'cerrado'}${h.pide >= 8 ? ' maestro' : ''}">
+        <div class="bola">${lleno ? '✓' : abierto ? r.ico : '🔒'}</div>
+        <div class="txt"><div class="fila"><b>${L(...h.n)}</b><span class="rangos">${'●'.repeat(n)}${'○'.repeat(h.max - n)}</span></div>
+          <span class="nota">${L(...h.d)}</span>
+          ${abierto ? '' : `<small class="pide">${L(`Pide ${h.pide} ${h.pide === 1 ? 'punto' : 'puntos'} en ${r.n[0]} (llevas ${gastado})`, `Needs ${h.pide} ${h.pide === 1 ? 'point' : 'points'} in ${r.n[1]} (you have ${gastado})`)}</small>`}
+          ${puede ? `<button class="btn prim peq" data-h="${h.id}">${L('Aprender', 'Learn')} · ⭐ 1</button>` : ''}</div></div>`;
+    }).join('')}</div>
+    <div class="acciones"><button class="btn prim" id="arbolListo">${L('Listo', 'Done')}</button>${total ? `<button class="btn" id="reiniciar" ${S.dinero < costo ? 'disabled' : ''}>${reinicioPend ? L('¿Seguro? Toca otra vez', 'Sure? Tap again') : L('Reiniciar', 'Reset')} · ${dinero(costo)}</button>` : ''}</div>
+    <p class="nota">${L('Reiniciar te devuelve todos los puntos para repartirlos de nuevo.', 'Resetting gives you back all your points to spend again.')}</p>`);
+  P.querySelectorAll('[data-rama]').forEach(b => b.onclick = () => { ramaVista = b.dataset.rama; reinicioPend = false; pantallaArbol(volver); });
+  P.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { S.hab[b.dataset.h] = hab(b.dataset.h) + 1; S.puntos--; reinicioPend = false; guardar(); sDing(); pantallaArbol(volver); });
+  $('#arbolListo').onclick = () => { reinicioPend = false; volver(); };
+  const re = $('#reiniciar');
+  if (re) re.onclick = () => {
+    if (!reinicioPend) { reinicioPend = true; return pantallaArbol(volver); }
+    reinicioPend = false; S.dinero -= costo; S.puntos += total; S.hab = {}; guardar(); sCaja(); pantallaArbol(volver);
+  };
 }
 
 // ---- inicio: continuar o nueva partida con tu nombre
