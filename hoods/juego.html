@@ -670,7 +670,7 @@ const ETAPAS = [
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
 const fama = r => { const i = FAMA.filter(f => r >= f[0]).length - 1; return L(FAMA[i][1], EN.fama[i]); };
 const tun = id => !!(S && S.tuneo && S.tuneo[id]);
-const multPago = () => (.85 + S.rep / 100 * .6) * (1 + .03 * ((S && S.eq.flota) || 0)) * (tun('rines') ? 1.03 : 1);   // reputación y tamaño de la empresa   // la reputación sube lo que paga cada cliente
+const multPago = () => (.85 + S.rep / 100 * .6) * (1 + .03 * Math.min(4, (S && S.eq.flota) || 0))   // +3 % por camioneta, hasta +12 % * (tun('rines') ? 1.03 : 1);   // reputación y tamaño de la empresa   // la reputación sube lo que paga cada cliente
 
 // Frecuencias de limpieza de la norma NFPA 96, en noches de juego.
 const FREC = { mensual: 3, trimestral: 5, semestral: 7, anual: 9 };
@@ -3939,6 +3939,12 @@ function prepararNoche() {
     return true;
   });
   if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos(3 + (S.eq.flota || 0));
+  // Rescate: si te quedaste sin dinero, Don Rigo te presta para la gasolina y los sueldos; se le devuelve solo
+  // con una cuarta parte de lo que ganes cada noche, sin intereses.
+  if (S.fase === 'empresa' && S.dinero < 150) {
+    const presta = 300 - S.dinero; S.dinero = 300; S.deuda = (S.deuda || 0) + presta;
+    avisos.push(L(`📞 Don Rigo: «Me contó un pajarito que andas sin un peso. Te deposité ${dinero(presta)}. Me lo pagas poco a poco, sin intereses. Pero sí me lo pagas.»`, `📞 Don Rigo: «A little bird told me you're broke. I sent you ${dinero(presta)}. Pay me back bit by bit, no interest. But you do pay me back.»`));
+  }
   const ordenes = generarOrdenes();
   if (S.cunado && S.cunado.presume) { avisos.push(L(`${RIVAL} presume en redes: «Le gané a ${S.empresa ? S.empresa.nombre : 'Grasa Brava'} en ${S.cunado.presume}. Con una mano.» Ya te tocará la revancha.`, `${RIVAL} brags online: «Beat ${S.empresa ? S.empresa.nombre : 'Grasa Brava'} at ${S.cunado.presume}. One-handed.» Your rematch will come.`)); S.cunado.presume = null; }
   if (S.recomienda && S.fase === 'empresa') {
@@ -4173,11 +4179,19 @@ function tarjetaOrden(o, i) {
     ${o.pedido ? `<span class="pedido"><b>${esc(TRAD(pedido(o.pedido).quien))}:</b> «${esc(TRAD(pedido(o.pedido).txt))}»${pedido(o.pedido).premio ? ` <i>${L('Si cumples', 'If you deliver')}: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
     ${o.duelo ? `<span class="aviso">${L(`${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.`, `${RIVAL} wants this client too: he will clean the same kitchen at the same time as you. If he finishes first, you get paid half.`)}</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(L(PISTAS[e], EN.pista[e]))}</span>`).join('') : `<span class="pista">${L('Todo tranquilo. Sospechoso.', 'All quiet. Suspicious.')}</span>`}
+    <span class="nota estimado">${(() => { const g = estimadoOrden(o); return L(`Te quedas unos ${dinero(g.neto)}: ${dinero(o.pago)} del trabajo + propina típica ${dinero(g.propina)} − sueldos ${dinero(g.sueldos)} − gasolina ${dinero(GASOLINA)}.`, `You keep about ${dinero(g.neto)}: ${dinero(o.pago)} for the job + typical tip ${dinero(g.propina)} − wages ${dinero(g.sueldos)} − gas ${dinero(GASOLINA)}.`); })()}</span>
     <span class="nota">${o.gigante ? L(`Trabajo gigante: ${o.campanas} campanas, ${o.ductos} ductos y ${o.filtros} filtros. Manda equipos a ayudarte, repártelos y revisa lo que entreguen.`, `Giant job: ${o.campanas} hoods, ${o.ductos} ducts and ${o.filtros} filters. Send teams to help you, assign the zones and check what they deliver.`) : L(`Gente sugerida: ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'}.`, `Suggested crew: ${sugerido(o)} ${sugerido(o) === 1 ? 'person' : 'people'}.`)}</span>
     ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">${L(`Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}`, `Needs ${o.ayud} ${o.ayud === 1 ? 'helper' : 'helpers'} besides your partner.${faltanAyud > 0 ? ' You are ' + faltanAyud + ' short.' : ''}`)}</span>` : ''}
   </button>`;
 }
 
+// Lo que te queda más o menos de un trabajo bien hecho: pago, propina típica (10 %), sueldos de quien va contigo y gasolina.
+function estimadoOrden(o) {
+  const H = S.hoy, aprendiz = S.fase === 'aprendiz';
+  const sueldos = aprendiz ? 0 : r10((((COMPANEROS[H.comp] || SOLO).sueldo || 0) + S.cuadrilla.filter(c => H.ayud.includes(c.id)).reduce((a, c) => a + (c.sueldo || 0), 0)) * sueldoMult());
+  const propina = r10(o.pago * .1);
+  return { sueldos, propina, neto: aprendiz ? SUELDO_APRENDIZ + 40 : o.pago + propina - sueldos - GASOLINA };
+}
 // Cuánta gente le va bien a un trabajo (contando al compañero): el tamaño manda.
 const sugerido = o => clamp(Math.round(o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * 1.3), 1, 4);
 const hayB = () => S.fase === 'empresa' && (S.eq.flota || 0) > 0;
@@ -4691,6 +4705,7 @@ function pantallaParte() {
   // Retos de Don Rigo
   const misHechas = aprendiz ? [] : avanzarMisiones({ aprobado, n, o, BS, danos: M.danos.length, gana: !!ganaDuelo, espejo, finMin, pedOk: !!(ped && !ped.tacos && pedOk) });
   for (const x of misHechas) { lineas.push([x.todo ? L('Don Rigo: ¡los tres retos de la semana!', 'Don Rigo: all three weekly challenges!') : `${L('Reto de Don Rigo', 'Don Rigo challenge')}: ${textoMision(x)}`, x.dinero]); neto += x.dinero; rep += x.rep; }
+  if (S.deuda > 0 && neto > 0) { const abono = Math.min(S.deuda, r10(neto * .25)); S.deuda -= abono; neto -= abono; lineas.push([L(`Abono al préstamo de Don Rigo${S.deuda ? ` (quedan ${dinero(S.deuda)})` : ' (¡pagado!)'}`, `Payment on Don Rigo's loan${S.deuda ? ` (${dinero(S.deuda)} left)` : ' (paid off!)'}`), -abono]); }
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
   for (const th of [40, 60, 80]) if (S.rep >= th && !(S.hitosRep || []).includes(th)) { S.hitosRep = [...(S.hitosRep || []), th]; S.puntos = (S.puntos || 0) + 1; lineas.push([L(`¡Reputación ${th}! +1 punto de habilidad`, `Reputation ${th}! +1 skill point`), null]); }
   // Récords
