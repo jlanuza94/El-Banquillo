@@ -153,7 +153,7 @@ body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas butt
 @keyframes marca { to { transform: translate(-50%, -50%) scale(1.1); } }
 
 /* Pantallas (camioneta, taller, parte…) */
-.pantalla { position: absolute; inset: 0; overflow-y: auto; background: linear-gradient(rgba(13,20,27,.5), rgba(13,20,27,.93) 38%); padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)); padding-left: var(--lado-i); padding-right: var(--lado-d); }
+.pantalla { position: absolute; inset: 0; overflow-y: auto; background: linear-gradient(rgba(13,20,27,.62), rgba(13,20,27,.97) 30%); padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)); padding-left: var(--lado-i); padding-right: var(--lado-d); }
 .hoja { max-width: 580px; margin: 0 auto; display: grid; gap: 14px; }
 .hoja p { margin: 0; }
 .rotulo { font-family: var(--f-display); font-size: clamp(26px, 7.5vw, 38px); line-height: .95; color: var(--acero); text-wrap: balance; }
@@ -185,8 +185,11 @@ body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas butt
 .orden.finde { border-color: var(--hivis); }
 .misiones i { font-style: normal; font-family: var(--f-mono); font-size: 12px; color: var(--hivis); }
 .misiones em { font-style: normal; font-size: 12px; color: var(--tenue); }
-.tabs button { background: none; border: 0; padding: 12px 10px; min-height: 44px; font-family: var(--f-cond); font-weight: 700; font-size: 16px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; }
-.tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); }
+.tabs button { flex: 1 0 auto; background: none; border: 0; padding: 7px 6px 6px; min-height: 52px; display: grid; justify-items: center; align-content: center; gap: 1px; font-family: var(--f-cond); font-weight: 700; font-size: 14px; letter-spacing: .05em; text-transform: uppercase; color: var(--tenue); border-bottom: 3px solid transparent; margin-bottom: -2px; white-space: nowrap; position: relative; border-radius: 8px 8px 0 0; }
+.tabs button i { font-style: normal; font-size: 19px; line-height: 1.1; filter: grayscale(.85) opacity(.7); transition: filter .15s, transform .15s; }
+.tabs button[aria-selected="true"] { color: var(--acero); border-color: var(--hivis); background: linear-gradient(rgba(255,138,31,0), rgba(255,138,31,.14)); }
+.tabs button[aria-selected="true"] i { filter: none; transform: scale(1.12); }
+.tabs .cuenta { position: absolute; top: 3px; right: calc(50% - 22px); }
 .tabs .cuenta { font-family: var(--f-mono); font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; margin-left: 4px; }
 h2.sec { margin: 4px 0 0; font-family: var(--f-cond); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); font-weight: 700; }
 .orden { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 12px 14px; display: grid; gap: 7px; text-align: left; width: 100%; }
@@ -411,8 +414,21 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .cab .datos { display: grid; grid-template-columns: auto auto 1fr auto; gap: 5px; }
 .cab .dato { padding: 3px 8px; min-width: 0; }
 .cab .dato b { font-size: 15px; }
+.cab .dato:nth-child(2) b { color: var(--ok); }
+.cab .dato { border-radius: 6px; background: linear-gradient(var(--panel-2), var(--panel)); }
 .cab .dato i { font-size: 10px; }
 .cab .dato small { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.barrio { width: 100%; text-align: left; color: inherit; background: var(--panel); border: 1px solid var(--linea); border-left: 3px solid var(--grasa); border-radius: 0 8px 8px 0; padding: 7px 10px; display: grid; gap: 6px; font-size: 14px; box-sizing: border-box; }
+.barrio .linea { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: start; }
+.barrio .linea + .linea { border-top: 1px dashed var(--linea); padding-top: 6px; }
+.barrio .cara { width: 28px; height: 28px; font-size: 12px; }
+.barrio .ico-radio { font-style: normal; font-size: 18px; text-align: center; line-height: 28px; }
+.barrio b { display: block; font-family: var(--f-cond); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
+.barrio span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.barrio .mas { justify-self: end; font-size: 11px; color: var(--tenue); margin-top: -4px; }
+.barrio.abierto span { -webkit-line-clamp: unset; }
+.barrio.abierto .mas { display: none; }
+.orden, .cita, .persona, .equipo, .evalua, .retos { box-sizing: border-box; min-width: 0; }
 .jefe.corto { width: 100%; text-align: left; color: inherit; border: 0; grid-template-columns: 28px 1fr; gap: 8px; padding: 6px 10px; font-size: 14px; }
 .jefe.corto .cara { width: 28px; height: 28px; font-size: 12px; }
 .jefe.corto b { font-size: 11px; }
@@ -4194,6 +4210,7 @@ function furgo(nombre, color, et) {
   </svg>`;
 }
 
+const ICO_TAB = { noche: '🌙', clientes: '📇', cuadrilla: '👷', taller: '🔧', logros: '🏆' };
 function cabecera() {
   const need = xpNivel(S.nivel), aprendiz = S.fase === 'aprendiz';
   return `<div class="cab">${aprendiz ? '<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>'
@@ -4219,14 +4236,14 @@ function pantallaCamioneta() {
   const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros y álbum', 'Awards & album')]] : [['noche', L('Noche', 'Night')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
   if (!tabs.some(t => t[0] === tab)) tab = 'noche';
   pantalla(`<div class="lado-cab">${cabecera()}
-    <button class="jefe corto" id="jefeCorto">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b><span>${esc(TRAD(H.frase))}</span></div></button>
-    ${H.avisos.length ? `<div class="cita corto"><b>${L('Noticias del barrio', 'Neighborhood news')}</b>${esc(H.avisos.map(TRAD).join(' '))}</div>` : ''}</div>
-    <div class="lado-main"><nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}">${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
+    <button class="barrio" id="jefeCorto" aria-expanded="false"><div class="linea">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b><span>${esc(TRAD(H.frase))}</span></div></div>
+    ${H.avisos.length ? `<div class="linea"><i class="ico-radio">📻</i><div><b>${L('Noticias del barrio', 'Neighborhood news')}</b><span>${esc(H.avisos.map(TRAD).join(' '))}</span></div></div>` : ''}${TRAD(H.frase).length + H.avisos.map(TRAD).join(' ').length > 110 ? `<small class="mas">${L('Toca para leer todo', 'Tap to read it all')}</small>` : ''}</button></div>
+    <div class="lado-main"><nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
     ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}
     <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div></div>`);
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
-  $('#jefeCorto').onclick = () => $('#jefeCorto').classList.toggle('abierto');
+  $('#jefeCorto').onclick = () => { const b = $('#jefeCorto'); b.classList.toggle('abierto'); b.setAttribute('aria-expanded', b.classList.contains('abierto')); };
   $('#abrirArbol').onclick = () => pantallaArbol(pantallaCamioneta);   // la frase larga se abre al tocarla
   enlazar();
 }
