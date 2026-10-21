@@ -123,7 +123,7 @@ body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas butt
 .combo-med .pasos-c i.corte { margin-right: 5px; }
 .combo-med .pasos-c small { font-family: var(--f-mono); font-size: 11px; color: var(--tenue); }
 .combo-med .ventana { grid-column: 1 / -1; height: 3px; background: rgba(255,255,255,.12); border-radius: 2px; overflow: hidden; }
-.combo-med .ventana span { display: block; height: 100%; background: var(--hivis); animation: ventanaCombo 1.3s linear forwards; }
+.combo-med .ventana span { display: block; height: 100%; background: var(--hivis); animation: ventanaCombo var(--vc, 1.3s) linear forwards; }
 @keyframes ventanaCombo { from { width: 100%; } to { width: 0; } }
 @keyframes combo { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.7); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -80%) scale(1); } }
 .falta { position: absolute; top: 50%; transform: translateY(-50%); border: 0; background: var(--hivis); color: var(--hivis-tinta); font-family: var(--f-cond); font-weight: 700; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; padding: 10px 8px; box-shadow: 0 0 18px rgba(255,138,31,.6); animation: falta 1s ease-in-out infinite alternate; writing-mode: vertical-rl; }
@@ -360,11 +360,11 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 /* Árbol de habilidades */
 .dato.nivel { color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .dato.nivel .puntos { font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; vertical-align: 2px; animation: falta 1s ease-in-out infinite alternate; }
-.ramas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ramas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
 .ramas button { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 6px 4px; display: grid; justify-items: center; gap: 1px; color: inherit; }
 .ramas button[aria-pressed="true"] { border-color: var(--hivis); background: var(--panel-2); }
 .ramas i { font-style: normal; font-size: 20px; }
-.ramas b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+.ramas b { font-family: var(--f-cond); font-size: 12px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; letter-spacing: .04em; text-transform: uppercase; }
 .ramas small { font-family: var(--f-mono); font-size: 11px; color: var(--tenue); }
 .camino { display: grid; gap: 10px; position: relative; }
 .camino::before { content: ""; position: absolute; left: 21px; top: 22px; bottom: 22px; width: 3px; background: var(--linea); border-radius: 2px; }
@@ -376,6 +376,10 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .nodo .pide { color: var(--tenue); font-size: 12px; }
 .nodo .btn { justify-self: start; }
 .nodo.cerrado { opacity: .5; }
+.nodo.descartada .bola { color: var(--mal); }
+.nodo.confirma .txt { border-color: var(--hivis); box-shadow: 0 0 0 1px var(--hivis); }
+.nodo .confirmar { display: grid; gap: 4px; padding-top: 4px; border-top: 1px dashed var(--linea); }
+.o-alt { margin-left: 54px; font-family: var(--f-cond); font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--hivis); }
 .nodo.abierto .bola { border-color: var(--hivis); }
 .nodo.parte .bola { border-color: var(--hivis); background: rgba(255,138,31,.2); }
 .nodo.lleno .bola { border-color: var(--ok); background: rgba(105,201,122,.25); color: var(--ok); }
@@ -839,28 +843,40 @@ const ARBOL = [
   { id: 'limpieza', ico: '🧽', n: ['Limpieza', 'Cleaning'], hab: [
     { id: 'brazo', max: 3, pide: 0, n: ['Brazo de acero', 'Arm of steel'], d: ['La rasqueta quita un 10 % más por rango.', 'The scraper removes 10% more per rank.'] },
     { id: 'espuma', max: 2, pide: 1, n: ['Mano para la espuma', 'Foam hand'], d: ['La espuma rinde un 25 % más por rango y ablanda antes.', 'Foam lasts 25% longer per rank and softens sooner.'] },
-    { id: 'pulso', max: 1, pide: 3, n: ['Pulso de cirujano', 'Surgeon\'s hand'], d: ['La hidro sin espuma salpica un 60 % menos.', 'The washer splatters 60% less without foam.'] },
+    { id: 'pulso', max: 1, pide: 3, alt: 'especialista', n: ['Pulso de cirujano', 'Surgeon\'s hand'], d: ['La hidro sin espuma salpica un 60 % menos.', 'The washer splatters 60% less without foam.'] },
+    { id: 'especialista', max: 1, pide: 3, alt: 'pulso', n: ['Especialista en grasa', 'Grease specialist'], d: ['Con la herramienta correcta, la grasa quemada, el aceite y el sarro salen un 30 % más rápido.', 'With the right tool, burnt grease, oil and scale come off 30% faster.'] },
     { id: 'ojo', max: 2, pide: 4, n: ['Ojo de inspector', 'Inspector\'s eye'], d: ['La ayuda para apuntar llega el doble de lejos (con II, el triple).', 'Aim assist reaches twice as far (three times with II).'] },
     { id: 'espejo', max: 1, pide: 8, n: ['Maestro del espejo', 'Mirror master'], d: ['Migdalear avanza un 50 % más rápido y el espejo da un 10 % más de propina.', 'Polishing goes 50% faster and a mirror finish gives 10% more tip.'] },
   ] },
   { id: 'negocio', ico: '💼', n: ['Negocio', 'Business'], hab: [
     { id: 'labia', max: 3, pide: 0, n: ['Labia de vendedor', 'Silver tongue'], d: ['Un 4 % más de propina por rango.', '4% more tip per rank.'] },
     { id: 'regateo', max: 2, pide: 1, n: ['Regateador', 'Haggler'], d: ['Al negociar, un 10 % más de probabilidad de que acepten, por rango.', 'When negotiating, 10% more chance they accept, per rank.'] },
-    { id: 'gentes', max: 2, pide: 3, n: ['Don de gentes', 'People person'], d: ['Un 15 % más de clientes te ofrecen contrato fijo, por rango.', '15% more clients offer you a regular contract, per rank.'] },
+    { id: 'gentes', max: 2, pide: 3, alt: 'negociador', n: ['Don de gentes', 'People person'], d: ['Un 15 % más de clientes te ofrecen contrato fijo, por rango.', '15% more clients offer you a regular contract, per rank.'] },
+    { id: 'negociador', max: 2, pide: 3, alt: 'gentes', n: ['Negociador', 'Negotiator'], d: ['Al negociar ves la probabilidad exacta de que acepten; con II, aceptan un 10 % más.', 'When negotiating you see the exact chance they accept; with II, they accept 10% more.'] },
     { id: 'tarjeta', max: 1, pide: 4, n: ['Tarjeta de presentación', 'Business card'], d: ['Cada noche aparece un trabajo más en el mapa.', 'One more job shows up on the map every night.'] },
     { id: 'contrato', max: 1, pide: 8, n: ['Maestro del contrato', 'Contract master'], d: ['Si fallas una garantía de A solo devuelves el dinero: no pierdes reputación.', 'If you miss an A guarantee you only refund the money: no reputation lost.'] },
+  ] },
+  { id: 'ritmo', ico: '⚡', n: ['Ritmo', 'Rhythm'], hab: [
+    { id: 'ritmo', max: 3, pide: 0, n: ['Ritmo de trabajo', 'Work rhythm'], d: ['Pelar, quitar cubiertas y bajar bolsas cuesta un 20 % menos de tiempo por rango.', 'Peeling, removing covers and taking bags down takes 20% less time per rank.'] },
+    { id: 'estable', max: 2, pide: 1, n: ['Combo estable', 'Steady combo'], d: ['Más tiempo entre pasadas para seguir el combo (+0,3 s por rango); con II, un cambio de dirección no lo corta.', 'More time between strokes to keep the combo (+0.3 s per rank); with II, one change of direction won\'t break it.'] },
+    { id: 'cadena', max: 1, pide: 3, alt: 'perfectas', n: ['Cadena de herramientas', 'Tool chain'], d: ['Raspar justo después de echar espuma (4 s) raspa un 30 % más.', 'Scraping right after foaming (4 s) scrapes 30% more.'] },
+    { id: 'perfectas', max: 1, pide: 3, alt: 'cadena', n: ['Pasadas perfectas', 'Perfect strokes'], d: ['Cada combo ×3 suma +1 % de propina (hasta +5 %).', 'Each ×3 combo adds +1% tip (up to +5%).'] },
+    { id: 'arranque', max: 2, pide: 4, n: ['Arranque rápido', 'Quick start'], d: ['Los primeros 3 segundos en cada zona raspas un 20 % más por rango.', 'The first 3 seconds in each zone you scrape 20% more per rank.'] },
+    { id: 'remate', max: 1, pide: 8, n: ['Remate impecable', 'Flawless finish'], d: ['Cada zona que dejas en espejo (≤ 50 µm) suma +2 % de propina (hasta +10 %).', 'Each zone you leave as a mirror (≤ 50 µm) adds +2% tip (up to +10%).'] },
   ] },
   { id: 'cuadrilla', ico: '👷', n: ['Cuadrilla', 'Crew'], hab: [
     { id: 'jefe', max: 3, pide: 0, n: ['Jefe nato', 'Born boss'], d: ['Tu cuadrilla limpia un 8 % más rápido por rango.', 'Your crew cleans 8% faster per rank.'] },
     { id: 'ambiente', max: 2, pide: 1, n: ['Buen ambiente', 'Good vibes'], d: ['Regañar baja la mitad de ánimo; con II, felicitar sube uno extra.', 'Scolding costs half the morale; with II, praise gives one extra.'] },
-    { id: 'puntual', max: 1, pide: 3, n: ['Puntualidad', 'Punctuality'], d: ['Faltan la mitad de veces.', 'Half as many no-shows.'] },
+    { id: 'puntual', max: 1, pide: 3, alt: 'supervisor', n: ['Puntualidad', 'Punctuality'], d: ['Faltan la mitad de veces.', 'Half as many no-shows.'] },
+    { id: 'supervisor', max: 1, pide: 3, alt: 'puntual', n: ['Buen supervisor', 'Good supervisor'], d: ['Tu gente rompe la mitad de cosas: menos tuberías rotas y menos errores al preparar.', 'Your people break half as many things: fewer burst pipes and prep mistakes.'] },
     { id: 'capacita', max: 2, pide: 4, n: ['Capacitación', 'Training'], d: ['Los equipos que mandas solos trabajan mejor, por rango.', 'Teams you send out on their own do better work, per rank.'] },
     { id: 'cuadrillas', max: 1, pide: 8, n: ['Maestro de cuadrillas', 'Crew master'], d: ['Los candidatos nuevos llegan con +1 de cuidado y pagas un 10 % menos de sueldos.', 'New candidates come with +1 care and you pay 10% less in wages.'] },
   ] },
   { id: 'aguante', ico: '🛡️', n: ['Aguante', 'Grit'], hab: [
     { id: 'pulmones', max: 3, pide: 0, n: ['Pulmones de buzo', 'Diver\'s lungs'], d: ['El turno dura 10 segundos más por rango.', 'The shift lasts 10 seconds longer per rank.'] },
     { id: 'sangre', max: 2, pide: 1, n: ['Sangre fría', 'Cool head'], d: ['1,5 segundos más para reaccionar en los imprevistos, por rango.', '1.5 more seconds to react to surprises, per rank.'] },
-    { id: 'domador', max: 1, pide: 3, n: ['Domador de mapaches', 'Raccoon tamer'], d: ['Mapaches, cucarachas y compañeros dormidos se resuelven con un toque menos.', 'Raccoons, cockroaches and sleeping coworkers take one tap less.'] },
+    { id: 'domador', max: 1, pide: 3, alt: 'metodico', n: ['Domador de mapaches', 'Raccoon tamer'], d: ['Mapaches, cucarachas y compañeros dormidos se resuelven con un toque menos.', 'Raccoons, cockroaches and sleeping coworkers take one tap less.'] },
+    { id: 'metodico', max: 1, pide: 3, alt: 'domador', n: ['Preparación metódica', 'Methodical prep'], d: ['Preparar la cocina (gas, luz, cubrir, plástico) cuesta la mitad de tiempo.', 'Prepping the kitchen (gas, power, covers, plastic) takes half the time.'] },
     { id: 'santo', max: 2, pide: 4, n: ['Paciencia de santo', 'Saint\'s patience'], d: ['El gerente aguanta un 20 % más antes de enojarse, por rango.', 'The manager lasts 20% longer before getting angry, per rank.'] },
     { id: 'madrugada', max: 1, pide: 8, n: ['Maestro de la madrugada', 'Night master'], d: ['El primer daño de cada noche no te cuesta dinero.', 'The first damage each night costs you no money.'] },
   ] },
@@ -1180,6 +1196,8 @@ function cargar() { try { const t = localStorage.getItem(KEY); if (t) { const s 
 const hab = k => (S.hab && S.hab[k]) || 0;
 const enRama = r => r.hab.reduce((a, h) => a + hab(h.id), 0);   // puntos gastados en una rama
 const sueldoMult = () => hab('cuadrillas') ? .9 : 1;
+// Puntos que caben en una rama: de cada pareja «una u otra» solo cuenta una.
+const maxRama = r => r.hab.reduce((a, h) => a + (h.alt && r.hab.findIndex(x => x.id === h.alt) < r.hab.indexOf(h) ? 0 : h.max), 0);
 // De aprendiz trabajas con el equipo de Don Rigo, al máximo: el trabajo se siente fácil. Con tu empresa, usas el tuyo (al principio, lo básico).
 const EQ_RIGO = { rasqueta: 3, conc: true, hidro: true, orbital: true, bolsa: true, xl: true };
 const EQ = () => S.fase === 'aprendiz' ? EQ_RIGO : S.eq;
@@ -2190,7 +2208,7 @@ function ayudaPrep() {
     if (!M || M.prepTok !== tok || cupo-- <= 0) return;
     const p = pend(); if (!p.length) return;
     const q = gente[k++ % gente.length], quien = { n: q.n, color: q.color || '#7fd3e6' };
-    const torpe = q.principal ? (M.orden.comp === 'beto' ? .3 : 0) : (q.cuidado || 3) <= 2 ? .25 : 0;
+    const torpe = (q.principal ? (M.orden.comp === 'beto' ? .3 : 0) : (q.cuidado || 3) <= 2 ? .25 : 0) * (hab('supervisor') ? .5 : 1);
     if (azar(torpe)) { if (!hablo) { hablo = true; decir(quien, uno(PREP_MAL)); } }
     else { M.ayudando = true; tocarMarca(uno(p)); M.ayudando = false; if (!hablo && azar(.5)) { hablo = true; decir(quien, uno(['Yo me encargo de esto.', 'Esto ya quedó. Sigue tú.', 'Uno menos. De nada.'])); } }
     setTimeout(paso, 900);
@@ -2265,7 +2283,7 @@ function empezarTurno(orden) {
   if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22), tropiezo: azar(.35) ? M.dur * rnd(.25, .5) : null };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   // La tubería la puede romper cualquiera de la cuadrilla, salvo los más cuidadosos (Lupe y los serios). Beto, casi seguro.
-  const prob = e => e.principal ? ({ beto: .75, chuy: .25 })[orden.comp] || 0 : e.tipo === 'serio' ? 0 : e.tipo === 'lio' ? .45 : e.tipo === 'medio' ? .25 : Math.max(0, 3 - (e.cuidado || 3)) * .1;
+  const prob = e => (e.principal ? ({ beto: .75, chuy: .25 })[orden.comp] || 0 : e.tipo === 'serio' ? 0 : e.tipo === 'lio' ? .45 : e.tipo === 'medio' ? .25 : Math.max(0, 3 - (e.cuidado || 3)) * .1) * (hab('supervisor') ? .5 : 1);
   const rompe = [...M.equipo].sort(() => Math.random() - .5).find(e => azar(prob(e)));
   if (rompe) M.eventos.push({ tipo: 'tuberia', zona: 1, en: rnd(14, 26), quien: rompe });
   if (orden.eventos.includes('mapache')) M.eventos.push({ tipo: 'mapache', zona: iDucto(), en: rnd(8, 14) });
@@ -2315,7 +2333,7 @@ function panelPrep(titulo, texto, estado, boton, alPulsar) {
   prepEl.querySelector('.txt').onclick = e => e.currentTarget.classList.toggle('abierto');
   $('#prepSig').onclick = () => { audio(); (alPulsar || (() => escenaPrep(M.escena + 1)))(); };
 }
-function gastar(min) { if (M.ayudando) return; M.prepMin += min; const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(M.prepMin); }
+function gastar(min) { if (M.ayudando) return; M.prepMin += min * (hab('metodico') ? .5 : 1); const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(M.prepMin); }
 function escenaPrep(i) {
   M.escena = i; limpiarMarcas(); matPlastico.opacity = .5;
   if (i === 0) {
@@ -2529,6 +2547,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
       if (tp === 2) duro *= herr === 'hidro' ? 2.2 : herr === 'rasqueta' ? .5 : 1;          // aceite: la hidro lo arrastra, la rasqueta lo embarra
       if (tp === 3) duro *= herr === 'rasqueta' ? (EQ().rasqueta >= 3 ? 1.1 : .4) : .2;     // sarro: rasqueta de carburo
     }
+    if (tp && hab('especialista') && herr !== 'cuadrilla' && (tp === 1 ? m > 1 && herr === 'rasqueta' : tp === 2 ? herr !== 'rasqueta' : herr === 'rasqueta')) duro *= 1.3;
     if (tp) sf.ultTipo = tp + (m > 1 ? 10 : 0);
     const q = Math.min(sf.d[i], cant * f * m * duro);
     sf.d[i] -= q; quit += q;
@@ -2552,7 +2571,8 @@ function escurre(sf) {
   return sf.abajo;
 }
 const radioRasqueta = () => [0, .1, .12, .14][EQ().rasqueta] * (EQ().mango ? 1.25 : 1);
-const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .1 * hab('brazo')) * (EQ().electrica ? 1.25 : 1) * ((M && M.bonoRasqueta) || 1);
+const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .1 * hab('brazo')) * (EQ().electrica ? 1.25 : 1) * ((M && M.bonoRasqueta) || 1)
+  * (M && hab('cadena') && performance.now() - (M.ultEspumaT || 0) < 4000 ? 1.3 : 1) * (M && M.enZona < 3 ? 1 + .2 * hab('arranque') : 1);
 
 // ---- Turno a medias: si se cierra la app, el turno se guarda (grasa de cada superficie, hora, zona, preparación,
 // espuma, daños) y al volver se puede retomar donde iba. No se guardan los gigantes, los duelos ni la primera noche.
@@ -2640,6 +2660,11 @@ function consejoHerr(z) {
 }
 // La primera vez que tocas cada suciedad especial con la herramienta equivocada, alguien te avisa.
 function avisoTipo(t, herr) {
+  const tt = t % 10; S.descubre = S.descubre || {};
+  if (!S.descubre[tt] && M.etapa === 'lavar') {
+    S.descubre[tt] = true; S.puntos = (S.puntos || 0) + 1; guardar(); sDing();
+    decir(M.comp.solo ? 'rigo' : M.comp, L(`¡Primera vez con ${['', 'grasa quemada', 'aceite', 'sarro'][tt]}! Eso se aprende una vez y ya. (+1 punto de habilidad)`, `First time with ${['', 'burnt grease', 'oil', 'scale'][tt]}! You learn that once and for all. (+1 skill point)`));
+  }
   const blanda = t > 10; t %= 10;
   const k = t + herr; if (M.avisosTipo[k]) return;
   let txt = null;
@@ -2674,7 +2699,7 @@ function aplicarTramo(a, b) {
   for (let k = 1; k <= pasos; k++) q += raspar(sf, a.gx + (b.gx - a.gx) * k / pasos, a.gy + (b.gy - a.gy) * k / pasos, rc, cant * .4, herr);
   const ahora = performance.now(), libre = ahora - (M.ultRuido || 0);
   if (herr === 'rasqueta' && q > .02) { emitir(b.punto, Math.min(6, 1 + q * 4), 'grasa', b.normal, .8); if (q > .05 && azar(Math.min(.7, q * 2))) trozo(b.punto, b.normal); if (libre > 55) { M.ultRuido = ahora; rafaga(.09, 700 + M.combo * 140 + Math.random() * 200, .12); } }
-  if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); pulso('spray'); }
+  if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); pulso('spray'); M.ultEspumaT = performance.now(); }
   if (herr === 'pulidor') {
     pulso('pulidora', .2);
     if (q > 0) { if (azar(.3)) emitir(b.punto, 1, 'chispa', b.normal, .4); }
@@ -2726,23 +2751,26 @@ function soltar(e) {
   // Combo: pasadas que quitan grasa, seguidas y paralelas a la anterior.
   if (tr.quitado > 1 && l > 25) {
     const dir = [dx / l, dy / l];
-    const paralela = M.ultDir ? Math.abs(dir[0] * M.ultDir[0] + dir[1] * M.ultDir[1]) > .75 : true;
-    const lento = ahora - M.ultSuelta >= 1300;
+    let paralela = M.ultDir ? Math.abs(dir[0] * M.ultDir[0] + dir[1] * M.ultDir[1]) > .75 : true;
+    const lento = ahora - M.ultSuelta >= ventanaCombo();
+    if (!paralela && hab('estable') >= 2 && M.combo >= 2 && !M.giroPerdonado) { M.giroPerdonado = true; paralela = true; ayuda(L('Combo estable: este giro no lo corta (solo uno).', 'Steady combo: this turn doesn\'t break it (just one).'), 2.5); }
     // Si se corta un combo, se explica por qué (las primeras veces de cada turno).
     if (M.combo >= 2 && (lento || !paralela) && (M.pistasCombo = (M.pistasCombo || 0) + 1) <= 3)
       ayuda(paralela ? L('Combo cortado: tardaste mucho. Encadena las pasadas sin parar.', 'Combo broken: too slow. Chain your strokes without stopping.') : L('Combo cortado: cambiaste de dirección. Raspa siempre en el mismo sentido.', 'Combo broken: you changed direction. Keep scraping the same way.'), 3);
     if (!lento && paralela) {
       const antes = M.combo; M.combo++; M.maxCombo = Math.max(M.maxCombo, M.combo); if (antes < 6 && M.combo >= 6) M.combos3++;
+      if (antes < 6 && M.combo >= 6 && hab('perfectas') && (M.perfectas || 0) < 5) { M.perfectas = (M.perfectas || 0) + 1; M.propinaMod += .01; ayuda(L(`Pasadas perfectas: +1 % de propina (${M.perfectas} de 5).`, `Perfect strokes: +1% tip (${M.perfectas} of 5).`), 2.5); }
       if ((antes < 3 && M.combo >= 3) || (antes < 6 && M.combo >= 6)) {
         verCombo(M.combo >= 6 ? '×3' : '×2'); sCombo(M.combo >= 6 ? 3 : 2); vibrar(M.combo >= 6 ? 50 : 25);
         if (M.combo >= 6 && azar(.5)) decir(M.comp, uno(['¡Eso! ¡Como en los videos!', 'Mira nomás, ya pareces profesional.', 'Así se raspa, sí señor.']));
       }
-    } else M.combo = 1;
+    } else { M.combo = 1; M.giroPerdonado = false; }
     M.ultDir = dir; M.ultSuelta = ahora;
     if (M.combo === 1 && !S.tutoCombo) { S.tutoCombo = true; ayuda(L('Buena pasada. Haz otra en la misma dirección enseguida: así sube el combo y raspas más rápido.', 'Good stroke. Do another one the same way right away: that builds the combo and you scrape faster.'), 5); }
   } else if (tr.quitado < .1) M.combo = 0;
   pintarCombo();
 }
+const ventanaCombo = () => 1300 + 300 * hab('estable');
 // El medidor de combo: pasadas hacia ×2 (3) y ×3 (6), y el tiempo que queda para la siguiente.
 let comboT = 0;
 function pintarCombo() {
@@ -2753,7 +2781,8 @@ function pintarCombo() {
   el.querySelector('b').textContent = `COMBO ×${c >= 6 ? 3 : c >= 3 ? 2 : 1}`;
   el.querySelector('.pasos-c').innerHTML = c >= 6 ? `<small>${c} ${L('pasadas', 'strokes')}</small>` : Array.from({ length: 6 }, (_, i) => `<i class="${i < c ? 'si' : ''}${i === 2 ? ' corte' : ''}"></i>`).join('');
   const v = el.querySelector('.ventana span'), n = v.cloneNode(); v.replaceWith(n);   // reinicia la barra de tiempo
-  comboT = setTimeout(() => { el.hidden = true; }, 1300);
+  el.style.setProperty('--vc', ventanaCombo() / 1000 + 's');
+  comboT = setTimeout(() => { el.hidden = true; }, ventanaCombo());
 }
 canvas.addEventListener('pointerup', soltar);
 canvas.addEventListener('pointercancel', soltar);
@@ -2869,7 +2898,7 @@ function dano(t, dinero, rep) {
   if (dinero > 0 && hab('madrugada') && !M.perdonado) { M.perdonado = true; t += L(' (Maestro de la madrugada: no cuesta)', ' (Night master: free)'); dinero = 0; }
   M.danos.push({ t, dinero }); M.repExtra -= rep || 0;
 }
-function sumarTiempo(min) { if (!M.ayudando) M.t += min / 480 * M.dur; }
+function sumarTiempo(min) { if (!M.ayudando) M.t += min / 480 * M.dur * (M.etapa === 'pelar' ? 1 - .2 * hab('ritmo') : 1); }
 function ensuciar(zona, cant) {
   for (const sf of zona.sfs) {
     const cx = rnd(0, sf.nx), cy = rnd(0, sf.ny), rr = sf.nx * .3;
@@ -4210,7 +4239,7 @@ function vNoche() {
 function pantallaNegociar(i, msg) {
   const H = S.hoy, o = H.ordenes[i], C = CARACTER[o.caracter];
   if (o.pac === undefined) o.pac = C.pac;
-  const prob = p => p >= .7 ? L('Seguramente acepta', 'Will probably accept') : p >= .4 ? L('Puede que sí, puede que no', 'Maybe yes, maybe no') : L('Difícil', 'Unlikely');
+  const prob = p => hab('negociador') ? `${L('Probabilidad', 'Chance')}: ${Math.round(clamp(p + (hab('negociador') >= 2 ? .1 : 0), 0, 1) * 100)} %` : p >= .7 ? L('Seguramente acepta', 'Will probably accept') : p >= .4 ? L('Puede que sí, puede que no', 'Maybe yes, maybe no') : L('Difícil', 'Unlikely');
   const intento = (o.intentos || 0) * .1, gar = C.garantia || 1.3;
   pantalla(`<div class="rotulo">${L('Negociar', 'Negotiate')}<span>${esc(o.nombre)}</span></div>
     <div class="jefe">${cara('#e9e9e9', o.nombre[0])}<div><b>${L(C.n, EN.trato[o.caracter][0])} · ${L('paciencia', 'patience')} ${'●'.repeat(Math.max(0, o.pac))}${'○'.repeat(Math.max(0, C.pac - o.pac))}</b>${esc(msg || C.hola)}</div></div>
@@ -4230,7 +4259,7 @@ function pantallaNegociar(i, msg) {
     if (k === 'ok') { o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
     if (k === 'contra') { o.pago = o.contra; o.contra = null; o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
     if (k === 'gar') { o.pago = r10(o.pago * gar); o.garantia = true; o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
-    const sube = k === '15' ? 1.15 : 1.3, p = (k === '15' ? C.p15 : C.p30) - intento + .1 * hab('regateo');
+    const sube = k === '15' ? 1.15 : 1.3, p = (k === '15' ? C.p15 : C.p30) - intento + .1 * hab('regateo') + (hab('negociador') >= 2 ? .1 : 0);
     o.intentos = (o.intentos || 0) + 1;
     if (azar(p)) { o.pago = r10(o.pago * sube); o.contra = null; tono(880, .12, .08, 'triangle'); guardar(); return pantallaNegociar(i, uno(['Está bien, está bien. Pero que brille.', 'Ándale pues. Me caíste bien.', 'Trato. Pero si veo una mancha, te llamo a las tres de la mañana.'])); }
     o.pac--; tono(300, .2, .08, 'triangle', 200);
@@ -4663,6 +4692,7 @@ function pantallaParte() {
   const misHechas = aprendiz ? [] : avanzarMisiones({ aprobado, n, o, BS, danos: M.danos.length, gana: !!ganaDuelo, espejo, finMin, pedOk: !!(ped && !ped.tacos && pedOk) });
   for (const x of misHechas) { lineas.push([x.todo ? L('Don Rigo: ¡los tres retos de la semana!', 'Don Rigo: all three weekly challenges!') : `${L('Reto de Don Rigo', 'Don Rigo challenge')}: ${textoMision(x)}`, x.dinero]); neto += x.dinero; rep += x.rep; }
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
+  for (const th of [40, 60, 80]) if (S.rep >= th && !(S.hitosRep || []).includes(th)) { S.hitosRep = [...(S.hitosRep || []), th]; S.puntos = (S.puntos || 0) + 1; lineas.push([L(`¡Reputación ${th}! +1 punto de habilidad`, `Reputation ${th}! +1 skill point`), null]); }
   // Récords
   const records = [];
   if (neto > S.mejor && S.noche > 1) records.push(L('Noche con más dinero', 'Most money in a night'));
@@ -4833,7 +4863,7 @@ function ofertaContrato(o) {
 
 function avisoNivel(n) {
   pantalla(`<div class="rotulo">${L(`¡Nivel ${S.nivel}!`, `Level ${S.nivel}!`)}<span>${n > 1 ? L(`+${n} puntos de habilidad`, `+${n} skill points`) : L('+1 punto de habilidad', '+1 skill point')}</span></div>
-    <p>${L('Gástalo en el árbol de habilidades: limpieza, negocio, cuadrilla o aguante. También puedes guardarlo para después (toca tu nivel en la camioneta).', 'Spend it in the skill tree: cleaning, business, crew or grit. You can also save it for later (tap your level in the van).')}</p>
+    <p>${L('Gástalo en el árbol de habilidades: limpieza, negocio, ritmo, cuadrilla o aguante. También puedes guardarlo para después (toca tu nivel en la camioneta).', 'Spend it in the skill tree: cleaning, business, rhythm, crew or grit. You can also save it for later (tap your level in the van).')}</p>
     <div class="acciones"><button class="btn prim" id="verArbol">${L('Ver el árbol', 'Open the tree')}</button><button class="btn" id="luego">${L('Más tarde', 'Later')}</button></div>`);
   sDing();
   $('#verArbol').onclick = () => pantallaArbol(siguiente);
@@ -4841,26 +4871,35 @@ function avisoNivel(n) {
 }
 
 // El árbol: una rama a la vez, de abajo (lo básico) hacia arriba (el maestro).
-let ramaVista = 'limpieza', reinicioPend = false;
+let ramaVista = 'limpieza', reinicioPend = false, habPend = null;
+// Reiniciar: gratis de aprendiz y hasta el nivel 6 (para experimentar); después, $250 por nivel.
+const costoReinicio = () => S.fase === 'aprendiz' || S.nivel <= 6 ? 0 : 250 * S.nivel;
 function pantallaArbol(volver) {
   S.hab = S.hab || {}; S.puntos = S.puntos || 0;
-  const r = ARBOL.find(x => x.id === ramaVista) || ARBOL[0], gastado = enRama(r), costo = 500 * S.nivel, total = Object.values(S.hab).reduce((a, n) => a + n, 0);
+  const r = ARBOL.find(x => x.id === ramaVista) || ARBOL[0], gastado = enRama(r), costo = costoReinicio(), total = Object.values(S.hab).reduce((a, n) => a + n, 0);
+  const lista = [...r.hab].reverse();
   pantalla(`<div class="rotulo">${L('Habilidades', 'Skills')}<span>${S.puntos ? `⭐ ${S.puntos} ${S.puntos === 1 ? L('punto para gastar', 'point to spend') : L('puntos para gastar', 'points to spend')}` : L('Sin puntos: sube de nivel para ganar más', 'No points: level up to earn more')}</span></div>
-    <div class="ramas">${ARBOL.map(x => `<button data-rama="${x.id}" aria-pressed="${x.id === r.id}"><i>${x.ico}</i><b>${L(...x.n)}</b><small>${enRama(x)}/${x.hab.reduce((a, h) => a + h.max, 0)}</small></button>`).join('')}</div>
-    <div class="camino">${[...r.hab].reverse().map(h => {
-      const n = hab(h.id), lleno = n >= h.max, abierto = gastado >= h.pide || n > 0, puede = !lleno && abierto && S.puntos > 0;
-      return `<div class="nodo ${lleno ? 'lleno' : n ? 'parte' : abierto ? 'abierto' : 'cerrado'}${h.pide >= 8 ? ' maestro' : ''}">
-        <div class="bola">${lleno ? '✓' : abierto ? r.ico : '🔒'}</div>
+    <div class="ramas">${ARBOL.map(x => `<button data-rama="${x.id}" aria-pressed="${x.id === r.id}"><i>${x.ico}</i><b>${L(...x.n)}</b><small>${enRama(x)}/${maxRama(x)}</small></button>`).join('')}</div>
+    <div class="camino">${lista.map((h, i) => {
+      const n = hab(h.id), lleno = n >= h.max, descartada = h.alt && hab(h.alt) > 0, abierto = !descartada && (gastado >= h.pide || n > 0), puede = !lleno && abierto && S.puntos > 0;
+      const o = h.alt && lista[i - 1] && lista[i - 1].id === h.alt ? `<div class="o-alt">${L('una u otra', 'pick one')}</div>` : '';
+      const pend = habPend === h.id;
+      return `${o}<div class="nodo ${descartada ? 'cerrado descartada' : lleno ? 'lleno' : n ? 'parte' : abierto ? 'abierto' : 'cerrado'}${h.pide >= 8 ? ' maestro' : ''}${pend ? ' confirma' : ''}">
+        <div class="bola">${descartada ? '✕' : lleno ? '✓' : abierto ? r.ico : '🔒'}</div>
         <div class="txt"><div class="fila"><b>${L(...h.n)}</b><span class="rangos">${'●'.repeat(n)}${'○'.repeat(h.max - n)}</span></div>
           <span class="nota">${L(...h.d)}</span>
-          ${abierto ? '' : `<small class="pide">${L(`Pide ${h.pide} ${h.pide === 1 ? 'punto' : 'puntos'} en ${r.n[0]} (llevas ${gastado})`, `Needs ${h.pide} ${h.pide === 1 ? 'point' : 'points'} in ${r.n[1]} (you have ${gastado})`)}</small>`}
-          ${puede ? `<button class="btn prim peq" data-h="${h.id}">${L('Aprender', 'Learn')} · ⭐ 1</button>` : ''}</div></div>`;
+          ${descartada ? `<small class="pide">${L(`Elegiste «${HAB[h.alt].n[0]}». Para cambiar, reinicia el árbol.`, `You picked «${HAB[h.alt].n[1]}». To switch, reset the tree.`)}</small>` : abierto ? '' : `<small class="pide">${L(`Pide ${h.pide} ${h.pide === 1 ? 'punto' : 'puntos'} en ${r.n[0]} (llevas ${gastado})`, `Needs ${h.pide} ${h.pide === 1 ? 'point' : 'points'} in ${r.n[1]} (you have ${gastado})`)}</small>`}
+          ${h.alt && !n && !descartada ? `<small class="pide">${L(`Si la eliges, «${HAB[h.alt].n[0]}» queda descartada.`, `If you pick it, «${HAB[h.alt].n[1]}» is ruled out.`)}</small>` : ''}
+          ${pend ? `<div class="confirmar"><b>${L(`¿Aprender ${n ? 'el rango ' + 'I'.repeat(n + 1) + ' de ' : ''}«${h.n[0]}»?`, `Learn ${n ? 'rank ' + 'I'.repeat(n + 1) + ' of ' : ''}«${h.n[1]}»?`)}</b><div class="acciones"><button class="btn prim peq" data-si="${h.id}">${L('Sí', 'Yes')} · ⭐ 1</button><button class="btn peq" data-no>${L('No', 'No')}</button></div></div>`
+            : puede ? `<button class="btn prim peq" data-h="${h.id}">${L('Aprender', 'Learn')} · ⭐ 1</button>` : ''}</div></div>`;
     }).join('')}</div>
-    <div class="acciones"><button class="btn prim" id="arbolListo">${L('Listo', 'Done')}</button>${total ? `<button class="btn" id="reiniciar" ${S.dinero < costo ? 'disabled' : ''}>${reinicioPend ? L('¿Seguro? Toca otra vez', 'Sure? Tap again') : L('Reiniciar', 'Reset')} · ${dinero(costo)}</button>` : ''}</div>
-    <p class="nota">${L('Reiniciar te devuelve todos los puntos para repartirlos de nuevo.', 'Resetting gives you back all your points to spend again.')}</p>`);
-  P.querySelectorAll('[data-rama]').forEach(b => b.onclick = () => { ramaVista = b.dataset.rama; reinicioPend = false; pantallaArbol(volver); });
-  P.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { S.hab[b.dataset.h] = hab(b.dataset.h) + 1; S.puntos--; reinicioPend = false; guardar(); sDing(); pantallaArbol(volver); });
-  $('#arbolListo').onclick = () => { reinicioPend = false; volver(); };
+    <div class="acciones"><button class="btn prim" id="arbolListo">${L('Listo', 'Done')}</button>${total ? `<button class="btn" id="reiniciar" ${S.dinero < costo ? 'disabled' : ''}>${reinicioPend ? L('¿Seguro? Toca otra vez', 'Sure? Tap again') : L('Reiniciar', 'Reset')} · ${costo ? dinero(costo) : L('gratis', 'free')}</button>` : ''}</div>
+    <p class="nota">${L(`Reiniciar te devuelve todos los puntos para repartirlos de nuevo. ${costo ? '' : 'Es gratis mientras eres aprendiz y hasta el nivel 6.'}`, `Resetting gives you back all your points to spend again. ${costo ? '' : 'It\'s free while you\'re an apprentice and up to level 6.'}`)} ${L('También ganas puntos al descubrir cada grasa especial y al llegar a 40, 60 y 80 de reputación.', 'You also earn points by discovering each special grease and reaching 40, 60 and 80 reputation.')}</p>`);
+  P.querySelectorAll('[data-rama]').forEach(b => b.onclick = () => { ramaVista = b.dataset.rama; reinicioPend = false; habPend = null; pantallaArbol(volver); });
+  P.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { habPend = b.dataset.h; reinicioPend = false; pantallaArbol(volver); });
+  P.querySelectorAll('[data-si]').forEach(b => b.onclick = () => { const id = b.dataset.si; if (S.puntos > 0 && !(HAB[id].alt && hab(HAB[id].alt))) { S.hab[id] = hab(id) + 1; S.puntos--; guardar(); sDing(); } habPend = null; pantallaArbol(volver); });
+  P.querySelectorAll('[data-no]').forEach(b => b.onclick = () => { habPend = null; pantallaArbol(volver); });
+  $('#arbolListo').onclick = () => { reinicioPend = false; habPend = null; volver(); };
   const re = $('#reiniciar');
   if (re) re.onclick = () => {
     if (!reinicioPend) { reinicioPend = true; return pantallaArbol(volver); }
@@ -5072,6 +5111,7 @@ function brilloEspejo(z) {
   for (const sf of z.sfs) { const m = sf.mesh.material; m.roughness = .14; (piezas.destellos = piezas.destellos || []).push({ m, t0: performance.now() }); }
   vibrar([40, 40, 80]); tono(1568, .25, .05, 'sine', 2093); tono(2093, .3, .04, 'sine', null, .12);
   if (zonaAct() === z) ayuda(L(`¡${z.n} quedó como espejo!`, `${z.n} is a mirror now!`), 3);
+  if (hab('remate') && (M.remates || 0) < 5) { M.remates = (M.remates || 0) + 1; M.propinaMod += .02; setTimeout(() => M && ayuda(L(`Remate impecable: +2 % de propina (${M.remates} de 5).`, `Flawless finish: +2% tip (${M.remates} of 5).`), 3), 3200); }
   if (!M.vioEspejo && azar(.5)) {
     M.vioEspejo = true; M.propinaMod += .03;
     setTimeout(() => M && decir(M.cliente || { n: L('El dueño', 'The owner'), color: '#e9e9e9' }, uno([L('¿Eso es mi campana? Me estoy viendo los pelos de la nariz. Esto merece propina.', 'Is that my hood? I can see my nose hairs. That deserves a tip.'), L('Le tomé foto para mi mamá. Va a pensar que me compré una nueva.', 'I took a picture for my mom. She\'ll think I bought a new one.')])), 1500);
