@@ -2169,7 +2169,33 @@ function marca(pos, texto, alTocar, punto) {
   marcasEl.appendChild(el); MARCAS.push(m);
   return m;
 }
-function tocarMarca(m) { if (m.hecho) return; m.hecho = true; m.el.classList.add('hecha'); if (!m.el.classList.contains('punto')) m.el.textContent = '✓'; m.alTocar(); }
+function tocarMarca(m) {
+  if (m.hecho) return; m.hecho = true; m.el.classList.add('hecha'); if (!m.el.classList.contains('punto')) m.el.textContent = '✓'; m.alTocar();
+  // Pantalla terminada (preparación o pelado): pasa sola a la siguiente.
+  if (M && (M.fase === 'prep' || M.etapa === 'pelar') && MARCAS.every(x => x.hecho)) {
+    const tok = M.prepTok;
+    setTimeout(() => { if (M && M.prepTok === tok && MARCAS.length && MARCAS.every(x => x.hecho)) { const b = $('#prepSig'); if (b) b.click(); } }, 900);
+  }
+}
+// La cuadrilla ayuda en la preparación y el pelado: cada uno hace alguna tarea a la vez que tú (no te cuesta tiempo),
+// hasta la mitad de lo que haya. Los descuidados (y Beto) a veces la hacen mal y hay que repetirla.
+const PREP_MAL = ['Ya quedó. Bueno, casi. Mejor revísalo tú.', 'Se me resbaló. Te lo dejo a ti, que tienes mejor mano.', 'Lo hice al revés. No sé cómo, pero al revés.'];
+function ayudaPrep() {
+  const tok = M.prepTok = (M.prepTok || 0) + 1;
+  if (M.orden.tuto || !M.equipo || !M.equipo.length) return;
+  const gente = M.equipo, pend = () => MARCAS.filter(m => !m.hecho);
+  let cupo = Math.min(gente.length, Math.ceil(pend().length / 2)), k = 0, hablo = false;
+  const paso = () => {
+    if (!M || M.prepTok !== tok || cupo-- <= 0) return;
+    const p = pend(); if (!p.length) return;
+    const q = gente[k++ % gente.length], quien = { n: q.n, color: q.color || '#7fd3e6' };
+    const torpe = q.principal ? (M.orden.comp === 'beto' ? .3 : 0) : (q.cuidado || 3) <= 2 ? .25 : 0;
+    if (azar(torpe)) { if (!hablo) { hablo = true; decir(quien, uno(PREP_MAL)); } }
+    else { M.ayudando = true; tocarMarca(uno(p)); M.ayudando = false; if (!hablo && azar(.5)) { hablo = true; decir(quien, uno(['Yo me encargo de esto.', 'Esto ya quedó. Sigue tú.', 'Uno menos. De nada.'])); } }
+    setTimeout(paso, 900);
+  };
+  setTimeout(paso, 1200);
+}
 function limpiarMarcas() { MARCAS = []; marcasEl.innerHTML = ''; }
 function moverMarcas() {
   const puestas = [];
@@ -2279,7 +2305,7 @@ function panelPrep(titulo, texto, estado, boton, alPulsar) {
   prepEl.querySelector('.txt').onclick = e => e.currentTarget.classList.toggle('abierto');
   $('#prepSig').onclick = () => { audio(); (alPulsar || (() => escenaPrep(M.escena + 1)))(); };
 }
-function gastar(min) { M.prepMin += min; const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(M.prepMin); }
+function gastar(min) { if (M.ayudando) return; M.prepMin += min; const r = prepEl.querySelector('.reloj'); if (r) r.textContent = hora(M.prepMin); }
 function escenaPrep(i) {
   M.escena = i; limpiarMarcas(); matPlastico.opacity = .5;
   if (i === 0) {
@@ -2290,7 +2316,7 @@ function escenaPrep(i) {
     pil.forEach(p => marca(p.pos, L(p.txt, EN.gas[p.txt]), () => { p.off = true; p.mesh.visible = false; gastar(2); tono(300, .15, .08, 'sawtooth', 120); actualizar(); }));
     marca(luz.pos, L('Cortar la luz', 'Cut the power'), () => { luz.off = true; luz.palanca.rotation.z = 2.6; gastar(2); tono(180, .1, .12, 'square'); actualizar(); });
     panelPrep(L('Seguridad primero', 'Safety first'), pil.length ? L('Toca cada piloto para cerrar el gas y baja la palanca de la luz del extractor. Cada cosa cuesta un par de minutos.', 'Tap each pilot to shut off the gas and pull down the exhaust fan\'s power lever. Each one takes a couple of minutes.') : L('Esta cocina no tiene pilotos de gas. Solo falta bajar la palanca de la luz del extractor.', 'This kitchen has no gas pilots. You only need to pull down the exhaust fan\'s power lever.'), estado(), L('Seguir sin terminar', 'Skip the rest'));
-    actualizar();
+    actualizar(); M.arrastrar = true; ayudaPrep();
     decir(M.comp, uno(['Yo te ilumino. Bueno, mi casco te ilumina.', 'Primero el gas. Lo dice Don Rigo y lo dicen los bomberos.', '¿Cerramos el gas o vivimos peligrosamente?']));
   } else if (i === 1) {
     irVista(VISTAS.linea);
@@ -2299,7 +2325,7 @@ function escenaPrep(i) {
     const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = ap.every(a => a.cubierto) ? L('Siguiente: el plástico de la campana', 'Next: wrap the hood') : L('Seguir sin terminar', 'Skip the rest'); };
     ap.forEach(a => marca(a.pos, L('Cubrir', 'Cover'), () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(EQ().cubiertas ? 1 : 2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
     panelPrep(L('Cubrir la cocina', 'Cover the kitchen'), L('Toca cada aparato para taparlo con plástico. Lo que quede al aire se llena de agua con grasa y espuma.', 'Tap each appliance to cover it with plastic. Anything left uncovered gets soaked in greasy water and foam.'), estado(), L('Seguir sin terminar', 'Skip the rest'));
-    actualizar();
+    actualizar(); M.arrastrar = true; ayudaPrep();
     if (M.pedido && M.pedido.id === 'abuela') decir(M.cliente, '¡Esa plancha es la de mi abuela! Cúbranla bien. Y todo lo demás también.');
   } else if (i === 2) {
     irVista(VISTAS.frente);
@@ -2314,7 +2340,7 @@ function escenaPrep(i) {
     ci.forEach(c => marca(c.pos, '', () => { c.hecho = true; gastar(EQ().pistola ? .3 : .6); cinta(); actualizar(); }, true));
     M.arrastrar = true;
     panelPrep(L('Envolver la campana', 'Wrap the hood'), L('Pasa el dedo por los puntos del borde para pegar el plástico con cinta: forma un embudo. Luego cuelga la bolsa donde cae el agua.', 'Swipe across the dots on the edge to tape the plastic: it makes a funnel. Then hang the bag where the water drips.'), estado(), L('Empezar sin terminar', 'Start anyway'));
-    actualizar();
+    actualizar(); ayudaPrep();
     decir(M.comp, uno(['Más cinta. Siempre más cinta.', 'El plástico es como un paraguas al revés. No preguntes.', 'Si queda un hueco, el agua lo encuentra. El agua siempre lo encuentra.']));
   } else {
     M.arrastrar = false; limpiarMarcas(); prepEl.hidden = true;
@@ -2410,14 +2436,14 @@ function revisar(z) {
     ayuda(L(`${z.crew.n} dejó grasa en ${z.n.toLowerCase()}. Termínala tú.`, `${z.crew.n} left grease on ${z.n.toLowerCase()}. Finish it yourself.`), 5); tono(300, .2, .08, 'triangle', 200);
   }
 }
-// Arrastrar el dedo por los puntos de cinta los va pegando.
+// Arrastrar el dedo por las marcas las va haciendo: puntos de cinta, pilotos, cubiertas, bolsas.
 let dedoAbajo = false;
 addEventListener('pointerdown', () => { dedoAbajo = true; }, true);
 addEventListener('pointerup', () => { dedoAbajo = false; });
 addEventListener('pointercancel', () => { dedoAbajo = false; });
 addEventListener('pointermove', e => {
   if (!dedoAbajo || !M || !M.arrastrar || arrastreVista) return;
-  for (const m of MARCAS) if (!m.hecho && m.sx !== undefined && m.el.classList.contains('punto') && Math.hypot(m.sx - e.clientX, m.sy - e.clientY) < 34) tocarMarca(m);
+  for (const m of MARCAS) if (!m.hecho && !m.sinArrastre && m.sx !== undefined && m.el.style.display !== 'none' && Math.hypot(m.sx - e.clientX, m.sy - e.clientY) < (m.el.classList.contains('punto') ? 34 : 42)) tocarMarca(m);
 });
 
 function arrancarTurno() {
@@ -2781,7 +2807,7 @@ function dano(t, dinero, rep) {
   if (dinero > 0 && hab('madrugada') && !M.perdonado) { M.perdonado = true; t += L(' (Maestro de la madrugada: no cuesta)', ' (Night master: free)'); dinero = 0; }
   M.danos.push({ t, dinero }); M.repExtra -= rep || 0;
 }
-function sumarTiempo(min) { M.t += min / 480 * M.dur; }
+function sumarTiempo(min) { if (!M.ayudando) M.t += min / 480 * M.dur; }
 function ensuciar(zona, cant) {
   for (const sf of zona.sfs) {
     const cx = rnd(0, sf.nx), cy = rnd(0, sf.ny), rr = sf.nx * .3;
@@ -3501,15 +3527,15 @@ function empezarPelado() {
   };
   faldas.forEach(f => marca(f.mesh.position.clone(), '', () => { f.pelada = true; f.mesh.userData.vuela = 1; rasgar(); sumarTiempo(.4); act(); }, true));
   cubs.forEach(a => marca(a.pos, L('Quitar', 'Remove'), () => { a.quitada = true; a.cubierta.userData.sube = .6; rafaga(.25, 900, .08, 'lowpass'); sumarTiempo(EQ().cubiertas ? .5 : 1); act(); }));
-  bolsas.forEach(b => marca(b.pos, L('Bajar la bolsa', 'Take down the bag'), () => {
+  bolsas.forEach(b => (marca(b.pos, L('Bajar la bolsa', 'Take down the bag'), () => {
     b.bajada = true; b.mesh.visible = false; sumarTiempo(1.5);
     if (azar(EQ().bolsa ? .05 : .2)) { emitir(b.pos, 30, 'agua', null, 1.5); tono(200, .4, .1, 'sawtooth', 80); dano(L('Bolsa derramada al bajarla', 'Bag spilled while taking it down'), 20, 1); decir(M.comp, '¡Chof! Bueno, el suelo también necesitaba agua.'); }
     else tono(500, .1, .08, 'triangle');
     act();
-  }));
+  })).sinArrastre = true);   // bajar la bolsa tiene su riesgo: se hace a propósito, no de pasada
   M.arrastrar = true;
   panelPrep(L('Pelar', 'Peel'), L('Arrastra el dedo por los puntos para arrancar el plástico, quita las cubiertas y baja la bolsa con cuidado.', 'Swipe across the dots to tear off the plastic, remove the covers and take the bag down carefully.'), estado(), L('Seguir sin terminar', 'Skip the rest'), empezarMigdaleo);
-  act();
+  act(); ayudaPrep();
   decir(M.comp, uno(['Lo más satisfactorio de la noche: pelar el plástico.', 'Pela despacito, como un plátano de acero.', 'Si el plástico sale entero, pide un deseo.']));
 }
 
