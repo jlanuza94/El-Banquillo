@@ -2496,6 +2496,10 @@ function raspar(sf, gx, gy, rc, cant, herr) {
     if (tp) sf.ultTipo = tp + (m > 1 ? 10 : 0);
     const q = Math.min(sf.d[i], cant * f * m * duro);
     sf.d[i] -= q; quit += q;
+    if (herr === 'hidro' && q > .002 && escurre(sf)) {   // el agua sucia baja por la pared y deja una película en lo de abajo
+      const j = clamp(y + escurre(sf) * (2 + (Math.random() * 10 | 0)), 0, sf.ny - 1) * sf.nx + x;
+      if (sf.d[j] < .22) { if (sf.d[j] === 0) M.escurrido = (M.escurrido || 0) + q; sf.d[j] = Math.min(.22, sf.d[j] + q * .15); }
+    }
     if (tp === 2 && herr === 'rasqueta' && q > 0) {   // el aceite se corre a la celda de al lado
       const j = clamp(y + (Math.random() < .5 ? -2 : 2), 0, sf.ny - 1) * sf.nx + clamp(x + (Math.random() < .5 ? -2 : 2), 0, sf.nx - 1);
       sf.d[j] = Math.min(1.3, sf.d[j] + q * .45); sf.tipo[j] = 2;
@@ -2504,6 +2508,12 @@ function raspar(sf, gx, gy, rc, cant, herr) {
   }
   sf.sucio = true;
   return quit;
+}
+// Hacia dónde escurre el agua en una superficie: -1 si «abajo» son las filas menores, 1 si son las mayores, 0 si no es pared.
+const _arriba = new T.Vector3();
+function escurre(sf) {
+  if (sf.abajo === undefined) { _arriba.set(0, 1, 0).transformDirection(sf.mesh.matrixWorld); sf.abajo = sf.mesh.geometry.type !== 'PlaneGeometry' ? 0 : _arriba.y > .6 ? -1 : _arriba.y < -.6 ? 1 : 0; }
+  return sf.abajo;
 }
 const radioRasqueta = () => [0, .1, .12, .14][EQ().rasqueta] * (EQ().mango ? 1.25 : 1);
 const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .1 * hab('brazo')) * (EQ().electrica ? 1.25 : 1);
@@ -3293,17 +3303,25 @@ function tickTurno(dt) {
   const congelado = M.pausa || M.pausaRueda || (M.ev && M.ev.bloquea);
   if (!congelado) {
     M.t += dt * (S.aj.comodo ? .5 : 1); M.enZona += dt;
-    // Hidrolavadora: mantener y apuntar.
+    // Hidrolavadora: mantener y barrer. Barrer a ritmo constante rinde más que quedarse quieto (o pasar volando).
     if (M.presionado && M.herr === 'hidro' && M.apuntado) {
       const a = M.apuntado;
-      const q = raspar(a.sf, a.gx, a.gy, .17 / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * (EQ().vapor ? 1.4 : 1) * dt, 'hidro');
+      // Velocidad del dedo (no del punto que corrige la ayuda de apuntar), medida cada 0,3 s en píxeles por segundo
+      // con el desplazamiento neto, para que el temblor natural del dedo se cancele.
+      const tr = M.trazo || { x: 0, y: 0 }, hv = M.hidroPrev || (M.hidroPrev = { x: tr.x, y: tr.y, t: 0, v: 200 });
+      if ((hv.t += dt) >= .3) { hv.v = Math.hypot(tr.x - hv.x, tr.y - hv.y) / hv.t; hv.x = tr.x; hv.y = tr.y; hv.t = 0; }
+      const v = hv.v * 412 / Math.min(innerWidth, innerHeight), barrido = v < 30 ? .55 : v > 2200 ? .7 : v >= 90 ? 1.25 : .9;
+      M.quieto = v < 30 ? (M.quieto || 0) + dt : 0;
+      if (M.quieto > 1.6 && !M.pistaBarrer) { M.pistaBarrer = true; ayuda(L('Con la hidro, barre despacio de lado a lado: quieto en un punto limpia la mitad.', 'With the washer, sweep slowly side to side: holding still on one spot cleans half as much.'), 5); }
+      const q = raspar(a.sf, a.gx, a.gy, .17 / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * (EQ().vapor ? 1.4 : 1) * barrido * dt, 'hidro');
       emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
       if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5 * (1 - .6 * hab('pulso')))) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda(L('¡Salpica! Echa espuma antes en la costra.', 'It splatters! Foam the crust first.')); }
       const al = M.eventos.find(x => x.tipo === 'alarma' && !M.hechos.has(x));
       if (q > 0 && al && z.id === 'campana' && azar(dt * .3)) lanzarEvento(al);
-    } else if (!M.presionado) chorro(false);
+      if (M.escurrido > .4 && !M.pistaEscurre) { M.pistaEscurre = true; ayuda(L('El agua sucia escurre y mancha lo de abajo: lava de arriba hacia abajo.', 'Dirty water runs down and stains what\'s below: wash from top to bottom.'), 5); }
+    } else if (!M.presionado) { chorro(false); M.hidroPrev = null; M.quieto = 0; }
     // Espuma: el tiempo corre para la grasa empapada.
     let espuma = false;
     for (const s of z.sfs) { let hay = false; for (let i = 0; i < s.soak.length; i++) if (s.soak[i] >= 0) { s.soak[i] += dt; hay = true; if (s.soak[i] > 30 || s.d[i] <= 0) s.soak[i] = -1; } if (hay) { s.sucio = true; espuma = true; } }
