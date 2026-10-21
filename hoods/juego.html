@@ -454,6 +454,7 @@ a.btn { display: inline-block; text-decoration: none; }
 .opciones.neg .btn small { display: block; font-weight: 400; font-size: 13px; opacity: .8; }
 .cita.historia b { color: #c6a0ff; }
 .por-que { display: grid; gap: 6px; }
+.aviso-flotante { position: fixed; left: 50%; top: max(12px, env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 50; max-width: min(92vw, 420px); background: var(--mal); color: #fff; border-radius: 10px; padding: 10px 14px; font-weight: 600; box-shadow: 0 6px 20px #0008; }
 .por-que .desglose { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 14px; }
 .por-que .desglose span:nth-child(even) { font-family: var(--f-mono); text-align: right; color: var(--tenue); }
 .por-que .desglose .ok { color: var(--ok) !important; } .por-que .desglose .mal { color: var(--mal) !important; }
@@ -1197,7 +1198,19 @@ function guardarFoto(f) {
   for (let n = Math.min(l.length, 12); n > 0; n--) { try { localStorage.setItem(KEY_FOTOS, JSON.stringify(l.slice(0, n))); return; } catch (e) { /* lleno */ } }
 }
 let guardada = false;   // hay una partida guardada que se puede continuar
-function guardar() { guardada = true; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
+// Guardar nunca falla en silencio: si no cabe, se sueltan las fotos del álbum (lo menos importante) y se reintenta; si aun así
+// no se puede, se avisa una vez para que el jugador lo sepa.
+let avisoGuardado = false;
+function guardar() {
+  guardada = true; const t = JSON.stringify(S);
+  try { localStorage.setItem(KEY, t); return; } catch (e) { /* lleno o bloqueado */ }
+  try { localStorage.removeItem(KEY_FOTOS); localStorage.setItem(KEY, t); avisar(L('La memoria del teléfono estaba llena: se borraron las fotos del álbum para guardar tu partida.', 'Phone storage was full: album photos were deleted to save your game.')); return; } catch (e) { /* sigue sin caber */ }
+  avisar(L('No se pudo guardar la partida: el teléfono no tiene espacio o bloquea el guardado. Libera espacio y vuelve a abrir el juego.', 'Couldn\'t save the game: the phone is out of space or blocks saving. Free some space and reopen the game.'));
+}
+function avisar(txt) {
+  if (avisoGuardado) return; avisoGuardado = true;
+  const d = document.createElement('div'); d.className = 'aviso-flotante'; d.textContent = txt; document.body.appendChild(d); setTimeout(() => d.remove(), 7000);
+}
 function cargar() { try { const t = localStorage.getItem(KEY); if (t) { const s = migrar(JSON.parse(t)); if (s) { S = s; return true; } } } catch (e) { /* nueva */ } return false; }
 const hab = k => (S.hab && S.hab[k]) || 0;
 const enRama = r => r.hab.reduce((a, h) => a + hab(h.id), 0);   // puntos gastados en una rama
@@ -5173,7 +5186,11 @@ function medirFps(ahora) {
   if (FPS.lentos >= 2 && !S.ahorroAuto) { S.aj.ahorro = true; S.ahorroAuto = true; calidad(); redimensionar(); guardar(); ayuda(L('Modo ahorro activado: el celular iba lento. Puedes quitarlo en Ajustes.', 'Battery saver on: the phone was running slow. You can turn it off in Settings.'), 6); }
 }
 let ult = performance.now(), faltaT = 0;
+let ultDibujo = 0;
 function bucle(ahora) {
+  // En los menús (camioneta, parte, tienda…) la cocina de fondo se dibuja 15 veces por segundo, no 60: ahorra batería y calor.
+  if (!P.hidden && !(M && (M.fase === 'turno' || M.fase === 'prep')) && ahora - ultDibujo < 66) { requestAnimationFrame(bucle); return; }
+  ultDibujo = ahora;
   const dt = Math.min(.05, (ahora - ult) / 1000); ult = ahora;
   U.tiempo.value = ahora / 1000;
   if (M && M.fase === 'turno') { tickTurno(dt); medirFps(ahora); }
