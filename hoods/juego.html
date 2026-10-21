@@ -521,7 +521,7 @@ a.btn { display: inline-block; text-decoration: none; }
   <div class="aqui" id="aqui" hidden><span></span></div>
   <div id="hud" hidden>
     <div class="hud-arriba">
-      <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="pausa" aria-label="Pausa / Pause">❚❚</button></div>
+      <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="centrar" aria-label="Recentrar la vista / Recenter view" hidden>⌖</button><button class="btn-ico" id="pausa" aria-label="Pausa / Pause">❚❚</button></div>
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
       <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
       <div class="pasos" id="pasos"></div>
@@ -2554,6 +2554,58 @@ function escurre(sf) {
 const radioRasqueta = () => [0, .1, .12, .14][EQ().rasqueta] * (EQ().mango ? 1.25 : 1);
 const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .1 * hab('brazo')) * (EQ().electrica ? 1.25 : 1) * ((M && M.bonoRasqueta) || 1);
 
+// ---- Turno a medias: si se cierra la app, el turno se guarda (grasa de cada superficie, hora, zona, preparación,
+// espuma, daños) y al volver se puede retomar donde iba. No se guardan los gigantes, los duelos ni la primera noche.
+const KEY_TURNO = 'hood-cleaners-turno';
+const empaca = a => { let t = ''; for (let i = 0; i < a.length; i++) t += String.fromCharCode(Math.round(clamp(a[i], 0, 1.3) / 1.3 * 255)); return btoa(t); };
+const desempaca = (b64, a) => { const t = atob(b64); for (let i = 0; i < Math.min(t.length, a.length); i++) a[i] = t.charCodeAt(i) / 255 * 1.3; };
+const turnoGuardable = () => M && M.fase === 'turno' && !M.orden.gigante && !M.duelo && !M.orden.tuto && !M.crews;
+function guardarTurno() {
+  if (!turnoGuardable()) return;
+  const pz = piezas;
+  const snap = { noche: S.noche, id: M.orden.id, orden: M.orden, t: M.t, dur: M.dur, etapa: M.etapa, zona: M.zona, prepMin: M.prepMin, botella: M.botella, propinaMod: M.propinaMod, repExtra: M.repExtra,
+    danos: M.danos, paciencia: M.paciencia, hidroRota: !!M.hidroRota, hechos: [...M.hechos].map(e => e.tipo), usoHidro: M.usoHidro, usoEspuma: M.usoEspuma, combos3: M.combos3, maxCombo: M.maxCombo, tFiltros: M.tFiltros,
+    piezas: { pil: pz.pilotos.map(p => p.off), luz: pz.luz.off, ap: pz.aparatos.map(a => [a.cubierto, !!a.quitada]), ci: pz.cintas.map(c => c.hecho), fa: pz.faldas.map(f => !!f.pelada), bo: pz.bolsas.map(b => [b.hecho, !!b.bajada]) },
+    grasa: Z.map(z => z.sfs.map(sf => [empaca(sf.d), empaca(sf.pol)])) };
+  try { localStorage.setItem(KEY_TURNO, JSON.stringify(snap)); } catch (e) { /* sin espacio: se pierde solo este turno */ }
+}
+function borrarTurno() { try { localStorage.removeItem(KEY_TURNO); } catch (e) { /* nada */ } }
+function turnoPendiente() {
+  try { const t = JSON.parse(localStorage.getItem(KEY_TURNO)); if (t && t.noche === S.noche && S.hoy && S.hoy.ordenes.some(o => o.id === t.id)) return t; } catch (e) { /* roto */ }
+  return null;
+}
+function reanudarTurno(snap) {
+  borrarTurno();
+  empezarTurno(snap.orden);
+  const pz = piezas, k = snap.piezas;
+  pz.pilotos.forEach((p, i) => { if (k.pil[i]) { p.off = true; p.mesh.visible = false; } });
+  if (k.luz) { pz.luz.off = true; pz.luz.palanca.rotation.z = 2.6; }
+  pz.aparatos.forEach((a, i) => { if (k.ap[i] && k.ap[i][0]) { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = 0; a.cubierta.position.y = .9 + (a.alto + .1) / 2; } });
+  pz.cintas.forEach((c, i) => { c.hecho = !!k.ci[i]; });
+  pz.faldas.forEach(f => { f.mesh.visible = pz.cintas[f.a].hecho && pz.cintas[f.b].hecho; });
+  pz.bolsas.forEach((b, i) => { if (k.bo[i] && k.bo[i][0]) { b.hecho = true; b.mesh.visible = true; } });
+  escenaPrep(3);   // termina la preparación tal como estaba: arranca el turno con esa protección
+  Object.assign(M, { t: snap.t, prepMin: snap.prepMin, botella: snap.botella, propinaMod: snap.propinaMod, repExtra: snap.repExtra, danos: snap.danos, paciencia: snap.paciencia, hidroRota: snap.hidroRota,
+    usoHidro: snap.usoHidro, usoEspuma: snap.usoEspuma, combos3: snap.combos3 || 0, maxCombo: snap.maxCombo || 0, tFiltros: snap.tFiltros });
+  for (const e of M.eventos) if (snap.hechos.includes(e.tipo)) M.hechos.add(e);
+  Z.forEach((z, i) => z.sfs.forEach((sf, j) => { const g = snap.grasa[i] && snap.grasa[i][j]; if (g) { desempaca(g[0], sf.d); desempaca(g[1], sf.pol); sf.soak.fill(-1); sf.sucio = true; pintarSf(sf); } }));
+  if (snap.zona !== M.zona && Z[snap.zona]) irZona(snap.zona);
+  if (snap.etapa === 'pelar' || snap.etapa === 'migdalear') {
+    pz.faldas.forEach((f, i) => { if (k.fa[i]) { f.pelada = true; f.mesh.visible = false; } });
+    pz.aparatos.forEach((a, i) => { if (k.ap[i] && k.ap[i][1]) { a.quitada = true; a.cubierta.visible = false; a.cubierto = false; } });
+    pz.bolsas.forEach((b, i) => { if (k.bo[i] && k.bo[i][1]) { b.bajada = true; b.mesh.visible = false; b.hecho = false; } });
+    if (snap.etapa === 'pelar') empezarPelado(); else empezarMigdaleo();
+  }
+  pintarHud(true); pintarHerrBtn();
+  ayuda(L('Turno retomado donde lo dejaste.', 'Shift resumed where you left off.'), 4);
+}
+// Al salir de la app a mitad del turno: pausa y foto del turno.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'hidden' || !M || M.fase !== 'turno') return;
+  guardarTurno();
+  if (!M.pausa && $('#hud') && !$('#hud').hidden) { M.pausa = true; pantallaAjustes(true); }
+});
+addEventListener('pagehide', () => guardarTurno());
 // ¿Atascado? Si llevas unos segundos limpiando una zona sin que baje, te dice qué usar según la grasa que queda
 // en esa zona y hace brillar el botón de esa herramienta. La espuma no cuenta: con ella toca esperar.
 function vigilarAtasco(dt, z) {
@@ -3557,6 +3609,7 @@ function tickTurno(dt) {
   animarGente(dt);
   if (M.ayudaT > 0 && (M.ayudaT -= dt) <= 0) $('#ayuda').textContent = '';
   vigilarAtasco(dt, z);
+  if ((M.fotoT = (M.fotoT ?? 10) - dt) <= 0) { M.fotoT = 10; guardarTurno(); }
   const pr = M.prioridad;
   if (pr && !pr.fin) {
     if (micras(pr.z) <= LIMITE) { pr.fin = true; M.propinaMod += .06; sDing(); decir(pr.quien, L(`¡${pr.z.n} lista a tiempo! Eso se nota en la propina.`, `${pr.z.n} done in time! That'll show in the tip.`)); }
@@ -3691,6 +3744,7 @@ function empezarMigdaleo() {
   decir(M.comp, uno(['Ahora a migdalear. Que se vea hasta el alma.', 'Migdalea bonito, que el dueño se quiere peinar ahí.', 'El toque final. Migdalea como si fuera tu camioneta.']));
 }
 $('#contra').addEventListener('click', () => { audio(); contraataque(); });
+$('#centrar').addEventListener('click', () => { camT.a.pan = 0; $('#centrar').hidden = true; tono(660, .05, .05, 'triangle'); });
 $('#pausa').addEventListener('click', () => { if (M && M.fase === 'turno') { M.pausa = true; pantallaAjustes(true); } });
 function pintarRadio() { const b = $('#radioBtn'); b.setAttribute('aria-pressed', !!S.aj.radio); b.textContent = S.aj.radio ? 'FM' : 'FM ✕'; }
 const toquesFM = [];
@@ -3712,6 +3766,7 @@ $('#radioBtn').addEventListener('click', () => {
 });
 
 function terminarTurno() {
+  borrarTurno();
   delete document.body.dataset.recom;
   M.finMin = clamp(M.t / M.dur, 0, 1) * 480; M.apagon = 0; U.mig.value = 0; U.hl.value = 0;
   M.fase = 'parte'; M.pausa = false; M.arrastrar = false; cerrarCarta(); cerrarRueda(); limpiarMarcas(); prepEl.hidden = true; quitarTuto(); M.tuto = 0;
@@ -4123,7 +4178,10 @@ function vNoche() {
   const o = H.ordenes[H.sel], bloqueada = o && (o.ayud > H.ayud.length || !o.firmado);
   const sig = !aprendiz && ETAPAS[S.etapa + 1];
   const dia = H.dia && DIAS.find(x => x.id === H.dia.id);
-  return `${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(TRAD(dia.t))}</h3><p>${esc(TRAD(dia.txt))}</p>
+  const pend = turnoPendiente(), op = pend && H.ordenes.find(x => x.id === pend.id);
+  const aviso = op ? `<div class="orden dia retomar"><span class="chip naranja">${L('Turno a medias', 'Unfinished shift')}</span><h3>${esc(op.nombre)} · ${L('se quedó a las', 'stopped at')} ${hora(clamp(pend.t / (pend.dur || TURNO_S), 0, 1) * 480)}</h3><p>${L('Se cerró el juego a mitad del trabajo. Puedes retomarlo donde iba.', 'The game closed mid-job. You can pick it up where you left off.')}</p>
+      <div class="opciones"><button class="btn prim" id="retomar">${L('Retomar el turno', 'Resume the shift')}</button><button class="btn" id="descartar">${L('Empezar de nuevo', 'Start over')}</button></div></div>` : '';
+  return `${aviso}${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(TRAD(dia.t))}</h3><p>${esc(TRAD(dia.txt))}</p>
       ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(TRAD(H.dia.res))}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(TRAD(op.t))}<small>${esc(TRAD(op.d))}</small></button>`).join('')}</div>`}</div>` : ''}
     ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
@@ -4382,7 +4440,10 @@ function enlazar() {
   });
   const fs = $('#findeSi'); if (fs) fs.onclick = () => { audio(); aceptarFinde(); sCaja(); guardar(); pantallaCamioneta(); };
   const fn = $('#findeNo'); if (fn) fn.onclick = () => { H.findeOferta = false; guardar(); pantallaCamioneta(); };
+  const ret = $('#retomar'); if (ret) ret.onclick = () => { audio(); const t = turnoPendiente(); if (t) reanudarTurno(t); };
+  const des = $('#descartar'); if (des) des.onclick = () => { borrarTurno(); pantallaCamioneta(); };
   const sal = $('#salir'); if (sal) sal.onclick = () => {
+    borrarTurno();
     audio();
     const o = H.ordenes[H.sel], c = H.comp === 'solo' ? SOLO : COMPANEROS[H.comp];
     const equipo = [...c.solo ? [] : [{ principal: true, n: c.n, color: c.color, fuerza: c.fuerza, sueldo: S.fase === 'aprendiz' ? 0 : c.sueldo }], ...S.cuadrilla.filter(x => H.ayud.includes(x.id)).map(x => ({ id: x.id, n: x.n, color: x.color, fuerza: x.fuerza, frase: x.frase, sueldo: x.prueba ? r10(x.sueldo * .8) : x.sueldo, cuidado: x.cuidado || 3, puntual: x.puntual || 3, esp: x.esp, tipo: x.tipo, rasgo: x.rasgo }))];
@@ -4469,7 +4530,7 @@ function pantallaAjustes(enTurno, desdeInicio) {
     if (k === 'sonido' || k === 'radio') { audio(); if (!S.aj.sonido) for (const id in A.loops) loop(id, false); if (M && !S.aj.radio) M.radioApagada = true; radioEncender(!!M && S.aj.radio); }
   });
   $('#volver').onclick = () => { if (enTurno) { P.hidden = true; M.pausa = false; } else if (desdeInicio) pantallaInicio(); else pantallaCamioneta(); };
-  const ab = $('#abandonar'); if (ab) ab.onclick = () => { P.hidden = true; terminarTurno(); };
+  const ab = $('#abandonar'); if (ab) ab.onclick = () => { P.hidden = true; borrarTurno(); terminarTurno(); };
   const mn = $('#menu'); if (mn) mn.onclick = pantallaInicio;
 }
 
@@ -5058,6 +5119,7 @@ function bucle(ahora) {
     const txt = !M ? '' : M.fase === 'prep' || M.etapa === 'pelar' ? L('falta', 'more') : M.etapa === 'migdalear' ? L('falta migdalear', 'polish left') : L('falta grasa', 'grease left');
     $('#faltaI').hidden = !izq; $('#faltaD').hidden = !der; $('#faltaI').textContent = txt + ' ›'; $('#faltaD').textContent = txt + ' ›';
     buscarAqui();
+    const bc = $('#centrar'); if (bc) bc.hidden = !(M && M.fase === 'turno' && Math.abs(camT.a.pan || 0) > .05);
   }
   ponerAqui(dt);
   moverCamara(dt);
