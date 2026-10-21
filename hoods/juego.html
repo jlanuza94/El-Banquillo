@@ -360,6 +360,10 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .orden.dia { border-color: var(--grasa); }
 .orden.dia { padding: 10px 12px; gap: 5px; box-sizing: border-box; }
 /* Árbol de habilidades */
+.cursos { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 6px; }
+.cursos .btn { text-align: left; text-transform: none; letter-spacing: 0; display: grid; gap: 2px; padding: 6px 8px; }
+.cursos .btn b { font-family: var(--f-cond); font-size: 14px; } .cursos .btn small { font-family: var(--f-cuerpo); font-weight: 400; font-size: 11.5px; opacity: .85; }
+.cursos .nota { grid-column: 1 / -1; }
 .van-mej { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: -2px 0 6px 50px; }
 .van-mej > div { background: var(--panel); border: 1px solid var(--linea); border-radius: 6px; padding: 5px 7px; display: grid; gap: 3px; }
 .van-mej b { font-family: var(--f-cond); font-size: 13px; } .van-mej b { color: var(--acero); } .van-mej small { font-size: 11px; color: var(--tenue); line-height: 1.25; }
@@ -965,6 +969,26 @@ const maxFlota = () => S.fase === 'empresa' && S.etapa >= 1 ? 9 : 0;   // desde 
 // Equipo de herramientas de cada camioneta extra: mejora cuánto y qué tan bien limpian sus equipos.
 const KITS = [{ n: 'Básico', d: 'Rasquetas viejas y una cubeta.' }, { n: 'Completo', d: 'Rasquetas buenas, espuma y escaleras.', p: 350 }, { n: 'Pro', d: 'Hidrolavadora y migdaleadora propias.', p: 800 }];
 const kit = k => (S.kits || [])[k] || 0;
+// La sede de la empresa: 5 estaciones con 3 niveles. Cada nivel se nota en el trabajo.
+const SEDE = {
+  almacen: { ico: '📦', n: ['Almacén', 'Storeroom'], d: ['La espuma rinde un 10 % más y los materiales salen un 10 % más baratos, por nivel.', 'Foam lasts 10% longer and supplies cost 10% less, per level.'] },
+  mantenimiento: { ico: '🔧', n: ['Banco de mantenimiento', 'Maintenance bench'], d: ['Menos averías: la manguera revienta y el robot se atora un 30 % menos por nivel.', 'Fewer breakdowns: the hose bursts and the robot gets stuck 30% less per level.'] },
+  formacion: { ico: '🎓', n: ['Sala de formación', 'Training room'], d: ['Nivel 1: cursos básicos para tu gente. Nivel 2: cursos avanzados. Nivel 3: cursos un 30 % más baratos.', 'Level 1: basic courses for your people. Level 2: advanced courses. Level 3: courses 30% cheaper.'] },
+  planificacion: { ico: '🗺️', n: ['Sala de planificación', 'Planning room'], d: ['Trabajos gigantes: propone el reparto de zonas y tus equipos rinden un 8 % más por nivel.', 'Giant jobs: suggests how to split the zones and your teams work 8% better per level.'] },
+  oficina: { ico: '🗂️', n: ['Oficina', 'Office'], d: ['Nivel 1: un candidato más. Nivel 2: un trabajo más cada noche. Nivel 3: al negociar aceptan un 10 % más.', 'Level 1: one more candidate. Level 2: one more job each night. Level 3: clients accept 10% more when negotiating.'] },
+};
+const PRECIO_SEDE = [2000, 5000, 9000];
+const sede = id => (S.sede || {})[id] || 0;
+// Cursos para los ayudantes: 2 por persona. Mejoran sus medidas sin borrar su carácter (el lío sigue siendo lío).
+const CURSOS = {
+  seguridad: { n: ['Seguridad', 'Safety'], d: ['+1 de cuidado: rompe menos cosas.', '+1 care: breaks fewer things.'] },
+  puntual: { n: ['Puntualidad', 'Punctuality'], d: ['+1 de puntualidad: falta menos.', '+1 punctuality: misses fewer shifts.'] },
+  acabado: { n: ['Acabado fino', 'Fine finish'], d: ['Su equipo saca mejor calidad (+2 % de aprobar).', 'Their team gets better quality (+2% to pass).'] },
+  fuerza: { n: ['Herramientas industriales', 'Industrial tools'], d: ['+10 % de fuerza.', '+10% strength.'] },
+  coordina: { n: ['Coordinación', 'Coordination'], d: ['Organiza a su equipo: +3 % de aprobar y más calidad en gigantes.', 'Organizes their team: +3% to pass and better quality on giant jobs.'] },
+};
+const precioCurso = c => Math.round(((c.cursos || []).length ? 1500 : 600) * (sede('formacion') >= 3 ? .7 : 1));
+const conCurso = (gente, k) => gente.filter(g => g && g.cursos && g.cursos.includes(k)).length;
 // Mejoras de cada camioneta extra, además del kit: iluminación (menos accidentes) y organización (mejor calidad).
 const VAN_MEJ = { luz: { n: ['Iluminación', 'Lighting'], d: ['Ese equipo tiene menos accidentes (−35 % / −70 %).', 'That team has fewer accidents (−35% / −70%).'], p: [400, 900] }, orden: { n: ['Organización', 'Organization'], d: ['Ese equipo trabaja mejor: +4 % / +8 % de aprobar.', 'That team works better: +4% / +8% to pass.'], p: [500, 1100] } };
 const vanMej = (k, id) => ((S.vanMej || [])[k] || {})[id] || 0;
@@ -2332,7 +2356,7 @@ function empezarTurno(orden) {
     if (azar(.2)) extra.push({ tipo: 'apagon', zona: 1, en: rnd(14, 26) });
     if (azar(.2)) extra.push({ tipo: 'coche', zona: 0, en: rnd(8, 18) });
     // Sorpresas que cambian cómo limpias
-    if (EQ().hidro && azar(.25)) extra.push({ tipo: 'hidroRota', zona: -1, en: M.dur * rnd(.2, .5) });
+    if (EQ().hidro && azar(.25 * (1 - .3 * sede('mantenimiento')))) extra.push({ tipo: 'hidroRota', zona: -1, en: M.dur * rnd(.2, .5) });
     if (azar(.3)) extra.push({ tipo: 'costra', zona: -1, en: M.dur * rnd(.15, .45) });
     if (Z.length >= 3 && azar(.25)) extra.push({ tipo: 'bloqueo', zona: -1, en: M.dur * rnd(.1, .35) });
     if (azar(.25)) extra.push({ tipo: 'prioridad', zona: -1, en: M.dur * rnd(.08, .25) });
@@ -2429,13 +2453,13 @@ function escenaReparto() {
   const crews = armarCuadrillas(), yo = Z.indexOf(zCampana());
   // Por defecto: tú la primera campana; el resto, por turnos entre tus equipos.
   let r = 0; const reparto = Z.map((z, i) => i === yo ? -1 : (r++) % crews.length);
-  if (S.angelica || M.orden.leccion === 4) {   // Angélica propone: las zonas más grandes, para los equipos más fuertes. Tú decides.
+  if (S.angelica || M.orden.leccion === 4 || sede('planificacion')) {   // Angélica (o la sala de planificación) propone: las zonas más grandes, para los equipos más fuertes. Tú decides.
     const orden = Z.map((z, i) => i).filter(i => i !== yo).sort((a, b) => Z[b].inicial - Z[a].inicial), carga = crews.map(() => 0);
     for (const i of orden) { const k = carga.map((c, k) => [c / crews[k].gente.reduce((a, g) => a + g.fuerza, 0), k]).sort((a, b) => a[0] - b[0])[0][1]; reparto[i] = k; carga[k] += Z[i].inicial; }
   }
   const pintar = () => {
     prepEl.innerHTML = `<div class="carta reparto"><div class="pasos">${pasosHTML(0)}</div><div class="fila"><h3>${L('Reparte el trabajo', 'Assign the work')}</h3><span class="reloj">${hora(M.prepMin)}</span></div>
-      <p class="txt">${L('El reloj no corre mientras repartes.', 'The clock stops while you assign.')} ${M.orden.leccion === 4 ? `<b>Angélica:</b> «${esc(planAngelica())}» ` : ''}${S.angelica ? L('Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ', 'Angélica suggests this plan (big zones for the strong teams), but you decide. ') : ''}${L('Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.', 'Each team cleans only its zones and tells you when it is done. Then you check them: if grease is left, you finish it and it shows in their review.')}</p>
+      <p class="txt">${L('El reloj no corre mientras repartes.', 'The clock stops while you assign.')} ${M.orden.leccion === 4 ? `<b>Angélica:</b> «${esc(planAngelica())}» ` : ''}${S.angelica ? L('Angélica propone este reparto (las zonas grandes para los equipos fuertes), pero tú decides. ', 'Angélica suggests this plan (big zones for the strong teams), but you decide. ') : ''}${!S.angelica && sede('planificacion') ? L('La sala de planificación propone este reparto; tú decides. ', 'Your planning room suggests this plan; you decide. ') : ''}${L('Cada equipo limpia solo sus zonas y te avisa al terminar. Luego tú las revisas: si quedó grasa, la terminas tú y se nota en su evaluación.', 'Each team cleans only its zones and tells you when it is done. Then you check them: if grease is left, you finish it and it shows in their review.')}</p>
       <div class="filas-reparto">${Z.map((z, i) => `<label><span>${esc(z.n)}</span><select data-rz="${i}"><option value="-1" ${reparto[i] === -1 ? 'selected' : ''}>${L('Yo', 'Me')}</option>${crews.map((c, k) => `<option value="${k}" ${reparto[i] === k ? 'selected' : ''}>${esc(c.n)} (${c.gente.length})</option>`).join('')}</select></label>`).join('')}</div>
       <div class="pie"><p class="nota">${crews.map(c => `${c.n}: ${c.gente.map(g => g.n).join(', ')}`).join(' · ')}</p><button class="btn prim" id="prepSig">${L('Empezar a limpiar', 'Start cleaning')}</button></div></div>`;
     prepEl.hidden = false;
@@ -2445,7 +2469,7 @@ function escenaReparto() {
       M.crews = crews.map((c, k) => {
         const cuid = c.gente.reduce((a, g) => a + (g.cuidado || 3), 0) / c.gente.length, con = c.gente.filter(g => g.animo), an = con.length ? con.reduce((a, g) => a + g.animo, 0) / con.length : 3;
         return { ...c, zonas: Z.map((z, i) => reparto[i] === k ? i : -1).filter(i => i >= 0), zona: null, t: rnd(.2, .6), fallos: 0, ok: 0,
-          cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + .015 * (c.k ? vanMej(c.k - 2, 'orden') : 0) + .03 * hab('capacita') + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
+          cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + .01 * sede('planificacion') + .012 * conCurso(c.gente, 'coordina') + .006 * conCurso(c.gente, 'acabado') + .015 * (c.k ? vanMej(c.k - 2, 'orden') : 0) + .03 * hab('capacita') + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
       });
       for (const c of M.crews) for (const i of c.zonas) Z[i].crew = c;
       prepEl.hidden = true; arrancarTurno();
@@ -2468,7 +2492,7 @@ function tickCuadrillas(dt) {
     if ((c.t -= dt) > 0) continue;
     c.t = .5;
     // Cada medio segundo, varias pasadas según su fuerza y su equipo: una cuadrilla de 3 deja una zona en un minuto y medio.
-    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit) * activos * (1 + .4 * c.gente.filter(g => g.esp === z.id).length / c.gente.length)));
+    const z = Z[c.zona], pasadas = Math.max(1, Math.round(c.fuerza * 1.6 * (1 + .25 * c.kit) * (1 + .08 * sede('planificacion')) * activos * (1 + .4 * c.gente.filter(g => g.esp === z.id).length / c.gente.length)));
     for (let p = 0; p < pasadas; p++) {
       const sf = uno(z.sfs); let mejor = -1, md = 0;
       for (let k = 0; k < 12; k++) { const i = Math.floor(Math.random() * sf.d.length); if (sf.d[i] > md) { md = sf.d[i]; mejor = i; } }
@@ -2726,7 +2750,7 @@ function aplicarTramo(a, b) {
     if (M.botella <= 0) { ayuda(L('Botella de espuma vacía. Te queda la rasqueta.', 'Foam bottle empty. You still have the scraper.')); return 0; }
     if (!M.avisoEspuma) { M.avisoEspuma = true; ayuda(L('La espuma no limpia: ablanda la grasa. Espera 2 segundos y pásale la rasqueta.', 'Foam doesn\'t clean: it softens the grease. Wait 2 seconds and go over it with the scraper.'), 6); decir(M.comp, L('Ojo: la espuma no quita nada, solo ablanda. Luego toca la rasqueta.', 'Careful: foam doesn\'t remove anything, it just softens. Then use the scraper.')); }
     else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda(L('Esto ya está blando: cambia a la rasqueta y raspa.', 'This is soft now: switch to the scraper and scrape.'), 4); }
-    rc = .15 / sf.celda * (EQ().canon ? 1.8 : 1); cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .25 * hab('espuma')) / (EQ().xl ? 1.5 : 1) * (EQ().canon ? .7 : 1));
+    rc = .15 / sf.celda * (EQ().canon ? 1.8 : 1); cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .25 * hab('espuma') + .1 * sede('almacen')) / (EQ().xl ? 1.5 : 1) * (EQ().canon ? .7 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = EQ().orbital ? .5 : .28; }
   else { const fino = modo('rasqueta') === 'fino'; rc = radioRasqueta() * (fino ? .55 : 1) / sf.celda; cant = fuerzaRasqueta() * ef * multCombo * (fino ? 1.45 : 1); }
   const pasos = Math.ceil(dist / .4);
@@ -3335,7 +3359,7 @@ function mandarRobot() {
   const r = piezas.robot, d = z.duct;
   r.visible = true; r.position.set(d.dx, d.piso + (z.redondo ? .03 : 0), d.z0 + .1);
   // Sin orugas, a veces se atora en una costra a medio camino y hay que rescatarlo.
-  M.robot = { z, t: 0, dur: (EQ().robot === 2 ? 14 : 28) * Math.abs(d.z0 - d.z1) / 2, atasco: !EQ().orugas && azar(EQ().robot === 2 ? .25 : .4) ? rnd(.25, .7) : null };
+  M.robot = { z, t: 0, dur: (EQ().robot === 2 ? 14 : 28) * Math.abs(d.z0 - d.z1) / 2, atasco: !EQ().orugas && azar((EQ().robot === 2 ? .25 : .4) * (1 - .3 * sede('mantenimiento'))) ? rnd(.25, .7) : null };
   loop('robot', true); tono(660, .1, .08, 'square'); tono(990, .12, .08, 'square', null, .12);
   decir(QUIEN_ROBOT, uno(robotDice('entra')));
   pintarHud(false);
@@ -3913,7 +3937,7 @@ function generarOrdenes() {
   const fijos = out.length, flota = S.eq.flota || 0, n = clamp(1 + Math.floor(S.rep / 15), 1, 4 + flota);   // con poca reputación casi nadie llama: hay que salir a buscar clientes
   const permitidas = cocinasHasta(S.etapa);
   let intentos = 0;
-  while (out.length < fijos + n + hab('tarjeta') && intentos++ < 50) {
+  while (out.length < fijos + n + hab('tarjeta') + (sede('oficina') >= 2 ? 1 : 0) && intentos++ < 50) {
     const k = uno(permitidas);
     if (out.filter(o => o.cocina === k && !o.clienteId).length > flota / 3) continue;
     out.push(genOrden(k));
@@ -3985,7 +4009,7 @@ function prepararNoche() {
     }
     return true;
   });
-  if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos(3 + (S.eq.flota || 0));
+  if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos(3 + (S.eq.flota || 0) + (sede('oficina') >= 1 ? 1 : 0));
   // Rescate: si te quedaste sin dinero, Don Rigo te presta para la gasolina y los sueldos; se le devuelve solo
   // con una cuarta parte de lo que ganes cada noche, sin intereses.
   if (S.fase === 'empresa' && S.dinero < 150) {
@@ -4235,7 +4259,7 @@ function tarjetaOrden(o, i) {
 // Materiales del trabajo: el desengrasante que gastaste (la botella XL trae más) y el plástico y la cinta que pusiste.
 function materiales() {
   const usada = Math.max(0, 1 - M.botella) * (EQ().xl ? 1.5 : 1) * (1 + (M.orden.campanas - 1) * .5);
-  return r10((10 + usada * 45 + M.prep.envuelto * 20 * M.orden.campanas + piezas.aparatos.filter(a => a.cubierto).length * 3) * (EQ().planta ? .6 : 1));
+  return r10((10 + usada * 45 + M.prep.envuelto * 20 * M.orden.campanas + piezas.aparatos.filter(a => a.cubierto).length * 3) * (EQ().planta ? .6 : 1) * (1 - .1 * sede('almacen')));
 }
 // Lo que te queda más o menos de un trabajo bien hecho: pago, propina típica (10 %), sueldos de quien va contigo y gasolina.
 function estimadoOrden(o) {
@@ -4326,7 +4350,7 @@ function pantallaNegociar(i, msg) {
     if (k === 'ok') { o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
     if (k === 'contra') { o.pago = o.contra; o.contra = null; o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
     if (k === 'gar') { o.pago = r10(o.pago * gar); o.garantia = true; o.negociado = o.firmado = true; sCaja(); guardar(); return pantallaCamioneta(); }
-    const sube = k === '15' ? 1.15 : 1.3, p = (k === '15' ? C.p15 : C.p30) - intento + .1 * hab('regateo') + (hab('negociador') >= 2 ? .1 : 0);
+    const sube = k === '15' ? 1.15 : 1.3, p = (k === '15' ? C.p15 : C.p30) - intento + .1 * hab('regateo') + (hab('negociador') >= 2 ? .1 : 0) + (sede('oficina') >= 3 ? .1 : 0);
     o.intentos = (o.intentos || 0) + 1;
     if (azar(p)) { o.pago = r10(o.pago * sube); o.contra = null; tono(880, .12, .08, 'triangle'); guardar(); return pantallaNegociar(i, uno(['Está bien, está bien. Pero que brille.', 'Ándale pues. Me caíste bien.', 'Trato. Pero si veo una mancha, te llamo a las tres de la mañana.'])); }
     o.pac--; tono(300, .2, .08, 'triangle', 200);
@@ -4405,7 +4429,7 @@ function resolverB(b) {
   const o = b.orden, gente = [...(b.comp ? [{ ...COMPANEROS[b.comp], id: null }] : []), ...b.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
   const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * (o.ayud > b.ayud.length ? 1.5 : 1);
   const ayudG = gente.filter(g => g.animo), animo = ayudG.length ? ayudG.reduce((a, g) => a + g.animo, 0) / ayudG.length : 3;
-  let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + vanMej((b.k || 2) - 2, 'orden') * .04 + (animo - 3) * .05 + (S.angelica ? .05 : 0) + .05 * hab('capacita');
+  let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + vanMej((b.k || 2) - 2, 'orden') * .04 + .02 * conCurso(gente, 'acabado') + .03 * conCurso(gente, 'coordina') + (animo - 3) * .05 + (S.angelica ? .05 : 0) + .05 * hab('capacita');
   const cosas = []; let dano = 0;
   const kv = (b.k || 2) - 2, torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08 * (1 - .35 * vanMej(kv, 'luz'))));
   if (torpe) { dano += uno([20, 40]); cosas.push(`${torpe.n} tiró algo que no debía.`); }
@@ -4458,8 +4482,8 @@ function vCuadrilla() {
   const angelica = S.angelica ? `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · ${L('coordinadora', 'coordinator')}</b><span>${L('Organiza los equipos de cada noche (botón en «Noche») y con ella trabajan mejor.', 'She organizes the teams every night (button in "Night") and they work better with her.')} ${dinero(ANGELICA.sueldo)} ${L('por noche', 'per night')}.</span></div><span class="chip ok">${L('En tu equipo', 'On your team')}</span></div>`
     : `<div class="persona">${cara(ANGELICA.color, 'A')}<div><b>Angélica · ${L('coordinadora', 'coordinator')}</b><span>${flota >= ANGELICA.minVans ? L(`Organiza los equipos de cada noche y con ella trabajan mejor. Pide ${dinero(ANGELICA.adelanto)} de adelanto y ${dinero(ANGELICA.sueldo)} por noche.`, `She organizes the teams every night and they work better with her. Asks for ${dinero(ANGELICA.adelanto)} up front and ${dinero(ANGELICA.sueldo)} per night.`) : L(`Se une cuando tengas 4 camionetas (tienes ${flota + 1}). Dice que con menos no vale la pena organizarse.`, `She joins when you have 4 vans (you have ${flota + 1}). She says with fewer it isn't worth organizing.`)}</span></div>
       ${flota >= ANGELICA.minVans ? `<button class="btn prim peq" id="ficharAngelica" ${S.dinero < ANGELICA.adelanto ? 'disabled' : ''}>${L('Contratar', 'Hire')}</button>` : `<span class="chip">${L('4 camionetas', '4 vans')}</span>`}</div>`;
-  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? L('Pasó la prueba', 'Passed the trial') : L(`A prueba · ${c.noches} de 3 noches`, `On trial · ${c.noches} of 3 nights`)}</span>` : ''}<span>${esc(TRAD(c.rasgo))} ${dinero(c.sueldo)} ${L('por noche', 'per night')}${c.prueba ? L(' (a prueba cobra el 80 %)', ' (80% pay while on trial)') : ''} · ${c.noches} ${L('noches', 'nights')}${c.fuerza > c.base + .01 ? ` · ${L('con experiencia', 'experience')}: +${Math.round((c.fuerza - c.base) * 100)} ${L('de fuerza', 'strength')}` : ''}</span>${medidas(c)}${chipsPerfil(c)}</div>
-    <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div></div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
+  const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? L('Pasó la prueba', 'Passed the trial') : L(`A prueba · ${c.noches} de 3 noches`, `On trial · ${c.noches} of 3 nights`)}</span>` : ''}<span>${esc(TRAD(c.rasgo))} ${dinero(c.sueldo)} ${L('por noche', 'per night')}${c.prueba ? L(' (a prueba cobra el 80 %)', ' (80% pay while on trial)') : ''} · ${c.noches} ${L('noches', 'nights')}${c.fuerza > c.base + .01 ? ` · ${L('con experiencia', 'experience')}: +${Math.round((c.fuerza - c.base) * 100)} ${L('de fuerza', 'strength')}` : ''}</span>${medidas(c)}${chipsPerfil(c)}${(c.cursos || []).length ? `<span class="chips-perfil">${c.cursos.map(k => `<span class="chip ok">🎓 ${L(...CURSOS[k].n)}</span>`).join('')}</span>` : ''}</div>
+    <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}${!c.prueba && sede('formacion') > (c.cursos || []).length ? `<button class="btn peq" data-formar="${c.id}">🎓 ${L('Formar', 'Train')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div>${cursoAbierto === c.id ? `<div class="cursos">${Object.entries(CURSOS).filter(([k]) => !(c.cursos || []).includes(k)).map(([k, cu]) => `<button class="btn peq" data-curso="${c.id}|${k}" ${S.dinero < precioCurso(c) ? 'disabled' : ''}><b>${L(...cu.n)}</b><small>${L(...cu.d)}</small></button>`).join('')}<small class="nota">${L(`Cada curso cuesta ${dinero(precioCurso(c))}. Máximo 2 por persona.`, `Each course costs ${dinero(precioCurso(c))}. Up to 2 per person.`)}</small></div>` : ''}</div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(TRAD(c.rasgo))} ${L('Pide', 'Asks for')} ${dinero(c.sueldo)} ${L('por noche', 'per night')}.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">${L('Bueno en', 'Good at')} ${L(ESPECIAL[c.esp], EN.esp[c.esp])}</span><span class="chip">${L('Carácter: ¿? (entrevístalo)', 'Personality: ? (interview them)')}</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.resp ? c.resp.map(TRAD).join(' ') : c.respuesta)}»</span>` : ''}</div>
     <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">${L('Entrevistar', 'Interview')}</button>`}<button class="btn prim peq" data-contratar="${c.id}">${L('Contratar', 'Hire')}</button></div></div>`).join('') || `<p class="nota">${L('Nadie por ahora. Vuelve en un par de noches.', 'Nobody right now. Check back in a couple of nights.')}</p>`;
   return `${companeros}<h2 class="sec">${L('Coordinación', 'Coordination')}</h2>${angelica}<h2 class="sec">${L(`Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta`, `Helpers · ${plazas} ${plazas === 1 ? 'fits' : 'fit'} in the van`)}</h2>${mios}${S.etapa < 1 ? `<p class="pista">${L('En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.', 'Only one helper fits in the old van. With your own workshop you can buy bigger vans and more vans, and then you can fill whole teams.')}</p>` : ''}
@@ -4469,6 +4493,13 @@ function vCuadrilla() {
     <p class="nota">${L(`El anuncio trae candidatos nuevos ya. Tienes ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'ayudante' : 'ayudantes'}${hayB() ? ` y ${(S.eq.flota || 0) + 1} camionetas: para llenarlas todas necesitas unos ${((S.eq.flota || 0) + 1) * 3}` : ''}.`, `The ad brings new candidates right away. You have ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'helper' : 'helpers'}${hayB() ? ` and ${(S.eq.flota || 0) + 1} vans: to fill them all you need about ${((S.eq.flota || 0) + 1) * 3}` : ''}.`)}</p>`;
 }
 
+function vSede() {
+  if (S.fase !== 'empresa' || S.etapa < 1) return S.fase === 'empresa' ? `<p class="nota">${L('La sede (almacén, mantenimiento, formación, planificación y oficina) se abre con el taller propio.', 'The headquarters (storeroom, maintenance, training, planning and office) opens with your own workshop.')}</p>` : '';
+  const medallas = Object.keys(S.medallas || {}).length, total = Object.values(S.sede || {}).reduce((a, n) => a + n, 0);
+  return `<h2 class="sec">${L('Tu sede', 'Your headquarters')} · ${total}/15</h2>
+    <p class="nota">${L(`Vitrina: ${medallas ? '🏅'.repeat(Math.min(medallas, 12)) + (medallas > 12 ? ` +${medallas - 12}` : '') : 'vacía (gana medallas para llenarla)'}`, `Trophy case: ${medallas ? '🏅'.repeat(Math.min(medallas, 12)) + (medallas > 12 ? ` +${medallas - 12}` : '') : 'empty (win medals to fill it)'}`)}</p>
+    ${Object.entries(SEDE).map(([id, e]) => { const nv = sede(id), p = PRECIO_SEDE[nv]; return `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${e.ico}</div><div><b>${L(...e.n)} <span class="rangos">${'●'.repeat(nv)}${'○'.repeat(3 - nv)}</span></b><span>${L(...e.d)}</span></div>${p ? `<button class="btn prim peq" data-sede="${id}" ${S.dinero < p ? 'disabled' : ''}>${L('Nivel', 'Level')} ${nv + 1} · ${dinero(p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`; }).join('')}`;
+}
 function vTaller() {
   const bloqueadas = S.fase === 'empresa' ? [[L('Cañón de espuma y rasqueta eléctrica', 'Foam cannon and electric scraper'), 1], [L('Hidrolavadora de vapor y robot de ductos', 'Steam pressure washer and duct robot'), 2], [L('Turbo para el robot', 'Robot turbo'), 3]].filter(([, e]) => S.etapa < e) : [];
   if (S.fase === 'aprendiz') return `<div class="cita"><b>Don Rigo</b>${L('Las herramientas son mías y son las mejores: rasqueta de carburo, hidrolavadora, migdaleadora orbital, de todo. Disfrútalas mientras trabajes conmigo. Cuando tengas tu empresa, te compras las tuyas.', 'The tools are mine and they are the best: carbide scraper, pressure washer, orbital polisher, everything. Enjoy them while you work for me. When you have your own company, you buy your own.')}</div>`;
@@ -4482,6 +4513,7 @@ function vTaller() {
   return `<p class="nota">${L('Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas.', 'You pay for tools with your money and they are yours: you take them wherever you go.')} ${L('Tienes', 'You have')} ${dinero(S.dinero)}.</p>
     ${items.map(t => `<div class="orden"><h3>${esc(nTienda(t))}</h3><span class="nota">${esc(dTienda(t))}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${L('Comprar', 'Buy')}</button></div></div>`).join('') || `<p class="nota">${L('Ya tienes todo el equipo.', 'You already have all the equipment.')}</p>`}
     ${S.eq.camioneta === 1 && etapa() < 1 ? `<p class="nota">${L('Las camionetas más grandes, cuando tengas taller propio.', 'Bigger vans come with your own workshop.')}</p>` : ''}
+    ${vSede()}
     ${bloqueadas.length ? `<p class="nota">${L('Más adelante', 'Coming later')}: ${bloqueadas.map(([n, e]) => `${n} (${L('desde', 'from')} ${nEtapa(e)})`).join(' · ')}.</p>` : ''}${kits}
     ${S.fase === 'empresa' ? `<h2 class="sec">${L('Tunear la camioneta', 'Pimp your van')}</h2><div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}</div>
       ${[[L('Con efecto', 'With an effect'), TUNEO.filter(t => !ESTILO_SOLO.includes(t.id))], [L('Solo estilo (no cambia nada del trabajo)', 'Style only (doesn\'t change the work)'), TUNEO.filter(t => ESTILO_SOLO.includes(t.id))]].map(([tit, ts]) => `<p class="nota"><b>${tit}</b></p>` + ts.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(L(t.n, EN.tuneo[t.id][0]))}</b><span>${esc(L(t.d, EN.tuneo[t.id][1]))}</span></div>${tun(t.id) ? `<span class="chip ok">${L('Puesto', 'Installed')}</span>` : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')).join('')}` : ''}`;
@@ -4582,6 +4614,17 @@ function enlazar() {
   const fa = $('#ficharAngelica'); if (fa) fa.onclick = () => { S.dinero -= ANGELICA.adelanto; S.angelica = true; sCaja(); guardar(); pantallaCamioneta(); };
   const org = $('#organizar'); if (org) org.onclick = () => { H.angelica = organizar(); tono(880, .1, .08, 'triangle'); guardar(); pantallaCamioneta(); };
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
+  P.querySelectorAll('[data-sede]').forEach(b => b.onclick = () => { const id = b.dataset.sede, p = PRECIO_SEDE[sede(id)]; if (!p || S.dinero < p) return; S.sede = { ...(S.sede || {}), [id]: sede(id) + 1 }; S.dinero -= p; sCaja(); sDing(); guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-curso]').forEach(b => b.onclick = () => {
+    const [id, k] = b.dataset.curso.split('|'), c = S.cuadrilla.find(x => x.id === +id), p = c && precioCurso(c);
+    if (!c || S.dinero < p || (c.cursos || []).length >= 2 || (c.cursos || []).includes(k)) return;
+    S.dinero -= p; c.cursos = [...(c.cursos || []), k];
+    if (k === 'seguridad') c.cuidado = Math.min(c.tipo === 'lio' ? 3 : 5, c.cuidado + 1);   // el que da problemas mejora, pero sigue siendo él
+    if (k === 'puntual') c.puntual = Math.min(5, c.puntual + 1);
+    if (k === 'fuerza') { c.base = +(c.base * 1.1).toFixed(2); c.fuerza = +(c.fuerza * 1.1).toFixed(2); }
+    cursoAbierto = null; sCaja(); sDing(); guardar(); pantallaCamioneta();
+  });
+  P.querySelectorAll('[data-formar]').forEach(b => b.onclick = () => { cursoAbierto = cursoAbierto === +b.dataset.formar ? null : +b.dataset.formar; pantallaCamioneta(); });
   P.querySelectorAll('[data-vm]').forEach(b => b.onclick = () => { const [k, id] = b.dataset.vm.split('|'), nv = vanMej(+k, id), p = VAN_MEJ[id].p[nv]; if (!p || S.dinero < p) return; S.vanMej = S.vanMej || []; S.vanMej[+k] = { ...(S.vanMej[+k] || {}), [id]: nv + 1 }; S.dinero -= p; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-kit]').forEach(b => b.onclick = () => { const k = +b.dataset.kit; S.kits = S.kits || []; const sig = KITS[kit(k) + 1]; S.dinero -= sig.p; S.kits[k] = kit(k) + 1; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-fijo]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.fijo); c.prueba = false; sCaja(); guardar(); pantallaCamioneta(); });
@@ -4944,7 +4987,7 @@ function avisoNivel(n) {
 }
 
 // El árbol: una rama a la vez, de abajo (lo básico) hacia arriba (el maestro).
-let ramaVista = 'limpieza', reinicioPend = false, habPend = null;
+let ramaVista = 'limpieza', reinicioPend = false, habPend = null, cursoAbierto = null;
 // Reiniciar: gratis de aprendiz y hasta el nivel 6 (para experimentar); después, $250 por nivel.
 const costoReinicio = () => S.fase === 'aprendiz' || S.nivel <= 6 ? 0 : 250 * S.nivel;
 function pantallaArbol(volver) {
