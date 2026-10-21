@@ -2284,11 +2284,12 @@ function empezarTurno(orden) {
     const n = orden.gigante ? 2 : azar(.45) ? 1 : 0;
     for (let i = 0; i < n; i++) M.eventos.push({ tipo: 'crisis', zona: -1, en: M.dur * rnd(.18 + i * .3, .4 + i * .3) });
   }
+  dirigirEventos(orden);
   P.hidden = true;
   escenaPrep(0);
   radioEncender(true);
   for (const e of M.faltan) setTimeout(() => M && decir(M.comp, `${e.n} no llegó. Mandó mensaje: «${uno(['Se me poncharon las dos llantas. Y la de repuesto.', 'Me quedé dormido viendo un video de cómo limpiar campanas.', 'Mi gato se comió las llaves.', 'Estoy en camino. (No está en camino.)'])}»`), 1200);
-  if (M.pedido) setTimeout(() => M && M.fase === 'prep' && decir(M.cliente, M.pedido.txt), 1800);
+  if (M.pedido) setTimeout(() => M && M.fase === 'prep' && M.pedido && decir(M.cliente, M.pedido.txt), 1800);
   if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
 }
 
@@ -3008,7 +3009,23 @@ function mapacheDorado() {
   ], { bloquea: true });
 }
 const SVG_CUCA = '<svg viewBox="0 0 60 60" width="64" height="64"><g stroke="#2a1608" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M22 24 9 15M21 32 6 32M22 40 10 50M38 24 51 15M39 32 54 32M38 40 50 50"/><path d="M27 12 19 1M33 12 41 1" stroke-width="1.6"/></g><ellipse cx="30" cy="34" rx="11" ry="18" fill="#7a4314" stroke="#2a1608" stroke-width="2"/><ellipse cx="30" cy="15" rx="7.5" ry="5.5" fill="#4a250a"/><path d="M30 19v31" stroke="#2a1608" stroke-width="1.6"/><circle cx="26" cy="27" r="2.5" fill="#fff" opacity=".35"/></svg>';
-function lanzarEvento(e) { M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](e); }
+// Director de eventos. Siempre pasa lo que tú provocas (gas, luz, bolsa), la tubería que rompe un descuidado y lo que
+// anunciaba la tarjeta del trabajo. Las sorpresas y las crisis se limitan a un presupuesto por noche según la etapa,
+// prefiriendo las que no salieron en las últimas noches. Al lanzarlos, se dejan respirar y no empiezan al final del turno.
+const EV_ANUNCIADOS = ['mapache', 'alarma', 'techo'], EV_CAUSADOS = ['piloto', 'extractor', 'bolsa', 'tuberia'];
+function dirigirEventos(orden) {
+  const sorpresas = M.eventos.filter(e => !EV_ANUNCIADOS.includes(e.tipo) && !EV_CAUSADOS.includes(e.tipo));
+  const anunciados = M.eventos.filter(e => EV_ANUNCIADOS.includes(e.tipo)).length;
+  const extra = azar([.35, .5, .6, .7][S.etapa] ?? .7) ? 1 : 0;
+  const presupuesto = orden.gigante ? 3 : S.fase === 'aprendiz' && S.noche <= 2 ? 1 : 1 + extra;
+  const rec = S.evRecientes || [];
+  sorpresas.sort((a, b) => rec.includes(a.tipo) - rec.includes(b.tipo) || Math.random() - .5);
+  const quedan = sorpresas.slice(0, Math.max(orden.gigante ? 1 : 0, presupuesto - anunciados));
+  M.eventos = M.eventos.filter(e => !sorpresas.includes(e) || quedan.includes(e));
+}
+function lanzarEvento(e) {
+  M.ultEvT = M.t; S.evRecientes = [e.tipo, ...(S.evRecientes || []).filter(t => t !== e.tipo)].slice(0, 5);
+  M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](e); }
 const QUIEN_PERRO = { n: 'Grasita', color: '#c8a27a' };
 
 // ---- el gerente que te apura
@@ -3401,7 +3418,12 @@ function tickTurno(dt) {
       if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) visitaGerente();
     }
     // Desastres programados
-    if (!M.ev && M.etapa === 'lavar') for (const e of M.eventos) if (!M.hechos.has(e) && (e.zona === -1 ? M.t >= e.en : e.zona === M.zona && M.enZona >= e.en)) { lanzarEvento(e); break; }
+    // Nunca seguidos; al final del turno solo las consecuencias de lo que pasó (gas, luz, bolsa, tubería), que van primero.
+    if (!M.ev && M.etapa === 'lavar' && M.t - (M.ultEvT ?? -99) > M.dur * .08) {
+      const toca = e => !M.hechos.has(e) && (e.zona === -1 ? M.t >= e.en : e.zona === M.zona && M.enZona >= e.en);
+      const e = M.eventos.find(e => toca(e) && EV_CAUSADOS.includes(e.tipo)) || (M.t < M.dur * .88 && M.eventos.find(toca));
+      if (e) lanzarEvento(e);
+    }
     if (M.t >= M.dur) return terminarTurno();
   }
   // Cuenta atrás de las tarjetas con límite: corre aunque la tarjeta pare el reloj del turno (pero no en la pausa).
