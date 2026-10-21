@@ -108,6 +108,8 @@ body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas butt
 .barra-herr { display: flex; gap: 6px; pointer-events: auto; }
 .barra-herr button { width: 56px; height: 54px; border-radius: 8px; background: var(--panel); border: 2px solid var(--linea); display: grid; place-items: center; align-content: center; padding: 2px; }
 .barra-herr button[aria-pressed="true"] { border-color: var(--hivis); background: var(--panel-2); }
+.barra-herr button.modo2 { border-color: #ffd23f; box-shadow: inset 0 0 0 1px #ffd23f; }
+.barra-herr button.modo2 small { color: #ffd23f; }
 .barra-herr svg { width: 24px; height: 24px; }
 .barra-herr small { font-family: var(--f-cond); font-weight: 700; font-size: 10.5px; text-transform: uppercase; line-height: 1.1; }
 .barra-herr .gasto { color: var(--espuma); font-family: var(--f-mono); font-size: 10px; }
@@ -358,6 +360,10 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .orden.dia { border-color: var(--grasa); }
 .orden.dia { padding: 10px 12px; gap: 5px; box-sizing: border-box; }
 /* Árbol de habilidades */
+.van-mej { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: -2px 0 6px 50px; }
+.van-mej > div { background: var(--panel); border: 1px solid var(--linea); border-radius: 6px; padding: 5px 7px; display: grid; gap: 3px; }
+.van-mej b { font-family: var(--f-cond); font-size: 13px; } .van-mej b { color: var(--acero); } .van-mej small { font-size: 11px; color: var(--tenue); line-height: 1.25; }
+.van-mej .btn { justify-self: start; }
 .dato.nivel { color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .dato.nivel .puntos { font-size: 12px; background: var(--hivis); color: var(--hivis-tinta); border-radius: 8px; padding: 0 5px; vertical-align: 2px; animation: falta 1s ease-in-out infinite alternate; }
 .ramas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
@@ -591,7 +597,8 @@ const EN = {
   caracter: { lio: 'Trouble', medio: 'Sometimes goofs off', serio: 'Serious and reliable' },
   herr: { rasqueta: ['Scraper', 'Short strokes: it removes the crust.'], espuma: ['Foam', 'Spread it on the grease and wait 2 seconds: then it comes off three times faster.'], hidro: ['Pressure washer', 'Hold and aim. Without foam, the crust splatters.'], pulidor: ['Polish', 'Polish the clean metal: mirror finish and bigger tips.'] },
   kit: [['Basic', 'Old scrapers and a bucket.'], ['Complete', 'Good scrapers, foam and ladders.'], ['Pro', 'Their own pressure washer and polisher.']],
-  tienda: { r2: ['Tempered steel scraper', 'Wider and 30% stronger.'], r3: ['Carbide scraper', 'The ultimate blade. Crust is scared of it.'], xl: ['XL foam bottle', 'Your foam lasts 50% longer each night.'], conc: ['Concentrated degreaser', 'Foam softens 4× instead of 3×.'],
+  tienda: { alta: ['High-pressure washer', 'Tap the washer button again to switch modes: covers more and removes 35% more, but hitting crust without foam splatters the kitchen (small damage).'], fino: ['Fine scraper', 'Tap the scraper again for fine mode: a narrow stroke 45% stronger. Great for corners and leftovers; slow on big areas.'], aspira: ['Industrial vacuum', 'Dirty water on the floor costs 70% less and water running down the walls stains half as much. Without a bag, vacuuming at the end takes 5 minutes.'], planta: ['Water recycling unit', 'Recycles water and degreaser: each job\'s supplies cost 40% less.'],
+    r2: ['Tempered steel scraper', 'Wider and 30% stronger.'], r3: ['Carbide scraper', 'The ultimate blade. Crust is scared of it.'], xl: ['XL foam bottle', 'Your foam lasts 50% longer each night.'], conc: ['Concentrated degreaser', 'Foam softens 4× instead of 3×.'],
     orb: ['Orbital polisher', 'Mirror finish in half the strokes.'], bolsa: ['New containment bags', 'The old ones have more patches than bag.'], hidro: ['Your own hot water pressure washer', 'Wide, strong jet. This one is yours, and nobody will sell it to buy a karaoke machine.'],
     cam2: ['Van with roof rack', 'Room for 2 helpers besides your partner.'], uv: ['UV grease flashlight', 'Leftover grease glows a little under your helmet light. No spot gets past you.'], cubiertas: ['Custom covers', 'Covering and uncovering each appliance takes half the time.'],
     pistola: ['Tape gun', 'Taping the plastic takes half the time. Sounds like the movies.'], mango: ['Long-handle scraper', 'Strokes cover 25% more width.'], canon: ['Foam cannon', 'Foam comes out as a cloud: covers almost twice as much and uses less bottle.'],
@@ -904,6 +911,7 @@ const ICONOS = {
 const RUEDA = ['rasqueta', 'espuma', 'hidro', 'pulidor'];
 
 // Tunear la camioneta: lujos graciosos, cada uno con su pequeño efecto (o ninguno, pero con mucho estilo).
+const ESTILO_SOLO = ['bigotes', 'dados'];   // tuneo que solo se ve
 const TUNEO = [
   { id: 'bigotes', ico: '🥸', n: 'Bigotes en el frente', d: '+100 % de estilo. Efecto en el trabajo: ninguno. Efecto en tu autoestima: enorme.', p: 90 },
   { id: 'dados', ico: '🎲', n: 'Dados de peluche', d: 'Cuelgan del espejo. Dicen que dan suerte. Probablemente.', p: 60 },
@@ -938,6 +946,11 @@ const TIENDA = [
   { id: 'seguro', n: 'Seguro contra daños', d: 'La aseguradora paga la mitad de cada daño: lo que rompas tú, tu gente o tus equipos. Una sola vez, para siempre.', p: 1500, ok: s => s.fase === 'empresa' && s.etapa >= 2 && !s.eq.seguro, f: s => { s.eq.seguro = true; } },
   { id: 'robotVoz', n: 'Voz de Don Rigo para el Ductobot', d: 'El robot habla como Don Rigo. No limpia mejor, pero regaña igual.', p: 150, ok: s => s.eq.robot >= 1 && !s.eq.robotVoz, f: s => { s.eq.robotVoz = true; } },
   { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 2200, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
+  // Herramientas con ventaja y limitación: no reemplazan a las básicas, se eligen según la zona.
+  { id: 'alta', n: 'Hidro de alta presión', d: 'Toca otra vez el botón de la hidro para cambiar de modo: cubre más y quita un 35 % más, pero si das en costra sin espuma salpica la cocina (pequeños daños).', p: 1600, ok: s => s.eq.hidro && !s.eq.alta && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.alta = true; } },
+  { id: 'fino', n: 'Raspador fino', d: 'Toca otra vez la rasqueta para el modo fino: pasada estrecha y un 45 % más fuerte. Ideal para esquinas y restos; lento en áreas grandes.', p: 900, ok: s => !s.eq.fino && s.fase === 'empresa', f: s => { s.eq.fino = true; } },
+  { id: 'aspira', n: 'Aspiradora industrial', d: 'El agua sucia en el piso cuesta un 70 % menos y el agua que escurre por las paredes mancha la mitad. Si no pusiste bolsa, aspirar al final te cuesta 5 minutos.', p: 1200, ok: s => !s.eq.aspira && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.aspira = true; } },
+  { id: 'planta', n: 'Planta de agua', d: 'Recicla el agua y el desengrasante: los materiales de cada trabajo salen un 40 % más baratos.', p: 2000, ok: s => !s.eq.planta && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.planta = true; } },
   { id: 'flota', get n() { return S.eq.flota ? L(`Camioneta para el equipo ${S.eq.flota + 2}`, `Van for team ${S.eq.flota + 2}`) : L('Segunda camioneta', 'Second van'); }, get d() { return L(`Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`, `One more team working the same night. You have ${S.eq.flota || 0} of 9. Each team raises what all your jobs pay by 3%.`); },
     get p() { return 1500 + (S.eq.flota || 0) * 900; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
       s.eq.flota = (s.eq.flota || 0) + 1;
@@ -952,6 +965,9 @@ const maxFlota = () => S.fase === 'empresa' && S.etapa >= 1 ? 9 : 0;   // desde 
 // Equipo de herramientas de cada camioneta extra: mejora cuánto y qué tan bien limpian sus equipos.
 const KITS = [{ n: 'Básico', d: 'Rasquetas viejas y una cubeta.' }, { n: 'Completo', d: 'Rasquetas buenas, espuma y escaleras.', p: 350 }, { n: 'Pro', d: 'Hidrolavadora y migdaleadora propias.', p: 800 }];
 const kit = k => (S.kits || [])[k] || 0;
+// Mejoras de cada camioneta extra, además del kit: iluminación (menos accidentes) y organización (mejor calidad).
+const VAN_MEJ = { luz: { n: ['Iluminación', 'Lighting'], d: ['Ese equipo tiene menos accidentes (−35 % / −70 %).', 'That team has fewer accidents (−35% / −70%).'], p: [400, 900] }, orden: { n: ['Organización', 'Organization'], d: ['Ese equipo trabaja mejor: +4 % / +8 % de aprobar.', 'That team works better: +4% / +8% to pass.'], p: [500, 1100] } };
+const vanMej = (k, id) => ((S.vanMej || [])[k] || {})[id] || 0;
 
 // Pedidos especiales: cada cliente tiene su manía. Cumplirla paga extra; fallarla, sale caro.
 const PEDIDOS = [
@@ -2429,7 +2445,7 @@ function escenaReparto() {
       M.crews = crews.map((c, k) => {
         const cuid = c.gente.reduce((a, g) => a + (g.cuidado || 3), 0) / c.gente.length, con = c.gente.filter(g => g.animo), an = con.length ? con.reduce((a, g) => a + g.animo, 0) / con.length : 3;
         return { ...c, zonas: Z.map((z, i) => reparto[i] === k ? i : -1).filter(i => i >= 0), zona: null, t: rnd(.2, .6), fallos: 0, ok: 0,
-          cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + .03 * hab('capacita') + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
+          cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + .015 * (c.k ? vanMej(c.k - 2, 'orden') : 0) + .03 * hab('capacita') + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
       });
       for (const c of M.crews) for (const i of c.zonas) Z[i].crew = c;
       prepEl.hidden = true; arrancarTurno();
@@ -2572,7 +2588,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
     sf.d[i] -= q; quit += q;
     if (herr === 'hidro' && q > .002 && escurre(sf)) {   // el agua sucia baja por la pared y deja una película en lo de abajo
       const j = clamp(y + escurre(sf) * (2 + (Math.random() * 10 | 0)), 0, sf.ny - 1) * sf.nx + x;
-      if (sf.d[j] < .22) { if (sf.d[j] === 0) M.escurrido = (M.escurrido || 0) + q; sf.d[j] = Math.min(.22, sf.d[j] + q * .15); }
+      if (sf.d[j] < .22) { if (sf.d[j] === 0) M.escurrido = (M.escurrido || 0) + q; sf.d[j] = Math.min(.22, sf.d[j] + q * .15 * (EQ().aspira ? .5 : 1) * (modo('hidro') === 'alta' ? 1.5 : 1)); }
     }
     if (tp === 2 && herr === 'rasqueta' && q > 0) {   // el aceite se corre a la celda de al lado
       const j = clamp(y + (Math.random() < .5 ? -2 : 2), 0, sf.ny - 1) * sf.nx + clamp(x + (Math.random() < .5 ? -2 : 2), 0, sf.nx - 1);
@@ -2712,7 +2728,7 @@ function aplicarTramo(a, b) {
     else if (azar(.04)) { const i = clamp(Math.floor(b.gy), 0, sf.ny - 1) * sf.nx + clamp(Math.floor(b.gx), 0, sf.nx - 1); if (sf.soak[i] >= 1.5) ayuda(L('Esto ya está blando: cambia a la rasqueta y raspa.', 'This is soft now: switch to the scraper and scrape.'), 4); }
     rc = .15 / sf.celda * (EQ().canon ? 1.8 : 1); cant = 0; M.usoEspuma = true; M.botella = Math.max(0, M.botella - dist * sf.celda * .03 / (1 + .25 * hab('espuma')) / (EQ().xl ? 1.5 : 1) * (EQ().canon ? .7 : 1));
   } else if (herr === 'pulidor') { rc = .1 / sf.celda; cant = EQ().orbital ? .5 : .28; }
-  else { rc = radioRasqueta() / sf.celda; cant = fuerzaRasqueta() * ef * multCombo; }
+  else { const fino = modo('rasqueta') === 'fino'; rc = radioRasqueta() * (fino ? .55 : 1) / sf.celda; cant = fuerzaRasqueta() * ef * multCombo * (fino ? 1.45 : 1); }
   const pasos = Math.ceil(dist / .4);
   let q = 0;
   for (let k = 1; k <= pasos; k++) q += raspar(sf, a.gx + (b.gx - a.gx) * k / pasos, a.gy + (b.gy - a.gy) * k / pasos, rc, cant * .4, herr);
@@ -2813,9 +2829,18 @@ const hb = $('#herrBtn');
 let ruedaT = null, ruedaAbierta = false, ruedaSel = null;
 function pintarHerrBtn() {
   hb.innerHTML = ICONOS[M.herr] + `<small>${nHerr(M.herr)}</small>`;
-  $('#barraHerr').innerHTML = herramientas().map(h => `<button data-hb="${h}" aria-pressed="${h === M.herr}" aria-label="${nHerr(h)}">${ICONOS[h]}${h === 'espuma' ? `<small class="gasto">${Math.round(M.botella * 100)} %</small>` : `<small>${nHerr(h)}</small>`}</button>`).join('');
+  $('#barraHerr').innerHTML = herramientas().map(h => `<button data-hb="${h}" aria-pressed="${h === M.herr}" aria-label="${nHerr(h)}" class="${modo(h) !== 'normal' ? 'modo2' : ''}">${ICONOS[h]}${h === 'espuma' ? `<small class="gasto">${Math.round(M.botella * 100)} %</small>` : `<small>${modo(h) !== 'normal' ? L(...MODOS[h][2]) : nHerr(h)}</small>`}</button>`).join('');
 }
-$('#barraHerr').addEventListener('click', e => { const b = e.target.closest('[data-hb]'); if (b && M && M.fase === 'turno' && !(M.ev && M.ev.bloquea)) { audio(); cambiarHerr(b.dataset.hb); } });
+$('#barraHerr').addEventListener('click', e => { const b = e.target.closest('[data-hb]'); if (b && M && M.fase === 'turno' && !(M.ev && M.ev.bloquea)) { audio(); if (b.dataset.hb === M.herr) cambiarModo(M.herr); else cambiarHerr(b.dataset.hb); } });
+// Segundo modo de una herramienta (si lo compraste): hidro de alta presión y rasqueta fina. Se cambia tocando otra vez su botón.
+const MODOS = { hidro: ['alta', () => EQ().alta, ['ALTA', 'HIGH']], rasqueta: ['fino', () => EQ().fino, ['FINA', 'FINE']] };
+const modo = h => (M && M.modo && M.modo[h]) || 'normal';
+function cambiarModo(h) {
+  const m = MODOS[h]; if (!m || !m[1]()) return;
+  M.modo = M.modo || {}; M.modo[h] = modo(h) === 'normal' ? m[0] : 'normal'; pintarHerrBtn(); tono(modo(h) === 'normal' ? 520 : 780, .08, .06, 'triangle');
+  ayuda(h === 'hidro' ? (modo(h) === 'alta' ? L('Alta presión: cubre más y quita más, pero en costra sin espuma salpica la cocina.', 'High pressure: covers more and removes more, but on crust without foam it splatters the kitchen.') : L('Hidro normal: más control.', 'Normal washer: more control.'))
+    : (modo(h) === 'fino' ? L('Rasqueta fina: estrecha y fuerte, para esquinas y restos.', 'Fine scraper: narrow and strong, for corners and leftovers.') : L('Rasqueta normal: pasada ancha.', 'Normal scraper: wide stroke.')), 3);
+}
 function cambiarHerr(h) {
   if (h === M.herr) return; M.prevHerr = M.herr; M.herr = h; if (document.body.dataset.recom === h) delete document.body.dataset.recom; pintarHerrBtn(); pintarCombo(); tono(660, .06, .06, 'triangle'); ayuda(dHerr(h));
   const p = M.pedido && M.pedido.id;
@@ -3570,11 +3595,13 @@ function tickTurno(dt) {
       const v = hv.v * 412 / Math.min(innerWidth, innerHeight), barrido = v < 30 ? .55 : v > 2200 ? .7 : v >= 90 ? 1.25 : .9;
       M.quieto = v < 30 ? (M.quieto || 0) + dt : 0;
       if (M.quieto > 1.6 && !M.pistaBarrer) { M.pistaBarrer = true; ayuda(L('Con la hidro, barre despacio de lado a lado: quieto en un punto limpia la mitad.', 'With the washer, sweep slowly side to side: holding still on one spot cleans half as much.'), 5); }
-      const q = raspar(a.sf, a.gx, a.gy, .17 / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * (EQ().vapor ? 1.4 : 1) * barrido * dt, 'hidro');
+      const alta = modo('hidro') === 'alta';
+      const q = raspar(a.sf, a.gx, a.gy, (alta ? .25 : .17) / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * (EQ().vapor ? 1.4 : 1) * (alta ? 1.35 : 1) * barrido * dt, 'hidro');
       emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
-      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5 * (1 - .6 * hab('pulso')))) { emitir(a.punto, 12, 'grasa', a.normal, 2); ayuda(L('¡Salpica! Echa espuma antes en la costra.', 'It splatters! Foam the crust first.')); }
+      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5 * (alta ? 2.5 : 1) * (1 - .6 * hab('pulso')))) { emitir(a.punto, 12, 'grasa', a.normal, 2);
+        if (alta && (M.salpicaAlta || 0) < 2 && azar(.35)) { M.salpicaAlta = (M.salpicaAlta || 0) + 1; dano(L('La alta presión salpicó grasa a la cocina', 'High pressure splattered grease on the kitchen'), 15, 0); } ayuda(L('¡Salpica! Echa espuma antes en la costra.', 'It splatters! Foam the crust first.')); }
       const al = M.eventos.find(x => x.tipo === 'alarma' && !M.hechos.has(x));
       if (q > 0 && al && z.id === 'campana' && azar(dt * .3)) lanzarEvento(al);
       if (M.escurrido > .4 && !M.pistaEscurre) { M.pistaEscurre = true; ayuda(L('El agua sucia escurre y mancha lo de abajo: lava de arriba hacia abajo.', 'Dirty water runs down and stains what\'s below: wash from top to bottom.'), 5); }
@@ -3757,6 +3784,7 @@ function quitarTuto() { $('#tuto').hidden = true; delete document.body.dataset.t
 // ---- pelar: quitar el plástico de la campana, las cubiertas y bajar la bolsa
 
 function empezarPelado() {
+  if (EQ().aspira && !M.prep.bolsa) { sumarTiempo(5); setTimeout(() => M && ayuda(L('Sin bolsa, toca aspirar el agua del piso: 5 minutos.', 'No bag: vacuuming the floor water takes 5 minutes.'), 4), 300); }
   M.etapa = 'pelar'; M.trazo = null; M.presionado = false; chorro(false); cerrarRueda();
   $('#hudAbajo').hidden = true; matPlastico.opacity = .5;
   irVista(VISTAS.pelar); pintarHud(false);
@@ -4207,7 +4235,7 @@ function tarjetaOrden(o, i) {
 // Materiales del trabajo: el desengrasante que gastaste (la botella XL trae más) y el plástico y la cinta que pusiste.
 function materiales() {
   const usada = Math.max(0, 1 - M.botella) * (EQ().xl ? 1.5 : 1) * (1 + (M.orden.campanas - 1) * .5);
-  return r10(10 + usada * 45 + M.prep.envuelto * 20 * M.orden.campanas + piezas.aparatos.filter(a => a.cubierto).length * 3);
+  return r10((10 + usada * 45 + M.prep.envuelto * 20 * M.orden.campanas + piezas.aparatos.filter(a => a.cubierto).length * 3) * (EQ().planta ? .6 : 1));
 }
 // Lo que te queda más o menos de un trabajo bien hecho: pago, propina típica (10 %), sueldos de quien va contigo y gasolina.
 function estimadoOrden(o) {
@@ -4377,9 +4405,9 @@ function resolverB(b) {
   const o = b.orden, gente = [...(b.comp ? [{ ...COMPANEROS[b.comp], id: null }] : []), ...b.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
   const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * (o.ayud > b.ayud.length ? 1.5 : 1);
   const ayudG = gente.filter(g => g.animo), animo = ayudG.length ? ayudG.reduce((a, g) => a + g.animo, 0) / ayudG.length : 3;
-  let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + (animo - 3) * .05 + (S.angelica ? .05 : 0) + .05 * hab('capacita');
+  let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + vanMej((b.k || 2) - 2, 'orden') * .04 + (animo - 3) * .05 + (S.angelica ? .05 : 0) + .05 * hab('capacita');
   const cosas = []; let dano = 0;
-  const torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08));
+  const kv = (b.k || 2) - 2, torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08 * (1 - .35 * vanMej(kv, 'luz'))));
   if (torpe) { dano += uno([20, 40]); cosas.push(`${torpe.n} tiró algo que no debía.`); }
   if (b.comp === 'lupe') { p += .15; cosas.push('Lupe revisó cada esquina dos veces. Y a los ayudantes, tres.'); }
   if (b.comp === 'beto' && azar(.4)) { dano = uno([40, 80, 120]); cosas.push(uno(['Beto rompió una lámpara del techo con la escalera.', 'Beto confundió el desengrasante con el refresco del chef.', 'Beto se quedó encerrado en la cámara fría veinte minutos.'])); }
@@ -4448,14 +4476,15 @@ function vTaller() {
   const kits = S.fase === 'empresa' && S.eq.flota ? `<h2 class="sec">${L('Equipo de tus camionetas', 'Your vans\' equipment')}</h2>${Array.from({ length: S.eq.flota }, (_, k) => {
     const nv = kit(k), sig = KITS[nv + 1];
     return `<div class="persona"><div class="cara" style="background:#5d7180">${k + 2}</div><div><b>${L('Camioneta del equipo', 'Van for team')} ${k + 2}</b><span>${L(`Equipo ${KITS[nv].n.toLowerCase()}`, `${EN.kit[nv][0]} equipment`)}: ${esc(L(KITS[nv].d, EN.kit[nv][1]))}</span></div>
-      ${sig ? `<button class="btn prim peq" data-kit="${k}" ${S.dinero < sig.p ? 'disabled' : ''}>${L(sig.n, EN.kit[nv + 1][0])} ${dinero(sig.p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`;
+      ${sig ? `<button class="btn prim peq" data-kit="${k}" ${S.dinero < sig.p ? 'disabled' : ''}>${L(sig.n, EN.kit[nv + 1][0])} ${dinero(sig.p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>
+      <div class="van-mej">${Object.entries(VAN_MEJ).map(([id, m]) => { const nv = vanMej(k, id), p = m.p[nv]; return `<div><b>${L(...m.n)} ${'●'.repeat(nv)}${'○'.repeat(2 - nv)}</b><small>${L(...m.d)}</small>${p ? `<button class="btn peq" data-vm="${k}|${id}" ${S.dinero < p ? 'disabled' : ''}>${dinero(p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`; }).join('')}</div>`;
   }).join('')}<p class="nota">${L('Con mejor equipo, sus equipos limpian más rápido y aprueban más fácil.', 'With better equipment, your teams clean faster and pass more easily.')}</p>` : '';
   return `<p class="nota">${L('Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas.', 'You pay for tools with your money and they are yours: you take them wherever you go.')} ${L('Tienes', 'You have')} ${dinero(S.dinero)}.</p>
     ${items.map(t => `<div class="orden"><h3>${esc(nTienda(t))}</h3><span class="nota">${esc(dTienda(t))}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${L('Comprar', 'Buy')}</button></div></div>`).join('') || `<p class="nota">${L('Ya tienes todo el equipo.', 'You already have all the equipment.')}</p>`}
     ${S.eq.camioneta === 1 && etapa() < 1 ? `<p class="nota">${L('Las camionetas más grandes, cuando tengas taller propio.', 'Bigger vans come with your own workshop.')}</p>` : ''}
     ${bloqueadas.length ? `<p class="nota">${L('Más adelante', 'Coming later')}: ${bloqueadas.map(([n, e]) => `${n} (${L('desde', 'from')} ${nEtapa(e)})`).join(' · ')}.</p>` : ''}${kits}
     ${S.fase === 'empresa' ? `<h2 class="sec">${L('Tunear la camioneta', 'Pimp your van')}</h2><div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}</div>
-      ${TUNEO.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(L(t.n, EN.tuneo[t.id][0]))}</b><span>${esc(L(t.d, EN.tuneo[t.id][1]))}</span></div>${tun(t.id) ? `<span class="chip ok">${L('Puesto', 'Installed')}</span>` : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')}` : ''}`;
+      ${[[L('Con efecto', 'With an effect'), TUNEO.filter(t => !ESTILO_SOLO.includes(t.id))], [L('Solo estilo (no cambia nada del trabajo)', 'Style only (doesn\'t change the work)'), TUNEO.filter(t => ESTILO_SOLO.includes(t.id))]].map(([tit, ts]) => `<p class="nota"><b>${tit}</b></p>` + ts.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(L(t.n, EN.tuneo[t.id][0]))}</b><span>${esc(L(t.d, EN.tuneo[t.id][1]))}</span></div>${tun(t.id) ? `<span class="chip ok">${L('Puesto', 'Installed')}</span>` : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')).join('')}` : ''}`;
 }
 
 function vLogros() {
@@ -4553,6 +4582,7 @@ function enlazar() {
   const fa = $('#ficharAngelica'); if (fa) fa.onclick = () => { S.dinero -= ANGELICA.adelanto; S.angelica = true; sCaja(); guardar(); pantallaCamioneta(); };
   const org = $('#organizar'); if (org) org.onclick = () => { H.angelica = organizar(); tono(880, .1, .08, 'triangle'); guardar(); pantallaCamioneta(); };
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
+  P.querySelectorAll('[data-vm]').forEach(b => b.onclick = () => { const [k, id] = b.dataset.vm.split('|'), nv = vanMej(+k, id), p = VAN_MEJ[id].p[nv]; if (!p || S.dinero < p) return; S.vanMej = S.vanMej || []; S.vanMej[+k] = { ...(S.vanMej[+k] || {}), [id]: nv + 1 }; S.dinero -= p; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-kit]').forEach(b => b.onclick = () => { const k = +b.dataset.kit; S.kits = S.kits || []; const sig = KITS[kit(k) + 1]; S.dinero -= sig.p; S.kits[k] = kit(k) + 1; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-fijo]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.fijo); c.prueba = false; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-contratar]').forEach(b => b.onclick = () => {
@@ -4650,7 +4680,7 @@ function pantallaParte() {
   if (piezas.bolsas.some(b => b.hecho && !b.bajada)) dano(L('Bolsa llena olvidada colgando de la campana', 'Full bag left hanging from the hood'), 30, 2);
   const sinCubrir = piezas.aparatos.filter(a => !a.cubierto).length;
   if (sinCubrir && azar(Math.min(1, sinCubrir / piezas.aparatos.length * 1.4))) dano(L(`Espuma y grasa en ${sinCubrir} ${sinCubrir === 1 ? 'aparato sin cubrir' : 'aparatos sin cubrir'}`, `Foam and grease on ${sinCubrir} uncovered ${sinCubrir === 1 ? 'appliance' : 'appliances'}`), sinCubrir * 25, sinCubrir > 2 ? 4 : 2);
-  if (!M.prep.bolsa) dano(L('Agua con grasa en el suelo (plástico o bolsa incompletos)', 'Greasy water on the floor (plastic or bag incomplete)'), Math.round(90 * (1 - M.prep.envuelto * .6)), 2);
+  if (!M.prep.bolsa) dano(EQ().aspira ? L('Agua con grasa en el suelo (la aspiradora levantó casi toda)', 'Greasy water on the floor (the vacuum picked up most of it)') : L('Agua con grasa en el suelo (plástico o bolsa incompletos)', 'Greasy water on the floor (plastic or bag incomplete)'), Math.round(90 * (1 - M.prep.envuelto * .6) * (EQ().aspira ? .3 : 1)), EQ().aspira ? 1 : 2);
   const limpio = zonas.reduce((a, z) => a + z.pct, 0) / zonas.length;
   // El pedido especial del cliente y el duelo con El Cuñado
   const ped = M.pedido, finMin = M.finMin;
