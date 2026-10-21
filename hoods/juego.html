@@ -656,7 +656,11 @@ const hora = min => { const m = 22 * 60 + Math.floor(min); return `${String(Math
 
 const APRENDIZ = 4;            // noches trabajando para Don Rigo antes del despido
 const SUELDO_APRENDIZ = 110;
-const GASOLINA = 35;
+// Gasolina por noche según el vehículo: camioneta vieja, con baca o camión.
+const gasolina = () => [35, 35, 50, 70][(S && S.eq.camioneta) || 1];
+// Gastos fijos de la empresa por noche: renta del local según la etapa y mantenimiento de cada camioneta extra.
+const RENTA = [0, 25, 50, 90, 140];
+const gastosFijos = () => S.fase === 'empresa' ? RENTA[S.etapa] + 40 * (S.eq.flota || 0) : 0;
 const RIVAL = 'Limpiezas El Cuñado';
 const QUIEN_CUNADO = { n: 'El Cuñado', color: '#d7382b' };
 // Las etapas de tu empresa: se pasa a la siguiente con reputación y pagando el salto.
@@ -664,8 +668,8 @@ const ETAPAS = [
   { n: 'Camioneta vieja', txt: 'Tú solo y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías. Beto espera a que puedas pagarle y cabe un ayudante del barrio.' },
   { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe busca trabajo, compras camionetas más grandes (y más camionetas) para más ayudantes y te anuncias en redes.' },
   { n: 'Oficina con fax', rep: 40, compra: 4000, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy busca trabajo (despierto, casi siempre).' },
-  { n: 'Contratista de confianza', rep: 60, compra: 7000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
-  { n: 'Leyenda de la grasa', rep: 85, compra: 12000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
+  { n: 'Contratista de confianza', rep: 60, compra: 12000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
+  { n: 'Leyenda de la grasa', rep: 85, compra: 25000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad.' },
 ];
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
 const fama = r => { const i = FAMA.filter(f => r >= f[0]).length - 1; return L(FAMA[i][1], EN.fama[i]); };
@@ -737,13 +741,13 @@ const TIPO_CAMPANA = { caja: 'Campana de caja', inclinada: 'Campana inclinada', 
 const FORMA_DUCTO = { cuadrado: 'ducto cuadrado', redondo: 'ducto redondo', ancho: 'ducto ancho y bajo' };
 
 const COMPANEROS = {
-  beto: { n: 'Beto', apodo: 'el Primo', color: '#ffd23f', etapa: 0, fuerza: 1.25, sueldo: 90, rasgo: 'Rápido. Rompe cosas con total seguridad.',
+  beto: { n: 'Beto', apodo: 'el Primo', color: '#ffd23f', etapa: 0, fuerza: 1.25, sueldo: 110, rasgo: 'Rápido. Rompe cosas con total seguridad.',
     frases: ['Tranquilo, sé lo que hago.', '¿Esto se desenchufa o se jala?', 'Yo una vez limpié un ducto con una escoba. Bueno, la mitad.', 'Esa mancha tiene forma de mi ex.', 'Si algo truena, yo no estaba.'],
     bien: 'Quedó tan limpio que me da miedo tocarlo. Y eso que yo toco todo.', mal: 'El inspector no entiende el arte moderno.', desastre: 'Esa tubería ya venía rota. Yo solo la terminé.' },
-  lupe: { n: 'Lupe', apodo: 'la veterana', color: '#7fd3e6', etapa: 1, fuerza: 1.0, sueldo: 120, rasgo: 'Trabajo perfecto. No confía en nadie.',
+  lupe: { n: 'Lupe', apodo: 'la veterana', color: '#7fd3e6', etapa: 1, fuerza: 1.0, sueldo: 160, rasgo: 'Trabajo perfecto. No confía en nadie.',
     frases: ['Diez años en esto y nunca vi una campana tan triste.', 'Te faltó una esquina. No, la otra.', 'No me mires, yo no fui. Nunca soy yo.', 'Esta grasa tiene más antigüedad que yo en la empresa.'],
     bien: 'Aceptable. No se lo digas a nadie, pero aceptable.', mal: 'Te lo dije. Bueno, no te lo dije. Pero lo pensé fuerte.', desastre: 'Voy a anotar esto en mi libreta de cosas que no fueron culpa mía.' },
-  chuy: { n: 'Chuy', apodo: 'el Grande', color: '#69c97a', etapa: 2, fuerza: 1.55, sueldo: 140, rasgo: 'Fuerza bruta. Se duerme en cualquier superficie plana.',
+  chuy: { n: 'Chuy', apodo: 'el Grande', color: '#69c97a', etapa: 2, fuerza: 1.55, sueldo: 190, rasgo: 'Fuerza bruta. Se duerme en cualquier superficie plana.',
     frases: ['Esto pesa poquito. Lo cargo yo.', '¿Ya es de día? ¿No? Ah.', 'Yo de niño quería ser almohada.', 'Qué buena siesta haría en ese ducto.'],
     bien: 'Buen turno. Me voy a dormir en la camioneta, despiértame en el próximo semáforo.', mal: 'Yo vi todo limpio. Bueno, vi con los ojos cerrados.', desastre: 'Me perdí lo mejor. Estaba descansando la vista.' },
 };
@@ -925,21 +929,21 @@ const TIENDA = [
   { id: 'pistola', n: 'Cinta con pistola', d: 'Encintar el plástico tarda la mitad. Suena como en las películas.', p: 150, ok: s => !s.eq.pistola && s.fase === 'empresa', f: s => { s.eq.pistola = true; } },
   { id: 'mango', n: 'Rasqueta de mango largo', d: 'Las pasadas cubren un 25 % más de ancho.', p: 400, ok: s => !s.eq.mango && s.fase === 'empresa', f: s => { s.eq.mango = true; } },
   { id: 'canon', n: 'Cañón de espuma', d: 'La espuma sale en una nube: cubre casi el doble y gasta menos botella.', p: 650, ok: s => !s.eq.canon && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.canon = true; } },
-  { id: 'electrica', n: 'Rasqueta eléctrica', d: 'Vibra sola: un 25 % más de fuerza en cada pasada. Hace cosquillas.', p: 1200, ok: s => !s.eq.electrica && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.electrica = true; } },
-  { id: 'vapor', n: 'Hidrolavadora de vapor', d: 'Agua a 140 °C: el chorro limpia un 40 % más y derrite la grasa quemada sin espuma.', p: 1800, ok: s => !s.eq.vapor && s.eq.hidro && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.vapor = true; } },
-  { id: 'robot', n: 'Robot de ductos «Ductobot 3000»', d: 'Lo metes en el ducto y lo limpia solo, de punta a punta. Las esquinas te las deja a ti.', p: 2500, ok: s => !s.eq.robot && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.robot = 1; } },
+  { id: 'electrica', n: 'Rasqueta eléctrica', d: 'Vibra sola: un 25 % más de fuerza en cada pasada. Hace cosquillas.', p: 1800, ok: s => !s.eq.electrica && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.electrica = true; } },
+  { id: 'vapor', n: 'Hidrolavadora de vapor', d: 'Agua a 140 °C: el chorro limpia un 40 % más y derrite la grasa quemada sin espuma.', p: 2800, ok: s => !s.eq.vapor && s.eq.hidro && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.vapor = true; } },
+  { id: 'robot', n: 'Robot de ductos «Ductobot 3000»', d: 'Lo metes en el ducto y lo limpia solo, de punta a punta. Las esquinas te las deja a ti.', p: 3800, ok: s => !s.eq.robot && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.robot = 1; } },
   { id: 'robotCam', n: 'Cámara para el Ductobot', d: 'Ves el ducto desde los ojos del robot mientras trabaja. Hipnótico.', p: 600, ok: s => s.eq.robot >= 1 && !s.eq.robotCam, f: s => { s.eq.robotCam = true; } },
   { id: 'orugas', n: 'Orugas todoterreno para el Ductobot', d: 'Ya no se atora en las costras: pasa por encima de todo.', p: 800, ok: s => s.eq.robot >= 1 && !s.eq.orugas, f: s => { s.eq.orugas = true; } },
   { id: 'seguro', n: 'Seguro contra daños', d: 'La aseguradora paga la mitad de cada daño: lo que rompas tú, tu gente o tus equipos. Una sola vez, para siempre.', p: 1500, ok: s => s.fase === 'empresa' && s.etapa >= 2 && !s.eq.seguro, f: s => { s.eq.seguro = true; } },
   { id: 'robotVoz', n: 'Voz de Don Rigo para el Ductobot', d: 'El robot habla como Don Rigo. No limpia mejor, pero regaña igual.', p: 150, ok: s => s.eq.robot >= 1 && !s.eq.robotVoz, f: s => { s.eq.robotVoz = true; } },
-  { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 1500, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
+  { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 2200, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
   { id: 'flota', get n() { return S.eq.flota ? L(`Camioneta para el equipo ${S.eq.flota + 2}`, `Van for team ${S.eq.flota + 2}`) : L('Segunda camioneta', 'Second van'); }, get d() { return L(`Otro equipo trabajando la misma noche. Tienes ${S.eq.flota || 0} de 9. Cada equipo sube un 3 % lo que pagan todos tus trabajos.`, `One more team working the same night. You have ${S.eq.flota || 0} of 9. Each team raises what all your jobs pay by 3%.`); },
-    get p() { return 1200 + (S.eq.flota || 0) * 600; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
+    get p() { return 1500 + (S.eq.flota || 0) * 900; }, ok: s => s.fase === 'empresa' && (s.eq.flota || 0) < maxFlota(), f: s => {
       s.eq.flota = (s.eq.flota || 0) + 1;
       // La camioneta nueva ya trae trabajo para esta misma noche.
       if (s.hoy && s.hoy.noche === s.noche) s.hoy.ordenes.push(genOrden(uno(cocinasHasta(s.etapa))));
     } },
-  { id: 'cam3', n: 'Camión de la empresa', d: 'Caben 4 ayudantes. Y tiene radio que funciona.', p: 2200, ok: s => s.eq.camioneta === 2 && s.etapa >= 2, f: s => { s.eq.camioneta = 3; } },
+  { id: 'cam3', n: 'Camión de la empresa', d: 'Caben 4 ayudantes. Y tiene radio que funciona.', p: 3200, ok: s => s.eq.camioneta === 2 && s.etapa >= 2, f: s => { s.eq.camioneta = 3; } },
 ];
 const PLAZAS = [0, 1, 2, 4];
 // Camionetas extra que permite cada etapa: con la última, 9 equipos más el tuyo = 10.
@@ -1142,6 +1146,8 @@ function completar(s) {
     for (const [k, n] of Object.entries(s.perks || {})) if (de[k]) s.hab[de[k]] = Math.min(n, HAB[de[k]].max);
     s.puntos = Math.max(0, (s.nivel || 1) - 1 - Object.values(s.hab).reduce((a, n) => a + n, 0));
   }
+  // Subida de sueldos (fase 4): los ayudantes que ya estaban también ganan un 20 % más, una sola vez.
+  if (!s.sueldos2) { for (const c of [...(s.cuadrilla || []), ...(s.candidatos || [])]) if (c.sueldo) c.sueldo = Math.round(c.sueldo * 1.2 / 5) * 5; s.sueldos2 = true; }
   s.medallas = s.medallas || {}; s.secretos = s.secretos || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
   if (s.aj.radio === undefined) s.aj.radio = true;
   if (s.aj.vibrar === undefined) s.aj.vibrar = true;
@@ -3897,7 +3903,7 @@ function genCandidatos(n = 3) {
   return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase, tipo, esp]) => {
     const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5), animo = 3;
     // Los buenos piden más: el sueldo sale de las tres medidas.
-    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: Math.min(5, (tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado) + hab('cuadrillas')), puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) / 5) * 5, color: uno(COLORES), noches: 0 });
+    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: Math.min(5, (tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado) + hab('cuadrillas')), puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) * 1.2 / 5) * 5, color: uno(COLORES), noches: 0 });
   });
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
@@ -4179,18 +4185,24 @@ function tarjetaOrden(o, i) {
     ${o.pedido ? `<span class="pedido"><b>${esc(TRAD(pedido(o.pedido).quien))}:</b> «${esc(TRAD(pedido(o.pedido).txt))}»${pedido(o.pedido).premio ? ` <i>${L('Si cumples', 'If you deliver')}: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
     ${o.duelo ? `<span class="aviso">${L(`${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.`, `${RIVAL} wants this client too: he will clean the same kitchen at the same time as you. If he finishes first, you get paid half.`)}</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(L(PISTAS[e], EN.pista[e]))}</span>`).join('') : `<span class="pista">${L('Todo tranquilo. Sospechoso.', 'All quiet. Suspicious.')}</span>`}
-    <span class="nota estimado">${(() => { const g = estimadoOrden(o); return L(`Te quedas unos ${dinero(g.neto)}: ${dinero(o.pago)} del trabajo + propina típica ${dinero(g.propina)} − sueldos ${dinero(g.sueldos)} − gasolina ${dinero(GASOLINA)}.`, `You keep about ${dinero(g.neto)}: ${dinero(o.pago)} for the job + typical tip ${dinero(g.propina)} − wages ${dinero(g.sueldos)} − gas ${dinero(GASOLINA)}.`); })()}</span>
+    <span class="nota estimado">${(() => { const g = estimadoOrden(o); return L(`Te quedas unos ${dinero(g.neto)}: ${dinero(o.pago)} del trabajo + propina típica ${dinero(g.propina)} − sueldos ${dinero(g.sueldos)} − gasolina, materiales y gastos fijos ${dinero(g.otros)}.`, `You keep about ${dinero(g.neto)}: ${dinero(o.pago)} for the job + typical tip ${dinero(g.propina)} − wages ${dinero(g.sueldos)} − gas, supplies and fixed costs ${dinero(g.otros)}.`); })()}</span>
     <span class="nota">${o.gigante ? L(`Trabajo gigante: ${o.campanas} campanas, ${o.ductos} ductos y ${o.filtros} filtros. Manda equipos a ayudarte, repártelos y revisa lo que entreguen.`, `Giant job: ${o.campanas} hoods, ${o.ductos} ducts and ${o.filtros} filters. Send teams to help you, assign the zones and check what they deliver.`) : L(`Gente sugerida: ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'}.`, `Suggested crew: ${sugerido(o)} ${sugerido(o) === 1 ? 'person' : 'people'}.`)}</span>
     ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">${L(`Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}`, `Needs ${o.ayud} ${o.ayud === 1 ? 'helper' : 'helpers'} besides your partner.${faltanAyud > 0 ? ' You are ' + faltanAyud + ' short.' : ''}`)}</span>` : ''}
   </button>`;
 }
 
+// Materiales del trabajo: el desengrasante que gastaste (la botella XL trae más) y el plástico y la cinta que pusiste.
+function materiales() {
+  const usada = Math.max(0, 1 - M.botella) * (EQ().xl ? 1.5 : 1) * (1 + (M.orden.campanas - 1) * .5);
+  return r10(10 + usada * 45 + M.prep.envuelto * 20 * M.orden.campanas + piezas.aparatos.filter(a => a.cubierto).length * 3);
+}
 // Lo que te queda más o menos de un trabajo bien hecho: pago, propina típica (10 %), sueldos de quien va contigo y gasolina.
 function estimadoOrden(o) {
   const H = S.hoy, aprendiz = S.fase === 'aprendiz';
   const sueldos = aprendiz ? 0 : r10((((COMPANEROS[H.comp] || SOLO).sueldo || 0) + S.cuadrilla.filter(c => H.ayud.includes(c.id)).reduce((a, c) => a + (c.sueldo || 0), 0)) * sueldoMult());
   const propina = r10(o.pago * .1);
-  return { sueldos, propina, neto: aprendiz ? SUELDO_APRENDIZ + 40 : o.pago + propina - sueldos - GASOLINA };
+  const otros = aprendiz ? 0 : gasolina() + 45 + gastosFijos();   // gasolina, materiales típicos, renta y camionetas
+  return { sueldos, propina, otros, neto: aprendiz ? SUELDO_APRENDIZ + 40 : o.pago + propina - sueldos - otros };
 }
 // Cuánta gente le va bien a un trabajo (contando al compañero): el tamaño manda.
 const sugerido = o => clamp(Math.round(o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * 1.3), 1, 4);
@@ -4363,7 +4375,7 @@ function resolverB(b) {
   const aprobado = azar(p), notaA = aprobado && azar(p * .7);
   if (o.pedido) cosas.push(aprobado ? 'Cumplieron el pedido especial del cliente.' : 'Se les olvidó el pedido especial. El cliente no está contento.');
   if (!cosas.length) cosas.push(uno(['Trabajaron callados, como profesionales. Raro, pero bien.', 'Pusieron cumbia y limpiaron a buen ritmo.', 'El gerente les invitó un café. Dicen que estaba bueno.']));
-  const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1) * sueldoMult()), 0)], ['Equipo B: gasolina', -GASOLINA]];
+  const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1) * sueldoMult()), 0)], ['Equipo B: gasolina', -gasolina()]];
   if (dano) lineas.push([`Equipo B: daños${EQ().seguro ? ' (el seguro paga la mitad)' : ''}`, -conSeguro(dano)]);
   if (o.garantia && !notaA) lineas.push(['Equipo B: garantía de A incumplida', -r10(o.pago * .3)]);
   return { o, aprobado, notaA, gente, lineas, cosas, k: b.k, rep: (aprobado ? 3 : -5) + (o.garantia ? (notaA ? 1 : -3) : 0) };
@@ -4647,7 +4659,10 @@ function pantallaParte() {
     ? [[L('Sueldo de la noche', 'Night\'s wage'), SUELDO_APRENDIZ], [L('Bono por aprobar', 'Passing bonus'), aprobado ? 40 : 0], [L('Propina', 'Tip'), propina], [L('Propina extra por el pedido especial', 'Extra tip for the special request'), extraPed], ...M.danos.map(x => [TRAD(x.t) + (x.dinero ? L(' (lo paga Don Rigo)', ' (Don Rigo pays)') : ''), null])]
     : [[`${aprobado ? L('Pago del trabajo', 'Job payment') : L('Pago parcial', 'Partial payment')}${M.descuento ? L(' (con el descuento prometido al gerente)', ' (with the discount promised to the manager)') : ''}${tacos < 1 ? L(' (la otra mitad, en tacos)', ' (the other half, in tacos)') : ''}${d && !ganaDuelo ? L(' (la mitad: ganó El Cuñado)', ' (half: El Cuñado won)') : ''}`, cobro],
       ...(tacos < 1 ? [[L('120 tacos de pastor', '120 al pastor tacos'), null]] : []), [L(`Bono de racha (${racha} noches aprobadas seguidas)`, `Streak bonus (${racha} passed nights in a row)`), bonoRacha], [L('Propina', 'Tip'), propina], [pedOk ? L('Extra por cumplir el pedido especial', 'Bonus for the special request') : L('Descuento por no cumplir el pedido', 'Discount for missing the request'), extraPed],
-      ...M.danos.map(x => [TRAD(x.t) + (x.dinero && EQ().seguro ? L(' (el seguro paga la mitad)', ' (insurance pays half)') : ''), x.dinero ? -conSeguro(x.dinero) : null]), [L('Sueldos de la cuadrilla', 'Crew wages'), -sueldos], [L('Gasolina', 'Gas'), -GASOLINA]];
+      ...M.danos.map(x => [TRAD(x.t) + (x.dinero && EQ().seguro ? L(' (el seguro paga la mitad)', ' (insurance pays half)') : ''), x.dinero ? -conSeguro(x.dinero) : null]), [L('Sueldos de la cuadrilla', 'Crew wages'), -sueldos], [L('Gasolina', 'Gas'), -gasolina()],
+      [L('Materiales (desengrasante, plástico y cinta)', 'Supplies (degreaser, plastic and tape)'), -materiales()],
+      ...(RENTA[S.etapa] ? [[L(`Renta del local (${nEtapa(S.etapa).toLowerCase()})`, `Rent (${nEtapa(S.etapa).toLowerCase()})`), -RENTA[S.etapa]]] : []),
+      ...(S.eq.flota ? [[L(`Mantenimiento de camionetas (${S.eq.flota})`, `Van upkeep (${S.eq.flota})`), -40 * S.eq.flota]] : [])];
   let neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
@@ -4682,7 +4697,7 @@ function pantallaParte() {
   if (S.angelica && !aprendiz) { lineas.push([L('Angélica (coordinación)', 'Angélica (coordination)'), -ANGELICA.sueldo]); neto -= ANGELICA.sueldo; }
   // Equipos que te ayudaron en el trabajo gigante: sus sueldos y su gasolina.
   for (const a of o.ayudan || []) {
-    const g = a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean), v = -(g.reduce((t, c) => t + r10(c.sueldo * (c.prueba ? .8 : 1) * sueldoMult()), 0) + r10((a.comp ? COMPANEROS[a.comp].sueldo : 0) * sueldoMult()) + GASOLINA);
+    const g = a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean), v = -(g.reduce((t, c) => t + r10(c.sueldo * (c.prueba ? .8 : 1) * sueldoMult()), 0) + r10((a.comp ? COMPANEROS[a.comp].sueldo : 0) * sueldoMult()) + gasolina());
     lineas.push([L(`Equipo ${a.k} (te ayudó): sueldos y gasolina`, `Team ${a.k} (helped you): wages and gas`), v]); neto += v;
     for (const c of g) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); }
   }
