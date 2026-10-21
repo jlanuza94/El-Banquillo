@@ -431,6 +431,11 @@ a.btn { display: inline-block; text-decoration: none; }
 .opciones.neg .btn { text-align: left; text-transform: none; font-family: var(--f-cuerpo); font-weight: 600; font-size: 15px; letter-spacing: 0; }
 .opciones.neg .btn small { display: block; font-weight: 400; font-size: 13px; opacity: .8; }
 .cita.historia b { color: #c6a0ff; }
+.por-que { display: grid; gap: 6px; }
+.por-que .desglose { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 14px; }
+.por-que .desglose span:nth-child(even) { font-family: var(--f-mono); text-align: right; color: var(--tenue); }
+.por-que .desglose .ok { color: var(--ok) !important; } .por-que .desglose .mal { color: var(--mal) !important; }
+.por-que .consejos { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
 .novedad { background: rgba(105,201,122,.14); border: 1px solid var(--ok); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
 /* Celular acostado: barras compactas, el chat a la derecha y los paneles a la izquierda para que se vea la escena. */
 @media (orientation: landscape) and (max-height: 560px) {
@@ -4155,6 +4160,37 @@ function pantallaAjustes(enTurno, desdeInicio) {
 let cola = [];
 function siguiente() { const f = cola.shift(); if (f) f(); else pantallaCamioneta(); }
 
+// La nota explicada: de dónde salen los puntos, cuánto faltó para la siguiente letra y qué cambiar la próxima vez.
+function explicarNota({ pts, n, zonas, limpio, aprobado, espejo, pulido, finMin, ped, pedOk, d, ganaDuelo }) {
+  const rapidez = aprobado ? Math.round(clamp((480 - finMin) / 480, 0, .5) * 20) : 0, p = M.prep;
+  const prep = (p.gas ? 2 : 0) + (p.luz ? 2 : 0) + Math.round(p.cubierto * 3) + (p.bolsa ? 3 : 0);
+  const filas = [
+    [L('Limpieza de las zonas', 'Zone cleaning'), Math.round(limpio * 45), 45],
+    [L(`Todo bajo ${LIMITE} µm`, `Everything under ${LIMITE} µm`), aprobado ? 15 : 0, 15],
+    [L('Migdaleado y espejo', 'Polish and mirror'), Math.round(pulido * 12) + (espejo ? 5 : 0), 17],
+    [L('Rapidez', 'Speed'), rapidez, 10],
+    [L('Preparación', 'Prep'), prep, 10],
+  ];
+  if (M.danos.length) filas.push([L(`Daños (${M.danos.length})`, `Damage (${M.danos.length})`), -4 * M.danos.length, 0]);
+  if (M.enojado) filas.push([L('Gerente enojado', 'Angry manager'), -5, 0]);
+  if (ped && !ped.tacos) filas.push([L('Pedido del cliente', 'Client request'), pedOk ? 5 : -6, 5]);
+  if (d) filas.push([L('Duelo', 'Duel'), ganaDuelo ? 4 : -2, 4]);
+  const sig = [...NOTAS].reverse().find(x => x[0] > pts);
+  const tips = [];
+  const sucias = zonas.filter(z => z.m > LIMITE);
+  if (sucias.length) tips.push(L(`Faltó bajar de ${LIMITE} µm: ${sucias.map(z => `${z.n} (${z.m.toLocaleString('es-MX')} µm)`).join(', ')}. Sin eso no se aprueba.`, `Not under ${LIMITE} µm: ${sucias.map(z => `${z.n} (${z.m.toLocaleString('es-MX')} µm)`).join(', ')}. You can't pass without it.`));
+  const faltaPrep = [!p.gas && L('cerrar el gas', 'turn off the gas'), !p.luz && L('cortar la luz', 'cut the power'), p.cubierto < 1 && L('cubrir los aparatos', 'cover the appliances'), !p.bolsa && L('plástico y bolsa', 'plastic and bag')].filter(Boolean);
+  if (faltaPrep.length) tips.push(L(`En la preparación faltó: ${faltaPrep.join(', ')}. Son ${10 - prep} puntos fáciles y evitan daños.`, `Prep was missing: ${faltaPrep.join(', ')}. That's ${10 - prep} easy points and it prevents damage.`));
+  if (M.danos.length) tips.push(L(`Cada daño quita 4 puntos (y a veces dinero): ${M.danos.slice(0, 2).map(x => TRAD(x.t)).join('; ')}.`, `Each damage costs 4 points (and sometimes money): ${M.danos.slice(0, 2).map(x => TRAD(x.t)).join('; ')}.`));
+  if (aprobado && pulido < .8) tips.push(L(`Migdaleaste el ${Math.round(pulido * 100)} % de la campana: pásale el pulidor a todo el metal limpio (hasta 12 puntos).`, `You polished ${Math.round(pulido * 100)}% of the hood: run the polisher over all the clean metal (up to 12 points).`));
+  if (aprobado && !espejo) tips.push(L('Si bajas todo a 50 µm o menos sale «metal desnudo»: +5 puntos y más reputación.', 'Get everything to 50 µm or less for «bare metal»: +5 points and more reputation.'));
+  if (M.enojado) tips.push(L('El gerente se enojó: contéstale cuando pregunta o termina antes de que pierda la paciencia.', 'The manager got angry: answer him when he asks, or finish before he runs out of patience.'));
+  if (rapidez < 5 && aprobado) tips.push(L(`Llamaste al inspector a las ${hora(finMin)}: llamarlo antes da hasta 10 puntos.`, `You called the inspector at ${hora(finMin)}: calling earlier gives up to 10 points.`));
+  return `<div class="cita por-que"><b>${L('¿Por qué esta nota?', 'Why this grade?')} · ${pts} ${L('puntos', 'points')}</b>
+    <div class="desglose">${filas.map(([t, v, max]) => `<span>${t}</span><span class="${v < 0 ? 'mal' : max && v >= max ? 'ok' : ''}">${v > 0 ? '+' : ''}${v}${max ? ` / ${max}` : ''}</span>`).join('')}</div>
+    ${sig ? `<p class="nota">${L(`Te faltaron ${sig[0] - pts} puntos para la ${sig[1]}.`, `You were ${sig[0] - pts} points short of ${/^[AF]/.test(sig[1]) ? 'an' : 'a'} ${sig[1]}.`)}</p>` : ''}
+    ${tips.length ? `<ul class="consejos">${tips.slice(0, 3).map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : `<p class="nota">${L('Trabajo redondo. Así se hace.', 'A flawless job. That\'s how it\'s done.')}</p>`}</div>`;
+}
 function pantallaParte() {
   const o = M.orden, aprendiz = S.fase === 'aprendiz';
   const zonas = Z.map(z => ({ n: z.n, m: micras(z), pct: pctZona(z) }));
@@ -4195,10 +4231,11 @@ function pantallaParte() {
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
   // La nota del turno: limpieza, acabado, rapidez, preparación y lo que salió mal.
-  const pts = Math.round(limpio * 45 + (aprobado ? 15 : 0) + pulido * 12 + (espejo ? 5 : 0) + clamp((480 - finMin) / 480, 0, .5) * 20
+  const pts = Math.round(limpio * 45 + (aprobado ? 15 : 0) + pulido * 12 + (espejo ? 5 : 0) + (aprobado ? clamp((480 - finMin) / 480, 0, .5) * 20 : 0)   // la rapidez solo cuenta si el trabajo pasa
     + (M.prep.gas ? 2 : 0) + (M.prep.luz ? 2 : 0) + M.prep.cubierto * 3 + (M.prep.bolsa ? 3 : 0)
     - M.danos.length * 4 - (M.enojado ? 5 : 0) + (ped && !ped.tacos ? (pedOk ? 5 : -6) : 0) + (d ? (ganaDuelo ? 4 : -2) : 0));
   const n = nota(pts);
+  const porQue = explicarNota({ pts, n, zonas, limpio, aprobado, espejo, pulido, finMin, ped, pedOk, d, ganaDuelo });
   // Garantía de A negociada con el cliente
   if (o.garantia && !aprendiz) {
     if (n === 'A' || n === 'A+') rep += 1;
@@ -4328,6 +4365,7 @@ function pantallaParte() {
     <div id="fotoParte"></div>
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % ${L('limpio', 'clean')}</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
       <span class="nota">${L(`El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.`, `The inspector measures with a grease comb: it passes at ${LIMITE} µm or less in each zone. Mirror polish: ${Math.round(pulido * 100)}%. Inspector at ${hora(finMin)}.`)}</span></div>
+    ${porQue}
     ${d ? `<div class="cita"><b>${ganaDuelo ? L('Duelo ganado', 'Duel won') : L('Duelo perdido', 'Duel lost')}</b>${ganaDuelo ? L(`Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.`, `You finished at ${hora(d.tuyo / M.dur * 480)}. El Cuñado left without saying goodbye and forgot his scraper. It's yours now, as a souvenir.`) : L(`El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`, `El Cuñado finished at ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` and you at ${hora(d.tuyo / M.dur * 480)}` : ''}. The client stays with him and pays you half "for your trouble".`)}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(TRAD(ped.quien))} · ${esc(L(ped.chip, EN.pedidoChip[ped.id]))}</b>${esc(TRAD(ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : ped.mal))}</div>` : ''}
     ${misHechas.length ? `<div class="cita"><b>📞 ${L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b>${misHechas.some(x => x.todo) ? L('¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.', 'All three weekly challenges! I told all my buddies. Well, the only one who picks up.') : uno([L('¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'See? I told you you could. Well, I didn\'t tell you. But I thought it.'), L('Reto cumplido. Se me cayó la caña de la emoción.', 'Challenge done. I dropped my fishing rod from the excitement.'), L('Así se hace. Beto dice que él te enseñó. Yo no dije nada.', 'That\'s how it\'s done. Beto says he taught you. I said nothing.')])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
