@@ -2262,7 +2262,7 @@ function empezarTurno(orden) {
   M.faltan = faltan;   // las donas de la clienta, para el gerente
   if (M.pedido) M.cliente = { n: M.pedido.quien, color: '#e9e9e9' };
   // El duelo: El Cuñado limpia la misma cocina a la vez. Gana quien deje todo bajo el límite primero.
-  if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22) };
+  if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22), tropiezo: azar(.35) ? M.dur * rnd(.25, .5) : null };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   // La tubería la puede romper cualquiera de la cuadrilla, salvo los más cuidadosos (Lupe y los serios). Beto, casi seguro.
   const prob = e => e.principal ? ({ beto: .75, chuy: .25 })[orden.comp] || 0 : e.tipo === 'serio' ? 0 : e.tipo === 'lio' ? .45 : e.tipo === 'medio' ? .25 : Math.max(0, 3 - (e.cuidado || 3)) * .1;
@@ -2283,6 +2283,7 @@ function empezarTurno(orden) {
     if (azar(.3)) extra.push({ tipo: 'costra', zona: -1, en: M.dur * rnd(.15, .45) });
     if (Z.length >= 3 && azar(.25)) extra.push({ tipo: 'bloqueo', zona: -1, en: M.dur * rnd(.1, .35) });
     if (azar(.25)) extra.push({ tipo: 'prioridad', zona: -1, en: M.dur * rnd(.08, .25) });
+    if (orden.comp === 'beto' && azar(.55)) extra.push({ tipo: 'beto', zona: -1, en: M.dur * rnd(.35, .7) });
     M.eventos.push(...extra.sort(() => Math.random() - .5).slice(0, 3));
   }
   // Crisis con la gente: le pasa algo a alguien de tu cuadrilla (o a un equipo, en un gigante). Salta en cualquier zona.
@@ -2296,7 +2297,9 @@ function empezarTurno(orden) {
   radioEncender(true);
   for (const e of M.faltan) setTimeout(() => M && decir(M.comp, `${e.n} no llegó. Mandó mensaje: «${uno(['Se me poncharon las dos llantas. Y la de repuesto.', 'Me quedé dormido viendo un video de cómo limpiar campanas.', 'Mi gato se comió las llaves.', 'Estoy en camino. (No está en camino.)'])}»`), 1200);
   if (M.pedido) setTimeout(() => M && M.fase === 'prep' && M.pedido && decir(M.cliente, M.pedido.txt), 1800);
-  if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
+  const hist = S.cunado && S.cunado.ultimo;
+  if (M.duelo && hist) setTimeout(() => M && decir(QUIEN_CUNADO, hist.gano === 'el' ? uno([L(`¿Te acuerdas de ${hist.donde}? Yo sí. Todos los días.`, `Remember ${hist.donde}? I do. Every day.`), L(`Otra vez tú. Te gané en ${hist.donde}, ¿o ya se te olvidó?`, `You again. I beat you at ${hist.donde}, or did you forget?`)]) : uno([L(`Lo de ${hist.donde} fue suerte. Hoy traigo rasqueta nueva.`, `${hist.donde} was luck. Today I brought a new scraper.`), L(`No he dormido desde que me ganaste en ${hist.donde}. Hoy me desquito.`, `I haven't slept since you beat me at ${hist.donde}. Payback time.`)])), 2400);
+  else if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
 }
 
 // ---- preparación jugable: seguridad, cubrir la cocina y envolver la campana
@@ -3039,6 +3042,26 @@ EVENTOS.prioridad = () => {
     { t: L('Hoy no se puede', 'Not tonight'), f: () => resultado(L('Sin prisas', 'No rush'), L('Le explicas que la campana se limpia en orden. Lo entiende. Más o menos.', 'You explain the hood gets cleaned in order. He gets it. Sort of.'), quien, 'Bueno, ustedes saben.') },
   ], { bloquea: true });
 };
+// ---- Beto: sus torpezas tienen efecto (y siempre trae una excusa)
+const EXCUSA_BETO = [['Fue el mapache. Lo vi. Bueno, lo sentí.', 'It was the raccoon. I saw it. Well, I felt it.'], ['Es que estaba estirando. El doctor dice que estire.', 'I was stretching. The doctor says I have to stretch.'], ['Mi horóscopo decía «hoy tocarás algo brillante». Cumplí.', 'My horoscope said «today you\'ll touch something shiny». Done.'], ['Yo solo quería ayudar. Eso es lo peor de mí: las ganas.', 'I only wanted to help. That\'s my worst trait: enthusiasm.']];
+EVENTOS.beto = () => {
+  if (M.orden.comp !== 'beto') return;
+  const limpias = Z.filter(z => !z.crew && micras(z) <= LIMITE);
+  if (limpias.length && azar(.6)) {
+    // La huella: se apoya con la mano llena de grasa en una zona que ya pasaba
+    const z = uno(limpias), sf = uno(z.sfs), falta = z.inicial * .085, r = Math.max(3, Math.round(Math.sqrt(falta / .9 / Math.PI)));
+    const cx = r + (Math.random() * Math.max(1, sf.nx - 2 * r) | 0), cy = r + (Math.random() * Math.max(1, sf.ny - 2 * r) | 0);
+    for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) if (x >= 0 && y >= 0 && x < sf.nx && y < sf.ny && Math.hypot(x - cx, y - cy) <= r) sf.d[y * sf.nx + x] = Math.max(sf.d[y * sf.nx + x], .9);
+    sf.sucio = true; z.espejo = false; M.listoAvisado.delete(Z.indexOf(z)); pintarSf(sf); pintarHud(false);
+    decir(M.comp, L(...uno(EXCUSA_BETO)));
+    ayuda(L(`Beto se apoyó con la mano llena de grasa en ${z.n.toLowerCase()}. Hay que repasarla.`, `Beto leaned on ${z.n.toLowerCase()} with a greasy hand. It needs another pass.`), 5);
+  } else {
+    // La cubeta: si el plástico y la bolsa estaban bien puestos, no pasa nada
+    rafaga(.3, 400, .2, 'lowpass');
+    if (M.prep.bolsa) decir(M.comp, L('¡Pateé la cubeta! …Pero el plástico se la tragó toda. ¿Ves? Para eso lo pusimos. Bueno, lo pusiste.', 'I kicked the bucket! …But the plastic caught all of it. See? That\'s what it\'s for. Well, you put it there.'));
+    else { dano(L('Beto pateó la cubeta: agua sucia por el piso (sin plástico que la parara)', 'Beto kicked the bucket: dirty water all over the floor (no plastic to stop it)'), 30, 1); decir(M.comp, L(...uno(EXCUSA_BETO))); }
+  }
+};
 // ---- cosas buenas: no paran el trabajo
 EVENTOS.hallazgo = () => {
   const quien = M.equipo.length ? (({ n, color }) => ({ n, color: color || '#7fd3e6' }))(uno(M.equipo)) : M.comp;
@@ -3096,7 +3119,19 @@ function dirigirEventos(orden) {
   const buenos = ['hallazgo', 'cafe', ...(M.equipo.length ? ['truco'] : [])].filter(t => !rec.includes(t));
   if (buenos.length && !(orden.leccion && orden.leccion < 3) && (vacia || azar(.45))) M.eventos.push({ tipo: uno(buenos), zona: -1, en: M.dur * rnd(.3, .65) });
 }
+// La radio comenta lo que de verdad pasa en tu noche (a veces, y unos segundos después).
+const RADIO_EV = {
+  mapache: [['Reportan un mapache en un ducto de la ciudad. Pedimos a la población que no le dé pizza. Otra vez.', 'A raccoon reported in a city duct. We ask the public not to feed it pizza. Again.']],
+  tuberia: [['Corte de agua no programado en una cocina. Los fontaneros cobran tarifa de madrugada. Ánimo.', 'Unscheduled water outage in a kitchen. Plumbers charge night rates. Hang in there.']],
+  apagon: [['Se fue la luz en una cocina, pero no aquí: seguimos con la cumbia. Linternas arriba.', 'Power out in a kitchen, but not here: the cumbia goes on. Flashlights up.']],
+  hidroRota: [['Minuto de silencio por una manguera que dio todo esta noche.', 'A minute of silence for a hose that gave everything tonight.']],
+  cafe: [['Nos llega que un gerente invitó café de olla. Hay gente buena en este mundo.', 'Word is a manager served café de olla. There are good people in this world.']],
+  beto: [['Mensaje de un radioescucha: «Beto, ¿otra vez?». Le mandamos un saludo a Beto, que seguro está escuchando.', 'A listener writes: «Beto, again?». Shout-out to Beto, who\'s surely listening.']],
+  cucaracha: [['Aviso: una cucaracha del tamaño de un taco fue vista corriendo por la ciudad. No es broma. Bueno, un poco.', 'Notice: a taco-sized cockroach was seen running through the city. Not a joke. Well, a bit.']],
+  bloqueo: [['Hay una olla de pozole estorbando en alguna cocina. Si es tuya, muévela, por favor.', 'There\'s a pot of pozole in someone\'s way in a kitchen. If it\'s yours, please move it.']],
+};
 function lanzarEvento(e) {
+  if (RADIO.on && RADIO_EV[e.tipo] && azar(.4)) setTimeout(() => M && M.fase === 'turno' && RADIO.on && decir(QUIEN_RADIO, L(...uno(RADIO_EV[e.tipo]))), 9000);
   M.ultEvT = M.t; S.evRecientes = [e.tipo, ...(S.evRecientes || []).filter(t => t !== e.tipo)].slice(0, 5);
   M.hechos.add(e); cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); EVENTOS[e.tipo](e); }
 const QUIEN_PERRO = { n: 'Grasita', color: '#c8a27a' };
@@ -3247,6 +3282,12 @@ function tickDuelo(dt) {
       ayuda(`¡Sabotaje! El Cuñado te ensució ${z.n.toLowerCase()}.`, 5);
       M.listoAvisado.delete(Z.indexOf(z));
     }
+  }
+  // A veces El Cuñado también la riega: se resbala con su propia espuma y pierde tiempo. Hay que aprovecharlo.
+  if (d.tropiezo && M.t >= d.tropiezo && d.rivalFin === null && d.tuyo === null && !M.ev) {
+    d.tropiezo = null; d.tRival += M.dur * .07; tono(220, .3, .1, 'sawtooth', 110);
+    decir(QUIEN_CUNADO, uno([L('¡Aaay! ¿Quién puso espuma aquí? …Ah, fui yo.', 'Aaah! Who put foam here? …Oh, me.'), L('Nadie vio eso. NADIE.', 'Nobody saw that. NOBODY.')]));
+    ayuda(L('¡El Cuñado se resbaló con su propia espuma! Aprovecha: va más lento.', 'El Cuñado slipped on his own foam! Take advantage: he\'s slower now.'), 5);
   }
   const bc = $('#contra'); if (bc) bc.hidden = !!d.contra || d.tuyo !== null || d.rivalFin !== null || M.etapa !== 'lavar';
   // La radio se llena de estática si vas perdiendo, y El Cuñado se mete a la emisora una vez.
@@ -3782,7 +3823,7 @@ function rival(ordenes, avisos) {
   if (tiro < .3) {   // reseña falsa: un cliente fiel te defiende
     const fiel = S.clientes.find(c => c.visitas >= 3);
     if (fiel) avisos.push(`${RIVAL} publicó una reseña falsa: «encontré un mapache en la sopa». Pero ${fiel.nombre} te defendió en los comentarios. No pasó nada.`);
-    else { S.rep = clamp(S.rep - 2, 0, 100); avisos.push(`${RIVAL} publicó una reseña falsa: «encontré un mapache en la sopa». −2 de reputación. Un cliente fiel te habría defendido.`); }
+    else { S.rep = clamp(S.rep - 2, 0, 100); S.resena = true; avisos.push(L(`${RIVAL} publicó una reseña falsa: «encontré un mapache en la sopa». −2 de reputación. Desmiéntela con tu próxima A: la gente compara.`, `${RIVAL} posted a fake review: «found a raccoon in my soup». −2 reputation. Prove him wrong with your next A: people compare.`)); }
     return;
   }
   if (tiro < .55) {   // le ofrece precio a un cliente fijo nuevo: en su próxima visita hay que lucirse
@@ -3790,12 +3831,15 @@ function rival(ordenes, avisos) {
     if (c) { c.amenazado = true; avisos.push(`${RIVAL} le ofreció precio a ${c.nombre}. En su próxima visita sácale una B o mejor y se queda contigo.`); return; }
   }
   const libres = ordenes.filter(o => !o.clienteId);
-  if (libres.length >= 2 && azar(.6)) {
-    const o = uno(libres); ordenes.splice(ordenes.indexOf(o), 1);
-    avisos.push(`${RIVAL} se quedó con ${o.nombre}: les cobró la mitad. Y les dejó la mitad de la grasa.`);
-  } else {
-    for (const o of ordenes) if (!o.clienteId) o.pago = Math.round(o.pago * .9 / 10) * 10;
-    avisos.push(`${RIVAL} bajó sus precios. Esta noche los clientes nuevos pagan un 10 % menos.`);
+  // Nunca se lleva un trabajo sin avisar: lo disputa (duelo en la cocina, y el cliente paga algo más por el lío)
+  // o le baja el precio a un cliente, que te lo dice. Tú decides si entras.
+  const disputable = libres.filter(o => !o.gigante && !o.duelo);
+  if (disputable.length && azar(.6)) {
+    const o = uno(disputable); o.duelo = true; o.pago = Math.round(o.pago * 1.1 / 10) * 10;
+    avisos.push(L(`${RIVAL} le ofreció la mitad del precio a ${o.nombre}. Si lo tomas esta noche, te lo disputa en la cocina: duelo. Si no, se lo queda.`, `${RIVAL} offered ${o.nombre} half price. Take it tonight and he'll fight you for it in the kitchen: a duel. If not, he keeps it.`));
+  } else if (libres.length) {
+    const o = uno(libres); o.pago = Math.round(o.pago * .85 / 10) * 10; o.barato = true;
+    avisos.push(L(`${o.nombre} te avisa que ${RIVAL} le cobra menos. Te paga un 15 % menos esta vez; tú decides si lo tomas.`, `${o.nombre} tells you ${RIVAL} charges less. They'll pay you 15% less this time; your call.`));
   }
 }
 // Los clientes que se lleva El Cuñado se pueden recuperar ganándole un duelo en su cocina.
@@ -3812,6 +3856,7 @@ function prepararNoche() {
   });
   if (S.fase === 'empresa' && (!S.candidatos.length || S.noche % 3 === 0)) S.candidatos = genCandidatos(3 + (S.eq.flota || 0));
   const ordenes = generarOrdenes();
+  if (S.cunado && S.cunado.presume) { avisos.push(L(`${RIVAL} presume en redes: «Le gané a ${S.empresa ? S.empresa.nombre : 'Grasa Brava'} en ${S.cunado.presume}. Con una mano.» Ya te tocará la revancha.`, `${RIVAL} brags online: «Beat ${S.empresa ? S.empresa.nombre : 'Grasa Brava'} at ${S.cunado.presume}. One-handed.» Your rematch will come.`)); S.cunado.presume = null; }
   if (S.recomienda && S.fase === 'empresa') {
     const o = genOrden(S.recomienda.cocina); o.origen = 'Recomendación'; o.pago = Math.round(o.pago * 1.1 / 10) * 10; ordenes.push(o);
     avisos.push(L(`📞 Llamó ${o.nombre}: dice que en ${S.recomienda.de} les hablaron muy bien de ti. Pagan un 10 % más.`, `📞 ${o.nombre} called: ${S.recomienda.de} told them great things about you. They pay 10% more.`));
@@ -4027,7 +4072,7 @@ function pantallaCamioneta() {
 
 // Los trabajos que no eliges se ven en una tarjeta corta; el elegido se abre con todos sus detalles.
 function tarjetaCorta(o, i) {
-  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.gigante ? L('Gigante', 'Giant') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
+  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.gigante ? L('Gigante', 'Giant') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
   return `<button class="orden corta ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="false">
     <div class="fila"><h3>${esc(o.nombre)}</h3><span class="pago">${dinero(o.pago)}</span></div>
     <span class="nota">${chip ? `<b class="chip-txt ${o.duelo ? 'mal' : ''}">${esc(chip)}</b> · ` : ''}${nCocina(o.cocina)}${o.campanas > 1 ? ` · ${o.campanas} ${L('campanas', 'hoods')}` : ''} · ${o.micras.toLocaleString('es-MX')} µm${o.firmado ? '' : ` · <i>${L('sin firmar', 'not signed')}</i>`}</span>
@@ -4543,6 +4588,8 @@ function pantallaParte() {
       return { t: `${c.n} · ${c.zonas.map(i => Z[i].n).join(', ')}`, nota: c.fallos === 0 && entregadas === c.zonas.length ? 'A' : c.fallos === 0 ? 'B' : c.fallos === 1 ? 'C' : 'D', bien: c.fallos === 0 && entregadas > 0,
         gente: c.gente, txt: L(`Entregó ${entregadas} de ${c.zonas.length} zonas. ${c.ok} pasaron tu revisión a la primera${c.fallos ? `; ${c.fallos} las tuviste que terminar tú` : ''}.`, `Delivered ${entregadas} of ${c.zonas.length} zones. ${c.ok} passed your check the first time${c.fallos ? `; you had to finish ${c.fallos} yourself` : ''}.`) }; })];
   S.racha = racha;
+  if (d) { const c = S.cunado = S.cunado || { gane: 0, perdi: 0 }; ganaDuelo ? c.gane++ : c.perdi++; c.ultimo = { gano: ganaDuelo ? 'tu' : 'el', donde: o.nombre }; if (!ganaDuelo) c.presume = o.nombre; }
+  if (S.resena && (n === 'A' || n === 'A+') && !aprendiz) { S.resena = false; S.rep = clamp(S.rep + 3, 0, 100); lineas.push([L('Tu A desmintió la reseña falsa de El Cuñado (+3 de reputación)', 'Your A disproved El Cuñado\'s fake review (+3 reputation)'), null]); }
   // Trabajo de A: a veces el cliente le habla de ti a otro restaurante y mañana llaman.
   if (!aprendiz && (n === 'A' || n === 'A+') && !S.recomienda && azar(.35)) S.recomienda = { de: o.nombre, cocina: uno(cocinasHasta(S.etapa).filter(k => !COCINAS[k].gigante)) };
   // Retos de la noche
