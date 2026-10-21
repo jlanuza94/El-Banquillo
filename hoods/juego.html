@@ -129,6 +129,10 @@ body[data-tuto="espuma"] [data-hb="espuma"], body[data-tuto="zonas"] #zonas butt
 #faltaI { left: 0; border-radius: 0 10px 10px 0; padding-left: max(8px, env(safe-area-inset-left, 0px)); transform: translateY(-50%) rotate(180deg); }
 #faltaD { right: 0; border-radius: 10px 0 0 10px; padding-right: max(8px, env(safe-area-inset-right, 0px)); }
 @keyframes falta { to { opacity: .55; } }
+.aqui { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 2; }
+.aqui::before { content: ""; position: absolute; left: -26px; top: -26px; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--hivis); box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 0 14px rgba(255,138,31,.6); animation: aquiLate 1s ease-in-out infinite; }
+.aqui span { position: absolute; left: 0; top: -50px; transform: translateX(-50%); white-space: nowrap; font-family: var(--f-cond); font-weight: 700; font-size: 13px; letter-spacing: .05em; text-transform: uppercase; background: var(--hivis); color: var(--hivis-tinta); border-radius: 999px; padding: 1px 8px; }
+@keyframes aquiLate { 0%, 100% { transform: scale(.85); opacity: 1; } 50% { transform: scale(1.12); opacity: .7; } }
 
 /* Rueda de herramientas */
 .rueda { position: absolute; width: 250px; height: 250px; margin: -125px 0 0 -125px; pointer-events: none; }
@@ -513,6 +517,7 @@ a.btn { display: inline-block; text-decoration: none; }
   <div id="oscuro" aria-hidden="true"></div>
   <div class="vineta" aria-hidden="true"></div>
   <div id="marcas"></div>
+  <div class="aqui" id="aqui" hidden><span></span></div>
   <div id="hud" hidden>
     <div class="hud-arriba">
       <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="pausa" aria-label="Pausa / Pause">❚❚</button></div>
@@ -2066,6 +2071,57 @@ function faltaFuera() {
   return [izq, der];
 }
 
+// El círculo «aquí»: señala el trozo con más grasa (o sin migdalear) de la zona cuando ya quedan pocos restos
+// difíciles de encontrar, o cuando te atascas. Lo que queda fuera de la pantalla lo siguen avisando las flechas.
+const pendiente = (s, i) => M.etapa === 'migdalear' ? s.d[i] === 0 && s.pol[i] < .6 : s.d[i] > .1;
+function celdaMundo(s, cx, cy, out) {
+  const g = s.mesh.geometry;
+  if (g.type === 'PlaneGeometry') out.set((cx / s.nx - .5) * s.w, (cy / s.ny - .5) * s.h, 0);   // la fila 0 de la textura es la de abajo
+  else {   // superficie curva (ducto redondo): el vértice con la coordenada de textura más parecida
+    const uv = g.attributes.uv, pos = g.attributes.position, u = cx / s.nx, v = cy / s.ny; let mj = 0, md = 9;
+    for (let j = 0; j < uv.count; j++) { const dd = (uv.getX(j) - u) ** 2 + (uv.getY(j) - v) ** 2; if (dd < md) { md = dd; mj = j; } }
+    out.fromBufferAttribute(pos, mj);
+  }
+  return s.mesh.localToWorld(out);
+}
+function buscarAqui() {
+  if (!M || M.fase !== 'turno' || (M.etapa !== 'lavar' && M.etapa !== 'migdalear') || M.robotCam) { if (M) M.aqui = null; return; }
+  const z = zonaAct();
+  if (M.etapa === 'lavar' && micras(z) <= LIMITE) { M.aqui = null; return; }
+  let tot = 0, pend = 0; const bloques = [];
+  for (const s of z.sfs) {
+    const b = Math.max(2, Math.round(Math.min(s.nx, s.ny) / 6));
+    for (let by = 0; by < s.ny; by += b) for (let bx = 0; bx < s.nx; bx += b) {
+      let peso = 0;
+      for (let y = by; y < Math.min(s.ny, by + b); y++) for (let x = bx; x < Math.min(s.nx, bx + b); x++) {
+        const i = y * s.nx + x; tot++;
+        if (pendiente(s, i)) { pend++; peso += M.etapa === 'migdalear' ? 1 : s.d[i]; }
+      }
+      if (peso > 0) bloques.push({ s, peso, cx: bx + b / 2, cy: by + b / 2 });
+    }
+  }
+  const pocos = pend / tot < .3;
+  if (!bloques.length || !(pocos || M.aquiForzado > 0)) { M.aqui = null; return; }
+  // El más sucio de los que se ven (lo de fuera de la pantalla ya lo avisan las flechas).
+  bloques.sort((a, b) => b.peso - a.peso);
+  const w = new T.Vector3();
+  for (const k of bloques.slice(0, 40)) { celdaMundo(k.s, k.cx, k.cy, w); if (enHueco(w)) { M.aqui = (M.aqui || new T.Vector3()).copy(w); return; } }
+  M.aqui = null;
+}
+function enHueco(w) {
+  pv.copy(w).project(cam);
+  const x = (pv.x + 1) / 2 * innerWidth, y = (1 - pv.y) / 2 * innerHeight, h = huecoLibre();
+  return pv.z < 1 && x > 20 && x < innerWidth - 20 && y > (h ? h.cy - h.fh * innerHeight / 2 : 60) && y < (h ? h.cy + h.fh * innerHeight / 2 : innerHeight - 160);
+}
+function ponerAqui(dt) {
+  const el = $('#aqui');
+  if (M && M.aquiForzado > 0) M.aquiForzado -= dt;
+  if (!M || !M.aqui || M.ev || $('#hud').hidden) { el.hidden = true; return; }
+  const dentro = enHueco(M.aqui), x = (pv.x + 1) / 2 * innerWidth, y = (1 - pv.y) / 2 * innerHeight;
+  el.hidden = !dentro;
+  if (dentro) { el.style.transform = `translate(${x}px, ${y}px)`; el.querySelector('span').textContent = M.etapa === 'migdalear' ? L('migdalea aquí', 'polish here') : L('aquí', 'here'); }
+}
+
 // ------------------------------------------------------------------ partículas
 
 const NP = 400;
@@ -2478,7 +2534,7 @@ function consejoHerr(z) {
   else if (cuota(1) > .3) { h = 'espuma'; txt = L('Esto es grasa quemada: así casi no sale. Échale espuma, espera 2 segundos y luego raspa.', 'This is burnt grease: it barely comes off like this. Foam it, wait 2 seconds, then scrape.'); }
   else if (cuota(2) > .3) { h = hay.includes('hidro') ? 'hidro' : 'espuma'; txt = h === 'hidro' ? L('Esto es aceite: la rasqueta lo embarra. La hidro lo arrastra solito.', 'This is oil: the scraper smears it. The pressure washer carries it away.') : L('Esto es aceite: la rasqueta lo embarra. Espuma primero; con hidro (en el Taller) sale mejor.', 'This is oil: the scraper smears it. Foam first; a pressure washer (in the Shop) does even better.'); }
   else if (costra / total > .4) { h = 'espuma'; txt = L('Costra gruesa: con espuma sale el triple de rápido. Échala, espera 2 segundos y raspa.', 'Thick crust: with foam it comes off three times faster. Spray, wait 2 seconds, then scrape.'); }
-  else { txt = L('Busca lo más oscuro: la flecha naranja del borde te lleva a la grasa que falta.', 'Look for the darkest spots: the orange arrow on the edge takes you to the grease that\'s left.'); }
+  else { txt = L('Te marco con el círculo naranja dónde queda más grasa. Si no lo ves, la flecha del borde te lleva.', 'The orange circle marks where most grease is left. If you can\'t see it, the edge arrow takes you there.'); M.aquiForzado = 8; }
   if (h && h === M.herr) txt = h === 'rasqueta' ? L('Vas bien con la rasqueta, pero esto es duro: pasadas cortas y en la misma dirección (el combo raspa más).', 'The scraper is right, but this is tough: short strokes in the same direction (the combo scrapes more).') : txt;
   ayuda(txt, 6);
   if (h && h !== M.herr) { document.body.dataset.recom = h; setTimeout(() => { if (document.body.dataset.recom === h) delete document.body.dataset.recom; }, 7000); }
@@ -4798,7 +4854,9 @@ function bucle(ahora) {
     const [izq, der] = M && (M.fase === 'turno' || M.fase === 'prep') ? faltaFuera() : [false, false];
     const txt = !M ? '' : M.fase === 'prep' || M.etapa === 'pelar' ? L('falta', 'more') : M.etapa === 'migdalear' ? L('falta migdalear', 'polish left') : L('falta grasa', 'grease left');
     $('#faltaI').hidden = !izq; $('#faltaD').hidden = !der; $('#faltaI').textContent = txt + ' ›'; $('#faltaD').textContent = txt + ' ›';
+    buscarAqui();
   }
+  ponerAqui(dt);
   moverCamara(dt);
   moverParticulas(dt);
   if (MARCAS.length) moverMarcas();
