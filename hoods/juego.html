@@ -2439,7 +2439,7 @@ function construirNoche(orden) {
   VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
   Z = gruposF.map((g, i) => ({ id: 'filtros', n: gruposF.length > 1 ? `${L('Filtros', 'Filters')} ${'ABCD'[i]}` : L('Filtros', 'Filters'), sfs: g.sfs, vista: vista(new T.Vector3(g.lx, 0, g.lonaZ), new T.Vector3(0, 1.6, 1.0), g.lonaW + .2, 1.7, 3.2, 55) }));
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, labio: c.labio, huella: c.huella,
-    vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100 } } }));
+    vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100, dir: new T.Vector3(0, -.6, .8).normalize() } } }));
   piezas.robot = null;
   ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 }, acostado: { dMin: dL - .05, dMax: dL - .05 } } }));
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
@@ -2481,7 +2481,8 @@ function moverCamara(dt) {
     while (f > 78 && d + .1 <= tope) { d += .1; camT.objPos.copy(camT.objMira).addScaledVector(dir, d); f = fovParaCaja(v.caja, hueco); }
     fov = Math.max(fov, f);
     const hf2 = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * cam.aspect);
-    v.vis = 2 * d * Math.tan(hf2 / 2); v.maxPan = Math.max(0, (v.ancho - v.vis) / 2); v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
+    // Lo que no cabe se alcanza deslizando la vista: el margen sale de la caja entera, no solo del frente de la campana.
+    v.vis = 2 * d * Math.tan(hf2 / 2); v.maxPan = Math.max(0, (v.ancho - v.vis) / 2, cajaTx * 1.08 * d - v.vis / 2); v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
     camT.objMira.x += v.pan; camT.objPos.x += v.pan;
   }
   const k = 1 - Math.exp(-dt * 7);
@@ -2515,6 +2516,7 @@ function huecoLibre() {
 }
 // El campo de visión que hace falta para que toda la caja quepa en el hueco (con un poco de margen), visto desde donde va la cámara.
 const _f = new T.Vector3(), _r = new T.Vector3(), _u = new T.Vector3(), _p = new T.Vector3();
+let cajaTx = 0;
 function fovParaCaja(caja, hueco) {
   _f.subVectors(camT.objMira, camT.objPos).normalize(); _r.crossVectors(_f, cam.up).normalize(); _u.crossVectors(_r, _f);
   let tx = 0, ty = 0;
@@ -2524,7 +2526,8 @@ function fovParaCaja(caja, hueco) {
   }
   // Lo alto tiene que caber siempre; lo ancho, hasta cierto ángulo: si la campana es muy larga se desliza de lado.
   const g = t => 2 * Math.atan(t * 1.06) * 180 / Math.PI;
-  return Math.min(Math.max(g(ty / hueco.fh), Math.min(g(tx / cam.aspect), 84)), 104);
+  cajaTx = tx;   // lo ancho que se ve la caja (con las paredes laterales, que se abren hacia la cámara)
+  return Math.min(Math.max(g(ty / hueco.fh), Math.min(g(tx / cam.aspect), 90)), 104);
 }
 // Mover la vista: arrastrar con dos dedos, arrastrar sobre algo que no se limpia (pared, suelo, aire),
 // tocar el aviso naranja del borde o, en ordenador, las flechas del teclado.
@@ -2552,6 +2555,7 @@ function faltaFuera() {
         if (izq && der) break;
       }
     }
+    if ((izq || der) && !M.avisoLados) { M.avisoLados = true; ayuda(L('Hay grasa fuera de la pantalla (los lados de la campana): toca el aviso naranja del borde o arrastra con dos dedos.', 'There\'s grease off-screen (the sides of the hood): tap the orange edge tab or drag with two fingers.'), 6); }
   }
   return [izq, der];
 }
