@@ -159,7 +159,7 @@ caso('tu vida: estilo, gastos en el parte y renta semanal', async () => {
 // Fin de la campaña de Ciudad Comal: llega Lustre, eliges vender o no, director y mano derecha, y te vas a Puerto Fritanga.
 const NACHO = { id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, cuidado: 3, puntual: 3, animo: 3, tipo: 'serio' };
 const finCampana = (mas = {}) => partida({ etapa: 4, rep: 90, noche: 40, dinero: 40000, licitGanada: 30, residencia: { hecha: true, exito: true, nota: 'A', noche: 33 }, fijos: ['beto', 'lupe', 'chuy'],
-  cuadrilla: [{ ...NACHO }], clientes: [], cunado: { gane: 2 }, perro: true, sueldos2: true, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 2 }, medallas: {}, ...mas });
+  cuadrilla: [{ ...NACHO }], clientes: [], cunado: { gane: 2 }, perro: true, sueldos2: true, buho: { revelado: 35 }, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 2 }, medallas: {}, ...mas });
 caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', async () => {
   const p = await abrir(finCampana({ residencia: null, licitGanada: 36 }));
   afirmar(await p.evaluate(() => !document.querySelector('#comprador') && !__hc.compradorListo()), 'Lustre llegó antes de la Residencia');
@@ -210,6 +210,38 @@ caso('el comprador: camino A (vender) con pagos y sin vuelta', async () => {
 caso('partidas antiguas que ya habían comprado a El Cuñado', async () => {
   const p = await abrir(finCampana({ final: 38 }));
   afirmar(await p.evaluate(() => !!document.querySelector('#comprador')), 'Lustre no aparece en partidas que ya habían terminado');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('el Búho de la radio: pistas y la revelación de Don Rigo', async () => {
+  const p = await abrir(partida({ noche: 24, rep: 45, etapa: 2 }));
+  const pista = await p.evaluate(() => __hc.S.hoy.avisos.join(' '));
+  afirmar(/El Búho de la Madrugada dijo/.test(pista) && !/\{jugador\}|\{empresa\}/.test(pista), 'no salió la pista en las noticias de la noche 24: ' + pista);
+  afirmar(await p.evaluate(() => !document.querySelector('#buhoOk')), 'la revelación salió antes de la Licitación');
+  await p.evaluate(() => { __hc.S.etapa = 4; __hc.S.licitGanada = 22; __hc.pantallaCamioneta(); });
+  afirmar(await p.evaluate(() => /soy yo\. Rigo/.test(document.querySelector('.buho').innerText) && /Tester/.test(document.querySelector('.buho').innerText)), 'la tarjeta de la revelación no está o no usa el nombre del jugador');
+  await p.click('#buhoOk');
+  const r = await p.evaluate(() => ({ b: __hc.S.buho, chip: document.querySelector('#jefeCorto').innerText, carta: !!document.querySelector('#buhoOk'), album: __hc.S.album }));
+  afirmar(r.b && r.b.revelado === 24 && /cabina de Radio Grasa FM/i.test(r.chip) && !/desde el lago:/i.test(r.chip) && !r.carta && r.album.some(a => /Búho/.test(a)), 'la revelación no se guardó: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+caso('la huella de Beto: en la campana, en el parte del inspector y en la pared del taller', async () => {
+  const p = await abrir(partida({ compPref: 'beto' }));
+  await p.evaluate(() => { __hc.S.hoy.comp = 'beto'; });
+  let vista = null;
+  const r = await jugarNoche(p, { cocina: 'burger', durante: () => {
+    const z = __hc.Z.find(z => z.id === 'campana'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud();
+    window.__huella = { M: __hc.M.huella, vis: z.huella.visible, comp: __hc.M.orden.comp };
+  } });
+  vista = await p.evaluate(() => window.__huella);
+  afirmar(vista.comp === 'beto' && vista.M === 20 && vista.vis, 'Beto no dejó la huella al quedar limpia la campana: ' + JSON.stringify(vista));
+  afirmar(await p.evaluate(() => (__hc.S.huellas || []).length === 1 && __hc.S.huellas[0].n === 20), 'la huella no se apuntó: ' + await p.evaluate(() => JSON.stringify([__hc.S.huellas, __hc.S.noche, __hc.M && __hc.M.huella])));
+  await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('[data-tab="taller"]');
+  afirmar(await p.evaluate(() => document.querySelectorAll('.pared-beto span').length === 1), 'la pared del taller no muestra la huella');
+  // sin Beto no hay huella
+  await p.click('[data-tab="noche"]'); await p.evaluate(() => { __hc.S.hoy.comp = 'lupe'; });
+  await jugarNoche(p, { cocina: 'cafe', durante: () => { const z = __hc.Z.find(z => z.id === 'campana'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); } });
+  afirmar(await p.evaluate(() => __hc.S.huellas.length === 1), 'apareció una huella sin Beto');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 

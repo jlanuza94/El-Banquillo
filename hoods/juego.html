@@ -390,6 +390,9 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .contrato.diario { border-color: #8ad4ff99; background: rgba(138,212,255,.08); } .contrato.diario b { color: #8ad4ff; }
 .vida { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .vida .comp { grid-template-columns: 1fr; }
+.pared-beto { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-radius: 10px; background: #3a3f44 repeating-linear-gradient(0deg, transparent 0 22px, #ffffff0d 22px 24px); }
+.pared-beto span { display: grid; place-items: center; width: 40px; font-size: 26px; filter: grayscale(1) brightness(.35); transform: rotate(var(--r)); }
+.pared-beto small { font-size: 10px; filter: invert(1); }
 .comprador-esc { display: grid; gap: 10px; } .comprador-esc .cita { font-style: italic; }
 .dos-caminos { display: grid; gap: 8px; } .dos-caminos .orden { border-color: #ffd23f; }
 .legado-lista { display: grid; gap: 6px; } button.persona.elegir { width: 100%; text-align: left; color: inherit; cursor: pointer; }
@@ -1354,6 +1357,34 @@ const LOCUTOR = ['Son las {h} y esto es Radio Grasa FM, la estación que no se d
   'Mensaje de un radioescucha: «Beto, devuélveme la licuadora». Firma: tu prima.', 'Recuerden: la espuma ablanda, la rasqueta quita y el mapache observa.',
   `Esta canción va para ${RIVAL}: que les dure la grasa.`, 'Radio Grasa FM: si la escuchas, ya es tarde para dormir.', 'Llamó Doña Chela: dice que nadie toque la plancha de su abuela. Ni en la radio.'];
 
+// El Búho de la Madrugada, el locutor de Radio Grasa FM: suelta pistas cada vez más claras… y en la Gran Licitación
+// se descubre que es Don Rigo, que nunca se fue al lago (bueno, los domingos sí).
+const BUHO = { n: 'El Búho de la Madrugada', color: '#c6a0ff' };
+const PISTAS_BUHO = [
+  [['Saludos al aprendiz nuevo de Grasa Brava. Dicen que rasca derechito. Alguien le enseñó bien.', 'Greetings to the new Grasa Brava apprentice. They say you scrape straight. Somebody taught you well.'],
+   ['Para el aprendiz que me escucha en la camioneta: espuma, espera, rasqueta. No me pregunten cómo lo sé.', 'For the apprentice listening in the van: foam, wait, scraper. Don\'t ask me how I know.']],
+  [['Me cuentan que {empresa} va subiendo. Yo los vi empezar. Bueno… me contaron.', 'They tell me {empresa} is on the rise. I saw them start. Well… someone told me.'],
+   ['¿{jugador}? Bonito nombre. Para un limpiador de campanas, digo. Lo digo por decir.', '{jugador}? Nice name. For a hood cleaner, I mean. Just saying.'],
+   ['Hoy no fui al lago. Digo, ¿qué lago? Yo no tengo lago. Siguiente canción.', 'I didn\'t go to the lake today. I mean, what lake? I don\'t have a lake. Next song.']],
+  [['Oye, {jugador}, ¿te acuerdas del primer café que limpiaste? Yo sí. Digo… me lo imagino.', 'Hey, {jugador}, remember the first café you cleaned? I do. I mean… I imagine it.'],
+   ['Un oyente pescador me manda saludos. Le digo que no pica nada. Que nunca pica nada. Es más, ni caña tengo.', 'A fisherman listener says hi. I tell him nothing\'s biting. Nothing ever bites. In fact, I don\'t even own a rod.'],
+   ['Esta ranchera va para un muchacho que no deja la rasqueta en el piso. Porque si la deja, se la escondo. Digo, se la esconden.', 'This ranchera goes to a kid who never leaves the scraper on the floor. Because if they do, I hide it. I mean, someone hides it.']],
+  [['Consejo de este viejo búho: la rasqueta a cuarenta y cinco grados. Como te enseñé. Como te enseñaron. Ya me voy.', 'Advice from this old owl: scraper at forty-five degrees. Like I taught you. Like they taught you. I\'m leaving now.'],
+   ['{jugador}, si me estás oyendo: estoy orgulloso. De ti. De todos los limpiadores. Sobre todo de ti. Comercial.', '{jugador}, if you\'re listening: I\'m proud. Of you. Of all cleaners. Especially you. Commercial break.'],
+   ['Me preguntan por qué mi voz se parece a la de un señor jubilado que pesca. Pura coincidencia. Pónganle volumen a la cumbia.', 'People ask why my voice sounds like a retired fisherman. Pure coincidence. Turn up the cumbia.']],
+];
+const PISTA_LICIT = ['El Palacio Municipal, en vivo. {jugador}: cuando termine todo esto, tengo algo que contarte.', 'City Hall, live. {jugador}: when all this is over, I have something to tell you.'];
+const DESPUES_BUHO = [['Aquí Don Rigo, ya sin disfraz, en Radio Grasa FM. Sí, sigo yendo al lago. Los domingos.', 'Don Rigo here, no more disguise, on Radio Grasa FM. Yes, I still go to the lake. On Sundays.'],
+  ['Saludos a {jugador}, que ya sabe quién soy y todavía me deja poner rancheras.', 'Greetings to {jugador}, who knows who I am now and still lets me play rancheras.'],
+  ['La cafetera de la cabina sigue haciendo ruido de olas. Si oyen el mar, es el café.', 'The booth\'s coffee maker still sounds like waves. If you hear the sea, it\'s the coffee.']];
+const buhoRevelado = () => !!(S && S.buho && S.buho.revelado);
+const nivelBuho = () => S.fase !== 'empresa' ? 0 : S.rep < 40 && S.etapa < 2 ? 1 : S.rep < 70 && S.etapa < 3 ? 2 : 3;
+const conNombres = t => t.replace(/\{jugador\}/g, jugador()).replace(/\{empresa\}/g, S.empresa ? S.empresa.nombre : 'Grasa Brava');
+function pistaBuho() {
+  if (buhoRevelado()) return conNombres(L(...uno(DESPUES_BUHO)));
+  if (S.licit && S.licit.paso >= 2) return conNombres(L(...PISTA_LICIT));
+  return conNombres(L(...uno(PISTAS_BUHO[nivelBuho()])));
+}
 // Comerciales de patrocinadores del barrio (todos inventados).
 const COMERCIALES = ['Este programa es patrocinado por Desengrasantes El Tigre: si no quita la grasa, por lo menos huele a limón.',
   'Tacos El Insomne: abiertos cuando todos duermen. Pregunte por el de pastor con piña de cortesía.', '¿Su ducto hace ruidos raros? Llame a Exorcismos y Ductos Hermanos Peña. Primera consulta gratis.',
@@ -1614,7 +1645,7 @@ function radioCancion(forzada) {
     if (noticia) { S.noticiaRadio = null; guardar(); }
     const llamada = !noticia && S.llamada && M.fase === 'turno' ? S.llamada : null;
     if (llamada) { S.llamada = null; guardar(); }
-    const loc = llamada ? ` 📞 ${L('Llamada al aire', 'Caller on the air')} · ${L(llamada[0], llamada[3] || llamada[0])}: «${L(llamada[1], llamada[2])}»` : noticia ? ` 📰 ${L('Noticias de madrugada', 'Late-night news')}: ${TRAD(noticia)}` : azar(.55) ? ' ' + (azar(.3) ? '📢 ' + TRAD(uno(COMERCIALES)) : TRAD(uno(LOCUTOR)).replace('{h}', M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480))) : '';
+    const loc = llamada ? ` 📞 ${L('Llamada al aire', 'Caller on the air')} · ${L(llamada[0], llamada[3] || llamada[0])}: «${L(llamada[1], llamada[2])}»` : noticia ? ` 📰 ${L('Noticias de madrugada', 'Late-night news')}: ${TRAD(noticia)}` : azar(.55) ? ' ' + (azar(.3) ? '📢 ' + TRAD(uno(COMERCIALES)) : azar(.45) ? `🦉 ${buhoRevelado() ? 'Don Rigo' : BUHO.n}: «${pistaBuho()}»` : TRAD(uno(LOCUTOR)).replace('{h}', M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480))) : '';
     decir(QUIEN_RADIO, `♪ «${can.t}», ${L('de', 'by')} ${can.de}.${loc}`);
   }
 }
@@ -1695,6 +1726,13 @@ const fluor = new T.DirectionalLight(0xe6f2ff, .65); fluor.position.set(1, 4, 2)
   escena.environment = new T.PMREMGenerator(R).fromScene(env, .02).texture;
 })();
 
+// Una mano abierta, oscura, para la huella de Beto (se dibuja una vez y se reutiliza).
+let txHuella = null;
+const TX_HUELLA = () => txHuella || (txHuella = texCanvas(lienzo(128, 160, (g) => {
+  g.fillStyle = '#1a120a'; g.beginPath(); g.ellipse(64, 108, 34, 38, 0, 0, Math.PI * 2); g.fill();
+  [[22, 70, 9, 26, -.5], [42, 42, 9, 32, -.15], [64, 34, 9.5, 36, 0], [86, 42, 9, 32, .15], [104, 62, 8, 24, .45]].forEach(([x, y, rx, ry, a]) => { g.beginPath(); g.ellipse(x, y, rx, ry, a, 0, Math.PI * 2); g.fill(); });
+  g.globalCompositeOperation = 'destination-out'; g.globalAlpha = .35; for (let i = 0; i < 40; i++) { g.beginPath(); g.arc(20 + Math.random() * 90, 20 + Math.random() * 130, Math.random() * 4, 0, 7); g.fill(); }
+})));
 function lienzo(w, h, fn) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); return c; }
 function texCanvas(c, rx = 1, ry = 1) { const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(rx, ry); t.anisotropy = 4; return t; }
 
@@ -2201,7 +2239,10 @@ function construirNoche(orden) {
     const bolsa = add(new T.ConeGeometry(.17, .32, 14, 1, true), new T.MeshStandardMaterial({ color: 0xe0e0e0, transparent: true, opacity: .8, side: T.DoubleSide }), cx + hW / 2 - .22, hY0 - .3, hZ0 + .22);
     bolsa.rotation.x = Math.PI; bolsa.visible = false;
     piezas.bolsas.push({ mesh: bolsa, pos: new T.Vector3(cx + hW / 2 - .22, hY0 - .25, hZ0 + .25), hecho: false });
-    campanas.push({ cx, sfs, gotas, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
+    // La huella de Beto: escondida hasta que él «firma» la campana que acaba de quedar limpia.
+    const huella = add(new T.PlaneGeometry(.3, .36), new T.MeshBasicMaterial({ map: TX_HUELLA(), transparent: true, opacity: .6, depthWrite: false }), cx + hW * .27, hY0 + hood.alto * .5, hZ0 + .022);
+    huella.rotation.z = rnd(-.35, .2); huella.visible = false;
+    campanas.push({ cx, sfs, gotas, huella, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
   }
   patronSf = null;
 
@@ -2278,7 +2319,7 @@ function construirNoche(orden) {
   VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
   VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
   Z = gruposF.map((g, i) => ({ id: 'filtros', n: gruposF.length > 1 ? `${L('Filtros', 'Filters')} ${'ABCD'[i]}` : L('Filtros', 'Filters'), sfs: g.sfs, vista: vista(new T.Vector3(g.lx, 0, g.lonaZ), new T.Vector3(0, 1.6, 1.0), g.lonaW + .2, 1.7, 3.2, 55) }));
-  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, labio: c.labio,
+  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, labio: c.labio, huella: c.huella,
     vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100 } } }));
   piezas.robot = null;
   ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 }, acostado: { dMin: dL - .05, dMax: dL - .05 } } }));
@@ -4148,6 +4189,10 @@ function pintarHud(todo) {
       M.listoAvisado.add(i); sDing(); vibrar(30);
       if (z.id === 'filtros' && M.tFiltros === null && Z.filter(x => x.id === 'filtros').every(x => micras(x) <= LIMITE)) M.tFiltros = clamp(M.t / M.dur, 0, 1) * 480;
       if (M.listoAvisado.size === Z.length && M.etapa === 'lavar' && !M.danos.length) fanfarria();
+      if (z.id === 'campana' && z.huella && !M.huella && M.orden && M.orden.comp === 'beto' && S.noche > 1) {
+        M.huella = S.noche; z.huella.visible = true;
+        decir(COMPANEROS.beto, L(...uno([['¡Quedó tan bonita que le puse mi firma! (una mano entera, negra de grasa)', 'It came out so pretty I signed it! (a whole hand, black with grease)'], ['Ups. Me apoyé. Bueno, ahora tiene personalidad.', 'Oops. I leaned on it. Well, now it has personality.'], ['Esa es mi huella. Para que sepan quién estuvo aquí.', 'That\'s my handprint. So they know who was here.']])));
+      }
       if (i === M.zona && M.etapa === 'lavar') { ayuda(L(`${z.n} pasa la inspección. Al final toca pelar y migdalear la campana.`, `${z.n} passes inspection. At the end you peel and polish the hood.`)); decir(M.comp, uno(['Mírate, te ves en el acero.', 'Eso brilla más que mi futuro.', 'Ni el día que la instalaron estaba así.'])); }
     }
     if (m <= 50 && !z.espejo && M.etapa === 'lavar') brilloEspejo(z);   // después del aviso de «pasa»: el del espejo es el que se queda
@@ -4216,7 +4261,7 @@ function revisionInspector() {
       fila.querySelector('em').textContent = `${f.m.toLocaleString('es-MX')} µm${f.z.id === 'campana' && cel ? ` · ${L('migdaleado', 'polished')} ${Math.round(pul / cel * 100)} %` : ''}`;
       const sello = fila.querySelector('i'); sello.textContent = ok ? '✓' : '✗'; sello.className = ok ? (tipo === 'espejo' ? 'ok brillo' : 'ok') : 'mal';
       fila.classList.add('vista');
-      dice(L(...uno(DICHOS_INSP[tipo])));
+      dice(f.z.huella && f.z.huella.visible ? L('¿Y esta mano? Es de Beto, ¿verdad? No cuenta como grasa. Cuenta como firma. Pasa.', 'And this hand? It\'s Beto\'s, isn\'t it? Doesn\'t count as grease. Counts as a signature. Moving on.') : L(...uno(DICHOS_INSP[tipo])));
       tono(ok ? 880 : 220, .12, .08, ok ? 'triangle' : 'square'); rafaga(.06, 1800, .08, 'bandpass');
       t = setTimeout(paso, lento * .55);
     }, lento * .6);
@@ -4594,6 +4639,7 @@ function prepararNoche() {
     const presta = 300 - S.dinero; S.dinero = 300; S.deuda = (S.deuda || 0) + presta;
     avisos.push(L(`📞 Don Rigo: «Me contó un pajarito que andas sin un peso. Te deposité ${dinero(presta)}. Me lo pagas poco a poco, sin intereses. Pero sí me lo pagas.»`, `📞 Don Rigo: «A little bird told me you're broke. I sent you ${dinero(presta)}. Pay me back bit by bit, no interest. But you do pay me back.»`));
   }
+  if (S.fase === 'empresa' && !buhoRevelado() && S.noche % 4 === 0) avisos.push(L(`📻 Anoche, en Radio Grasa FM, ${BUHO.n} dijo: «${pistaBuho()}»`, `📻 Last night on Radio Grasa FM, ${BUHO.n} said: "${pistaBuho()}"`));
   const ordenes = generarOrdenes();
   if (S.cunado && S.cunado.presume) { avisos.push(L(`${RIVAL} presume en redes: «Le gané a ${S.empresa ? S.empresa.nombre : 'Grasa Brava'} en ${S.cunado.presume}. Con una mano.» Ya te tocará la revancha.`, `${RIVAL} brags online: «Beat ${S.empresa ? S.empresa.nombre : 'Grasa Brava'} at ${S.cunado.presume}. One-handed.» Your rematch will come.`)); S.cunado.presume = null; }
   if (S.recomienda && S.fase === 'empresa') {
@@ -4717,7 +4763,14 @@ function licitHoy() {
   if (S.licit.ultima !== S.noche - 1) { H.avisos.push(L('Perdiste la Gran Licitación: no te presentaste a la siguiente prueba.', 'You lost the Grand Tender: you didn\'t show up for the next test.')); S.licit = null; S.licitPerdida = S.noche; return; }
   const o = ordenLicit(S.licit.paso); H.ordenes.unshift(o); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++; S.licit.noche = S.noche;
 }
+const buhoPendiente = () => S.fase === 'empresa' && !buhoRevelado() && !!(S.licitGanada || S.licitPerdida || S.legado || S.final);
+function tarjetaBuho() {
+  return `<div class="orden licit buho"><span class="chip naranja">📻 ${L('Radio Grasa FM interrumpe la transmisión', 'Radio Grasa FM interrupts the broadcast')}</span><h3>${L('El Búho tiene algo que confesar', 'The Owl has a confession')}</h3>
+    <p class="cita">${conNombres(L('«{jugador}: soy yo. Rigo. Nunca me fui al lago. Bueno, los domingos sí. Los mensajes «desde el lago» los mandaba desde la cabina de la radio; el ruido del agua era la cafetera. Quería ver si podías tú solo. Pudiste. Y la Gran Licitación la narré yo, en vivo, llorando como un mapache.»', '"{jugador}: it\'s me. Rigo. I never went to the lake. Well, on Sundays I did. The messages "from the lake" were sent from the radio booth; the water sound was the coffee maker. I wanted to see if you could do it on your own. You could. And I narrated the Grand Tender myself, live, crying like a raccoon."'))}</p>
+    <div class="acciones"><button class="btn prim" id="buhoOk">${L('¡Don Rigo!', 'Don Rigo!')}</button></div></div>`;
+}
 function tarjetaLicit() {
+  if (buhoPendiente()) return tarjetaBuho();
   if (compradorListo()) return `<div class="orden licit comprador"><span class="chip naranja">🚘 ${L('Visita inesperada', 'Unexpected visitor')}</span><h3>${L('Una limusina en la puerta del taller', 'A limousine outside the workshop')}</h3>
     <p class="nota">${L('Un señor de traje color perla baja con dos asistentes y un portafolios dorado. Pregunta por «el dueño de la empresa más limpia del país».', 'A man in a pearl-gray suit steps out with two assistants and a golden briefcase. He asks for "the owner of the cleanest company in the country".')}</p>
     <div class="acciones"><button class="btn prim" id="comprador">${L('Recibirlo', 'Meet him')}</button></div></div>`;
@@ -4810,6 +4863,9 @@ function pantallaEpilogo(camino, e) {
     a.beto && a.beto.fin ? (a.beto.apoyo ? L('Beto nunca volvió a abrir una taquería, pero guarda el letrero de «Beto\'s Tacos» en la sede. Y sus lentes.', 'Beto never opened another taco stand, but he keeps the "Beto\'s Tacos" sign at HQ. And his glasses.') : L('Beto sigue vendiendo tacos en el estacionamiento. Técnicamente, no es la empresa.', 'Beto still sells tacos in the parking lot. Technically, not the company.')) : null,
     a.lupe && a.lupe.fin ? L('Lupe y Doña Remedios juegan dominó los domingos. Hacen trampa las dos.', 'Lupe and Doña Remedios play dominoes on Sundays. They both cheat.') : null,
     a.chuy && a.chuy.fin ? L('Chuy y Marisol se van a casar. Él promete no dormirse en la boda.', 'Chuy and Marisol are getting married. He promises not to fall asleep at the wedding.') : null,
+    (S.huellas || []).length ? (e.mano === 'c:beto' ? L(`Beto descolgó sus ${S.huellas.length} huellas de la pared del taller y las metió en la camioneta, envueltas en periódico. «Para la pared nueva.»`, `Beto took his ${S.huellas.length} handprints off the workshop wall and packed them in the van, wrapped in newspaper. "For the new wall."`)
+      : a.beto && a.beto.apoyo ? L(`Beto enmarcó sus ${S.huellas.length} huellas y las colgó en su taquería. Debajo dice: «Aquí estuvo Beto».`, `Beto framed his ${S.huellas.length} handprints and hung them in his taco stand. The caption says: "Beto was here".`)
+      : L(`La pared del taller sigue llena de huellas de Beto: ${S.huellas.length}. Nadie se atreve a pintarla.`, `The workshop wall is still covered in Beto\'s handprints: ${S.huellas.length}. Nobody dares to paint over it.`)) : null,
     S.perro ? L('Grasita se sube la primera a la camioneta. Sabe que hay viaje.', 'Grasita is first into the van. She knows there\'s a trip.') : null,
     L(`${RIVAL} ya no existe: Grupo Brillo Total se la compró. El Cuñado${cu.gane ? `, que perdió ${cu.gane} ${cu.gane === 1 ? 'duelo' : 'duelos'} contigo,` : ''} ahora es gerente regional en Puerto Fritanga. Te mandó un mensaje: «Allá te espero.»`, `${RIVAL} is gone: Grupo Brillo Total bought it. El Cuñado${cu.gane ? `, who lost ${cu.gane} ${cu.gane === 1 ? 'duel' : 'duels'} to you,` : ''} is now regional manager in Port Fritanga. He sent you a message: "I'll be waiting for you there."`),
     camino === 'A' ? L(`Vendiste. ${esc(dir.n)} se queda al frente, ahora con logo de Brillo en la camisa. Te dio un abrazo largo y un «no me olvides».`, `You sold. ${esc(dir.n)} stays in charge, now with a Brillo logo on the shirt. A long hug and a "don\'t forget me".`)
@@ -4819,7 +4875,7 @@ function pantallaEpilogo(camino, e) {
   pantalla(`<div class="final"><div class="rotulo">${L('Fin de la primera campaña', 'End of the first campaign')}<span>Ciudad Comal</span></div>
     ${lineas.map(t => `<p>${t}</p>`).join('')}
     <div class="datos"><div class="dato"><i>${L('Noches', 'Nights')}</i><b>${S.noche - 1}</b></div><div class="dato"><i>${L('Aprobadas', 'Passed')}</i><b>${S.aprobados}</b></div><div class="dato"><i>${L('Medallas', 'Medals')}</i><b>${Object.keys(S.medallas).length}</b></div><div class="dato"><i>${L('Caja', 'Till')}</i><b>${dinero(S.dinero)}</b></div></div>
-    <div class="creditos">${[[L('Dueño y fundador', 'Owner and founder'), esc(S.jugador || L('Tú', 'You'))], [L('Maestro jubilado', 'Retired master'), 'Don Rigo'], [L('Primo de alguien', 'Somebody\'s cousin'), 'Beto'], [L('La veterana', 'The veteran'), 'Lupe'], [L('El grandote', 'The big guy'), 'Chuy'], [L('Coordinación', 'Coordination'), 'Angélica'], [L('Música', 'Music'), 'Radio Grasa FM'], [L('Rival', 'Rival'), 'El Cuñado'], [L('Ningún mapache fue lastimado', 'No raccoons were harmed'), '🦝']].map(([x, y]) => `<span>${x}</span><b>${y}</b>`).join('')}</div>
+    <div class="creditos">${[[L('Dueño y fundador', 'Owner and founder'), esc(S.jugador || L('Tú', 'You'))], [L('Maestro jubilado', 'Retired master'), 'Don Rigo'], [L('Primo de alguien', 'Somebody\'s cousin'), 'Beto'], [L('La veterana', 'The veteran'), 'Lupe'], [L('El grandote', 'The big guy'), 'Chuy'], [L('Coordinación', 'Coordination'), 'Angélica'], buhoRevelado() ? [L('Locutor de Radio Grasa FM', 'Radio Grasa FM host'), L('Don Rigo (lo sabías)', 'Don Rigo (you knew it)')] : [L('Música', 'Music'), 'Radio Grasa FM'], [L('Rival', 'Rival'), 'El Cuñado'], [L('Ningún mapache fue lastimado', 'No raccoons were harmed'), '🦝']].map(([x, y]) => `<span>${x}</span><b>${y}</b>`).join('')}</div>
     <div class="acciones"><button class="btn" id="noTodavia">${L('Todavía no me voy', 'Not leaving yet')}</button><button class="btn prim" id="rumbo">⚓ ${L('Rumbo a Puerto Fritanga', 'Off to Port Fritanga')}</button></div></div>`);
   [523, 659, 784, 1046].forEach((f, i) => tono(f, .5, .08, 'triangle', null, i * .18));
   $('#noTodavia').onclick = () => pantallaCamioneta();
@@ -4872,7 +4928,7 @@ function pantallaFinal() {
     <p>${L('Beto pidió un aumento. Lupe pidió que no se lo dieras. Chuy se durmió durante la fiesta, encima del pastel.', 'Beto asked for a raise. Lupe asked you not to give him one. Chuy fell asleep during the party, on top of the cake.')}</p>
     <p>${L('Una semana después, El Cuñado abrió «Limpiezas El Cuñado 2», enfrente de tu oficina. La rivalidad continúa.', 'A week later, El Cuñado opened "Limpiezas El Cuñado 2", right across from your office. The rivalry continues.')}</p>
     <div class="datos"><div class="dato"><i>${L('Noches', 'Nights')}</i><b>${S.noche - 1}</b></div><div class="dato"><i>${L('Aprobadas', 'Passed')}</i><b>${S.aprobados}</b></div><div class="dato"><i>${L('Medallas', 'Medals')}</i><b>${med}</b></div><div class="dato"><i>${L('Tu dinero', 'Your money')}</i><b>${dinero(S.dinero)}</b></div></div>
-    <div class="creditos">${[[L('Dueño y fundador', 'Owner and founder'), esc(S.jugador || L('Tú', 'You'))], [L('Maestro jubilado', 'Retired master'), 'Don Rigo'], [L('Primo de alguien', 'Somebody\'s cousin'), 'Beto'], [L('La veterana', 'The veteran'), 'Lupe'], [L('El grandote', 'The big guy'), 'Chuy'], [L('Coordinación', 'Coordination'), 'Angélica'], [L('Música', 'Music'), 'Radio Grasa FM'], [L('Rival', 'Rival'), RIVAL], [L('Ningún mapache fue lastimado', 'No raccoons were harmed'), '🦝']].map(([a, b]) => `<span>${a}</span><b>${b}</b>`).join('')}</div>
+    <div class="creditos">${[[L('Dueño y fundador', 'Owner and founder'), esc(S.jugador || L('Tú', 'You'))], [L('Maestro jubilado', 'Retired master'), 'Don Rigo'], [L('Primo de alguien', 'Somebody\'s cousin'), 'Beto'], [L('La veterana', 'The veteran'), 'Lupe'], [L('El grandote', 'The big guy'), 'Chuy'], [L('Coordinación', 'Coordination'), 'Angélica'], buhoRevelado() ? [L('Locutor de Radio Grasa FM', 'Radio Grasa FM host'), L('Don Rigo (lo sabías)', 'Don Rigo (you knew it)')] : [L('Música', 'Music'), 'Radio Grasa FM'], [L('Rival', 'Rival'), RIVAL], [L('Ningún mapache fue lastimado', 'No raccoons were harmed'), '🦝']].map(([a, b]) => `<span>${a}</span><b>${b}</b>`).join('')}</div>
     <div class="acciones"><button class="btn prim" id="libre">${L('Seguir jugando (modo libre)', 'Keep playing (free mode)')}</button></div></div>`);
   [523, 659, 784, 1046].forEach((f, i) => tono(f, .5, .08, 'triangle', null, i * .18));
   $('#libre').onclick = () => { audio(); pantallaCamioneta(); };
@@ -5019,7 +5075,7 @@ function pantallaCamioneta() {
   const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros y álbum', 'Awards & album')]] : [['noche', L('Noche', 'Night')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
   if (!tabs.some(t => t[0] === tab)) tab = 'noche';
   pantalla(`<div class="lado-cab">${cabecera()}
-    <button class="barrio" id="jefeCorto" aria-expanded="false"><div class="linea">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b><span>${esc(TRAD(H.frase))}</span></div></div>
+    <button class="barrio" id="jefeCorto" aria-expanded="false"><div class="linea">${cara('#b9a27a', 'R')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : (buhoRevelado() ? L('Don Rigo, desde la cabina de Radio Grasa FM', 'Don Rigo, from the Radio Grasa FM booth') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake'))}</b><span>${esc(buhoRevelado() ? TRAD(H.frase).replace(/^Desde el lago:/, 'Desde la cabina:').replace(/^From the lake:/, 'From the booth:') : TRAD(H.frase))}</span></div></div>
     ${H.avisos.length ? `<div class="linea"><i class="ico-radio">📻</i><div><b>${L('Noticias del barrio', 'Neighborhood news')}</b><span>${esc(H.avisos.map(TRAD).join(' '))}</span></div></div>` : ''}${TRAD(H.frase).length + H.avisos.map(TRAD).join(' ').length > 110 ? `<small class="mas">${L('Toca para leer todo', 'Tap to read it all')}</small>` : ''}</button></div>
     <div class="lado-main"><nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
     ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}
@@ -5317,6 +5373,12 @@ function vSede() {
     <p class="nota">${L(`Vitrina: ${medallas ? '🏅'.repeat(Math.min(medallas, 12)) + (medallas > 12 ? ` +${medallas - 12}` : '') : 'vacía (gana medallas para llenarla)'}`, `Trophy case: ${medallas ? '🏅'.repeat(Math.min(medallas, 12)) + (medallas > 12 ? ` +${medallas - 12}` : '') : 'empty (win medals to fill it)'}`)}</p>
     ${Object.entries(SEDE).map(([id, e]) => { const nv = sede(id), p = PRECIO_SEDE[nv]; return `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${e.ico}</div><div><b>${L(...e.n)} <span class="rangos">${'●'.repeat(nv)}${'○'.repeat(3 - nv)}</span></b><span>${L(...e.d)}</span></div>${p ? `<button class="btn prim peq" data-sede="${id}" ${S.dinero < p ? 'disabled' : ''}>${L('Nivel', 'Level')} ${nv + 1} · ${dinero(p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`; }).join('')}`;
 }
+// La pared del taller con las huellas de Beto: una por cada campana que «firmó».
+function paredBeto() {
+  const h = S.huellas || []; if (!h.length) return '';
+  return `<h2 class="sec">${L('La pared de Beto', 'Beto\'s wall')} · ${h.length}</h2><div class="pared-beto">${h.map((x, i) => `<span title="${esc(x.c)} · ${L('noche', 'night')} ${x.n}" style="--r:${((i * 37) % 50) - 25}deg">🖐️<small>${x.n}</small></span>`).join('')}</div>
+    <p class="nota">${L('Beto deja su mano en cada campana que limpia contigo. Dice que es su firma. El inspector ya se acostumbró.', 'Beto leaves his hand on every hood he cleans with you. He says it\'s his signature. The inspector got used to it.')}</p>`;
+}
 function vTaller() {
   const bloqueadas = S.fase === 'empresa' ? [[L('Cañón de espuma y rasqueta eléctrica', 'Foam cannon and electric scraper'), 1], [L('Hidrolavadora de vapor y robot de ductos', 'Steam pressure washer and duct robot'), 2], [L('Turbo para el robot', 'Robot turbo'), 3]].filter(([, e]) => S.etapa < e) : [];
   if (S.fase === 'aprendiz') return `<div class="cita"><b>Don Rigo</b>${L('Las herramientas son mías y son las mejores: rasqueta de carburo, hidrolavadora, migdaleadora orbital, de todo. Disfrútalas mientras trabajes conmigo. Cuando tengas tu empresa, te compras las tuyas.', 'The tools are mine and they are the best: carbide scraper, pressure washer, orbital polisher, everything. Enjoy them while you work for me. When you have your own company, you buy your own.')}</div>`;
@@ -5330,6 +5392,7 @@ function vTaller() {
   return `<p class="nota">${L('Las herramientas se pagan con tu dinero y son tuyas: te las llevas a donde vayas.', 'You pay for tools with your money and they are yours: you take them wherever you go.')} ${L('Tienes', 'You have')} ${dinero(S.dinero)}.</p>
     ${items.map(t => `<div class="orden"><h3>${esc(nTienda(t))}</h3><span class="nota">${esc(dTienda(t))}</span><div class="fila"><span class="pago">${dinero(t.p)}</span><button class="btn prim" data-t="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${L('Comprar', 'Buy')}</button></div></div>`).join('') || `<p class="nota">${L('Ya tienes todo el equipo.', 'You already have all the equipment.')}</p>`}
     ${S.eq.camioneta === 1 && etapa() < 1 ? `<p class="nota">${L('Las camionetas más grandes, cuando tengas taller propio.', 'Bigger vans come with your own workshop.')}</p>` : ''}
+    ${paredBeto()}
     ${vSede()}
     ${bloqueadas.length ? `<p class="nota">${L('Más adelante', 'Coming later')}: ${bloqueadas.map(([n, e]) => `${n} (${L('desde', 'from')} ${nEtapa(e)})`).join(' · ')}.</p>` : ''}${kits}
     ${S.fase === 'empresa' ? `<h2 class="sec">${L('Tunear la camioneta', 'Pimp your van')}</h2><div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}</div>
@@ -5387,6 +5450,7 @@ function enlazar() {
     guardar(); pantallaCamioneta();
   });
   const ls = $('#licitSi'); if (ls) ls.onclick = () => { if (S.dinero < LICIT_ENTRADA) return; audio(); S.dinero -= LICIT_ENTRADA; S.licit = { paso: 0, res: [], noche: S.noche, ultima: null }; const o = ordenLicit(0); H.ordenes.unshift(o); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++; sCaja(); guardar(); pantallaCamioneta(); };
+  const bo = $('#buhoOk'); if (bo) bo.onclick = () => { audio(); S.buho = { revelado: S.noche }; const al = L('El Búho de la madrugada era Don Rigo', 'The late-night Owl was Don Rigo'); if (!S.album.includes(al)) S.album.push(al); guardar(); [392, 494, 587, 784].forEach((f, i) => tono(f, .3, .07, 'triangle', null, i * .12)); pantallaCamioneta(); };
   const cm = $('#comprador'); if (cm) cm.onclick = () => { audio(); pantallaComprador(); };
   const vj = $('#viajar'); if (vj) vj.onclick = () => { audio(); pantallaViaje(); };
   const cc = $('#comprarCunado'); if (cc) cc.onclick = () => { if (S.dinero < PRECIO_CUNADO) return; audio(); S.dinero -= PRECIO_CUNADO; S.final = S.noche; S.medallas.final = S.noche; sCaja(); guardar(); pantallaFinal(); };
@@ -5765,6 +5829,7 @@ function pantallaParte() {
   if (S.dinero >= 50000) dar('rico');
   S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
+  if (M.huella) { S.huellas = S.huellas || []; S.huellas.push({ n: M.huella, c: o.nombre }); if (S.huellas.length > 80) S.huellas.shift(); }
   for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }   // la experiencia se nota
   for (const B of BS) {
     for (const g of B.gente) { const c = g.id && S.cuadrilla.find(x => x.id === g.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }
