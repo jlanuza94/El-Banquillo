@@ -1918,10 +1918,18 @@ TX.acero = texCanvas(lienzo(512, 512, (g, w, h) => {
   g.fillStyle = '#c4cbd1'; g.fillRect(0, 0, w, h);
   for (let i = 0; i < 1400; i++) { const y = Math.random() * h, a = Math.random() * .08; g.fillStyle = Math.random() < .5 ? `rgba(255,255,255,${a})` : `rgba(60,70,80,${a})`; g.fillRect(0, y, w, Math.random() * 1.6 + .3); }
 }));
+// Filtro de láminas (bafles) como los de verdad: láminas en V con luz y sombra, marco grueso y dos asas.
 TX.bafles = texCanvas(lienzo(256, 256, (g, w, h) => {
-  g.fillStyle = '#b9c1c8'; g.fillRect(0, 0, w, h);
-  for (let x = 12; x < w - 8; x += 24) { g.fillStyle = 'rgba(40,48,56,.55)'; g.fillRect(x, 10, 6, h - 20); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x + 6, 10, 3, h - 20); }
-  g.strokeStyle = '#59646d'; g.lineWidth = 14; g.strokeRect(7, 7, w - 14, h - 14);
+  g.fillStyle = '#9aa3ab'; g.fillRect(0, 0, w, h);
+  for (let x = 16; x < w - 16; x += 22) {
+    const gr = g.createLinearGradient(x, 0, x + 22, 0);
+    gr.addColorStop(0, '#5d666e'); gr.addColorStop(.42, '#dfe5ea'); gr.addColorStop(.5, '#f7fafc'); gr.addColorStop(.58, '#c9d0d6'); gr.addColorStop(1, '#4c545b');
+    g.fillStyle = gr; g.fillRect(x, 16, 22, h - 32);
+    g.fillStyle = 'rgba(20,24,28,.55)'; g.fillRect(x + 21, 16, 1.5, h - 32);
+  }
+  g.strokeStyle = '#6b757d'; g.lineWidth = 16; g.strokeRect(8, 8, w - 16, h - 16);
+  g.strokeStyle = '#c4ccd2'; g.lineWidth = 2; g.strokeRect(15, 15, w - 30, h - 30);
+  g.fillStyle = '#3a4148'; for (const x of [70, 186]) { g.fillRect(x - 16, 2, 32, 9); }
 }));
 TX.azulejo = texCanvas(lienzo(256, 256, (g, w, h) => {
   g.fillStyle = '#d9d4c8'; g.fillRect(0, 0, w, h); g.strokeStyle = '#a8a294'; g.lineWidth = 3;
@@ -2053,6 +2061,14 @@ function superficie(w, h, base, micrasRel, celda = .03, geo, lado, tipos) {
     const media = suma / n, esf = a => a.reduce((t, x) => t + x / (x > .6 ? .5 : 1), 0), antes = esf(d);   // la costra gruesa (> .6) cuesta el doble
     for (let i = 0; i < n; i++) d[i] = clamp(d[i] * fp[i] / media, .08, 1.3);
     for (let k = 0; k < 3; k++) { const f = antes / esf(d); if (Math.abs(f - 1) < .02) break; for (let i = 0; i < n; i++) d[i] = clamp(d[i] * f, .08, 1.3); }   // mismo esfuerzo total: cambia el dibujo, no la dificultad
+  }
+  // Chorreaduras: en las paredes de la campana la grasa baja en hilos desde arriba y se acumula abajo, como en las de verdad.
+  if (patronSf && patronSf.cara === 'pared') {
+    const hilos = Array.from({ length: nx }, () => 0), antes = d.reduce((a, x) => a + x, 0);
+    for (let k = 0, nh = Math.round(nx / 5); k < nh; k++) { const c = rnd(0, nx), a = rnd(.6, 2.2), f = rnd(.4, 1); for (let x = Math.max(0, Math.floor(c - a * 2)); x < Math.min(nx, c + a * 2); x++) hilos[x] = Math.max(hilos[x], f * Math.exp(-(((x - c) / a) ** 2))); }
+    const largo = hilos.map(() => rnd(.35, 1));
+    for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) { const v = y / ny, baja = 1 - v; if (hilos[x] > .05 && baja < largo[x] + .3) d[y * nx + x] *= 1 + hilos[x] * (v > 1 - largo[x] ? 2.2 : 1.2) + .5 * (1 - v) ** 3; else d[y * nx + x] *= .7; }
+    const f = antes / d.reduce((a, x) => a + x, 0); for (let i = 0; i < n; i++) d[i] = clamp(d[i] * f, .08, 1.3);   // mismo total de grasa: cambia el dibujo
   }
   // Manchas de suciedad especial: unas cuantas manchas redondas de cada tipo, más gruesas que la grasa normal.
   let tipo = null, ttex = null;
@@ -2322,7 +2338,7 @@ function construirNoche(orden) {
   const hW = hood.ancho, hY0 = 1.95, hY1 = hY0 + hood.alto, hZ0 = -.95, hZ1 = hZ0 + hood.fondo, hZ = (hZ0 + hZ1) / 2;
   const sep = .5, span = nC * hW + (nC - 1) * sep, lineW = span + .2;
   const xs = Array.from({ length: nC }, (_, i) => (i - (nC - 1) / 2) * (hW + sep));
-  piezas.pilotos = []; piezas.aparatos = []; piezas.cintas = []; piezas.faldas = []; piezas.bolsas = []; piezas.recuerdos = [];
+  piezas.pilotos = []; piezas.aparatos = []; piezas.cintas = []; piezas.faldas = []; piezas.bolsas = []; piezas.recuerdos = []; piezas.bancos = [];
 
   // Cuarto
   const suelo = add(new T.PlaneGeometry(9, 8), new T.MeshStandardMaterial({ map: TX.suelo, roughness: .7 }), 0, 0, 1); suelo.rotation.x = -Math.PI / 2;
@@ -2433,6 +2449,23 @@ function construirNoche(orden) {
     // La huella de Beto: escondida hasta que él «firma» la campana que acaba de quedar limpia.
     const huella = add(new T.PlaneGeometry(.3, .36), new T.MeshBasicMaterial({ map: TX_HUELLA(), transparent: true, opacity: .6, depthWrite: false }), cx + hW * .27, hY0 + hood.alto * .5, hZ0 + .022);
     huella.rotation.z = rnd(-.35, .2); huella.visible = false;
+    // Banco de filtros inclinado al fondo de la campana (sucios en la preparación, en la lona mientras se lavan,
+    // y de vuelta, limpios, al terminar) y el sistema contra incendios con sus boquillas.
+    const nFil = Math.max(2, Math.round((hW - .2) / .5)), anchoF = (hW - .16) / nFil, alto = Math.min(.42, hood.alto * .7);
+    const banco = new T.Group(); banco.position.set(cx, hY0 + alto / 2 * .7 + .04, hZ0 + .2); banco.rotation.x = -.62; mundo.add(banco);
+    const matFiltroSucio = new T.MeshStandardMaterial({ map: TX.bafles, color: 0x6b5330, metalness: .6, roughness: .55 }), matFiltroLimpio = new T.MeshStandardMaterial({ map: TX.bafles, metalness: .85, roughness: .28 });
+    const filtrosHood = [];
+    for (let k = 0; k < nFil; k++) { const m = new T.Mesh(new T.PlaneGeometry(anchoF - .015, alto), matFiltroSucio); m.position.x = -hW / 2 + .08 + anchoF * (k + .5); banco.add(m); filtrosHood.push(m); }
+    for (const yy of [-alto / 2 - .01, alto / 2 + .01]) { const r = new T.Mesh(new T.BoxGeometry(hW - .1, .025, .04), matAcero); r.position.y = yy; banco.add(r); }
+    const matTubo = new T.MeshStandardMaterial({ color: 0xc9a54a, metalness: .9, roughness: .3 });
+    const tubo = add(new T.CylinderGeometry(.014, .014, hW - .1, 10), matTubo, cx, hY1 - .07, hZ0 + hood.fondo * .55); tubo.rotation.z = Math.PI / 2;
+    add(new T.CylinderGeometry(.014, .014, .2, 10), matTubo, cx + hW / 2 - .12, hY1 + .03, hZ0 + hood.fondo * .55);
+    for (let k = 0; k < Math.max(2, Math.round(hW / .7)); k++) {
+      const nxp = cx - hW / 2 + .3 + (hW - .6) * (k / Math.max(1, Math.round(hW / .7) - 1));
+      add(new T.CylinderGeometry(.008, .008, .07, 8), matTubo, nxp, hY1 - .105, hZ0 + hood.fondo * .55);
+      add(new T.ConeGeometry(.022, .035, 10, 1, true), new T.MeshStandardMaterial({ color: 0xdedede, metalness: .9, roughness: .2, side: T.DoubleSide }), nxp, hY1 - .155, hZ0 + hood.fondo * .55);
+    }
+    piezas.bancos = piezas.bancos || []; piezas.bancos.push({ banco, filtros: filtrosHood, limpio: matFiltroLimpio });
     campanas.push({ cx, sfs, gotas, huella, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
   }
   patronSf = null;
@@ -3052,6 +3085,7 @@ function arrancarTurno() {
   M.t = M.prepMin / 480 * M.dur;
   matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
   M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0; U.hl.value = hlBase();
+  for (const b of piezas.bancos || []) b.banco.visible = false;   // los filtros se bajan a la lona para lavarlos
   ayuda(L('Elige la herramienta abajo y haz pasadas cortas sobre la grasa.', 'Pick a tool below and make short strokes over the grease.'), 5);
   if (M.orden.tuto) { M.tuto = 1; M.tutoZona = M.zona; decir(M.comp, L('Primera noche, ¿eh? Tranquilo. Te voy diciendo. Arriba sale lo que toca.', 'First night, huh? Relax. I\'ll walk you through it. What to do shows up at the top.')); }
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
@@ -4648,6 +4682,7 @@ function requemar(a) {
 // ---- pelar: quitar el plástico de la campana, las cubiertas y bajar la bolsa
 
 function empezarPelado() {
+  for (const b of piezas.bancos || []) { b.banco.visible = true; b.filtros.forEach(f => { f.material = b.limpio; }); }   // los filtros limpios vuelven a su sitio
   if (EQ().aspira && !M.prep.bolsa) { sumarTiempo(5); setTimeout(() => M && ayuda(L('Sin bolsa, toca aspirar el agua del piso: 5 minutos.', 'No bag: vacuuming the floor water takes 5 minutes.'), 4), 300); }
   M.etapa = 'pelar'; M.trazo = null; M.presionado = false; chorro(false); cerrarRueda();
   $('#hudAbajo').hidden = true; matPlastico.opacity = .5;

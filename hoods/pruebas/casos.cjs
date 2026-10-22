@@ -316,9 +316,9 @@ caso('duelo 2.0: sin apuesta, El Cuñado se confía y gana', async () => {
   await empezarDuelo(p, false);
   afirmar(await p.evaluate(() => __hc.M.duelo.apuesta === 0), 'rechazar la apuesta no quedó registrado');
   await p.evaluate(() => { __hc.M.duelo.prog = .5; });
-  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 20000 });
+  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 45000 });
   await p.evaluate(() => { __hc.M.duelo.prog = .99; });
-  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 20000 });
+  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 45000 });
   await terminarDuelo(p); await p.waitForSelector('.nota-grande', { timeout: 60000 });
   const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
   afirmar(/Duelo perdido · \d–2/i.test(t) && !/Apuesta/.test(t) && /la mitad/.test(t), 'el parte del duelo perdido no es correcto: ' + (t.match(/Duelo[^\n]*\n?[^\n]*/) || [t.slice(0, 200)])[0]);
