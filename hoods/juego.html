@@ -367,6 +367,16 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .cursos .btn { text-align: left; text-transform: none; letter-spacing: 0; display: grid; gap: 2px; padding: 6px 8px; }
 .cursos .btn b { font-family: var(--f-cond); font-size: 14px; } .cursos .btn small { font-family: var(--f-cuerpo); font-weight: 400; font-size: 11.5px; opacity: .85; }
 .cursos .nota { grid-column: 1 / -1; }
+.jefe-med { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 8px; align-items: center; background: rgba(17,25,33,.8); border: 1px solid #c6a0ff88; border-radius: 8px; padding: 4px 9px; font-family: var(--f-cond); font-weight: 700; font-size: 13px; letter-spacing: .04em; max-width: 340px; }
+.jefe-med small { color: var(--tenue); font-size: 12px; }
+.jefe-med .barra { height: 8px; }
+.jefe-med .barra > div { height: 100%; background: #c6a0ff; transition: width .25s; }
+.jefe-med[data-tipo="tele"] .barra > div { background: linear-gradient(90deg, var(--mal), #ffd23f 50%, var(--ok)); }
+.jefe-med[data-tipo="hospital"] .barra > div { background: linear-gradient(90deg, var(--ok), #ffd23f 60%, var(--mal)); }
+.jefe-med[data-tipo="inspector"] .barra > div { background: var(--hivis); transition: none; }
+.chip.jefe { background: #c6a0ff; color: #1a1030; }
+.jefe-card { border-color: #c6a0ff99; background: rgba(198,160,255,.08); }
+.jefe-card b { color: #c6a0ff; }
 .contrato { display: grid; gap: 3px; background: rgba(255,210,63,.08); border: 1px dashed #ffd23f88; border-radius: 6px; padding: 8px 10px; font-size: 14px; }
 .contrato b { font-family: var(--f-cond); letter-spacing: .05em; text-transform: uppercase; font-size: 14px; color: #ffd23f; }
 .contrato i { color: var(--acero); }
@@ -560,6 +570,7 @@ a.btn { display: inline-block; text-decoration: none; }
       <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="centrar" aria-label="Recentrar la vista / Recenter view" hidden>⌖</button><button class="btn-ico" id="pausa" aria-label="Pausa / Pause">❚❚</button></div>
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
       <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
+      <div class="jefe-med" id="jefeMed" hidden><b></b><div class="barra"><div></div></div><small></small></div>
       <div class="pasos" id="pasos"></div>
       <div class="cinta" id="cinta" hidden><b>FM</b><div><span></span></div></div>
       <div class="tuto" id="tuto" hidden></div>
@@ -641,12 +652,13 @@ const EN = {
     cuca: ['Roach hunter', 'Catch the giant cockroach.'], apagon: ['Cat eyes', 'Pass a night with a blackout.'], pedido: ['Picky client', 'Fulfill a special request.'], duelo: ['Bye, Cuñado', 'Win a duel against El Cuñado.'], diez: ['Veteran', 'Pass 10 inspections.'],
     fotos: ['Grease photographer', 'Collect 6 photos in the album.'], finde: ['Legendary weekend', 'Beat the weekend challenge: three giant jobs in a row.'], contrato: ['Fine print', 'Complete a tough contract.'], contratos5: ['Official supplier', 'Complete 5 tough contracts.'], racha10: ['Unstoppable', 'Pass 10 nights in a row.'], cunado5: ['El Cuñado\'s nightmare', 'Win 5 duels against El Cuñado.'],
     sede3: ['First stone', 'Take a headquarters station to level 3.'], sedeTotal: ['Headquarters', 'Max out the whole headquarters.'], maestro: ['Hood school', 'Train 3 different helpers.'], flota: ['Fleet', 'Own 5 vans.'], rico: ['Grease tycoon', 'Save up $50,000.'],
+    j_tele: ['TV star', 'Beat the live show with good ratings.'], j_embrujada: ['Ghostbuster', 'Clean the haunted hood.'], j_hospital: ['Quiet, please', 'Clean the hospital kitchen without three scoldings.'], j_inspector: ['Under the magnifier', 'Pass with the surprise inspector (more checks than crosses).'], jefes: ['Legend of the night', 'Beat every boss job.'],
     dorado: ['The golden raccoon', 'You saw it. Nobody will believe you.'], casete: ['The lost tape', 'You found Don Rigo\'s cassette in a duct.'], himno: ['Perfect pitch', 'You found the radio\'s secret song.'] },
   reto: { sinHidro: 'No pressure washer', sinEspuma: 'No foam', combo2: 'Reach a ×3 combo twice', antes4: 'Inspector before 4:00, passed', espejo: 'Polish 80% of the hood', sinDanos: 'Not a single damage', prep: 'Perfect prep (gas, power, covers and plastic)', filtros: 'Filters done before 11:30 pm', notaA: 'Get an A or better', metal: 'Everything at 50 µm or less' },
   look: { espuma: 'Foam color', casco: 'Partner\'s helmet', pegatina: 'Van sticker', linterna: 'Helmet light', combo: 'Combo sound',
     blanca: 'White', rosa: 'Pink', menta: 'Mint green', oro: 'Gold', azul: 'Pool blue', normal: 'Their own', negro: 'Matte black', militar: 'Army green', nada: 'None', llamas: 'Flames', mapache: 'Raccoon', estrella: 'Star', cuca: 'Cockroach', rayo: 'Lightning',
     calida: 'Warm', fria: 'Cold', disco: 'Disco', verde: 'Neon green', clasico: 'Classic', corneta: 'Bugle', cumbia: 'Güiro', mariachi: 'Mariachi',
-    lava: 'Lava', morada: 'Purple', cromo: 'Chrome', rojo: 'Rematch red', corona: 'Crown', birrete: 'Grad cap', dolar: 'Banknote', ambar: 'Amber', rosada: 'Pink', claxon: 'Car horn' },
+    lava: 'Lava', morada: 'Purple', cromo: 'Chrome', rojo: 'Rematch red', corona: 'Crown', birrete: 'Grad cap', dolar: 'Banknote', ambar: 'Amber', rosada: 'Pink', claxon: 'Car horn', ecto: 'Ectoplasm', blanco: 'Hospital white', fantasma: 'Ghost', tele: 'TV', lupa: 'Inspector red', aplausos: 'Applause' },
   pasos: ['Prep', 'Wash', 'Peel', 'Polish', 'Inspector'],
   leccion: [null, ['Night 1 · Learn with Beto', 'A quiet coffee shop to learn the ropes. I will tell you what to do step by step.'], ['Night 2 · On your own', 'Another easy one, but no instructions this time. Let\'s see what you learned.'],
     ['Night 3 · Getting tough', 'Burnt grease, scale, a manager in a hurry and less time. Lupe comes with you today.'], ['Night 4 · The big job', 'A whole food court: three hoods, several ducts and half the company working with you. Angélica assigns the work.']],
@@ -1052,6 +1064,21 @@ const CONTRATANTES = [
   ['El abogado del dueño', 'The owner\'s lawyer', 'Mi cliente es muy exigente. He preparado un contratito de doce páginas. Lo importante está en negritas.', 'My client is very demanding. I prepared a little twelve-page contract. The important part is in bold.'],
 ];
 const MULT_CONTRATO = 1.7, PENA_CONTRATO = .3;
+// Trabajos jefe: noches únicas con su propia regla. Salen de vez en cuando; los que no has superado salen antes.
+const JEFES = {
+  tele: { ico: '📺', n: ['En vivo: «Cocina con Fuego»', 'Live: "Cooking with Fire"'], quien: ['El productor', 'The producer'], cocinas: ['burger', 'pizza'], mult: 1.5,
+    txt: ['Grabamos el programa mientras limpian. Si la audiencia baja, nos cancelan. ¡Den espectáculo!', 'We\'re shooting the show while you clean. If the ratings drop, we get cancelled. Put on a show!'],
+    regla: ['Medidor de audiencia: sube si limpias rápido y con combos; baja si te quedas quieto o rompes algo. Al final te pagan según el rating.', 'Ratings meter: it goes up if you clean fast and chain combos; it drops if you stand still or break something. You get paid by the final rating.'] },
+  embrujada: { ico: '👻', n: ['La campana embrujada', 'The haunted hood'], quien: ['El velador', 'The night watchman'], cocinas: ['pizza', 'burger', 'cafe'], mult: 1.6,
+    txt: ['Este restaurante lleva cerrado desde 1994. Nadie quiere entrar de noche. Ustedes sí, ¿verdad?', 'This restaurant has been closed since 1994. Nobody wants to go in at night. You will, right?'],
+    regla: ['No hay luz en toda la noche: solo ves con la linterna del casco (sigue a tu dedo). Y a veces pasan cosas raras.', 'There\'s no power all night: you only see with your helmet light (it follows your finger). And sometimes weird things happen.'] },
+  hospital: { ico: '🏥', n: ['Cocina del hospital', 'Hospital kitchen'], quien: ['La enfermera jefa', 'The head nurse'], cocinas: ['comedor', 'cafe'], mult: 1.5,
+    txt: ['Arriba está terapia intensiva. Si hacen ruido, los saco yo misma. Del brazo.', 'Intensive care is right upstairs. If you make noise, I\'ll throw you out myself. By the arm.'],
+    regla: ['Medidor de ruido: la hidrolavadora y el robot hacen mucho ruido. Si llega al tope, la enfermera te regaña; a la tercera, te descuentan.', 'Noise meter: the pressure washer and the robot are loud. If it maxes out, the nurse scolds you; on the third time, you get docked.'] },
+  inspector: { ico: '🔍', n: ['El inspector sorpresa', 'The surprise inspector'], quien: ['El inspector Garza', 'Inspector Garza'], cocinas: ['burger', 'pizza', 'wok'], mult: 1.4,
+    txt: ['No me haga caso. Yo solo voy a estar aquí. Mirando. Anotando.', 'Don\'t mind me. I\'ll just be here. Watching. Taking notes.'],
+    regla: ['Cada tanto avisa qué zona va a revisar y te da 20 segundos. Si la encuentra limpia, palomita; si no, tache. Las palomitas pagan extra.', 'Every so often he says which zone he\'ll check and gives you 20 seconds. Clean: a check mark; dirty: a cross. Check marks pay extra.'] },
+};
 // Carácter del cliente al negociar: paciencia (intentos antes de irse) y probabilidad de aceptar un 15 % o un 30 % más.
 const CARACTER = {
   tacano: { n: 'Tacaño', txt: 'Cuenta las monedas dos veces. Y luego otra vez.', pac: 1, p15: .3, p30: .1, hola: '¿Tanto? Mi cuñado lo hace por la mitad. Bueno, no lo hace, pero lo dice.', no: 'Ni un peso más. Ni medio.' },
@@ -1102,6 +1129,11 @@ const MEDALLAS = [
   { id: 'maestro', n: 'Escuela de campaneros', d: 'Forma a 3 ayudantes distintos.', ico: '🎓' },
   { id: 'flota', n: 'Flotilla', d: 'Ten 5 camionetas.', ico: '🚐' },
   { id: 'rico', n: 'Magnate de la grasa', d: 'Junta $50,000.', ico: '$' },
+  { id: 'j_tele', n: 'Estrella de la tele', d: 'Supera el programa en vivo con buen rating.', ico: '📺' },
+  { id: 'j_embrujada', n: 'Cazafantasmas', d: 'Limpia la campana embrujada.', ico: '👻' },
+  { id: 'j_hospital', n: 'Silencio, por favor', d: 'Limpia la cocina del hospital sin tres regaños.', ico: '🏥' },
+  { id: 'j_inspector', n: 'Bajo la lupa', d: 'Aprueba con el inspector sorpresa (más palomitas que taches).', ico: '🔍' },
+  { id: 'jefes', n: 'Leyenda de la noche', d: 'Supera todos los trabajos jefe.', ico: '👑' },
   { id: 'dorado', n: 'El mapache dorado', d: 'Lo viste. Nadie te va a creer.', ico: '✪', secreto: true },
   { id: 'casete', n: 'La cinta perdida', d: 'Encontraste el casete de Don Rigo en un ducto.', ico: '▭', secreto: true },
   { id: 'himno', n: 'Oído absoluto', d: 'Encontraste la canción secreta de la radio.', ico: '♫', secreto: true },
@@ -1130,18 +1162,18 @@ const reto = id => RETOS.find(r => r.id === id);
 const LOOK = {
   espuma: { n: 'Color de la espuma', ops: [
     { id: 'blanca', n: 'Blanca', c: [.92, .97, 1] }, { id: 'rosa', n: 'Rosa chicle', c: [1, .55, .8], m: 'combo' },
-    { id: 'menta', n: 'Verde menta', c: [.55, 1, .75], m: 'limpio' }, { id: 'oro', n: 'Dorada', c: [1, .82, .3], m: 'notaA' }, { id: 'azul', n: 'Azul alberca', c: [.5, .8, 1], e: 6 }, { id: 'lava', n: 'Lava', c: [1, .55, .25], m: 'contrato' }, { id: 'morada', n: 'Morada', c: [.75, .55, 1], m: 'racha10' }] },
+    { id: 'menta', n: 'Verde menta', c: [.55, 1, .75], m: 'limpio' }, { id: 'oro', n: 'Dorada', c: [1, .82, .3], m: 'notaA' }, { id: 'azul', n: 'Azul alberca', c: [.5, .8, 1], e: 6 }, { id: 'lava', n: 'Lava', c: [1, .55, .25], m: 'contrato' }, { id: 'ecto', n: 'Ectoplasma', c: [.6, 1, .4], m: 'j_embrujada' }, { id: 'morada', n: 'Morada', c: [.75, .55, 1], m: 'racha10' }] },
   casco: { n: 'Casco del compañero', ops: [
     { id: 'normal', n: 'El suyo' }, { id: 'oro', n: 'Dorado', c: '#ffcc33', m: 'espejo' },
-    { id: 'rosa', n: 'Rosa', c: '#ff7ab8', m: 'mapache' }, { id: 'negro', n: 'Negro mate', c: '#2a2a2e', m: 'duelo' }, { id: 'militar', n: 'Verde militar', c: '#4b5d33', e: 10 }, { id: 'cromo', n: 'Cromado', c: '#c9d1d9', m: 'contratos5' }, { id: 'rojo', n: 'Rojo revancha', c: '#d8342c', m: 'cunado5' }] },
+    { id: 'rosa', n: 'Rosa', c: '#ff7ab8', m: 'mapache' }, { id: 'negro', n: 'Negro mate', c: '#2a2a2e', m: 'duelo' }, { id: 'militar', n: 'Verde militar', c: '#4b5d33', e: 10 }, { id: 'cromo', n: 'Cromado', c: '#c9d1d9', m: 'contratos5' }, { id: 'rojo', n: 'Rojo revancha', c: '#d8342c', m: 'cunado5' }, { id: 'blanco', n: 'Blanco hospital', c: '#f2f4f5', m: 'j_hospital' }, { id: 'corona', n: 'Corona de oro', c: '#ffd23f', m: 'jefes' }] },
   pegatina: { n: 'Pegatina de la camioneta', ops: [
     { id: 'nada', n: 'Ninguna' }, { id: 'llamas', n: 'Llamas', m: 'rapido' }, { id: 'mapache', n: 'Mapache', m: 'mapache' },
-    { id: 'estrella', n: 'Estrella', m: 'pedido' }, { id: 'cuca', n: 'Cucaracha', m: 'cuca' }, { id: 'rayo', n: 'Rayo', e: 4 }, { id: 'corona', n: 'Corona', m: 'sedeTotal' }, { id: 'birrete', n: 'Birrete', m: 'maestro' }, { id: 'dolar', n: 'Billete', m: 'rico' }] },
+    { id: 'estrella', n: 'Estrella', m: 'pedido' }, { id: 'cuca', n: 'Cucaracha', m: 'cuca' }, { id: 'rayo', n: 'Rayo', e: 4 }, { id: 'corona', n: 'Corona', m: 'sedeTotal' }, { id: 'birrete', n: 'Birrete', m: 'maestro' }, { id: 'dolar', n: 'Billete', m: 'rico' }, { id: 'fantasma', n: 'Fantasma', m: 'j_embrujada' }, { id: 'tele', n: 'Tele', m: 'j_tele' }] },
   linterna: { n: 'Luz del casco', ops: [
     { id: 'calida', n: 'Cálida', c: 0xfff1dd }, { id: 'fria', n: 'Fría', c: 0xd8ecff, m: 'primera' },
-    { id: 'disco', n: 'Disco', m: 'apagon' }, { id: 'verde', n: 'Verde fosforito', c: 0xb8ffb0, e: 14 }, { id: 'ambar', n: 'Ámbar', c: 0xffc27a, m: 'flota' }, { id: 'rosada', n: 'Rosada', c: 0xffb0d8, m: 'sede3' }] },
+    { id: 'disco', n: 'Disco', m: 'apagon' }, { id: 'verde', n: 'Verde fosforito', c: 0xb8ffb0, e: 14 }, { id: 'ambar', n: 'Ámbar', c: 0xffc27a, m: 'flota' }, { id: 'rosada', n: 'Rosada', c: 0xffb0d8, m: 'sede3' }, { id: 'lupa', n: 'Roja de inspector', c: 0xff8a7a, m: 'j_inspector' }] },
   combo: { n: 'Sonido del combo', ops: [
-    { id: 'clasico', n: 'Clásico' }, { id: 'corneta', n: 'Corneta', m: 'diez' }, { id: 'cumbia', n: 'Güiro', m: 'migdal' }, { id: 'mariachi', n: 'Mariachi', e: 20 }, { id: 'claxon', n: 'Claxon', m: 'contratos5' }] },
+    { id: 'clasico', n: 'Clásico' }, { id: 'corneta', n: 'Corneta', m: 'diez' }, { id: 'cumbia', n: 'Güiro', m: 'migdal' }, { id: 'mariachi', n: 'Mariachi', e: 20 }, { id: 'claxon', n: 'Claxon', m: 'contratos5' }, { id: 'aplausos', n: 'Aplausos', m: 'j_tele' }] },
 };
 const libreLook = op => (!op.m || S.medallas[op.m]) && (!op.e || (S.estrellas || 0) >= op.e);
 const look = k => LOOK[k].ops.find(o => o.id === (S.look || {})[k]) || LOOK[k].ops[0];
@@ -1396,6 +1428,7 @@ function sCombo(n) {
   if (k === 'corneta') [0, 4, 7, n > 2 ? 12 : 7].forEach((s, i) => tono(392 * Math.pow(2, s / 12), i === 3 ? .35 : .1, .07, 'sawtooth', null, i * .09));
   else if (k === 'mariachi') [0, 4, 7, 12, 7, 12].forEach((s, i) => tono(440 * Math.pow(2, s / 12), i === 5 ? .4 : .11, .06, 'sawtooth', null, i * .08));
   else if (k === 'cumbia') { for (let i = 0; i < 3; i++) rafaga(i === 2 ? .14 : .05, 4200, .12, 'bandpass', 2, 2600, i * .08); tono(830, .12, .08, 'square', null, .26); }
+  else if (k === 'aplausos') { for (let i = 0; i < (n > 2 ? 9 : 5); i++) rafaga(.03, 2400 + Math.random() * 1500, .1, 'bandpass', 1.5, null, i * .05 + Math.random() * .03); }
   else if (k === 'claxon') { tono(415, .22, .08, 'square'); tono(523, .22, .06, 'square'); if (n > 2) { tono(415, .3, .08, 'square', null, .26); tono(523, .3, .06, 'square', null, .26); } }
   else tono(500 + n * 180, .18, .08, 'triangle');
 }
@@ -2404,7 +2437,7 @@ function empezarTurno(orden) {
     const extra = [];
     if (azar(.3)) extra.push({ tipo: 'cucaracha', zona: 1, en: rnd(9, 20) });
     if (azar(.3) && !M.comp.solo) extra.push({ tipo: 'atorado', zona: iDucto(), en: rnd(4, 10) });
-    if (azar(.2)) extra.push({ tipo: 'apagon', zona: 1, en: rnd(14, 26) });
+    if (azar(.2) && orden.jefe !== 'embrujada') extra.push({ tipo: 'apagon', zona: 1, en: rnd(14, 26) });
     if (azar(.2)) extra.push({ tipo: 'coche', zona: 0, en: rnd(8, 18) });
     // Sorpresas que cambian cómo limpias
     if (EQ().hidro && azar(.25 * (1 - .3 * sede('mantenimiento')))) extra.push({ tipo: 'hidroRota', zona: -1, en: M.dur * rnd(.2, .5) });
@@ -2425,6 +2458,12 @@ function empezarTurno(orden) {
   radioEncender(true);
   for (const e of M.faltan) setTimeout(() => M && decir(M.comp, `${e.n} no llegó. Mandó mensaje: «${uno(['Se me poncharon las dos llantas. Y la de repuesto.', 'Me quedé dormido viendo un video de cómo limpiar campanas.', 'Mi gato se comió las llaves.', 'Estoy en camino. (No está en camino.)'])}»`), 1200);
   if (M.pedido) setTimeout(() => M && M.fase === 'prep' && M.pedido && decir(M.cliente, M.pedido.txt), 1800);
+  if (orden.jefe) {
+    const J = JEFES[orden.jefe]; M.cliente = { n: L(...J.quien), color: '#e9e9e9' };
+    M.jefe = { id: orden.jefe, v: orden.jefe === 'tele' ? 60 : 0, min: 100, strikes: 0, ok: 0, mal: 0, prox: 25, rev: null, nd: 0, limpio: 0, tick: 0, susto: rnd(18, 28), sustos: 0 };
+    if (orden.jefe === 'embrujada') { M.apagon = 1e6; M.huboApagon = true; }
+    setTimeout(() => M && M.jefe && decir(M.cliente, L(...J.txt)), 1500);
+  }
   if (orden.contrato) { const q = CONTRATANTES[orden.contrato.quien] || CONTRATANTES[0]; M.cliente = { n: L(q[0], q[1]), color: '#e9e9e9' }; setTimeout(() => M && M.fase === 'prep' && decir(M.cliente, L(`Le recuerdo el contrato: ${orden.contrato.conds.map(id => condicion(id).t[0].toLowerCase()).join('; ')}.`, `A reminder of the contract: ${orden.contrato.conds.map(id => condicion(id).t[1].toLowerCase()).join('; ')}.`)), 1800); }
   const hist = S.cunado && S.cunado.ultimo;
   if (M.duelo && hist) setTimeout(() => M && decir(QUIEN_CUNADO, hist.gano === 'el' ? uno([L(`¿Te acuerdas de ${hist.donde}? Yo sí. Todos los días.`, `Remember ${hist.donde}? I do. Every day.`), L(`Otra vez tú. Te gané en ${hist.donde}, ¿o ya se te olvidó?`, `You again. I beat you at ${hist.donde}, or did you forget?`)]) : uno([L(`Lo de ${hist.donde} fue suerte. Hoy traigo rasqueta nueva.`, `${hist.donde} was luck. Today I brought a new scraper.`), L(`No he dormido desde que me ganaste en ${hist.donde}. Hoy me desquito.`, `I haven't slept since you beat me at ${hist.donde}. Payback time.`)])), 2400);
@@ -2599,7 +2638,7 @@ function arrancarTurno() {
   if (M.orden.tuto) { M.tuto = 1; M.tutoZona = M.zona; decir(M.comp, L('Primera noche, ¿eh? Tranquilo. Te voy diciendo. Arriba sale lo que toca.', 'First night, huh? Relax. I\'ll walk you through it. What to do shows up at the top.')); }
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
-  $('#duelo').hidden = !M.duelo; pintarRadio();
+  $('#duelo').hidden = !M.duelo; $('#jefeMed').hidden = !M.jefe; pintarJefe(); pintarRadio();
   if (M.duelo) { $('#contra').textContent = '⚡ Contraataque'; $('#contra').title = (CONTRA[M.orden.comp] || CONTRA.solo)[0]; }
   irVista(Z[0].vista);
   pintarHud(true);
@@ -3332,6 +3371,63 @@ const RADIO_EV = {
   cucaracha: [['Aviso: una cucaracha del tamaño de un taco fue vista corriendo por la ciudad. No es broma. Bueno, un poco.', 'Notice: a taco-sized cockroach was seen running through the city. Not a joke. Well, a bit.']],
   bloqueo: [['Hay una olla de pozole estorbando en alguna cocina. Si es tuya, muévela, por favor.', 'There\'s a pot of pozole in someone\'s way in a kitchen. If it\'s yours, please move it.']],
 };
+// ---- Trabajos jefe: la regla de cada noche especial
+function tickJefe(dt, z) {
+  const J = M.jefe;
+  if (J.id === 'tele') {
+    if ((J.tick += dt) >= 1) {
+      const limpio = Z.reduce((a, x) => a + pctZona(x), 0) / Z.length, dl = limpio - (J.limpio || limpio);
+      J.limpio = limpio; J.tick = 0;
+      J.v += dl * 320 + (M.combo >= 6 ? 2.5 : M.combo >= 3 ? 1.2 : 0) - (M.ev ? 0 : 1.1);
+      if (M.danos.length > J.nd) { J.v -= 12 * (M.danos.length - J.nd); J.nd = M.danos.length; decir(M.cliente, L('¡¿Eso salió al aire?! ¡Corten! No, no corten, ¡sigan!', 'Did that go out live?! Cut! No, don\'t cut, keep going!')); }
+      J.v = clamp(J.v, 0, 100); J.min = Math.min(J.min, J.v);
+      if (J.v < 30 && !J.avisoBajo) { J.avisoBajo = true; decir(M.cliente, L('¡Estamos perdiendo audiencia! ¡Hagan algo espectacular! ¡Un combo, algo!', 'We\'re losing viewers! Do something spectacular! A combo, anything!')); }
+      if (J.v > 35) J.avisoBajo = false;
+      if (J.v >= 85 && !J.avisoAlto) { J.avisoAlto = true; decir(M.cliente, L('¡Somos tendencia nacional! Mi mamá me está mandando mensajes.', 'We\'re trending nationwide! My mom is texting me.')); }
+    }
+  } else if (J.id === 'hospital') {
+    if (M.robot) J.v += dt * 18;
+    J.v = Math.max(0, J.v - dt * 7);
+    if (J.v >= 100) {
+      J.v = 35; J.strikes++; sAlarma();
+      decir(M.cliente, J.strikes >= 3 ? L('¡TERCERA VEZ! Despertaron al señor de la 302. Esto se los voy a descontar.', 'THIRD TIME! You woke up the man in 302. I\'m docking you for this.') : L(`¡SHHH! Aquí arriba hay pacientes. Van ${J.strikes} de 3.`, `SHHH! There are patients upstairs. That\'s ${J.strikes} of 3.`));
+    }
+  } else if (J.id === 'embrujada') {
+    if ((J.susto -= dt) <= 0 && !M.ev) {
+      J.susto = rnd(22, 34); J.sustos++;
+      const quien = uno(M.equipo.filter(e => !e.principal)) || null;
+      vibrar([60, 40, 60]); tono(90, 1.2, .12, 'sine', 55); tono(740, .9, .03, 'sine', 980, .2);
+      const sustos = [[L('(Una puerta se cierra sola en el fondo)', '(A door slams shut by itself in the back)'), L('¿Fuiste tú? Dime que fuiste tú.', 'Was that you? Tell me it was you.')],
+        [L('(Se oye una licuadora. No hay licuadora.)', '(A blender can be heard. There is no blender.)'), L('Yo no oí nada. Yo no oí nada. Sigue raspando.', 'I didn\'t hear anything. I didn\'t hear anything. Keep scraping.')],
+        [L('(Alguien silba un bolero detrás del ducto)', '(Someone whistles a bolero behind the duct)'), L('Ese es el cocinero de 1994. Dicen que nunca terminó su turno.', 'That\'s the 1994 cook. They say he never finished his shift.')],
+        [L('(Las ollas tiemblan solas)', '(The pots shake by themselves)'), L('Si se me cae la rasqueta, no es miedo. Es la grasa.', 'If I drop the scraper, it\'s not fear. It\'s the grease.')]];
+      const [a, b] = uno(sustos); decir(M.cliente, a); setTimeout(() => M && decir(M.comp, b), 1300);
+      if (quien && azar(.5)) { quien.parado = 5; setTimeout(() => M && decir(quien, L('¡Yo me voy a la camioneta un ratito! ¡Ahorita vuelvo!', 'I\'m going to the van for a bit! Be right back!')), 2600); }
+    }
+  } else if (J.id === 'inspector' && M.etapa === 'lavar') {
+    if (J.rev) {
+      if ((J.rev.t -= dt) <= 0) {
+        const zr = Z[J.rev.z], ok = pctZona(zr) >= .8 || micras(zr) <= LIMITE * 1.5;
+        ok ? J.ok++ : J.mal++; ok ? sDing() : tono(180, .35, .1, 'square');
+        decir(M.cliente, ok ? L(`${zr.n}: limpio. Palomita.`, `${zr.n}: clean. Check mark.`) : L(`${zr.n}: todavía con grasa. Tache. Lo anoto.`, `${zr.n}: still greasy. Cross. Noted.`));
+        J.rev = null; J.prox = rnd(30, 42);
+      }
+    } else if ((J.prox -= dt) <= 0) {
+      const cand = Z.map((x, i) => i).filter(i => pctZona(Z[i]) < .99);
+      if (cand.length) { const i = uno(cand); J.rev = { z: i, t: 20 }; decir(M.cliente, L(`En 20 segundos reviso: ${Z[i].n}.`, `In 20 seconds I check: ${Z[i].n}.`)); } else J.prox = 20;
+    }
+  }
+  if ((J.pinta = (J.pinta || 0) + dt) > .25) { J.pinta = 0; pintarJefe(); }
+}
+function pintarJefe() {
+  const el = $('#jefeMed'); if (!M || !M.jefe) return;
+  const J = M.jefe, bar = el.querySelector('.barra'), b = bar.firstElementChild;
+  el.dataset.tipo = J.id; bar.hidden = J.id === 'embrujada';
+  if (J.id === 'tele') { el.querySelector('b').textContent = `📺 ${L('Audiencia', 'Ratings')} ${Math.round(J.v)} %`; b.style.width = J.v + '%'; el.querySelector('small').textContent = ''; }
+  if (J.id === 'hospital') { el.querySelector('b').textContent = `🏥 ${L('Ruido', 'Noise')}`; b.style.width = Math.min(100, J.v) + '%'; el.querySelector('small').textContent = `${L('Regaños', 'Scoldings')}: ${J.strikes}/3`; }
+  if (J.id === 'embrujada') { el.querySelector('b').textContent = `👻 ${L('Campana embrujada', 'Haunted hood')}`; el.querySelector('small').textContent = `${L('Sustos', 'Scares')}: ${J.sustos}`; }
+  if (J.id === 'inspector') { el.querySelector('b').textContent = `🔍 ${'✓'.repeat(J.ok)}${'✗'.repeat(J.mal)}` + (J.ok + J.mal ? '' : L('Inspector', 'Inspector')); bar.hidden = !J.rev; if (J.rev) b.style.width = J.rev.t / 20 * 100 + '%'; el.querySelector('small').textContent = J.rev ? `${Z[J.rev.z].n} · ${Math.ceil(J.rev.t)} s` : ''; }
+}
 function lanzarEvento(e) {
   if (RADIO.on && RADIO_EV[e.tipo] && azar(.4)) setTimeout(() => M && M.fase === 'turno' && RADIO.on && decir(QUIEN_RADIO, L(...uno(RADIO_EV[e.tipo]))), 9000);
   M.ultEvT = M.t; S.evRecientes = [e.tipo, ...(S.evRecientes || []).filter(t => t !== e.tipo)].slice(0, 5);
@@ -3674,7 +3770,7 @@ function tickTurno(dt) {
       if (M.quieto > 1.6 && !M.pistaBarrer) { M.pistaBarrer = true; ayuda(L('Con la hidro, barre despacio de lado a lado: quieto en un punto limpia la mitad.', 'With the washer, sweep slowly side to side: holding still on one spot cleans half as much.'), 5); }
       const alta = modo('hidro') === 'alta';
       const q = raspar(a.sf, a.gx, a.gy, (alta ? .25 : .17) / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * (EQ().vapor ? 1.4 : 1) * (alta ? 1.35 : 1) * barrido * dt, 'hidro');
-      emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4);
+      emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4); if (M.jefe && M.jefe.id === 'hospital') M.jefe.v += dt * (modo('hidro') === 'alta' ? 55 : 32);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
       if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5 * (alta ? 2.5 : 1) * (1 - .6 * hab('pulso')))) { emitir(a.punto, 12, 'grasa', a.normal, 2);
@@ -3703,6 +3799,7 @@ function tickTurno(dt) {
     }
     if (M.pedido && M.pedido.id === 'antes3' && !M.aviso3 && M.t / M.dur * 480 >= 270) { M.aviso3 = true; decir(M.cliente, '¡Ya son las dos y media! El panadero llega a las tres, ¿eh?'); }
     if (M.duelo) tickDuelo(dt);
+    if (M.jefe) tickJefe(dt, z);
     if (M.robot) tickRobot(dt);
     if (M.tuto) tickTuto();
     if (!M.ev) {
@@ -4007,11 +4104,18 @@ function generarOrdenes() {
   // Duelo: El Cuñado también quiere este cliente y limpiará a la vez que tú.
   const libres = out.filter(o => !o.clienteId && o.campanas === 1 && !o.duelo && !o.gigante);
   if (S.noche >= S.abierta + 1 && libres.length && azar(.3)) { const o = uno(libres); o.duelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.4 / 10) * 10; }
-  const paraContrato = out.filter(o => !o.clienteId && o.campanas === 1 && !o.duelo && !o.gigante);
+  const paraContrato = out.filter(o => !o.clienteId && o.campanas === 1 && !o.duelo && !o.gigante && !o.jefe);
   if (S.fase === 'empresa' && S.etapa >= 1 && S.rep >= 35 && paraContrato.length && azar(.45)) {
     const o = uno(paraContrato), pool = CONDICIONES.filter(c => !c.si || c.si()).sort(() => Math.random() - .5);
     o.contrato = { conds: pool.slice(0, S.rep >= 70 ? 3 : 2).map(c => c.id), quien: Math.floor(Math.random() * CONTRATANTES.length) };
     o.pedido = null; o.micras = Math.round(o.micras * 1.25 / 50) * 50;   // los contratos difíciles vienen con más grasa
+  }
+  if (S.fase === 'empresa' && S.etapa >= 1 && S.rep >= 30 && S.noche >= (S.jefeNoche || 0) + 3) {
+    const pend = Object.keys(JEFES).filter(id => !(S.jefes || {})[id]);
+    if (azar(pend.length ? .3 : .12)) {
+      const id = uno(pend.length ? pend : Object.keys(JEFES)), J = JEFES[id], ks = J.cocinas.filter(k => COCINAS[k] && cocinasHasta(S.etapa).includes(k));
+      const o = genOrden(uno(ks.length ? ks : ['burger'])); o.jefe = id; o.pedido = null; o.pago = r10(o.pago * J.mult); o.nombre = L(...J.n); out.unshift(o); S.jefeNoche = S.noche;
+    }
   }
   return out;
 }
@@ -4227,6 +4331,8 @@ const PEGATINAS = {
   mapache: '<g transform="translate(197 63)"><circle r="8" fill="#8a8580" stroke="#0b1117" stroke-width="1.5"/><path d="M-7-1h14v4h-14z" fill="#1b1b1b"/><circle cx="-3" cy="1" r="1.3" fill="#fff3a0"/><circle cx="3" cy="1" r="1.3" fill="#fff3a0"/><path d="M-7-5l-1-6 5 3M7-5l1-6-5 3" fill="#8a8580" stroke="#0b1117" stroke-width="1.2"/></g>',
   estrella: '<path d="M197 52l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.5"/>',
   rayo: '<path d="M200 51l-9 13h7l-4 11 11-15h-7l4-9z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.3"/>',
+  fantasma: '<path d="M189 72v-10a8 8 0 0 1 16 0v10l-3-3-2.5 3-2.5-3-2.5 3-2.5-3z" fill="#f2f4f5" stroke="#0b1117" stroke-width="1.4"/><circle cx="194" cy="62" r="1.4" fill="#0b1117"/><circle cx="200" cy="62" r="1.4" fill="#0b1117"/>',
+  tele: '<g stroke="#0b1117" stroke-width="1.4"><rect x="186" y="57" width="22" height="15" rx="2" fill="#2b3946"/><rect x="189" y="60" width="16" height="9" fill="#9fe0ef"/><path d="M193 57l-4-5M201 57l4-5" fill="none"/></g>',
   corona: '<path d="M187 71l-2-14 6 6 6-9 6 9 6-6-2 14z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.5"/>',
   birrete: '<g stroke="#0b1117" stroke-width="1.3"><path d="M184 60l13-6 13 6-13 6z" fill="#1b1b1b"/><path d="M190 63v6q7 4 14 0v-6l-7 3z" fill="#2a2a2e"/><path d="M208 61v8" stroke="#ffd23f" stroke-width="1.6"/></g>',
   dolar: '<g stroke="#0b1117" stroke-width="1.3"><rect x="184" y="56" width="26" height="15" rx="2" fill="#69c97a"/><circle cx="197" cy="63.5" r="4.5" fill="#3d8a4c"/></g><text x="197" y="66.5" font-size="8" font-weight="700" text-anchor="middle" fill="#e8ffe8" font-family="sans-serif">$</text>',
@@ -4296,7 +4402,7 @@ function pantallaCamioneta() {
 
 // Los trabajos que no eliges se ven en una tarjeta corta; el elegido se abre con todos sus detalles.
 function tarjetaCorta(o, i) {
-  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.gigante ? L('Gigante', 'Giant') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
+  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.gigante ? L('Gigante', 'Giant') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
   return `<button class="orden corta ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="false">
     <div class="fila"><h3>${esc(o.nombre)}</h3><span class="pago">${dinero(o.pago)}</span></div>
     <span class="nota">${chip ? `<b class="chip-txt ${o.duelo ? 'mal' : ''}">${esc(chip)}</b> · ` : ''}${nCocina(o.cocina)}${o.campanas > 1 ? ` · ${o.campanas} ${L('campanas', 'hoods')}` : ''} · ${o.micras.toLocaleString('es-MX')} µm${o.firmado ? '' : ` · <i>${L('sin firmar', 'not signed')}</i>`}</span>
@@ -4313,11 +4419,12 @@ function tarjetaOrden(o, i) {
   if (i !== H.sel) return tarjetaCorta(o, i);
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
+    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.jefe ? `<span class="chip jefe">${JEFES[o.jefe].ico} ${L('Trabajo jefe', 'Boss job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
     <h3>${esc(o.nombre)}</h3>${o.leccion ? `<span class="pista">${esc(L(LECCIONES[o.leccion].txt, EN.leccion[o.leccion][1]))}</span>` : ''}${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(TRAD(h.n))}: ${L('capítulo', 'chapter')} ${(c.cap || 0) + 1} ${L('de', 'of')} ${h.caps.length}</span>` : ''; })()}
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + L(' campanas · ', ' hoods · ') : ''}${L(`${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros`, `${EN.campana[o.hood.tipo]}, ${o.hood.ancho.toFixed(1)} m · ${EN.ducto[o.ducto.forma]}, ${o.ducto.largo} m · ${o.filtros} filters`)} · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
     ${o.pedido ? `<span class="pedido"><b>${esc(TRAD(pedido(o.pedido).quien))}:</b> «${esc(TRAD(pedido(o.pedido).txt))}»${pedido(o.pedido).premio ? ` <i>${L('Si cumples', 'If you deliver')}: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
     ${o.contrato ? tarjetaContrato(o) : ''}
+    ${o.jefe ? (J => `<span class="contrato jefe-card"><b>${J.ico} ${L('Trabajo jefe', 'Boss job')} · ${esc(L(...J.quien))}</b><i>«${esc(L(...J.txt))}»</i><span>${esc(L(...J.regla))}</span>${(S.jefes || {})[o.jefe] ? `<small>${L('Ya lo superaste con', 'You beat it with')} ${S.jefes[o.jefe]}. ${L('Paga igual de bien.', 'It pays just as well.')}</small>` : `<small>${L('Si lo superas: medalla y algo de estilo nuevo.', 'Beat it: a medal and some new style.')}</small>`}</span>`)(JEFES[o.jefe]) : ''}
     ${o.duelo ? `<span class="aviso">${L(`${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.`, `${RIVAL} wants this client too: he will clean the same kitchen at the same time as you. If he finishes first, you get paid half.`)}</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(L(PISTAS[e], EN.pista[e]))}</span>`).join('') : `<span class="pista">${L('Todo tranquilo. Sospechoso.', 'All quiet. Suspicious.')}</span>`}
     <span class="nota estimado">${(() => { const g = estimadoOrden(o); return L(`Te quedas unos ${dinero(g.neto)}: ${dinero(o.pago)} del trabajo + propina típica ${dinero(g.propina)} − sueldos ${dinero(g.sueldos)} − gasolina, materiales y gastos fijos ${dinero(g.otros)}.`, `You keep about ${dinero(g.neto)}: ${dinero(o.pago)} for the job + typical tip ${dinero(g.propina)} − wages ${dinero(g.sueldos)} − gas, supplies and fixed costs ${dinero(g.otros)}.`); })()}</span>
@@ -4480,7 +4587,7 @@ function organizar() {
   const H = S.hoy, eqs = equiposHoy();
   eqs.forEach(e => { e.o = null; e.comp = null; e.ayud = []; });
   const comps = S.fijos.filter(id => id !== H.comp), gente = S.cuadrilla.filter(c => !H.ayud.includes(c.id)).sort((a, b) => b.fuerza * (b.cuidado || 3) - a.fuerza * (a.cuidado || 3));
-  const mio = H.ordenes[H.sel], trabajos = H.ordenes.map((o, i) => [o, i]).filter(([o, i]) => i !== H.sel && o.firmado && !o.duelo && !o.gigante && !o.contrato).sort((a, b) => b[0].pago - a[0].pago);
+  const mio = H.ordenes[H.sel], trabajos = H.ordenes.map((o, i) => [o, i]).filter(([o, i]) => i !== H.sel && o.firmado && !o.duelo && !o.gigante && !o.contrato && !o.jefe).sort((a, b) => b[0].pago - a[0].pago);
   const plan = mio && mio.gigante ? [['mio', 3], ['mio', 3], ...trabajos.map(([o, i]) => [i, sugerido(o)])] : trabajos.map(([o, i]) => [i, sugerido(o)]);
   let armados = 0, sinGente = 0;
   for (const e of eqs) {
@@ -4880,6 +4987,17 @@ function pantallaParte() {
     if (ok) S.contratos = (S.contratos || 0) + 1;
     contrato = { ok, conds };
   }
+  let jefe = null;
+  if (M.jefe && !aprendiz) {
+    const J = M.jefe, id = J.id; let v = 0, txt = '', supera = aprobado;
+    if (id === 'tele') { v = r10(cobro * (J.v - 50) / 100); supera = aprobado && J.v >= 60; txt = L(`Audiencia final: ${Math.round(J.v)} %. ${J.v >= 80 ? 'El programa fue un éxito: ya hablan de una segunda temporada.' : J.v >= 60 ? 'Buen rating. El productor te da su tarjeta.' : 'Rating bajo. El productor dice que «la grasa no vende».'}`, `Final ratings: ${Math.round(J.v)}%. ${J.v >= 80 ? 'The show was a hit: there\'s talk of a second season.' : J.v >= 60 ? 'Good ratings. The producer gives you his card.' : 'Low ratings. The producer says "grease doesn\'t sell".'}`); lineas.push([L(`Rating del programa (${Math.round(J.v)} %)`, `Show ratings (${Math.round(J.v)}%)`), v]); rep += J.v >= 80 ? 4 : J.v >= 60 ? 2 : -1; }
+    if (id === 'hospital') { v = -r10(cobro * .15 * Math.max(0, J.strikes - 2)); supera = aprobado && J.strikes < 3; txt = J.strikes ? L(`La enfermera te regañó ${J.strikes} ${J.strikes === 1 ? 'vez' : 'veces'}.`, `The nurse scolded you ${J.strikes} ${J.strikes === 1 ? 'time' : 'times'}.`) : L('Ni un ruido. La enfermera casi sonríe.', 'Not a sound. The nurse almost smiles.'); if (v) lineas.push([L('Descuento por ruido (tercer regaño)', 'Noise penalty (third scolding)'), v]); rep += J.strikes ? -J.strikes + 1 : 3; }
+    if (id === 'inspector') { v = r10(cobro * .08 * (J.ok - J.mal)); supera = aprobado && J.ok >= J.mal; txt = L(`Palomitas: ${J.ok} · Taches: ${J.mal}.`, `Check marks: ${J.ok} · Crosses: ${J.mal}.`); if (J.ok + J.mal) lineas.push([L(`Hoja del inspector (${J.ok} ✓ · ${J.mal} ✗)`, `Inspector\'s sheet (${J.ok} ✓ · ${J.mal} ✗)`), v]); rep += J.ok - J.mal; }
+    if (id === 'embrujada') { txt = aprobado ? L(`Terminaste a oscuras con ${J.sustos} sustos. El velador dice que el fantasma «se ve más tranquilo».`, `You finished in the dark with ${J.sustos} scares. The watchman says the ghost "looks calmer".`) : L('La campana sigue embrujada. Y sucia.', 'The hood is still haunted. And dirty.'); rep += aprobado ? 3 : -1; }
+    neto += v;
+    if (supera) { const ant = (S.jefes || {})[id]; if (!ant || pts > (S.jefesPts || {})[id]) { S.jefes = { ...(S.jefes || {}), [id]: n }; S.jefesPts = { ...(S.jefesPts || {}), [id]: pts }; } }
+    jefe = { id, supera, txt };
+  }
   S.estrellas = estrellasAntes + retosHechos.filter(r => r[1]).length;
   // Retos de Don Rigo
   const misHechas = aprendiz ? [] : avanzarMisiones({ aprobado, n, o, BS, danos: M.danos.length, gana: !!ganaDuelo, espejo, finMin, pedOk: !!(ped && !ped.tacos && pedOk) });
@@ -4918,6 +5036,8 @@ function pantallaParte() {
   if (S.secretos.himno) dar('himno');
   if (finde && finde.t.startsWith('¡Reto')) dar('finde');
   if (contrato && contrato.ok) dar('contrato');
+  if (jefe && jefe.supera) dar('j_' + jefe.id);
+  if (Object.keys(JEFES).every(id => (S.jefes || {})[id])) dar('jefes');
   if ((S.contratos || 0) >= 5) dar('contratos5');
   if (racha >= 10) dar('racha10');
   if (((S.cunado || {}).gane || 0) >= 5) dar('cunado5');
@@ -4975,6 +5095,7 @@ function pantallaParte() {
       <div class="rotulo">${aprobado ? (espejo ? L('Metal desnudo', 'Bare metal') : L('Aprobado', 'Passed')) : L('No pasa', 'Failed')}<span>${L('Parte de', 'Report for')} ${esc(o.nombre)}</span></div></div>
     ${records.length ? `<div class="chips">${records.map(r => `<span class="chip naranja">${L('¡Récord!', 'Record!')} ${esc(r)}</span>`).join('')}</div>` : ''}
     ${nuevas.length ? `<div class="medallas">${nuevas.map(id => tarjetaMedalla(medalla(id), true)).join('')}</div>${desbloq.length ? `<p class="pista">${L('Desbloqueaste', 'You unlocked')}: ${esc(desbloq.join(' · '))}. ${L('Cámbialo en «Logros».', 'Change it in "Awards".')}</p>` : ''}` : ''}
+    ${jefe ? `<div class="retos jefe-res"><b>${JEFES[jefe.id].ico} ${esc(L(...JEFES[jefe.id].n))} · ${jefe.supera ? L('¡superado!', 'beaten!') : L('no superado', 'not beaten')}</b><span>${esc(jefe.txt)}</span></div>` : ''}
     ${contrato ? `<div class="retos contrato-res"><b>📜 ${contrato.ok ? L('Contrato cumplido', 'Contract fulfilled') : L('Contrato incumplido', 'Contract missed')}</b>${contrato.conds.map(([c, ok]) => `<span class="${ok ? 'ok' : 'mal'}">${ok ? '☑' : '☒'} ${esc(L(...c.t))}</span>`).join('')}${!aprobado ? `<span class="mal">☒ ${L('Aprobar la inspección', 'Pass the inspection')}</span>` : ''}</div>` : ''}
     ${retosHechos.length ? `<div class="retos"><b>${L('Retos', 'Challenges')} · +${S.estrellas - estrellasAntes} ★ (${L('llevas', 'total')} ${S.estrellas})</b>${retosHechos.map(([r, ok]) => `<span class="${ok ? 'ok' : ''}">${ok ? '★' : '☆'} ${esc(tReto(r))}</span>`).join('')}</div>` : ''}
     ${racha > 2 ? `<p class="pista">${L(`¡Racha de ${racha} noches aprobadas!${aprendiz ? '' : ' Cada noche seguida paga un poco más.'}`, `${racha}-night passing streak!${aprendiz ? '' : ' Each night in a row pays a little more.'}`)}</p>` : ''}
