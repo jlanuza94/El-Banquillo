@@ -1,7 +1,7 @@
 // Pruebas de Hood Cleaners. Uso: node hoods/pruebas/casos.cjs [parte-del-nombre]
 // Abren el juego construido en Chromium y comprueban que lo importante sigue funcionando y que no hay errores.
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -380,6 +380,11 @@ caso('tutorial compacto y barras de progreso de las zonas', async () => {
   const w0 = await p.evaluate(() => [...document.querySelectorAll('#zonas .prog s')].map(s => s.style.width));
   afirmar(w0.length >= 3 && w0.every(w => parseFloat(w) > 90), 'las barras no empiezan llenas: ' + w0);
   await p.evaluate(() => { const z = __hc.Z.find(z => z.id === 'filtros'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); });
+  // la campana en vertical: las paredes laterales se alcanzan deslizando la vista
+  await p.evaluate(() => { const i = __hc.Z.findIndex(z => z.id === 'campana'); __hc.irZona(i); });
+  await p.waitForTimeout(1500);
+  const lados = await p.evaluate(() => ({ pan: __hc.camT.a.maxPan, tabs: !document.querySelector('#faltaD').hidden || !document.querySelector('#faltaI').hidden }));
+  afirmar(lados.pan < .1 || lados.tabs, 'los lados de la campana no se pueden alcanzar: ' + JSON.stringify(lados));
   const ok = await p.evaluate(() => { const i = __hc.Z.findIndex(z => z.id === 'filtros'); return document.querySelectorAll('#zonas .prog s')[i].style.background; });
   afirmar(/--ok/.test(ok), 'la barra de la zona limpia no se puso verde: ' + ok);
   afirmar(!p.errores.length, p.errores[0]); await p.close();
