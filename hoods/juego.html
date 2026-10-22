@@ -4699,6 +4699,7 @@ function generarOrdenes() {
       const o = genOrden(uno(ks.length ? ks : ['burger'])); o.jefe = id; o.pedido = null; o.pago = r10(o.pago * J.mult); o.nombre = L(...J.n); out.unshift(o); S.jefeNoche = S.noche;
     }
   }
+  if (S.fase === 'empresa' && capricho('radio')) { const o = genOrden(uno(cocinasHasta(S.etapa))); o.origen = 'Radio'; out.push(o); }   // lo oyeron en el programa de Don Rigo
   return out;
 }
 // Más gente para cuando la empresa crece: nombres y manías combinados al azar.
@@ -5022,6 +5023,55 @@ function tarjetaLicit() {
     <p class="nota">${L(`El ayuntamiento va a dar TODAS sus cocinas a una sola empresa. Solo quedan dos: tú y ${RIVAL}. Tres noches seguidas: el hospital (en silencio), el estadio (con inspector) y el Palacio Municipal (en vivo por la tele). Quien saque mejor nota en 2 de 3, gana. Inscripción: ${dinero(LICIT_ENTRADA)}. Premio: ${dinero(LICIT_PREMIO)} y la ciudad.`, `City Hall will give ALL its kitchens to a single company. Only two are left: you and ${RIVAL}. Three nights in a row: the hospital (quiet), the stadium (with an inspector) and City Hall (live on TV). Whoever gets the better grade on 2 of 3 wins. Entry: ${dinero(LICIT_ENTRADA)}. Prize: ${dinero(LICIT_PREMIO)} and the city.`)}</p>
     <div class="acciones"><button class="btn prim" id="licitSi" ${S.dinero < LICIT_ENTRADA ? 'disabled' : ''}>${L('Inscribirse', 'Sign up')} · ${dinero(LICIT_ENTRADA)}</button></div></div>`;
 }
+// ---- En qué gastar cuando sobra: caprichos con historia (se pagan con la caja de la ciudad donde estás y son tuyos)
+const CAPRICHOS = [
+  { id: 'casa', ico: '🏡', p: 30000, n: ['Tu propia casa', 'Your own house'], d: ['Se acabó la renta semanal: solo pagas luz, agua e internet.', 'No more weekly rent: you only pay power, water and internet.'],
+    escena: ['Firmas las escrituras con la mano llena de grasa. El notario no dice nada; tú dejas una huella en la hoja. Esa noche duermes en el piso de la sala, porque todavía no hay muebles. Es la mejor noche en años.', 'You sign the deed with a greasy hand. The notary says nothing; you leave a print on the page. That night you sleep on the living room floor, because there\'s no furniture yet. Best night in years.'] },
+  { id: 'tigres', ico: '⚾', p: 12000, n: ['Patrocinar a los Tigres del barrio', 'Sponsor the neighborhood Tigers'], d: ['El equipo de béisbol de la foto de la hamburguesería juega con tu logo: +5 de reputación y un poco más de propina.', 'The baseball team from the burger joint\'s photo plays with your logo: +5 reputation and slightly better tips.'],
+    escena: ['Los Tigres estrenan uniforme con tu logo. Pierden 14 a 2, pero el pitcher te dedica el único strike de la tarde. Todo el barrio aplaude. A ti.', 'The Tigers debut uniforms with your logo. They lose 14 to 2, but the pitcher dedicates the only strike of the afternoon to you. The whole neighborhood cheers. For you.'] },
+  { id: 'radio', ico: '📻', p: 15000, n: ['Un programa para Don Rigo en Radio Grasa FM', 'A show for Don Rigo on Radio Grasa FM'], d: ['«El rincón de Don Rigo»: lo escuchan los dueños de restaurantes. Cada noche llega un trabajo más.', '"Don Rigo\'s Corner": restaurant owners tune in. One extra job every night.'],
+    escena: ['Don Rigo estrena su programa con una ranchera desafinada y un consejo: «la rasqueta a cuarenta y cinco grados». Al día siguiente suenan tres teléfonos preguntando por ti.', 'Don Rigo debuts his show with an off-key ranchera and a tip: "scraper at forty-five degrees". The next day three phones ring asking for you.'] },
+  { id: 'taqueria', ico: '🌮', p: 20000, n: ['La taquería de Beto', 'Beto\'s taco stand'], d: ['Le pones local a Beto. Cenas ahí cada noche: la comida diaria te cuesta la mitad.', 'You give Beto a proper place. You eat there every night: daily food costs half.'],
+    escena: ['«Beto\'s Tacos» abre con el letrero viejo, ya enmarcado. Beto llora picando cebolla y jura que es la cebolla. Tu primer taco es gratis. Los siguientes, también.', '"Beto\'s Tacos" opens with the old sign, now framed. Beto cries chopping onions and swears it\'s the onions. Your first taco is free. So are the rest.'] },
+];
+const capricho = id => !!(S && S.compras && S.compras[id]);
+function vCaprichos() {
+  if (S.fase !== 'empresa' || (S.etapa < 3 && !S.legado)) return '';
+  return `<h2 class="sec">${L('Para cuando sobra', 'When there\'s money to spare')}</h2>
+    ${CAPRICHOS.map(c => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${c.ico}</div><div><b>${L(...c.n)}</b><span>${L(...c.d)}</span></div>
+      ${capricho(c.id) ? `<span class="chip ok">${L('Hecho', 'Done')}</span>` : `<button class="btn prim peq" data-capricho="${c.id}" ${S.dinero < c.p ? 'disabled' : ''}>${dinero(c.p)}</button>`}</div>`).join('')}`;
+}
+function comprarCapricho(id) {
+  const c = CAPRICHOS.find(x => x.id === id); if (!c || capricho(id) || S.dinero < c.p) return;
+  S.dinero -= c.p; S.compras = S.compras || {}; S.compras[id] = S.noche;
+  if (id === 'tigres') S.rep = clamp(S.rep + 5, 0, 100);
+  const al = L(...c.n); if (!S.album.includes(al)) S.album.push(al); guardar();
+  pantalla(`<div class="final"><div class="rotulo">${c.ico} ${L(...c.n)}</div><p>${L(...c.escena)}</p><div class="acciones"><button class="btn prim" id="volverCap">${L('Volver', 'Back')}</button></div></div>`);
+  [523, 659, 784].forEach((f, i) => tono(f, .3, .07, 'triangle', null, i * .12));
+  $('#volverCap').onclick = () => pantallaCamioneta();
+}
+// Invertir en tu empresa de Ciudad Comal (si no la vendiste): se paga con la caja de allá y sube los dividendos.
+const INVERSIONES = [
+  { id: 'flota', p: 10000, mas: .2, n: ['Camioneta nueva para tu director', 'A new van for your director'] },
+  { id: 'oficina', p: 15000, mas: .2, n: ['Remodelar la oficina de Ciudad Comal', 'Remodel the Comal City office'] },
+  { id: 'personal', p: 8000, mas: .15, n: ['Dos ayudantes más para tu director', 'Two more helpers for your director'] },
+  { id: 'anuncios', p: 6000, mas: .1, n: ['Anuncios en Radio Grasa FM', 'Ads on Radio Grasa FM'] },
+];
+const cajaComal = () => ciudad() === 1 ? S.dinero : ((S.ciudades || {})[1] || {}).dinero || 0;
+const masDividendos = () => INVERSIONES.reduce((a, x) => a + ((S.legado && S.legado.inversiones || {})[x.id] ? x.mas : 0), 0);
+function vInversiones() {
+  if (!S.legado || S.legado.camino !== 'B') return '';
+  const inv = S.legado.inversiones || {};
+  return `<h2 class="sec">${L('Tu empresa en Ciudad Comal', 'Your company in Comal City')}</h2><p class="nota">${L(`La dirige ${esc(S.legado.director.n)}. Caja de allá: ${dinero(cajaComal())}. Lo que inviertas sube los dividendos que te llegan cada noche (ahora +${Math.round(masDividendos() * 100)} %).`, `Run by ${esc(S.legado.director.n)}. Till over there: ${dinero(cajaComal())}. Investing raises the dividends you get every night (now +${Math.round(masDividendos() * 100)}%).`)}</p>
+    ${INVERSIONES.map(x => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:18px">📈</div><div><b>${L(...x.n)}</b><span>+${Math.round(x.mas * 100)} % ${L('de dividendos', 'dividends')}</span></div>
+      ${inv[x.id] ? `<span class="chip ok">${L('Hecho', 'Done')}</span>` : `<button class="btn peq" data-invertir="${x.id}" ${cajaComal() < x.p ? 'disabled' : ''}>${dinero(x.p)}</button>`}</div>`).join('')}`;
+}
+function invertir(id) {
+  const x = INVERSIONES.find(v => v.id === id), lg = S.legado; if (!x || !lg || cajaComal() < x.p) return;
+  lg.inversiones = lg.inversiones || {}; if (lg.inversiones[id]) return;
+  if (ciudad() === 1) S.dinero -= x.p; else S.ciudades[1].dinero -= x.p;
+  lg.inversiones[id] = S.noche; guardar(); tono(660, .15, .06, 'triangle'); pantallaCamioneta();
+}
 // ---- El comprador, el legado y Puerto Fritanga
 // Tras la Gran Licitación y la Residencia Oficial llega Maximiliano Lustre (Grupo Brillo Total). Ya le compró la empresa a
 // El Cuñado y quiere la tuya. Vendas o no, te vas a Puerto Fritanga, donde Brillo (con El Cuñado de gerente) es tu rival.
@@ -5045,7 +5095,7 @@ function estiloDirector(d) {
 function dividendo() {
   const c1 = S.ciudades && S.ciudades[1], d = S.legado && S.legado.director; if (!c1 || !d) return 0;
   const e = estiloDirector(d), v = 250 + 120 * ((c1.eq || {}).flota || 0) + 40 * nivelesSede(c1.sede) + 30 * (c1.clientes || []).length + 2 * (c1.rep || 0);
-  return Math.max(0, r10(v * e.base * (1 + rnd(-e.vari, e.vari))));
+  return Math.max(0, r10(v * e.base * (1 + masDividendos()) * (1 + rnd(-e.vari, e.vari))));
 }
 const puedeViajar = () => !!(S.legado && S.legado.camino === 'B' && !S.licit && !S.finde && !turnoPendiente());
 // Lo que te cuenta tu director desde Ciudad Comal (por la radio, en las noticias del barrio).
@@ -5063,7 +5113,7 @@ function pantallaComprador() {
     <p class="cita">${L(`«Esta mañana le compré su empresa a un tal Cuñado. Buen hombre. Lloró al firmar. Ahora es mi gerente regional en Puerto Fritanga.${c.gane ? ` Me contó que usted le ganó ${c.gane} ${c.gane === 1 ? 'duelo' : 'duelos'}. No lo dijo con cariño.` : ''}»`, `"This morning I bought the company of a fellow called Cuñado. Good man. Cried while signing. He is now my regional manager in Port Fritanga.${c.gane ? ` He told me you beat him in ${c.gane} ${c.gane === 1 ? 'duel' : 'duels'}. Not fondly.` : ''}"`)}</p>
     <p class="cita">${L(`«Le ofrezco ${dinero(v)} por su empresa. Una parte al firmar y el resto en pagos. Si dice que no, lo entenderé… y lo veré en Puerto Fritanga, porque esta ciudad ya le queda chica. Allá, mi empresa será su competencia.»`, `"I offer you ${dinero(v)} for your company. Part on signing, the rest in installments. If you say no, I\'ll understand… and I\'ll see you in Port Fritanga, because this city is too small for you now. Over there, my company will be your competition."`)}</p>
     <div class="dos-caminos">
-      <button class="orden" data-camino="A"><h3>${L('Vender', 'Sell')}</h3><span class="nota">${L(`Grupo Brillo se queda tu empresa de Ciudad Comal (tu director sigue al frente, ahora para ellos). Tú fundas una nueva en Puerto Fritanga con ${dinero(6000)} al firmar y ${PAGOS_VENTA} pagos de ${dinero(r10(v * .4 / PAGOS_VENTA))}.`, `Grupo Brillo keeps your Comal City company (your director stays in charge, now for them). You found a new one in Port Fritanga with ${dinero(6000)} on signing and ${PAGOS_VENTA} payments of ${dinero(r10(v * .4 / PAGOS_VENTA))}.`)}</span></button>
+      <button class="orden" data-camino="A"><h3>${L('Vender', 'Sell')}</h3><span class="nota">${L(`Grupo Brillo se queda tu empresa de Ciudad Comal (tu director sigue al frente, ahora para ellos). Tú fundas una nueva en Puerto Fritanga con ${dinero(6000)} al firmar y ${PAGOS_VENTA} pagos de ${dinero(r10(v * .4 / PAGOS_VENTA))} (más lo que quede en la caja, repartido en esos pagos).`, `Grupo Brillo keeps your Comal City company (your director stays in charge, now for them). You found a new one in Port Fritanga with ${dinero(6000)} on signing and ${PAGOS_VENTA} payments of ${dinero(r10(v * .4 / PAGOS_VENTA))}.`)}</span></button>
       <button class="orden" data-camino="B"><h3>${L('No vender y expandirse', 'Don\'t sell, expand')}</h3><span class="nota">${L(`Tu empresa de Ciudad Comal sigue siendo tuya, con un director al frente: te manda dividendos cada noche y puedes volver cuando quieras. Te llevas ${dinero(capitalSemilla())} de la caja para abrir en Puerto Fritanga.`, `Your Comal City company stays yours, with a director in charge: they send you dividends every night and you can come back whenever you like. You take ${dinero(capitalSemilla())} from the till to open in Port Fritanga.`)}</span></button>
     </div>
     <div class="acciones"><button class="btn" id="pensarlo">${L('Lo voy a pensar (vuelve en 3 noches)', 'I\'ll think about it (he returns in 3 nights)')}</button></div></div>`);
@@ -5088,8 +5138,24 @@ function pantallaLegado(camino, paso = 'director', eleccion = {}) {
     audio();
     if (paso === 'director') return pantallaLegado(camino, 'mano', { director: b.dataset.g });
     const nombre = camino === 'A' ? (($('#nombreNueva') || {}).value || '').trim() || S.jugador : null;
-    pantallaEpilogo(camino, { ...eleccion, mano: b.dataset.g, nombre });
+    pantallaMudanza(camino, { ...eleccion, mano: b.dataset.g, nombre });
   });
+}
+// Preparar la mudanza: con la caja de Ciudad Comal compras ventajas para empezar en el puerto (con tope: sigue siendo un reto).
+const MUDANZA = [
+  { id: 'camioneta', p: 6000, n: ['Una camioneta más grande para el puerto', 'A bigger van for the port'], d: ['Empiezas con la camioneta mediana (cabe un ayudante más).', 'You start with the medium van (room for one more helper).'] },
+  { id: 'local', p: 15000, n: ['Un local ya rentado en el puerto', 'A place already rented at the port'], d: ['Empiezas en la etapa «Taller propio» sin pagar el salto.', 'You start at the "Own workshop" stage without paying for the jump.'] },
+  { id: 'fondo', p: 10000, n: ['Un fondo de arranque', 'A startup fund'], d: [`Llegas con ${dinero(4000)} más (el cambio de ciudad sale caro).`, `You arrive with ${dinero(4000)} more (moving cities is expensive).`] },
+];
+function pantallaMudanza(camino, e, elegido = {}) {
+  const coste = MUDANZA.reduce((a, m) => a + (elegido[m.id] ? m.p : 0), 0), libre = S.dinero - coste;
+  pantalla(`<div class="rotulo">📦 ${L('Preparar la mudanza', 'Get ready to move')}<span>${L('Se paga con la caja de Ciudad Comal', 'Paid from the Comal City till')}</span></div>
+    <p class="nota">${L(`Caja: ${dinero(S.dinero)} · después de la mudanza: ${dinero(libre)}.`, `Till: ${dinero(S.dinero)} · after moving: ${dinero(libre)}.`)} ${camino === 'A' ? L('Lo que quede en la caja se suma a la venta y te llega en los pagos de Grupo Brillo.', 'Whatever is left in the till is added to the sale and reaches you in Grupo Brillo\'s payments.') : L('Lo que quede sigue siendo de tu empresa de Ciudad Comal: puedes invertirlo después.', 'Whatever is left stays with your Comal City company: you can invest it later.')}</p>
+    <div class="legado-lista">${MUDANZA.map(m => `<button class="persona elegir" data-mud="${m.id}" aria-pressed="${!!elegido[m.id]}" ${!elegido[m.id] && libre < m.p ? 'disabled' : ''}><div class="cara" style="background:#2b3946;font-size:20px">${elegido[m.id] ? '✅' : '📦'}</div><div><b>${L(...m.n)} · ${dinero(m.p)}</b><span>${L(...m.d)}</span></div></button>`).join('')}</div>
+    <div class="acciones"><button class="btn" id="atrasMud">${L('Atrás', 'Back')}</button><button class="btn prim" id="sigMud">${L('Seguir', 'Continue')}</button></div>`);
+  P.querySelectorAll('[data-mud]').forEach(b => b.onclick = () => { audio(); pantallaMudanza(camino, e, { ...elegido, [b.dataset.mud]: !elegido[b.dataset.mud] }); });
+  $('#atrasMud').onclick = () => pantallaLegado(camino, 'mano', { director: e.director });
+  $('#sigMud').onclick = () => { audio(); pantallaEpilogo(camino, { ...e, mudanza: elegido }); };
 }
 // La escena final de Ciudad Comal: lo conseguido, qué fue de cada uno y la despedida.
 function pantallaEpilogo(camino, e) {
@@ -5129,12 +5195,17 @@ function fundarPuerto(camino, e) {
     let cuadrilla2 = [], fijos2 = [], comp2 = 'solo';
     if (mano.comp) { S.aumentos[mano.comp] = AUMENTO; S.fijos = S.fijos.filter(x => x !== mano.comp); if (S.compPref === mano.comp) S.compPref = dir.comp || 'solo'; fijos2 = [mano.comp]; comp2 = mano.comp; }
     else { const c = S.cuadrilla.find(x => x.id === mano.id); S.cuadrilla = S.cuadrilla.filter(x => x !== c); c.sueldo = Math.round(c.sueldo * AUMENTO / 5) * 5; c.prueba = false; c.mano = true; cuadrilla2 = [c]; }
-    const valor = tasacion(), semilla = camino === 'A' ? 6000 : capitalSemilla();
-    if (camino === 'B') S.dinero -= semilla;
+    const mud = e.mudanza || {}, costeMud = MUDANZA.reduce((a, m) => a + (mud[m.id] ? m.p : 0), 0);
+    if (costeMud > S.dinero) throw new Error('mudanza');
+    S.dinero -= costeMud;
+    const valor = tasacion(), semilla = (camino === 'A' ? 6000 : capitalSemilla()) + (mud.fondo ? 4000 : 0);
+    if (camino === 'B') S.dinero -= semilla - (mud.fondo ? 4000 : 0);
+    const caja = camino === 'A' ? Math.max(0, S.dinero) : 0;   // vendiendo, lo que queda en la caja entra en la venta
     S.final = S.noche; S.medallas.final = S.medallas.final || S.noche;
-    S.legado = { camino, noche: S.noche, director: ficha(dir), mano: ficha(mano), venta: camino === 'A' ? { total: valor, porNoche: r10(valor * .4 / PAGOS_VENTA), restan: PAGOS_VENTA } : null };
-    const ok = viajar(2, { empresa: { nombre: camino === 'A' ? e.nombre : S.empresa.nombre, color: S.empresa.color }, etapa: 1, rep: 10, dinero: semilla, clientes: [], perdidos: [], cuadrilla: cuadrilla2, candidatos: [],
-      fijos: fijos2, compPref: comp2, abierta: S.noche, hoy: null, eq: { camioneta: 2 } }, true);
+    S.legado = { camino, noche: S.noche, director: ficha(dir), mano: ficha(mano), venta: camino === 'A' ? { total: valor, caja, porNoche: r10((valor * .4 + caja) / PAGOS_VENTA), restan: PAGOS_VENTA } : null, mudanza: mud };
+    if (camino === 'A') S.dinero = 0;
+    const ok = viajar(2, { empresa: { nombre: camino === 'A' ? e.nombre : S.empresa.nombre, color: S.empresa.color }, etapa: mud.local ? 2 : 1, rep: 10, dinero: semilla, clientes: [], perdidos: [], cuadrilla: cuadrilla2, candidatos: [],
+      fijos: fijos2, compPref: comp2, abierta: S.noche, hoy: null, eq: { camioneta: mud.camioneta ? 3 : 2 } }, true);
     if (!ok) throw new Error('viaje');
     if (camino === 'A' && S.ciudades[1]) S.ciudades[1].vendida = true;
     guardar(); return true;
@@ -5663,6 +5734,8 @@ function vTaller() {
     ${S.eq.camioneta === 1 && etapa() < 1 ? `<p class="nota">${L('Las camionetas más grandes, cuando tengas taller propio.', 'Bigger vans come with your own workshop.')}</p>` : ''}
     ${paredBeto()}
     ${vSede()}
+    ${vInversiones()}
+    ${vCaprichos()}
     ${bloqueadas.length ? `<p class="nota">${L('Más adelante', 'Coming later')}: ${bloqueadas.map(([n, e]) => `${n} (${L('desde', 'from')} ${nEtapa(e)})`).join(' · ')}.</p>` : ''}${kits}
     ${S.fase === 'empresa' ? `<h2 class="sec">${L('Tunear la camioneta', 'Pimp your van')}</h2><div class="empresa">${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}</div>
       ${[[L('Con efecto', 'With an effect'), TUNEO.filter(t => !ESTILO_SOLO.includes(t.id))], [L('Solo estilo (no cambia nada del trabajo)', 'Style only (doesn\'t change the work)'), TUNEO.filter(t => ESTILO_SOLO.includes(t.id))]].map(([tit, ts]) => `<p class="nota"><b>${tit}</b></p>` + ts.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(L(t.n, EN.tuneo[t.id][0]))}</b><span>${esc(L(t.d, EN.tuneo[t.id][1]))}</span></div>${tun(t.id) ? `<span class="chip ok">${L('Puesto', 'Installed')}</span>` : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')).join('')}` : ''}`;
@@ -5741,6 +5814,8 @@ function enlazar() {
     const ayudan = o.gigante ? eqs.filter(({ e }) => e.o === 'mio' && conGente(e)).map(({ e, k }) => ({ comp: e.comp, ayud: [...e.ayud], k })).slice(0, o.finde || o.residencia ? 2 : 99) : [];
     empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, contento: !!H.contento, muela: !!H.muela, retos: H.retos || [], equipos, ayudan, espumaExtra: H.espumaExtra || 0 });
   };
+  P.querySelectorAll('[data-capricho]').forEach(b => b.onclick = () => { audio(); comprarCapricho(b.dataset.capricho); });
+  P.querySelectorAll('[data-invertir]').forEach(b => b.onclick = () => { audio(); invertir(b.dataset.invertir); });
   P.querySelectorAll('[data-vida]').forEach(b => b.onclick = () => { S.vida = b.dataset.vida; tono(700, .08, .06, 'triangle'); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-arco]').forEach(b => b.onclick = () => {
     const k = H.historia, a = S.arcos[k], op = ARCOS[k].caps[a.cap].ops[+b.dataset.arco];
@@ -5908,7 +5983,7 @@ function pantallaParte() {
   const ganaDuelo = d ? cerrarDuelo(d) : null, marcador = d ? puntosDuelo(d) : null;
   const tacos = ped && ped.tacos ? .5 : 1, mitadDuelo = d && !ganaDuelo ? .5 : 1;
   const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) * tacos * mitadDuelo / 10) * 10;
-  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 + .1 * hab('espejo') : 0) + .04 * hab('labia') + vida().propina + M.propinaMod, 0, .3 + .1 * hab('espejo')) / 5) * 5);
+  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 + .1 * hab('espejo') : 0) + .04 * hab('labia') + (vida().propina + (capricho('tigres') ? .02 : 0)) + M.propinaMod, 0, .3 + .1 * hab('espejo')) / 5) * 5);
   const extraPed = ped && !ped.tacos ? (pedOk ? Math.round(o.pago * ped.premio * (aprendiz ? .25 : 1) / 10) * 10 : aprendiz ? 0 : -Math.round(o.pago * .1 / 10) * 10) : 0;
   const danos = M.danos.reduce((a, x) => a + x.dinero, 0);
   // Racha: cada noche aprobada seguida suma un 5 % más (hasta un 25 %). Premia jugar bien sin castigar de más.
@@ -5931,8 +6006,8 @@ function pantallaParte() {
     if (lg.camino === 'B') { const dv = dividendo(); lineas.push([L(`Dividendos de Ciudad Comal (dirige ${lg.director.n})`, `Comal City dividends (run by ${lg.director.n})`), dv]); }
   }
   const V = vida();
-  lineas.push([L(`Tu vida (${V.n[0].toLowerCase()}): comida y transporte`, `Your life (${V.n[1].toLowerCase()}): food and transport`), -V.noche]);
-  if (S.noche % 7 === 0) lineas.push([L('Renta del depa, luz, agua, internet y teléfono (semanal)', 'Rent, power, water, internet and phone (weekly)'), -V.semana]);
+  lineas.push([L(`Tu vida (${V.n[0].toLowerCase()}): comida y transporte${capricho('taqueria') ? ' (cenas en la taquería de Beto)' : ''}`, `Your life (${V.n[1].toLowerCase()}): food and transport${capricho('taqueria') ? ' (dinner at Beto\'s taco stand)' : ''}`), -r10(V.noche * (capricho('taqueria') ? .5 : 1))]);
+  if (S.noche % 7 === 0) lineas.push(capricho('casa') ? [L('Luz, agua, internet y teléfono de tu casa (semanal)', 'Power, water, internet and phone for your house (weekly)'), -r10(V.semana * .3)] : [L('Renta del depa, luz, agua, internet y teléfono (semanal)', 'Rent, power, water, internet and phone (weekly)'), -V.semana]);
   let neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
@@ -6002,7 +6077,7 @@ function pantallaParte() {
   BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = B.k || k + 2; B.neto = v; lineas.push([L(`Equipo ${B.k} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, `Team ${B.k} at ${B.o.nombre} · ${B.aprobado ? 'passed' : 'failed'}`), v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
   rep = clamp(rep, -15, 25);
   // Cuanta más fama, más cuesta subirla: así las etapas (20, 40, 60, 85) se ganan noche a noche y no en dos semanas.
-  if (rep > 0 && !aprendiz) rep = Math.max(1, Math.round(rep * clamp(1.15 - S.rep / 100, .25, 1)));
+  if (rep > 0 && !aprendiz) rep = Math.max(1, Math.round(rep * clamp(1.25 - S.rep / 110, .35, 1)));   // cuesta más subir arriba, pero sin estancarse
   if (S.angelica && !aprendiz) { lineas.push([L('Angélica (coordinación)', 'Angélica (coordination)'), -ANGELICA.sueldo]); neto -= ANGELICA.sueldo; }
   // Equipos que te ayudaron en el trabajo gigante: sus sueldos y su gasolina.
   for (const a of o.ayudan || []) {

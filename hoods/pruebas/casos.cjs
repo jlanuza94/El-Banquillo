@@ -171,22 +171,24 @@ caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', asy
   await p.click('[data-g="c:lupe"]');
   afirmar(await p.evaluate(() => !document.querySelector('[data-g="c:lupe"]')), 'el director aparece también como mano derecha');
   await p.click('[data-g="a:7"]');
+  // mudanza: una camioneta más grande (se paga con la caja de Ciudad Comal)
+  await p.click('[data-mud="camioneta"]'); await p.click('#sigMud');
   const epi = await p.evaluate(() => document.querySelector('#pantalla').innerText);
   afirmar(/Lupe se queda al mando/.test(epi) && /Nacho ya tiene la maleta/.test(epi) && /Grasita/.test(epi) && /2 duelos/.test(epi), 'el epílogo no refleja las decisiones');
   await p.click('#rumbo'); await p.click('#empezarPuerto');
   const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, cu: S.cuadrilla.map(c => [c.n, c.sueldo]), f: S.fijos, lupe: __hc.COMPANEROS.lupe.sueldo, beto: __hc.COMPANEROS.beto.sueldo,
     c1: S.ciudades[1].dinero, c1f: S.ciudades[1].fijos, c1cu: S.ciudades[1].cuadrilla.length, fin: S.medallas.final, eq: S.eq, lg: S.legado.camino }; });
-  afirmar(r.c === 2 && Math.abs(r.d - 10000) <= 300 && r.c1 === 30000, 'el dinero no se repartió bien: ' + JSON.stringify(r));
+  afirmar(r.c === 2 && Math.abs(r.d - 8500) <= 300 && r.c1 === 25500, 'el dinero no se repartió bien: ' + JSON.stringify(r));
   afirmar(JSON.stringify(r.cu) === '[["Nacho",165]]' && r.f.length === 0 && r.c1cu === 0, 'la mano derecha no se mudó con su aumento: ' + JSON.stringify(r));
   afirmar(r.lupe === 200 && r.beto === 110 && r.c1f.includes('lupe'), 'el director no tiene su aumento: ' + JSON.stringify(r));
-  afirmar(r.fin && r.eq.camioneta === 2 && !r.eq.flota && r.eq.hidro && r.lg === 'B', 'la llegada al puerto no es la esperada: ' + JSON.stringify(r));
+  afirmar(r.fin && r.eq.camioneta === 3 && !r.eq.flota && r.eq.hidro && r.lg === 'B', 'la llegada al puerto no es la esperada: ' + JSON.stringify(r));
   afirmar(await p.evaluate(() => /Puerto Fritanga/.test(document.querySelector('.meta-final').innerText)), 'la cabecera no habla de Puerto Fritanga');
   const t = await jugarNoche(p, { cocina: 'cafe' });
   afirmar(/Dividendos de Ciudad Comal \(dirige Lupe\)/.test(t.texto), 'no llegaron los dividendos al parte');
   await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('[data-tab="noche"]');
   await p.click('#viajar'); await p.click('#siViajar');
   const v = await p.evaluate(() => ({ c: __hc.ciudad(), d: __hc.S.dinero, f: __hc.S.fijos, carta: !!document.querySelector('#comprador') }));
-  afirmar(v.c === 1 && Math.abs(v.d - 30000) <= 300 && v.f.includes('lupe') && !v.carta, 'volver a Ciudad Comal no funcionó: ' + JSON.stringify(v));
+  afirmar(v.c === 1 && Math.abs(v.d - 25500) <= 300 && v.f.includes('lupe') && !v.carta, 'volver a Ciudad Comal no funcionó: ' + JSON.stringify(v));
   const almacen = await p.evaluate(() => Object.keys(localStorage).map(k => k + ':' + localStorage.getItem(k).length).join(' '));
   await p.reload(); await p.waitForSelector('#continuar'); await p.click('#continuar'); await p.waitForSelector('#salir');
   afirmar(await p.evaluate(() => __hc.ciudad() === 1 && __hc.COMPANEROS.lupe.sueldo === 200), 'tras recargar se perdió la ciudad o el aumento: ' + await p.evaluate(() => JSON.stringify([__hc.ciudad(), __hc.COMPANEROS.lupe.sueldo, __hc.S.aumentos, __hc.S.noche])) + ' · antes: ' + almacen + ' · después: ' + await p.evaluate(() => Object.keys(localStorage).map(k => k + ':' + localStorage.getItem(k).length).join(' ')));
@@ -198,12 +200,13 @@ caso('el comprador: camino A (vender) con pagos y sin vuelta', async () => {
   await p.click('#comprador'); await p.click('[data-camino="A"]');
   await p.click('[data-g="c:chuy"]');
   await p.fill('#nombreNueva', 'Brillo Ninguno'); await p.click('[data-g="c:beto"]');
+  await p.click('[data-mud="local"]'); await p.click('#sigMud');
   await p.click('#rumbo'); await p.click('#empezarPuerto');
   const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, n: S.empresa.nombre, f: S.fijos, pref: S.compPref, c1f: S.ciudades[1].fijos, vend: S.ciudades[1].vendida, c1d: S.ciudades[1].dinero,
-    beto: __hc.COMPANEROS.beto.sueldo, chuy: __hc.COMPANEROS.chuy.sueldo, v: S.legado.venta, viaje: !!document.querySelector('#viajar') }; });
-  afirmar(r.c === 2 && r.d === 6000 && r.n === 'Brillo Ninguno' && r.c1d >= 40000, 'la venta no fundó la nueva empresa: ' + JSON.stringify(r));
+    beto: __hc.COMPANEROS.beto.sueldo, chuy: __hc.COMPANEROS.chuy.sueldo, v: S.legado.venta, et: S.etapa, viaje: !!document.querySelector('#viajar') }; });
+  afirmar(r.c === 2 && r.d === 6000 && r.n === 'Brillo Ninguno' && r.c1d === 0 && r.et === 2 && r.v.caja >= 25000, 'la venta no fundó la nueva empresa: ' + JSON.stringify(r));
   afirmar(JSON.stringify(r.f) === '["beto"]' && r.pref === 'beto' && !r.c1f.includes('beto') && r.vend, 'Beto no se mudó: ' + JSON.stringify(r));
-  afirmar(r.beto === 140 && r.chuy > 0 && r.v.restan === 30 && r.v.total === valor && !r.viaje, 'aumentos o pagos mal: ' + JSON.stringify(r));
+  afirmar(r.beto === 140 && r.chuy > 0 && r.v.restan === 30 && r.v.total === valor && r.v.porNoche === Math.round((valor * .4 + r.v.caja) / 300) * 10 && !r.viaje, 'aumentos o pagos mal: ' + JSON.stringify(r));
   const t = await jugarNoche(p, { cocina: 'cafe' });
   afirmar(/Pago de Grupo Brillo por la venta \(1 de 30\)/.test(t.texto) && !/Dividendos/.test(t.texto), 'el parte no trae el pago de la venta');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -387,6 +390,26 @@ caso('tutorial compacto y barras de progreso de las zonas', async () => {
   afirmar(lados.pan < .1 || lados.tabs, 'los lados de la campana no se pueden alcanzar: ' + JSON.stringify(lados));
   const ok = await p.evaluate(() => { const i = __hc.Z.findIndex(z => z.id === 'filtros'); return document.querySelectorAll('#zonas .prog s')[i].style.background; });
   afirmar(/--ok/.test(ok), 'la barra de la zona limpia no se puso verde: ' + ok);
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('en qué gastar: caprichos con historia e inversiones en Ciudad Comal', async () => {
+  const p = await abrir(partida({ etapa: 3, dinero: 80000, noche: 21, sueldos2: true }));
+  await p.click('[data-tab="taller"]');
+  afirmar(await p.evaluate(() => document.querySelectorAll('[data-capricho]').length === 4), 'no salen los caprichos en el taller');
+  for (const id of ['casa', 'tigres', 'radio', 'taqueria']) { await p.click('[data-tab="taller"]'); await p.click(`[data-capricho="${id}"]`); await p.click('#volverCap'); }
+  let r = await p.evaluate(() => ({ d: __hc.S.dinero, c: Object.keys(__hc.S.compras), rep: __hc.S.rep, album: __hc.S.album.length }));
+  afirmar(r.d === 80000 - 77000 && r.c.length === 4 && r.rep >= 43 && r.album >= 4, 'los caprichos no se cobraron o no hicieron efecto: ' + JSON.stringify(r));
+  await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  afirmar(await p.evaluate(() => __hc.S.hoy.ordenes.some(o => o.origen === 'Radio')), 'el programa de Don Rigo no trae un trabajo más');
+  await p.evaluate(() => { __hc.S.noche = 28; }); await p.click('[data-tab="noche"]');
+  const t = await jugarNoche(p, { cocina: 'cafe' });
+  afirmar(/cenas en la taquería de Beto/.test(t.texto) && /de tu casa \(semanal\)/.test(t.texto), 'el parte no refleja la casa o la taquería');
+  // inversiones (camino B, ya en el puerto): se pagan con la caja de Ciudad Comal y suben los dividendos
+  await p.evaluate(() => { const S = __hc.S; S.legado = { camino: 'B', noche: 20, director: { n: 'Lupe', comp: 'lupe' }, mano: { n: 'Beto', comp: 'beto' } }; __hc.viajar(2, { empresa: { nombre: 'Puerto', color: '#2e9e5b' }, etapa: 1, rep: 10, dinero: 3000, clientes: [], perdidos: [], cuadrilla: [], candidatos: [], fijos: ['beto'], compPref: 'beto', abierta: S.noche, hoy: null, eq: { camioneta: 2 } }); S.ciudades[1].dinero = 20000; __hc.pantallaCamioneta(); });
+  await p.click('[data-tab="taller"]'); await p.click('[data-invertir="flota"]');
+  r = await p.evaluate(() => ({ c1: __hc.S.ciudades[1].dinero, d: __hc.S.dinero, inv: __hc.S.legado.inversiones }));
+  afirmar(r.c1 === 10000 && r.d === 3000 && r.inv.flota, 'la inversión no se pagó con la caja de Ciudad Comal: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
