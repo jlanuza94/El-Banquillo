@@ -391,6 +391,9 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .vida { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .vida .comp { grid-template-columns: 1fr; }
 .marca.recuerdo { background: #e9d8a6; color: #222; font-size: 16px; padding: 4px 7px; opacity: .92; }
+.duelo .hitos { display: flex; gap: 3px; } .duelo .hitos i { font-style: normal; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px; background: #ffffff1a; font-size: 12px; }
+.duelo .hitos i.tu { background: var(--ok, #2e9e5b); color: #fff; } .duelo .hitos i.el { background: #b3261e; color: #fff; }
+.duelo[data-animo="nervioso"] .barra.rival { box-shadow: 0 0 0 2px #ffd23f; } .duelo[data-animo="confiado"] .barra.rival { opacity: .7; }
 .pared-beto { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-radius: 10px; background: #3a3f44 repeating-linear-gradient(0deg, transparent 0 22px, #ffffff0d 22px 24px); }
 .pared-beto span { display: grid; place-items: center; width: 40px; font-size: 26px; filter: grayscale(1) brightness(.35); transform: rotate(var(--r)); }
 .pared-beto small { font-size: 10px; filter: invert(1); }
@@ -615,7 +618,7 @@ a.btn { display: inline-block; text-decoration: none; }
     <div class="hud-arriba">
       <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="centrar" aria-label="Recentrar la vista / Recenter view" hidden>⌖</button><button class="btn-ico" id="pausa" aria-label="Pausa / Pause">❚❚</button></div>
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
-      <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
+      <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><span class="hitos" id="dHitos"></span><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
       <div class="jefe-med" id="jefeMed" hidden><b></b><div class="barra"><div></div></div><small></small></div>
       <div class="pasos" id="pasos"></div>
       <div class="cinta" id="cinta" hidden><b>FM</b><div><span></span></div></div>
@@ -2767,8 +2770,16 @@ function empezarTurno(orden) {
   const hist = S.cunado && S.cunado.ultimo;
   if (M.duelo && hist) setTimeout(() => M && decir(QUIEN_CUNADO, hist.gano === 'el' ? uno([L(`¿Te acuerdas de ${hist.donde}? Yo sí. Todos los días.`, `Remember ${hist.donde}? I do. Every day.`), L(`Otra vez tú. Te gané en ${hist.donde}, ¿o ya se te olvidó?`, `You again. I beat you at ${hist.donde}, or did you forget?`)]) : uno([L(`Lo de ${hist.donde} fue suerte. Hoy traigo rasqueta nueva.`, `${hist.donde} was luck. Today I brought a new scraper.`), L(`No he dormido desde que me ganaste en ${hist.donde}. Hoy me desquito.`, `I haven't slept since you beat me at ${hist.donde}. Payback time.`)])), 2400);
   else if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
+  if (M.duelo && S.fase === 'empresa') { const x = Math.max(100, r10(orden.pago * .5)); if (S.dinero >= x) setTimeout(() => M && M.duelo && M.fase === 'prep' && !M.ev && proponerApuesta(x), 900); }
 }
 
+// La apuesta: antes de empezar, El Cuñado se juega dinero a que gana. Es proporcional al trabajo (la mitad del pago).
+function proponerApuesta(x) {
+  carta(L('El Cuñado quiere apostar', 'El Cuñado wants a bet'), L(`«Te apuesto ${dinero(x)} a que te gano. Dos de tres: filtros, campana y ducto. ¿O te da miedo, ${jugador()}?»`, `"I bet you ${dinero(x)} I beat you. Best of three: filters, hood and duct. Or are you scared, ${jugador()}?"`), [
+    { t: L(`Aceptar · ${dinero(x)}`, `Accept · ${dinero(x)}`), d: L('Si ganas el duelo, te lo paga. Si pierdes, se lo pagas tú.', 'Win the duel and he pays you. Lose and you pay him.'), prim: true, f: () => { M.duelo.apuesta = x; cerrarCarta(); decir(QUIEN_CUNADO, L('¡Trato hecho! Ya me estoy gastando tu dinero.', 'Deal! I\'m already spending your money.')); } },
+    { t: L('No apostar', 'No bet'), d: L('Sin riesgo. El Cuñado se burlará un poco.', 'No risk. El Cuñado will mock you a little.'), f: () => { M.duelo.apuesta = 0; cerrarCarta(); decir(QUIEN_CUNADO, uno([L('Gallina. Pío, pío.', 'Chicken. Cluck, cluck.'), L('Lo sabía. Mucha rasqueta y poca cartera.', 'I knew it. All scraper, no wallet.')])); } },
+  ]);
+}
 // ---- preparación jugable: seguridad, cubrir la cocina y envolver la campana
 
 const prepEl = $('#prep');
@@ -3934,24 +3945,82 @@ function tickRobot(dt) {
 // ---- el duelo contra El Cuñado: limpia la misma cocina a la vez que tú
 
 const avanceTuyo = () => Z.reduce((a, z) => a + clamp(pctZona(z) / Math.max(.05, 1 - LIMITE / M.orden.micras), 0, 1), 0) / Z.length;
+// Duelo 2.0: tres hitos (filtros, campana, ducto). Quien termine primero cada grupo se lleva el punto; gana quien
+// tenga más. El Cuñado avanza con su propio ritmo, que cambia según cómo vas tú: si le ganas, se pone nervioso
+// (más rápido, pero se resbala más); si te gana, se confía y afloja.
+const HITOS = [['filtros', 0.32], ['campana', 0.7], ['ducto', 1]];
+const nHito = id => ({ filtros: L('Filtros', 'Filters'), campana: L('Campana', 'Hood'), ducto: L('Ducto', 'Duct') })[id];
+const hitosDuelo = () => HITOS.filter(([id]) => Z.some(z => z.id === id));
+const puntosDuelo = d => { const v = Object.values(d.hitos || {}); return { tu: v.filter(x => x === 'tu').length, el: v.filter(x => x === 'el').length }; };
+// Al terminar la noche, los hitos que nadie cerró: son tuyos si quedaron limpios (el inspector ya pasó), si no, de El Cuñado.
+function cerrarDuelo(d) {
+  for (const [id] of hitosDuelo()) if (!d.hitos[id]) d.hitos[id] = Z.filter(z => z.id === id).every(z => micras(z) <= LIMITE) ? 'tu' : 'el';
+  const p = puntosDuelo(d); return p.tu > p.el || (p.tu === p.el && d.tuyo !== null);
+}
+function ganarHito(d, id, quien) {
+  if (d.hitos[id]) return; d.hitos[id] = quien;
+  const p = puntosDuelo(d), total = hitosDuelo().length, nec = Math.floor(total / 2) + 1;
+  if (quien === 'tu') {
+    M.vida *= 1.06; sCombo(2); verCombo(L(`¡${nHito(id)} para ti!`, `${nHito(id)}: yours!`), true);
+    decir(QUIEN_CUNADO, uno([L('Eso fue suerte. La siguiente es mía.', 'That was luck. The next one is mine.'), L(`¿Ya acabaste ${nHito(id).toLowerCase()}? ¿Con qué, con magia?`, `Done with the ${nHito(id).toLowerCase()} already? What, magic?`)]));
+  } else {
+    tono(260, .3, .08, 'sawtooth', 160); verCombo(L(`${nHito(id)} para El Cuñado`, `${nHito(id)}: El Cuñado`), false);
+    decir(QUIEN_CUNADO, uno([L(`¡${nHito(id)} lista! Uno para el Cuñado, cero para ${jugador()}.`, `${nHito(id)} done! One for Cuñado, zero for ${jugador()}.`), L('Apunten: El Cuñado, campeón de este hito.', 'Write it down: El Cuñado, champion of this round.')]));
+  }
+  ayuda(L(`Marcador: tú ${p.tu} · El Cuñado ${p.el}`, `Score: you ${p.tu} · El Cuñado ${p.el}`), 4);
+  if (!d.ganador && (p.tu >= nec || p.el >= nec)) {
+    d.ganador = p.tu >= nec ? 'tu' : 'el';
+    if (d.ganador === 'tu') { verCombo(L('¡GANASTE EL DUELO!', 'DUEL WON!'), true); sCaja(); setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ya? ¿YA? Esto no se queda así.', 'Seguro hicieron trampa. Una rasqueta con turbo o algo.', 'Mi cuñado el alcalde se va a enterar de esto.'])), 1500); }
+    else { tono(400, .5, .1, 'sawtooth', 200); ayuda(L('El Cuñado ganó el duelo. Termina igual: el inspector todavía tiene que aprobar.', 'El Cuñado won the duel. Finish anyway: the inspector still has to pass it.'), 6); }
+  }
+  pintarHitos();
+}
+function pintarHitos() {
+  const d = M && M.duelo, el = $('#dHitos'); if (!d || !el) return;
+  el.innerHTML = hitosDuelo().map(([id]) => `<i class="${d.hitos[id] || ''}" title="${nHito(id)}">${{ filtros: '▦', campana: '⌂', ducto: '◎' }[id]}</i>`).join('');
+}
+const ANIMO_CUNADO = {
+  nervioso: { vel: 1.2, frases: [['¡No puede ser! ¡Más rápido, más rápido!', 'No way! Faster, faster!'], ['{jugador}, ¿qué desayunaste? Pásame la receta.', '{jugador}, what did you have for breakfast? Send me the recipe.'], ['Me tiembla la rasqueta. Es el frío. En una cocina. Sí.', 'My scraper is shaking. It\'s the cold. In a kitchen. Yes.']] },
+  confiado: { vel: .85, frases: [['¡Vas lento, {jugador}! ¿Te traigo una silla?', 'You\'re slow, {jugador}! Want me to bring you a chair?'], ['¿Eso es todo? Me voy a tomar un cafecito mientras.', 'Is that all? I\'ll grab a coffee meanwhile.'], ['Tranquilo, {jugador}. Yo te espero. Bueno, no.', 'Relax, {jugador}. I\'ll wait for you. Well, no.']] },
+  normal: { vel: 1, frases: [] },
+};
 function tickDuelo(dt) {
   const d = M.duelo;
   if ((d.chk = (d.chk || 0) - dt) > 0) return;
   d.chk = .25;
-  if (d.tuyo === null && Z.every(z => micras(z) <= LIMITE)) {
-    d.tuyo = M.t;
-    if (d.rivalFin === null) { verCombo('¡GANASTE!', true); sCaja(); decir(QUIEN_CUNADO, uno(['¿Ya? ¿YA? Esto no se queda así.', 'Seguro hicieron trampa. Una rasqueta con turbo o algo.', 'Mi cuñado el alcalde se va a enterar de esto.'])); }
-  }
-  if (d.rivalFin === null && M.t >= d.tRival) {
+  d.hitos = d.hitos || {}; if (d.prog === undefined) { d.prog = 0; d.ultT = M.t; d.animo = 'normal'; pintarHitos(); }
+  // Avance de El Cuñado: su ritmo depende de su ánimo; los contraataques y resbalones lo paran un rato.
+  const paso = Math.max(0, M.t - d.ultT); d.ultT = M.t;
+  if (d.pausa > 0) d.pausa -= paso; else if (d.rivalFin === null) d.prog = Math.min(1, d.prog + paso * ANIMO_CUNADO[d.animo].vel / d.tRival);
+  if (d.tuyo === null && Z.every(z => micras(z) <= LIMITE)) d.tuyo = M.t;
+  if (d.rivalFin === null && d.prog >= 1) {
     d.rivalFin = M.t;
-    if (d.tuyo === null) { tono(400, .5, .1, 'sawtooth', 200); decir(QUIEN_CUNADO, uno(['¡Terminé! ¿Les presto una rasqueta?', 'Listo. El cliente es mío. Ustedes sigan jugando a limpiar.', '¡Ganamos! Bueno, gané yo. Ustedes no.'])); ayuda('El Cuñado terminó primero. Acaba igual: el cliente te paga la mitad.', 6); }
+    if (d.tuyo === null && !d.ganador) { tono(400, .5, .1, 'sawtooth', 200); decir(QUIEN_CUNADO, uno(['¡Terminé! ¿Les presto una rasqueta?', 'Listo. El cliente es mío. Ustedes sigan jugando a limpiar.'])); }
   }
-  const tu = d.tuyo !== null ? 1 : avanceTuyo(), el = clamp(M.t / d.tRival, 0, 1);
-  // Sabotajes: dos veces por noche, El Cuñado ensucia la zona que llevas más limpia.
-  if (d.tuyo === null && d.rivalFin === null && !M.ev && M.etapa === 'lavar' && (d.sab || 0) < 2 && el >= [.33, .66][d.sab || 0]) {
+  const tu = d.tuyo !== null ? 1 : avanceTuyo(), el = d.prog;
+  // Los hitos: tú los cierras al dejar todo el grupo bajo el límite; él, al llegar a su parte del trabajo.
+  for (const [id, umbral] of hitosDuelo()) if (!d.hitos[id]) {
+    if (Z.filter(z => z.id === id).every(z => micras(z) <= LIMITE)) ganarHito(d, id, 'tu');
+    else if (el >= umbral) ganarHito(d, id, 'el');
+  }
+  // El ánimo: cambia con la diferencia, con un poco de inercia para que no salte a cada momento.
+  const dif = tu - el, animo = dif > .15 ? 'nervioso' : dif < -.2 ? 'confiado' : d.animo === 'nervioso' && dif > .05 ? 'nervioso' : d.animo === 'confiado' && dif < -.08 ? 'confiado' : 'normal';
+  if (animo !== d.animo && !d.ganador && d.rivalFin === null) {
+    d.animo = animo; const fr = ANIMO_CUNADO[animo].frases;
+    if (fr.length && !M.ev) decir(QUIEN_CUNADO, L(...uno(fr)).replace('{jugador}', jugador()));
+    $('#duelo').dataset.animo = animo;
+  }
+  // Nervioso se resbala más.
+  if (d.animo === 'nervioso' && d.rivalFin === null && !d.pausa && !M.ev && azar(.012)) {
+    d.pausa = M.dur * .035; tono(220, .3, .1, 'sawtooth', 110);
+    decir(QUIEN_CUNADO, uno([L('¡Aaay! Se me cayó la rasqueta. Dentro del ducto.', 'Aaah! Dropped my scraper. Inside the duct.'), L('¡Nadie vio eso! ¡NADIE!', 'Nobody saw that! NOBODY!')]));
+    ayuda(L('El Cuñado, nervioso, se resbaló. ¡Aprovecha!', 'El Cuñado, nervous, slipped. Take advantage!'), 4);
+  }
+  // Sabotajes: dos veces por noche, El Cuñado ensucia la zona que llevas más limpia (solo mientras el duelo sigue abierto).
+  if (!d.ganador && d.tuyo === null && d.rivalFin === null && !M.ev && M.etapa === 'lavar' && (d.sab || 0) < 2 && el >= [.33, .66][d.sab || 0]) {
     d.sab = (d.sab || 0) + 1;
     const z = Z.reduce((a, b) => pctZona(b) > pctZona(a) ? b : a);
-    if (pctZona(z) > .2) {
+    if (pctZona(z) > .2 && micras(z) > LIMITE) {
       ensuciar(z, .35); for (const s of z.sfs) s.sucio = true;
       rafaga(.25, 300, .25, 'lowpass'); tono(180, .3, .1, 'sawtooth', 90);
       if (z === zonaAct()) for (const s of z.sfs) emitir(s.mesh.position, 25, 'grasa', s.normal || null, 1.5);
@@ -3961,16 +4030,16 @@ function tickDuelo(dt) {
     }
   }
   // A veces El Cuñado también la riega: se resbala con su propia espuma y pierde tiempo. Hay que aprovecharlo.
-  if (d.tropiezo && M.t >= d.tropiezo && d.rivalFin === null && d.tuyo === null && !M.ev) {
-    d.tropiezo = null; d.tRival += M.dur * .07; tono(220, .3, .1, 'sawtooth', 110);
+  if (d.tropiezo && M.t >= d.tropiezo && d.rivalFin === null && !d.ganador && !M.ev) {
+    d.tropiezo = null; d.pausa = (d.pausa || 0) + M.dur * .07; tono(220, .3, .1, 'sawtooth', 110);
     decir(QUIEN_CUNADO, uno([L('¡Aaay! ¿Quién puso espuma aquí? …Ah, fui yo.', 'Aaah! Who put foam here? …Oh, me.'), L('Nadie vio eso. NADIE.', 'Nobody saw that. NOBODY.')]));
     ayuda(L('¡El Cuñado se resbaló con su propia espuma! Aprovecha: va más lento.', 'El Cuñado slipped on his own foam! Take advantage: he\'s slower now.'), 5);
   }
-  const bc = $('#contra'); if (bc) bc.hidden = !!d.contra || d.tuyo !== null || d.rivalFin !== null || M.etapa !== 'lavar';
+  const bc = $('#contra'); if (bc) bc.hidden = !!d.contra || !!d.ganador || d.tuyo !== null || d.rivalFin !== null || M.etapa !== 'lavar';
   // La radio se llena de estática si vas perdiendo, y El Cuñado se mete a la emisora una vez.
   if (RADIO.on && el - tu > .15 && azar(.05)) golpeEstatica();
   if (RADIO.on && el - tu > .25 && !d.dj && !M.ev) { d.dj = true; decir(QUIEN_RADIO, 'Interrumpimos la transmisión: aquí El Cuñado. Esta canción va dedicada a los que van perdiendo. Saludos.'); }
-  if ((d.charlaT -= .25) <= 0 && d.rivalFin === null && d.tuyo === null && !M.ev) {
+  if ((d.charlaT -= .25) <= 0 && d.rivalFin === null && !d.ganador && !M.ev) {
     d.charlaT = rnd(18, 28);
     decir(QUIEN_CUNADO, uno(el > tu ? ['Yo ya voy por el ducto. ¿Y ustedes?', 'Uy, qué lentos. ¿Les traigo un cafecito?', 'Mi rasqueta es importada. De Tijuana.'] : ['¿Cómo van tan rápido? ¿Eso es legal?', 'No me presionen, que me tiembla la rasqueta.', 'Voy atrás porque mi ayudante se fue al baño. Hace una hora.']));
   }
@@ -4121,7 +4190,7 @@ const CONTRA = {
 function contraataque() {
   const d = M && M.duelo; if (!d || d.contra) return;
   const [, txt, k] = CONTRA[M.orden.comp] || CONTRA.solo;
-  d.contra = true; d.tRival += M.dur * k; sCombo(3);
+  d.contra = true; d.pausa = (d.pausa || 0) + M.dur * k; sCombo(3);
   ayuda((CONTRA[M.orden.comp] || CONTRA.solo)[0] + '. ' + txt, 6); setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¡¿QUIÉN FUE?!', 'Esto es una guerra. Una guerra limpia. Bueno, sucia.', 'Me las van a pagar. En efectivo.'])), 600);
 }
 // Noche perfecta: todo limpio y sin daños antes de pelar.
@@ -5726,7 +5795,7 @@ function pantallaParte() {
   const pedOk = ped ? ped.ok({ finMin, pulido, usoHidro: M.usoHidro, usoEspuma: M.usoEspuma, todoCubierto: piezas.aparatos.every(a => a.cubierto && a.quitada), radioApagada: M.radioApagada }) : null;
   const d = M.duelo;
   if (d && d.tuyo === null && aprobado) d.tuyo = finMin / 480 * M.dur;   // terminó justo al llamar al inspector
-  const ganaDuelo = d ? d.tuyo !== null && d.tuyo <= d.tRival : null;
+  const ganaDuelo = d ? cerrarDuelo(d) : null, marcador = d ? puntosDuelo(d) : null;
   const tacos = ped && ped.tacos ? .5 : 1, mitadDuelo = d && !ganaDuelo ? .5 : 1;
   const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) * tacos * mitadDuelo / 10) * 10;
   const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 + .1 * hab('espejo') : 0) + .04 * hab('labia') + vida().propina + M.propinaMod, 0, .3 + .1 * hab('espejo')) / 5) * 5);
@@ -5745,6 +5814,7 @@ function pantallaParte() {
       [L('Materiales (desengrasante, plástico y cinta)', 'Supplies (degreaser, plastic and tape)'), -materiales()],
       ...(RENTA[S.etapa] ? [[L(`Renta del local (${nEtapa(S.etapa).toLowerCase()})`, `Rent (${nEtapa(S.etapa).toLowerCase()})`), -RENTA[S.etapa]]] : []),
       ...(S.eq.flota ? [[L(`Mantenimiento de camionetas (${S.eq.flota})`, `Van upkeep (${S.eq.flota})`), -40 * S.eq.flota]] : [])];
+  if (d && d.apuesta) lineas.push([ganaDuelo ? L('Apuesta ganada a El Cuñado', 'Bet won against El Cuñado') : L('Apuesta perdida con El Cuñado', 'Bet lost to El Cuñado'), ganaDuelo ? d.apuesta : -d.apuesta]);
   if (S.legado && ciudad() === 2 && !aprendiz) {
     const lg = S.legado;
     if (lg.venta && lg.venta.restan > 0) { lg.venta.restan--; lineas.push([L(`Pago de Grupo Brillo por la venta (${PAGOS_VENTA - lg.venta.restan} de ${PAGOS_VENTA})`, `Grupo Brillo payment for the sale (${PAGOS_VENTA - lg.venta.restan} of ${PAGOS_VENTA})`), lg.venta.porNoche]); }
@@ -5977,7 +6047,7 @@ function pantallaParte() {
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % ${L('limpio', 'clean')}</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
       <span class="nota">${L(`El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.`, `The inspector measures with a grease comb: it passes at ${LIMITE} µm or less in each zone. Mirror polish: ${Math.round(pulido * 100)}%. Inspector at ${hora(finMin)}.`)}</span></div>
     ${porQue}
-    ${d ? `<div class="cita"><b>${ganaDuelo ? L('Duelo ganado', 'Duel won') : L('Duelo perdido', 'Duel lost')}</b>${ganaDuelo ? L(`Terminaste a las ${hora(d.tuyo / M.dur * 480)}. El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.`, `You finished at ${hora(d.tuyo / M.dur * 480)}. El Cuñado left without saying goodbye and forgot his scraper. It's yours now, as a souvenir.`) : L(`El Cuñado terminó a las ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` y tú a las ${hora(d.tuyo / M.dur * 480)}` : ''}. El cliente se queda con él y a ti te paga la mitad «por las molestias».`, `El Cuñado finished at ${hora(d.tRival / M.dur * 480)}${d.tuyo !== null ? ` and you at ${hora(d.tuyo / M.dur * 480)}` : ''}. The client stays with him and pays you half "for your trouble".`)}</div>` : ''}
+    ${d ? `<div class="cita"><b>${ganaDuelo ? L('Duelo ganado', 'Duel won') : L('Duelo perdido', 'Duel lost')} · ${marcador.tu}–${marcador.el}</b>${hitosDuelo().map(([id]) => `${nHito(id)}: ${d.hitos[id] === 'tu' ? L('tuyo', 'yours') : 'El Cuñado'}`).join(' · ')}. ${ganaDuelo ? L('El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.', 'El Cuñado left without saying goodbye and forgot his scraper. It\'s yours now, as a souvenir.') : L('El cliente se queda con él y a ti te paga la mitad «por las molestias».', 'The client stays with him and pays you half "for your trouble".')}${d.apuesta ? ' ' + (ganaDuelo ? L(`Y te pagó la apuesta: ${dinero(d.apuesta)}, en billetes arrugados.`, `And he paid the bet: ${dinero(d.apuesta)}, in crumpled bills.`) : L(`Y le pagaste la apuesta: ${dinero(d.apuesta)}. La contó dos veces delante de ti.`, `And you paid him the bet: ${dinero(d.apuesta)}. He counted it twice in front of you.`)) : ''}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(TRAD(ped.quien))} · ${esc(L(ped.chip, EN.pedidoChip[ped.id]))}</b>${esc(TRAD(ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : ped.mal))}</div>` : ''}
     ${misHechas.length ? `<div class="cita"><b>📞 ${L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b>${misHechas.some(x => x.todo) ? L('¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.', 'All three weekly challenges! I told all my buddies. Well, the only one who picks up.') : uno([L('¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'See? I told you you could. Well, I didn\'t tell you. But I thought it.'), L('Reto cumplido. Se me cayó la caña de la emoción.', 'Challenge done. I dropped my fishing rod from the excitement.'), L('Así se hace. Beto dice que él te enseñó. Yo no dije nada.', 'That\'s how it\'s done. Beto says he taught you. I said nothing.')])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
     ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
