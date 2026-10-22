@@ -414,6 +414,12 @@ button.orden[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--hivis), 0 
 .gota-cara { position: absolute; inset: 0; pointer-events: none; z-index: 6; background: radial-gradient(circle at var(--x) var(--y), rgba(120,90,30,.92) 0, rgba(120,90,30,.85) 70px, rgba(80,60,20,.4) 140px, transparent 220px); animation: gotaCara 1.3s ease-out forwards; }
 @keyframes gotaCara { 0% { opacity: 1; } 60% { opacity: .9; } 100% { opacity: 0; } }
 .orden.dia.saga { border-color: #d7382b; background: linear-gradient(165deg, rgba(215,56,43,.12), rgba(22,33,42,.96)); }
+.barras-yo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.barra-yo { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px; font-size: 12px; }
+.barra-yo i { height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); overflow: hidden; } .barra-yo s { display: block; height: 100%; border-radius: 3px; text-decoration: none; }
+.barra-yo b { font-family: var(--f-mono); font-size: 11px; color: var(--tenue); }
+.yo-linea { display: grid; gap: 4px; padding: 6px 2px; } .yo-ult { margin: 0; font-size: 13px; }
+.yo-card .opciones { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 .pared-beto { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-radius: 10px; background: #3a3f44 repeating-linear-gradient(0deg, transparent 0 22px, #ffffff0d 22px 24px); }
 .pared-beto span { display: grid; place-items: center; width: 40px; font-size: 26px; filter: grayscale(1) brightness(.35); transform: rotate(var(--r)); }
 .pared-beto small { font-size: 10px; filter: invert(1); }
@@ -785,6 +791,64 @@ const VIDA = {
   lujo: { n: ['De lujo', 'Luxury'], d: ['Penthouse, chef a domicilio y masajes. Llegas impecable a cada cocina.', 'Penthouse, private chef and massages. You show up spotless at every kitchen.'], noche: 200, semana: 700, fuerza: 1.09, propina: .03 },
 };
 const vida = () => VIDA[(S && S.vida) || 'austero'] || VIDA.austero;
+// ---- Tu vida, jugable: descanso, ánimo y salud. Bajan con el trabajo y suben con lo que haces al salir del turno.
+const yo = () => (S.yo = S.yo || { descanso: 80, animo: 70, salud: 90, muebles: {} });
+const DORMIR = { austero: 32, normal: 42, comodo: 52, lujo: 62 };
+const MUEBLES = [
+  { id: 'cama', ico: '🛏️', p: 600, n: ['Cama ortopédica', 'Orthopedic bed'], d: ['Dormir te recupera más descanso.', 'Sleeping restores more rest.'] },
+  { id: 'cafetera', ico: '☕', p: 250, n: ['Cafetera de verdad', 'A real coffee maker'], d: ['El cansancio te pega más tarde.', 'Tiredness kicks in later.'] },
+  { id: 'sillon', ico: '🛋️', p: 400, n: ['Sillón reclinable', 'Recliner'], d: ['Nueva opción al salir: ver la tele (descansa y anima, gratis).', 'New after-shift option: watch TV (rest and mood, free).'] },
+  { id: 'sonido', ico: '🔊', p: 350, n: ['Equipo de sonido', 'Sound system'], d: ['Un poco más de ánimo cada día.', 'A little more mood every day.'] },
+  { id: 'cocina', ico: '🍳', p: 500, n: ['Cocina equipada', 'Equipped kitchen'], d: ['La comida diaria cuesta un 30 % menos.', 'Daily food costs 30% less.'] },
+];
+const mueble = id => !!(S && S.yo && S.yo.muebles && S.yo.muebles[id]);
+// Qué haces al salir del turno: una sola decisión por noche (si no eliges, te vas a dormir).
+const DESPUES = [
+  { id: 'dormir', ico: '😴', n: ['Dormir de corrido', 'Sleep it off'], p: 0, f: Y => { Y.descanso += DORMIR[S.vida || 'austero'] + (capricho('casa') ? 5 : 0) + (mueble('cama') ? 15 : 0); Y.animo -= 2;
+      return S.perro && azar(.5) ? ['Duermes once horas. Grasita, en tus pies, ronca más fuerte que tú.', 'You sleep eleven hours. Grasita, at your feet, snores louder than you.'] : azar(.15) ? (Y.animo += 6, ['Despiertas y hay pan dulce en la puerta. Una nota: «Come algo. —R.»', 'You wake up to sweet bread at the door. A note: "Eat something. —R."']) : ['Duermes como piedra. Sueñas con campanas. Limpias.', 'You sleep like a rock. You dream of hoods. Clean ones.']; } },
+  { id: 'tele', ico: '📺', n: ['Ver la tele en el sillón', 'Watch TV in the recliner'], p: 0, si: () => mueble('sillon'), f: Y => { Y.descanso += 34; Y.animo += 6; return ['Ves tres capítulos de una telenovela de limpiadores. Lloras en el final. Nadie lo sabe.', 'You watch three episodes of a soap opera about cleaners. You cry at the finale. Nobody knows.']; } },
+  { id: 'tacos', ico: '🌮', n: ['Tacos con la cuadrilla', 'Tacos with the crew'], p: 40, f: Y => { Y.animo += 15; Y.descanso += 22; S.cuadrilla.forEach(c => { c.animo = clamp((c.animo || 3) + 1, 1, 5); });
+      return ['Cinco de pastor y un chisme por taco. La cuadrilla vuelve contenta (y con más ganas).', 'Five al pastor and a piece of gossip per taco. The crew comes back happy (and keen).']; } },
+  { id: 'mama', ico: '👵', n: ['Visitar a tu mamá', 'Visit your mom'], p: 0, f: Y => { Y.salud += 10; Y.animo += 10; Y.descanso += 28;
+      if (azar(.4)) { Y.tuppers = 3; return ['Tu mamá te regaña por flaco y te manda con tres tuppers. Comida gratis tres días.', 'Your mom scolds you for being skinny and sends you off with three tupperware boxes. Free food for three days.']; }
+      return ['Tu mamá te pregunta si ya tienes pareja, si comes bien y si es legal limpiar campanas de madrugada. Sí, más o menos y sí.', 'Your mom asks if you\'re seeing anyone, if you eat well and if cleaning hoods at dawn is legal. Yes, sort of, and yes.']; } },
+  { id: 'gym', ico: '🏋️', n: ['Gimnasio', 'Gym'], p: 30, f: Y => { Y.descanso += 12; Y.salud += 6; Y.gym = S.noche + 3; return ['Levantas pesas junto a un señor que también limpia campanas. Se reconocen por el olor. Tres noches con más fuerza.', 'You lift weights next to a guy who also cleans hoods. You recognize each other by the smell. Three nights of extra strength.']; } },
+  { id: 'fiesta', ico: '🎉', n: ['Irte de fiesta', 'Go out partying'], p: 120, f: Y => { Y.animo += 30; Y.descanso += 4; Y.salud -= 8; return ['Bailas una cumbia del ducto con desconocidos. Llegas a casa al amanecer… otra vez.', 'You dance a duct cumbia with strangers. You get home at dawn… again.']; } },
+];
+// Cómo te afecta en el turno: cansado rindes menos; animado, más propina; enfermo, mucho menos.
+function efectoYo() {
+  if (S.fase !== 'empresa') return { fuerza: 1, propina: 0 };
+  const Y = yo(), umbral = mueble('cafetera') ? 20 : 30;
+  const f = (Y.descanso < umbral - 15 ? .8 : Y.descanso < umbral ? .9 : 1) * (Y.gym && S.noche <= Y.gym ? 1.06 : 1) * (S.hoy && S.hoy.gripa === 'trabajar' ? .75 : 1);
+  return { fuerza: f, propina: Y.animo >= 75 ? .03 : Y.animo < 25 ? -.03 : 0 };
+}
+// Al terminar la noche, el trabajo te desgasta.
+function desgasteYo({ aprobado, gigante, duelo, danos }) {
+  const Y = yo();
+  Y.descanso -= 18 + (gigante ? 10 : 0) + (duelo ? 5 : 0);
+  Y.animo += (aprobado ? 4 : -8) - (danos ? 3 : 0) + (mueble('sonido') ? 3 : 0);
+  Y.salud -= Y.descanso < 20 ? 6 : 1;
+  for (const k of ['descanso', 'animo', 'salud']) Y[k] = clamp(Math.round(Y[k]), 0, 100);
+  Y.pendiente = S.noche;   // al volver al menú: ¿qué haces al salir?
+}
+function elegirDespues(id) {
+  const Y = yo(), o = DESPUES.find(x => x.id === id); if (!o || !Y.pendiente || S.dinero < o.p) return;
+  S.dinero -= o.p; const r = o.f(Y);
+  for (const k of ['descanso', 'animo', 'salud']) Y[k] = clamp(Math.round(Y[k]), 0, 100);
+  Y.pendiente = null; Y.ultimo = { id, txt: r, noche: S.noche }; guardar();
+}
+const barraYo = (ico, n, v) => `<div class="barra-yo" title="${n}"><span>${ico}</span><i><s style="width:${v}%;background:${v < 30 ? 'var(--mal)' : v < 60 ? 'var(--grasa)' : 'var(--ok)'}"></s></i><b>${v}</b></div>`;
+const barrasYo = () => { const Y = yo(); return `<div class="barras-yo">${barraYo('😴', L('Descanso', 'Rest'), Y.descanso)}${barraYo('🙂', L('Ánimo', 'Mood'), Y.animo)}${barraYo('❤️', L('Salud', 'Health'), Y.salud)}</div>`; };
+function tarjetaYo() {
+  if (S.fase !== 'empresa') return '';
+  const Y = yo(), H = S.hoy;
+  const despues = Y.pendiente ? `<div class="orden dia yo-card"><span class="chip">🌙 ${L('Al salir del turno', 'After the shift')}</span><h3>${L('¿Qué haces antes de la siguiente noche?', 'What do you do before the next night?')}</h3>${barrasYo()}
+    <div class="opciones">${DESPUES.filter(o => !o.si || o.si()).map(o => `<button class="btn" data-despues="${o.id}" ${S.dinero < o.p ? 'disabled' : ''}>${o.ico} ${L(...o.n)}<small>${o.p ? dinero(o.p) : L('Gratis', 'Free')}</small></button>`).join('')}</div></div>` : '';
+  const gripa = H && H.gripa === null ? `<div class="orden dia yo-card"><span class="chip naranja">🤒 ${L('Te despertaste con gripa', 'You woke up with the flu')}</span><p>${L('Llevas noches durmiendo poco y comiendo mal. Hoy te duele todo.', 'You\'ve been sleeping little and eating badly for nights. Everything hurts today.')}</p>
+    <div class="opciones"><button class="btn" data-gripa="doctor" ${S.dinero < 150 ? 'disabled' : ''}>🩺 ${L('Ir al doctor', 'See a doctor')}<small>$150 · ${L('trabajas normal', 'you work normally')}</small></button><button class="btn" data-gripa="trabajar">🤧 ${L('Trabajar así', 'Work like this')}<small>${L('−25 % de fuerza esta noche', '−25% strength tonight')}</small></button></div></div>` : '';
+  const ult = Y.ultimo && Y.ultimo.noche === S.noche - 1 ? `<p class="nota yo-ult">${DESPUES.find(o => o.id === Y.ultimo.id).ico} ${esc(L(...Y.ultimo.txt))}</p>` : '';
+  return despues + gripa + (despues ? '' : `<div class="yo-linea">${barrasYo()}${ult}</div>`);
+}
 // Gasolina por noche según el vehículo: camioneta vieja, con baca o camión.
 const gasolina = () => [35, 35, 50, 70][(S && S.eq.camioneta) || 1];
 // Gastos fijos de la empresa por noche: renta del local según la etapa y mantenimiento de cada camioneta extra.
@@ -2751,8 +2815,8 @@ function empezarTurno(orden) {
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0;
   M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 10 * hab('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45) * (arcoFin('chuy') ? 2 : 1), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .2 * hab('santo')), paciencia: 100 * (1 + .2 * hab('santo')), enojado: false, descuento: 0,
-    eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
-    maxCombo: 0, combos3: 0, utiles: 0, vacias: 0, tFiltros: null, vida: vida().fuerza * (orden.contento ? 1.05 : 1) * (orden.muela ? .9 : 1), retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
+    eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: efectoYo().propina, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
+    maxCombo: 0, combos3: 0, utiles: 0, vacias: 0, tFiltros: null, vida: vida().fuerza * efectoYo().fuerza * (orden.contento ? 1.05 : 1) * (orden.muela ? .9 : 1), retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
     pedido: orden.pedido ? pedido(orden.pedido) : null, cliente: { n: 'Cliente', color: '#e9e9e9' },
     equipo: orden.equipo.map(e => ({ ...e, fuerza: e.fuerza * (orden.animo ? 1.15 : 1) * (tun('masaje') ? 1.05 : 1), t: rnd(.2, .8) })) };
   if (tun('bocina')) { M.propinaMod += .02; setTimeout(bocina, 600); }
@@ -5021,6 +5085,8 @@ function prepararNoche() {
   // Lo que pasa de día: una de cada dos noches, algo en la camioneta.
   const dias = DIAS.filter(d => !d.solo || d.solo(S));
   if (S.noche >= 2 && azar(.5)) S.hoy.dia = { id: uno(dias).id, res: '' };
+  // Si la salud está por los suelos, puede tocarte una gripa.
+  if (S.fase === 'empresa' && yo().salud < 25 && azar(.35)) S.hoy.gripa = null;
   // La saga de El Cuñado: un capítulo cada pocas noches, cuando toca. En el puerto, las partidas viejas saltan al último.
   S.saga = S.saga || { cap: 0, next: 0, respeto: 0 };
   if (S.legado && ciudad() === 2 && S.saga.cap < SAGA.length - 1) S.saga.cap = SAGA.length - 1;
@@ -5623,7 +5689,7 @@ function vNoche() {
       <div class="opciones"><button class="btn prim" id="retomar">${L('Retomar el turno', 'Resume the shift')}</button><button class="btn" id="descartar">${L('Empezar de nuevo', 'Start over')}</button></div></div>` : '';
   return `${aviso}${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(TRAD(dia.t))}</h3><p>${esc(TRAD(dia.txt))}</p>
       ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(TRAD(H.dia.res))}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(TRAD(op.t))}<small>${esc(TRAD(op.d))}</small></button>`).join('')}</div>`}</div>` : ''}
-    ${tarjetaSaga()}${aprendiz ? '' : tarjetaArco()}
+    ${tarjetaYo()}${tarjetaSaga()}${aprendiz ? '' : tarjetaArco()}
     ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
     ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
@@ -5793,8 +5859,11 @@ const RESPUESTAS = {
 };
 function vVida() {
   const act = (S && S.vida) || 'austero';
-  return `<h2 class="sec">🏠 ${L('Tu vida', 'Your life')}</h2><p class="nota">${L('Tú también comes, pagas renta y necesitas descansar. Se cobra cada noche en el parte; la renta y los servicios, cada 7 noches. Vivir mejor te deja descansado: rindes un poco más.', 'You also eat, pay rent and need rest. It\'s charged every night in the report; rent and bills every 7 nights. Living better keeps you rested: you work a little better.')}</p>
-    <div class="vida">${Object.entries(VIDA).map(([k, v]) => `<button class="comp" data-vida="${k}" aria-pressed="${act === k}"><div><b>${L(...v.n)}</b><span>${L(...v.d)}</span><span class="nota">${dinero(v.noche)}/${L('noche', 'night')} + ${dinero(v.semana)}/${L('semana', 'week')}${v.fuerza > 1 ? ` · +${Math.round((v.fuerza - 1) * 100)} % ${L('fuerza', 'strength')}` : ''}${v.propina ? ` · +${Math.round(v.propina * 100)} % ${L('propina', 'tip')}` : ''}</span></div></button>`).join('')}</div>`;
+  const Y = S.fase === 'empresa' ? yo() : null;
+  return `<h2 class="sec">🏠 ${L('Tu vida', 'Your life')}</h2>${Y ? `${barrasYo()}<p class="nota">${L('El trabajo te cansa cada noche. Lo que haces al salir del turno te recupera. Cansado rindes menos; animado sacas más propina; si la salud se va al suelo, te puede dar gripa.', 'Work tires you every night. What you do after the shift restores you. Tired, you work worse; in a good mood, you earn more tips; if your health hits bottom, you can catch the flu.')}</p>` : ''}
+    <p class="nota"><b>${L('Dónde vives', 'Where you live')}</b> · ${L('Se cobra cada noche en el parte; la renta y los servicios, cada 7 noches. Una casa mejor te hace dormir mejor.', 'Charged every night in the report; rent and bills every 7 nights. A better home helps you sleep better.')}</p>
+    <div class="vida">${Object.entries(VIDA).map(([k, v]) => `<button class="comp" data-vida="${k}" aria-pressed="${act === k}"><div><b>${L(...v.n)}</b><span>${L(...v.d)}</span><span class="nota">${dinero(v.noche)}/${L('noche', 'night')} + ${dinero(v.semana)}/${L('semana', 'week')}${v.fuerza > 1 ? ` · +${Math.round((v.fuerza - 1) * 100)} % ${L('fuerza', 'strength')}` : ''}${v.propina ? ` · +${Math.round(v.propina * 100)} % ${L('propina', 'tip')}` : ''} · 😴 +${DORMIR[k]}</span></div></button>`).join('')}</div>
+    ${Y ? `<p class="nota"><b>${L('Tu casa', 'Your home')}</b></p><div class="muebles">${MUEBLES.map(m => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:20px">${m.ico}</div><div><b>${L(...m.n)}</b><span>${L(...m.d)}</span></div>${mueble(m.id) ? `<span class="chip ok">${L('En casa', 'At home')}</span>` : `<button class="btn peq" data-mueble="${m.id}" ${S.dinero < m.p ? 'disabled' : ''}>${dinero(m.p)}</button>`}</div>`).join('')}</div>` : ''}`;
 }
 function vCuadrilla() {
   const plazas = PLAZAS[S.eq.camioneta];
@@ -5931,6 +6000,11 @@ function enlazar() {
   P.querySelectorAll('[data-capricho]').forEach(b => b.onclick = () => { audio(); comprarCapricho(b.dataset.capricho); });
   P.querySelectorAll('[data-invertir]').forEach(b => b.onclick = () => { audio(); invertir(b.dataset.invertir); });
   P.querySelectorAll('[data-vida]').forEach(b => b.onclick = () => { S.vida = b.dataset.vida; tono(700, .08, .06, 'triangle'); guardar(); pantallaCamioneta(); });
+  // Si sales sin decidir: te fuiste a dormir, y la gripa la trabajas como puedas.
+  const salY = $('#salir'); if (salY && S.fase === 'empresa') salY.addEventListener('click', () => { if (yo().pendiente) elegirDespues('dormir'); if (H.gripa === null) H.gripa = 'trabajar'; }, { capture: true });
+  P.querySelectorAll('[data-despues]').forEach(b => b.onclick = () => { audio(); elegirDespues(b.dataset.despues); tono(620, .12, .06, 'triangle'); pantallaCamioneta(); });
+  P.querySelectorAll('[data-gripa]').forEach(b => b.onclick = () => { audio(); if (b.dataset.gripa === 'doctor') { if (S.dinero < 150) return; S.dinero -= 150; yo().salud = clamp(yo().salud + 40, 0, 100); } H.gripa = b.dataset.gripa; guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-mueble]').forEach(b => b.onclick = () => { const m = MUEBLES.find(x => x.id === b.dataset.mueble); if (!m || mueble(m.id) || S.dinero < m.p) return; audio(); S.dinero -= m.p; yo().muebles[m.id] = S.noche; tono(700, .12, .06, 'triangle'); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-saga]').forEach(b => b.onclick = () => {
     if (H.sagaRes) return; const C = SAGA[H.saga]; if (!C || S.saga.cap !== H.saga) return;
     audio(); H.sagaRes = C.ops[+b.dataset.saga].f(); S.saga.cap++; S.saga.next = S.noche + (C.id === 'foto' ? 2 : 4);
@@ -6125,8 +6199,10 @@ function pantallaParte() {
     if (lg.venta && lg.venta.restan > 0) { lg.venta.restan--; lineas.push([L(`Pago de Grupo Brillo por la venta (${PAGOS_VENTA - lg.venta.restan} de ${PAGOS_VENTA})`, `Grupo Brillo payment for the sale (${PAGOS_VENTA - lg.venta.restan} of ${PAGOS_VENTA})`), lg.venta.porNoche]); }
     if (lg.camino === 'B') { const dv = dividendo(); lineas.push([L(`Dividendos de Ciudad Comal (dirige ${lg.director.n})`, `Comal City dividends (run by ${lg.director.n})`), dv]); }
   }
-  const V = vida();
-  lineas.push([L(`Tu vida (${V.n[0].toLowerCase()}): comida y transporte${capricho('taqueria') ? ' (cenas en la taquería de Beto)' : ''}`, `Your life (${V.n[1].toLowerCase()}): food and transport${capricho('taqueria') ? ' (dinner at Beto\'s taco stand)' : ''}`), -r10(V.noche * (capricho('taqueria') ? .5 : 1))]);
+  const V = vida(), Yv = S.fase === 'empresa' ? yo() : {}, tupper = Yv.tuppers > 0;
+  if (tupper) Yv.tuppers--;
+  lineas.push([L(`Tu vida (${V.n[0].toLowerCase()}): comida y transporte${tupper ? ' (con los tuppers de tu mamá)' : capricho('taqueria') ? ' (cenas en la taquería de Beto)' : ''}`, `Your life (${V.n[1].toLowerCase()}): food and transport${tupper ? ' (with your mom\'s tupperware)' : capricho('taqueria') ? ' (dinner at Beto\'s taco stand)' : ''}`), -r10(V.noche * (tupper ? .4 : 1) * (capricho('taqueria') ? .5 : 1) * (mueble('cocina') ? .7 : 1))]);
+  if (S.fase === 'empresa' && !aprendiz) desgasteYo({ aprobado, gigante: !!o.gigante, duelo: !!d, danos: M.danos.length });
   if (S.noche % 7 === 0) lineas.push(capricho('casa') ? [L('Luz, agua, internet y teléfono de tu casa (semanal)', 'Power, water, internet and phone for your house (weekly)'), -r10(V.semana * .3)] : [L('Renta del depa, luz, agua, internet y teléfono (semanal)', 'Rent, power, water, internet and phone (weekly)'), -V.semana]);
   let neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
