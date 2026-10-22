@@ -2989,6 +2989,27 @@ function apuntar(cx, cy) {
 }
 
 function multEspuma(a) { return a >= 1.5 - .3 * hab('espuma') - (M && M.trucoEspuma ? .4 : 0) && a < 30 ? (EQ().conc ? 4 : 3) : 1; }
+// Cuánto se quitó de cada tipo de suciedad en la última pasada (para que cada una suene distinta).
+const TIPO_Q = [0, 0, 0, 0];
+function sonidoRaspa() {
+  let tp = 0; for (let k = 1; k < 4; k++) if (TIPO_Q[k] > TIPO_Q[tp] * 1.2) tp = k;
+  TIPO_Q.fill(0);
+  const c = M.combo * 140;
+  if (tp === 1) { rafaga(.025, 2600 + Math.random() * 900, .22, 'highpass'); rafaga(.02, 1900 + Math.random() * 700, .16, 'highpass', 1.2, null, .035); rafaga(.04, 3000 + c, .06, 'highpass', 1.2, null, .06); }   // quemada: crujido seco
+  else if (tp === 2) { rafaga(.13, 320 + Math.random() * 80, .16, 'lowpass'); tono(150, .07, .04, 'sine', 90); }                                                 // aceite: chof blando
+  else if (tp === 3) { tono(1700 + Math.random() * 500, .06, .025, 'sawtooth', 1500); rafaga(.08, 3400 + c, .1, 'bandpass', 4); }                                 // sarro: raspado metálico
+  else rafaga(.09, 700 + c + Math.random() * 200, .12);                                                                                                         // grasa normal
+}
+// De arriba abajo: si trabajas el ducto con la campana ya limpia, lo que sale del ducto escurre y la vuelve a manchar.
+function escurrirDucto(seg) {
+  if (!M || M.etapa !== 'lavar' || zonaAct().id !== 'ducto') return;
+  if ((M.escurre = (M.escurre || 0) + seg) < 1.2) return;
+  M.escurre = 0;
+  const limpias = Z.filter(z => z.id === 'campana' && micras(z) <= LIMITE && (z.reens || 0) < 8); if (!limpias.length) return;
+  const z = uno(limpias); ensuciar(z, .05); z.reens = (z.reens || 0) + 1; M.listoAvisado.delete(Z.indexOf(z)); gota(.04);
+  if (!M.avisoEscurre) { M.avisoEscurre = true; ayuda(L('Lo del ducto escurre sobre la campana limpia. Se trabaja de arriba abajo: primero el ducto, después la campana.', 'What comes off the duct drips onto the clean hood. Work top to bottom: duct first, then the hood.'), 6);
+    decir(M.comp.solo ? 'rigo' : M.comp, L('¡Ojo! Está chorreando grasa del ducto a la campana que ya limpiamos.', 'Careful! Grease from the duct is dripping onto the hood we already cleaned.')); }
+}
 function raspar(sf, gx, gy, rc, cant, herr) {
   let quit = 0;
   const x0 = Math.max(0, Math.floor(gx - rc)), x1 = Math.min(sf.nx - 1, Math.floor(gx + rc));
@@ -3011,7 +3032,7 @@ function raspar(sf, gx, gy, rc, cant, herr) {
     if (tp && hab('especialista') && herr !== 'cuadrilla' && (tp === 1 ? m > 1 && herr === 'rasqueta' : tp === 2 ? herr !== 'rasqueta' : herr === 'rasqueta')) duro *= 1.3;
     if (tp) sf.ultTipo = tp + (m > 1 ? 10 : 0);
     const q = Math.min(sf.d[i], cant * f * m * duro);
-    sf.d[i] -= q; quit += q;
+    sf.d[i] -= q; quit += q; TIPO_Q[tp || 0] += q;
     if (herr === 'hidro' && q > .002 && escurre(sf)) {   // el agua sucia baja por la pared y deja una película en lo de abajo
       const j = clamp(y + escurre(sf) * (2 + (Math.random() * 10 | 0)), 0, sf.ny - 1) * sf.nx + x;
       if (sf.d[j] < .22) { if (sf.d[j] === 0) M.escurrido = (M.escurrido || 0) + q; sf.d[j] = Math.min(.22, sf.d[j] + q * .15 * (EQ().aspira ? .5 : 1) * (modo('hidro') === 'alta' ? 1.5 : 1)); }
@@ -3160,7 +3181,7 @@ function aplicarTramo(a, b) {
   let q = 0;
   for (let k = 1; k <= pasos; k++) q += raspar(sf, a.gx + (b.gx - a.gx) * k / pasos, a.gy + (b.gy - a.gy) * k / pasos, rc, cant * .4, herr);
   const ahora = performance.now(), libre = ahora - (M.ultRuido || 0);
-  if (herr === 'rasqueta' && q > .02) { emitir(b.punto, Math.min(6, 1 + q * 4), 'grasa', b.normal, .8); if (q > .05 && azar(Math.min(.7, q * 2))) trozo(b.punto, b.normal); if (libre > 55) { M.ultRuido = ahora; rafaga(.09, 700 + M.combo * 140 + Math.random() * 200, .12); } }
+  if (herr === 'rasqueta' && q > .02) { emitir(b.punto, Math.min(6, 1 + q * 4), 'grasa', b.normal, .8); if (q > .05 && azar(Math.min(.7, q * 2))) trozo(b.punto, b.normal); if (libre > 55) { M.ultRuido = ahora; sonidoRaspa(); } escurrirDucto(.15); }
   if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); pulso('spray'); M.ultEspumaT = performance.now(); }
   if (herr === 'pulidor') {
     pulso('pulidora', .2);
@@ -4218,6 +4239,7 @@ function tickTurno(dt) {
       if (M.quieto > 1.6 && !M.pistaBarrer) { M.pistaBarrer = true; ayuda(L('Con la hidro, barre despacio de lado a lado: quieto en un punto limpia la mitad.', 'With the washer, sweep slowly side to side: holding still on one spot cleans half as much.'), 5); }
       const alta = modo('hidro') === 'alta';
       const q = raspar(a.sf, a.gx, a.gy, (alta ? .25 : .17) / a.sf.celda, (EQ().hidro ? 1.8 : 1.1) * (EQ().vapor ? 1.4 : 1) * (alta ? 1.35 : 1) * barrido * dt, 'hidro');
+      if (q > .001) escurrirDucto(dt);
       emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4); if (M.jefe && M.jefe.id === 'hospital') M.jefe.v += dt * (modo('hidro') === 'alta' ? 55 : 32);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
