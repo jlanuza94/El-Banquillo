@@ -593,5 +593,18 @@ caso('historias de los ayudantes y la freidora', async () => {
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+caso('el menú no salta arriba al tocar algo', async () => {
+  const p = await abrir(partida({ dinero: 5000 }));
+  await p.click('[data-tab="cuadrilla"]');
+  const y0 = await p.evaluate(() => { const P = document.querySelector('#pantalla'); P.scrollTop = 600; return P.scrollTop; });
+  await p.click('[data-vida="comodo"]');
+  const y1 = await p.evaluate(() => document.querySelector('#pantalla').scrollTop);
+  afirmar(y0 > 300 && Math.abs(y1 - y0) < 5, 'el menú saltó al tocar: ' + y0 + ' → ' + y1);
+  await p.click('[data-tab="taller"]');
+  const y2 = await p.evaluate(() => { const P = document.querySelector('#pantalla'), nav = P.querySelector('.tabs'); return [P.scrollTop, nav.offsetTop]; });
+  afirmar(y2[0] <= y2[1], 'al cambiar de pestaña no se fue al principio de la pestaña: ' + y2);
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };
