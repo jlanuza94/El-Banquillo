@@ -5719,6 +5719,8 @@ function cabecera() {
 }
 
 function pantallaCamioneta() {
+  // Si ya estabas en el menú y en la misma pestaña, al volver a dibujarlo te quedas donde estabas (antes saltaba arriba).
+  const enMenu = !P.hidden && !!P.querySelector('.lado-cab'), mismaTab = enMenu && P.dataset.tab === tab, yAntes = P.scrollTop;
   if (RADIO.on) radioEncender(false);
   ponerAlDia();
   M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true; aplicarLook();
@@ -5736,6 +5738,9 @@ function pantallaCamioneta() {
     <div class="lado-main"><nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}${id === 'logros' && manualNuevos().length ? `<span class="cuenta">${manualNuevos().length}</span>` : ''}</button>`).join('')}</nav>
     ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}
     <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div></div>`);
+  P.dataset.tab = tab;
+  if (mismaTab) P.scrollTop = yAntes;
+  else if (enMenu) { const nav = P.querySelector('.tabs'); if (nav && yAntes > nav.offsetTop) P.scrollTop = nav.offsetTop - 8; }   // al cambiar de pestaña: a su principio, no al de la pantalla
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
   $('#jefeCorto').onclick = () => { const b = $('#jefeCorto'); b.classList.toggle('abierto'); b.setAttribute('aria-expanded', b.classList.contains('abierto')); };
