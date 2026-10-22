@@ -1,6 +1,7 @@
 // Pruebas de Hood Cleaners. Uso: node hoods/pruebas/casos.cjs [parte-del-nombre]
 // Abren el juego construido en Chromium y comprueban que lo importante sigue funcionando y que no hay errores.
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -152,6 +153,63 @@ caso('tu vida: estilo, gastos en el parte y renta semanal', async () => {
   await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   afirmar(await p.evaluate(() => Math.abs(__hc.M.vida - 1.09 * .9) < .001), 'la muela y el estilo no afectan la fuerza: ' + await p.evaluate(() => __hc.M.vida));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+// Fin de la campaña de Ciudad Comal: llega Lustre, eliges vender o no, director y mano derecha, y te vas a Puerto Fritanga.
+const NACHO = { id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, cuidado: 3, puntual: 3, animo: 3, tipo: 'serio' };
+const finCampana = (mas = {}) => partida({ etapa: 4, rep: 90, noche: 40, dinero: 40000, licitGanada: 30, residencia: { hecha: true, exito: true, nota: 'A', noche: 33 }, fijos: ['beto', 'lupe', 'chuy'],
+  cuadrilla: [{ ...NACHO }], clientes: [], cunado: { gane: 2 }, perro: true, sueldos2: true, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 2 }, medallas: {}, ...mas });
+caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', async () => {
+  const p = await abrir(finCampana({ residencia: null, licitGanada: 36 }));
+  afirmar(await p.evaluate(() => !document.querySelector('#comprador') && !__hc.compradorListo()), 'Lustre llegó antes de la Residencia');
+  await p.evaluate(() => { __hc.S.residencia = { hecha: true, exito: true, nota: 'A', noche: 33 }; __hc.pantallaCamioneta(); });
+  await p.click('#comprador'); await p.click('#pensarlo');
+  afirmar(await p.evaluate(() => __hc.S.comprador.vuelve === 43 && !document.querySelector('#comprador')), 'pensarlo no aplazó la visita');
+  await p.evaluate(() => { __hc.S.noche = 43; __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  await p.click('#comprador'); await p.click('[data-camino="B"]');
+  await p.click('[data-g="c:lupe"]');
+  afirmar(await p.evaluate(() => !document.querySelector('[data-g="c:lupe"]')), 'el director aparece también como mano derecha');
+  await p.click('[data-g="a:7"]');
+  const epi = await p.evaluate(() => document.querySelector('#pantalla').innerText);
+  afirmar(/Lupe se queda al mando/.test(epi) && /Nacho ya tiene la maleta/.test(epi) && /Grasita/.test(epi) && /2 duelos/.test(epi), 'el epílogo no refleja las decisiones');
+  await p.click('#rumbo'); await p.click('#empezarPuerto');
+  const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, cu: S.cuadrilla.map(c => [c.n, c.sueldo]), f: S.fijos, lupe: __hc.COMPANEROS.lupe.sueldo, beto: __hc.COMPANEROS.beto.sueldo,
+    c1: S.ciudades[1].dinero, c1f: S.ciudades[1].fijos, c1cu: S.ciudades[1].cuadrilla.length, fin: S.medallas.final, eq: S.eq, lg: S.legado.camino }; });
+  afirmar(r.c === 2 && r.d === 10000 && r.c1 === 30000, 'el dinero no se repartió bien: ' + JSON.stringify(r));
+  afirmar(JSON.stringify(r.cu) === '[["Nacho",165]]' && r.f.length === 0 && r.c1cu === 0, 'la mano derecha no se mudó con su aumento: ' + JSON.stringify(r));
+  afirmar(r.lupe === 200 && r.beto === 110 && r.c1f.includes('lupe'), 'el director no tiene su aumento: ' + JSON.stringify(r));
+  afirmar(r.fin && r.eq.camioneta === 2 && !r.eq.flota && r.eq.hidro && r.lg === 'B', 'la llegada al puerto no es la esperada: ' + JSON.stringify(r));
+  afirmar(await p.evaluate(() => /Puerto Fritanga/.test(document.querySelector('.meta-final').innerText)), 'la cabecera no habla de Puerto Fritanga');
+  const t = await jugarNoche(p, { cocina: 'cafe' });
+  afirmar(/Dividendos de Ciudad Comal \(dirige Lupe\)/.test(t.texto), 'no llegaron los dividendos al parte');
+  await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('[data-tab="noche"]');
+  await p.click('#viajar'); await p.click('#siViajar');
+  const v = await p.evaluate(() => ({ c: __hc.ciudad(), d: __hc.S.dinero, f: __hc.S.fijos, carta: !!document.querySelector('#comprador') }));
+  afirmar(v.c === 1 && v.d === 30000 && v.f.includes('lupe') && !v.carta, 'volver a Ciudad Comal no funcionó: ' + JSON.stringify(v));
+  await p.reload(); await p.waitForSelector('#continuar'); await p.click('#continuar'); await p.waitForSelector('#salir');
+  afirmar(await p.evaluate(() => __hc.ciudad() === 1 && __hc.COMPANEROS.lupe.sueldo === 200), 'tras recargar se perdió la ciudad o el aumento');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+caso('el comprador: camino A (vender) con pagos y sin vuelta', async () => {
+  const p = await abrir(finCampana());
+  const valor = await p.evaluate(() => __hc.tasacion());
+  await p.click('#comprador'); await p.click('[data-camino="A"]');
+  await p.click('[data-g="c:chuy"]');
+  await p.fill('#nombreNueva', 'Brillo Ninguno'); await p.click('[data-g="c:beto"]');
+  await p.click('#rumbo'); await p.click('#empezarPuerto');
+  const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, n: S.empresa.nombre, f: S.fijos, pref: S.compPref, c1f: S.ciudades[1].fijos, vend: S.ciudades[1].vendida, c1d: S.ciudades[1].dinero,
+    beto: __hc.COMPANEROS.beto.sueldo, chuy: __hc.COMPANEROS.chuy.sueldo, v: S.legado.venta, viaje: !!document.querySelector('#viajar') }; });
+  afirmar(r.c === 2 && r.d === 6000 && r.n === 'Brillo Ninguno' && r.c1d >= 40000, 'la venta no fundó la nueva empresa: ' + JSON.stringify(r));
+  afirmar(JSON.stringify(r.f) === '["beto"]' && r.pref === 'beto' && !r.c1f.includes('beto') && r.vend, 'Beto no se mudó: ' + JSON.stringify(r));
+  afirmar(r.beto === 140 && r.chuy > 0 && r.v.restan === 30 && r.v.total === valor && !r.viaje, 'aumentos o pagos mal: ' + JSON.stringify(r));
+  const t = await jugarNoche(p, { cocina: 'cafe' });
+  afirmar(/Pago de Grupo Brillo por la venta \(1 de 30\)/.test(t.texto) && !/Dividendos/.test(t.texto), 'el parte no trae el pago de la venta');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+caso('partidas antiguas que ya habían comprado a El Cuñado', async () => {
+  const p = await abrir(finCampana({ final: 38 }));
+  afirmar(await p.evaluate(() => !!document.querySelector('#comprador')), 'Lustre no aparece en partidas que ya habían terminado');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
