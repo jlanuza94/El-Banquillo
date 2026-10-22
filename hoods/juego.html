@@ -390,6 +390,7 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .contrato.diario { border-color: #8ad4ff99; background: rgba(138,212,255,.08); } .contrato.diario b { color: #8ad4ff; }
 .vida { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .vida .comp { grid-template-columns: 1fr; }
+.marca.recuerdo { background: #e9d8a6; color: #222; font-size: 16px; padding: 4px 7px; opacity: .92; }
 .pared-beto { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-radius: 10px; background: #3a3f44 repeating-linear-gradient(0deg, transparent 0 22px, #ffffff0d 22px 24px); }
 .pared-beto span { display: grid; place-items: center; width: 40px; font-size: 26px; filter: grayscale(1) brightness(.35); transform: rotate(var(--r)); }
 .pared-beto small { font-size: 10px; filter: invert(1); }
@@ -1357,6 +1358,85 @@ const LOCUTOR = ['Son las {h} y esto es Radio Grasa FM, la estación que no se d
   'Mensaje de un radioescucha: «Beto, devuélveme la licuadora». Firma: tu prima.', 'Recuerden: la espuma ablanda, la rasqueta quita y el mapache observa.',
   `Esta canción va para ${RIVAL}: que les dure la grasa.`, 'Radio Grasa FM: si la escuchas, ya es tarde para dormir.', 'Llamó Doña Chela: dice que nadie toque la plancha de su abuela. Ni en la radio.'];
 
+// Objetos con historia en las cocinas más comunes: una foto, un calendario y un dibujo. Se tocan durante la preparación
+// (no gastan tiempo). Si conoces los tres en un restaurante, la siguiente vez que vuelvas habrán cambiado.
+const RECUERDOS = {
+  cafe: [
+    { t: 'foto', a: ['Una foto torcida: una señora sirviendo café en 1978. Abajo, a pluma: «Mamá, el primer día». Su hija todavía atiende la caja.', 'A crooked photo: a woman pouring coffee in 1978. Below, in pen: "Mom, first day". Her daughter still runs the register.'],
+      d: ['La foto de la mamá ya está derecha. Tiene marco nuevo y una flor de plástico al lado.', 'Mom\'s photo is straight now. New frame, and a plastic flower next to it.'] },
+    { t: 'cal', a: ['Un calendario de panadería de 2009, abierto en julio. Dicen que fue el último mes que vino el dueño anterior.', 'A 2009 bakery calendar, open on July. They say it was the last month the old owner came by.'],
+      d: ['Calendario nuevo, de este año. En el día de hoy alguien escribió: «Vienen los de las campanas. Barrer antes».', 'A new calendar, this year\'s. On today someone wrote: "Hood people coming. Sweep first".'] },
+    { t: 'dib', a: ['Un dibujo de crayón pegado con cinta: una taza gigante con cara feliz. Firma: «Sofi, 6 años».', 'A crayon drawing taped up: a giant mug with a happy face. Signed: "Sofi, age 6".'],
+      d: ['El dibujo de Sofi ahora tiene marco dorado. Al lado hay otro nuevo: una camioneta con una rasqueta. Es la tuya.', 'Sofi\'s drawing has a golden frame now. Next to it, a new one: a van with a scraper. It\'s yours.'] }],
+  pizza: [
+    { t: 'foto', a: ['Un señor de bigote frente a un horno de leña. Puede ser Nápoles o Iztapalapa: la foto no lo aclara y él tampoco.', 'A mustached man in front of a wood oven. Could be Naples or Iztapalapa: the photo doesn\'t say, and neither does he.'],
+      d: ['La foto está derecha y tiene placa: «Fundador. Inventor de la pizza de chicharrón (no preguntes)».', 'The photo is straight and has a plaque: "Founder. Inventor of the pork-rind pizza (don\'t ask)".'] },
+    { t: 'cal', a: ['Un calendario de taller mecánico de 2015 con fechas de pago tachadas en rojo. Muchas.', 'A 2015 auto-shop calendar with payment dates crossed out in red. Lots of them.'],
+      d: ['Calendario nuevo. Ya no hay nada en rojo: solo «día de la masa madre», cada viernes.', 'A new calendar. Nothing in red anymore: just "sourdough day", every Friday.'] },
+    { t: 'dib', a: ['El dibujo de una pizza con piernas huyendo del horno. Firma: «Toño, 8».', 'A drawing of a pizza with legs running from the oven. Signed: "Toño, 8".'],
+      d: ['El dibujo de Toño está enmarcado y la pizza de la casa ahora se llama «La Fugitiva».', 'Toño\'s drawing is framed, and the house pizza is now called "The Fugitive".'] }],
+  burger: [
+    { t: 'foto', a: ['La foto del equipo de béisbol del barrio que patrocinan. Perdieron todos los partidos. Sonríen igual.', 'A photo of the neighborhood baseball team they sponsor. They lost every game. Smiling anyway.'],
+      d: ['Foto nueva y derecha: el equipo con un trofeo de tercer lugar. Lo celebran como si fuera el mundial.', 'A new, straight photo: the team with a third-place trophy. Celebrating like it\'s the World Series.'] },
+    { t: 'cal', a: ['Un calendario con un reto: «Si te comes la Triple Monstruo en 10 minutos, no pagas». Ningún día tachado.', 'A calendar with a challenge: "Eat the Triple Monster in 10 minutes and it\'s free". Not a single day crossed out.'],
+      d: ['Calendario de este año: una cruz en el día 14 y «¡¡LO LOGRÓ!!». Fue el cocinero. No cuenta, pero lo cuentan.', 'This year\'s calendar: a cross on the 14th and "HE DID IT!!". It was the cook. Doesn\'t count, but they count it.'] },
+    { t: 'dib', a: ['Una hamburguesa con capa de superhéroe, en crayón. Firma: «Dani, 7».', 'A hamburger wearing a superhero cape, in crayon. Signed: "Dani, 7".'],
+      d: ['La Hamburguesa Héroe del dibujo de Dani ya está en el menú, enmarcada junto al precio. Dani come gratis en su cumpleaños.', 'The Hero Burger from Dani\'s drawing is on the menu now, framed next to the price. Dani eats free on birthdays.'] }],
+  wok: [
+    { t: 'foto', a: ['La foto de una boda: los dueños, jovencitos, recibiendo un wok de regalo. Es el mismo que usan hoy.', 'A wedding photo: the owners, very young, getting a wok as a gift. It\'s the same one they use today.'],
+      d: ['La foto está derecha y al lado hay otra: los mismos dos, ya abuelos, con el mismo wok.', 'The photo is straight, and next to it there\'s another: the same two, now grandparents, with the same wok.'] },
+    { t: 'cal', a: ['Un calendario lunar con una nota: «Comprar wok nuevo (no)».', 'A lunar calendar with a note: "Buy new wok (no)".'],
+      d: ['Calendario nuevo, misma nota: «Comprar wok nuevo (todavía no)».', 'New calendar, same note: "Buy new wok (still no)".'] },
+    { t: 'dib', a: ['Un dragón dibujado en una servilleta. Lo hizo un cliente que se fue sin pagar hace diez años.', 'A dragon drawn on a napkin. A customer made it and left without paying, ten years ago.'],
+      d: ['El dragón ya tiene marco. El cliente volvió, pagó la cuenta de hace diez años y dejó propina.', 'The dragon is framed now. The customer came back, paid the ten-year-old bill and left a tip.'] }],
+  asador: [
+    { t: 'foto', a: ['La foto de un pollo asado premiado en la feria de 1995. El pollo sale mejor que el dueño.', 'A photo of a prize-winning roast chicken at the 1995 fair. The chicken looks better than the owner.'],
+      d: ['Foto derecha, con listón azul. Al lado, una nueva: el nieto con el pollo campeón de este año.', 'A straight photo, with a blue ribbon. Next to it, a new one: the grandson with this year\'s champion chicken.'] },
+    { t: 'cal', a: ['Un calendario de carnicería con todos los domingos marcados: «carne asada familiar».', 'A butcher-shop calendar with every Sunday marked: "family barbecue".'],
+      d: ['Calendario nuevo. Los domingos ahora dicen: «carne asada (invitar a los de las campanas)».', 'New calendar. Sundays now say: "barbecue (invite the hood people)".'] },
+    { t: 'dib', a: ['Un carbón con ojos tristes, en crayón. Firma: «Mati, 5». Dice que el carbón llora porque lo queman.', 'A charcoal briquette with sad eyes, in crayon. Signed: "Mati, 5". Mati says it cries because they burn it.'],
+      d: ['Mati dibujó al carbón feliz y con sombrero. El dibujo nuevo tiene marco; el triste, también.', 'Mati drew the charcoal happy, wearing a hat. The new drawing is framed; the sad one too.'] }],
+};
+const ICO_RECUERDO = { foto: '🖼️', cal: '📅', dib: '🖍️' };
+const recuerdo = nombre => (S.recuerdos = S.recuerdos || {})[nombre] || (S.recuerdos[nombre] = { v: [0, 0, 0] });
+const recuerdoCambiado = nombre => { const r = S.recuerdos && S.recuerdos[nombre]; return !!(r && r.todo && r.todo < S.noche); };
+// Cómo se ve cada objeto: torcido y viejo, o arreglado tras tu visita.
+function texRecuerdo(t, cambiado, k) {
+  return texCanvas(lienzo(128, 160, (g, w, h) => {
+    const marco = (c, a) => { g.fillStyle = c; g.fillRect(0, 0, w, h); g.fillStyle = '#f4eee0'; g.fillRect(a, a, w - 2 * a, h - 2 * a); };
+    if (t === 'foto') {
+      marco(cambiado ? '#c9a227' : '#5a3a22', 12); g.fillStyle = cambiado ? '#d9c39a' : '#b79e74'; g.fillRect(18, 18, w - 36, h - 36);
+      g.fillStyle = '#4e3b2a'; g.beginPath(); g.arc(64, 62, 16, 0, 7); g.fill(); g.fillRect(44, 80, 40, 50);
+      if (cambiado) { g.beginPath(); g.arc(94, 72, 11, 0, 7); g.fill(); g.fillRect(82, 86, 24, 40); }
+    } else if (t === 'cal') {
+      g.fillStyle = '#fbfbf7'; g.fillRect(6, 6, w - 12, h - 12); g.fillStyle = cambiado ? '#2e9e5b' : '#c0392b'; g.fillRect(6, 6, w - 12, 34);
+      g.fillStyle = '#fff'; g.font = '700 22px sans-serif'; g.textAlign = 'center'; g.fillText(cambiado ? String(new Date().getFullYear()) : ['2009', '2015', '1999', '2012', '1995'][k % 5], 64, 31);
+      g.fillStyle = '#555'; for (let r = 0; r < 5; r++) for (let c = 0; c < 6; c++) g.fillRect(14 + c * 17, 52 + r * 19, 12, 12);
+      g.strokeStyle = cambiado ? '#2e9e5b' : '#c0392b'; g.lineWidth = 3; g.beginPath(); g.moveTo(48, 90); g.lineTo(62, 104); g.moveTo(62, 90); g.lineTo(48, 104); g.stroke();
+    } else {
+      if (cambiado) marco('#c9a227', 10); else { g.fillStyle = '#fffdf6'; g.fillRect(4, 8, w - 8, h - 12); g.fillStyle = '#e8d98a88'; g.fillRect(44, 0, 40, 16); }
+      g.lineWidth = 6; g.lineCap = 'round'; ['#e63946', '#2a9df4', '#f4a300'].forEach((c, i) => { g.strokeStyle = c; g.beginPath(); g.moveTo(24 + i * 8, 120 - i * 20); g.quadraticCurveTo(64, 30 + i * 10, 104 - i * 6, 110 - i * 15); g.stroke(); });
+      g.fillStyle = '#222'; g.beginPath(); g.arc(54, 70, 4, 0, 7); g.arc(76, 70, 4, 0, 7); g.fill();
+    }
+  }));
+}
+// Las marcas para tocarlos en la preparación (no son tareas: no hacen pasar de pantalla ni gastan minutos).
+function marcasRecuerdo() {
+  const o = M && M.orden; if (!o || !piezas.recuerdos || !piezas.recuerdos.length) return;
+  const lista = RECUERDOS[o.cocina], r = recuerdo(o.nombre), camb = recuerdoCambiado(o.nombre);
+  M.recVistos = M.recVistos || new Set();
+  piezas.recuerdos.forEach((p, k) => {
+    if (M.recVistos.has(k)) return;
+    const m = marca(p.pos, ICO_RECUERDO[lista[k].t], () => {
+      M.recVistos.add(k); r.v[k] = 1; tono(660 + k * 120, .15, .05, 'triangle');
+      carta(`${ICO_RECUERDO[lista[k].t]} ${o.nombre}`, L(...(camb ? lista[k].d : lista[k].a)), [{ t: L('Seguir', 'Continue'), prim: true, f: () => cerrarCarta() }]);
+      if (!r.todo && r.v.every(Boolean)) { r.todo = S.noche; setTimeout(() => M && ayuda(L(`Ya conoces las tres historias de ${o.nombre}. La próxima vez que vuelvas, algo habrá cambiado.`, `You know all three stories of ${o.nombre}. Next time you come back, something will have changed.`)), 2600); }
+      if (camb && M.recVistos.size === 3) { const al = L(`Las historias de ${o.nombre}`, `The stories of ${o.nombre}`); if (!S.album.includes(al)) S.album.push(al); r.fin = S.noche; }
+      guardar();
+    });
+    m.extra = true; m.el.classList.add('recuerdo');
+  });
+}
 // El Búho de la Madrugada, el locutor de Radio Grasa FM: suelta pistas cada vez más claras… y en la Gran Licitación
 // se descubre que es Don Rigo, que nunca se fue al lago (bueno, los domingos sí).
 const BUHO = { n: 'El Búho de la Madrugada', color: '#c6a0ff' };
@@ -2145,7 +2225,7 @@ function construirNoche(orden) {
   const hW = hood.ancho, hY0 = 1.95, hY1 = hY0 + hood.alto, hZ0 = -.95, hZ1 = hZ0 + hood.fondo, hZ = (hZ0 + hZ1) / 2;
   const sep = .5, span = nC * hW + (nC - 1) * sep, lineW = span + .2;
   const xs = Array.from({ length: nC }, (_, i) => (i - (nC - 1) / 2) * (hW + sep));
-  piezas.pilotos = []; piezas.aparatos = []; piezas.cintas = []; piezas.faldas = []; piezas.bolsas = [];
+  piezas.pilotos = []; piezas.aparatos = []; piezas.cintas = []; piezas.faldas = []; piezas.bolsas = []; piezas.recuerdos = [];
 
   // Cuarto
   const suelo = add(new T.PlaneGeometry(9, 8), new T.MeshStandardMaterial({ map: TX.suelo, roughness: .7 }), 0, 0, 1); suelo.rotation.x = -Math.PI / 2;
@@ -2169,6 +2249,15 @@ function construirNoche(orden) {
   suelo.material.color.set(amb.suelo || 0xab413a);
   piezas.brillos = []; piezas.destellos = [];
   amb.deco({ add, lineW, xd: clamp(lineW / 2 + .95, 1.9, 3.1), brillos: piezas.brillos });
+  if (orden && RECUERDOS[orden.cocina] && S.fase === 'empresa') {
+    const camb = recuerdoCambiado(orden.nombre);
+    RECUERDOS[orden.cocina].forEach((x, k) => {
+      const px = (k - 1) * Math.min(.62, lineW * .3) - .1, py = 1.6 + (k === 1 ? .06 : 0), tam = x.t === 'cal' ? [.2, .25] : x.t === 'foto' ? [.22, .27] : [.24, .3];
+      const m = add(new T.PlaneGeometry(...tam), new T.MeshStandardMaterial({ map: texRecuerdo(x.t, camb, k), roughness: .8 }), px, py, -.985);
+      m.rotation.z = camb ? 0 : x.t === 'foto' ? -.22 : x.t === 'dib' ? .12 : .04;
+      piezas.recuerdos.push({ mesh: m, pos: new T.Vector3(px, py - .2, -.95) });
+    });
+  }
   piezas.reloj = texCanvas(RELOJ_TX); pintarRelojPared(0);
   add(new T.CircleGeometry(.2, 24), new T.MeshBasicMaterial({ map: piezas.reloj, transparent: true }), 3.59, 2.35, .4).rotation.y = -Math.PI / 2;
 
@@ -2538,9 +2627,10 @@ function marca(pos, texto, alTocar, punto) {
 function tocarMarca(m) {
   if (m.hecho) return; m.hecho = true; m.el.classList.add('hecha'); if (!m.el.classList.contains('punto')) m.el.textContent = '✓'; m.alTocar();
   // Pantalla terminada (preparación o pelado): pasa sola a la siguiente.
-  if (M && (M.fase === 'prep' || M.etapa === 'pelar') && MARCAS.every(x => x.hecho)) {
+  const tareas = () => MARCAS.filter(x => !x.extra);   // los objetos de la pared no cuentan como tarea
+  if (M && (M.fase === 'prep' || M.etapa === 'pelar') && !m.extra && tareas().every(x => x.hecho)) {
     const tok = M.prepTok;
-    setTimeout(() => { if (M && M.prepTok === tok && MARCAS.length && MARCAS.every(x => x.hecho)) { const b = $('#prepSig'); if (b) b.click(); } }, 900);
+    setTimeout(() => { if (M && M.prepTok === tok && tareas().length && tareas().every(x => x.hecho)) { const b = $('#prepSig'); if (b) b.click(); } }, 900);
   }
 }
 // La cuadrilla ayuda en la preparación y el pelado: cada uno hace alguna tarea a la vez que tú (no te cuesta tiempo),
@@ -2549,7 +2639,7 @@ const PREP_MAL = ['Ya quedó. Bueno, casi. Mejor revísalo tú.', 'Se me resbal�
 function ayudaPrep() {
   const tok = M.prepTok = (M.prepTok || 0) + 1;
   if (M.orden.tuto || !M.equipo || !M.equipo.length) return;
-  const gente = M.equipo, pend = () => MARCAS.filter(m => !m.hecho);
+  const gente = M.equipo, pend = () => MARCAS.filter(m => !m.hecho && !m.extra);
   let cupo = Math.min(gente.length, Math.ceil(pend().length / 2)), k = 0, hablo = false;
   const paso = () => {
     if (!M || M.prepTok !== tok || cupo-- <= 0) return;
@@ -2704,6 +2794,7 @@ function escenaPrep(i) {
     marca(luz.pos, L('Cortar la luz', 'Cut the power'), () => { luz.off = true; luz.palanca.rotation.z = 2.6; gastar(2); tono(180, .1, .12, 'square'); actualizar(); });
     panelPrep(L('Seguridad primero', 'Safety first'), pil.length ? L('Toca cada piloto para cerrar el gas y baja la palanca de la luz del extractor. Cada cosa cuesta un par de minutos.', 'Tap each pilot to shut off the gas and pull down the exhaust fan\'s power lever. Each one takes a couple of minutes.') : L('Esta cocina no tiene pilotos de gas. Solo falta bajar la palanca de la luz del extractor.', 'This kitchen has no gas pilots. You only need to pull down the exhaust fan\'s power lever.'), estado(), L('Seguir sin terminar', 'Skip the rest'));
     actualizar(); M.arrastrar = true; ayudaPrep();
+    marcasRecuerdo();
     decir(M.comp, uno(['Yo te ilumino. Bueno, mi casco te ilumina.', 'Primero el gas. Lo dice Don Rigo y lo dicen los bomberos.', '¿Cerramos el gas o vivimos peligrosamente?']));
   } else if (i === 1) {
     irVista(VISTAS.linea);
@@ -2712,7 +2803,7 @@ function escenaPrep(i) {
     const actualizar = () => { const n = prepEl.querySelector('.nota'); if (n) n.textContent = estado(); const b = $('#prepSig'); if (b) b.textContent = ap.every(a => a.cubierto) ? L('Siguiente: el plástico de la campana', 'Next: wrap the hood') : L('Seguir sin terminar', 'Skip the rest'); };
     ap.forEach(a => marca(a.pos, L('Cubrir', 'Cover'), () => { a.cubierto = true; a.cubierta.visible = true; a.cubierta.userData.caida = .5; gastar(EQ().cubiertas ? 1 : 2); rafaga(.25, 900, .1, 'lowpass'); actualizar(); }));
     panelPrep(L('Cubrir la cocina', 'Cover the kitchen'), L('Toca cada aparato para taparlo con plástico. Lo que quede al aire se llena de agua con grasa y espuma.', 'Tap each appliance to cover it with plastic. Anything left uncovered gets soaked in greasy water and foam.'), estado(), L('Seguir sin terminar', 'Skip the rest'));
-    actualizar(); M.arrastrar = true; ayudaPrep();
+    actualizar(); M.arrastrar = true; ayudaPrep(); marcasRecuerdo();
     if (M.pedido && M.pedido.id === 'abuela') decir(M.cliente, '¡Esa plancha es la de mi abuela! Cúbranla bien. Y todo lo demás también.');
   } else if (i === 2) {
     irVista(VISTAS.frente);
