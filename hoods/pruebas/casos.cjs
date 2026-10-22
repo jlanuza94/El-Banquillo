@@ -271,5 +271,55 @@ caso('objetos con historia: se tocan en la preparación y cambian en la siguient
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+// Duelo 2.0: apuesta, hitos (2 de 3) y El Cuñado que reacciona a tu ritmo.
+async function empezarDuelo(p, apostar) {
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0 && document.querySelector('.carta[role=dialog] [data-i]'), null, { timeout: 90000 });
+  const txt = await p.evaluate(() => document.querySelector('.carta[role=dialog]').innerText);
+  await p.evaluate(i => document.querySelector(`.carta[role=dialog] [data-i="${i}"]`).click(), apostar ? 0 : 1);
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  await p.evaluate(() => { __hc.M.eventos = []; __hc.M.duelo.sab = 2; __hc.M.duelo.tropiezo = null; });
+  return txt;
+}
+const terminarDuelo = p => p.evaluate(() => { const M = __hc.M; __hc.piezas.aparatos.forEach(a => { a.quitada = true; }); __hc.piezas.bolsas.forEach(b => { b.bajada = true; }); __hc.piezas.faldas.forEach(f => { f.pelada = true; });
+  __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); s.sucio = true; })); M.t = M.dur * .6; __hc.terminarTurno(); });
+caso('duelo 2.0: apuesta aceptada, hitos 2 de 3 y El Cuñado nervioso', async () => {
+  const p = await abrir(partida({ dinero: 5000, compPref: 'solo' }));
+  const txt = await empezarDuelo(p, true);
+  afirmar(/Te apuesto \$[\d,]+ a que te gano/.test(txt) && /Tester/.test(txt), 'no salió la propuesta de apuesta: ' + txt);
+  const x = await p.evaluate(() => __hc.M.duelo.apuesta);
+  afirmar(x > 0, 'la apuesta aceptada no se guardó');
+  // filtros limpios antes que él: punto para ti, y él se pone nervioso
+  await p.evaluate(() => { __hc.Z.filter(z => z.id === 'filtros').forEach(z => z.sfs.forEach(s => s.d.fill(0))); });
+  await p.waitForFunction(() => __hc.M.duelo.hitos && __hc.M.duelo.hitos.filtros, null, { timeout: 20000 });
+  let r = await p.evaluate(() => ({ h: __hc.M.duelo.hitos, hud: document.querySelector('#dHitos i.tu') !== null }));
+  afirmar(r.h.filtros === 'tu' && r.hud, 'el hito de filtros no fue tuyo o no se ve: ' + JSON.stringify(r));
+  await p.evaluate(() => { __hc.M.duelo.prog = .05; });
+  await p.waitForFunction(() => __hc.M.duelo.animo === 'nervioso', null, { timeout: 20000 });
+  await p.evaluate(() => { __hc.Z.filter(z => z.id !== 'filtros').forEach(z => z.sfs.forEach(s => s.d.fill(0))); });
+  await p.waitForFunction(() => __hc.M.duelo.ganador, null, { timeout: 20000 });
+  r = await p.evaluate(() => ({ g: __hc.M.duelo.ganador, h: __hc.M.duelo.hitos, a: __hc.M.duelo.animo }));
+  afirmar(r.g === 'tu' && r.h.campana === 'tu', 'no ganaste el duelo 2–0: ' + JSON.stringify(r));
+  const antes = await p.evaluate(() => __hc.S.dinero);
+  await terminarDuelo(p); await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
+  afirmar(/Apuesta ganada a El Cuñado/.test(t) && /Duelo ganado · 3–0/i.test(t), 'el parte no refleja la apuesta o el marcador');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+caso('duelo 2.0: sin apuesta, El Cuñado se confía y gana', async () => {
+  const p = await abrir(partida({ dinero: 5000, compPref: 'solo' }));
+  await empezarDuelo(p, false);
+  afirmar(await p.evaluate(() => __hc.M.duelo.apuesta === 0), 'rechazar la apuesta no quedó registrado');
+  await p.evaluate(() => { __hc.M.duelo.prog = .5; });
+  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 20000 });
+  await p.evaluate(() => { __hc.M.duelo.prog = .99; });
+  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 20000 });
+  await terminarDuelo(p); await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
+  afirmar(/Duelo perdido · \d–2/i.test(t) && !/Apuesta/.test(t) && /la mitad/.test(t), 'el parte del duelo perdido no es correcto: ' + (t.match(/Duelo[^\n]*\n?[^\n]*/) || [t.slice(0, 200)])[0]);
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };
