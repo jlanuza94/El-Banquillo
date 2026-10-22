@@ -501,5 +501,43 @@ caso('la saga: el favor de la carretera regala los filtros en el siguiente duelo
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+caso('tu vida jugable: desgaste, qué haces al salir, efectos, gripa y muebles', async () => {
+  const p = await abrir(partida({ dinero: 5000, compPref: 'solo', vida: 'normal', yo: { descanso: 80, animo: 70, salud: 90, muebles: {} } }));
+  await jugarNoche(p, { cocina: 'cafe' });
+  let r = await p.evaluate(() => ({ ...__hc.S.yo }));
+  afirmar(r.descanso === 62 && r.pendiente, 'la noche no cansó o no quedó pendiente la decisión: ' + JSON.stringify(r));
+  await p.evaluate(() => __hc.pantallaCamioneta());
+  afirmar(await p.evaluate(() => document.querySelectorAll('[data-despues]').length === 5), 'no salen las opciones de después del turno');
+  await p.click('[data-despues="mama"]');
+  r = await p.evaluate(() => ({ ...__hc.S.yo, d: __hc.S.dinero, card: !!document.querySelector('[data-despues]'), linea: !!document.querySelector('.yo-linea') }));
+  afirmar(!r.pendiente && r.descanso === 90 && !r.card && r.linea, 'visitar a mamá no hizo efecto: ' + JSON.stringify(r));
+  // cansado: menos fuerza en el turno
+  await p.evaluate(() => { __hc.S.yo.descanso = 10; });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  afirmar(await p.evaluate(() => Math.abs(__hc.M.vida - 1.03 * .8) < .001), 'el cansancio no baja la fuerza: ' + await p.evaluate(() => __hc.M.vida));
+  await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); })); M.t = M.dur * .6; M.fase = 'turno'; __hc.terminarTurno(); });
+  await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  // si sales sin decidir, duermes
+  await p.evaluate(() => { __hc.S.yo.salud = 10; __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  const pend = await p.evaluate(() => !!__hc.S.yo.pendiente);
+  await p.evaluate(() => { const H = __hc.S.hoy; H.gripa = null; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); });
+  afirmar(await p.evaluate(() => !!document.querySelector('[data-gripa="doctor"]')), 'no sale la tarjeta de la gripa');
+  await p.evaluate(() => document.querySelector('#salir').click());
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  r = await p.evaluate(() => ({ pend: __hc.S.yo.pendiente, ult: __hc.S.yo.ultimo.id, gripa: __hc.S.hoy.gripa }));
+  afirmar(pend && !r.pend && r.ult === 'dormir' && r.gripa === 'trabajar', 'salir sin decidir no te mandó a dormir: ' + JSON.stringify(r));
+  await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); })); M.t = M.dur * .6; M.fase = 'turno'; __hc.terminarTurno(); });
+  await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  // muebles: la cama recupera más
+  await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  await p.click('[data-tab="cuadrilla"]'); await p.click('[data-mueble="cama"]');
+  const antes = await p.evaluate(() => __hc.S.yo.descanso);
+  await p.click('[data-tab="noche"]'); await p.click('[data-despues="dormir"]');
+  const desp = await p.evaluate(() => __hc.S.yo.descanso);
+  afirmar(await p.evaluate(() => !!__hc.S.yo.muebles.cama) && desp - antes >= 42 + 15 - 1 || desp === 100, 'la cama no ayuda a descansar: ' + antes + ' → ' + desp);
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };
