@@ -1708,6 +1708,18 @@ const matPlastico = new T.MeshStandardMaterial({ color: 0xdfefff, transparent: t
 const matCubierta = new T.MeshStandardMaterial({ color: 0xbfdcff, transparent: true, opacity: .6, roughness: .15, depthWrite: false });
 
 // Una superficie limpiable: malla + rejilla de grasa (celdas de unos 3 cm). geo opcional (ducto redondo).
+// Cómo se reparte la grasa en la campana según lo que se cocina debajo (misma cantidad total, distinto dibujo):
+// plancha: una nube gruesa justo encima; freidoras: goterones verticales; hornos y asadores: costra arriba; woks: focos muy cargados.
+const PATRON_LINEA = { plancha: 'banda', fonda: 'banda', hotel: 'banda', comedor: 'banda', truck: 'goteo', mariscos: 'goteo', estadio: 'goteo', horno: 'arriba', pan: 'arriba', carbon: 'arriba', wok: 'focos', banquete: 'focos', plaza: 'focos' };
+let patronSf = null;   // { tipo, cara } mientras se construyen las superficies de la campana
+function factorPatron(p, u, v, focos) {
+  const g = (x, c, a) => Math.exp(-(((x - c) / a) ** 2));
+  if (p.tipo === 'banda') return p.cara === 'techo' ? 1 + .6 * g(u, .5, .3) : 1 + 1.1 * g(u, .5, .3) * (1 - v) ** 1.5;
+  if (p.tipo === 'goteo') return p.cara === 'techo' ? 1.1 : 1 + 1.3 * Math.max(0, Math.sin(u * Math.PI * focos.rayas + focos.fase)) ** 10 * (.35 + .65 * (1 - v)) + .25 * (1 - v);
+  if (p.tipo === 'arriba') return p.cara === 'techo' ? 1.5 : 1 + 1.1 * v * v;
+  if (p.tipo === 'focos') return 1 + focos.puntos.reduce((a, [cx, cy, r]) => a + 1.4 * Math.exp(-((u - cx) ** 2 + (v - cy) ** 2) / r), 0);
+  return 1;
+}
 function superficie(w, h, base, micrasRel, celda = .03, geo, lado, tipos) {
   const nx = Math.max(8, Math.round(w / celda)), ny = Math.max(8, Math.round(h / celda));
   const n = nx * ny;
@@ -1723,6 +1735,15 @@ function superficie(w, h, base, micrasRel, celda = .03, geo, lado, tipos) {
     const borde = !geo && Math.min(u, 1 - u, v, 1 - v) < .1 ? .25 : 0;
     d[y * nx + x] = clamp(micrasRel * (.72 + s * .12 + borde + rnd(-.08, .08)), .08, 1.3);
   }
+  let fp = null;
+  if (patronSf && patronSf.tipo) {
+    const focos = { rayas: Math.round(rnd(4, 8)), fase: rnd(0, 3), puntos: Array.from({ length: 2 + (Math.random() * 2 | 0) }, () => [rnd(.15, .85), rnd(.15, .85), rnd(.008, .02)]) };
+    fp = new Float32Array(n); let suma = 0;
+    for (let y = 0; y < ny; y++) for (let x = 0; x < nx; x++) suma += fp[y * nx + x] = factorPatron(patronSf, x / nx, y / ny, focos) ** 2.2;   // contraste fuerte: zonas limpias de película y zonas de costra
+    const media = suma / n, esf = a => a.reduce((t, x) => t + x / (x > .6 ? .5 : 1), 0), antes = esf(d);   // la costra gruesa (> .6) cuesta el doble
+    for (let i = 0; i < n; i++) d[i] = clamp(d[i] * fp[i] / media, .08, 1.3);
+    for (let k = 0; k < 3; k++) { const f = antes / esf(d); if (Math.abs(f - 1) < .02) break; for (let i = 0; i < n; i++) d[i] = clamp(d[i] * f, .08, 1.3); }   // mismo esfuerzo total: cambia el dibujo, no la dificultad
+  }
   // Manchas de suciedad especial: unas cuantas manchas redondas de cada tipo, más gruesas que la grasa normal.
   let tipo = null, ttex = null;
   if (tipos && Object.values(tipos).some(f => f > 0)) {
@@ -1731,7 +1752,8 @@ function superficie(w, h, base, micrasRel, celda = .03, geo, lado, tipos) {
       if (!(f > 0)) continue;
       const manchas = Math.max(1, Math.round(f * 7)), rr = Math.max(3, Math.sqrt(n * f / manchas / Math.PI));
       for (let k = 0; k < manchas; k++) {
-        const cx = rnd(0, nx), cy = rnd(0, ny), r = rr * rnd(.7, 1.3);
+        let cx = rnd(0, nx), cy = rnd(0, ny); const r = rr * rnd(.7, 1.3);
+        if (fp) for (let t = 0; t < 6; t++) { const ax = rnd(0, nx), ay = rnd(0, ny); if (fp[(ay | 0) * nx + (ax | 0)] > fp[(cy | 0) * nx + (cx | 0)]) { cx = ax; cy = ay; } }   // la suciedad especial cae donde más se cocina
         for (let y = Math.max(0, Math.floor(cy - r)); y < Math.min(ny, cy + r); y++) for (let x = Math.max(0, Math.floor(cx - r)); x < Math.min(nx, cx + r); x++) {
           if (Math.hypot(x - cx, y - cy) > r * (.8 + .2 * Math.sin(x * 1.7 + y))) continue;
           const i = y * nx + x; tipo[i] = +t; d[i] = clamp(d[i] + .2, .1, 1.3);
@@ -2034,9 +2056,10 @@ function construirNoche(orden) {
 
   // Campanas: superficies interiores sucias + piel exterior limpia + plástico y bolsa de la preparación
   const campanas = [];
+  patronSf = orden && COCINAS[orden.cocina] ? { tipo: PATRON_LINEA[COCINAS[orden.cocina].linea] } : null;
   for (const cx of xs) {
     const sfs = [], piso = new T.Vector3();
-    const pon = (w, h, pos, normal, f = 1) => { const s = superficie(w, h, TX.acero, rel * f, .03, null, null, tCampana); colocar(s, pos, normal); mundo.add(s.mesh); sfs.push(s);
+    const pon = (w, h, pos, normal, f = 1) => { if (patronSf) patronSf.cara = normal.y < -.5 ? 'techo' : 'pared'; const s = superficie(w, h, TX.acero, rel * f, .03, null, null, tCampana); colocar(s, pos, normal); mundo.add(s.mesh); sfs.push(s);
       const p = new T.Mesh(s.mesh.geometry, matPiel); p.position.copy(s.mesh.position).addScaledVector(normal, -.012); p.quaternion.copy(s.mesh.quaternion); mundo.add(p); };
     if (hood.tipo === 'inclinada') {
       const topW = hW * .72, dx = (hW - topW) / 2, lado = Math.hypot(hood.alto, dx);
@@ -2084,6 +2107,7 @@ function construirNoche(orden) {
     piezas.bolsas.push({ mesh: bolsa, pos: new T.Vector3(cx + hW / 2 - .22, hY0 - .25, hZ0 + .25), hecho: false });
     campanas.push({ cx, sfs, gotas, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
   }
+  patronSf = null;
 
   // Filtros sobre la lona, en el suelo (en trabajos con muchos filtros, varias lonas: una zona cada una)
   const nf = orden ? orden.filtros : 3;
@@ -2456,7 +2480,7 @@ function empezarTurno(orden) {
   M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 10 * hab('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45) * (arcoFin('chuy') ? 2 : 1), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .2 * hab('santo')), paciencia: 100 * (1 + .2 * hab('santo')), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
-    maxCombo: 0, combos3: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
+    maxCombo: 0, combos3: 0, utiles: 0, vacias: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
     pedido: orden.pedido ? pedido(orden.pedido) : null, cliente: { n: 'Cliente', color: '#e9e9e9' },
     equipo: orden.equipo.map(e => ({ ...e, fuerza: e.fuerza * (orden.animo ? 1.15 : 1) * (tun('masaje') ? 1.05 : 1), t: rnd(.2, .8) })) };
   if (tun('bocina')) { M.propinaMod += .02; setTimeout(bocina, 600); }
@@ -2781,7 +2805,7 @@ function guardarTurno() {
   if (!turnoGuardable()) return;
   const pz = piezas;
   const snap = { noche: S.noche, id: M.orden.id, orden: M.orden, t: M.t, dur: M.dur, etapa: M.etapa, zona: M.zona, prepMin: M.prepMin, botella: M.botella, propinaMod: M.propinaMod, repExtra: M.repExtra,
-    danos: M.danos, paciencia: M.paciencia, hidroRota: !!M.hidroRota, hechos: [...M.hechos].map(e => e.tipo), usoHidro: M.usoHidro, usoEspuma: M.usoEspuma, combos3: M.combos3, maxCombo: M.maxCombo, tFiltros: M.tFiltros,
+    danos: M.danos, paciencia: M.paciencia, hidroRota: !!M.hidroRota, jefe: M.jefe ? { ...M.jefe, rev: null } : null, hechos: [...M.hechos].map(e => e.tipo), usoHidro: M.usoHidro, usoEspuma: M.usoEspuma, combos3: M.combos3, maxCombo: M.maxCombo, utiles: M.utiles, vacias: M.vacias, tFiltros: M.tFiltros,
     piezas: { pil: pz.pilotos.map(p => p.off), luz: pz.luz.off, ap: pz.aparatos.map(a => [a.cubierto, !!a.quitada]), ci: pz.cintas.map(c => c.hecho), fa: pz.faldas.map(f => !!f.pelada), bo: pz.bolsas.map(b => [b.hecho, !!b.bajada]) },
     grasa: Z.map(z => z.sfs.map(sf => [empaca(sf.d), empaca(sf.pol)])) };
   try { localStorage.setItem(KEY_TURNO, JSON.stringify(snap)); } catch (e) { /* sin espacio: se pierde solo este turno */ }
@@ -2803,7 +2827,8 @@ function reanudarTurno(snap) {
   pz.bolsas.forEach((b, i) => { if (k.bo[i] && k.bo[i][0]) { b.hecho = true; b.mesh.visible = true; } });
   escenaPrep(3);   // termina la preparación tal como estaba: arranca el turno con esa protección
   Object.assign(M, { t: snap.t, prepMin: snap.prepMin, botella: snap.botella, propinaMod: snap.propinaMod, repExtra: snap.repExtra, danos: snap.danos, paciencia: snap.paciencia, hidroRota: snap.hidroRota,
-    usoHidro: snap.usoHidro, usoEspuma: snap.usoEspuma, combos3: snap.combos3 || 0, maxCombo: snap.maxCombo || 0, tFiltros: snap.tFiltros });
+    usoHidro: snap.usoHidro, usoEspuma: snap.usoEspuma, combos3: snap.combos3 || 0, maxCombo: snap.maxCombo || 0, utiles: snap.utiles || 0, vacias: snap.vacias || 0, tFiltros: snap.tFiltros });
+  if (snap.jefe && M.jefe) Object.assign(M.jefe, snap.jefe, { prox: 15 });   // el medidor del trabajo jefe sigue donde iba
   for (const e of M.eventos) if (snap.hechos.includes(e.tipo)) M.hechos.add(e);
   Z.forEach((z, i) => z.sfs.forEach((sf, j) => { const g = snap.grasa[i] && snap.grasa[i][j]; if (g) { desempaca(g[0], sf.d); desempaca(g[1], sf.pol); sf.soak.fill(-1); sf.sucio = true; pintarSf(sf); } }));
   if (snap.zona !== M.zona && Z[snap.zona]) irZona(snap.zona);
@@ -2945,6 +2970,11 @@ function soltar(e) {
   if (M.herr !== 'rasqueta') return;
   const dx = tr.x - tr.x0, dy = tr.y - tr.y0, l = Math.hypot(dx, dy);
   const ahora = performance.now();
+  // Técnica: pasadas que quitan grasa frente a pasadas sobre metal ya limpio (cuentan en la nota).
+  if (l > 25 && M.etapa === 'lavar') {
+    if (tr.quitado > 1) M.utiles++;
+    else if (tr.quitado < .1 && ++M.vacias === 4 && !S.tutoVacias) { S.tutoVacias = true; ayuda(L('Esas pasadas fueron sobre metal limpio: no quitan nada y bajan tu técnica. Busca lo que brilla en ámbar o negro.', 'Those strokes were on clean metal: they remove nothing and lower your technique. Look for the amber or black spots.'), 5); }
+  }
   // Combo: pasadas que quitan grasa, seguidas y paralelas a la anterior.
   if (tr.quitado > 1 && l > 25) {
     const dir = [dx / l, dy / l];
@@ -3540,7 +3570,7 @@ function atrasado() {
   return f > .3 && hecho < f * 1.15;
 }
 function visitaGerente() {
-  M.gerenteT = rnd(22, 32) * (1 + .2 * hab('santo'));
+  M.gerenteT = rnd(32, 45) * (1 + .2 * hab('santo'));   // unas 6 visitas por noche: que moleste, pero que deje limpiar
   const tarde = atrasado();
   M.paciencia -= tarde ? 22 : 8;
   if (!tarde) M.paciencia = Math.max(25, M.paciencia);   // si vas a buen ritmo, como mucho se impacienta
@@ -3934,7 +3964,7 @@ function tickTurno(dt) {
         if (S.perro && azar(.18)) decir(QUIEN_PERRO, uno(['¡Guau! (le ladra al ducto)', '¡Guau guau! (se comió un trozo de plástico)', '(se echa justo donde vas a pisar)', '¡Auuuu! (aúlla con la radio)']));
         else if (!quien || quien.principal) { if (!M.dormido) decir(M.comp, uno(M.comp.frases)); } else decir(quien, quien.frase);
       }
-      if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) visitaGerente();
+      if (piezas.gerente.visible && (M.gerenteT -= dt) <= 0) { if (M.t - (M.ultEvT ?? -99) < 12) M.gerenteT = 6; else visitaGerente(); }   // no llega encima de otro imprevisto
     }
     // Desastres programados
     // Nunca seguidos; al final del turno solo las consecuencias de lo que pasó (gas, luz, bolsa, tubería), que van primero.
@@ -4495,7 +4525,7 @@ const LICIT = [
   { k: 'estadio', jefe: 'inspector', n: ['Estadio Municipal', 'Municipal Stadium'] },
   { k: 'convenciones', jefe: 'tele', n: ['Palacio Municipal · en vivo', 'City Hall · live'] },
 ];
-const LICIT_ENTRADA = 10000, LICIT_PREMIO = 15000, PRECIO_CUNADO = 30000, CUNADO_PTS = [64, 71, 78];
+const LICIT_ENTRADA = 10000, LICIT_PREMIO = 15000, PRECIO_CUNADO = 30000, CUNADO_PTS = [72, 78, 83];   // El Cuñado se juega la empresa: B alta, A y A; cada licitación perdida le cuesta 3 puntos
 const licitLista = () => S.fase === 'empresa' && S.etapa >= 4 && !S.licitGanada && !S.finde && (!S.licitPerdida || S.noche >= S.licitPerdida + 7);
 function ordenLicit(paso) {
   const d = LICIT[paso], o = genOrden(d.k); o.licit = paso + 1; o.jefe = d.jefe; o.firmado = true; o.ayud = 0; o.duelo = false; o.pedido = null; o.nombre = L(...d.n); o.pago = r10(o.pago * 1.4);
@@ -4514,7 +4544,8 @@ function tarjetaLicit() {
     <div class="acciones"><button class="btn prim" id="comprarCunado" ${S.dinero < PRECIO_CUNADO ? 'disabled' : ''}>${L('Comprar', 'Buy')} · ${dinero(PRECIO_CUNADO)}</button></div>${S.dinero < PRECIO_CUNADO ? `<span class="nota">${L('Te faltan', 'You need')} ${dinero(PRECIO_CUNADO - S.dinero)}${L('.', ' more.')}</span>` : ''}</div>`;
   if (S.licit) return `<div class="retos licit"><b>🏛️ ${L('La Gran Licitación', 'The Grand Tender')} · ${S.licit.paso + 1} ${L('de', 'of')} 3</b>${LICIT.map((d, i) => { const r = S.licit.res[i]; return `<span class="${r ? (r.gano ? 'ok' : 'mal') : ''}">${r ? (r.gano ? '★' : '✗') : '☆'} ${esc(L(...d.n))}${r ? ` · ${L('tú', 'you')} ${r.yo} · ${RIVAL} ${r.el}` : ''}</span>`; }).join('')}<small>${L('Gana 2 de 3 noches a El Cuñado (mejor nota que la suya) y la ciudad es tuya.', 'Beat El Cuñado on 2 of 3 nights (a better grade than his) and the city is yours.')}</small></div>`;
   if (S.fase !== 'empresa' || S.etapa < 4) return '';
-  if (!licitLista()) return `<p class="nota">${L(`La Gran Licitación vuelve a abrirse la noche ${S.licitPerdida + 7}.`, `The Grand Tender opens again on night ${S.licitPerdida + 7}.`)}</p>`;
+  if (!licitLista()) return S.finde ? `<p class="nota">${L('La Gran Licitación te espera cuando termines el reto de fin de semana.', 'The Grand Tender is waiting for you once the weekend challenge is over.')}</p>`
+    : `<p class="nota">${L(`La Gran Licitación vuelve a abrirse la noche ${S.licitPerdida + 7}.`, `The Grand Tender opens again on night ${S.licitPerdida + 7}.`)}</p>`;
   return `<div class="orden licit"><span class="chip naranja">🏛️ ${L('El final', 'The ending')}</span><h3>${L('La Gran Licitación de la ciudad', 'The city\'s Grand Tender')}</h3>
     <p class="nota">${L(`El ayuntamiento va a dar TODAS sus cocinas a una sola empresa. Solo quedan dos: tú y ${RIVAL}. Tres noches seguidas: el hospital (en silencio), el estadio (con inspector) y el Palacio Municipal (en vivo por la tele). Quien saque mejor nota en 2 de 3, gana. Inscripción: ${dinero(LICIT_ENTRADA)}. Premio: ${dinero(LICIT_PREMIO)} y la ciudad.`, `City Hall will give ALL its kitchens to a single company. Only two are left: you and ${RIVAL}. Three nights in a row: the hospital (quiet), the stadium (with an inspector) and City Hall (live on TV). Whoever gets the better grade on 2 of 3 wins. Entry: ${dinero(LICIT_ENTRADA)}. Prize: ${dinero(LICIT_PREMIO)} and the city.`)}</p>
     <div class="acciones"><button class="btn prim" id="licitSi" ${S.dinero < LICIT_ENTRADA ? 'disabled' : ''}>${L('Inscribirse', 'Sign up')} · ${dinero(LICIT_ENTRADA)}</button></div></div>`;
@@ -5142,14 +5173,21 @@ let cola = [];
 function siguiente() { const f = cola.shift(); if (f) f(); else pantallaCamioneta(); }
 
 // La nota explicada: de dónde salen los puntos, cuánto faltó para la siguiente letra y qué cambiar la próxima vez.
+// Técnica (hasta 6 puntos): combos ×3 conseguidos y pasadas que de verdad quitan grasa. Premia raspar bien, no solo rápido.
+function tecnica() {
+  const combos = Math.min(3, (M.combos3 || 0) * 1.5), total = (M.utiles || 0) + (M.vacias || 0);
+  const ef = total ? M.utiles / total : 1, prec = total < 4 ? 1.5 : 3 * clamp((ef - .55) / .35, 0, 1);
+  return { pts: Math.round(combos + prec), combos: M.combos3 || 0, ef, total };
+}
 function explicarNota({ pts, n, zonas, limpio, aprobado, espejo, pulido, finMin, ped, pedOk, d, ganaDuelo }) {
-  const rapidez = aprobado ? Math.round(clamp((480 - finMin) / 480, 0, .5) * 20) : 0, p = M.prep;
+  const rapidez = aprobado ? Math.round(clamp((480 - finMin) / 480, 0, .5) * 12) : 0, p = M.prep, tec = tecnica();
   const prep = (p.gas ? 2 : 0) + (p.luz ? 2 : 0) + Math.round(p.cubierto * 3) + (p.bolsa ? 3 : 0);
   const filas = [
     [L('Limpieza de las zonas', 'Zone cleaning'), Math.round(limpio * 45), 45],
     [L(`Todo bajo ${LIMITE} µm`, `Everything under ${LIMITE} µm`), aprobado ? 15 : 0, 15],
     [L('Migdaleado y espejo', 'Polish and mirror'), Math.round(pulido * 12) + (espejo ? 5 : 0), 17],
-    [L('Rapidez', 'Speed'), rapidez, 10],
+    [L('Rapidez', 'Speed'), rapidez, 6],
+    [L('Técnica (combos y pasadas útiles)', 'Technique (combos and useful strokes)'), tec.pts, 6],
     [L('Preparación', 'Prep'), prep, 10],
   ];
   if (M.danos.length) filas.push([L(`Daños (${M.danos.length})`, `Damage (${M.danos.length})`), -4 * M.danos.length, 0]);
@@ -5166,7 +5204,9 @@ function explicarNota({ pts, n, zonas, limpio, aprobado, espejo, pulido, finMin,
   if (aprobado && pulido < .8) tips.push(L(`Migdaleaste el ${Math.round(pulido * 100)} % de la campana: pásale el pulidor a todo el metal limpio (hasta 12 puntos).`, `You polished ${Math.round(pulido * 100)}% of the hood: run the polisher over all the clean metal (up to 12 points).`));
   if (aprobado && !espejo) tips.push(L('Si bajas todo a 50 µm o menos sale «metal desnudo»: +5 puntos y más reputación.', 'Get everything to 50 µm or less for «bare metal»: +5 points and more reputation.'));
   if (M.enojado) tips.push(L('El gerente se enojó: contéstale cuando pregunta o termina antes de que pierda la paciencia.', 'The manager got angry: answer him when he asks, or finish before he runs out of patience.'));
-  if (rapidez < 5 && aprobado) tips.push(L(`Llamaste al inspector a las ${hora(finMin)}: llamarlo antes da hasta 10 puntos.`, `You called the inspector at ${hora(finMin)}: calling earlier gives up to 10 points.`));
+  if (tec.total >= 4 && tec.ef < .8) tips.push(L(`El ${Math.round((1 - tec.ef) * 100)} % de tus pasadas fueron sobre metal ya limpio: raspa donde queda grasa y sube tu técnica.`, `${Math.round((1 - tec.ef) * 100)}% of your strokes were on already clean metal: scrape where grease is left to raise your technique.`));
+  if (tec.combos < 2 && tec.total >= 4) tips.push(L('Encadena pasadas paralelas sin parar para llegar al combo ×3: raspa más rápido y suma técnica.', 'Chain parallel strokes without stopping to reach the ×3 combo: you scrape faster and earn technique.'));
+  if (rapidez < 3 && aprobado) tips.push(L(`Llamaste al inspector a las ${hora(finMin)}: llamarlo antes da hasta 6 puntos.`, `You called the inspector at ${hora(finMin)}: calling earlier gives up to 6 points.`));
   return `<div class="cita por-que"><b>${L('¿Por qué esta nota?', 'Why this grade?')} · ${pts} ${L('puntos', 'points')}</b>
     <div class="desglose">${filas.map(([t, v, max]) => `<span>${t}</span><span class="${v < 0 ? 'mal' : max && v >= max ? 'ok' : ''}">${v > 0 ? '+' : ''}${v}${max ? ` / ${max}` : ''}</span>`).join('')}</div>
     ${sig ? `<p class="nota">${L(`Te faltaron ${sig[0] - pts} puntos para la ${sig[1]}.`, `You were ${sig[0] - pts} points short of ${/^[AF]/.test(sig[1]) ? 'an' : 'a'} ${sig[1]}.`)}</p>` : ''}
@@ -5215,7 +5255,7 @@ function pantallaParte() {
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
   // La nota del turno: limpieza, acabado, rapidez, preparación y lo que salió mal.
-  const pts = Math.round(limpio * 45 + (aprobado ? 15 : 0) + pulido * 12 + (espejo ? 5 : 0) + (aprobado ? clamp((480 - finMin) / 480, 0, .5) * 20 : 0)   // la rapidez solo cuenta si el trabajo pasa
+  const pts = Math.round(limpio * 45 + (aprobado ? 15 : 0) + pulido * 12 + (espejo ? 5 : 0) + (aprobado ? clamp((480 - finMin) / 480, 0, .5) * 12 : 0) + tecnica().pts   // la rapidez solo cuenta si el trabajo pasa
     + (M.prep.gas ? 2 : 0) + (M.prep.luz ? 2 : 0) + M.prep.cubierto * 3 + (M.prep.bolsa ? 3 : 0)
     - M.danos.length * 4 - (M.enojado ? 5 : 0) + (ped && !ped.tacos ? (pedOk ? 5 : -6) : 0) + (d ? (ganaDuelo ? 4 : -2) : 0));
   const n = nota(pts);
@@ -5253,15 +5293,15 @@ function pantallaParte() {
   // La Gran Licitación: tu nota contra la de El Cuñado
   let licit = null;
   if (o.licit && S.licit && !aprendiz) {
-    const el = clamp(Math.round(CUNADO_PTS[o.licit - 1] + rnd(-6, 6)), 40, 95), gano = aprobado && pts > el;
+    const el = clamp(Math.round(CUNADO_PTS[o.licit - 1] - 3 * Math.min(3, S.licitIntentos || 0) + rnd(-5, 5)), 40, 95), gano = aprobado && pts > el;
     S.licit.res[o.licit - 1] = { yo: n, el: nota(el), gano }; S.licit.paso = o.licit; S.licit.ultima = S.noche;
     const g = S.licit.res.filter(r => r.gano).length, p = S.licit.res.filter(r => !r.gano).length;
     if (g >= 2) {
       lineas.push([L('Premio de la Gran Licitación', 'Grand Tender prize'), LICIT_PREMIO]); neto += LICIT_PREMIO; rep += 10; S.licitGanada = S.noche; S.licit = null;
       licit = { t: L('¡Ganaste la Gran Licitación!', 'You won the Grand Tender!'), txt: L(`Todas las cocinas de la ciudad son tuyas. ${RIVAL} no contesta el teléfono. Mañana te va a llamar él… para venderte su empresa.`, `Every kitchen in the city is yours. ${RIVAL} isn't answering his phone. Tomorrow he'll call you… to sell you his company.`) };
     } else if (p >= 2) {
-      S.licitPerdida = S.noche; S.licit = null;
-      licit = { t: L('Perdiste la Gran Licitación', 'You lost the Grand Tender'), txt: L(`${RIVAL} se llevó la ciudad… por ahora. La licitación vuelve a abrirse en una semana.`, `${RIVAL} took the city… for now. The tender opens again in a week.`) };
+      S.licitPerdida = S.noche; S.licit = null; S.licitIntentos = (S.licitIntentos || 0) + 1;
+      licit = { t: L('Perdiste la Gran Licitación', 'You lost the Grand Tender'), txt: L(`${RIVAL} se llevó la ciudad… por ahora. Defenderla le salió carísimo: la próxima vez llega más cansado. La licitación vuelve a abrirse en una semana.`, `${RIVAL} took the city… for now. Defending it cost him a fortune: next time he'll be more worn out. The tender opens again in a week.`) };
     } else licit = { t: L(`Gran Licitación · noche ${o.licit} de 3`, `Grand Tender · night ${o.licit} of 3`), txt: L(`Tú: ${n}. ${RIVAL}: ${nota(el)}. ${gano ? '¡Esta noche es tuya!' : 'Esta se la llevó él.'} Mañana sigue: ${L(...LICIT[o.licit].n)}.`, `You: ${n}. ${RIVAL}: ${nota(el)}. ${gano ? 'Tonight is yours!' : 'He took this one.'} It continues tomorrow: ${L(...LICIT[o.licit].n)}.`) };
   }
   // El equipo B, en su propio trabajo
@@ -5269,6 +5309,8 @@ function pantallaParte() {
   const BS = (o.equipos || (o.equipoB ? [o.equipoB] : [])).map(resolverB);
   BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = B.k || k + 2; B.neto = v; lineas.push([L(`Equipo ${B.k} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, `Team ${B.k} at ${B.o.nombre} · ${B.aprobado ? 'passed' : 'failed'}`), v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
   rep = clamp(rep, -15, 25);
+  // Cuanta más fama, más cuesta subirla: así las etapas (20, 40, 60, 85) se ganan noche a noche y no en dos semanas.
+  if (rep > 0 && !aprendiz) rep = Math.max(1, Math.round(rep * clamp(1.15 - S.rep / 100, .25, 1)));
   if (S.angelica && !aprendiz) { lineas.push([L('Angélica (coordinación)', 'Angélica (coordination)'), -ANGELICA.sueldo]); neto -= ANGELICA.sueldo; }
   // Equipos que te ayudaron en el trabajo gigante: sus sueldos y su gasolina.
   for (const a of o.ayudan || []) {
