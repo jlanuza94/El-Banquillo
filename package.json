@@ -8,7 +8,8 @@
     "test": "node tools/build.mjs --test && node dist-test/test.cjs",
     "check": "tsc --noEmit",
     "bench": "node tools/build.mjs --test && node dist-test/bench.cjs",
-    "dev": "node tools/build.mjs --watch"
+    "dev": "node tools/build.mjs --watch",
+    "test:hoods": "node hoods/pruebas/casos.cjs"
   },
   "devDependencies": {
     "esbuild": "0.25.5",
