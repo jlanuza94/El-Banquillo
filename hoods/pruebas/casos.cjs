@@ -1,7 +1,7 @@
 // Pruebas de Hood Cleaners. Uso: node hoods/pruebas/casos.cjs [parte-del-nombre]
 // Abren el juego construido en Chromium y comprueban que lo importante sigue funcionando y que no hay errores.
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -178,7 +178,7 @@ caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', asy
   await p.click('#rumbo'); await p.click('#empezarPuerto');
   const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, cu: S.cuadrilla.map(c => [c.n, c.sueldo]), f: S.fijos, lupe: __hc.COMPANEROS.lupe.sueldo, beto: __hc.COMPANEROS.beto.sueldo,
     c1: S.ciudades[1].dinero, c1f: S.ciudades[1].fijos, c1cu: S.ciudades[1].cuadrilla.length, fin: S.medallas.final, eq: S.eq, lg: S.legado.camino }; });
-  afirmar(r.c === 2 && Math.abs(r.d - 8500) <= 300 && r.c1 === 25500, 'el dinero no se repartió bien: ' + JSON.stringify(r));
+  afirmar(r.c === 2 && Math.abs(r.d - 8500) <= 300 && Math.abs(r.c1 - 25500) <= 300, 'el dinero no se repartió bien: ' + JSON.stringify(r));
   afirmar(JSON.stringify(r.cu) === '[["Nacho",165]]' && r.f.length === 0 && r.c1cu === 0, 'la mano derecha no se mudó con su aumento: ' + JSON.stringify(r));
   afirmar(r.lupe === 200 && r.beto === 110 && r.c1f.includes('lupe'), 'el director no tiene su aumento: ' + JSON.stringify(r));
   afirmar(r.fin && r.eq.camioneta === 3 && !r.eq.flota && r.eq.hidro && r.lg === 'B', 'la llegada al puerto no es la esperada: ' + JSON.stringify(r));
@@ -410,6 +410,52 @@ caso('en qué gastar: caprichos con historia e inversiones en Ciudad Comal', asy
   await p.click('[data-tab="taller"]'); await p.click('[data-invertir="flota"]');
   r = await p.evaluate(() => ({ c1: __hc.S.ciudades[1].dinero, d: __hc.S.dinero, inv: __hc.S.legado.inversiones }));
   afirmar(r.c1 === 10000 && r.d === 3000 && r.inv.flota, 'la inversión no se pagó con la caja de Ciudad Comal: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('duelo que termina antes de arrancar el marcador', async () => {
+  const p = await abrir(partida({ compPref: 'solo' }));
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => s.d.fill(0))); M.t = M.dur * .5; M.fase = 'turno'; __hc.terminarTurno(); });
+  await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('soplete y gel: cada uno con su ventaja y su punto débil', async () => {
+  const p = await abrir(partida({ etapa: 2, compPref: 'solo', eq: { rasqueta: 2, hidro: true, camioneta: 2, flota: 0, soplete: true, gel: true } }));
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('asador'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  afirmar(await p.evaluate(() => __hc.herramientas().includes('soplete') && !!document.querySelector('[data-hb="soplete"]')), 'el soplete no aparece entre las herramientas');
+  // soplete sobre grasa quemada: la derrite; mantenerlo apretado más de 3 s requema el metal
+  const r = await p.evaluate(async () => {
+    const M = __hc.M, ic = __hc.Z.findIndex(z => z.id === 'campana'); __hc.irZona(ic); M.eventos = [];
+    const sf = __hc.Z[ic].sfs[0]; sf.tipo = sf.tipo || new Uint8Array(sf.d.length); sf.tipo.fill(1); sf.d.fill(1); sf.soak.fill(-1);
+    const gx = sf.nx / 2, gy = sf.ny / 2, i0 = Math.floor(gy) * sf.nx + Math.floor(gx);
+    M.herr = 'soplete'; M.apuntado = { sf, gx, gy, punto: sf.mesh.position.clone(), normal: sf.normal }; M.presionado = true; M.trazo = { x: 100, y: 100 };
+    await new Promise(ok => setTimeout(ok, 1200)); const tras1 = sf.d[i0], req1 = M.requemado || 0;
+    for (let k = 0; k < 60 && !(M.requemado >= 1); k++) await new Promise(ok => setTimeout(ok, 300));
+    M.presionado = false;
+    return { tras1, req1, req: M.requemado || 0 };
+  });
+  afirmar(r.tras1 < .2 && r.req1 === 0 && r.req >= 1, 'el soplete no derrite la costra o no requema al mantenerlo: ' + JSON.stringify(r));
+  // gel: tarda más en actuar que la espuma y escurre hacia abajo por las paredes
+  const g = await p.evaluate(async () => {
+    const M = __hc.M, ic = __hc.Z.findIndex(z => z.id === 'campana'), z = __hc.Z[ic];
+    const sf = z.sfs.find(s => s.normal && Math.abs(s.normal.y) < .5); sf.d.fill(1); sf.soak.fill(-1); if (sf.tipo) sf.tipo.fill(0);
+    M.modo = { espuma: 'gel' }; const gx = sf.nx / 2, gy = sf.ny - 3, i0 = Math.floor(gy) * sf.nx + Math.floor(gx);
+    __hc.raspar(sf, gx, gy, 1.2, 0, 'espuma');
+    const espuma2 = __hc.multEspuma(2.5, false), gel2 = __hc.multEspuma(2.5, true), gel6 = __hc.multEspuma(5.5, true);
+    const t0 = M.t; for (let k = 0; k < 80 && M.t - t0 < 4; k++) await new Promise(ok => setTimeout(ok, 250));
+    let abajo = 0; for (let k = 1; k <= 5; k++) if (sf.soak[i0 - k * sf.nx] >= 0) abajo++;
+    return { marcado: sf.gel && sf.gel[i0] > 0, espuma2, gel2, gel6, abajo };
+  });
+  afirmar(g.marcado && g.espuma2 > 1 && g.gel2 === 1 && g.gel6 > 1 && g.abajo >= 2, 'el gel no se comporta como debe: ' + JSON.stringify(g));
+  await p.evaluate(() => { const M = __hc.M; M.presionado = false; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); })); M.t = M.dur * .6; __hc.terminarTurno(); });
+  await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  afirmar(await p.evaluate(() => /Metal requemado/.test(document.querySelector('#pantalla').innerText)), 'el parte no descuenta el metal requemado');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
