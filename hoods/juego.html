@@ -420,6 +420,7 @@ button.orden[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--hivis), 0 
 .barra-yo b { font-family: var(--f-mono); font-size: 11px; color: var(--tenue); }
 .yo-linea { display: grid; gap: 4px; padding: 6px 2px; } .yo-ult { margin: 0; font-size: 13px; }
 .yo-card .opciones { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.manual-txt { margin: 0; padding: 0 14px 12px; font-size: 14px; line-height: 1.45; }
 .pared-beto { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-radius: 10px; background: #3a3f44 repeating-linear-gradient(0deg, transparent 0 22px, #ffffff0d 22px 24px); }
 .pared-beto span { display: grid; place-items: center; width: 40px; font-size: 26px; filter: grayscale(1) brightness(.35); transform: rotate(var(--r)); }
 .pared-beto small { font-size: 10px; filter: invert(1); }
@@ -3086,6 +3087,10 @@ function arrancarTurno() {
   matPlastico.opacity = .16;   // durante el turno el plástico apenas estorba la vista
   M.fase = 'turno'; M.etapa = 'lavar'; M.enZona = 0; U.hl.value = hlBase();
   for (const b of piezas.bancos || []) b.banco.visible = false;   // los filtros se bajan a la lona para lavarlos
+  // Primera vez con una herramienta nueva: dos líneas de cómo se usa.
+  S.manual = S.manual || { visto: {}, avisado: {} }; const tip = S.manual.tips = S.manual.tips || {};
+  if (EQ().soplete && !tip.soplete) { tip.soplete = true; setTimeout(() => M && ayuda(L('Nuevo: el soplete. Mantén apretado sobre la grasa quemada y suelta a ratos: más de 3 segundos y el metal se pone azul.', 'New: the torch. Hold it on burnt grease and let go now and then: more than 3 seconds and the metal turns blue.'), 7), 1500); }
+  else if (EQ().gel && !tip.gel) { tip.gel = true; setTimeout(() => M && ayuda(L('Nuevo: el gel. Toca otra vez la espuma para cambiar a gel: tarda 5 segundos pero escurre por las paredes.', 'New: the gel. Tap the foam again to switch to gel: it takes 5 seconds but runs down the walls.'), 7), 1500); }
   ayuda(L('Elige la herramienta abajo y haz pasadas cortas sobre la grasa.', 'Pick a tool below and make short strokes over the grease.'), 5);
   if (M.orden.tuto) { M.tuto = 1; M.tutoZona = M.zona; decir(M.comp, L('Primera noche, ¿eh? Tranquilo. Te voy diciendo. Arriba sale lo que toca.', 'First night, huh? Relax. I\'ll walk you through it. What to do shows up at the top.')); }
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
@@ -3203,7 +3208,7 @@ const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * ((M && M.vida) 
 const KEY_TURNO = 'hood-cleaners-turno';
 const empaca = a => { let t = ''; for (let i = 0; i < a.length; i++) t += String.fromCharCode(Math.round(clamp(a[i], 0, 1.3) / 1.3 * 255)); return btoa(t); };
 const desempaca = (b64, a) => { const t = atob(b64); for (let i = 0; i < Math.min(t.length, a.length); i++) a[i] = t.charCodeAt(i) / 255 * 1.3; };
-const turnoGuardable = () => M && M.fase === 'turno' && !M.orden.gigante && !M.duelo && !M.orden.tuto && !M.crews;
+const turnoGuardable = () => M && M.fase === 'turno' && !M.duelo && !M.orden.tuto && !M.crews;   // los gigantes también se guardan (salvo con equipos ayudando)
 function guardarTurno() {
   if (!turnoGuardable()) return;
   const pz = piezas;
@@ -3770,7 +3775,7 @@ EVENTOS.prioridad = () => {
 EVENTOS.fuego = () => {
   sAlarma(); M.humo = 5; vibrar([80, 40, 80]);
   decir(M.comp, L(...uno([['¡FUEGO! ¡Fuego en la plancha! ¡El extintor!', 'FIRE! Fire on the griddle! The extinguisher!'], ['¡Se prendió la grasa de la freidora! ¡Rápido!', 'The fryer grease caught fire! Quick!']])));
-  let quedan = 5 - hab('sangre');
+  let quedan = 5;   // sangre fría ya da más tiempo (en la carta): no quita toques
   carta(L('¡Fuego de grasa!', 'Grease fire!'), L('La grasa de abajo se prendió. Toca el extintor muchas veces, rápido, antes de que llegue a la campana.', 'The grease below caught fire. Tap the extinguisher many times, fast, before it reaches the hood.'), [], { limite: 5, bloquea: true, alAgotar: () => {
     M.humo = 0; dano(L('Fuego de grasa: la plancha y la pared quedaron chamuscadas', 'Grease fire: the griddle and the wall got scorched'), 130, 4); ensuciar(zonaAct(), .25);
     resultado(L('Se quemó', 'It burned'), L('Lo apagaste al final, pero la pared quedó negra y la campana, otra vez sucia de hollín.', 'You put it out in the end, but the wall is black and the hood is sooty again.'), M.comp, L('Mira el lado bueno: ya sabemos que el extintor funciona.', 'Look on the bright side: now we know the extinguisher works.'));
@@ -5122,6 +5127,12 @@ function prepararNoche() {
   if (S.noche >= 2 && azar(.5)) S.hoy.dia = { id: uno(dias).id, res: '' };
   // Si la salud está por los suelos, puede tocarte una gripa.
   if (S.fase === 'empresa' && yo().salud < 25 && azar(.35)) S.hoy.gripa = null;
+  // El manual: avisar una vez de cada página nueva (las dos primeras ya vienen de serie).
+  S.manual = S.manual || { visto: {}, avisado: {} }; S.manual.avisado = S.manual.avisado || {};
+  const paginas = manualDisponible().filter(m => !S.manual.avisado[m.id]); paginas.forEach(m => { S.manual.avisado[m.id] = S.noche; });
+  const nuevas = paginas.filter(m => S.noche > 1 && !['limpiar', 'prep'].includes(m.id));
+  if (nuevas.length === 1) avisos.push(L(`📘 Don Rigo añadió «${nuevas[0].t[0]}» a su manual (pestaña Logros).`, `📘 Don Rigo added "${nuevas[0].t[1]}" to his manual (Awards tab).`));
+  else if (nuevas.length > 1) avisos.push(L(`📘 Don Rigo te dejó su manual con ${nuevas.length} páginas nuevas (pestaña Logros).`, `📘 Don Rigo left you his manual with ${nuevas.length} new pages (Awards tab).`));
   // La saga de El Cuñado: un capítulo cada pocas noches, cuando toca. En el puerto, las partidas viejas saltan al último.
   S.saga = S.saga || { cap: 0, next: 0, respeto: 0 };
   if (S.legado && ciudad() === 2 && S.saga.cap < SAGA.length - 1) S.saga.cap = SAGA.length - 1;
@@ -5632,7 +5643,7 @@ function pantallaCamioneta() {
   pantalla(`<div class="lado-cab">${cabecera()}
     <button class="barrio" id="jefeCorto" aria-expanded="false"><div class="linea">${cara('#b9a27a', 'R', 'Don Rigo')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : (buhoRevelado() ? L('Don Rigo, desde la cabina de Radio Grasa FM', 'Don Rigo, from the Radio Grasa FM booth') : L('Don Rigo, desde el lago', 'Don Rigo, from the lake'))}</b><span>${esc(buhoRevelado() ? TRAD(H.frase).replace(/^Desde el lago:/, 'Desde la cabina:').replace(/^From the lake:/, 'From the booth:') : TRAD(H.frase))}</span></div></div>
     ${H.avisos.length ? `<div class="linea"><i class="ico-radio">📻</i><div><b>${L('Noticias del barrio', 'Neighborhood news')}</b><span>${esc(H.avisos.map(TRAD).join(' '))}</span></div></div>` : ''}${TRAD(H.frase).length + H.avisos.map(TRAD).join(' ').length > 110 ? `<small class="mas">${L('Toca para leer todo', 'Tap to read it all')}</small>` : ''}</button></div>
-    <div class="lado-main"><nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}</button>`).join('')}</nav>
+    <div class="lado-main"><nav class="tabs" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}${id === 'logros' && manualNuevos().length ? `<span class="cuenta">${manualNuevos().length}</span>` : ''}</button>`).join('')}</nav>
     ${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}
     <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div></div>`);
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
@@ -5671,7 +5682,8 @@ function tarjetaOrden(o, i) {
     ${o.jefe && !o.residencia ? (J => `<span class="contrato jefe-card"><b>${J.ico} ${L('Trabajo jefe', 'Boss job')} · ${esc(L(...J.quien))}</b><i>«${esc(L(...J.txt))}»</i><span>${esc(L(...J.regla))}</span>${(S.jefes || {})[o.jefe] ? `<small>${L('Ya lo superaste con', 'You beat it with')} ${S.jefes[o.jefe]}. ${L('Paga igual de bien.', 'It pays just as well.')}</small>` : `<small>${L('Si lo superas: medalla y algo de estilo nuevo.', 'Beat it: a medal and some new style.')}</small>`}</span>`)(JEFES[o.jefe]) : ''}
     ${o.duelo ? `<span class="aviso">${L(`${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.`, `${RIVAL} wants this client too: he will clean the same kitchen at the same time as you. If he finishes first, you get paid half.`)}</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(L(PISTAS[e], EN.pista[e]))}</span>`).join('') : `<span class="pista">${L('Todo tranquilo. Sospechoso.', 'All quiet. Suspicious.')}</span>`}
-    <span class="nota estimado">${(() => { const g = estimadoOrden(o); return L(`Te quedas unos ${dinero(g.neto)}: ${dinero(o.pago)} del trabajo + propina típica ${dinero(g.propina)} − sueldos ${dinero(g.sueldos)} − gasolina, materiales y gastos fijos ${dinero(g.otros)}.`, `You keep about ${dinero(g.neto)}: ${dinero(o.pago)} for the job + typical tip ${dinero(g.propina)} − wages ${dinero(g.sueldos)} − gas, supplies and fixed costs ${dinero(g.otros)}.`); })()}</span>
+    <span class="nota estimado">${(() => { const g = estimadoOrden(o), extra = [g.contrato ? L(`${dinero(g.contrato)} si cumples el contrato`, `${dinero(g.contrato)} if you meet the contract`) : '', g.racha ? L(`${dinero(g.racha)} de bono de racha si apruebas`, `${dinero(g.racha)} streak bonus if you pass`) : '', o.jefe ? L('y lo que dé el trabajo jefe (más o menos, según cómo te vaya)', 'plus whatever the boss job adds (more or less, depending on how it goes)') : ''].filter(Boolean);
+        return L(`Te quedas unos ${dinero(g.neto)}: ${dinero(o.pago)} del trabajo + propina típica ${dinero(g.propina)} − sueldos ${dinero(g.sueldos)} − gasolina, materiales y gastos fijos ${dinero(g.otros)}.`, `You keep about ${dinero(g.neto)}: ${dinero(o.pago)} for the job + typical tip ${dinero(g.propina)} − wages ${dinero(g.sueldos)} − gas, supplies and fixed costs ${dinero(g.otros)}.`) + (extra.length ? ' ' + L('Además: ', 'Plus: ') + extra.join(' · ') + '.' : ''); })()}</span>
     <span class="nota">${o.gigante ? L(`Trabajo gigante: ${o.campanas} campanas, ${o.ductos} ductos y ${o.filtros} filtros. Manda equipos a ayudarte, repártelos y revisa lo que entreguen.`, `Giant job: ${o.campanas} hoods, ${o.ductos} ducts and ${o.filtros} filters. Send teams to help you, assign the zones and check what they deliver.`) : L(`Gente sugerida: ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'}.`, `Suggested crew: ${sugerido(o)} ${sugerido(o) === 1 ? 'person' : 'people'}.`)}</span>
     ${o.ayud ? `<span class="${faltanAyud > 0 ? 'aviso' : 'nota'}">${L(`Necesita ${o.ayud} ${o.ayud === 1 ? 'ayudante' : 'ayudantes'} además del compañero.${faltanAyud > 0 ? ' Te faltan ' + faltanAyud + '.' : ''}`, `Needs ${o.ayud} ${o.ayud === 1 ? 'helper' : 'helpers'} besides your partner.${faltanAyud > 0 ? ' You are ' + faltanAyud + ' short.' : ''}`)}</span>` : ''}
   </button>`;
@@ -5688,7 +5700,9 @@ function estimadoOrden(o) {
   const sueldos = aprendiz ? 0 : r10((((COMPANEROS[H.comp] || SOLO).sueldo || 0) + S.cuadrilla.filter(c => H.ayud.includes(c.id)).reduce((a, c) => a + (c.sueldo || 0), 0)) * sueldoMult());
   const propina = r10(o.pago * .1);
   const otros = aprendiz ? 0 : gasolina() + 45 + gastosFijos();   // gasolina, materiales típicos, renta y camionetas
-  return { sueldos, propina, otros, neto: aprendiz ? SUELDO_APRENDIZ + 40 : o.pago + propina - sueldos - otros };
+  // Bonos posibles (si sale bien): contrato difícil cumplido y racha de noches aprobadas.
+  const contrato = !aprendiz && o.contrato ? r10(o.pago * (MULT_CONTRATO - 1)) : 0, racha = !aprendiz && (S.racha || 0) >= 1 ? r10(o.pago * Math.min(.25, .05 * S.racha)) : 0;
+  return { sueldos, propina, otros, contrato, racha, neto: aprendiz ? SUELDO_APRENDIZ + 40 : o.pago + propina - sueldos - otros };
 }
 // Cuánta gente le va bien a un trabajo (contando al compañero): el tamaño manda.
 const sugerido = o => clamp(Math.round(o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * 1.3), 1, 4);
@@ -5959,10 +5973,42 @@ function vTaller() {
       ${[[L('Con efecto', 'With an effect'), TUNEO.filter(t => !ESTILO_SOLO.includes(t.id))], [L('Solo estilo (no cambia nada del trabajo)', 'Style only (doesn\'t change the work)'), TUNEO.filter(t => ESTILO_SOLO.includes(t.id))]].map(([tit, ts]) => `<p class="nota"><b>${tit}</b></p>` + ts.map(t => `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${t.ico}</div><div><b>${esc(L(t.n, EN.tuneo[t.id][0]))}</b><span>${esc(L(t.d, EN.tuneo[t.id][1]))}</span></div>${tun(t.id) ? `<span class="chip ok">${L('Puesto', 'Installed')}</span>` : `<button class="btn prim peq" data-tun="${t.id}" ${S.dinero < t.p ? 'disabled' : ''}>${dinero(t.p)}</button>`}</div>`).join('')).join('')}` : ''}`;
 }
 
+// ---- El manual de Don Rigo: cada sistema explicado en dos líneas (con su humor). Crece con tu progreso.
+const MANUAL = [
+  { id: 'limpiar', ico: '🧽', si: () => true, t: ['Cómo se limpia', 'How to clean'],
+    txt: ['Pasadas cortas con la rasqueta: frotar sin soltar no rinde. La espuma no limpia, ablanda: échala, espera 2 segundos y raspa (sale el triple). La hidro se mantiene apretada y se barre despacio. Cada zona tiene que bajar del límite de micras para pasar la inspección. Encadena pasadas buenas y sube el combo.', 'Short strokes with the scraper: rubbing without lifting doesn\'t work. Foam doesn\'t clean, it softens: spray, wait 2 seconds and scrape (three times faster). The pressure washer is held down and swept slowly. Every zone must drop below the micron limit to pass. Chain good strokes to build your combo.'] },
+  { id: 'prep', ico: '🧰', si: () => true, t: ['Antes y después de limpiar', 'Before and after cleaning'],
+    txt: ['Antes: cierra pilotos, corta la luz del extractor, tapa los aparatos y encinta el plástico de la campana con su bolsa. Lo que se te olvide sale en el parte como daño. Después: pela el plástico, destapa todo, migdalea la campana hasta que brille y llama al inspector.', 'Before: shut the pilots, cut the fan power, cover the appliances and tape the hood plastic with its bag. Whatever you forget shows up as damage in the report. After: peel the plastic, uncover everything, polish the hood until it shines and call the inspector.'] },
+  { id: 'orden', ico: '⬇️', si: () => S.noche >= 3, t: ['De arriba abajo', 'Top to bottom'],
+    txt: ['Lo de arriba cae sobre lo de abajo. Si lavas el ducto con la campana ya limpia, la vuelves a manchar. Y el agua de la hidro escurre por las paredes: empieza por arriba.', 'What\'s above drips onto what\'s below. Wash the duct after the hood and you\'ll stain it again. Pressure-washer water runs down the walls: start at the top.'] },
+  { id: 'suciedad', ico: '🧪', si: () => S.fase === 'empresa', t: ['Grasa quemada, aceite y sarro', 'Burnt grease, oil and scale'],
+    txt: ['Cruje: es grasa quemada, pide espuma (o vapor, o el soplete). Hace «chof»: es aceite, la rasqueta lo embarra y la hidro lo arrastra. Suena a metal: es sarro, y solo la rasqueta de carburo le gana.', 'It crackles: burnt grease, use foam (or steam, or the torch). It goes "splosh": oil, the scraper smears it and the washer sweeps it away. It sounds like metal: scale, and only the carbide scraper beats it.'] },
+  { id: 'herramientas', ico: '🔥', si: () => S.fase === 'empresa' && (S.etapa >= 1 || EQ().gel || EQ().soplete || EQ().alta || EQ().fino), t: ['Herramientas y modos', 'Tools and modes'],
+    txt: ['Toca otra vez una herramienta para su segundo modo (si lo compraste): hidro de alta presión, rasqueta fina o gel. El gel tarda 5 segundos pero escurre por las paredes. El soplete derrite la costra al instante, pero suéltalo a ratos: más de 3 segundos y el metal se pone azul.', 'Tap a tool again for its second mode (if you bought it): high-pressure washer, fine scraper or gel. Gel takes 5 seconds but runs down the walls. The torch melts crust instantly, but let go now and then: more than 3 seconds and the metal turns blue.'] },
+  { id: 'duelo', ico: '⚔️', si: () => S.fase === 'empresa' && !!(S.primerDuelo || S.cunado), t: ['Duelos con El Cuñado', 'Duels with El Cuñado'],
+    txt: ['Dos de tres: quien termine antes los filtros, la campana y el ducto se lleva cada punto. Si le ganas se pone nervioso (va más rápido pero se resbala); si te gana se confía. Antes puede proponerte una apuesta. Y según cómo te lleves con él, sabotea más o menos.', 'Best of three: whoever finishes the filters, hood and duct first takes each point. Beat him and he gets nervous (faster but slips); lose and he gets cocky. He may offer a bet first. And depending on how you get along, he sabotages more or less.'] },
+  { id: 'vida', ico: '🏠', si: () => S.fase === 'empresa', t: ['Tu vida', 'Your life'],
+    txt: ['Descanso, ánimo y salud. Cada noche cansa; lo que haces al salir del turno te recupera (dormir, tacos, tu mamá, gimnasio, fiesta…). Cansado rindes menos, animado sacas más propina, y con la salud por los suelos te da gripa. Una casa mejor y unos buenos muebles ayudan.', 'Rest, mood and health. Every night tires you; what you do after the shift restores you (sleep, tacos, your mom, gym, party…). Tired you work worse, happy you earn more tips, and with health at rock bottom you catch the flu. A better home and good furniture help.'] },
+  { id: 'empresa', ico: '🏢', si: () => S.fase === 'empresa', t: ['Tu empresa', 'Your company'],
+    txt: ['Sube de etapa con reputación y dinero. Firma contratos, cuida a los clientes fijos (si te retrasas, se van con El Cuñado), contrata cuadrilla a prueba y fórmala, compra camionetas para mandar equipos y mejora la sede. La reputación alta cuesta más de subir.', 'Level up with reputation and money. Sign contracts, look after regulars (if you\'re late, they go to El Cuñado), hire crew on trial and train them, buy vans to send teams and upgrade HQ. High reputation is harder to earn.'] },
+  { id: 'historias', ico: '📖', si: () => !!(S.saga && S.saga.cap > 0), t: ['Las historias', 'The stories'],
+    txt: ['La de El Cuñado va por capítulos y tus decisiones cuentan: lo ayudas o no, lo respetas o no, y eso cambia los duelos, la licitación y el final. Beto, Lupe y Chuy tienen sus propias historias cuando trabajan contigo.', 'El Cuñado\'s story comes in chapters and your choices matter: help him or not, respect him or not, and it changes the duels, the tender and the ending. Beto, Lupe and Chuy have their own stories when they work with you.'] },
+  { id: 'final', ico: '🏛️', si: () => S.fase === 'empresa' && S.etapa >= 3, t: ['La Gran Licitación y lo que viene', 'The Grand Tender and what comes next'],
+    txt: ['En la última etapa se abre la Gran Licitación: tres noches seguidas contra El Cuñado, gana el que saque mejor nota en dos. Después viene la Residencia Oficial… y una visita muy importante.', 'At the last stage the Grand Tender opens: three nights in a row against El Cuñado, whoever gets the better grade on two wins. Then comes the Official Residence… and a very important visitor.'] },
+  { id: 'puerto', ico: '⚓', si: () => !!S.legado, t: ['Puerto Fritanga', 'Port Fritanga'],
+    txt: ['Empiezas con poco y todo cuesta más. Si no vendiste, tu director te manda dividendos cada noche, puedes invertir en Ciudad Comal y volver cuando quieras con el botón ✈️. Si vendiste, te llegan los pagos de Grupo Brillo.', 'You start small and everything costs more. If you didn\'t sell, your director sends dividends every night, you can invest in Comal City and go back with the ✈️ button. If you sold, Grupo Brillo\'s payments arrive.'] },
+];
+const manualDisponible = () => MANUAL.filter(m => m.si());
+const manualNuevos = () => { const v = (S.manual && S.manual.visto) || {}; return manualDisponible().filter(m => !v[m.id]); };
+function vManual() {
+  const v = (S.manual && S.manual.visto) || {};
+  return `<h2 class="sec">📘 ${L('El manual de Don Rigo', 'Don Rigo\'s manual')}</h2><p class="nota">${L('«Lo que sé, en pocas palabras. Lo demás lo aprendes raspando.» Se van añadiendo páginas según avanzas.', '"What I know, in a few words. The rest you learn by scraping." Pages get added as you progress.')}</p>
+    ${manualDisponible().map(m => plegable('man-' + m.id, `${m.ico} ${L(...m.t)}${v[m.id] ? '' : ` <span class="chip naranja">${L('Nuevo', 'New')}</span>`}`, '', `<p class="manual-txt">${L(...m.txt)}</p>`)).join('')}`;
+}
 function vLogros() {
   const ganadas = MEDALLAS.filter(m => S.medallas[m.id]).length, r = S.rec;
   const dato = (i, b, sm) => `<div class="dato"><i>${i}</i><b>${b}</b>${sm ? `<small>${sm}</small>` : ''}</div>`;
-  return `<h2 class="sec">${L('Récords', 'Records')}</h2>
+  return `${vManual()}<h2 class="sec">${L('Récords', 'Records')}</h2>
     <div class="datos">${dato(L('Mejor nota', 'Best grade'), r.nota || '—', r.pts ? r.pts + ' pts' : '')}${dato(L('Mejor noche', 'Best night'), S.mejor ? dinero(S.mejor) : '—')}${dato(L('Inspector más temprano', 'Earliest inspector'), r.fin !== undefined ? hora(r.fin) : '—')}${dato(L('Combo más largo', 'Longest combo'), r.combo || 0)}${dato(L('Aprobadas', 'Passed'), S.aprobados)}${r.duelos ? dato(L('Duelos ganados', 'Duels won'), r.duelos) : ''}</div>
     ${S.notas.length ? `<div class="notas">${S.notas.slice(-12).map(n => `<span style="--c:${COL_NOTA[n]}">${n}</span>`).join('')}</div>` : ''}
     ${vAlbum()}
@@ -5987,7 +6033,8 @@ function vAlbum() {
 
 function enlazar() {
   const H = S.hoy;
-  P.querySelectorAll('[data-pl]').forEach(d => d.addEventListener('toggle', () => { PLEG[d.dataset.pl] = d.open; }));
+  P.querySelectorAll('[data-pl]').forEach(d => d.addEventListener('toggle', () => { PLEG[d.dataset.pl] = d.open;
+    if (d.open && d.dataset.pl.startsWith('man-')) { S.manual = S.manual || { visto: {} }; S.manual.visto[d.dataset.pl.slice(4)] = S.noche; guardar(); const ch = d.querySelector('summary .chip'); if (ch) ch.remove(); const c = document.querySelector('[data-tab="logros"] .cuenta'); if (c) { const n = manualNuevos().length; if (n) c.textContent = n; else c.remove(); } } }));
   P.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { H.sel = +b.dataset.o; for (const e of H.equipos || []) if (e.o === H.sel || (e.o === 'mio' && !H.ordenes[H.sel].gigante)) e.o = null; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-firmar]').forEach(b => b.onclick = () => { const o = H.ordenes[+b.dataset.firmar]; o.firmado = true; sCaja(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-neg]').forEach(b => b.onclick = () => { audio(); pantallaNegociar(+b.dataset.neg); });

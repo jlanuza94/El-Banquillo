@@ -539,5 +539,39 @@ caso('tu vida jugable: desgaste, qué haces al salir, efectos, gripa y muebles',
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+caso('arreglos: el turno de un trabajo gigante se guarda y se retoma, y el cálculo incluye los bonos', async () => {
+  const p = await abrir(partida({ compPref: 'solo', racha: 3 }));
+  // el cálculo de «Te quedas unos…» menciona el contrato y la racha
+  const est = await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.contrato = { conds: ['espejo'], quien: 'protocolo' }; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); return document.querySelector('.estimado').innerText; });
+  afirmar(/si cumples el contrato/.test(est) && /bono de racha/.test(est), 'el cálculo no menciona los bonos: ' + est);
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('plaza'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.ayud = []; H.equipos = []; __hc.guardar(); __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 20 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  const antes = await p.evaluate(() => { const M = __hc.M; M.eventos = []; const z = __hc.Z[0]; z.sfs.forEach(s => { for (let i = 0; i < s.d.length; i++) s.d[i] *= .3; }); Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); return { gig: !!M.orden.gigante, m: __hc.micras(z) }; });
+  afirmar(antes.gig && await p.evaluate(() => !!localStorage.getItem('hood-cleaners-turno')), 'no se guardó el turno del trabajo gigante');
+  await p.reload(); await p.waitForSelector('#continuar'); await p.click('#continuar'); await p.waitForSelector('#retomar', { timeout: 60000 });
+  await p.click('#retomar'); await p.waitForFunction(() => __hc.M && __hc.M.fase === 'turno', null, { timeout: 90000 });
+  const desp = await p.evaluate(() => ({ gig: !!__hc.M.orden.gigante, m: __hc.micras(__hc.Z[0]) }));
+  afirmar(desp.gig && Math.abs(desp.m - antes.m) <= antes.m * .05 + 10, 'el gigante no se retomó igual: ' + JSON.stringify([antes, desp]));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('el manual de Don Rigo: páginas según el progreso, avisos e insignia', async () => {
+  const p = await abrir(partida({ fase: 'aprendiz', etapa: 0, empresa: null, noche: 1, compPref: 'beto', fijos: [], hoy: null }));
+  let r = await p.evaluate(() => ({ n: __hc.S.manual && Object.keys(__hc.S.manual.avisado).length, badge: (document.querySelector('[data-tab="logros"] .cuenta') || {}).textContent }));
+  afirmar(r.n === 2 && r.badge === '2', 'de aprendiz deberían verse 2 páginas nuevas: ' + JSON.stringify(r));
+  await p.evaluate(() => { const S = __hc.S; S.fase = 'empresa'; S.etapa = 3; S.empresa = { nombre: 'Prueba', color: '#2e9e5b' }; S.noche = 20; S.abierta = 10; S.hoy = null; __hc.pantallaCamioneta(); });
+  r = await p.evaluate(() => ({ avisos: __hc.S.hoy.avisos.filter(a => /manual/.test(a)).length, badge: +(document.querySelector('[data-tab="logros"] .cuenta') || {}).textContent }));
+  afirmar(r.avisos === 1 && r.badge >= 6, 'no se añadieron páginas al avanzar: ' + JSON.stringify(r));
+  await p.click('[data-tab="logros"]');
+  const antes = r.badge;
+  await p.evaluate(() => { const d = document.querySelector('[data-pl="man-vida"]'); d.open = true; });
+  await p.waitForTimeout(300);
+  r = await p.evaluate(() => ({ visto: !!__hc.S.manual.visto.vida, badge: +(document.querySelector('[data-tab="logros"] .cuenta') || {}).textContent, txt: document.querySelector('[data-pl="man-vida"] .manual-txt').innerText }));
+  afirmar(r.visto && r.badge === antes - 1 && /Descanso/.test(r.txt), 'abrir una página no la marcó como leída: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };
