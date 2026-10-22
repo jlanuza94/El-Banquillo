@@ -573,5 +573,25 @@ caso('el manual de Don Rigo: páginas según el progreso, avisos e insignia', as
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+caso('historias de los ayudantes y la freidora', async () => {
+  const ay = (id, n, tipo) => ({ id, n, rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, cuidado: 3, puntual: 3, animo: 3, tipo, esp: 'filtros' });
+  const p = await abrir(partida({ dinero: 3000, compPref: 'solo', fijos: [], cuadrilla: [ay(7, 'Nacho', 'normal')], saga: { cap: 7 }, clientes: [] }));
+  // capítulo 1 y 2 de la historia de Nacho (carácter normal: la abuela)
+  const cap = async (noche, op) => { await p.evaluate(n => { __hc.S.noche = n; __hc.S.hoy = null; for (let k = 0; k < 20 && !__hc.S.hoy?.ayudHist; k++) { __hc.S.hoy = null; __hc.pantallaCamioneta(); } }, noche);
+    const t = await p.evaluate(() => (document.querySelector('[data-ayh]') || {}).closest ? document.querySelector('[data-ayh]').closest('.orden').innerText : null);
+    if (!t) throw new Error('no apareció la historia del ayudante (noche ' + noche + ')'); await p.click(`[data-ayh="${op}"]`); return t; };
+  let t = await cap(21, 1);
+  afirmar(/abuela/.test(t) && /Nacho/.test(t), 'capítulo 1 mal: ' + t);
+  t = await cap(26, 0);
+  const r = await p.evaluate(() => ({ cap: __hc.S.cuadrilla[0].hist.cap, clientes: __hc.S.clientes.length, album: __hc.S.album.some(a => /historia de Nacho/.test(a)) }));
+  afirmar(/zumba/.test(t) && r.cap === 2 && r.clientes === 1 && r.album, 'capítulo 2 mal: ' + JSON.stringify(r));
+  // la freidora: zona nueva en la hamburguesería, se limpia y cuenta en la inspección
+  const z = await p.evaluate(() => { const o = __hc.genOrden('burger'); const c = __hc.genOrden('cafe'); return [o.freidora, c.freidora]; });
+  afirmar(z[0] === true && z[1] === false, 'la freidora no sale donde toca: ' + z);
+  const res = await jugarNoche(p, { cocina: 'burger' });
+  afirmar(/Freidora/.test(res.texto), 'la freidora no aparece en el parte');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };

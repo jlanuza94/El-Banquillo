@@ -2368,6 +2368,28 @@ function construirNoche(orden) {
   suelo.material.color.set(amb.suelo || 0xab413a);
   piezas.brillos = []; piezas.destellos = [];
   amb.deco({ add, lineW, xd: clamp(lineW / 2 + .95, 1.9, 3.1), brillos: piezas.brillos });
+  // La cocina alrededor: repisa con ollas, refrigerador con puerta de vidrio, lámparas colgantes, tragaluz y coladeras.
+  {
+    const matRepisa = new T.MeshStandardMaterial({ color: 0xaab3bb, metalness: .7, roughness: .4 }), matOlla = new T.MeshStandardMaterial({ color: 0xb8bec4, metalness: .85, roughness: .3 });
+    for (const yy of [.35, .95, 1.55]) add(new T.BoxGeometry(.42, .03, 1.3), matRepisa, -3.37, yy, .9);
+    for (const zz of [.27, 1.53]) for (const xx of [-3.57, -3.17]) add(new T.BoxGeometry(.03, 1.6, .03), matRepisa, xx, .8, zz);
+    [[.4, .5, .16], [1, .5, .12], [.95, 1.25, .14], [1.55, .7, .1], [1.55, 1.15, .13], [.35, 1.3, .11]].forEach(([y, z, r]) => add(new T.CylinderGeometry(r, r * .9, r * 1.4, 16), matOlla, -3.37, y + r * .7 + .015, z));
+    add(new T.BoxGeometry(.3, .22, .3), new T.MeshStandardMaterial({ color: 0xd9c49a, roughness: .9 }), -3.37, 1.67, 1.3);   // costal de harina
+    const fx = 3.2, fz = -.15;
+    const matNevera = new T.MeshStandardMaterial({ color: 0xc9d0d6, metalness: .6, roughness: .35 });
+    add(new T.BoxGeometry(.5, 2, .7), matNevera, fx + .12, 1, fz);   // el cuerpo, detrás; delante, el vidrio con lo de adentro a la vista
+    for (const [y, h] of [[.08, .16], [1.94, .12]]) add(new T.BoxGeometry(.26, h, .7), matNevera, fx - .24, y, fz);
+    for (const dz of [-.33, .33]) add(new T.BoxGeometry(.26, 2, .04), matNevera, fx - .24, 1, fz + dz);
+    add(new T.PlaneGeometry(.62, 1.76), new T.MeshBasicMaterial({ color: 0xe8f6ff, transparent: true, opacity: .22, depthWrite: false }), fx - .375, 1.02, fz).rotation.y = -Math.PI / 2;
+    add(new T.PlaneGeometry(.6, 1.7), new T.MeshBasicMaterial({ color: 0xf4fbff }), fx - .12, 1.02, fz).rotation.y = -Math.PI / 2;   // luz del fondo
+    for (const yy of [.5, .95, 1.4]) { add(new T.BoxGeometry(.22, .02, .6), new T.MeshBasicMaterial({ color: 0xdfe6ea }), fx - .24, yy, fz);
+      for (let k = 0; k < 3; k++) add(new T.BoxGeometry(.1, .16, .12), new T.MeshBasicMaterial({ color: [0xd94a3a, 0xf2c14e, 0x6cbf6a, 0xf0f0f0][(k + yy * 10 | 0) % 4] }), fx - .24, yy + .09, fz - .18 + k * .18); }
+    const matLampara = new T.MeshStandardMaterial({ color: 0x3a3f44, metalness: .6, roughness: .5, side: T.DoubleSide }), matFoco = new T.MeshBasicMaterial({ color: 0xffe2a8 });
+    for (const lx of [-1.9, 1.9]) { add(new T.CylinderGeometry(.006, .006, .55, 6), matLampara, lx, 2.72, .8); add(new T.ConeGeometry(.16, .14, 18, 1, true), matLampara, lx, 2.4, .8); add(new T.SphereGeometry(.045, 10, 8), matFoco, lx, 2.36, .8); }
+    add(new T.PlaneGeometry(1.4, .9), new T.MeshBasicMaterial({ color: 0x9fc4e8, transparent: true, opacity: .55 }), 0, 2.985, 2.6).rotation.x = Math.PI / 2;   // tragaluz
+    const matRejilla = new T.MeshStandardMaterial({ color: 0x23272b, metalness: .6, roughness: .5 });
+    for (const [x, z] of [[-2.6, 2.7], [2.6, 2.2]]) { const r = add(new T.PlaneGeometry(.32, .32), matRejilla, x, .004, z); r.rotation.x = -Math.PI / 2; }
+  }
   if (orden && RECUERDOS[orden.cocina] && S.fase === 'empresa') {
     const camb = recuerdoCambiado(orden.nombre);
     RECUERDOS[orden.cocina].forEach((x, k) => {
@@ -2547,7 +2569,23 @@ function construirNoche(orden) {
   campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, labio: c.labio, huella: c.huella,
     vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100, dir: new T.Vector3(0, -.6, .8).normalize() } } }));
   piezas.robot = null;
+  // Freidora (en las cocinas que fríen): la tina se vacía y se talla por dentro, con aceite viejo y costra quemada.
+  let tinaFreidora = null;
+  if (orden && orden.freidora) {
+    const tx = -2.45, tz = 1.05, tw = .5, td = .55, th = .32, base = .45, sfs = [], tipF = { 2: .55, 1: .25 };
+    add(new T.BoxGeometry(tw + .1, base, td + .1), new T.MeshStandardMaterial({ color: 0x9aa3ab, metalness: .7, roughness: .35 }), tx, base / 2, tz);
+    const ponF = (w, h, pos, normal) => { const sf = superficie(w, h, TX.acero, rel * 1.15, .025, null, null, tipF); colocar(sf, pos, normal); mundo.add(sf.mesh); sfs.push(sf); };
+    ponF(tw, td, new T.Vector3(tx, base + .005, tz), new T.Vector3(0, 1, 0));
+    ponF(tw, th, new T.Vector3(tx, base + th / 2, tz - td / 2), new T.Vector3(0, 0, 1));
+    ponF(tw, th, new T.Vector3(tx, base + th / 2, tz + td / 2), new T.Vector3(0, 0, -1));
+    ponF(td, th, new T.Vector3(tx - tw / 2, base + th / 2, tz), new T.Vector3(1, 0, 0));
+    ponF(td, th, new T.Vector3(tx + tw / 2, base + th / 2, tz), new T.Vector3(-1, 0, 0));
+    for (const [dx, dz, w2, d2] of [[0, -td / 2 - .03, tw + .12, .04], [0, td / 2 + .03, tw + .12, .04], [-tw / 2 - .03, 0, .04, td + .12], [tw / 2 + .03, 0, .04, td + .12]]) add(new T.BoxGeometry(w2, th, d2), matAcero, tx + dx, base + th / 2, tz + dz);
+    const canasta = add(new T.CylinderGeometry(.13, .12, .2, 14, 1, true), new T.MeshStandardMaterial({ color: 0x8c8c8c, metalness: .8, roughness: .45, wireframe: true }), tx + .48, .1, tz + .1);
+    tinaFreidora = { sfs, vista: { ...vista(new T.Vector3(tx, base, tz), new T.Vector3(0, 1.7, .9), tw + .35, .95, 1.6, 58), alt: { dMax: 1.8, hfMin: 46, fovMax: 90 } } };
+  }
   ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 }, acostado: { dMin: dL - .05, dMax: dL - .05 } } }));
+  if (tinaFreidora) Z.push({ id: 'freidora', n: L('Freidora', 'Fryer'), sfs: tinaFreidora.sfs, vista: tinaFreidora.vista });
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
   // La caja de lo que hay que lavar en cada campana: la cámara la encuadra entera en el hueco que deja el HUD.
   mundo.updateMatrixWorld(true);
@@ -2847,7 +2885,7 @@ function empezarTurno(orden) {
   if (tun('escape')) orden.eventos = orden.eventos.filter(e => e !== 'mapache' || azar(.4));
   orden.equipo = orden.equipo.filter(e => !faltan.includes(e));
   construirNoche(orden); U.mig.value = 0; cine = null; FPS.t0 = 0; FPS.lentos = 0;
-  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 10 * hab('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
+  M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 10 * hab('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.freidora ? 35 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45) * (arcoFin('chuy') ? 2 : 1), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .2 * hab('santo')), paciencia: 100 * (1 + .2 * hab('santo')), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: efectoYo().propina, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
     maxCombo: 0, combos3: 0, utiles: 0, vacias: 0, tFiltros: null, vida: vida().fuerza * efectoYo().fuerza * (orden.contento ? 1.05 : 1) * (orden.muela ? .9 : 1), retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
@@ -4784,8 +4822,9 @@ function genOrden(k, cliente) {
   const base = cliente ? cliente.pagoBase : Math.round(rnd(C.pago[0], C.pago[1]) / 10) * 10;
   return { id: S.sigId++, cocina: k, nombre: cliente ? cliente.nombre : uno(C.nombres), filtros: diseno.filtros, campanas: diseno.campanas, ayud: diseno.ayud, ductos: C.ductos || 1, gigante: !!C.gigante,
     hood: diseno.hood, ducto: diseno.ducto, eventos, micras: Math.round(rnd(C.micras[0], C.micras[1]) / 50) * 50,
-    pagoBase: base, pago: Math.round(base * multPago() * (cliente ? 1.1 : 1) / 10) * 10, clienteId: cliente ? cliente.id : null, diseno, suciedad: diseno.suciedad || {}, pedido: genPedido(C.siemprePedido),
-    caracter: !cliente && S.fase === 'empresa' ? uno(Object.keys(CARACTER)) : null };
+    pagoBase: base, pago: Math.round(base * multPago() * (cliente ? 1.1 : 1) * (S.fase === 'empresa' && !C.gigante && (LINEAS[C.linea] || []).includes('freidora') ? 1.12 : 1) / 10) * 10, clienteId: cliente ? cliente.id : null, diseno, suciedad: diseno.suciedad || {}, pedido: genPedido(C.siemprePedido),
+    caracter: !cliente && S.fase === 'empresa' ? uno(Object.keys(CARACTER)) : null,
+    freidora: S.fase === 'empresa' && !C.gigante && (LINEAS[C.linea] || []).includes('freidora') };
 }
 // A partir de la segunda noche, un cliente de cada tres trae su manía.
 function genPedido(siempre) {
@@ -5052,6 +5091,53 @@ function tarjetaSaga() {
     ${H.sagaRes ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(L(...H.sagaRes))}</div>`
       : `<div class="opciones">${C.ops.map((op, i) => `<button class="btn" data-saga="${i}">${esc(L(...op.t))}${op.d ? `<small>${esc(L(...op.d))}</small>` : ''}</button>`).join('')}</div>`}</div>`;
 }
+// ---- Historias de los ayudantes: dos capítulos según su carácter. Cualquiera que contrates tiene algo que contar.
+const HIST_AYUD = {
+  lio: [
+    { txt: ['{n} llega con el teléfono en alto: grabó la limpieza de anoche para su canal «Grasa Extrema». Sale tu cara, la campana… y un mapache al fondo.', '{n} shows up holding a phone: they filmed last night\'s job for their channel "Extreme Grease". Your face is in it, the hood… and a raccoon in the back.'],
+      ops: [{ t: ['Dejar que lo publique', 'Let them post it'], f: c => { c.viral = true; return ['«¡Gracias, jefe! Esto se va a hacer viral.» Lo dice con total convicción.', '"Thanks, boss! This is going viral." Said with total confidence.']; } },
+        { t: ['Que lo borre', 'Have them delete it'], f: c => { c.cuidado = clamp((c.cuidado || 3) + 1, 1, 5); c.animo = clamp((c.animo || 3) - 1, 1, 5); return ['Lo borra de mala gana. A cambio, esa semana trabaja con más cuidado que nunca.', 'They delete it grudgingly. In return, that week they work more carefully than ever.']; } }] },
+    { txt: c => c.viral ? ['El video de {n} tiene 80 mil vistas. Un restaurante llamó preguntando por «los del video del mapache».', '{n}\'s video has 80 thousand views. A restaurant called asking for "the people from the raccoon video".'] : ['{n} lleva una semana sin romper nada. Te enseña su lista: «Cosas que no rompí». Es larga.', '{n} hasn\'t broken anything in a week. They show you their list: "Things I didn\'t break." It\'s long.'],
+      ops: [{ t: ['Felicitarle', 'Congratulate them'], f: c => { if (c.viral) { nuevoCliente(); S.rep = clamp(S.rep + 3, 0, 100); return ['Nuevo cliente fijo y +3 de reputación. {n} ya se presenta como «influencer de la grasa».', 'A new regular client and +3 reputation. {n} now introduces themselves as a "grease influencer".']; } c.animo = clamp((c.animo || 3) + 1, 1, 5); return ['{n} enmarca la lista y la cuelga en la camioneta.', '{n} frames the list and hangs it in the van.']; } },
+        { t: ['Un bono de $100', 'A $100 bonus'], pide: 100, f: c => { S.dinero -= 100; c.animo = 5; return ['{n} se compra unos guantes nuevos con el bono. Los estrena esa misma noche.', '{n} buys new gloves with the bonus. They break them in that very night.']; } }] },
+  ],
+  medio: [
+    { txt: ['{n} llega tarde y empapado: se le descompuso la moto a medio camino. «No vuelve a pasar», promete.', '{n} shows up late and soaked: their motorbike broke down halfway. "It won\'t happen again," they promise.'],
+      ops: [{ t: ['Prestarle $200 para arreglarla', 'Lend them $200 to fix it'], pide: 200, f: c => { S.dinero -= 200; c.presta = true; return ['Te da un abrazo empapado. Ahora el agua también es tuya.', 'They hug you, soaking wet. Now you\'re wet too.']; } },
+        { t: ['Descontarle la hora', 'Dock the hour'], f: c => { c.animo = clamp((c.animo || 3) - 1, 1, 5); return ['Asiente sin decir nada. Esa noche no hace ni una broma. Es raro.', 'They nod, serious. Not a single joke that night. It\'s weird.']; } }] },
+    { txt: c => c.presta ? ['{n} te devuelve los $200 en un sobre… con $50 más «de intereses». La moto ya ruge.', '{n} pays you back the $200 in an envelope… with $50 extra "in interest". The bike roars now.'] : ['{n} llega puntual toda la semana, pero con cara larga. Algo le pasa.', '{n} shows up on time all week, but with a long face. Something\'s up.'],
+      ops: [{ t: c => c.presta ? ['Quedarte solo los $200', 'Keep only the $200'] : ['Invitarle un café y hablar', 'Buy them a coffee and talk'], f: c => { if (c.presta) { S.dinero += 200; c.puntual = clamp((c.puntual || 3) + 1, 1, 5); return ['Le devuelves los $50. Desde entonces, no ha vuelto a llegar tarde.', 'You give back the $50. Since then, they haven\'t been late once.']; } c.animo = clamp((c.animo || 3) + 2, 1, 5); c.puntual = clamp((c.puntual || 3) + 1, 1, 5); return ['Era la moto, el casero y un perro que le muerde. Lo escuchas. Vuelve a sonreír.', 'It was the bike, the landlord and a dog that bites them. You listen. They smile again.']; } },
+        { t: c => c.presta ? ['Aceptar los intereses', 'Take the interest'] : ['Dejarlo pasar', 'Let it go'], f: c => { if (c.presta) { S.dinero += 250; return ['«Negocios son negocios», dice {n}, con orgullo.', '"Business is business," says {n}, proudly.']; } return ['A la semana se le pasa. Más o menos.', 'A week later it passes. Sort of.']; } }] },
+  ],
+  serio: [
+    { txt: ['{n} te pide permiso para estudiar por las mañanas un curso de supervisor de limpieza. Cuesta $300.', '{n} asks permission to study a cleaning-supervisor course in the mornings. It costs $300.'],
+      ops: [{ t: ['Pagarle el curso', 'Pay for the course'], pide: 300, f: c => { S.dinero -= 300; c.becado = true; return ['{n} te da las gracias con un apretón de manos muy formal. Casi una reverencia.', '{n} thanks you with a very formal handshake. Almost a bow.']; } },
+        { t: ['Que lo pague con sus ahorros', 'Let them pay for it'], f: () => ['«Entendido.» Saca una libreta y apunta algo. No ves qué.', '"Understood." They take out a notebook and write something down. You can\'t see what.'] }] },
+    { txt: c => c.becado ? ['{n} aprobó el curso con diez. Llega con un diploma enmarcado y una propuesta para organizar la camioneta.', '{n} passed the course with top marks. They bring a framed diploma and a plan to organize the van.'] : ['{n} aprobó el curso pagándolo solo. Otras empresas ya le están llamando.', '{n} passed the course on their own dime. Other companies are already calling.'],
+      ops: [{ t: c => c.becado ? ['Que organice los equipos', 'Let them organize the teams'] : ['Subirle el sueldo un 10 %', 'Give them a 10% raise'], f: c => { c.cursos = c.cursos || []; if (!c.cursos.includes('coordina')) c.cursos.push('coordina'); if (!c.becado) c.sueldo = Math.round(c.sueldo * 1.1 / 5) * 5; return ['{n} ahora tiene el curso de Coordinación: su equipo trabaja más ordenado.', '{n} now has the Coordination course: their team works more orderly.']; } },
+        { t: c => c.becado ? ['Colgar el diploma en la sede', 'Hang the diploma at HQ'] : ['Desearle suerte', 'Wish them luck'], f: c => { if (c.becado) { S.rep = clamp(S.rep + 2, 0, 100); return ['Los clientes que pasan por la sede ven el diploma. +2 de reputación.', 'Clients passing through HQ see the diploma. +2 reputation.']; } c.animo = clamp((c.animo || 3) - 1, 1, 5); return ['{n} se queda… por ahora. Pero el teléfono le sigue sonando.', '{n} stays… for now. But their phone keeps ringing.']; } }] },
+  ],
+  normal: [
+    { txt: ['{n} trae a su abuela a conocer la camioneta. La señora pasa el dedo por el tablero y sentencia: «Aquí hay polvo».', '{n} brings their grandma to see the van. She runs a finger over the dashboard and declares: "There\'s dust here."'],
+      ops: [{ t: ['Invitarla a un café', 'Buy her a coffee'], f: c => { c.abuela = 'cafe'; return ['Se toma el café y te cuenta la vida de todo el mercado. Toda.', 'She drinks the coffee and tells you the life story of the whole market. All of it.']; } },
+        { t: ['Enseñarle la hidrolavadora', 'Show her the pressure washer'], f: c => { c.abuela = 'hidro'; return ['La abuela agarra la hidro y deja la banqueta como espejo. Te da miedo y admiración.', 'Grandma grabs the washer and leaves the sidewalk mirror-clean. You feel fear and admiration.']; } }] },
+    { txt: c => c.abuela === 'hidro' ? ['La abuela de {n} quiere trabajo. «Los martes no, que tengo zumba.» Y te trae un cliente: su comadre tiene una fonda.', '{n}\'s grandma wants a job. "Not on Tuesdays, I have zumba." And she brings you a client: her friend runs a diner.'] : ['La abuela de {n} te recomendó con todas sus amigas del mercado. Una de ellas tiene una fonda.', '{n}\'s grandma recommended you to all her market friends. One of them runs a diner.'],
+      ops: [{ t: ['Aceptar el cliente', 'Take the client'], f: () => { nuevoCliente('fonda'); return ['Nuevo cliente fijo. La fonda manda saludos y un mole.', 'A new regular client. The diner sends regards and some mole.']; } },
+        { t: ['Mandarle flores a la abuela', 'Send grandma flowers'], pide: 60, f: c => { S.dinero -= 60; nuevoCliente('fonda'); c.animo = 5; return ['Nuevo cliente fijo, y la abuela te adopta como de la familia. A {n} le dan celos.', 'A new regular client, and grandma adopts you as an honorary grandkid. {n} is jealous.']; } }] },
+  ],
+};
+function nuevoCliente(k) {
+  const ks = k && COCINAS[k] && COCINAS[k].etapa <= S.etapa ? [k] : cocinasHasta(S.etapa).filter(x => !COCINAS[x].gigante);
+  const o = genOrden(uno(ks)); S.clientes.push({ id: S.sigId++, nombre: o.nombre, cocina: o.cocina, proxima: S.noche + 1, visitas: 3, diseno: o.diseno, pagoBase: o.pagoBase, cap: 0 });
+}
+const histAyudTxt = (v, c) => L(...(typeof v === 'function' ? v(c) : v)).replace(/\{n\}/g, c.n);
+function tarjetaAyud() {
+  const H = S.hoy, c = H.ayudHist && S.cuadrilla.find(x => x.id === H.ayudHist); if (!c) return '';
+  const caps = HIST_AYUD[c.tipo] || HIST_AYUD.normal, cap = H.ayudRes ? H.ayudCap : c.hist.cap, C = caps[cap];
+  return `<div class="orden dia historia-comp"><span class="chip">📖 ${L('Historia de', 'Story of')} ${esc(c.n)} · ${cap + 1} ${L('de', 'of')} 2</span><div class="fila-cara">${cara(c.color, c.n[0], c.n)}<h3>${esc(c.n)}</h3></div><p>${esc(histAyudTxt(C.txt, c))}</p>
+    ${H.ayudRes ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(H.ayudRes)}</div>`
+      : `<div class="opciones">${C.ops.map((op, i) => `<button class="btn" data-ayh="${i}" ${op.pide && S.dinero < op.pide ? 'disabled' : ''}>${esc(histAyudTxt(op.t, c))}${op.pide ? `<small>${dinero(op.pide)}</small>` : ''}</button>`).join('')}</div>`}</div>`;
+}
 const arcoFin = k => !!(S.arcos && S.arcos[k] && S.arcos[k].fin);
 const arcoTxt = (v, a) => L(...(typeof v === 'function' ? v(a) : v));
 function terminarArco(k) {
@@ -5143,6 +5229,10 @@ function prepararNoche() {
       if (!S.fijos.includes(k)) continue;
       const a = S.arcos[k] = S.arcos[k] || { cap: 0, next: S.noche + 2 };
       if (!a.fin && S.noche >= a.next) { S.hoy.historia = k; break; }
+    }
+    if (!S.hoy.historia && (S.hoy.saga === undefined || S.hoy.saga === null) && azar(.5)) {
+      const c = S.cuadrilla.find(x => !x.prueba && (x.noches || 0) >= 4 && (!x.hist || (x.hist.cap < 2 && S.noche >= x.hist.next)));
+      if (c) { c.hist = c.hist || { cap: 0, next: 0 }; S.hoy.ayudHist = c.id; }
     }
   }
   guardar();
@@ -5738,7 +5828,7 @@ function vNoche() {
       <div class="opciones"><button class="btn prim" id="retomar">${L('Retomar el turno', 'Resume the shift')}</button><button class="btn" id="descartar">${L('Empezar de nuevo', 'Start over')}</button></div></div>` : '';
   return `${aviso}${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(TRAD(dia.t))}</h3><p>${esc(TRAD(dia.txt))}</p>
       ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(TRAD(H.dia.res))}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(TRAD(op.t))}<small>${esc(TRAD(op.d))}</small></button>`).join('')}</div>`}</div>` : ''}
-    ${tarjetaYo()}${tarjetaSaga()}${aprendiz ? '' : tarjetaArco()}
+    ${tarjetaYo()}${tarjetaSaga()}${aprendiz ? '' : tarjetaArco() + tarjetaAyud()}
     ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
     ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
@@ -5981,6 +6071,8 @@ const MANUAL = [
     txt: ['Antes: cierra pilotos, corta la luz del extractor, tapa los aparatos y encinta el plástico de la campana con su bolsa. Lo que se te olvide sale en el parte como daño. Después: pela el plástico, destapa todo, migdalea la campana hasta que brille y llama al inspector.', 'Before: shut the pilots, cut the fan power, cover the appliances and tape the hood plastic with its bag. Whatever you forget shows up as damage in the report. After: peel the plastic, uncover everything, polish the hood until it shines and call the inspector.'] },
   { id: 'orden', ico: '⬇️', si: () => S.noche >= 3, t: ['De arriba abajo', 'Top to bottom'],
     txt: ['Lo de arriba cae sobre lo de abajo. Si lavas el ducto con la campana ya limpia, la vuelves a manchar. Y el agua de la hidro escurre por las paredes: empieza por arriba.', 'What\'s above drips onto what\'s below. Wash the duct after the hood and you\'ll stain it again. Pressure-washer water runs down the walls: start at the top.'] },
+  { id: 'freidora', ico: '🍟', si: () => S.fase === 'empresa', t: ['La freidora', 'The fryer'],
+    txt: ['En las cocinas que fríen (hamburguesas, fondas, food trucks…) también toca la tina de la freidora: aceite viejo y costra quemada por dentro. Pagan un poco más, y el inspector la revisa como cualquier otra zona.', 'In kitchens that fry (burgers, diners, food trucks…) you also do the fryer vat: old oil and burnt crust inside. They pay a bit more, and the inspector checks it like any other zone.'] },
   { id: 'suciedad', ico: '🧪', si: () => S.fase === 'empresa', t: ['Grasa quemada, aceite y sarro', 'Burnt grease, oil and scale'],
     txt: ['Cruje: es grasa quemada, pide espuma (o vapor, o el soplete). Hace «chof»: es aceite, la rasqueta lo embarra y la hidro lo arrastra. Suena a metal: es sarro, y solo la rasqueta de carburo le gana.', 'It crackles: burnt grease, use foam (or steam, or the torch). It goes "splosh": oil, the scraper smears it and the washer sweeps it away. It sounds like metal: scale, and only the carbide scraper beats it.'] },
   { id: 'herramientas', ico: '🔥', si: () => S.fase === 'empresa' && (S.etapa >= 1 || EQ().gel || EQ().soplete || EQ().alta || EQ().fino), t: ['Herramientas y modos', 'Tools and modes'],
@@ -6087,6 +6179,13 @@ function enlazar() {
   P.querySelectorAll('[data-despues]').forEach(b => b.onclick = () => { audio(); elegirDespues(b.dataset.despues); tono(620, .12, .06, 'triangle'); pantallaCamioneta(); });
   P.querySelectorAll('[data-gripa]').forEach(b => b.onclick = () => { audio(); if (b.dataset.gripa === 'doctor') { if (S.dinero < 150) return; S.dinero -= 150; yo().salud = clamp(yo().salud + 40, 0, 100); } H.gripa = b.dataset.gripa; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-mueble]').forEach(b => b.onclick = () => { const m = MUEBLES.find(x => x.id === b.dataset.mueble); if (!m || mueble(m.id) || S.dinero < m.p) return; audio(); S.dinero -= m.p; yo().muebles[m.id] = S.noche; tono(700, .12, .06, 'triangle'); guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-ayh]').forEach(b => b.onclick = () => {
+    const c = S.cuadrilla.find(x => x.id === H.ayudHist); if (!c || H.ayudRes) return;
+    const C = (HIST_AYUD[c.tipo] || HIST_AYUD.normal)[c.hist.cap], op = C.ops[+b.dataset.ayh]; if (op.pide && S.dinero < op.pide) return;
+    audio(); H.ayudCap = c.hist.cap; H.ayudRes = L(...op.f(c)).replace(/\{n\}/g, c.n); c.hist.cap++; c.hist.next = S.noche + 4;
+    if (c.hist.cap >= 2) { const al = L(`La historia de ${c.n}`, `${c.n}'s story`); if (!S.album.includes(al)) S.album.push(al); }
+    tono(600, .12, .08, 'triangle'); guardar(); pantallaCamioneta();
+  });
   P.querySelectorAll('[data-saga]').forEach(b => b.onclick = () => {
     if (H.sagaRes) return; const C = SAGA[H.saga]; if (!C || S.saga.cap !== H.saga) return;
     audio(); H.sagaRes = C.ops[+b.dataset.saga].f(); S.saga.cap++; S.saga.next = S.noche + (C.id === 'foto' ? 2 : 4);
