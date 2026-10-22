@@ -83,5 +83,77 @@ caso('trabajos jefe de principio a fin', async () => {
   }
 });
 
+caso('ciudades: ida y vuelta sin perder ni duplicar nada', async () => {
+  const p = await abrir(partida({ medallas: { primera: 3 }, cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, cuidado: 3, puntual: 3, animo: 3 }], sede: { almacen: 2 } }));
+  const foto = () => p.evaluate(() => { const S = __hc.S; return JSON.stringify({ c: __hc.ciudad(), d: S.dinero, r: S.rep, e: S.etapa, cu: S.cuadrilla.map(c => c.n), se: S.sede, eq: S.eq, emp: S.empresa.nombre }); });
+  const c1 = await foto();
+  afirmar(await p.evaluate(() => __hc.viajar(2)), 'no se pudo viajar a la ciudad 2');
+  await p.evaluate(() => { const S = __hc.S; S.dinero = 777; S.rep = 12; S.medallas.notaA = 99; S.empresa.nombre = 'Sucursal'; });
+  const c2 = await foto();
+  afirmar(JSON.parse(c2).cu.length === 0 && !JSON.parse(c2).se, 'la ciudad 2 no empezó sin cuadrilla ni sede');
+  afirmar(JSON.parse(c2).eq.rasqueta === 2 && JSON.parse(c2).eq.hidro, 'las herramientas personales no viajaron');
+  for (let i = 0; i < 5; i++) { await p.evaluate(() => __hc.viajar(1)); await p.evaluate(() => __hc.viajar(2)); }
+  afirmar(await foto() === c2, 'la ciudad 2 cambió tras ir y volver');
+  await p.evaluate(() => __hc.viajar(1));
+  afirmar(await foto() === c1, 'la ciudad 1 no quedó igual: ' + c1 + ' / ' + await foto());
+  afirmar(await p.evaluate(() => __hc.S.medallas.notaA === 99 && __hc.S.medallas.primera === 3), 'las medallas no son del jugador');
+  afirmar(await p.evaluate(() => !!localStorage.getItem('hood-cleaners-respaldo')), 'no se hizo la copia de seguridad');
+  await p.reload(); await p.waitForSelector('#continuar'); await p.click('#continuar'); await p.waitForSelector('#salir');
+  afirmar(await foto() === c1, 'tras recargar, la ciudad 1 no es la misma');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('la Residencia Oficial: seguridad, éxito y contratos de gobierno', async () => {
+  const base = partida({ etapa: 4, rep: 90, dinero: 20000, licitGanada: 10, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 2 }, fijos: ['beto', 'lupe', 'chuy'] });
+  for (const [idioma, limpio] of [['es', 1], ['en', .3]]) {
+    const p = await abrir(base, { idioma });
+    afirmar(await p.evaluate(() => !!__hc.S.hoy.ordenes[0].residencia), 'no apareció la misión tras la licitación');
+    await p.evaluate(() => { const H = __hc.S.hoy; H.sel = 0; H.dia = null; H.historia = null; __hc.guardar(); __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+    await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+    await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+    for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+    await p.evaluate(() => { __hc.M.eventos = []; __hc.M.t = 4; });
+    await p.waitForFunction(() => /seguridad|Security/i.test((document.querySelector('#evento:not([hidden])') || {}).innerText || ''), null, { timeout: 60000 });
+    await p.evaluate(() => [...document.querySelectorAll('#evento .opciones button')][1].click());
+    afirmar(await p.evaluate(() => !__hc.herramientas().includes('hidro')), 'la hidro no quedó confiscada');
+    await p.evaluate(() => { const b = document.querySelector('#evento .btn.prim'); b && b.click(); });
+    await p.evaluate(limpio => { const M = __hc.M; M.eventos = []; M.danos = []; __hc.piezas.aparatos.forEach(a => { a.quitada = true; }); __hc.piezas.bolsas.forEach(b => { b.bajada = true; }); __hc.piezas.faldas.forEach(f => { f.pelada = true; });
+      __hc.Z.forEach(z => z.sfs.forEach(s => { for (let i = 0; i < s.d.length; i++) s.d[i] *= 1 - limpio; s.pol.fill(.9); })); M.t = M.dur * .6; __hc.terminarTurno(); }, limpio);
+    await p.waitForSelector('.nota-grande', { timeout: 60000 });
+    const r = await p.evaluate(() => ({ res: __hc.S.residencia, gob: !!__hc.S.gobierno, med: !!__hc.S.medallas.estado, txt: document.querySelector('#pantalla').innerText }));
+    if (limpio === 1) {
+      afirmar(r.res.exito && r.gob && r.med, 'con A no se dieron premio, medalla o contratos: ' + JSON.stringify(r.res));
+      afirmar(/Presidencia|Presidential/.test(r.txt), 'el parte no muestra el premio');
+      const gob = await p.evaluate(() => { let n = 0; for (let i = 0; i < 30; i++) if (__hc.generarOrdenes().some(o => o.gobierno)) n++; return n; });
+      afirmar(gob > 3, 'casi no salen contratos de gobierno: ' + gob + '/30');
+      await p.evaluate(() => __hc.pantallaCamioneta());
+      afirmar(await p.evaluate(() => !__hc.S.hoy.ordenes.some(o => o.residencia)), 'la misión volvió a aparecer tras hacerla');
+    } else {
+      afirmar(!r.res.hecha && r.res.reintento === r.res.noche + 7 && !r.gob, 'el suspenso no programó la segunda oportunidad: ' + JSON.stringify(r.res));
+    }
+    afirmar(!p.errores.length, p.errores[0]); await p.close();
+  }
+});
+
+caso('tu vida: estilo, gastos en el parte y renta semanal', async () => {
+  const p = await abrir(partida({ noche: 20 }));
+  await p.click('[data-tab="cuadrilla"]'); await p.click('[data-vida="lujo"]'); await p.click('[data-tab="noche"]');
+  afirmar(await p.evaluate(() => __hc.S.vida === 'lujo'), 'no se guardó el estilo de vida');
+  let r = await jugarNoche(p, { cocina: 'cafe' });
+  afirmar(/Tu vida \(de lujo\)[^\n]*\s+−\$200/.test(r.texto), 'falta el gasto diario de lujo en el parte');
+  afirmar(!/semanal/.test(r.texto), 'la renta semanal salió una noche que no tocaba');
+  await p.evaluate(() => { __hc.S.noche = 28; __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  r = await jugarNoche(p, { cocina: 'cafe' });
+  afirmar(/semanal\)?\s+−\$700/.test(r.texto), 'falta la renta semanal en la noche 28');
+  // dolor de muela: la noche rinde menos
+  await p.evaluate(() => { __hc.pantallaCamioneta(); const H = __hc.S.hoy; H.dia = { id: 'muela', res: '' }; __hc.pantallaCamioneta(); });
+  await p.click('[data-tab="noche"]'); await p.evaluate(() => document.querySelector('[data-dia="1"]').click());
+  afirmar(await p.evaluate(() => __hc.S.hoy.muela === true), 'aguantar la muela no quedó marcado');
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  afirmar(await p.evaluate(() => Math.abs(__hc.M.vida - 1.09 * .9) < .001), 'la muela y el estilo no afectan la fuerza: ' + await p.evaluate(() => __hc.M.vida));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };

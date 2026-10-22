@@ -6,7 +6,7 @@ let playwright;
 try { playwright = require('playwright'); } catch (e) { playwright = require(path.join(execSync('npm root -g').toString().trim(), 'playwright')); }
 const THREE = path.join(RAIZ, 'node_modules', 'three', 'build', 'three.min.js');
 const EXPORTA = 'get M(){return M;}, get Z(){return Z;}, get S(){ return S; }, set S(v){ S = v; }, piezas, terminarTurno, pantallaCamioneta, genOrden, generarOrdenes, irZona, micras, dano, guardar, '
-  + 'COCINAS, TIENDA, ETAPAS, lanzarEvento, pintarHud, ' + (process.env.HC_EXTRA || '');
+  + 'COCINAS, TIENDA, ETAPAS, lanzarEvento, pintarHud, viajar, ciudad, herramientas, ' + (process.env.HC_EXTRA || '');
 let html = null;
 function construir() {
   if (html) return html;

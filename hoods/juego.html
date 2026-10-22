@@ -388,6 +388,8 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .blanco.brillo { background: radial-gradient(#fff6c0, #ffd23f 55%, #ff8a1f); border: 3px solid #fff; font-size: 26px; color: #1a1004; }
 .blanco.brillo small { display: block; font-size: 11px; }
 .contrato.diario { border-color: #8ad4ff99; background: rgba(138,212,255,.08); } .contrato.diario b { color: #8ad4ff; }
+.vida { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.vida .comp { grid-template-columns: 1fr; }
 .historia-comp { border-left: 4px solid #c6a0ff; }
 .fila-cara { display: flex; gap: 10px; align-items: center; }
 .orden.licit { border-color: #ffd23f; background: linear-gradient(rgba(255,210,63,.1), var(--panel)); }
@@ -659,7 +661,7 @@ const EN = {
     ['Grease legend', 'Your van makes the news. You are the most famous hood cleaning company in town.']],
   fama: ['Unknown', 'Local', 'Recommended', 'Trusted', 'Grease legend'],
   frec: { mensual: 'monthly', trimestral: 'quarterly', semestral: 'twice a year', anual: 'yearly' },
-  cocina: { cafe: 'Coffee shop', pizza: 'Wood-fired pizzeria', burger: 'Burger joint', wok: 'Wok kitchen', asador: 'Charcoal grill', hotel: 'Hotel kitchen', comedor: 'Industrial cafeteria',
+  cocina: { residencia: 'Official Residence', cafe: 'Coffee shop', pizza: 'Wood-fired pizzeria', burger: 'Burger joint', wok: 'Wok kitchen', asador: 'Charcoal grill', hotel: 'Hotel kitchen', comedor: 'Industrial cafeteria',
     fonda: 'Mexican diner', mariscos: 'Seafood place', truck: 'Food truck', panaderia: 'Bakery', sushi: 'Sushi bar', plaza: 'Mall food court', convenciones: 'Convention center', estadio: 'Stadium kitchen' },
   suc: { quemada: 'Burnt grease', aceite: 'Oil', sarro: 'Scale in the duct' },
   pista: { gerente: 'The manager says he is staying "just in case".', techo: 'Fan on the roof. "The key is around here somewhere," says the owner.', mapache: 'Old place. They say the duct "makes noises".', alarma: 'Very sensitive smoke detectors. Careful with the steam.' },
@@ -689,13 +691,13 @@ const EN = {
     cuca: ['Roach hunter', 'Catch the giant cockroach.'], apagon: ['Cat eyes', 'Pass a night with a blackout.'], pedido: ['Picky client', 'Fulfill a special request.'], duelo: ['Bye, Cuñado', 'Win a duel against El Cuñado.'], diez: ['Veteran', 'Pass 10 inspections.'],
     fotos: ['Grease photographer', 'Collect 6 photos in the album.'], finde: ['Legendary weekend', 'Beat the weekend challenge: three giant jobs in a row.'], contrato: ['Fine print', 'Complete a tough contract.'], contratos5: ['Official supplier', 'Complete 5 tough contracts.'], racha10: ['Unstoppable', 'Pass 10 nights in a row.'], cunado5: ['El Cuñado\'s nightmare', 'Win 5 duels against El Cuñado.'],
     sede3: ['First stone', 'Take a headquarters station to level 3.'], sedeTotal: ['Headquarters', 'Max out the whole headquarters.'], maestro: ['Hood school', 'Train 3 different helpers.'], flota: ['Fleet', 'Own 5 vans.'], rico: ['Grease tycoon', 'Save up $50,000.'],
-    diario5: ['Consistency', 'Play the daily challenge on 5 different days.'], objetos6: ['Duct archaeologist', 'Find 6 things in the ducts.'], objetos: ['The grease museum', 'Find every thing in the ducts.'], h_beto: ['Beto\'s Tacos', 'Finish Beto\'s story.'], h_lupe: ['Old rivals', 'Finish Lupe\'s story.'], h_chuy: ['Love among hoods', 'Finish Chuy\'s story.'], licitacion: ['The city is yours', 'Win the Grand Tender.'], final: ['End of the night', 'Buy Limpiezas El Cuñado and finish the story.'], bombero: ['Firefighter on duty', 'Put out a grease fire in time.'], j_tele: ['TV star', 'Beat the live show with good ratings.'], j_embrujada: ['Ghostbuster', 'Clean the haunted hood.'], j_hospital: ['Quiet, please', 'Clean the hospital kitchen without three scoldings.'], j_inspector: ['Under the magnifier', 'Pass with the surprise inspector (more checks than crosses).'], jefes: ['Legend of the night', 'Beat every boss job.'],
+    diario5: ['Consistency', 'Play the daily challenge on 5 different days.'], objetos6: ['Duct archaeologist', 'Find 6 things in the ducts.'], objetos: ['The grease museum', 'Find every thing in the ducts.'], h_beto: ['Beto\'s Tacos', 'Finish Beto\'s story.'], h_lupe: ['Old rivals', 'Finish Lupe\'s story.'], h_chuy: ['Love among hoods', 'Finish Chuy\'s story.'], estado: ['State-grade clean', 'Get an A or A+ at the Official Residence kitchen.'], licitacion: ['The city is yours', 'Win the Grand Tender.'], final: ['End of the night', 'Buy Limpiezas El Cuñado and finish the story.'], bombero: ['Firefighter on duty', 'Put out a grease fire in time.'], j_tele: ['TV star', 'Beat the live show with good ratings.'], j_embrujada: ['Ghostbuster', 'Clean the haunted hood.'], j_hospital: ['Quiet, please', 'Clean the hospital kitchen without three scoldings.'], j_inspector: ['Under the magnifier', 'Pass with the surprise inspector (more checks than crosses).'], jefes: ['Legend of the night', 'Beat every boss job.'],
     dorado: ['The golden raccoon', 'You saw it. Nobody will believe you.'], casete: ['The lost tape', 'You found Don Rigo\'s cassette in a duct.'], himno: ['Perfect pitch', 'You found the radio\'s secret song.'] },
   reto: { sinHidro: 'No pressure washer', sinEspuma: 'No foam', combo2: 'Reach a ×3 combo twice', antes4: 'Inspector before 4:00, passed', espejo: 'Polish 80% of the hood', sinDanos: 'Not a single damage', prep: 'Perfect prep (gas, power, covers and plastic)', filtros: 'Filters done before 11:30 pm', notaA: 'Get an A or better', metal: 'Everything at 50 µm or less' },
   look: { espuma: 'Foam color', casco: 'Partner\'s helmet', pegatina: 'Van sticker', linterna: 'Helmet light', combo: 'Combo sound',
     blanca: 'White', rosa: 'Pink', menta: 'Mint green', oro: 'Gold', azul: 'Pool blue', normal: 'Their own', negro: 'Matte black', militar: 'Army green', nada: 'None', llamas: 'Flames', mapache: 'Raccoon', estrella: 'Star', cuca: 'Cockroach', rayo: 'Lightning',
     calida: 'Warm', fria: 'Cold', disco: 'Disco', verde: 'Neon green', clasico: 'Classic', corneta: 'Bugle', cumbia: 'Güiro', mariachi: 'Mariachi',
-    lava: 'Lava', morada: 'Purple', cromo: 'Chrome', rojo: 'Rematch red', corona: 'Crown', birrete: 'Grad cap', dolar: 'Banknote', ambar: 'Amber', rosada: 'Pink', claxon: 'Car horn', ecto: 'Ectoplasm', blanco: 'Hospital white', fantasma: 'Ghost', tele: 'TV', lupa: 'Inspector red', aplausos: 'Applause', sirena: 'Siren', trofeo: 'Trophy', cunado: 'El Cuñado\'s own', tacos: 'Beto\'s Tacos', retro: 'Retro 1985', romantica: 'Romantic' },
+    lava: 'Lava', morada: 'Purple', cromo: 'Chrome', rojo: 'Rematch red', corona: 'Crown', birrete: 'Grad cap', dolar: 'Banknote', ambar: 'Amber', rosada: 'Pink', claxon: 'Car horn', ecto: 'Ectoplasm', blanco: 'Hospital white', fantasma: 'Ghost', tele: 'TV', lupa: 'Inspector red', aplausos: 'Applause', sirena: 'Siren', trofeo: 'Trophy', sello: 'Presidential seal', cunado: 'El Cuñado\'s own', tacos: 'Beto\'s Tacos', retro: 'Retro 1985', romantica: 'Romantic' },
   pasos: ['Prep', 'Wash', 'Peel', 'Polish', 'Inspector'],
   leccion: [null, ['Night 1 · Learn with Beto', 'A quiet coffee shop to learn the ropes. I will tell you what to do step by step.'], ['Night 2 · On your own', 'Another easy one, but no instructions this time. Let\'s see what you learned.'],
     ['Night 3 · Getting tough', 'Burnt grease, scale, a manager in a hurry and less time. Lupe comes with you today.'], ['Night 4 · The big job', 'A whole food court: three hoods, several ducts and half the company working with you. Angélica assigns the work.']],
@@ -741,12 +743,59 @@ const hora = min => { const m = 22 * 60 + Math.floor(min); return `${String(Math
 
 const APRENDIZ = 4;            // noches trabajando para Don Rigo antes del despido
 const SUELDO_APRENDIZ = 110;
+// Tu vida: el protagonista también come, paga renta y se divierte. Cuanto mejor vives, mejor descansas y rindes un poco más.
+const VIDA = {
+  austero: { n: ['Austero', 'Frugal'], d: ['Cuarto compartido, tacos de canasta y camión.', 'Shared room, street tacos and the bus.'], noche: 15, semana: 50, fuerza: 1, propina: 0 },
+  normal: { n: ['Normal', 'Normal'], d: ['Tu propio depa, comida casera y alguna salida.', 'Your own flat, home cooking and the odd night out.'], noche: 35, semana: 120, fuerza: 1.03, propina: 0 },
+  comodo: { n: ['Cómodo', 'Comfortable'], d: ['Depa bonito, buen colchón y cine los domingos.', 'Nice flat, a good mattress and movies on Sundays.'], noche: 80, semana: 300, fuerza: 1.06, propina: .01 },
+  lujo: { n: ['De lujo', 'Luxury'], d: ['Penthouse, chef a domicilio y masajes. Llegas impecable a cada cocina.', 'Penthouse, private chef and massages. You show up spotless at every kitchen.'], noche: 200, semana: 700, fuerza: 1.09, propina: .03 },
+};
+const vida = () => VIDA[(S && S.vida) || 'austero'] || VIDA.austero;
 // Gasolina por noche según el vehículo: camioneta vieja, con baca o camión.
 const gasolina = () => [35, 35, 50, 70][(S && S.eq.camioneta) || 1];
 // Gastos fijos de la empresa por noche: renta del local según la etapa y mantenimiento de cada camioneta extra.
 const RENTA = [0, 25, 50, 90, 140];
 const gastosFijos = () => S.fase === 'empresa' ? RENTA[S.etapa] + 40 * (S.eq.flota || 0) : 0;
-const RIVAL = 'Limpiezas El Cuñado';
+// Ciudades: cada empresa vive en la suya. La ciudad activa usa los campos normales de S; la otra queda guardada en S.ciudades.
+const CIUDADES = {
+  1: { n: ['Ciudad Comal', 'Comal City'], rival: 'Limpiezas El Cuñado' },
+  2: { n: ['Puerto Fritanga', 'Port Fritanga'], rival: 'Grupo Brillo Total' },
+};
+let RIVAL = CIUDADES[1].rival;   // cambia al viajar de ciudad
+// Lo que es de la empresa (se queda en su ciudad). Todo lo demás es del jugador y viaja con él: nivel, habilidades,
+// medallas, álbum, apariencias, objetos, récords y las herramientas personales.
+const CAMPOS_EMPRESA = ['empresa', 'etapa', 'rep', 'dinero', 'clientes', 'perdidos', 'cuadrilla', 'candidatos', 'fijos', 'compPref', 'sede', 'vanMej', 'kits', 'tuneo', 'angelica', 'finde', 'findeOfrecido',
+  'licit', 'licitGanada', 'licitPerdida', 'licitIntentos', 'mis', 'deuda', 'cunado', 'resena', 'recomienda', 'devolver', 'noticia', 'noticiaRadio', 'abierta', 'racha', 'hoy', 'jefeNoche', 'final', 'hitosRep'];
+const EQ_EMPRESA = ['camioneta', 'flota', 'seguro', 'planta'];
+const ciudad = () => (S && S.ciudad) || 1;
+const nCiudad = (k = ciudad()) => L(...CIUDADES[k].n);
+function empacarCiudad() {
+  const b = {}; for (const k of CAMPOS_EMPRESA) if (S[k] !== undefined) b[k] = JSON.parse(JSON.stringify(S[k]));
+  b.eq = {}; for (const k of EQ_EMPRESA) if (S.eq[k] !== undefined) b.eq[k] = S.eq[k];
+  return b;
+}
+function desempacarCiudad(b) {
+  for (const k of CAMPOS_EMPRESA) { if (b[k] === undefined) delete S[k]; else S[k] = b[k]; }
+  for (const k of EQ_EMPRESA) { if (b.eq && b.eq[k] !== undefined) S.eq[k] = b.eq[k]; else delete S.eq[k]; }
+}
+// Copia de seguridad completa antes de cada viaje o decisión grande (se puede recuperar desde Ajustes).
+const KEY_RESPALDO = 'hood-cleaners-respaldo';
+function respaldar(motivo) { try { localStorage.setItem(KEY_RESPALDO, JSON.stringify({ motivo, noche: S.noche, fecha: Date.now(), s: S })); return true; } catch (e) { return false; } }
+// Viajar a otra ciudad: guarda la empresa de aquí y carga (o crea) la de allá. Atómico: si algo falla, no cambia nada.
+function viajar(destino, nueva) {
+  if (destino === ciudad() || !CIUDADES[destino]) return false;
+  const antes = JSON.stringify(S);
+  try {
+    respaldar(`viaje a ${destino}`); borrarTurno();
+    S.ciudades = S.ciudades || {};
+    S.ciudades[ciudad()] = empacarCiudad();
+    const b = S.ciudades[destino] || nueva || { empresa: { ...(S.empresa || { nombre: S.jugador, color: '#2e9e5b' }) }, etapa: 1, rep: 0, dinero: 0, clientes: [], perdidos: [], cuadrilla: [], candidatos: [], fijos: [], compPref: 'solo', abierta: S.noche, hoy: null, eq: { camioneta: 1 } };
+    delete S.ciudades[destino];
+    desempacarCiudad(JSON.parse(JSON.stringify(b)));
+    S.ciudad = destino; RIVAL = CIUDADES[destino].rival;
+    guardar(); return true;
+  } catch (e) { S = completar(JSON.parse(antes)); RIVAL = CIUDADES[ciudad()].rival; return false; }
+}
 const QUIEN_CUNADO = { n: 'El Cuñado', color: '#d7382b' };
 // Las etapas de tu empresa: se pasa a la siguiente con reputación y pagando el salto.
 const ETAPAS = [
@@ -790,6 +839,8 @@ const COCINAS = {
     nombres: ['Sushi Kaito', 'Rollos del Pacífico', 'Nigiri Express'], eventos: ['gerente'] },
   plaza: { n: 'Food court de centro comercial', frec: 'trimestral', micras: [2000, 2700], pago: [6000, 7800], filtros: [10, 12], etapa: 0, linea: 'plaza', campanas: 3, ductos: 3, gigante: true,
     nombres: ['Plaza Galerías Norte', 'Centro Comercial Las Palmas', 'Mega Plaza del Sol'], eventos: ['gerente', 'alarma', 'mapache'] },
+  residencia: { n: 'Residencia Oficial', frec: 'anual', micras: [2700, 3200], pago: [12000, 14000], filtros: [10, 12], etapa: 99, linea: 'banquete', campanas: 3, ductos: 2, gigante: true,
+    nombres: ['Residencia Oficial'], eventos: [] },
   convenciones: { n: 'Centro de convenciones', frec: 'semestral', micras: [2200, 2900], pago: [6500, 8500], filtros: [9, 12], etapa: 0, linea: 'banquete', campanas: 3, ductos: 2, gigante: true,
     nombres: ['Centro de Convenciones Expo Grasa', 'Salón de Eventos Los Candiles', 'Expo Banquetes Real'], eventos: ['gerente', 'techo', 'alarma'] },
   estadio: { n: 'Cocina de estadio', frec: 'semestral', micras: [2500, 3300], pago: [3800, 4800], filtros: [8, 10], etapa: 3, linea: 'estadio', campanas: 2, ayud: 2,
@@ -813,7 +864,7 @@ const LINEAS = {
   plaza: ['plancha', 'trompo', 'wok', 'freidora', 'pasteles', 'salamandra', 'comal'],
 };
 // Suciedad especial de cada cocina (parte de la superficie): grasa quemada, aceite; el sarro sale en ductos viejos.
-const SUCIEDAD = { cafe: { aceite: .1 }, pizza: { quemada: .2 }, burger: { aceite: .3 }, wok: { quemada: .2, aceite: .15 }, asador: { quemada: .35 }, hotel: { aceite: .2 },
+const SUCIEDAD = { residencia: { quemada: .2, aceite: .15 }, cafe: { aceite: .1 }, pizza: { quemada: .2 }, burger: { aceite: .3 }, wok: { quemada: .2, aceite: .15 }, asador: { quemada: .35 }, hotel: { aceite: .2 },
   comedor: { aceite: .2, quemada: .1 }, estadio: { quemada: .2, aceite: .2 }, truck: { aceite: .3 }, plaza: { aceite: .2, quemada: .15 }, convenciones: { quemada: .25, aceite: .1 }, fonda: { aceite: .15, quemada: .1 }, mariscos: { aceite: .25 }, panaderia: { quemada: .25 }, sushi: { aceite: .1 } };
 const NOMBRE_SUC = { quemada: 'Grasa quemada', aceite: 'Aceite', sarro: 'Sarro en el ducto' };
 const PISTAS = {
@@ -1101,6 +1152,8 @@ const CONTRATANTES = [
   ['El abogado del dueño', 'The owner\'s lawyer', 'Mi cliente es muy exigente. He preparado un contratito de doce páginas. Lo importante está en negritas.', 'My client is very demanding. I prepared a little twelve-page contract. The important part is in bold.'],
 ];
 const MULT_CONTRATO = 1.7, PENA_CONTRATO = .3;
+const PROTOCOLO = ['El jefe de protocolo', 'The head of protocol', 'Mañana hay cena de Estado. La campana principal saldrá en las fotos: la quiero como espejo. Y ni un rasguño en la vajilla.', 'Tomorrow there\'s a state dinner. The main hood will be in the photos: I want it like a mirror. And not a single scratch on the china.'];
+const contratante = c => c.quien === 'protocolo' ? PROTOCOLO : CONTRATANTES[c.quien] || CONTRATANTES[0];
 // Trabajos jefe: noches únicas con su propia regla. Salen de vez en cuando; los que no has superado salen antes.
 const JEFES = {
   tele: { ico: '📺', n: ['En vivo: «Cocina con Fuego»', 'Live: "Cooking with Fire"'], quien: ['El productor', 'The producer'], cocinas: ['burger', 'pizza'], mult: 1.5,
@@ -1172,6 +1225,7 @@ const MEDALLAS = [
   { id: 'h_beto', n: 'Beto\'s Tacos', d: 'Termina la historia de Beto.', ico: '🌮' },
   { id: 'h_lupe', n: 'Viejas rivales', d: 'Termina la historia de Lupe.', ico: '🤝' },
   { id: 'h_chuy', n: 'Amor entre campanas', d: 'Termina la historia de Chuy.', ico: '💌' },
+  { id: 'estado', n: 'Limpieza de Estado', d: 'Saca A o A+ en la cocina de la Residencia Oficial.', ico: '🏛' },
   { id: 'licitacion', n: 'La ciudad es tuya', d: 'Gana la Gran Licitación.', ico: '🏛' },
   { id: 'final', n: 'Fin de la noche', d: 'Compra Limpiezas El Cuñado y termina la historia.', ico: '🏁' },
   { id: 'bombero', n: 'Bombero de guardia', d: 'Apaga un fuego de grasa a tiempo.', ico: '🧯' },
@@ -1214,7 +1268,7 @@ const LOOK = {
     { id: 'rosa', n: 'Rosa', c: '#ff7ab8', m: 'mapache' }, { id: 'negro', n: 'Negro mate', c: '#2a2a2e', m: 'duelo' }, { id: 'militar', n: 'Verde militar', c: '#4b5d33', e: 10 }, { id: 'cromo', n: 'Cromado', c: '#c9d1d9', m: 'contratos5' }, { id: 'rojo', n: 'Rojo revancha', c: '#d8342c', m: 'cunado5' }, { id: 'blanco', n: 'Blanco hospital', c: '#f2f4f5', m: 'j_hospital' }, { id: 'corona', n: 'Corona de oro', c: '#ffd23f', m: 'jefes' }, { id: 'cunado', n: 'El del Cuñado', c: '#7a1f2b', m: 'final' }, { id: 'retro', n: 'Retro 1985', c: '#3a6ea5', m: 'h_lupe' }] },
   pegatina: { n: 'Pegatina de la camioneta', ops: [
     { id: 'nada', n: 'Ninguna' }, { id: 'llamas', n: 'Llamas', m: 'rapido' }, { id: 'mapache', n: 'Mapache', m: 'mapache' },
-    { id: 'estrella', n: 'Estrella', m: 'pedido' }, { id: 'cuca', n: 'Cucaracha', m: 'cuca' }, { id: 'rayo', n: 'Rayo', e: 4 }, { id: 'corona', n: 'Corona', m: 'sedeTotal' }, { id: 'birrete', n: 'Birrete', m: 'maestro' }, { id: 'dolar', n: 'Billete', m: 'rico' }, { id: 'fantasma', n: 'Fantasma', m: 'j_embrujada' }, { id: 'trofeo', n: 'Trofeo', m: 'licitacion' }, { id: 'tacos', n: 'Beto\'s Tacos', m: 'h_beto' }, { id: 'tele', n: 'Tele', m: 'j_tele' }] },
+    { id: 'estrella', n: 'Estrella', m: 'pedido' }, { id: 'cuca', n: 'Cucaracha', m: 'cuca' }, { id: 'rayo', n: 'Rayo', e: 4 }, { id: 'corona', n: 'Corona', m: 'sedeTotal' }, { id: 'birrete', n: 'Birrete', m: 'maestro' }, { id: 'dolar', n: 'Billete', m: 'rico' }, { id: 'fantasma', n: 'Fantasma', m: 'j_embrujada' }, { id: 'trofeo', n: 'Trofeo', m: 'licitacion' }, { id: 'sello', n: 'Sello presidencial', m: 'estado' }, { id: 'tacos', n: 'Beto\'s Tacos', m: 'h_beto' }, { id: 'tele', n: 'Tele', m: 'j_tele' }] },
   linterna: { n: 'Luz del casco', ops: [
     { id: 'calida', n: 'Cálida', c: 0xfff1dd }, { id: 'fria', n: 'Fría', c: 0xd8ecff, m: 'primera' },
     { id: 'disco', n: 'Disco', m: 'apagon' }, { id: 'verde', n: 'Verde fosforito', c: 0xb8ffb0, e: 14 }, { id: 'ambar', n: 'Ámbar', c: 0xffc27a, m: 'flota' }, { id: 'rosada', n: 'Rosada', c: 0xffb0d8, m: 'sede3' }, { id: 'lupa', n: 'Roja de inspector', c: 0xff8a7a, m: 'j_inspector' }, { id: 'sirena', n: 'Sirena', c: 0xff5040, m: 'bombero' }, { id: 'romantica', n: 'Romántica', c: 0xff9ec4, m: 'h_chuy' }] },
@@ -1226,7 +1280,25 @@ const look = k => LOOK[k].ops.find(o => o.id === (S.look || {})[k]) || LOOK[k].o
 
 // Lo que pasa de día, antes de salir a trabajar.
 Object.assign(EN_TXT, {"Sabotaje en el estacionamiento": "Sabotage in the parking lot", "Las cuatro llantas de la camioneta, ponchadas. Bajo el limpiaparabrisas hay una tarjeta: «Limpiezas El Cuñado · Rápido, barato y sin preguntas».": "All four tires, flat. Under the wiper there's a card: \"Limpiezas El Cuñado · Fast, cheap and no questions asked\".", "Llamar a la vulcanizadora": "Call the tire shop", "−$120 · llegas a tiempo": "−$120 · you arrive on time", "El de la vulcanizadora conoce a El Cuñado: «Siempre hace lo mismo. Le hizo esto a su propia suegra».": "The tire guy knows El Cuñado: \"He always does this. He did it to his own mother-in-law\".", "Inflarlas con la compresora": "Inflate them with the compressor", "Gratis, pero llegas 30 minutos tarde": "Free, but you arrive 30 minutes late", "Media hora inflando llantas con la compresora de la hidro. Llegas tarde, pero con los brazos de acero.": "Half an hour pumping tires with the pressure washer compressor. You're late, but your arms are steel now.", "¿Y la escalera?": "Where's the ladder?", "Tu escalera desapareció. En el taller de El Cuñado, a dos cuadras, se ve una idéntica. Con tu logo tachado con plumón.": "Your ladder is gone. At El Cuñado's shop, two blocks away, there's an identical one. With your logo crossed out in marker.", "Comprar otra": "Buy another one", "−$90": "−$90", "Escalera nueva. Esta vez le pones candado. Y tu nombre. Y una foto tuya.": "New ladder. This time you put a lock on it. And your name. And your photo.", "Ir a reclamarla": "Go get it back", "A ver qué dice": "Let's see what he says", "Recuperas tu escalera. Y de paso, El Cuñado te pide perdón frente a sus empleados. Bueno, tose muy fuerte. +2 de reputación.": "You get your ladder back. And El Cuñado apologizes in front of his employees. Well, he coughs very loudly. +2 reputation.", "El Cuñado jura que la escalera es suya «desde siempre». Llegas 20 minutos tarde y rentas una: −$60.": "El Cuñado swears the ladder has been his \"forever\". You arrive 20 minutes late and rent one: −$60.", "Carrera al cliente": "Race to the client", "Un restaurante nuevo llamó a los dos al mismo tiempo: el que llegue primero se queda el trabajo. La camioneta de El Cuñado ya está calentando motor.": "A new restaurant called both of you at the same time: whoever gets there first gets the job. El Cuñado's van is already revving.", "¡Salir volando!": "Floor it!", "−$30 de gasolina extra": "−$30 extra gas", "¡Llegaste primero! El dueño te recibe con café. Tienes un trabajo más esta noche (y bien pagado).": "You got there first! The owner greets you with coffee. You have one more job tonight (and it pays well).", "El Cuñado se metió por un callejón y llegó antes. Te saluda desde la puerta con una dona.": "El Cuñado cut through an alley and got there first. He waves at you from the door with a donut.", "Dejarlo ir": "Let it go", "Hay trabajo para todos": "There's work for everyone", "Lo dejas ir. Una hora después, el dueño te llama: El Cuñado le rompió la licuadora. Quizá la próxima.": "You let it go. An hour later the owner calls: El Cuñado broke his blender. Maybe next time."});
+Object.assign(EN_TXT, { 'El cumpleaños de tu mamá': 'Your mom\'s birthday', 'Hoy cumple años tu mamá. Ya te mandó tres audios preguntando si vas a ir a comer.': 'It\'s your mom\'s birthday. She\'s already sent you three voice notes asking if you\'re coming over for lunch.',
+  'Comer con ella y llevarle regalo': 'Have lunch with her and bring a gift', '−$60 · sales contento: rindes más esta noche': '−$60 · you leave happy: you work better tonight', 'Te dio de comer tanto que casi no cabes en el uniforme. Sales feliz.': 'She fed you so much you barely fit in the uniform. You leave happy.',
+  'Mandarle un audio': 'Send her a voice note', 'Gratis': 'Free', 'Te contestó con un audio de once minutos. Ni modo.': 'She replied with an eleven-minute voice note. Oh well.',
+  'Dolor de muela': 'Toothache', 'Te despiertas con la muela palpitando. Sientes el latido hasta en la rasqueta.': 'You wake up with a throbbing tooth. You can feel the pulse all the way into the scraper.',
+  'Ir al dentista': 'Go to the dentist', '−$150': '−$150', 'Te la arreglaron. El dentista dijo que «muchos tacos de canasta». Lo negaste todo.': 'Fixed. The dentist said "too many street tacos". You denied everything.',
+  'Aguantarse': 'Tough it out', 'Gratis, pero rindes menos esta noche': 'Free, but you work worse tonight', 'Aguantas. Cada pasada de la rasqueta suena en tu cabeza como campana.': 'You tough it out. Every scrape rings in your head like a bell.',
+  'El partido': 'The match', 'Tus amigos te invitan a ver la final en el bar de la esquina. «Es la final, compadre».': 'Your friends invite you to watch the final at the corner bar. "It\'s the final, buddy".',
+  'Ir al partido': 'Go to the match', '−$40 · llegas 15 min tarde, pero contento': '−$40 · you arrive 15 min late, but happy', 'Ganó tu equipo. Llegas tarde, ronco y feliz.': 'Your team won. You arrive late, hoarse and happy.',
+  'Mejor trabajar': 'Better work', 'Lo ves por el celular en la camioneta. Pierde tu equipo. Mejor ni hubieras visto.': 'You watch it on your phone in the van. Your team loses. You shouldn\'t have watched.' });
 const DIAS = [
+  { id: 'mama', t: 'El cumpleaños de tu mamá', txt: 'Hoy cumple años tu mamá. Ya te mandó tres audios preguntando si vas a ir a comer.', ops: [
+    { t: 'Comer con ella y llevarle regalo', d: '−$60 · sales contento: rindes más esta noche', f: H => { S.dinero -= 60; H.contento = true; return 'Te dio de comer tanto que casi no cabes en el uniforme. Sales feliz.'; } },
+    { t: 'Mandarle un audio', d: 'Gratis', f: () => 'Te contestó con un audio de once minutos. Ni modo.' }] },
+  { id: 'muela', t: 'Dolor de muela', txt: 'Te despiertas con la muela palpitando. Sientes el latido hasta en la rasqueta.', ops: [
+    { t: 'Ir al dentista', d: '−$150', f: () => { S.dinero -= 150; return 'Te la arreglaron. El dentista dijo que «muchos tacos de canasta». Lo negaste todo.'; } },
+    { t: 'Aguantarse', d: 'Gratis, pero rindes menos esta noche', f: H => { H.muela = true; return 'Aguantas. Cada pasada de la rasqueta suena en tu cabeza como campana.'; } }] },
+  { id: 'partido', t: 'El partido', txt: 'Tus amigos te invitan a ver la final en el bar de la esquina. «Es la final, compadre».', ops: [
+    { t: 'Ir al partido', d: '−$40 · llegas 15 min tarde, pero contento', f: H => { S.dinero -= 40; H.retraso = 15; H.contento = true; return 'Ganó tu equipo. Llegas tarde, ronco y feliz.'; } },
+    { t: 'Mejor trabajar', d: 'Gratis', f: () => 'Lo ves por el celular en la camioneta. Pierde tu equipo. Mejor ni hubieras visto.' }] },
   { id: 'llantas', t: 'Sabotaje en el estacionamiento', solo: s => s.fase === 'empresa', txt: 'Las cuatro llantas de la camioneta, ponchadas. Bajo el limpiaparabrisas hay una tarjeta: «Limpiezas El Cuñado · Rápido, barato y sin preguntas».', ops: [
     { t: 'Llamar a la vulcanizadora', d: '−$120 · llegas a tiempo', f: () => { S.dinero -= 120; return 'El de la vulcanizadora conoce a El Cuñado: «Siempre hace lo mismo. Le hizo esto a su propia suegra».'; } },
     { t: 'Inflarlas con la compresora', d: 'Gratis, pero llegas 30 minutos tarde', f: H => { H.retraso = 30; return 'Media hora inflando llantas con la compresora de la hidro. Llegas tarde, pero con los brazos de acero.'; } }] },
@@ -1315,6 +1387,7 @@ function nueva() {
 // Lo que se añadió después (medallas, récords, estilo, radio): se rellena sin tocar la partida.
 function completar(s) {
   s.kits = s.kits || [];
+  RIVAL = CIUDADES[s.ciudad || 1].rival;
   if (s.eq && s.eq.segunda && !s.eq.flota) { s.eq.flota = 1; delete s.eq.segunda; }
   if (s.hoy && s.hoy.b && !s.hoy.equipos) { s.hoy.equipos = [s.hoy.b]; delete s.hoy.b; }
   if (!s.fijos) s.fijos = s.fase === 'empresa' ? Object.keys(COMPANEROS).filter(k => COMPANEROS[k].etapa <= s.etapa) : [];   // partidas de antes: los que ya estaban
@@ -1966,6 +2039,7 @@ function cartel(lineas, fondo, tinta, w, h, borde) {
   })), transparent: fondo === 'transparent' });
 }
 const AMBIENTE = {
+  residencia: { pared: 0xf1ead8, suelo: 0x1f2f4a, deco: ({ add, xd }) => { add(new T.BoxGeometry(8.9, .06, .02), new T.MeshStandardMaterial({ color: 0xd4af37, metalness: .9, roughness: .2 }), 0, 1.85, -.99); add(new T.PlaneGeometry(1, .42), cartel([['COCINA PRESIDENCIAL', 50], ['Prohibido el paso sin gafete', 30]], '#1f2f4a', '#ffe3b8', 1, .42, '#d4af37'), xd, 2.3, -.98); } },
   cafe: { pared: 0xbcd8b0, suelo: 0x8fae8a, deco: ({ add, xd }) => add(new T.PlaneGeometry(.75, .62), cartel([['MENÚ', 58], ['Café de olla · $25', 34], ['Conchas · $12', 34], ['Chilaquiles · $60', 34]], '#22382c', '#f1f1e6', .75, .62, '#8a5a2b'), xd, 2.2, -.99) },
   pizza: { pared: 0xe0a47a, suelo: 0xab413a, deco: ({ add, xd }) => { [0x2e9e5b, 0xf4f4f4, 0xd7382b].forEach((c, i) => add(new T.PlaneGeometry(.18, .5), new T.MeshBasicMaterial({ color: c }), xd - .18 + i * .18, 2.25, -.99));
     for (let j = 0; j < 15; j++) { const t = add(new T.CylinderGeometry(.05, .05, .42, 7), new T.MeshStandardMaterial({ color: 0x7a4a24, roughness: .95 }), xd - .25 + (j % 5) * .12, .05 + Math.floor(j / 5) * .095, -.7); t.rotation.z = Math.PI / 2; t.rotation.y = Math.PI / 2; }
@@ -2477,7 +2551,7 @@ const zCampana = () => Z.find(z => z.id === 'campana');
 function herramientas() {
   if (M && M.etapa === 'migdalear') return ['pulidor'];
   const h = ['rasqueta', 'espuma'];
-  if (EQ().hidro && !(M && M.hidroRota)) h.push('hidro');
+  if (EQ().hidro && !(M && (M.hidroRota || M.confiscada))) h.push('hidro');
   return h;
 }
 // Los pasos del trabajo, como en la vida real.
@@ -2495,7 +2569,7 @@ function empezarTurno(orden) {
   M = { orden, comp: orden.comp === 'solo' ? SOLO : COMPANEROS[orden.comp], fase: 'prep', zona: 0, t: 0, dur: TURNO_S + 10 * hab('pulmones') + (orden.campanas - 1) * 60 + ((orden.ductos || 1) - 1) * 30 + (orden.gigante ? 150 : 0) + (orden.comp === 'solo' ? 20 : 0) + (orden.leccion === 1 ? 60 : orden.leccion === 3 ? -25 : 0), herr: 'rasqueta', prevHerr: 'espuma', prep: {}, botella: 1,
     trazo: null, combo: 0, ultSuelta: 0, ultDir: null, charlaT: 9, dormido: false, dormirT: rnd(30, 45) * (arcoFin('chuy') ? 2 : 1), ronqT: 0, gerenteT: rnd(18, 28) * (1 + .2 * hab('santo')), paciencia: 100 * (1 + .2 * hab('santo')), enojado: false, descuento: 0,
     eventos: [], hechos: new Set(), danos: [], repExtra: 0, propinaMod: 0, enZona: 0, apuntado: null, presionado: false, ev: null, album: [], listoAvisado: new Set(), prepMin: orden.retraso || 0,
-    maxCombo: 0, combos3: 0, utiles: 0, vacias: 0, tFiltros: null, retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
+    maxCombo: 0, combos3: 0, utiles: 0, vacias: 0, tFiltros: null, vida: vida().fuerza * (orden.contento ? 1.05 : 1) * (orden.muela ? .9 : 1), retos: orden.retos || [], avisosTipo: {}, usoHidro: false, usoEspuma: false, radioApagada: !S.aj.radio, goteo: 0, fotoAntes: null, apagon: 0, coche: 0,
     pedido: orden.pedido ? pedido(orden.pedido) : null, cliente: { n: 'Cliente', color: '#e9e9e9' },
     equipo: orden.equipo.map(e => ({ ...e, fuerza: e.fuerza * (orden.animo ? 1.15 : 1) * (tun('masaje') ? 1.05 : 1), t: rnd(.2, .8) })) };
   if (tun('bocina')) { M.propinaMod += .02; setTimeout(bocina, 600); }
@@ -2545,12 +2619,13 @@ function empezarTurno(orden) {
   if (M.pedido) setTimeout(() => M && M.fase === 'prep' && M.pedido && decir(M.cliente, M.pedido.txt), 1800);
   if (S.fase === 'empresa' && iDucto() >= 0 && azar(.3)) M.objeto = 'pendiente';
   if (orden.jefe) {
-    const J = JEFES[orden.jefe]; M.cliente = { n: L(...J.quien), color: '#e9e9e9' };
+    const J = JEFES[orden.jefe]; M.cliente = orden.residencia ? { n: L('El escolta', 'The bodyguard'), color: '#2b3946' } : { n: L(...J.quien), color: '#e9e9e9' };
     M.jefe = { id: orden.jefe, v: orden.jefe === 'tele' ? 60 : 0, min: 100, strikes: 0, ok: 0, mal: 0, prox: 25, rev: null, nd: 0, limpio: 0, tick: 0, susto: rnd(18, 28), sustos: 0 };
     if (orden.jefe === 'embrujada') { M.apagon = 1e6; M.huboApagon = true; }
-    setTimeout(() => M && M.jefe && decir(M.cliente, L(...J.txt)), 1500);
+    if (!orden.residencia) setTimeout(() => M && M.jefe && decir(M.cliente, L(...J.txt)), 1500);
   }
-  if (orden.contrato) { const q = CONTRATANTES[orden.contrato.quien] || CONTRATANTES[0]; M.cliente = { n: L(q[0], q[1]), color: '#e9e9e9' }; setTimeout(() => M && M.fase === 'prep' && decir(M.cliente, L(`Le recuerdo el contrato: ${orden.contrato.conds.map(id => condicion(id).t[0].toLowerCase()).join('; ')}.`, `A reminder of the contract: ${orden.contrato.conds.map(id => condicion(id).t[1].toLowerCase()).join('; ')}.`)), 1800); }
+  if (orden.residencia) { M.fritoT = 25; setTimeout(() => M && M.fase === 'prep' && decir({ n: 'Monsieur Fritó', color: '#f2f2f2' }, L('Bienvenidos a mi cocina. Tienen hasta las seis. A las siete sirvo foie gras a doce embajadores.', 'Welcome to my kitchen. You have until six. At seven I serve foie gras to twelve ambassadors.')), 1200); }
+  if (orden.contrato) { const q = contratante(orden.contrato); M.cliente = { n: L(q[0], q[1]), color: '#e9e9e9' }; setTimeout(() => M && M.fase === 'prep' && decir(M.cliente, L(`Le recuerdo el contrato: ${orden.contrato.conds.map(id => condicion(id).t[0].toLowerCase()).join('; ')}.`, `A reminder of the contract: ${orden.contrato.conds.map(id => condicion(id).t[1].toLowerCase()).join('; ')}.`)), 1800); }
   const hist = S.cunado && S.cunado.ultimo;
   if (M.duelo && hist) setTimeout(() => M && decir(QUIEN_CUNADO, hist.gano === 'el' ? uno([L(`¿Te acuerdas de ${hist.donde}? Yo sí. Todos los días.`, `Remember ${hist.donde}? I do. Every day.`), L(`Otra vez tú. Te gané en ${hist.donde}, ¿o ya se te olvidó?`, `You again. I beat you at ${hist.donde}, or did you forget?`)]) : uno([L(`Lo de ${hist.donde} fue suerte. Hoy traigo rasqueta nueva.`, `${hist.donde} was luck. Today I brought a new scraper.`), L(`No he dormido desde que me ganaste en ${hist.donde}. Hoy me desquito.`, `I haven't slept since you beat me at ${hist.donde}. Payback time.`)])), 2400);
   else if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
@@ -2807,7 +2882,7 @@ function escurre(sf) {
   return sf.abajo;
 }
 const radioRasqueta = () => [0, .1, .12, .14][EQ().rasqueta] * (EQ().mango ? 1.25 : 1);
-const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * (1 + .1 * hab('brazo')) * (EQ().electrica ? 1.25 : 1) * ((M && M.bonoRasqueta) || 1)
+const fuerzaRasqueta = () => [0, .26, .34, .44][EQ().rasqueta] * ((M && M.vida) || 1) * (1 + .1 * hab('brazo')) * (EQ().electrica ? 1.25 : 1) * ((M && M.bonoRasqueta) || 1)
   * (M && hab('cadena') && performance.now() - (M.ultEspumaT || 0) < 4000 ? 1.3 : 1) * (M && M.enZona < 3 ? 1 + .2 * hab('arranque') : 1);
 
 // ---- Turno a medias: si se cierra la app, el turno se guarda (grasa de cada superficie, hora, zona, preparación,
@@ -3513,6 +3588,29 @@ const RADIO_EV = {
   ladron: [['Se busca: mapache con antecedentes. Última vez visto con una botella de desengrasante.', 'Wanted: raccoon with a record. Last seen carrying a bottle of degreaser.']],
   bloqueo: [['Hay una olla de pozole estorbando en alguna cocina. Si es tuya, muévela, por favor.', 'There\'s a pot of pozole in someone\'s way in a kitchen. If it\'s yours, please move it.']],
 };
+// ---- La Residencia Oficial: tras ganar la Gran Licitación, la Presidencia te llama. Una noche en tres actos:
+// control de seguridad (te quitan la hidro si no pagas el permiso), la cocina con el escolta revisando y el jefe de protocolo,
+// y la revisión final. Con A abre los contratos de gobierno.
+const RES_PREMIO = 25000, RES_PERMISO = 600;
+const FRITO = [['¡Mon Dieu! ¿Quién puso espuma sobre mi caldo de tres días?', 'Mon Dieu! Who put foam on my three-day stock?'], ['En Francia limpiamos las campanas con champaña. Aquí con… eso. Bueno.', 'In France we clean hoods with champagne. Here with… that. Fine.'],
+  ['El presidente quiere tacos de canasta para la cena. Yo renuncio. Mañana. Hoy no, hoy hay cena.', 'The president wants street tacos for dinner. I quit. Tomorrow. Not today, there\'s a dinner.'], ['¿Ve esa campana? Ahí me tomaron foto con tres presidentes. Que brille.', 'See that hood? Three presidents had their photo taken with me there. Make it shine.'],
+  ['Shhh. El escolta me está viendo. Me ve siempre. Creo que le caigo bien.', 'Shhh. The bodyguard is watching me. He always is. I think he likes me.']];
+const GOBIERNO = [['Embajada de Noruega', 'Norwegian Embassy', 'hotel'], ['Cafetería del Congreso', 'Congress cafeteria', 'comedor'], ['Cuartel de Bomberos', 'Fire station', 'fonda'],
+  ['Comedor del Ayuntamiento', 'City Hall canteen', 'comedor'], ['Cocina del Senado', 'Senate kitchen', 'hotel'], ['Hospital Militar', 'Military hospital', 'comedor']];
+const residenciaLista = () => S.fase === 'empresa' && S.licitGanada && (!S.residencia || (!S.residencia.hecha && S.noche >= (S.residencia.reintento || 0)));
+function ordenResidencia() {
+  const o = genOrden('residencia'); o.residencia = true; o.firmado = true; o.duelo = false; o.pedido = null; o.ayud = 0;
+  o.jefe = 'inspector'; o.contrato = { conds: ['espejo', 'sinDanos'], quien: 'protocolo' };
+  return o;
+}
+function controlSeguridad() {
+  if (!EQ().hidro) return;
+  carta(L('Control de seguridad', 'Security check'), L('El escolta revisa tu equipo con un detector, un perro y mucha desconfianza. «¿Y esta pistola de agua a presión? Queda confiscada.»', 'The bodyguard checks your gear with a detector, a dog and plenty of suspicion. "And this high-pressure water gun? Confiscated."'), [
+    { t: L(`Pagar el permiso especial (−$${RES_PERMISO})`, `Pay the special permit (−$${RES_PERMISO})`), prim: true, f: () => { S.dinero -= RES_PERMISO; resultado(L('Permiso concedido', 'Permit granted'), L('Tres sellos, dos firmas y una foto tuya de frente y de perfil. La hidrolavadora entra.', 'Three stamps, two signatures and a mugshot. The pressure washer is in.'), M.comp, L('Me pidieron identificación a mí también. Yo nomás traigo la credencial del gimnasio.', 'They asked for my ID too. All I had was my gym card.')); } },
+    { t: L('Que se la queden esta noche', 'Let them keep it tonight'), f: () => { M.confiscada = true; if (M.herr === 'hidro') cambiarHerr('rasqueta'); pintarHerrBtn(); resultado(L('Sin hidrolavadora', 'No pressure washer'), L('Esta noche, a pura rasqueta y espuma. Como en los tiempos de Don Rigo.', 'Tonight it\'s all scraper and foam. Like in Don Rigo\'s day.'), M.comp, L('Mis brazos ya están llorando.', 'My arms are already crying.')); } },
+    { t: L('Explicarle la norma NFPA 96', 'Explain the NFPA 96 code'), f: () => { if (azar(.5)) resultado(L('Convencido', 'Convinced'), L('Al tercer artículo, el escolta te devuelve la hidrolavadora para que dejes de hablar.', 'By the third article, the bodyguard hands back the pressure washer so you\'ll stop talking.'), M.comp, L('Nunca había visto a alguien rendirse tan rápido.', 'Never seen anyone give up that fast.')); else { M.confiscada = true; if (M.herr === 'hidro') cambiarHerr('rasqueta'); pintarHerrBtn(); resultado(L('No funcionó', 'It didn\'t work'), L('«Señor, aquí la norma la pongo yo.» La hidrolavadora se queda en la garita.', '"Sir, I make the rules here." The pressure washer stays at the gate.'), M.comp, L('Lo intentaste. Con mucho entusiasmo.', 'You tried. With lots of enthusiasm.')); } } },
+  ], { bloquea: true });
+}
 // ---- Trabajos jefe: la regla de cada noche especial
 function tickJefe(dt, z) {
   const J = M.jefe;
@@ -3568,7 +3666,7 @@ function pintarJefe() {
   if (J.id === 'tele') { el.querySelector('b').textContent = `📺 ${L('Audiencia', 'Ratings')} ${Math.round(J.v)} %`; b.style.width = J.v + '%'; el.querySelector('small').textContent = ''; }
   if (J.id === 'hospital') { el.querySelector('b').textContent = `🏥 ${L('Ruido', 'Noise')}`; b.style.width = Math.min(100, J.v) + '%'; el.querySelector('small').textContent = `${L('Regaños', 'Scoldings')}: ${J.strikes}/3`; }
   if (J.id === 'embrujada') { el.querySelector('b').textContent = `👻 ${L('Campana embrujada', 'Haunted hood')}`; el.querySelector('small').textContent = `${L('Sustos', 'Scares')}: ${J.sustos}`; }
-  if (J.id === 'inspector') { el.querySelector('b').textContent = `🔍 ${'✓'.repeat(J.ok)}${'✗'.repeat(J.mal)}` + (J.ok + J.mal ? '' : L('Inspector', 'Inspector')); bar.hidden = !J.rev; if (J.rev) b.style.width = J.rev.t / 20 * 100 + '%'; el.querySelector('small').textContent = J.rev ? `${Z[J.rev.z].n} · ${Math.ceil(J.rev.t)} s` : ''; }
+  if (J.id === 'inspector') { el.querySelector('b').textContent = `🔍 ${'✓'.repeat(J.ok)}${'✗'.repeat(J.mal)}` + (J.ok + J.mal ? '' : M.orden.residencia ? L('Escolta', 'Bodyguard') : L('Inspector', 'Inspector')); bar.hidden = !J.rev; if (J.rev) b.style.width = J.rev.t / 20 * 100 + '%'; el.querySelector('small').textContent = J.rev ? `${Z[J.rev.z].n} · ${Math.ceil(J.rev.t)} s` : ''; }
 }
 function lanzarEvento(e) {
   if (RADIO.on && RADIO_EV[e.tipo] && azar(.4)) setTimeout(() => M && M.fase === 'turno' && RADIO.on && decir(QUIEN_RADIO, L(...uno(RADIO_EV[e.tipo]))), 9000);
@@ -3949,6 +4047,8 @@ function tickTurno(dt) {
     if (M.pedido && M.pedido.id === 'antes3' && !M.aviso3 && M.t / M.dur * 480 >= 270) { M.aviso3 = true; decir(M.cliente, '¡Ya son las dos y media! El panadero llega a las tres, ¿eh?'); }
     if (M.duelo) tickDuelo(dt);
     if (M.jefe) tickJefe(dt, z);
+    if (M.orden.residencia && !M.controlHecho && M.t > 3 && !M.ev) { M.controlHecho = true; controlSeguridad(); }
+    if (M.orden.residencia && (M.fritoT -= dt) <= 0 && !M.ev) { M.fritoT = rnd(30, 45); decir({ n: 'Monsieur Fritó', color: '#f2f2f2' }, L(...uno(FRITO))); }
     if (M.robot) tickRobot(dt);
     if (M.tuto) tickTuto();
     if (!M.ev) {
@@ -4306,6 +4406,12 @@ function generarOrdenes() {
     o.pedido = null; o.micras = Math.round(o.micras * 1.25 / 50) * 50;   // los contratos difíciles vienen con más grasa
   }
   if (S.fase === 'empresa') { const f = fechaHoy(), D = S.diario && S.diario.fecha === f ? S.diario : null; if (!D || D.intentos < 3) out.push(ordenDiaria(f)); }
+  if (S.fase === 'empresa' && S.gobierno && azar(.35)) {
+    const lugar = uno(GOBIERNO), o = genOrden(COCINAS[lugar[2]] && COCINAS[lugar[2]].etapa <= S.etapa ? lugar[2] : 'cafe');
+    o.gobierno = true; o.nombre = L(lugar[0], lugar[1]); o.pago = r10(o.pago * 1.5); o.pedido = null; o.duelo = false;
+    o.contrato = { conds: [uno(CONDICIONES.filter(c => !c.si || c.si())).id], quien: 'protocolo' };
+    out.push(o);
+  }
   if (S.fase === 'empresa' && S.etapa >= 1 && S.rep >= 30 && S.noche >= (S.jefeNoche || 0) + 3) {
     const pend = Object.keys(JEFES).filter(id => !(S.jefes || {})[id]);
     if (azar(pend.length ? .3 : .12)) {
@@ -4591,6 +4697,12 @@ function ordenLicit(paso) {
   const d = LICIT[paso], o = genOrden(d.k); o.licit = paso + 1; o.jefe = d.jefe; o.firmado = true; o.ayud = 0; o.duelo = false; o.pedido = null; o.nombre = L(...d.n); o.pago = r10(o.pago * 1.4);
   return o;
 }
+function residenciaHoy() {
+  const H = S.hoy; if (!H || !residenciaLista() || H.ordenes.some(o => o.residencia)) return;
+  H.ordenes.unshift(ordenResidencia()); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++;
+  H.avisos.unshift(S.residencia && S.residencia.intento ? L('📞 La Presidencia te da otra oportunidad. «Esta vez sin escándalos, por favor.»', '📞 The Presidency gives you another chance. "No scandals this time, please."')
+    : L('📞 Llamaron de la Presidencia: después de la Gran Licitación, quieren a la mejor empresa de la ciudad para la cocina de la Residencia Oficial. Mañana hay cena de Estado.', '📞 The Presidency called: after the Grand Tender, they want the best company in the city for the Official Residence kitchen. There\'s a state dinner tomorrow.'));
+}
 function licitHoy() {
   const H = S.hoy; if (!H || !S.licit || H.ordenes.some(o => o.licit)) return;
   if (S.licit.noche === S.noche) return;
@@ -4691,6 +4803,7 @@ const PEGATINAS = {
   estrella: '<path d="M197 52l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.5"/>',
   rayo: '<path d="M200 51l-9 13h7l-4 11 11-15h-7l4-9z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.3"/>',
   tacos: '<g stroke="#0b1117" stroke-width="1.3"><path d="M185 70a12 12 0 0 1 24 0z" fill="#f2c14e"/><path d="M188 69q3-6 6-1q3-6 6-1q3-6 6 0" fill="none" stroke="#69c97a" stroke-width="2"/></g>',
+  sello: '<g stroke="#0b1117" stroke-width="1.3"><circle cx="197" cy="63" r="9" fill="#1f2f4a"/><circle cx="197" cy="63" r="6.5" fill="none" stroke="#d4af37"/><path d="M197 57.5l1.6 3.4 3.7.4-2.8 2.5.8 3.7-3.3-1.9-3.3 1.9.8-3.7-2.8-2.5 3.7-.4z" fill="#d4af37" stroke="none"/></g>',
   trofeo: '<g stroke="#0b1117" stroke-width="1.4"><path d="M190 54h14v6a7 7 0 0 1-14 0z" fill="#ffd23f"/><path d="M190 56h-4a4 4 0 0 0 4 5M204 56h4a4 4 0 0 1-4 5" fill="none"/><path d="M195 66h4v4h3v3h-10v-3h3z" fill="#ffd23f"/></g>',
   fantasma: '<path d="M189 72v-10a8 8 0 0 1 16 0v10l-3-3-2.5 3-2.5-3-2.5 3-2.5-3z" fill="#f2f4f5" stroke="#0b1117" stroke-width="1.4"/><circle cx="194" cy="62" r="1.4" fill="#0b1117"/><circle cx="200" cy="62" r="1.4" fill="#0b1117"/>',
   tele: '<g stroke="#0b1117" stroke-width="1.4"><rect x="186" y="57" width="22" height="15" rx="2" fill="#2b3946"/><rect x="189" y="60" width="16" height="9" fill="#9fe0ef"/><path d="M193 57l-4-5M201 57l4-5" fill="none"/></g>',
@@ -4756,7 +4869,7 @@ function pantallaCamioneta() {
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
   else if (!mundo) construirNoche(null);
-  findeHoy(); licitHoy(); misionesHoy();
+  findeHoy(); licitHoy(); residenciaHoy(); misionesHoy();
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
   const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros y álbum', 'Awards & album')]] : [['noche', L('Noche', 'Night')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
@@ -4776,14 +4889,14 @@ function pantallaCamioneta() {
 
 // Los trabajos que no eliges se ven en una tarjeta corta; el elegido se abre con todos sus detalles.
 function tarjetaCorta(o, i) {
-  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.gigante ? L('Gigante', 'Giant') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.diario ? '📅 ' + L('Reto del día', 'Daily challenge') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
+  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.gigante ? L('Gigante', 'Giant') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.diario ? '📅 ' + L('Reto del día', 'Daily challenge') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
   return `<button class="orden corta ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="false">
     <div class="fila"><h3>${esc(o.nombre)}</h3><span class="pago">${dinero(o.pago)}</span></div>
     <span class="nota">${chip ? `<b class="chip-txt ${o.duelo ? 'mal' : ''}">${esc(chip)}</b> · ` : ''}${nCocina(o.cocina)}${o.campanas > 1 ? ` · ${o.campanas} ${L('campanas', 'hoods')}` : ''} · ${o.micras.toLocaleString('es-MX')} µm${o.firmado ? '' : ` · <i>${L('sin firmar', 'not signed')}</i>`}</span>
   </button>`;
 }
 function tarjetaContrato(o) {
-  const q = CONTRATANTES[o.contrato.quien] || CONTRATANTES[0];
+  const q = contratante(o.contrato);
   return `<span class="contrato"><b>📜 ${L('Contrato difícil', 'Tough contract')} · ${esc(L(q[0], q[1]))}</b><i>«${esc(L(q[2], q[3]))}»</i>
     ${o.contrato.conds.map(id => `<span>☐ ${esc(L(...condicion(id).t))}</span>`).join('')}
     <small>${L(`Si cumples todo y apruebas: te pagan ${dinero(r10(o.pago * MULT_CONTRATO))} en vez de ${dinero(o.pago)}. Si fallas una: −${PENA_CONTRATO * 100} %. Viene más sucio de lo normal.`, `Meet everything and pass: you get ${dinero(r10(o.pago * MULT_CONTRATO))} instead of ${dinero(o.pago)}. Miss one: −${PENA_CONTRATO * 100}%. It's dirtier than usual.`)}</small></span>`;
@@ -4793,13 +4906,14 @@ function tarjetaOrden(o, i) {
   if (i !== H.sel) return tarjetaCorta(o, i);
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.diario ? `<span class="chip naranja">📅 ${L('Reto del día', 'Daily challenge')}</span>` : ''}${o.devolver ? `<span class="chip ok">🎁 ${L('Devolver', 'Return')}: ${esc(L(...objeto(o.devolver).n))}</span>` : ''}${o.jefe ? `<span class="chip jefe">${JEFES[o.jefe].ico} ${L('Trabajo jefe', 'Boss job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
+    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.gobierno ? `<span class="chip ok">🏛️ ${L('Contrato de gobierno', 'Government contract')}</span>` : ''}${o.residencia ? `<span class="chip jefe">🏛️ ${L('Misión de Estado', 'State mission')}</span>` : ''}${o.diario ? `<span class="chip naranja">📅 ${L('Reto del día', 'Daily challenge')}</span>` : ''}${o.devolver ? `<span class="chip ok">🎁 ${L('Devolver', 'Return')}: ${esc(L(...objeto(o.devolver).n))}</span>` : ''}${o.jefe && !o.residencia ? `<span class="chip jefe">${JEFES[o.jefe].ico} ${L('Trabajo jefe', 'Boss job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
     <h3>${esc(o.nombre)}</h3>${o.leccion ? `<span class="pista">${esc(L(LECCIONES[o.leccion].txt, EN.leccion[o.leccion][1]))}</span>` : ''}${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(TRAD(h.n))}: ${L('capítulo', 'chapter')} ${(c.cap || 0) + 1} ${L('de', 'of')} ${h.caps.length}</span>` : ''; })()}
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + L(' campanas · ', ' hoods · ') : ''}${L(`${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros`, `${EN.campana[o.hood.tipo]}, ${o.hood.ancho.toFixed(1)} m · ${EN.ducto[o.ducto.forma]}, ${o.ducto.largo} m · ${o.filtros} filters`)} · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
     ${o.pedido ? `<span class="pedido"><b>${esc(TRAD(pedido(o.pedido).quien))}:</b> «${esc(TRAD(pedido(o.pedido).txt))}»${pedido(o.pedido).premio ? ` <i>${L('Si cumples', 'If you deliver')}: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
+    ${o.residencia ? `<span class="contrato jefe-card"><b>🏛️ ${L('La Residencia Oficial', 'The Official Residence')}</b><span>${L(`Tres campanas, ductos largos y la cena de Estado a las 7:00. Seguridad estricta: solo entran dos equipos y revisan tu equipo en la puerta. El escolta revisará zonas durante la noche. Con A o A+: ${dinero(RES_PREMIO)} de premio, una medalla única y los contratos del gobierno.`, `Three hoods, long ducts and the state dinner at 7:00. Tight security: only two teams get in and they check your gear at the gate. The bodyguard will check zones during the night. With an A or A+: ${dinero(RES_PREMIO)} prize, a unique medal and government contracts.`)}</span></span>` : ''}
     ${o.contrato ? tarjetaContrato(o) : ''}
     ${o.diario ? (D => `<span class="contrato diario"><b>📅 ${L('Reto del día', 'Daily challenge')} · ${o.diario}</b><span>${L('Hoy todos los jugadores tienen esta misma cocina. Tienes 3 intentos para hacer tu mejor puntuación; si mejoras tu récord del día y apruebas, te dan un premio.', 'Today every player gets this same kitchen. You have 3 tries to set your best score; beat your record of the day and pass to get a prize.')}</span><small>${D ? L(`Tu récord de hoy: ${D.mejor} pts (${D.nota}) · intentos ${D.intentos}/3`, `Your record today: ${D.mejor} pts (${D.nota}) · tries ${D.intentos}/3`) : L('Todavía no lo has intentado hoy.', 'You haven\'t tried it today.')}${S.rec.diario ? ' · ' + L(`Mejor de siempre: ${S.rec.diario} pts`, `All-time best: ${S.rec.diario} pts`) : ''}</small></span>`)(S.diario && S.diario.fecha === o.diario ? S.diario : null) : ''}
-    ${o.jefe ? (J => `<span class="contrato jefe-card"><b>${J.ico} ${L('Trabajo jefe', 'Boss job')} · ${esc(L(...J.quien))}</b><i>«${esc(L(...J.txt))}»</i><span>${esc(L(...J.regla))}</span>${(S.jefes || {})[o.jefe] ? `<small>${L('Ya lo superaste con', 'You beat it with')} ${S.jefes[o.jefe]}. ${L('Paga igual de bien.', 'It pays just as well.')}</small>` : `<small>${L('Si lo superas: medalla y algo de estilo nuevo.', 'Beat it: a medal and some new style.')}</small>`}</span>`)(JEFES[o.jefe]) : ''}
+    ${o.jefe && !o.residencia ? (J => `<span class="contrato jefe-card"><b>${J.ico} ${L('Trabajo jefe', 'Boss job')} · ${esc(L(...J.quien))}</b><i>«${esc(L(...J.txt))}»</i><span>${esc(L(...J.regla))}</span>${(S.jefes || {})[o.jefe] ? `<small>${L('Ya lo superaste con', 'You beat it with')} ${S.jefes[o.jefe]}. ${L('Paga igual de bien.', 'It pays just as well.')}</small>` : `<small>${L('Si lo superas: medalla y algo de estilo nuevo.', 'Beat it: a medal and some new style.')}</small>`}</span>`)(JEFES[o.jefe]) : ''}
     ${o.duelo ? `<span class="aviso">${L(`${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.`, `${RIVAL} wants this client too: he will clean the same kitchen at the same time as you. If he finishes first, you get paid half.`)}</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(L(PISTAS[e], EN.pista[e]))}</span>`).join('') : `<span class="pista">${L('Todo tranquilo. Sospechoso.', 'All quiet. Suspicious.')}</span>`}
     <span class="nota estimado">${(() => { const g = estimadoOrden(o); return L(`Te quedas unos ${dinero(g.neto)}: ${dinero(o.pago)} del trabajo + propina típica ${dinero(g.propina)} − sueldos ${dinero(g.sueldos)} − gasolina, materiales y gastos fijos ${dinero(g.otros)}.`, `You keep about ${dinero(g.neto)}: ${dinero(o.pago)} for the job + typical tip ${dinero(g.propina)} − wages ${dinero(g.sueldos)} − gas, supplies and fixed costs ${dinero(g.otros)}.`); })()}</span>
@@ -5023,6 +5137,11 @@ const RESPUESTAS = {
   cuidado: ['Yo trato las campanas como si fueran de cristal.', 'Una vez rompí algo. Bueno, varias. Pero aprendí.', 'Si se rompe, es que ya venía rota.', '¿Cuidado? ¿Eso qué es?', 'Limpio con guantes de seda. Literal.'],
   puntual: ['¿A qué hora era? ¿De la noche o de la mañana?', 'Llego. Tarde, pero llego.', 'Normalmente llego a la hora. Normalmente.', 'Llego diez minutos antes. Siempre.', 'Llego antes que el jefe. Y me voy después.'],
 };
+function vVida() {
+  const act = (S && S.vida) || 'austero';
+  return `<h2 class="sec">🏠 ${L('Tu vida', 'Your life')}</h2><p class="nota">${L('Tú también comes, pagas renta y necesitas descansar. Se cobra cada noche en el parte; la renta y los servicios, cada 7 noches. Vivir mejor te deja descansado: rindes un poco más.', 'You also eat, pay rent and need rest. It\'s charged every night in the report; rent and bills every 7 nights. Living better keeps you rested: you work a little better.')}</p>
+    <div class="vida">${Object.entries(VIDA).map(([k, v]) => `<button class="comp" data-vida="${k}" aria-pressed="${act === k}"><div><b>${L(...v.n)}</b><span>${L(...v.d)}</span><span class="nota">${dinero(v.noche)}/${L('noche', 'night')} + ${dinero(v.semana)}/${L('semana', 'week')}${v.fuerza > 1 ? ` · +${Math.round((v.fuerza - 1) * 100)} % ${L('fuerza', 'strength')}` : ''}${v.propina ? ` · +${Math.round(v.propina * 100)} % ${L('propina', 'tip')}` : ''}</span></div></button>`).join('')}</div>`;
+}
 function vCuadrilla() {
   const plazas = PLAZAS[S.eq.camioneta];
   const comps = Object.entries(COMPANEROS).map(([id, c]) => {
@@ -5040,7 +5159,7 @@ function vCuadrilla() {
     <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}${!c.prueba && sede('formacion') > (c.cursos || []).length ? `<button class="btn peq" data-formar="${c.id}">🎓 ${L('Formar', 'Train')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div>${cursoAbierto === c.id ? `<div class="cursos">${Object.entries(CURSOS).filter(([k]) => !(c.cursos || []).includes(k)).map(([k, cu]) => `<button class="btn peq" data-curso="${c.id}|${k}" ${S.dinero < precioCurso(c) ? 'disabled' : ''}><b>${L(...cu.n)}</b><small>${L(...cu.d)}</small></button>`).join('')}<small class="nota">${L(`Cada curso cuesta ${dinero(precioCurso(c))}. Máximo 2 por persona.`, `Each course costs ${dinero(precioCurso(c))}. Up to 2 per person.`)}</small></div>` : ''}</div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0])}<div><b>${esc(c.n)}</b><span>${esc(TRAD(c.rasgo))} ${L('Pide', 'Asks for')} ${dinero(c.sueldo)} ${L('por noche', 'per night')}.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">${L('Bueno en', 'Good at')} ${L(ESPECIAL[c.esp], EN.esp[c.esp])}</span><span class="chip">${L('Carácter: ¿? (entrevístalo)', 'Personality: ? (interview them)')}</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.resp ? c.resp.map(TRAD).join(' ') : c.respuesta)}»</span>` : ''}</div>
     <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">${L('Entrevistar', 'Interview')}</button>`}<button class="btn prim peq" data-contratar="${c.id}">${L('Contratar', 'Hire')}</button></div></div>`).join('') || `<p class="nota">${L('Nadie por ahora. Vuelve en un par de noches.', 'Nobody right now. Check back in a couple of nights.')}</p>`;
-  return `${companeros}<h2 class="sec">${L('Coordinación', 'Coordination')}</h2>${angelica}<h2 class="sec">${L(`Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta`, `Helpers · ${plazas} ${plazas === 1 ? 'fits' : 'fit'} in the van`)}</h2>${mios}${S.etapa < 1 ? `<p class="pista">${L('En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.', 'Only one helper fits in the old van. With your own workshop you can buy bigger vans and more vans, and then you can fill whole teams.')}</p>` : ''}
+  return `${vVida()}${companeros}<h2 class="sec">${L('Coordinación', 'Coordination')}</h2>${angelica}<h2 class="sec">${L(`Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta`, `Helpers · ${plazas} ${plazas === 1 ? 'fits' : 'fit'} in the van`)}</h2>${mios}${S.etapa < 1 ? `<p class="pista">${L('En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.', 'Only one helper fits in the old van. With your own workshop you can buy bigger vans and more vans, and then you can fill whole teams.')}</p>` : ''}
     <p class="nota">${L('Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.', 'Helpers clean on their own during the shift and only get paid on the nights they go out. Big jobs need helpers. <b>Strength</b>: how much they clean (it grows with experience). <b>Care</b>: fewer accidents. <b>Punctuality</b>: whether they show up. Interview before hiring: until then you don\'t know their care or punctuality. New hires start with a 3-night trial at 80% pay.')}</p>
     <h2 class="sec">${L('Buscan trabajo · cambian cada 3 noches', 'Looking for work · changes every 3 nights')}</h2>${cand}
     <div class="acciones"><button class="btn" id="anuncioEmpleo" ${S.dinero < 60 ? 'disabled' : ''}>${L('Poner anuncio de empleo', 'Post a job ad')} (${dinero(60)})</button></div>
@@ -5139,9 +5258,10 @@ function enlazar() {
     const gen = e => e.ayud.length + (e.comp ? 1 : 0), eqs = hayB() ? (H.equipos || []).map((e, idx) => ({ e, k: idx + 2 })) : [];
     const conGente = e => gen(e) >= 2;
     const equipos = eqs.filter(({ e }) => typeof e.o === 'number' && e.o !== H.sel && H.ordenes[e.o] && H.ordenes[e.o].firmado && gen(e) >= sugerido(H.ordenes[e.o])).map(({ e, k }) => ({ orden: H.ordenes[e.o], comp: e.comp, ayud: [...e.ayud], k }));
-    const ayudan = o.gigante ? eqs.filter(({ e }) => e.o === 'mio' && conGente(e)).map(({ e, k }) => ({ comp: e.comp, ayud: [...e.ayud], k })).slice(0, o.finde ? 2 : 99) : [];
-    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, retos: H.retos || [], equipos, ayudan, espumaExtra: H.espumaExtra || 0 });
+    const ayudan = o.gigante ? eqs.filter(({ e }) => e.o === 'mio' && conGente(e)).map(({ e, k }) => ({ comp: e.comp, ayud: [...e.ayud], k })).slice(0, o.finde || o.residencia ? 2 : 99) : [];
+    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, contento: !!H.contento, muela: !!H.muela, retos: H.retos || [], equipos, ayudan, espumaExtra: H.espumaExtra || 0 });
   };
+  P.querySelectorAll('[data-vida]').forEach(b => b.onclick = () => { S.vida = b.dataset.vida; tono(700, .08, .06, 'triangle'); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-arco]').forEach(b => b.onclick = () => {
     const k = H.historia, a = S.arcos[k], op = ARCOS[k].caps[a.cap].ops[+b.dataset.arco];
     if (op.pide && S.dinero < op.pide) return;
@@ -5308,7 +5428,7 @@ function pantallaParte() {
   const ganaDuelo = d ? d.tuyo !== null && d.tuyo <= d.tRival : null;
   const tacos = ped && ped.tacos ? .5 : 1, mitadDuelo = d && !ganaDuelo ? .5 : 1;
   const cobro = Math.round((aprobado ? o.pago : o.pago * .5 * limpio) * (1 - M.descuento) * tacos * mitadDuelo / 10) * 10;
-  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 + .1 * hab('espejo') : 0) + .04 * hab('labia') + M.propinaMod, 0, .3 + .1 * hab('espejo')) / 5) * 5);
+  const propina = Math.max(0, Math.round(cobro * clamp(pulido * .25 + (espejo ? .05 + .1 * hab('espejo') : 0) + .04 * hab('labia') + vida().propina + M.propinaMod, 0, .3 + .1 * hab('espejo')) / 5) * 5);
   const extraPed = ped && !ped.tacos ? (pedOk ? Math.round(o.pago * ped.premio * (aprendiz ? .25 : 1) / 10) * 10 : aprendiz ? 0 : -Math.round(o.pago * .1 / 10) * 10) : 0;
   const danos = M.danos.reduce((a, x) => a + x.dinero, 0);
   // Racha: cada noche aprobada seguida suma un 5 % más (hasta un 25 %). Premia jugar bien sin castigar de más.
@@ -5324,6 +5444,9 @@ function pantallaParte() {
       [L('Materiales (desengrasante, plástico y cinta)', 'Supplies (degreaser, plastic and tape)'), -materiales()],
       ...(RENTA[S.etapa] ? [[L(`Renta del local (${nEtapa(S.etapa).toLowerCase()})`, `Rent (${nEtapa(S.etapa).toLowerCase()})`), -RENTA[S.etapa]]] : []),
       ...(S.eq.flota ? [[L(`Mantenimiento de camionetas (${S.eq.flota})`, `Van upkeep (${S.eq.flota})`), -40 * S.eq.flota]] : [])];
+  const V = vida();
+  lineas.push([L(`Tu vida (${V.n[0].toLowerCase()}): comida y transporte`, `Your life (${V.n[1].toLowerCase()}): food and transport`), -V.noche]);
+  if (S.noche % 7 === 0) lineas.push([L('Renta del depa, luz, agua, internet y teléfono (semanal)', 'Rent, power, water, internet and phone (weekly)'), -V.semana]);
   let neto = lineas.reduce((a, l) => a + (l[1] || 0), 0);
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
@@ -5352,6 +5475,16 @@ function pantallaParte() {
   } else if (S.finde && !aprendiz && S.finde.noche === S.noche) { finde = { t: L('Reto de fin de semana perdido', 'Weekend challenge lost'), txt: L('Esta noche hiciste otro trabajo y la cocina gigante del reto se quedó esperando.', 'You did another job tonight and the challenge\'s giant kitchen was left waiting.') }; S.finde = null; }
   if (o.devolver && !aprendiz && objeto(o.devolver)) {
     const ob = objeto(o.devolver), v = r10(o.pago * .3); lineas.push([L(`${ob.dueno[0]} recuperó ${L(...ob.n).toLowerCase()} (regalo de agradecimiento)`, `${ob.dueno[1]} got back ${L(...ob.n).toLowerCase()} (thank-you gift)`), v]); neto += v; rep += 3;
+  }
+  let residencia = null;
+  if (o.residencia && !aprendiz) {
+    const exito = aprobado && (n === 'A' || n === 'A+'), intento = ((S.residencia || {}).intento || 0) + 1;
+    if (exito) { lineas.push([L('Premio de la Presidencia', 'Presidential award'), RES_PREMIO]); neto += RES_PREMIO; rep += 8; S.gobierno = true; }
+    S.residencia = { hecha: aprobado, exito, nota: n, intento, noche: S.noche, reintento: aprobado ? null : S.noche + 7 };
+    residencia = exito ? L(`Nota ${n}. La cena de Estado fue un éxito: el presidente brindó «por la campana más limpia del país». Se abren los contratos del gobierno.`, `Grade ${n}. The state dinner was a hit: the president toasted "to the cleanest hood in the country". Government contracts are now open.`)
+      : aprobado ? L(`Nota ${n}. Aprobado, pero el jefe de protocolo esperaba más: «Cumplieron. Nada más.» Sin contratos del gobierno.`, `Grade ${n}. Passed, but the head of protocol expected more: "You did the job. That's all." No government contracts.`)
+      : L(`Nota ${n}. Escándalo: un embajador encontró grasa en su sopa. La Presidencia te dará otra oportunidad en una semana.`, `Grade ${n}. Scandal: an ambassador found grease in his soup. The Presidency will give you another chance in a week.`);
+    S.noticia = exito ? `La cena de Estado sale en todos los noticieros. El presidente agradeció en persona a ${S.empresa.nombre}: «sin ellos, la sopa sabría a campana».` : aprobado ? null : 'Escándalo en la Residencia Oficial: grasa en la sopa de un embajador. La oposición pide explicaciones. Y una servilleta.';
   }
   let diario = null;
   if (o.diario && !aprendiz) {
@@ -5466,6 +5599,7 @@ function pantallaParte() {
   if (jefe && jefe.supera) dar('j_' + jefe.id);
   if (M.bombero) dar('bombero');
   if (licit && S.licitGanada === S.noche) dar('licitacion');
+  if (o.residencia && S.residencia && S.residencia.exito) dar('estado');
   if ((S.objetos || []).length >= 6) dar('objetos6');
   if ((S.diarioDias || 0) >= 5) dar('diario5');
   if ((S.objetos || []).length >= OBJETOS.length) dar('objetos');
@@ -5518,7 +5652,7 @@ function pantallaParte() {
   guardar();
   M.nota = n; M.nombre = o.nombre; M.nocheParte = S.noche - 1;
   S.llamada = llamadaRadio({ n, nombre: o.nombre, aprobado, gana: ganaDuelo, perdioDuelo: d && !ganaDuelo, desastre: M.danos.some(x => x.dinero >= 60), jefe, bombero: M.bombero, objeto: !!M.objHallado, espejo });
-  S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
+  if (!o.residencia || !S.noticia) S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
   setTimeout(() => vibrar(n === 'F' ? 350 : n === 'A+' || n === 'A' ? [100, 50, 100, 50, 160] : [100, 50, 100]), 250);
   const desastre = M.danos.some(x => x.dinero >= 60);
   const nLook = (k, g, op) => `${L(g.n, EN.look[k])}: ${L(op.n, EN.look[op.id])}`;
@@ -5540,6 +5674,7 @@ function pantallaParte() {
     ${ped ? `<div class="cita"><b>${esc(TRAD(ped.quien))} · ${esc(L(ped.chip, EN.pedidoChip[ped.id]))}</b>${esc(TRAD(ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : ped.mal))}</div>` : ''}
     ${misHechas.length ? `<div class="cita"><b>📞 ${L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b>${misHechas.some(x => x.todo) ? L('¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.', 'All three weekly challenges! I told all my buddies. Well, the only one who picks up.') : uno([L('¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'See? I told you you could. Well, I didn\'t tell you. But I thought it.'), L('Reto cumplido. Se me cayó la caña de la emoción.', 'Challenge done. I dropped my fishing rod from the excitement.'), L('Así se hace. Beto dice que él te enseñó. Yo no dije nada.', 'That\'s how it\'s done. Beto says he taught you. I said nothing.')])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
     ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
+    ${residencia ? `<div class="cita historia"><b>🏛️ ${L('La Residencia Oficial', 'The Official Residence')}</b>${esc(residencia)}</div>` : ''}
     ${diario ? `<div class="cita historia"><b>📅 ${L('Reto del día', 'Daily challenge')}</b>${esc(diario)}</div>` : ''}
     ${licit ? `<div class="cita historia"><b>🏛️ ${esc(licit.t)}</b>${esc(licit.txt)}</div>` : ''}
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(TRAD(capitulo.t))}</b>${esc(TRAD(capitulo.txt))}</div>` : ''}
