@@ -411,6 +411,8 @@ button.orden[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--hivis), 0 
 .calle-aprendiz .roja { width: 70px; margin-left: auto; opacity: .75; filter: saturate(.9) brightness(.8); }
 .empresa { position: relative; }
 .cartel-cunado { position: absolute; left: 6px; top: 6px; transform: rotate(-8deg); background: #d7382b; color: #fff; font: 700 10px var(--f-cond); padding: 2px 5px; border: 1px dashed #fff; border-radius: 3px; cursor: pointer; }
+.gota-cara { position: absolute; inset: 0; pointer-events: none; z-index: 6; background: radial-gradient(circle at var(--x) var(--y), rgba(120,90,30,.92) 0, rgba(120,90,30,.85) 70px, rgba(80,60,20,.4) 140px, transparent 220px); animation: gotaCara 1.3s ease-out forwards; }
+@keyframes gotaCara { 0% { opacity: 1; } 60% { opacity: .9; } 100% { opacity: 0; } }
 .pared-beto { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-radius: 10px; background: #3a3f44 repeating-linear-gradient(0deg, transparent 0 22px, #ffffff0d 22px 24px); }
 .pared-beto span { display: grid; place-items: center; width: 40px; font-size: 26px; filter: grayscale(1) brightness(.35); transform: rotate(var(--r)); }
 .pared-beto small { font-size: 10px; filter: invert(1); }
@@ -698,9 +700,10 @@ const EN = {
   comp: { beto: ['the Cousin', 'Fast. Breaks things with total confidence.'], lupe: ['the Veteran', 'Perfect work. Trusts no one.'], chuy: ['the Big Guy', 'Brute strength. Falls asleep on any flat surface.'] },
   esp: { filtros: 'filters', campana: 'hoods', ducto: 'ducts' },
   caracter: { lio: 'Trouble', medio: 'Sometimes goofs off', serio: 'Serious and reliable' },
-  herr: { rasqueta: ['Scraper', 'Short strokes: it removes the crust.'], espuma: ['Foam', 'Spread it on the grease and wait 2 seconds: then it comes off three times faster.'], hidro: ['Pressure washer', 'Hold and aim. Without foam, the crust splatters.'], pulidor: ['Polish', 'Polish the clean metal: mirror finish and bigger tips.'] },
+  herr: { soplete: ['Torch', 'Short bursts: melts burnt grease instantly. More than 3 seconds straight and the metal turns blue.'], rasqueta: ['Scraper', 'Short strokes: it removes the crust.'], espuma: ['Foam', 'Spread it on the grease and wait 2 seconds: then it comes off three times faster.'], hidro: ['Pressure washer', 'Hold and aim. Without foam, the crust splatters.'], pulidor: ['Polish', 'Polish the clean metal: mirror finish and bigger tips.'] },
   kit: [['Basic', 'Old scrapers and a bucket.'], ['Complete', 'Good scrapers, foam and ladders.'], ['Pro', 'Their own pressure washer and polisher.']],
-  tienda: { alta: ['High-pressure washer', 'Tap the washer button again to switch modes: covers more and removes 35% more, but hitting crust without foam splatters the kitchen (small damage).'], fino: ['Fine scraper', 'Tap the scraper again for fine mode: a narrow stroke 45% stronger. Great for corners and leftovers; slow on big areas.'], aspira: ['Industrial vacuum', 'Dirty water on the floor costs 70% less and water running down the walls stains half as much. Without a bag, vacuuming at the end takes 5 minutes.'], planta: ['Water recycling unit', 'Recycles water and degreaser: each job\'s supplies cost 40% less.'],
+  tienda: { gel: ['Degreasing gel', 'Tap the foam button again for gel mode: it sticks to walls and ceilings and runs downward, softening more surface. Takes 5 s to work (foam takes 2). On the ceiling, careful: it drips.'],
+    soplete: ['Thermal torch', 'A new tool for burnt grease: melts it 5× faster than the scraper, without foam. Use it in short bursts: more than 3 seconds on the same spot burns the metal blue and the inspector deducts points. Useless on normal grease and oil.'], alta: ['High-pressure washer', 'Tap the washer button again to switch modes: covers more and removes 35% more, but hitting crust without foam splatters the kitchen (small damage).'], fino: ['Fine scraper', 'Tap the scraper again for fine mode: a narrow stroke 45% stronger. Great for corners and leftovers; slow on big areas.'], aspira: ['Industrial vacuum', 'Dirty water on the floor costs 70% less and water running down the walls stains half as much. Without a bag, vacuuming at the end takes 5 minutes.'], planta: ['Water recycling unit', 'Recycles water and degreaser: each job\'s supplies cost 40% less.'],
     r2: ['Tempered steel scraper', 'Wider and 30% stronger.'], r3: ['Carbide scraper', 'The ultimate blade. Crust is scared of it.'], xl: ['XL foam bottle', 'Your foam lasts 50% longer each night.'], conc: ['Concentrated degreaser', 'Foam softens 4× instead of 3×.'],
     orb: ['Orbital polisher', 'Mirror finish in half the strokes.'], bolsa: ['New containment bags', 'The old ones have more patches than bag.'], hidro: ['Your own hot water pressure washer', 'Wide, strong jet. This one is yours, and nobody will sell it to buy a karaoke machine.'],
     cam2: ['Van with roof rack', 'Room for 2 helpers besides your partner.'], uv: ['UV grease flashlight', 'Leftover grease glows a little under your helmet light. No spot gets past you.'], cubiertas: ['Custom covers', 'Covering and uncovering each appliance takes half the time.'],
@@ -1061,6 +1064,7 @@ const HERR = {
   rasqueta: { n: 'Rasqueta', d: 'Pasadas cortas: quita la costra.' },
   espuma: { n: 'Espuma', d: 'Barre la grasa y espera 2 segundos: luego sale el triple de rápido.' },
   hidro: { n: 'Hidro', d: 'Mantén y apunta. Sin espuma, la costra salpica.' },
+  soplete: { n: 'Soplete', d: 'A toques cortos: derrite la grasa quemada al instante. Más de 3 segundos seguidos y el metal se pone azul.' },
   pulidor: { n: 'Migdalear', d: 'Migdalea el metal limpio: acabado espejo y más propina.' },
 };
 const ICONOS = {
@@ -1069,7 +1073,8 @@ const ICONOS = {
   hidro: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20h10l3-4h4"/><path d="M8 20v6h5"/><path d="M23 13l6-3M23 16h7M23 19l6 3" stroke="#9fe0ef"/></svg>',
   pulidor: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2"><ellipse cx="16" cy="20" rx="11" ry="5"/><path d="M12 15V9h8v6"/><path d="M7 8l2 2M25 8l-2 2M16 3v3" stroke="#ffd23f"/></svg>',
 };
-const RUEDA = ['rasqueta', 'espuma', 'hidro', 'pulidor'];
+ICONOS.soplete = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M4 22h11l3-3h3v6h-3l-3-3" /><path d="M21 22h2"/><path d="M26 22c3-2 3-5 0-8 1 3-1 4-2 4 1-2 0-4-2-5 1 3-1 5 1 9z" fill="#ff8a1f" stroke="#ff8a1f"/></svg>';
+const RUEDA = ['rasqueta', 'espuma', 'hidro', 'soplete', 'pulidor'];
 
 // Tunear la camioneta: lujos graciosos, cada uno con su pequeño efecto (o ninguno, pero con mucho estilo).
 const ESTILO_SOLO = ['bigotes', 'dados'];   // tuneo que solo se ve
@@ -1109,6 +1114,8 @@ const TIENDA = [
   { id: 'robot2', n: 'Turbo para el Ductobot', d: 'Va el doble de rápido y con cepillos laterales: también limpia las esquinas.', p: 2200, ok: s => s.eq.robot === 1 && s.etapa >= 3, f: s => { s.eq.robot = 2; } },
   // Herramientas con ventaja y limitación: no reemplazan a las básicas, se eligen según la zona.
   { id: 'alta', n: 'Hidro de alta presión', d: 'Toca otra vez el botón de la hidro para cambiar de modo: cubre más y quita un 35 % más, pero si das en costra sin espuma salpica la cocina (pequeños daños).', p: 1600, ok: s => s.eq.hidro && !s.eq.alta && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.alta = true; } },
+  { id: 'gel', n: 'Gel desengrasante', d: 'Toca otra vez la espuma para el modo gel: se pega en paredes y techo y escurre hacia abajo ablandando más superficie. Tarda 5 s en actuar (la espuma, 2). En el techo, cuidado: gotea.', p: 700, ok: s => !s.eq.gel && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.gel = true; } },
+  { id: 'soplete', n: 'Soplete térmico', d: 'Herramienta nueva para la grasa quemada: la derrite 5 veces más rápido que la rasqueta, sin espuma. Úsalo a toques: más de 3 segundos en el mismo sitio quema el metal (se pone azul) y el inspector te quita nota. No sirve para grasa normal ni aceite.', p: 1800, ok: s => !s.eq.soplete && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.soplete = true; } },
   { id: 'fino', n: 'Raspador fino', d: 'Toca otra vez la rasqueta para el modo fino: pasada estrecha y un 45 % más fuerte. Ideal para esquinas y restos; lento en áreas grandes.', p: 900, ok: s => !s.eq.fino && s.fase === 'empresa', f: s => { s.eq.fino = true; } },
   { id: 'aspira', n: 'Aspiradora industrial', d: 'El agua sucia en el piso cuesta un 70 % menos y el agua que escurre por las paredes mancha la mitad. Si no pusiste bolsa, aspirar al final te cuesta 5 minutos.', p: 1200, ok: s => !s.eq.aspira && s.fase === 'empresa' && s.etapa >= 1, f: s => { s.eq.aspira = true; } },
   { id: 'planta', n: 'Planta de agua', d: 'Recicla el agua y el desengrasante: los materiales de cada trabajo salen un 40 % más baratos.', p: 2000, ok: s => !s.eq.planta && s.fase === 'empresa' && s.etapa >= 2, f: s => { s.eq.planta = true; } },
@@ -2726,6 +2733,7 @@ function herramientas() {
   if (M && M.etapa === 'migdalear') return ['pulidor'];
   const h = ['rasqueta', 'espuma'];
   if (EQ().hidro && !(M && (M.hidroRota || M.confiscada))) h.push('hidro');
+  if (EQ().soplete) h.push('soplete');
   return h;
 }
 // Los pasos del trabajo, como en la vida real.
@@ -2753,7 +2761,7 @@ function empezarTurno(orden) {
   M.faltan = faltan;   // las donas de la clienta, para el gerente
   if (M.pedido) M.cliente = { n: M.pedido.quien, color: '#e9e9e9' };
   // El duelo: El Cuñado limpia la misma cocina a la vez. Gana quien deje todo bajo el límite primero.
-  if (orden.duelo) M.duelo = { tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22), tropiezo: azar(.35) ? M.dur * rnd(.25, .5) : null };
+  if (orden.duelo) M.duelo = { hitos: {}, tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22), tropiezo: azar(.35) ? M.dur * rnd(.25, .5) : null };
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   // La tubería la puede romper cualquiera de la cuadrilla, salvo los más cuidadosos (Lupe y los serios). Beto, casi seguro.
   const prob = e => (e.principal ? ({ beto: arcoFin('beto') ? .45 : .75, chuy: .25 })[orden.comp] || 0 : e.tipo === 'serio' ? 0 : e.tipo === 'lio' ? .45 : e.tipo === 'medio' ? .25 : Math.max(0, 3 - (e.cuidado || 3)) * .1) * (hab('supervisor') ? .5 : 1);
@@ -3022,7 +3030,7 @@ function apuntar(cx, cy) {
   return { sf, gx, gy, punto: hit.point, normal };
 }
 
-function multEspuma(a) { return a >= 1.5 - .3 * hab('espuma') - (M && M.trucoEspuma ? .4 : 0) && a < 30 ? (EQ().conc ? 4 : 3) : 1; }
+function multEspuma(a, gel) { return a >= (gel ? 5 : 1.5) - .3 * hab('espuma') - (M && M.trucoEspuma ? .4 : 0) && a < (gel ? 60 : 30) ? (EQ().conc ? 4 : 3) : 1; }
 // Cuánto se quitó de cada tipo de suciedad en la última pasada (para que cada una suene distinta).
 const TIPO_Q = [0, 0, 0, 0];
 function sonidoRaspa() {
@@ -3051,18 +3059,19 @@ function raspar(sf, gx, gy, rc, cant, herr) {
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     const dist = Math.hypot(x + .5 - gx, y + .5 - gy); if (dist > rc) continue;
     const i = y * sf.nx + x, f = 1 - dist / rc;
-    if (herr === 'espuma') { if (sf.d[i] > .02 && (sf.soak[i] < 0 || sf.soak[i] > 20)) sf.soak[i] = 0; continue; }
+    if (herr === 'espuma') { if (sf.d[i] > .02 && (sf.soak[i] < 0 || sf.soak[i] > 20)) { sf.soak[i] = 0; if (modo('espuma') === 'gel') (sf.gel || (sf.gel = new Uint8Array(sf.d.length)))[i] = 6; else if (sf.gel) sf.gel[i] = 0; } continue; }
     if (herr === 'pulidor') { if (sf.d[i] < .02 && sf.pol[i] < 1) { sf.pol[i] = Math.min(1, sf.pol[i] + cant * f * (1 + .5 * hab('espejo'))); quit += cant * f; pulsoVib(8, 140); } continue; }
     if (herr === 'hidro') { sf.wet[i] = 1; sf.mojado = true; }
     if (sf.d[i] <= 0) continue;
     const tp = sf.tipo ? sf.tipo[i] : 0;
-    const m = tp === 3 ? 1 : multEspuma(sf.soak[i]);   // el sarro no se ablanda con espuma
+    const m = tp === 3 ? 1 : multEspuma(sf.soak[i], sf.gel && sf.gel[i]);   // el sarro no se ablanda con espuma
     let duro = sf.d[i] > .6 && m === 1 ? (herr === 'hidro' ? .25 : .5) : 1;
     if (herr !== 'cuadrilla') {   // las cuadrillas traen de todo: a ellas la suciedad especial no las frena
       if (tp === 1 && m === 1) duro *= herr === 'hidro' ? (EQ().vapor ? 1 : .4) : .3;                       // quemada: sin espuma casi no sale
       if (tp === 2) duro *= herr === 'hidro' ? 2.2 : herr === 'rasqueta' ? .5 : 1;          // aceite: la hidro lo arrastra, la rasqueta lo embarra
       if (tp === 3) duro *= herr === 'rasqueta' ? (EQ().rasqueta >= 3 ? 1.1 : .4) : .2;     // sarro: rasqueta de carburo
     }
+    if (herr === 'soplete') duro = tp === 1 ? 5 : tp === 2 ? .3 : tp === 3 ? .25 : .45;   // la llama es para la costra quemada
     if (tp && hab('especialista') && herr !== 'cuadrilla' && (tp === 1 ? m > 1 && herr === 'rasqueta' : tp === 2 ? herr !== 'rasqueta' : herr === 'rasqueta')) duro *= 1.3;
     if (tp) sf.ultTipo = tp + (m > 1 ? 10 : 0);
     const q = Math.min(sf.d[i], cant * f * m * duro);
@@ -3216,7 +3225,8 @@ function aplicarTramo(a, b) {
   for (let k = 1; k <= pasos; k++) q += raspar(sf, a.gx + (b.gx - a.gx) * k / pasos, a.gy + (b.gy - a.gy) * k / pasos, rc, cant * .4, herr);
   const ahora = performance.now(), libre = ahora - (M.ultRuido || 0);
   if (herr === 'rasqueta' && q > .02) { emitir(b.punto, Math.min(6, 1 + q * 4), 'grasa', b.normal, .8); if (q > .05 && azar(Math.min(.7, q * 2))) trozo(b.punto, b.normal); if (libre > 55) { M.ultRuido = ahora; sonidoRaspa(); } escurrirDucto(.15); }
-  if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); pulso('spray'); M.ultEspumaT = performance.now(); }
+  if (herr === 'espuma') { emitir(b.punto, 2, 'espuma', b.normal, .3); pulso('spray'); M.ultEspumaT = performance.now();
+    if (modo('espuma') === 'gel' && sf.normal && sf.normal.y < -.5 && performance.now() - (M.gotaGelT || 0) > 6000 && azar(.12)) { M.gotaGelT = performance.now(); gotaEnCara(); } }
   if (herr === 'pulidor') {
     pulso('pulidora', .2);
     if (q > 0) { if (azar(.3)) emitir(b.punto, 1, 'chispa', b.normal, .4); }
@@ -3253,7 +3263,7 @@ canvas.addEventListener('pointermove', e => {
   if (!M || !M.trazo) return;
   const h = apuntar(e.clientX, e.clientY);
   M.apuntado = h; M.trazo.x = e.clientX; M.trazo.y = e.clientY;
-  if (M.herr !== 'hidro') aplicarTramo(M.trazo.ultimo, h);
+  if (M.herr !== 'hidro' && M.herr !== 'soplete') aplicarTramo(M.trazo.ultimo, h);
   M.trazo.ultimo = h;
 });
 function soltar(e) {
@@ -3320,11 +3330,12 @@ function pintarHerrBtn() {
 }
 $('#barraHerr').addEventListener('click', e => { const b = e.target.closest('[data-hb]'); if (b && M && M.fase === 'turno' && !(M.ev && M.ev.bloquea)) { audio(); if (b.dataset.hb === M.herr) cambiarModo(M.herr); else cambiarHerr(b.dataset.hb); } });
 // Segundo modo de una herramienta (si lo compraste): hidro de alta presión y rasqueta fina. Se cambia tocando otra vez su botón.
-const MODOS = { hidro: ['alta', () => EQ().alta, ['ALTA', 'HIGH']], rasqueta: ['fino', () => EQ().fino, ['FINA', 'FINE']] };
+const MODOS = { hidro: ['alta', () => EQ().alta, ['ALTA', 'HIGH']], rasqueta: ['fino', () => EQ().fino, ['FINA', 'FINE']], espuma: ['gel', () => EQ().gel, ['GEL', 'GEL']] };
 const modo = h => (M && M.modo && M.modo[h]) || 'normal';
 function cambiarModo(h) {
   const m = MODOS[h]; if (!m || !m[1]()) return;
   M.modo = M.modo || {}; M.modo[h] = modo(h) === 'normal' ? m[0] : 'normal'; pintarHerrBtn(); tono(modo(h) === 'normal' ? 520 : 780, .08, .06, 'triangle');
+  if (h === 'espuma') return ayuda(modo(h) === 'gel' ? L('Gel: se pega en paredes y techo y escurre hacia abajo. Tarda 5 segundos en actuar.', 'Gel: it sticks to walls and ceilings and runs downward. Takes 5 seconds to work.') : L('Espuma normal: actúa en 2 segundos.', 'Normal foam: works in 2 seconds.'), 3);
   ayuda(h === 'hidro' ? (modo(h) === 'alta' ? L('Alta presión: cubre más y quita más, pero en costra sin espuma salpica la cocina.', 'High pressure: covers more and removes more, but on crust without foam it splatters the kitchen.') : L('Hidro normal: más control.', 'Normal washer: more control.'))
     : (modo(h) === 'fino' ? L('Rasqueta fina: estrecha y fuerte, para esquinas y restos.', 'Fine scraper: narrow and strong, for corners and leftovers.') : L('Rasqueta normal: pasada ancha.', 'Normal scraper: wide stroke.')), 3);
 }
@@ -3354,7 +3365,7 @@ function abrirRueda() {
   w.style.top = clamp(r.top + r.height / 2, 140, innerHeight - 135) + 'px';
   const hs = herramientas();
   w.innerHTML = '<div class="centro"></div>' + RUEDA.map((h, i) => {
-    const a = -Math.PI / 2 + i * Math.PI / 2, x = 125 + Math.cos(a) * 84, y = 125 + Math.sin(a) * 84;
+    const a = -Math.PI / 2 + i * 2 * Math.PI / RUEDA.length, x = 125 + Math.cos(a) * 84, y = 125 + Math.sin(a) * 84;
     return `<div class="sector ${hs.includes(h) ? '' : 'off'} ${h === M.herr ? 'sel' : ''}" data-h="${h}" style="left:${x}px;top:${y}px">${ICONOS[h]}<small>${nHerr(h)}</small></div>`;
   }).join('');
   w.hidden = false; tono(440, .08, .05, 'triangle');
@@ -3362,7 +3373,7 @@ function abrirRueda() {
 function elegirEnRueda(x, y) {
   const w = $('#rueda').getBoundingClientRect(), dx = x - (w.left + w.width / 2), dy = y - (w.top + w.height / 2);
   if (Math.hypot(dx, dy) < 30) ruedaSel = null;
-  else { const h = RUEDA[(Math.round((Math.atan2(dy, dx) + Math.PI / 2) / (Math.PI / 2)) + 4) % 4]; ruedaSel = herramientas().includes(h) ? h : null; }
+  else { const n = RUEDA.length, h = RUEDA[(Math.round((Math.atan2(dy, dx) + Math.PI / 2) / (2 * Math.PI / n)) + n) % n]; ruedaSel = herramientas().includes(h) ? h : null; }
   $('#rueda').querySelectorAll('.sector').forEach(s => s.classList.toggle('sel', s.dataset.h === ruedaSel));
 }
 function cerrarRueda() { ruedaAbierta = false; $('#rueda').hidden = true; if (M) M.pausaRueda = false; }
@@ -4010,6 +4021,7 @@ const hitosDuelo = () => HITOS.filter(([id]) => Z.some(z => z.id === id));
 const puntosDuelo = d => { const v = Object.values(d.hitos || {}); return { tu: v.filter(x => x === 'tu').length, el: v.filter(x => x === 'el').length }; };
 // Al terminar la noche, los hitos que nadie cerró: son tuyos si quedaron limpios (el inspector ya pasó), si no, de El Cuñado.
 function cerrarDuelo(d) {
+  d.hitos = d.hitos || {};
   for (const [id] of hitosDuelo()) if (!d.hitos[id]) d.hitos[id] = Z.filter(z => z.id === id).every(z => micras(z) <= LIMITE) ? 'tu' : 'el';
   const p = puntosDuelo(d); return p.tu > p.el || (p.tu === p.el && d.tuyo !== null);
 }
@@ -4278,15 +4290,35 @@ function tickTurno(dt) {
       emitir(a.punto, 3, 'agua', a.normal, 1.2); chorro(true); M.usoHidro = true; M.goteo = Math.min(1, M.goteo + dt * .4); if (M.jefe && M.jefe.id === 'hospital') M.jefe.v += dt * (modo('hidro') === 'alta' ? 55 : 32);
       if (azar(dt * 6)) gota(.03);
       const i = clamp(Math.floor(a.gy), 0, a.sf.ny - 1) * a.sf.nx + clamp(Math.floor(a.gx), 0, a.sf.nx - 1);
-      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i]) === 1 && azar(dt * 1.5 * (alta ? 2.5 : 1) * (1 - .6 * hab('pulso')))) { emitir(a.punto, 12, 'grasa', a.normal, 2);
+      if (a.sf.d[i] > .6 && multEspuma(a.sf.soak[i], a.sf.gel && a.sf.gel[i]) === 1 && azar(dt * 1.5 * (alta ? 2.5 : 1) * (1 - .6 * hab('pulso')))) { emitir(a.punto, 12, 'grasa', a.normal, 2);
         if (alta && (M.salpicaAlta || 0) < 2 && azar(.35)) { M.salpicaAlta = (M.salpicaAlta || 0) + 1; dano(L('La alta presión salpicó grasa a la cocina', 'High pressure splattered grease on the kitchen'), 15, 0); } ayuda(L('¡Salpica! Echa espuma antes en la costra.', 'It splatters! Foam the crust first.')); }
       const al = M.eventos.find(x => x.tipo === 'alarma' && !M.hechos.has(x));
       if (q > 0 && al && z.id === 'campana' && azar(dt * .3)) lanzarEvento(al);
       if (M.escurrido > .4 && !M.pistaEscurre) { M.pistaEscurre = true; ayuda(L('El agua sucia escurre y mancha lo de abajo: lava de arriba hacia abajo.', 'Dirty water runs down and stains what\'s below: wash from top to bottom.'), 5); }
+    } else if (M.presionado && M.herr === 'soplete' && M.apuntado) {
+      // Soplete: derrite la costra al instante, pero el metal se calienta. Hay que soltar a ratos (toques cortos).
+      const a = M.apuntado, tr = M.trazo || { x: 0, y: 0 }, hv = M.hidroPrev || (M.hidroPrev = { x: tr.x, y: tr.y, t: 0, v: 200 });
+      if ((hv.t += dt) >= .3) { hv.v = Math.hypot(tr.x - hv.x, tr.y - hv.y) / hv.t; hv.x = tr.x; hv.y = tr.y; hv.t = 0; }
+      const q = raspar(a.sf, a.gx, a.gy, .12 / a.sf.celda, fuerzaRasqueta() * 1.6 * dt * 6, 'soplete');
+      M.usoSoplete = true; M.calor = (M.calor || 0) + dt * (hv.v < 60 ? 1.25 : .8);
+      if (azar(dt * 30)) emitir(a.punto, 2, 'chispa', a.normal, .6); if (q > .002 && azar(dt * 8)) emitir(a.punto, 3, 'humo', a.normal, .3);
+      if ((M.sopleteRuido = (M.sopleteRuido || 0) - dt) <= 0) { M.sopleteRuido = .14; rafaga(.16, 380 + M.calor * 120, .07, 'lowpass'); }
+      if (M.calor > 2 && !M.avisoCalor) { M.avisoCalor = true; ayuda(L('¡El metal se está calentando! Suelta un momento o se pondrá azul.', 'The metal is heating up! Let go for a moment or it will turn blue.'), 3); vibrar(40); }
+      if (M.calor > 3) { M.calor = .8; requemar(a); }
     } else if (!M.presionado) { chorro(false); M.hidroPrev = null; M.quieto = 0; }
+    if (!(M.presionado && M.herr === 'soplete')) { M.calor = Math.max(0, (M.calor || 0) - dt * 1.6); if (M.calor < 1) M.avisoCalor = false; }
     // Espuma: el tiempo corre para la grasa empapada.
     let espuma = false;
-    for (const s of z.sfs) { let hay = false; for (let i = 0; i < s.soak.length; i++) if (s.soak[i] >= 0) { s.soak[i] += dt; hay = true; if (s.soak[i] > 30 || s.d[i] <= 0) s.soak[i] = -1; } if (hay) { s.sucio = true; espuma = true; } }
+    for (const s of z.sfs) {
+      let hay = false; const g = s.gel, pared = g && s.normal && Math.abs(s.normal.y) < .5;
+      for (let i = 0; i < s.soak.length; i++) if (s.soak[i] >= 0) {
+        s.soak[i] += dt; hay = true;
+        // El gel escurre por las paredes: ablanda la celda de abajo (unas cuantas filas).
+        if (pared && g[i] > 1 && i >= s.nx && s.d[i - s.nx] > .02 && s.soak[i - s.nx] < 0 && azar(dt * 1.3)) { s.soak[i - s.nx] = 0; g[i - s.nx] = g[i] - 1; }
+        if (s.soak[i] > (g && g[i] ? 60 : 30) || s.d[i] <= 0) { s.soak[i] = -1; if (g) g[i] = 0; }
+      }
+      if (hay) { s.sucio = true; espuma = true; }
+    }
     // La espuma chisporrotea y la cocina gotea (más después del chorro).
     if (espuma && azar(dt * 9)) burbuja();
     if ((M.escT = (M.escT || 0) + dt) > .1) { escurrir(z, M.escT); M.escT = 0; }   // el agua se recalcula 10 veces por segundo, no en cada imagen
@@ -4480,7 +4512,7 @@ function revisionInspector() {
       fila.querySelector('em').textContent = `${f.m.toLocaleString('es-MX')} µm${f.z.id === 'campana' && cel ? ` · ${L('migdaleado', 'polished')} ${Math.round(pul / cel * 100)} %` : ''}`;
       const sello = fila.querySelector('i'); sello.textContent = ok ? '✓' : '✗'; sello.className = ok ? (tipo === 'espejo' ? 'ok brillo' : 'ok') : 'mal';
       fila.classList.add('vista');
-      dice(f.z.huella && f.z.huella.visible ? L('¿Y esta mano? Es de Beto, ¿verdad? No cuenta como grasa. Cuenta como firma. Pasa.', 'And this hand? It\'s Beto\'s, isn\'t it? Doesn\'t count as grease. Counts as a signature. Moving on.') : L(...uno(DICHOS_INSP[tipo])));
+      dice(f.z.id === 'campana' && M.requemado && !M.dichoRequemado && (M.dichoRequemado = true) ? L('¿Y estas manchas azules? Metal requemado. Eso no se quita: te lo descuento.', 'And these blue marks? Burnt metal. That doesn\'t come off: I\'m deducting it.') : f.z.huella && f.z.huella.visible ? L('¿Y esta mano? Es de Beto, ¿verdad? No cuenta como grasa. Cuenta como firma. Pasa.', 'And this hand? It\'s Beto\'s, isn\'t it? Doesn\'t count as grease. Counts as a signature. Moving on.') : L(...uno(DICHOS_INSP[tipo])));
       tono(ok ? 880 : 220, .12, .08, ok ? 'triangle' : 'square'); rafaga(.06, 1800, .08, 'bandpass');
       t = setTimeout(paso, lento * .55);
     }, lento * .6);
@@ -4527,6 +4559,23 @@ function tickTuto() {
 }
 function quitarTuto() { $('#tuto').hidden = true; delete document.body.dataset.tuto; }
 
+// Gel en el techo: a veces te cae una gota en la cara (la pantalla se tapa un momento).
+function gotaEnCara() {
+  const el = document.createElement('div'); el.className = 'gota-cara'; el.style.setProperty('--x', rnd(25, 75) + '%'); el.style.setProperty('--y', rnd(25, 60) + '%');
+  $('#juego').appendChild(el); setTimeout(() => el.remove(), 1300); gota(.08); vibrar(30);
+  ayuda(L('¡Plaf! Gel en la cara. En el techo, mejor espuma normal.', 'Splat! Gel in your face. On the ceiling, regular foam works better.'), 3);
+}
+// Una mancha azulada de metal requemado por el soplete: no se quita y el inspector la descuenta.
+let txRequemado = null;
+function requemar(a) {
+  M.requemado = (M.requemado || 0) + 1; tono(160, .4, .1, 'sawtooth', 90); vibrar([60, 40, 60]);
+  txRequemado = txRequemado || texCanvas(lienzo(64, 64, g => { const r = g.createRadialGradient(32, 32, 2, 32, 32, 31); r.addColorStop(0, 'rgba(60,40,30,.85)'); r.addColorStop(.35, 'rgba(70,60,160,.75)'); r.addColorStop(.7, 'rgba(190,140,60,.45)'); r.addColorStop(1, 'rgba(190,140,60,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }));
+  if (a && a.punto && mundo && (M.requemadas = (M.requemadas || 0) + 1) <= 14) {
+    const m = new T.Mesh(new T.CircleGeometry(.07, 20), new T.MeshBasicMaterial({ map: txRequemado, transparent: true, depthWrite: false }));
+    const n = a.normal || new T.Vector3(0, 0, 1); m.position.copy(a.punto).addScaledVector(n, .006); m.lookAt(m.position.clone().add(n)); mundo.add(m);
+  }
+  ayuda(L('¡Requemaste el metal! Esa mancha azul ya no sale y el inspector la va a ver. Suelta el soplete a ratos.', 'You burnt the metal! That blue mark won\'t come off and the inspector will see it. Release the torch now and then.'), 5);
+}
 // ---- pelar: quitar el plástico de la campana, las cubiertas y bajar la bolsa
 
 function empezarPelado() {
@@ -5942,6 +5991,7 @@ function explicarNota({ pts, n, zonas, limpio, aprobado, espejo, pulido, finMin,
   if (M.enojado) filas.push([L('Gerente enojado', 'Angry manager'), -5, 0]);
   if (ped && !ped.tacos) filas.push([L('Pedido del cliente', 'Client request'), pedOk ? 5 : -6, 5]);
   if (d) filas.push([L('Duelo', 'Duel'), ganaDuelo ? 4 : -2, 4]);
+  if (M.requemado) filas.push([L(`Metal requemado con el soplete (${M.requemado})`, `Metal burnt by the torch (${M.requemado})`), -Math.min(9, 3 * M.requemado), 0]);
   const sig = [...NOTAS].reverse().find(x => x[0] > pts);
   const tips = [];
   const sucias = zonas.filter(z => z.m > LIMITE);
@@ -6012,7 +6062,7 @@ function pantallaParte() {
   let rep = (aprobado ? (espejo ? 6 : 4) : -6) + M.repExtra + (o.campanas > 1 && aprobado ? 3 : 0) + (ped && !ped.tacos ? (pedOk ? 2 : -2) : 0) + (tacos < 1 ? 1 : 0) + (d ? (ganaDuelo ? 3 : -2) : 0);
   const xp = Math.round(Z.reduce((a, z) => a + pctZona(z) * o.micras * z.sfs.length, 0) / 220) + (aprobado ? 40 : 0) + (espejo ? 25 : 0) + (tacos < 1 ? 30 : 0);
   // La nota del turno: limpieza, acabado, rapidez, preparación y lo que salió mal.
-  const pts = Math.round(limpio * 45 + (aprobado ? 15 : 0) + pulido * 12 + (espejo ? 5 : 0) + (aprobado ? clamp((480 - finMin) / 480, 0, .5) * 12 : 0) + tecnica().pts   // la rapidez solo cuenta si el trabajo pasa
+  const pts = -Math.min(9, 3 * (M.requemado || 0)) + Math.round(limpio * 45 + (aprobado ? 15 : 0) + pulido * 12 + (espejo ? 5 : 0) + (aprobado ? clamp((480 - finMin) / 480, 0, .5) * 12 : 0) + tecnica().pts   // la rapidez solo cuenta si el trabajo pasa
     + (M.prep.gas ? 2 : 0) + (M.prep.luz ? 2 : 0) + M.prep.cubierto * 3 + (M.prep.bolsa ? 3 : 0)
     - M.danos.length * 4 - (M.enojado ? 5 : 0) + (ped && !ped.tacos ? (pedOk ? 5 : -6) : 0) + (d ? (ganaDuelo ? 4 : -2) : 0));
   const n = nota(pts);
