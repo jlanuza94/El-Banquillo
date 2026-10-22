@@ -413,6 +413,7 @@ button.orden[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--hivis), 0 
 .cartel-cunado { position: absolute; left: 6px; top: 6px; transform: rotate(-8deg); background: #d7382b; color: #fff; font: 700 10px var(--f-cond); padding: 2px 5px; border: 1px dashed #fff; border-radius: 3px; cursor: pointer; }
 .gota-cara { position: absolute; inset: 0; pointer-events: none; z-index: 6; background: radial-gradient(circle at var(--x) var(--y), rgba(120,90,30,.92) 0, rgba(120,90,30,.85) 70px, rgba(80,60,20,.4) 140px, transparent 220px); animation: gotaCara 1.3s ease-out forwards; }
 @keyframes gotaCara { 0% { opacity: 1; } 60% { opacity: .9; } 100% { opacity: 0; } }
+.orden.dia.saga { border-color: #d7382b; background: linear-gradient(165deg, rgba(215,56,43,.12), rgba(22,33,42,.96)); }
 .pared-beto { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px; border-radius: 10px; background: #3a3f44 repeating-linear-gradient(0deg, transparent 0 22px, #ffffff0d 22px 24px); }
 .pared-beto span { display: grid; place-items: center; width: 40px; font-size: 26px; filter: grayscale(1) brightness(.35); transform: rotate(var(--r)); }
 .pared-beto small { font-size: 10px; filter: invert(1); }
@@ -4012,6 +4013,8 @@ function tickRobot(dt) {
 // ---- el duelo contra El Cuñado: limpia la misma cocina a la vez que tú
 
 const avanceTuyo = () => Z.reduce((a, z) => a + clamp(pctZona(z) / Math.max(.05, 1 - LIMITE / M.orden.micras), 0, 1), 0) / Z.length;
+// Cuántas veces sabotea El Cuñado por duelo según cómo os lleváis (y si en el puerto es tu aliado).
+const maxSabotajes = () => S.saga && S.saga.aliado && ciudad() === 2 ? 1 : respetoCunado() >= 2 ? 1 : respetoCunado() <= -2 ? 3 : 2;
 // Duelo 2.0: tres hitos (filtros, campana, ducto). Quien termine primero cada grupo se lleva el punto; gana quien
 // tenga más. El Cuñado avanza con su propio ritmo, que cambia según cómo vas tú: si le ganas, se pone nervioso
 // (más rápido, pero se resbala más); si te gana, se confía y afloja.
@@ -4056,7 +4059,9 @@ function tickDuelo(dt) {
   const d = M.duelo;
   if ((d.chk = (d.chk || 0) - dt) > 0) return;
   d.chk = .25;
-  d.hitos = d.hitos || {}; if (d.prog === undefined) { d.prog = 0; d.ultT = M.t; d.animo = 'normal'; pintarHitos(); }
+  d.hitos = d.hitos || {}; if (d.prog === undefined) { d.prog = 0; d.ultT = M.t; d.animo = 'normal'; pintarHitos();
+    // Te debía una (la llanta de la carretera): te regala los filtros, una sola vez.
+    if (S.saga && S.saga.favor && ciudad() === 1 && hitosDuelo().some(h => h[0] === 'filtros')) { S.saga.favor = false; ganarHito(d, 'filtros', 'tu'); decir(QUIEN_CUNADO, L('Los filtros son tuyos. Por lo de la llanta. Ya estamos a mano.', 'The filters are yours. For the tire thing. Now we\'re even.')); } }
   // Avance de El Cuñado: su ritmo depende de su ánimo; los contraataques y resbalones lo paran un rato.
   const paso = Math.max(0, M.t - d.ultT); d.ultT = M.t;
   if (d.pausa > 0) d.pausa -= paso; else if (d.rivalFin === null) d.prog = Math.min(1, d.prog + paso * ANIMO_CUNADO[d.animo].vel / d.tRival);
@@ -4085,7 +4090,7 @@ function tickDuelo(dt) {
     ayuda(L('El Cuñado, nervioso, se resbaló. ¡Aprovecha!', 'El Cuñado, nervous, slipped. Take advantage!'), 4);
   }
   // Sabotajes: dos veces por noche, El Cuñado ensucia la zona que llevas más limpia (solo mientras el duelo sigue abierto).
-  if (!d.ganador && d.tuyo === null && d.rivalFin === null && !M.ev && M.etapa === 'lavar' && (d.sab || 0) < 2 && el >= [.33, .66][d.sab || 0]) {
+  if (!d.ganador && d.tuyo === null && d.rivalFin === null && !M.ev && M.etapa === 'lavar' && (d.sab || 0) < maxSabotajes() && el >= [.33, .66, .85][d.sab || 0]) {
     d.sab = (d.sab || 0) + 1;
     const z = Z.reduce((a, b) => pctZona(b) > pctZona(a) ? b : a);
     if (pctZona(z) > .2 && micras(z) > LIMITE) {
@@ -4887,6 +4892,62 @@ const ARCOS = {
       { txt: () => ['Chuy llega temprano. Despierto. Peinado. «Jefe, Marisol dice que si me duermo en el trabajo no hay segunda cita. Así que ya no me duermo. Bueno, menos.» Y Tortas La Güera quiere que le limpies la campana.', 'Chuy shows up early. Awake. Hair combed. "Boss, Marisol says if I fall asleep at work there\'s no second date. So I don\'t sleep anymore. Well, less." And Tortas La Güera wants you to clean their hood.'],
         ops: [{ t: ['«Felicidades, Chuy»', '"Congratulations, Chuy"'], d: ['', ''], f: () => ['Chuy se pone rojo, sonríe y bosteza. Pero no se duerme.', 'Chuy blushes, smiles and yawns. But he doesn\'t fall asleep.'] }] }] },
 };
+// ---- La saga de El Cuñado: quién es y por qué te odia. Siete capítulos que se abren con tu progreso.
+// El secreto: hace veinte años fue aprendiz de Don Rigo, y Don Rigo lo despidió… como a ti.
+// Un medidor oculto (respeto: de −4 a +4) cambia sus sabotajes, sus frases, el epílogo y cómo te recibe en el puerto.
+const SAGA = [
+  { id: 'foto', quien: 'Don Rigo', listo: () => ciudad() === 1 && !S.legado && (S.fase === 'aprendiz' ? S.noche >= 3 : true),
+    t: ['La foto de la guantera', 'The photo in the glovebox'],
+    txt: () => ['Buscando cinta en la guantera de Don Rigo encuentras una foto vieja: él, mucho más joven, junto a un aprendiz flaco con bigote incipiente y gorra roja. Detrás dice: «Rigo y Toño, 2005. El mejor equipo de la ciudad». Ese bigote… es El Cuñado.', 'Looking for tape in Don Rigo\'s glovebox you find an old photo: him, much younger, next to a skinny apprentice with a budding mustache and a red cap. On the back: "Rigo and Toño, 2005. Best team in the city." That mustache… it\'s El Cuñado.'],
+    ops: [{ t: ['Preguntarle a Don Rigo', 'Ask Don Rigo'], f: () => ['Don Rigo mira la foto mucho rato. «Era bueno. Demasiado bueno para su propio bien.» Y cambia de tema hablando del clima. Dentro de una cocina.', 'Don Rigo stares at the photo for a long time. "He was good. Too good for his own good." Then he changes the subject to the weather. Inside a kitchen.'] },
+      { t: ['Guardarla sin decir nada', 'Keep it and say nothing'], f: () => { album(L('La foto de Rigo y Toño, 2005', 'The photo of Rigo and Toño, 2005')); return ['La guardas en tu cartera. Por alguna razón, sientes que la vas a necesitar.', 'You put it in your wallet. Somehow, you feel you\'ll need it.']; } }] },
+  { id: 'pastel', quien: 'El Cuñado', listo: () => S.fase === 'empresa' && ciudad() === 1 && !S.legado,
+    t: ['Un pastel de bienvenida', 'A welcome cake'],
+    txt: () => [`El Cuñado aparece en tu taller con un pastel de tres leches. «Bienvenido al negocio, ${jugador()}.» Dentro de la caja hay una factura por el pastel ($40) y un contrato: trabajar para Limpiezas El Cuñado, «con prestaciones de ley y gorra incluida».`, `El Cuñado shows up at your workshop with a tres leches cake. "Welcome to the business, ${jugador()}." Inside the box there's an invoice for the cake ($40) and a contract: work for Limpiezas El Cuñado, "with legal benefits and a cap included."`],
+    ops: [{ t: ['Reírte en su cara', 'Laugh in his face'], d: ['+2 de reputación: el barrio lo ve', '+2 reputation: the neighborhood sees it'], f: () => { respeto(-1); S.rep = clamp(S.rep + 2, 0, 100); return ['Te ríes tanto que se te sale la leche del pastel por la nariz. El Cuñado se va sin despedirse. El barrio lo comenta durante días.', 'You laugh so hard the cake milk comes out of your nose. El Cuñado leaves without saying goodbye. The neighborhood talks about it for days.']; } },
+      { t: ['Rechazar con educación', 'Decline politely'], d: ['Y pagar el pastel', 'And pay for the cake'], f: () => { respeto(1); S.dinero -= 40; return ['«Gracias, pero voy a hacerlo por mi cuenta.» Le pagas los $40. Te mira raro, como si nadie le hubiera pagado nunca nada. «…Suerte. La vas a necesitar.»', '"Thanks, but I\'ll do it on my own." You pay him the $40. He gives you a strange look, as if nobody had ever paid him for anything. "…Good luck. You\'ll need it."']; } },
+      { t: ['Quedarte el pastel y romper el contrato', 'Keep the cake, tear up the contract'], f: () => ['Rompes el contrato en ocho pedazos y te comes el pastel delante de él. «Esto es la guerra», dice. Con la boca llena, asientes.', 'You tear the contract into eight pieces and eat the cake in front of him. "This is war," he says. Mouth full, you nod.'] }] },
+  { id: 'nota', quien: 'El Cuñado', listo: () => S.fase === 'empresa' && ciudad() === 1 && !S.legado && S.cunado && (S.cunado.gane || 0) + (S.cunado.perdi || 0) >= 1,
+    t: ['Una nota en el parabrisas', 'A note on the windshield'],
+    txt: () => (S.cunado.ultimo || {}).gano === 'tu' ? ['Tras tu duelo, una nota en el parabrisas: «Ganaste una. Las cuentas se cobran al final. —T.» Está escrita en la parte de atrás de una factura. Pagada.', 'After your duel, a note on the windshield: "You won one. Debts are collected at the end. —T." Written on the back of an invoice. A paid one.']
+      : ['Tras tu duelo, una nota en el parabrisas: «Así se limpia una campana, aprendiz. Saludos a Rigo. —T.»', 'After your duel, a note on the windshield: "That\'s how you clean a hood, apprentice. Say hi to Rigo. —T."'],
+    ops: [{ t: ['Contestarle con otra nota', 'Reply with another note'], d: ['«Nos vemos en la siguiente»', '"See you at the next one"'], f: () => { respeto(1); return ['Le dejas la nota en su camioneta: «Nos vemos en la siguiente. Buen trabajo, por cierto». A la mañana siguiente la nota sigue ahí. Doblada con cuidado.', 'You leave the note on his van: "See you at the next one. Good work, by the way." The next morning the note is still there. Carefully folded.']; } },
+      { t: ['Pegarla en la pared del taller', 'Pin it on the workshop wall'], d: ['Motivación para la cuadrilla', 'Motivation for the crew'], f: () => { respeto(-1); S.rep = clamp(S.rep + 1, 0, 100); return ['La cuadrilla la lee cada mañana antes de salir. Funciona: nadie quiere perder contra «T».', 'The crew reads it every morning before heading out. It works: nobody wants to lose to "T."']; } }] },
+  { id: 'carretera', quien: 'El Cuñado', listo: () => S.fase === 'empresa' && ciudad() === 1 && !S.legado && S.etapa >= 2,
+    t: ['La camioneta roja en la carretera', 'The red van on the road'],
+    txt: () => ['Volviendo de un trabajo a las 4 de la mañana ves la camioneta roja con una llanta ponchada y el gato roto. El Cuñado, solo, maldice en la oscuridad. Te ve. Hace como que no te ve.', 'Driving back from a job at 4 a.m. you see the red van with a flat tire and a broken jack. El Cuñado, alone, cursing in the dark. He sees you. He pretends he doesn\'t.'],
+    ops: [{ t: ['Parar y ayudarlo', 'Stop and help him'], d: ['Te debe una', 'He owes you one'], f: () => { respeto(2); S.saga.favor = true; return ['Cambian la llanta entre los dos sin decir palabra. Al terminar, te da la mano. «No le digas a nadie.» Te debe una, y los dos lo saben.', 'You change the tire together without a word. When you finish, he shakes your hand. "Don\'t tell anyone." He owes you one, and you both know it.']; } },
+      { t: ['Seguir de largo', 'Drive on'], f: () => { respeto(-1); return ['Sigues de largo. Por el retrovisor lo ves patear la llanta. La llanta gana.', 'You drive on. In the mirror you see him kick the tire. The tire wins.']; } },
+      { t: ['Llamarle una grúa… y cobrarle', 'Call him a tow truck… and charge him'], d: ['+$150', '+$150'], f: () => { respeto(-2); S.dinero += 150; return ['Le mandas una grúa de un compadre y te quedas la comisión. El Cuñado paga apretando los dientes. Lo vas a pagar caro en el próximo duelo.', 'You send him a buddy\'s tow truck and keep the commission. El Cuñado pays through gritted teeth. You\'ll pay dearly at the next duel.']; } }] },
+  { id: 'deuda', quien: 'El Cuñado', listo: () => S.fase === 'empresa' && ciudad() === 1 && !S.legado && S.etapa >= 3,
+    t: ['El hijo de El Cuñado', 'El Cuñado\'s kid'],
+    txt: () => ['Un niño de unos diez años, con gorra roja, se te acerca en una cafetería: «¿Tú eres quien limpia las campanas? Mi papá dice que eres lo peor. ¿Me firmas la gorra?» Mientras firmas, oyes a El Cuñado al teléfono, fuera: «Sí, señor Lustre… no, todavía no tengo el pago… dele un mes más.»', 'A ten-year-old kid in a red cap comes up to you at a café: "Are you the hood person? My dad says you\'re the worst. Will you sign my cap?" While you sign, you hear El Cuñado on the phone outside: "Yes, Mr. Lustre… no, I don\'t have the payment yet… give me another month."'],
+    ops: [{ t: ['Firmar la gorra y no decir nada', 'Sign the cap and say nothing'], f: () => { respeto(2); return ['Le firmas la gorra con un dibujo de una rasqueta. El niño sale corriendo a enseñársela a su papá. El Cuñado te mira por la ventana. No dice nada. Tú tampoco.', 'You sign the cap with a little scraper drawing. The kid runs to show his dad. El Cuñado looks at you through the window. He says nothing. Neither do you.']; } },
+      { t: ['Contárselo a su cuñado el alcalde', 'Tell his brother-in-law the mayor'], d: ['En la licitación llegará más débil', 'He\'ll be weaker at the tender'], f: () => { respeto(-2); S.saga.chivato = true; return ['El alcalde se entera de las deudas por ti. En la cena familiar del domingo hay gritos. El Cuñado llegará a la licitación sin el apoyo de la familia.', 'The mayor learns about the debts from you. At Sunday family dinner there\'s shouting. El Cuñado will reach the tender without his family\'s backing.']; } },
+      { t: ['Ofrecerle trabajo', 'Offer him a job'], f: () => { respeto(1); return ['«¿Trabajar para ti? Jamás.» Pero se le quiebra la voz en «jamás». Te devuelve la tarjeta. Al día siguiente la ves pegada en su tablero.', '"Work for you? Never." But his voice cracks on "never". He hands back your card. The next day you see it taped to his dashboard.']; } }] },
+  { id: 'confesion', quien: 'Don Rigo', listo: () => S.fase === 'empresa' && ciudad() === 1 && !S.legado && !!(S.licit || S.licitGanada || S.licitPerdida),
+    t: ['Lo que pasó hace veinte años', 'What happened twenty years ago'],
+    txt: () => [`Don Rigo los cita a los dos en la camioneta vieja. «Hace veinte años se incendió la campana del Palacio Municipal. Fue culpa mía: dejé el piloto abierto. Toño cargó con la culpa para que no me quitaran la licencia. Y yo, cobarde, lo despedí para que nadie hiciera preguntas.» Silencio. El Cuñado mira el piso. «Te despedí a ti también, ${jugador()}, para que no te pasara lo mismo: para que crecieras por tu cuenta, sin deberme nada.»`, `Don Rigo calls you both to the old van. "Twenty years ago the City Hall hood caught fire. It was my fault: I left the pilot on. Toño took the blame so they wouldn't pull my license. And I, a coward, fired him so nobody would ask questions." Silence. El Cuñado stares at the floor. "I fired you too, ${jugador()}, so the same wouldn't happen to you: so you'd grow on your own, owing me nothing."`],
+    ops: [{ t: ['Darle la mano a El Cuñado', 'Shake El Cuñado\'s hand'], f: () => { respeto(2); return ['Le tiendes la mano. Tarda un rato, pero la acepta. «Mañana te voy a ganar igual», dice. «Ya veremos», dices. Don Rigo llora. Dice que es la cebolla. No hay cebolla.', 'You hold out your hand. It takes a while, but he takes it. "I\'m still beating you tomorrow," he says. "We\'ll see," you say. Don Rigo cries. He says it\'s the onion. There\'s no onion.']; } },
+      { t: ['«Esto no cambia nada»', '"This changes nothing"'], f: () => { respeto(-1); return ['«Esto no cambia nada. Mañana te gano.» El Cuñado sonríe por primera vez en años: «Así me gusta». Don Rigo suspira. Es lo más parecido a una tregua que van a tener.', '"This changes nothing. Tomorrow I beat you." El Cuñado smiles for the first time in years: "That\'s the spirit." Don Rigo sighs. It\'s the closest thing to a truce you\'ll get.']; } }] },
+  { id: 'puerto', quien: 'El Cuñado', listo: () => ciudad() === 2 && !!S.legado,
+    t: ['El muelle de Puerto Fritanga', 'The Port Fritanga pier'],
+    txt: () => respetoCunado() >= 2 ? ['En el muelle te espera El Cuñado, con la camisa de Grupo Brillo. Mira a los lados y te pasa un sobre: «La lista de clientes que Lustre tiene abandonados. Yo no te di nada.» Y se va silbando.', 'El Cuñado waits for you on the pier, in a Grupo Brillo shirt. He looks around and hands you an envelope: "The list of clients Lustre has neglected. I didn\'t give you anything." And he walks off whistling.']
+      : respetoCunado() <= -2 ? ['En el muelle hay un letrero nuevo: «PUERTO FRITANGA: TERRITORIO BRILLO». Debajo, a mano: «Bienvenidos a MI puerto. —T.» Aquí no va a tener piedad.', 'There\'s a new sign on the pier: "PORT FRITANGA: BRILLO TERRITORY". Underneath, handwritten: "Welcome to MY port. —T." He won\'t show any mercy here.']
+      : ['El Cuñado pasa en una camioneta nueva con el logo de Brillo. Te saluda con dos dedos, sin sonreír. Aquí las reglas son otras: ahora es él quien tiene jefe.', 'El Cuñado drives by in a new van with the Brillo logo. He gives you a two-finger salute, no smile. The rules are different here: now he\'s the one with a boss.'],
+    ops: [{ t: ['Seguir adelante', 'Carry on'], f: () => { if (respetoCunado() >= 2) { S.saga.aliado = true; for (const k of ['mariscos', 'fonda']) { const o = genOrden(COCINAS[k] && COCINAS[k].etapa <= S.etapa ? k : 'cafe'); S.clientes.push({ id: S.sigId++, nombre: o.nombre, cocina: o.cocina, proxima: S.noche + 1, visitas: 3, diseno: o.diseno, pagoBase: o.pagoBase, cap: 0 }); } return ['Dos clientes del sobre te llaman esa misma mañana. Ya son tuyos.', 'Two clients from the envelope call you that same morning. They\'re yours now.']; }
+      return respetoCunado() <= -2 ? ['Tomas nota. En este puerto, El Cuñado sabotea más.', 'Noted. In this port, El Cuñado sabotages more.'] : ['Ni amigos ni enemigos. Por ahora.', 'Neither friends nor enemies. For now.']; } }] },
+];
+const respetoCunado = () => (S && S.saga && S.saga.respeto) || 0;
+const respeto = n => { S.saga.respeto = clamp((S.saga.respeto || 0) + n, -4, 4); };
+const album = t => { if (!S.album.includes(t)) S.album.push(t); };
+function tarjetaSaga() {
+  const H = S.hoy; if (H.saga === undefined || H.saga === null) return '';
+  const C = SAGA[H.saga], q = C.quien === 'Don Rigo' ? ['#b9a27a', 'Don Rigo'] : ['#d7382b', 'El Cuñado'];
+  return `<div class="orden dia historia-comp saga"><span class="chip naranja">🎭 ${L('La historia de El Cuñado', 'El Cuñado\'s story')} · ${H.saga + 1} ${L('de', 'of')} ${SAGA.length}</span><div class="fila-cara">${cara(q[0], q[1][0], q[1])}<h3>${esc(L(...C.t))}</h3></div><p>${esc(L(...C.txt()))}</p>
+    ${H.sagaRes ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(L(...H.sagaRes))}</div>`
+      : `<div class="opciones">${C.ops.map((op, i) => `<button class="btn" data-saga="${i}">${esc(L(...op.t))}${op.d ? `<small>${esc(L(...op.d))}</small>` : ''}</button>`).join('')}</div>`}</div>`;
+}
 const arcoFin = k => !!(S.arcos && S.arcos[k] && S.arcos[k].fin);
 const arcoTxt = (v, a) => L(...(typeof v === 'function' ? v(a) : v));
 function terminarArco(k) {
@@ -4960,6 +5021,10 @@ function prepararNoche() {
   // Lo que pasa de día: una de cada dos noches, algo en la camioneta.
   const dias = DIAS.filter(d => !d.solo || d.solo(S));
   if (S.noche >= 2 && azar(.5)) S.hoy.dia = { id: uno(dias).id, res: '' };
+  // La saga de El Cuñado: un capítulo cada pocas noches, cuando toca. En el puerto, las partidas viejas saltan al último.
+  S.saga = S.saga || { cap: 0, next: 0, respeto: 0 };
+  if (S.legado && ciudad() === 2 && S.saga.cap < SAGA.length - 1) S.saga.cap = SAGA.length - 1;
+  if (S.saga.cap < SAGA.length && S.noche >= S.saga.next && SAGA[S.saga.cap].listo()) S.hoy.saga = S.saga.cap;
   if (S.fase === 'empresa') {
     S.arcos = S.arcos || {};
     for (const k of Object.keys(ARCOS).sort(() => Math.random() - .5)) {
@@ -5219,7 +5284,7 @@ function pantallaEpilogo(camino, e) {
       : a.beto && a.beto.apoyo ? L(`Beto enmarcó sus ${S.huellas.length} huellas y las colgó en su taquería. Debajo dice: «Aquí estuvo Beto».`, `Beto framed his ${S.huellas.length} handprints and hung them in his taco stand. The caption says: "Beto was here".`)
       : L(`La pared del taller sigue llena de huellas de Beto: ${S.huellas.length}. Nadie se atreve a pintarla.`, `The workshop wall is still covered in Beto\'s handprints: ${S.huellas.length}. Nobody dares to paint over it.`)) : null,
     S.perro ? L('Grasita se sube la primera a la camioneta. Sabe que hay viaje.', 'Grasita is first into the van. She knows there\'s a trip.') : null,
-    L(`${RIVAL} ya no existe: Grupo Brillo Total se la compró. El Cuñado${cu.gane ? `, que perdió ${cu.gane} ${cu.gane === 1 ? 'duelo' : 'duelos'} contigo,` : ''} ahora es gerente regional en Puerto Fritanga. Te mandó un mensaje: «Allá te espero.»`, `${RIVAL} is gone: Grupo Brillo Total bought it. El Cuñado${cu.gane ? `, who lost ${cu.gane} ${cu.gane === 1 ? 'duel' : 'duels'} to you,` : ''} is now regional manager in Port Fritanga. He sent you a message: "I'll be waiting for you there."`),
+    L(`${RIVAL} ya no existe: Grupo Brillo Total se la compró. El Cuñado${cu.gane ? `, que perdió ${cu.gane} ${cu.gane === 1 ? 'duelo' : 'duelos'} contigo,` : ''} ahora es gerente regional en Puerto Fritanga. ${respetoCunado() >= 2 ? 'Antes de irse te dio la mano, firme: «Allá te espero. Esta vez, limpio.»' : respetoCunado() <= -2 ? 'Te mandó un mensaje: «Allá te espero. Y allá no hay Rigo que te salve.»' : 'Te mandó un mensaje: «Allá te espero.»'}`, `${RIVAL} is gone: Grupo Brillo Total bought it. El Cuñado${cu.gane ? `, who lost ${cu.gane} ${cu.gane === 1 ? 'duel' : 'duels'} to you,` : ''} is now regional manager in Port Fritanga. ${respetoCunado() >= 2 ? 'Before leaving he shook your hand, firmly: "I\'ll be waiting there. Clean fight this time."' : respetoCunado() <= -2 ? 'He sent you a message: "I\'ll be waiting there. And there\'s no Rigo to save you."' : 'He sent you a message: "I\'ll be waiting for you there."'}`),
     camino === 'A' ? L(`Vendiste. ${esc(dir.n)} se queda al frente, ahora con logo de Brillo en la camisa. Te dio un abrazo largo y un «no me olvides».`, `You sold. ${esc(dir.n)} stays in charge, now with a Brillo logo on the shirt. A long hug and a "don\'t forget me".`)
       : L(`No vendiste. ${esc(dir.n)} se queda al mando de ${esc(S.empresa.nombre)}. Lustre se fue sin despedirse y con el portafolios cerrado de un golpe.`, `You didn\'t sell. ${esc(dir.n)} stays in charge of ${esc(S.empresa.nombre)}. Lustre left without saying goodbye, slamming his briefcase shut.`),
     L(`${esc(mano.n)} ya tiene la maleta en la camioneta. «¿Puerto Fritanga? ¿Hay mariscos? Entonces sí voy.»`, `${esc(mano.n)} already has a suitcase in the van. "Port Fritanga? Is there seafood? Then I\'m in."`),
@@ -5558,7 +5623,7 @@ function vNoche() {
       <div class="opciones"><button class="btn prim" id="retomar">${L('Retomar el turno', 'Resume the shift')}</button><button class="btn" id="descartar">${L('Empezar de nuevo', 'Start over')}</button></div></div>` : '';
   return `${aviso}${dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(TRAD(dia.t))}</h3><p>${esc(TRAD(dia.txt))}</p>
       ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(TRAD(H.dia.res))}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(TRAD(op.t))}<small>${esc(TRAD(op.d))}</small></button>`).join('')}</div>`}</div>` : ''}
-    ${aprendiz ? '' : tarjetaArco()}
+    ${tarjetaSaga()}${aprendiz ? '' : tarjetaArco()}
     ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
     ${H.ordenes.map((x, i) => tarjetaOrden(x, i) + extrasOrden(x, i)).join('') || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
@@ -5866,6 +5931,11 @@ function enlazar() {
   P.querySelectorAll('[data-capricho]').forEach(b => b.onclick = () => { audio(); comprarCapricho(b.dataset.capricho); });
   P.querySelectorAll('[data-invertir]').forEach(b => b.onclick = () => { audio(); invertir(b.dataset.invertir); });
   P.querySelectorAll('[data-vida]').forEach(b => b.onclick = () => { S.vida = b.dataset.vida; tono(700, .08, .06, 'triangle'); guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-saga]').forEach(b => b.onclick = () => {
+    if (H.sagaRes) return; const C = SAGA[H.saga]; if (!C || S.saga.cap !== H.saga) return;
+    audio(); H.sagaRes = C.ops[+b.dataset.saga].f(); S.saga.cap++; S.saga.next = S.noche + (C.id === 'foto' ? 2 : 4);
+    album(L(...C.t)); tono(520, .15, .07, 'triangle'); tono(660, .2, .07, 'triangle', null, .12); guardar(); pantallaCamioneta();
+  });
   P.querySelectorAll('[data-arco]').forEach(b => b.onclick = () => {
     const k = H.historia, a = S.arcos[k], op = ARCOS[k].caps[a.cap].ops[+b.dataset.arco];
     if (op.pide && S.dinero < op.pide) return;
@@ -6110,7 +6180,7 @@ function pantallaParte() {
   // La Gran Licitación: tu nota contra la de El Cuñado
   let licit = null;
   if (o.licit && S.licit && !aprendiz) {
-    const el = clamp(Math.round(CUNADO_PTS[o.licit - 1] - 3 * Math.min(3, S.licitIntentos || 0) + rnd(-5, 5)), 40, 95), gano = aprobado && pts > el;
+    const el = clamp(Math.round(CUNADO_PTS[o.licit - 1] - 3 * Math.min(3, S.licitIntentos || 0) - (S.saga && S.saga.chivato ? 3 : 0) + rnd(-5, 5)), 40, 95), gano = aprobado && pts > el;
     S.licit.res[o.licit - 1] = { yo: n, el: nota(el), gano }; S.licit.paso = o.licit; S.licit.ultima = S.noche;
     const g = S.licit.res.filter(r => r.gano).length, p = S.licit.res.filter(r => !r.gano).length;
     if (g >= 2) {

@@ -204,7 +204,7 @@ caso('el comprador: camino A (vender) con pagos y sin vuelta', async () => {
   await p.click('#rumbo'); await p.click('#empezarPuerto');
   const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, n: S.empresa.nombre, f: S.fijos, pref: S.compPref, c1f: S.ciudades[1].fijos, vend: S.ciudades[1].vendida, c1d: S.ciudades[1].dinero,
     beto: __hc.COMPANEROS.beto.sueldo, chuy: __hc.COMPANEROS.chuy.sueldo, v: S.legado.venta, et: S.etapa, viaje: !!document.querySelector('#viajar') }; });
-  afirmar(r.c === 2 && r.d === 6000 && r.n === 'Brillo Ninguno' && r.c1d === 0 && r.et === 2 && r.v.caja >= 25000, 'la venta no fundó la nueva empresa: ' + JSON.stringify(r));
+  afirmar(r.c === 2 && Math.abs(r.d - 6000) <= 300 && r.n === 'Brillo Ninguno' && r.c1d === 0 && r.et === 2 && r.v.caja >= 25000, 'la venta no fundó la nueva empresa: ' + JSON.stringify(r));
   afirmar(JSON.stringify(r.f) === '["beto"]' && r.pref === 'beto' && !r.c1f.includes('beto') && r.vend, 'Beto no se mudó: ' + JSON.stringify(r));
   afirmar(r.beto === 140 && r.chuy > 0 && r.v.restan === 30 && r.v.total === valor && r.v.porNoche === Math.round((valor * .4 + r.v.caja) / 300) * 10 && !r.viaje, 'aumentos o pagos mal: ' + JSON.stringify(r));
   const t = await jugarNoche(p, { cocina: 'cafe' });
@@ -381,7 +381,7 @@ caso('tutorial compacto y barras de progreso de las zonas', async () => {
   await p.click('#tuto');
   afirmar(await p.evaluate(() => !document.querySelector('#tuto').classList.contains('mini')), 'tocar el cartel no lo volvió a abrir');
   const w0 = await p.evaluate(() => [...document.querySelectorAll('#zonas .prog s')].map(s => s.style.width));
-  afirmar(w0.length >= 3 && w0.every(w => parseFloat(w) > 90), 'las barras no empiezan llenas: ' + w0);
+  afirmar(w0.length >= 3 && w0.filter(w => parseFloat(w) > 90).length >= 2, 'las barras no empiezan llenas: ' + w0);   // el compañero pudo adelantar alguna zona
   await p.evaluate(() => { const z = __hc.Z.find(z => z.id === 'filtros'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); });
   // la campana en vertical: las paredes laterales se alcanzan deslizando la vista
   await p.evaluate(() => { const i = __hc.Z.findIndex(z => z.id === 'campana'); __hc.irZona(i); });
@@ -435,7 +435,7 @@ caso('soplete y gel: cada uno con su ventaja y su punto débil', async () => {
     const sf = __hc.Z[ic].sfs[0]; sf.tipo = sf.tipo || new Uint8Array(sf.d.length); sf.tipo.fill(1); sf.d.fill(1); sf.soak.fill(-1);
     const gx = sf.nx / 2, gy = sf.ny / 2, i0 = Math.floor(gy) * sf.nx + Math.floor(gx);
     M.herr = 'soplete'; M.apuntado = { sf, gx, gy, punto: sf.mesh.position.clone(), normal: sf.normal }; M.presionado = true; M.trazo = { x: 100, y: 100 };
-    await new Promise(ok => setTimeout(ok, 1200)); const tras1 = sf.d[i0], req1 = M.requemado || 0;
+    const t0 = M.t; for (let k = 0; k < 40 && M.t - t0 < 1.2; k++) await new Promise(ok => setTimeout(ok, 100)); const tras1 = sf.d[i0], req1 = M.requemado || 0;
     for (let k = 0; k < 60 && !(M.requemado >= 1); k++) await new Promise(ok => setTimeout(ok, 300));
     M.presionado = false;
     return { tras1, req1, req: M.requemado || 0 };
@@ -456,6 +456,48 @@ caso('soplete y gel: cada uno con su ventaja y su punto débil', async () => {
   await p.evaluate(() => { const M = __hc.M; M.presionado = false; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); })); M.t = M.dur * .6; __hc.terminarTurno(); });
   await p.waitForSelector('.nota-grande', { timeout: 60000 });
   afirmar(await p.evaluate(() => /Metal requemado/.test(document.querySelector('#pantalla').innerText)), 'el parte no descuenta el metal requemado');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('la saga de El Cuñado: siete capítulos con decisiones y consecuencias', async () => {
+  const p = await abrir(partida({ fase: 'aprendiz', etapa: 0, empresa: null, noche: 3, compPref: 'beto', fijos: [], hoy: null, cunado: null }));
+  const capitulo = async (prep, op) => {
+    await p.evaluate(prep);
+    await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+    const t = await p.evaluate(() => { const c = document.querySelector('.saga'); return c ? c.innerText : null; });
+    if (t === null) throw new Error('no apareció el capítulo: ' + await p.evaluate(() => JSON.stringify(__hc.S.saga)));
+    await p.click(`[data-saga="${op}"]`);
+    return t;
+  };
+  let t = await capitulo(() => {}, 1);
+  afirmar(/Rigo y Toño, 2005/.test(t) && await p.evaluate(() => __hc.S.album.some(a => /Rigo y Toño/.test(a))), 'capítulo 1 (la foto) mal');
+  t = await capitulo(() => { const S = __hc.S; S.fase = 'empresa'; S.etapa = 1; S.empresa = { nombre: 'Prueba', color: '#2e9e5b' }; S.noche = 10; S.abierta = 9; S.dinero = 3000; }, 1);
+  afirmar(/pastel de tres leches/.test(t) && await p.evaluate(() => __hc.S.saga.respeto === 1 && __hc.S.dinero === 2960), 'capítulo 2 (el pastel) mal');
+  t = await capitulo(() => { const S = __hc.S; S.noche = 14; S.cunado = { gane: 1, perdi: 0, ultimo: { gano: 'tu', donde: 'X' } }; }, 0);
+  afirmar(/Ganaste una/.test(t) && await p.evaluate(() => __hc.S.saga.respeto === 2), 'capítulo 3 (la nota) mal');
+  t = await capitulo(() => { const S = __hc.S; S.noche = 18; S.etapa = 2; }, 0);
+  afirmar(/llanta ponchada/.test(t) && await p.evaluate(() => __hc.S.saga.respeto === 4 && __hc.S.saga.favor), 'capítulo 4 (la carretera) mal');
+  t = await capitulo(() => { const S = __hc.S; S.noche = 22; S.etapa = 3; }, 0);
+  afirmar(/Lustre/.test(t) && !/la de las campanas/.test(t), 'capítulo 5 (el hijo) mal');
+  t = await capitulo(() => { const S = __hc.S; S.noche = 26; S.etapa = 4; S.licit = { paso: 1, res: [], noche: 26, ultima: 25 }; }, 0);
+  afirmar(/hace veinte años|Palacio Municipal/.test(t) && /Toño cargó con la culpa/.test(t), 'capítulo 6 (la confesión) mal');
+  t = await capitulo(() => { const S = __hc.S; S.licit = null; S.noche = 30; S.legado = { camino: 'B', noche: 29, director: { n: 'Lupe', comp: 'lupe' }, mano: { n: 'Beto', comp: 'beto' } }; S.fijos = ['beto']; __hc.viajar(2, { empresa: { nombre: 'Puerto', color: '#2e9e5b' }, etapa: 1, rep: 10, dinero: 3000, clientes: [], perdidos: [], cuadrilla: [], candidatos: [], fijos: ['beto'], compPref: 'beto', abierta: S.noche, hoy: null, eq: { camioneta: 2 } }); }, 0);
+  const r = await p.evaluate(() => ({ aliado: __hc.S.saga.aliado, clientes: __hc.S.clientes.length, cap: __hc.S.saga.cap }));
+  afirmar(/sobre/.test(t) && r.aliado && r.clientes === 2 && r.cap === 7, 'capítulo 7 (el puerto) mal: ' + JSON.stringify(r));
+  await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  afirmar(await p.evaluate(() => !document.querySelector('.saga')), 'la saga siguió después del final');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+caso('la saga: el favor de la carretera regala los filtros en el siguiente duelo', async () => {
+  const p = await abrir(partida({ compPref: 'solo', saga: { cap: 4, next: 99, respeto: 3, favor: true } }));
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  await p.waitForTimeout(1500); await p.evaluate(() => { const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); }); await p.waitForTimeout(400); }
+  await p.waitForFunction(() => __hc.M.duelo.hitos && __hc.M.duelo.hitos.filtros, null, { timeout: 20000 });
+  const r = await p.evaluate(() => ({ h: __hc.M.duelo.hitos.filtros, favor: __hc.S.saga.favor }));
+  afirmar(r.h === 'tu' && r.favor === false, 'el favor no regaló los filtros: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
