@@ -245,5 +245,31 @@ caso('la huella de Beto: en la campana, en el parte del inspector y en la pared 
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+caso('objetos con historia: se tocan en la preparación y cambian en la siguiente visita', async () => {
+  const p = await abrir(partida());
+  const visita = async () => {
+    await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.nombre = 'Café La Esquina'; o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+    await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+    return p.evaluate(() => ({ n: document.querySelectorAll('.marca.recuerdo').length, rot: __hc.piezas.recuerdos.map(r => +r.mesh.rotation.z.toFixed(2)) }));
+  };
+  let v = await visita();
+  afirmar(v.n === 3 && v.rot[0] !== 0, 'no aparecen los 3 objetos torcidos: ' + JSON.stringify(v));
+  await p.evaluate(() => document.querySelector('.marca.recuerdo').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
+  await p.waitForTimeout(2500);
+  afirmar(await p.evaluate(() => __hc.M.escena === 0 && __hc.M.recVistos.has(0) && __hc.S.recuerdos['Café La Esquina'].v[0] === 1), 'tocar la foto no la apuntó o hizo pasar de pantalla');
+  afirmar(await p.evaluate(() => /1978/.test(document.body.innerText)), 'no se ve la historia de la foto');
+  await p.evaluate(() => document.querySelector('.carta button').click());
+  for (let i = 0; i < 2; i++) await p.evaluate(() => document.querySelector('.marca.recuerdo:not(.hecha)').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
+  await p.waitForTimeout(1200);
+  afirmar(await p.evaluate(() => __hc.S.recuerdos['Café La Esquina'].todo === 20), 'no se guardó que conoces las tres historias: ' + await p.evaluate(() => JSON.stringify([__hc.S.recuerdos, __hc.M.escena, [...__hc.M.recVistos]])));
+  await p.evaluate(() => { __hc.M = null; __hc.S.noche = 23; __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  v = await visita();
+  afirmar(v.n === 3 && v.rot.every(r => r === 0), 'en la siguiente visita los objetos no cambiaron: ' + JSON.stringify(v));
+  for (let i = 0; i < 3; i++) await p.evaluate(() => document.querySelector('.marca.recuerdo:not(.hecha)').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
+  afirmar(await p.evaluate(() => /marco dorado/.test(document.body.innerText) || __hc.S.album.includes('Las historias de Café La Esquina')), 'las historias nuevas no salieron');
+  afirmar(await p.evaluate(() => __hc.S.album.includes('Las historias de Café La Esquina')), 'no se añadió al álbum');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };
