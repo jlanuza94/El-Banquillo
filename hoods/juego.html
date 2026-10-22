@@ -387,6 +387,7 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .obj.no { opacity: .45; } .obj.no span { font-family: var(--f-display); color: var(--tenue); }
 .blanco.brillo { background: radial-gradient(#fff6c0, #ffd23f 55%, #ff8a1f); border: 3px solid #fff; font-size: 26px; color: #1a1004; }
 .blanco.brillo small { display: block; font-size: 11px; }
+.contrato.diario { border-color: #8ad4ff99; background: rgba(138,212,255,.08); } .contrato.diario b { color: #8ad4ff; }
 .historia-comp { border-left: 4px solid #c6a0ff; }
 .fila-cara { display: flex; gap: 10px; align-items: center; }
 .orden.licit { border-color: #ffd23f; background: linear-gradient(rgba(255,210,63,.1), var(--panel)); }
@@ -673,7 +674,7 @@ const EN = {
     cuca: ['Roach hunter', 'Catch the giant cockroach.'], apagon: ['Cat eyes', 'Pass a night with a blackout.'], pedido: ['Picky client', 'Fulfill a special request.'], duelo: ['Bye, Cuñado', 'Win a duel against El Cuñado.'], diez: ['Veteran', 'Pass 10 inspections.'],
     fotos: ['Grease photographer', 'Collect 6 photos in the album.'], finde: ['Legendary weekend', 'Beat the weekend challenge: three giant jobs in a row.'], contrato: ['Fine print', 'Complete a tough contract.'], contratos5: ['Official supplier', 'Complete 5 tough contracts.'], racha10: ['Unstoppable', 'Pass 10 nights in a row.'], cunado5: ['El Cuñado\'s nightmare', 'Win 5 duels against El Cuñado.'],
     sede3: ['First stone', 'Take a headquarters station to level 3.'], sedeTotal: ['Headquarters', 'Max out the whole headquarters.'], maestro: ['Hood school', 'Train 3 different helpers.'], flota: ['Fleet', 'Own 5 vans.'], rico: ['Grease tycoon', 'Save up $50,000.'],
-    objetos6: ['Duct archaeologist', 'Find 6 things in the ducts.'], objetos: ['The grease museum', 'Find every thing in the ducts.'], h_beto: ['Beto\'s Tacos', 'Finish Beto\'s story.'], h_lupe: ['Old rivals', 'Finish Lupe\'s story.'], h_chuy: ['Love among hoods', 'Finish Chuy\'s story.'], licitacion: ['The city is yours', 'Win the Grand Tender.'], final: ['End of the night', 'Buy Limpiezas El Cuñado and finish the story.'], bombero: ['Firefighter on duty', 'Put out a grease fire in time.'], j_tele: ['TV star', 'Beat the live show with good ratings.'], j_embrujada: ['Ghostbuster', 'Clean the haunted hood.'], j_hospital: ['Quiet, please', 'Clean the hospital kitchen without three scoldings.'], j_inspector: ['Under the magnifier', 'Pass with the surprise inspector (more checks than crosses).'], jefes: ['Legend of the night', 'Beat every boss job.'],
+    diario5: ['Consistency', 'Play the daily challenge on 5 different days.'], objetos6: ['Duct archaeologist', 'Find 6 things in the ducts.'], objetos: ['The grease museum', 'Find every thing in the ducts.'], h_beto: ['Beto\'s Tacos', 'Finish Beto\'s story.'], h_lupe: ['Old rivals', 'Finish Lupe\'s story.'], h_chuy: ['Love among hoods', 'Finish Chuy\'s story.'], licitacion: ['The city is yours', 'Win the Grand Tender.'], final: ['End of the night', 'Buy Limpiezas El Cuñado and finish the story.'], bombero: ['Firefighter on duty', 'Put out a grease fire in time.'], j_tele: ['TV star', 'Beat the live show with good ratings.'], j_embrujada: ['Ghostbuster', 'Clean the haunted hood.'], j_hospital: ['Quiet, please', 'Clean the hospital kitchen without three scoldings.'], j_inspector: ['Under the magnifier', 'Pass with the surprise inspector (more checks than crosses).'], jefes: ['Legend of the night', 'Beat every boss job.'],
     dorado: ['The golden raccoon', 'You saw it. Nobody will believe you.'], casete: ['The lost tape', 'You found Don Rigo\'s cassette in a duct.'], himno: ['Perfect pitch', 'You found the radio\'s secret song.'] },
   reto: { sinHidro: 'No pressure washer', sinEspuma: 'No foam', combo2: 'Reach a ×3 combo twice', antes4: 'Inspector before 4:00, passed', espejo: 'Polish 80% of the hood', sinDanos: 'Not a single damage', prep: 'Perfect prep (gas, power, covers and plastic)', filtros: 'Filters done before 11:30 pm', notaA: 'Get an A or better', metal: 'Everything at 50 µm or less' },
   look: { espuma: 'Foam color', casco: 'Partner\'s helmet', pegatina: 'Van sticker', linterna: 'Helmet light', combo: 'Combo sound',
@@ -1150,6 +1151,7 @@ const MEDALLAS = [
   { id: 'maestro', n: 'Escuela de campaneros', d: 'Forma a 3 ayudantes distintos.', ico: '🎓' },
   { id: 'flota', n: 'Flotilla', d: 'Ten 5 camionetas.', ico: '🚐' },
   { id: 'rico', n: 'Magnate de la grasa', d: 'Junta $50,000.', ico: '$' },
+  { id: 'diario5', n: 'Constancia', d: 'Juega el reto del día 5 días distintos.', ico: '📅' },
   { id: 'objetos6', n: 'Arqueólogo de ductos', d: 'Encuentra 6 cosas en los ductos.', ico: '🔦' },
   { id: 'objetos', n: 'El museo de la grasa', d: 'Encuentra todas las cosas de los ductos.', ico: '🏺' },
   { id: 'h_beto', n: 'Beto\'s Tacos', d: 'Termina la historia de Beto.', ico: '🌮' },
@@ -1208,7 +1210,17 @@ const libreLook = op => (!op.m || S.medallas[op.m]) && (!op.e || (S.estrellas ||
 const look = k => LOOK[k].ops.find(o => o.id === (S.look || {})[k]) || LOOK[k].ops[0];
 
 // Lo que pasa de día, antes de salir a trabajar.
+Object.assign(EN_TXT, {"Sabotaje en el estacionamiento": "Sabotage in the parking lot", "Las cuatro llantas de la camioneta, ponchadas. Bajo el limpiaparabrisas hay una tarjeta: «Limpiezas El Cuñado · Rápido, barato y sin preguntas».": "All four tires, flat. Under the wiper there's a card: \"Limpiezas El Cuñado · Fast, cheap and no questions asked\".", "Llamar a la vulcanizadora": "Call the tire shop", "−$120 · llegas a tiempo": "−$120 · you arrive on time", "El de la vulcanizadora conoce a El Cuñado: «Siempre hace lo mismo. Le hizo esto a su propia suegra».": "The tire guy knows El Cuñado: \"He always does this. He did it to his own mother-in-law\".", "Inflarlas con la compresora": "Inflate them with the compressor", "Gratis, pero llegas 30 minutos tarde": "Free, but you arrive 30 minutes late", "Media hora inflando llantas con la compresora de la hidro. Llegas tarde, pero con los brazos de acero.": "Half an hour pumping tires with the pressure washer compressor. You're late, but your arms are steel now.", "¿Y la escalera?": "Where's the ladder?", "Tu escalera desapareció. En el taller de El Cuñado, a dos cuadras, se ve una idéntica. Con tu logo tachado con plumón.": "Your ladder is gone. At El Cuñado's shop, two blocks away, there's an identical one. With your logo crossed out in marker.", "Comprar otra": "Buy another one", "−$90": "−$90", "Escalera nueva. Esta vez le pones candado. Y tu nombre. Y una foto tuya.": "New ladder. This time you put a lock on it. And your name. And your photo.", "Ir a reclamarla": "Go get it back", "A ver qué dice": "Let's see what he says", "Recuperas tu escalera. Y de paso, El Cuñado te pide perdón frente a sus empleados. Bueno, tose muy fuerte. +2 de reputación.": "You get your ladder back. And El Cuñado apologizes in front of his employees. Well, he coughs very loudly. +2 reputation.", "El Cuñado jura que la escalera es suya «desde siempre». Llegas 20 minutos tarde y rentas una: −$60.": "El Cuñado swears the ladder has been his \"forever\". You arrive 20 minutes late and rent one: −$60.", "Carrera al cliente": "Race to the client", "Un restaurante nuevo llamó a los dos al mismo tiempo: el que llegue primero se queda el trabajo. La camioneta de El Cuñado ya está calentando motor.": "A new restaurant called both of you at the same time: whoever gets there first gets the job. El Cuñado's van is already revving.", "¡Salir volando!": "Floor it!", "−$30 de gasolina extra": "−$30 extra gas", "¡Llegaste primero! El dueño te recibe con café. Tienes un trabajo más esta noche (y bien pagado).": "You got there first! The owner greets you with coffee. You have one more job tonight (and it pays well).", "El Cuñado se metió por un callejón y llegó antes. Te saluda desde la puerta con una dona.": "El Cuñado cut through an alley and got there first. He waves at you from the door with a donut.", "Dejarlo ir": "Let it go", "Hay trabajo para todos": "There's work for everyone", "Lo dejas ir. Una hora después, el dueño te llama: El Cuñado le rompió la licuadora. Quizá la próxima.": "You let it go. An hour later the owner calls: El Cuñado broke his blender. Maybe next time."});
 const DIAS = [
+  { id: 'llantas', t: 'Sabotaje en el estacionamiento', solo: s => s.fase === 'empresa', txt: 'Las cuatro llantas de la camioneta, ponchadas. Bajo el limpiaparabrisas hay una tarjeta: «Limpiezas El Cuñado · Rápido, barato y sin preguntas».', ops: [
+    { t: 'Llamar a la vulcanizadora', d: '−$120 · llegas a tiempo', f: () => { S.dinero -= 120; return 'El de la vulcanizadora conoce a El Cuñado: «Siempre hace lo mismo. Le hizo esto a su propia suegra».'; } },
+    { t: 'Inflarlas con la compresora', d: 'Gratis, pero llegas 30 minutos tarde', f: H => { H.retraso = 30; return 'Media hora inflando llantas con la compresora de la hidro. Llegas tarde, pero con los brazos de acero.'; } }] },
+  { id: 'escalera', t: '¿Y la escalera?', solo: s => s.fase === 'empresa', txt: 'Tu escalera desapareció. En el taller de El Cuñado, a dos cuadras, se ve una idéntica. Con tu logo tachado con plumón.', ops: [
+    { t: 'Comprar otra', d: '−$90', f: () => { S.dinero -= 90; return 'Escalera nueva. Esta vez le pones candado. Y tu nombre. Y una foto tuya.'; } },
+    { t: 'Ir a reclamarla', d: 'A ver qué dice', f: H => { if (azar(.55)) { S.rep = clamp(S.rep + 2, 0, 100); return 'Recuperas tu escalera. Y de paso, El Cuñado te pide perdón frente a sus empleados. Bueno, tose muy fuerte. +2 de reputación.'; } S.dinero -= 60; H.retraso = 20; return 'El Cuñado jura que la escalera es suya «desde siempre». Llegas 20 minutos tarde y rentas una: −$60.'; } }] },
+  { id: 'carrera', t: 'Carrera al cliente', solo: s => s.fase === 'empresa', txt: 'Un restaurante nuevo llamó a los dos al mismo tiempo: el que llegue primero se queda el trabajo. La camioneta de El Cuñado ya está calentando motor.', ops: [
+    { t: '¡Salir volando!', d: '−$30 de gasolina extra', f: H => { S.dinero -= 30; if (azar(tun('aleron') ? .85 : .55)) { const o = genOrden(uno(cocinasHasta(S.etapa))); o.pago = r10(o.pago * 1.25); o.firmado = true; H.ordenes.push(o); return '¡Llegaste primero! El dueño te recibe con café. Tienes un trabajo más esta noche (y bien pagado).'; } return 'El Cuñado se metió por un callejón y llegó antes. Te saluda desde la puerta con una dona.'; } },
+    { t: 'Dejarlo ir', d: 'Hay trabajo para todos', f: () => 'Lo dejas ir. Una hora después, el dueño te llama: El Cuñado le rompió la licuadora. Quizá la próxima.' }] },
   { id: 'llanta', t: 'Llanta ponchada', txt: 'Camino al trabajo, ¡pum! La llanta trasera. El clavo tiene pinta de llevar ahí desde 2019.', ops: [
     { t: 'Cambiarla nosotros', d: 'Gratis, pero llegas 30 minutos tarde', f: H => { H.retraso = 30; return 'Cambiada. Las tuercas, apretadas «a ojo». Llegas media hora tarde.'; } },
     { t: 'Llamar a la grúa', d: '−$80', f: () => { S.dinero -= 80; return 'La grúa llegó en diez minutos y cobró como si fueran tres horas.'; } }] },
@@ -1505,7 +1517,9 @@ function radioCancion(forzada) {
     // La primera canción de la noche trae las noticias de madrugada; luego, a veces el locutor o un comercial.
     const noticia = S.noticiaRadio || null;
     if (noticia) { S.noticiaRadio = null; guardar(); }
-    const loc = noticia ? ` 📰 ${L('Noticias de madrugada', 'Late-night news')}: ${TRAD(noticia)}` : azar(.55) ? ' ' + (azar(.3) ? '📢 ' + TRAD(uno(COMERCIALES)) : TRAD(uno(LOCUTOR)).replace('{h}', M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480))) : '';
+    const llamada = !noticia && S.llamada && M.fase === 'turno' ? S.llamada : null;
+    if (llamada) { S.llamada = null; guardar(); }
+    const loc = llamada ? ` 📞 ${L('Llamada al aire', 'Caller on the air')} · ${L(llamada[0], llamada[3] || llamada[0])}: «${L(llamada[1], llamada[2])}»` : noticia ? ` 📰 ${L('Noticias de madrugada', 'Late-night news')}: ${TRAD(noticia)}` : azar(.55) ? ' ' + (azar(.3) ? '📢 ' + TRAD(uno(COMERCIALES)) : TRAD(uno(LOCUTOR)).replace('{h}', M.fase === 'prep' ? hora(M.prepMin) : hora(clamp(M.t / M.dur, 0, 1) * 480))) : '';
     decir(QUIEN_RADIO, `♪ «${can.t}», ${L('de', 'by')} ${can.de}.${loc}`);
   }
 }
@@ -4201,6 +4215,7 @@ function generarOrdenes() {
     o.contrato = { conds: pool.slice(0, S.rep >= 70 ? 3 : 2).map(c => c.id), quien: Math.floor(Math.random() * CONTRATANTES.length) };
     o.pedido = null; o.micras = Math.round(o.micras * 1.25 / 50) * 50;   // los contratos difíciles vienen con más grasa
   }
+  if (S.fase === 'empresa') { const f = fechaHoy(), D = S.diario && S.diario.fecha === f ? S.diario : null; if (!D || D.intentos < 3) out.push(ordenDiaria(f)); }
   if (S.fase === 'empresa' && S.etapa >= 1 && S.rep >= 30 && S.noche >= (S.jefeNoche || 0) + 3) {
     const pend = Object.keys(JEFES).filter(id => !(S.jefes || {})[id]);
     if (azar(pend.length ? .3 : .12)) {
@@ -4254,6 +4269,32 @@ function rival(ordenes, avisos) {
 // Los clientes que se lleva El Cuñado se pueden recuperar ganándole un duelo en su cocina.
 function perdido(c) { S.perdidos = [...(S.perdidos || []).filter(x => x.id !== c.id), c].slice(-5); }
 // Una noche nueva: órdenes, clientes que se van, candidatos, llamadas.
+// Llamadas a Radio Grasa FM: los oyentes comentan lo que hiciste la noche anterior.
+const OYENTES = [['Doña Pelos', 'Doña Pelos'], ['El Taxista Nocturno', 'The Night Cabbie'], ['Rosita la del puesto', 'Rosita from the food stall'], ['Un señor que no quiso dar su nombre', 'A man who wouldn\'t give his name'], ['Kevin, de 9 años', 'Kevin, age 9'], ['La vecina de la 4', 'The neighbor in 4'], ['Don Chencho, panadero', 'Don Chencho, baker'], ['Una oyente fiel', 'A loyal listener']];
+function llamadaRadio(c) {
+  const nom = c.nombre, op = [];
+  if (c.n === 'A+' || c.n === 'A') op.push([`Ayer pasé por ${nom} y la campana brillaba tanto que me peiné en ella. Felicidades a los limpiadores.`, `I walked by ${nom} yesterday and the hood was so shiny I combed my hair in it. Congrats to the cleaners.`], [`Trabajo en ${nom}. Hoy el chef no paró de presumir la campana. Nos invitó tacos a todos.`, `I work at ${nom}. Today the chef kept showing off the hood. Tacos for everyone.`]);
+  if (c.n === 'D' || c.n === 'F') op.push([`¿Quién limpió ${nom} anoche? Hoy los huevos salieron sabor grasa vieja. Solo digo.`, `Who cleaned ${nom} last night? Today the eggs tasted like old grease. Just saying.`], [`Mi esposo trabaja en ${nom}. Dice que la campana sigue igual de cochina, pero ahora con huellas.`, `My husband works at ${nom}. He says the hood is just as dirty, but now with fingerprints.`]);
+  if (c.desastre) op.push([`Anoche en ${nom} se oyó un estruendo. Mi perro sigue debajo de la cama.`, `Last night at ${nom} there was a huge crash. My dog is still under the bed.`]);
+  if (c.gana) op.push([`Vi a El Cuñado salir de ${nom} con cara de que le ganaron. Gracias, de verdad. Me debe dinero.`, `I saw El Cuñado leave ${nom} looking defeated. Thank you, truly. He owes me money.`]);
+  if (c.perdioDuelo) op.push([`El Cuñado anda presumiendo lo de ${nom} en el mercado. Ya nadie lo aguanta. ¡Revancha!`, `El Cuñado is bragging about ${nom} at the market. Nobody can stand him. Rematch!`]);
+  if (c.jefe && c.jefe.supera) op.push([`¿Fueron ustedes los de ${nom}? ¡Héroes! Nadie se atrevía.`, `Was that you at ${nom}? Heroes! Nobody else dared.`]);
+  if (c.bombero) op.push([`Me contaron que anoche apagaron un incendio y siguieron limpiando como si nada. Eso es tener sangre fría.`, `I heard you put out a fire last night and kept cleaning like nothing happened. Ice in your veins.`]);
+  if (c.objeto) op.push([`Dicen que encontraron algo en un ducto. Yo perdí un diente de oro en 1996. Por si acaso.`, `They say you found something in a duct. I lost a gold tooth in 1996. Just in case.`]);
+  if (c.espejo) op.push([`Pasé por ${nom}: metal desnudo. Lloré. Soy soldador jubilado, eso me pega.`, `Walked by ${nom}: bare metal. I cried. I'm a retired welder, that gets to me.`]);
+  if (!op.length) return null;
+  const [es, en] = uno(op), [oe, oi] = uno(OYENTES); return [oe, es, en, oi];
+}
+// Reto del día: la misma cocina para todos ese día (sale de la fecha), hasta 3 intentos para superar tu récord.
+const fechaHoy = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+function azarFijo(semilla) { let a = semilla >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function ordenDiaria(f) {
+  const orig = Math.random; let o;
+  Math.random = azarFijo(hashTxt('diario' + f));
+  try { o = genOrden(uno(['cafe', 'pizza', 'burger', 'fonda'])); } finally { Math.random = orig; }
+  o.diario = f; o.pedido = null; o.duelo = false; o.pago = r10(o.pago * 1.1);
+  return o;
+}
 // Cosas encontradas dentro de los ductos: se coleccionan en el álbum. Algunas hay que devolverlas (y eso trae un trabajo).
 const OBJETOS = [
   { id: 'dentadura', ico: '🦷', n: ['Una dentadura postiza', 'A set of dentures'], d: ['Completa. Sonriendo. Nadie la ha reclamado desde 2003.', 'Complete. Smiling. Nobody has claimed it since 2003.'] },
@@ -4631,7 +4672,7 @@ function pantallaCamioneta() {
 
 // Los trabajos que no eliges se ven en una tarjeta corta; el elegido se abre con todos sus detalles.
 function tarjetaCorta(o, i) {
-  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.gigante ? L('Gigante', 'Giant') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
+  const chip = o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.gigante ? L('Gigante', 'Giant') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.diario ? '📅 ' + L('Reto del día', 'Daily challenge') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
   return `<button class="orden corta ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="false">
     <div class="fila"><h3>${esc(o.nombre)}</h3><span class="pago">${dinero(o.pago)}</span></div>
     <span class="nota">${chip ? `<b class="chip-txt ${o.duelo ? 'mal' : ''}">${esc(chip)}</b> · ` : ''}${nCocina(o.cocina)}${o.campanas > 1 ? ` · ${o.campanas} ${L('campanas', 'hoods')}` : ''} · ${o.micras.toLocaleString('es-MX')} µm${o.firmado ? '' : ` · <i>${L('sin firmar', 'not signed')}</i>`}</span>
@@ -4648,11 +4689,12 @@ function tarjetaOrden(o, i) {
   if (i !== H.sel) return tarjetaCorta(o, i);
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.devolver ? `<span class="chip ok">🎁 ${L('Devolver', 'Return')}: ${esc(L(...objeto(o.devolver).n))}</span>` : ''}${o.jefe ? `<span class="chip jefe">${JEFES[o.jefe].ico} ${L('Trabajo jefe', 'Boss job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
+    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.diario ? `<span class="chip naranja">📅 ${L('Reto del día', 'Daily challenge')}</span>` : ''}${o.devolver ? `<span class="chip ok">🎁 ${L('Devolver', 'Return')}: ${esc(L(...objeto(o.devolver).n))}</span>` : ''}${o.jefe ? `<span class="chip jefe">${JEFES[o.jefe].ico} ${L('Trabajo jefe', 'Boss job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
     <h3>${esc(o.nombre)}</h3>${o.leccion ? `<span class="pista">${esc(L(LECCIONES[o.leccion].txt, EN.leccion[o.leccion][1]))}</span>` : ''}${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(TRAD(h.n))}: ${L('capítulo', 'chapter')} ${(c.cap || 0) + 1} ${L('de', 'of')} ${h.caps.length}</span>` : ''; })()}
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + L(' campanas · ', ' hoods · ') : ''}${L(`${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros`, `${EN.campana[o.hood.tipo]}, ${o.hood.ancho.toFixed(1)} m · ${EN.ducto[o.ducto.forma]}, ${o.ducto.largo} m · ${o.filtros} filters`)} · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
     ${o.pedido ? `<span class="pedido"><b>${esc(TRAD(pedido(o.pedido).quien))}:</b> «${esc(TRAD(pedido(o.pedido).txt))}»${pedido(o.pedido).premio ? ` <i>${L('Si cumples', 'If you deliver')}: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
     ${o.contrato ? tarjetaContrato(o) : ''}
+    ${o.diario ? (D => `<span class="contrato diario"><b>📅 ${L('Reto del día', 'Daily challenge')} · ${o.diario}</b><span>${L('Hoy todos los jugadores tienen esta misma cocina. Tienes 3 intentos para hacer tu mejor puntuación; si mejoras tu récord del día y apruebas, te dan un premio.', 'Today every player gets this same kitchen. You have 3 tries to set your best score; beat your record of the day and pass to get a prize.')}</span><small>${D ? L(`Tu récord de hoy: ${D.mejor} pts (${D.nota}) · intentos ${D.intentos}/3`, `Your record today: ${D.mejor} pts (${D.nota}) · tries ${D.intentos}/3`) : L('Todavía no lo has intentado hoy.', 'You haven\'t tried it today.')}${S.rec.diario ? ' · ' + L(`Mejor de siempre: ${S.rec.diario} pts`, `All-time best: ${S.rec.diario} pts`) : ''}</small></span>`)(S.diario && S.diario.fecha === o.diario ? S.diario : null) : ''}
     ${o.jefe ? (J => `<span class="contrato jefe-card"><b>${J.ico} ${L('Trabajo jefe', 'Boss job')} · ${esc(L(...J.quien))}</b><i>«${esc(L(...J.txt))}»</i><span>${esc(L(...J.regla))}</span>${(S.jefes || {})[o.jefe] ? `<small>${L('Ya lo superaste con', 'You beat it with')} ${S.jefes[o.jefe]}. ${L('Paga igual de bien.', 'It pays just as well.')}</small>` : `<small>${L('Si lo superas: medalla y algo de estilo nuevo.', 'Beat it: a medal and some new style.')}</small>`}</span>`)(JEFES[o.jefe]) : ''}
     ${o.duelo ? `<span class="aviso">${L(`${RIVAL} también quiere este cliente: limpiará la misma cocina a la vez que tú. Si termina antes, te pagan la mitad.`, `${RIVAL} wants this client too: he will clean the same kitchen at the same time as you. If he finishes first, you get paid half.`)}</span>` : ''}
     ${o.eventos.length ? o.eventos.map(e => `<span class="pista">${esc(L(PISTAS[e], EN.pista[e]))}</span>`).join('') : `<span class="pista">${L('Todo tranquilo. Sospechoso.', 'All quiet. Suspicious.')}</span>`}
@@ -4818,7 +4860,7 @@ function organizar() {
   const H = S.hoy, eqs = equiposHoy();
   eqs.forEach(e => { e.o = null; e.comp = null; e.ayud = []; });
   const comps = S.fijos.filter(id => id !== H.comp), gente = S.cuadrilla.filter(c => !H.ayud.includes(c.id)).sort((a, b) => b.fuerza * (b.cuidado || 3) - a.fuerza * (a.cuidado || 3));
-  const mio = H.ordenes[H.sel], trabajos = H.ordenes.map((o, i) => [o, i]).filter(([o, i]) => i !== H.sel && o.firmado && !o.duelo && !o.gigante && !o.contrato && !o.jefe).sort((a, b) => b[0].pago - a[0].pago);
+  const mio = H.ordenes[H.sel], trabajos = H.ordenes.map((o, i) => [o, i]).filter(([o, i]) => i !== H.sel && o.firmado && !o.duelo && !o.gigante && !o.contrato && !o.jefe && !o.diario).sort((a, b) => b[0].pago - a[0].pago);
   const plan = mio && mio.gigante ? [['mio', 3], ['mio', 3], ...trabajos.map(([o, i]) => [i, sugerido(o)])] : trabajos.map(([o, i]) => [i, sugerido(o)]);
   let armados = 0, sinGente = 0;
   for (const e of eqs) {
@@ -5198,6 +5240,16 @@ function pantallaParte() {
   if (o.devolver && !aprendiz && objeto(o.devolver)) {
     const ob = objeto(o.devolver), v = r10(o.pago * .3); lineas.push([L(`${ob.dueno[0]} recuperó ${L(...ob.n).toLowerCase()} (regalo de agradecimiento)`, `${ob.dueno[1]} got back ${L(...ob.n).toLowerCase()} (thank-you gift)`), v]); neto += v; rep += 3;
   }
+  let diario = null;
+  if (o.diario && !aprendiz) {
+    const D = S.diario = S.diario && S.diario.fecha === o.diario ? S.diario : { fecha: o.diario, mejor: null, nota: null, intentos: 0 };
+    D.intentos++; if (D.intentos === 1) S.diarioDias = (S.diarioDias || 0) + 1;
+    const nuevo = D.mejor === null || pts > D.mejor, antes = D.mejor;
+    if (nuevo) { D.mejor = pts; D.nota = n; }
+    if (nuevo && aprobado) { const v = r10(cobro * .15); lineas.push([L('Premio del reto del día (nuevo récord)', 'Daily challenge prize (new record)'), v]); neto += v; }
+    if (pts > (S.rec.diario || 0)) S.rec.diario = pts;
+    diario = L(`${pts} pts (${n}). ${nuevo ? (antes === null ? 'Primer intento del día.' : `¡Nuevo récord del día! Antes: ${antes}.`) : `Tu récord de hoy sigue en ${D.mejor}.`} Intentos: ${D.intentos}/3.`, `${pts} pts (${n}). ${nuevo ? (antes === null ? 'First try of the day.' : `New record of the day! Before: ${antes}.`) : `Your record today is still ${D.mejor}.`} Tries: ${D.intentos}/3.`);
+  }
   // La Gran Licitación: tu nota contra la de El Cuñado
   let licit = null;
   if (o.licit && S.licit && !aprendiz) {
@@ -5300,6 +5352,7 @@ function pantallaParte() {
   if (M.bombero) dar('bombero');
   if (licit && S.licitGanada === S.noche) dar('licitacion');
   if ((S.objetos || []).length >= 6) dar('objetos6');
+  if ((S.diarioDias || 0) >= 5) dar('diario5');
   if ((S.objetos || []).length >= OBJETOS.length) dar('objetos');
   if (Object.keys(JEFES).every(id => (S.jefes || {})[id])) dar('jefes');
   if ((S.contratos || 0) >= 5) dar('contratos5');
@@ -5349,6 +5402,7 @@ function pantallaParte() {
   if (evals.length) cola.unshift(() => pantallaEvaluar(evals));
   guardar();
   M.nota = n; M.nombre = o.nombre; M.nocheParte = S.noche - 1;
+  S.llamada = llamadaRadio({ n, nombre: o.nombre, aprobado, gana: ganaDuelo, perdioDuelo: d && !ganaDuelo, desastre: M.danos.some(x => x.dinero >= 60), jefe, bombero: M.bombero, objeto: M.album.length > 0, espejo });
   S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
   setTimeout(() => vibrar(n === 'F' ? 350 : n === 'A+' || n === 'A' ? [100, 50, 100, 50, 160] : [100, 50, 100]), 250);
   const desastre = M.danos.some(x => x.dinero >= 60);
@@ -5371,6 +5425,7 @@ function pantallaParte() {
     ${ped ? `<div class="cita"><b>${esc(TRAD(ped.quien))} · ${esc(L(ped.chip, EN.pedidoChip[ped.id]))}</b>${esc(TRAD(ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : ped.mal))}</div>` : ''}
     ${misHechas.length ? `<div class="cita"><b>📞 ${L('Don Rigo, desde el lago', 'Don Rigo, from the lake')}</b>${misHechas.some(x => x.todo) ? L('¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.', 'All three weekly challenges! I told all my buddies. Well, the only one who picks up.') : uno([L('¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'See? I told you you could. Well, I didn\'t tell you. But I thought it.'), L('Reto cumplido. Se me cayó la caña de la emoción.', 'Challenge done. I dropped my fishing rod from the excitement.'), L('Así se hace. Beto dice que él te enseñó. Yo no dije nada.', 'That\'s how it\'s done. Beto says he taught you. I said nothing.')])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
     ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
+    ${diario ? `<div class="cita historia"><b>📅 ${L('Reto del día', 'Daily challenge')}</b>${esc(diario)}</div>` : ''}
     ${licit ? `<div class="cita historia"><b>🏛️ ${esc(licit.t)}</b>${esc(licit.txt)}</div>` : ''}
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(TRAD(capitulo.t))}</b>${esc(TRAD(capitulo.txt))}</div>` : ''}
     <div class="cita"><b>${L('El cliente', 'The client')}</b>${esc(TRAD(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL)))}${notaCliente ? ' ' + esc(TRAD(notaCliente)) : ''}</div>
