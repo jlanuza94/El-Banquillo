@@ -22,14 +22,22 @@ function construir() {
 const partida = (mas = {}) => ({ v: 4, fase: 'empresa', etapa: 1, empresa: { nombre: 'Prueba', color: '#2e9e5b' }, abierta: 1, compPref: 'lupe', fijos: ['beto', 'lupe'], jugador: 'Tester', noche: 20,
   dinero: 3000, rep: 40, aprobados: 8, mejor: 200, nivel: 4, xp: 0, perks: {}, eq: { rasqueta: 2, hidro: true, camioneta: 2, flota: 0 }, aj: { asist: true, sonido: false, ahorro: true },
   album: [], clientes: [], cuadrilla: [], candidatos: [], hoy: null, sigId: 50, ...mas });
-let navegador = null;
+let navegador = null, url = null;
+// Se sirve por http y no como file://: al recargar, Chromium a veces trata cada carga de un archivo como un origen nuevo
+// y la página aparece con el almacenamiento vacío (en el teléfono el juego nunca se abre así).
+function servidor() {
+  if (url) return url;
+  const http = require('http'), archivo = construir();
+  return url = new Promise(ok => { const sv = http.createServer((q, r) => { if (q.url.endsWith('three.min.js')) { r.writeHead(200, { 'content-type': 'application/javascript' }); return fs.createReadStream(THREE).pipe(r); }
+    r.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); fs.createReadStream(archivo).pipe(r); }); sv.listen(0, '127.0.0.1', () => { sv.unref(); ok('http://127.0.0.1:' + sv.address().port); }); });
+}
 async function abrir(save, { idioma = 'es', continuar = true } = {}) {
   if (!navegador) navegador = await playwright.chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await navegador.newPage({ viewport: { width: 412, height: 915 } });
   p.errores = []; p.on('pageerror', e => p.errores.push(e.message));
   await p.route('**/three.min.js', r => r.fulfill({ path: THREE, contentType: 'application/javascript' }));
   await p.addInitScript(([s, idioma]) => { if (localStorage.getItem('hc-prueba-lista')) return; localStorage.setItem('hc-prueba-lista', '1'); localStorage.setItem('hood-cleaners-idioma', idioma); if (s) localStorage.setItem('hood-cleaners-v2', JSON.stringify(s)); }, [save, idioma]);
-  await p.goto('file://' + construir());
+  await p.goto(await servidor() + '/juego.html');
   if (continuar) { await p.waitForSelector('#continuar'); await p.click('#continuar'); await p.waitForSelector('#salir'); }
   return p;
 }

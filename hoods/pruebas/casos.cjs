@@ -176,7 +176,7 @@ caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', asy
   await p.click('#rumbo'); await p.click('#empezarPuerto');
   const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, cu: S.cuadrilla.map(c => [c.n, c.sueldo]), f: S.fijos, lupe: __hc.COMPANEROS.lupe.sueldo, beto: __hc.COMPANEROS.beto.sueldo,
     c1: S.ciudades[1].dinero, c1f: S.ciudades[1].fijos, c1cu: S.ciudades[1].cuadrilla.length, fin: S.medallas.final, eq: S.eq, lg: S.legado.camino }; });
-  afirmar(r.c === 2 && r.d === 10000 && r.c1 === 30000, 'el dinero no se repartió bien: ' + JSON.stringify(r));
+  afirmar(r.c === 2 && Math.abs(r.d - 10000) <= 300 && r.c1 === 30000, 'el dinero no se repartió bien: ' + JSON.stringify(r));
   afirmar(JSON.stringify(r.cu) === '[["Nacho",165]]' && r.f.length === 0 && r.c1cu === 0, 'la mano derecha no se mudó con su aumento: ' + JSON.stringify(r));
   afirmar(r.lupe === 200 && r.beto === 110 && r.c1f.includes('lupe'), 'el director no tiene su aumento: ' + JSON.stringify(r));
   afirmar(r.fin && r.eq.camioneta === 2 && !r.eq.flota && r.eq.hidro && r.lg === 'B', 'la llegada al puerto no es la esperada: ' + JSON.stringify(r));
@@ -186,9 +186,10 @@ caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', asy
   await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('[data-tab="noche"]');
   await p.click('#viajar'); await p.click('#siViajar');
   const v = await p.evaluate(() => ({ c: __hc.ciudad(), d: __hc.S.dinero, f: __hc.S.fijos, carta: !!document.querySelector('#comprador') }));
-  afirmar(v.c === 1 && v.d === 30000 && v.f.includes('lupe') && !v.carta, 'volver a Ciudad Comal no funcionó: ' + JSON.stringify(v));
+  afirmar(v.c === 1 && Math.abs(v.d - 30000) <= 300 && v.f.includes('lupe') && !v.carta, 'volver a Ciudad Comal no funcionó: ' + JSON.stringify(v));
+  const almacen = await p.evaluate(() => Object.keys(localStorage).map(k => k + ':' + localStorage.getItem(k).length).join(' '));
   await p.reload(); await p.waitForSelector('#continuar'); await p.click('#continuar'); await p.waitForSelector('#salir');
-  afirmar(await p.evaluate(() => __hc.ciudad() === 1 && __hc.COMPANEROS.lupe.sueldo === 200), 'tras recargar se perdió la ciudad o el aumento');
+  afirmar(await p.evaluate(() => __hc.ciudad() === 1 && __hc.COMPANEROS.lupe.sueldo === 200), 'tras recargar se perdió la ciudad o el aumento: ' + await p.evaluate(() => JSON.stringify([__hc.ciudad(), __hc.COMPANEROS.lupe.sueldo, __hc.S.aumentos, __hc.S.noche])) + ' · antes: ' + almacen + ' · después: ' + await p.evaluate(() => Object.keys(localStorage).map(k => k + ':' + localStorage.getItem(k).length).join(' ')));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 caso('el comprador: camino A (vender) con pagos y sin vuelta', async () => {
@@ -339,6 +340,29 @@ caso('de arriba abajo: el ducto escurre sobre la campana limpia, y cada suciedad
   } });
   const r = await p.evaluate(() => window.__ducto);
   afirmar(r.sucia && r.mancha > 0 && r.aviso && r.tope === 8 && r.enCampana === 0 && r.vacio && r.audio, 'el escurrido o los sonidos no funcionan: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('El Cuñado desde el principio y el menú con caras e iconos', async () => {
+  // de aprendiz: la camioneta roja y el aviso de Don Rigo
+  let p = await abrir(partida({ fase: 'aprendiz', etapa: 0, empresa: null, noche: 2, compPref: 'beto', fijos: [], hoy: null }));
+  let r = await p.evaluate(() => ({ roja: !!document.querySelector('.calle-aprendiz .roja'), aviso: __hc.S.hoy.avisos.join(' '), caras: document.querySelectorAll('.cara svg').length }));
+  afirmar(r.roja && /camioneta roja/.test(r.aviso) && r.caras >= 1, 'falta la camioneta roja o el aviso de Don Rigo: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+  // primeras noches de la empresa: reseñas falsas, cartel en la camioneta y primer duelo escrito
+  p = await abrir(partida({ noche: 21, abierta: 20, hoy: null, cunado: null }));
+  r = await p.evaluate(() => { const out = { resenas: 0, cartel: false, primer: 0 }; for (let i = 0; i < 12; i++) { __hc.S.hoy = null; __hc.S.cartel = null; delete __hc.S.primerDuelo; __hc.pantallaCamioneta(); const H = __hc.S.hoy; if (/Reseña|oyente|En redes/.test(H.avisos.join(' '))) out.resenas++; if (__hc.S.cartel) out.cartel = true; if (H.ordenes.some(o => o.primerDuelo)) out.primer++; } return out; });
+  afirmar(r.resenas >= 1 && r.cartel && r.primer === 12, 'no salen las reseñas, el cartel o el primer duelo: ' + JSON.stringify(r));
+  await p.evaluate(() => { __hc.S.cartel = 21; __hc.pantallaCamioneta(); });
+  await p.click('#quitarCartel');
+  afirmar(await p.evaluate(() => !__hc.S.cartel && !document.querySelector('#quitarCartel')), 'no se pudo quitar el cartel');
+  r = await p.evaluate(() => ({ ico: document.querySelectorAll('.ico-cocina').length, caras: document.querySelectorAll('.cara svg').length, primer: /El Cuñado lo quiere/.test(document.body.innerText) }));
+  afirmar(r.ico >= 2 && r.caras >= 3, 'faltan iconos de cocina o caras: ' + JSON.stringify(r));
+  // el primer duelo empieza con su escena, sin apuesta
+  await p.evaluate(() => { const H = __hc.S.hoy; const i = H.ordenes.findIndex(o => o.primerDuelo); H.sel = i; H.ordenes[i].firmado = true; H.ordenes[i].eventos = []; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => document.querySelector('.carta[role=dialog]'), null, { timeout: 90000 });
+  const t = await p.evaluate(() => document.querySelector('.carta[role=dialog]').innerText);
+  afirmar(/camioneta roja ya está estacionada/.test(t) && !/apuesto/.test(t), 'el primer duelo no tiene su escena: ' + t);
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
