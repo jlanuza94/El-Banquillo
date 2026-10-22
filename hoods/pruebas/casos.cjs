@@ -366,5 +366,24 @@ caso('El Cuñado desde el principio y el menú con caras e iconos', async () => 
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+caso('tutorial compacto y barras de progreso de las zonas', async () => {
+  const p = await abrir(partida({ fase: 'aprendiz', etapa: 0, empresa: null, noche: 1, compPref: 'beto', fijos: [], hoy: null }));
+  await p.evaluate(() => { const H = __hc.S.hoy; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  await p.waitForSelector('#tuto:not([hidden])');
+  afirmar(await p.evaluate(() => !document.querySelector('#tuto').classList.contains('mini')), 'el cartel del tutorial empezó encogido');
+  await p.waitForFunction(() => document.querySelector('#tuto').classList.contains('mini'), null, { timeout: 9000 });
+  await p.click('#tuto');
+  afirmar(await p.evaluate(() => !document.querySelector('#tuto').classList.contains('mini')), 'tocar el cartel no lo volvió a abrir');
+  const w0 = await p.evaluate(() => [...document.querySelectorAll('#zonas .prog s')].map(s => s.style.width));
+  afirmar(w0.length >= 3 && w0.every(w => parseFloat(w) > 90), 'las barras no empiezan llenas: ' + w0);
+  await p.evaluate(() => { const z = __hc.Z.find(z => z.id === 'filtros'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); });
+  const ok = await p.evaluate(() => { const i = __hc.Z.findIndex(z => z.id === 'filtros'); return document.querySelectorAll('#zonas .prog s')[i].style.background; });
+  afirmar(/--ok/.test(ok), 'la barra de la zona limpia no se puso verde: ' + ok);
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };
