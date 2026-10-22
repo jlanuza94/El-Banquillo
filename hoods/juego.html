@@ -381,6 +381,12 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .chip.jefe { background: #c6a0ff; color: #1a1030; }
 .jefe-card { border-color: #c6a0ff99; background: rgba(198,160,255,.08); }
 .jefe-card b { color: #c6a0ff; }
+.objetos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.obj { background: var(--panel); border: 1px solid var(--linea); border-radius: 8px; padding: 8px 6px; display: grid; justify-items: center; gap: 2px; text-align: center; }
+.obj span { font-size: 26px; } .obj b { font-family: var(--f-cond); font-size: 12.5px; line-height: 1.15; }
+.obj.no { opacity: .45; } .obj.no span { font-family: var(--f-display); color: var(--tenue); }
+.blanco.brillo { background: radial-gradient(#fff6c0, #ffd23f 55%, #ff8a1f); border: 3px solid #fff; font-size: 26px; color: #1a1004; }
+.blanco.brillo small { display: block; font-size: 11px; }
 .historia-comp { border-left: 4px solid #c6a0ff; }
 .fila-cara { display: flex; gap: 10px; align-items: center; }
 .orden.licit { border-color: #ffd23f; background: linear-gradient(rgba(255,210,63,.1), var(--panel)); }
@@ -667,7 +673,7 @@ const EN = {
     cuca: ['Roach hunter', 'Catch the giant cockroach.'], apagon: ['Cat eyes', 'Pass a night with a blackout.'], pedido: ['Picky client', 'Fulfill a special request.'], duelo: ['Bye, Cuñado', 'Win a duel against El Cuñado.'], diez: ['Veteran', 'Pass 10 inspections.'],
     fotos: ['Grease photographer', 'Collect 6 photos in the album.'], finde: ['Legendary weekend', 'Beat the weekend challenge: three giant jobs in a row.'], contrato: ['Fine print', 'Complete a tough contract.'], contratos5: ['Official supplier', 'Complete 5 tough contracts.'], racha10: ['Unstoppable', 'Pass 10 nights in a row.'], cunado5: ['El Cuñado\'s nightmare', 'Win 5 duels against El Cuñado.'],
     sede3: ['First stone', 'Take a headquarters station to level 3.'], sedeTotal: ['Headquarters', 'Max out the whole headquarters.'], maestro: ['Hood school', 'Train 3 different helpers.'], flota: ['Fleet', 'Own 5 vans.'], rico: ['Grease tycoon', 'Save up $50,000.'],
-    h_beto: ['Beto\'s Tacos', 'Finish Beto\'s story.'], h_lupe: ['Old rivals', 'Finish Lupe\'s story.'], h_chuy: ['Love among hoods', 'Finish Chuy\'s story.'], licitacion: ['The city is yours', 'Win the Grand Tender.'], final: ['End of the night', 'Buy Limpiezas El Cuñado and finish the story.'], bombero: ['Firefighter on duty', 'Put out a grease fire in time.'], j_tele: ['TV star', 'Beat the live show with good ratings.'], j_embrujada: ['Ghostbuster', 'Clean the haunted hood.'], j_hospital: ['Quiet, please', 'Clean the hospital kitchen without three scoldings.'], j_inspector: ['Under the magnifier', 'Pass with the surprise inspector (more checks than crosses).'], jefes: ['Legend of the night', 'Beat every boss job.'],
+    objetos6: ['Duct archaeologist', 'Find 6 things in the ducts.'], objetos: ['The grease museum', 'Find every thing in the ducts.'], h_beto: ['Beto\'s Tacos', 'Finish Beto\'s story.'], h_lupe: ['Old rivals', 'Finish Lupe\'s story.'], h_chuy: ['Love among hoods', 'Finish Chuy\'s story.'], licitacion: ['The city is yours', 'Win the Grand Tender.'], final: ['End of the night', 'Buy Limpiezas El Cuñado and finish the story.'], bombero: ['Firefighter on duty', 'Put out a grease fire in time.'], j_tele: ['TV star', 'Beat the live show with good ratings.'], j_embrujada: ['Ghostbuster', 'Clean the haunted hood.'], j_hospital: ['Quiet, please', 'Clean the hospital kitchen without three scoldings.'], j_inspector: ['Under the magnifier', 'Pass with the surprise inspector (more checks than crosses).'], jefes: ['Legend of the night', 'Beat every boss job.'],
     dorado: ['The golden raccoon', 'You saw it. Nobody will believe you.'], casete: ['The lost tape', 'You found Don Rigo\'s cassette in a duct.'], himno: ['Perfect pitch', 'You found the radio\'s secret song.'] },
   reto: { sinHidro: 'No pressure washer', sinEspuma: 'No foam', combo2: 'Reach a ×3 combo twice', antes4: 'Inspector before 4:00, passed', espejo: 'Polish 80% of the hood', sinDanos: 'Not a single damage', prep: 'Perfect prep (gas, power, covers and plastic)', filtros: 'Filters done before 11:30 pm', notaA: 'Get an A or better', metal: 'Everything at 50 µm or less' },
   look: { espuma: 'Foam color', casco: 'Partner\'s helmet', pegatina: 'Van sticker', linterna: 'Helmet light', combo: 'Combo sound',
@@ -1144,6 +1150,8 @@ const MEDALLAS = [
   { id: 'maestro', n: 'Escuela de campaneros', d: 'Forma a 3 ayudantes distintos.', ico: '🎓' },
   { id: 'flota', n: 'Flotilla', d: 'Ten 5 camionetas.', ico: '🚐' },
   { id: 'rico', n: 'Magnate de la grasa', d: 'Junta $50,000.', ico: '$' },
+  { id: 'objetos6', n: 'Arqueólogo de ductos', d: 'Encuentra 6 cosas en los ductos.', ico: '🔦' },
+  { id: 'objetos', n: 'El museo de la grasa', d: 'Encuentra todas las cosas de los ductos.', ico: '🏺' },
   { id: 'h_beto', n: 'Beto\'s Tacos', d: 'Termina la historia de Beto.', ico: '🌮' },
   { id: 'h_lupe', n: 'Viejas rivales', d: 'Termina la historia de Lupe.', ico: '🤝' },
   { id: 'h_chuy', n: 'Amor entre campanas', d: 'Termina la historia de Chuy.', ico: '💌' },
@@ -2482,6 +2490,7 @@ function empezarTurno(orden) {
   radioEncender(true);
   for (const e of M.faltan) setTimeout(() => M && decir(M.comp, `${e.n} no llegó. Mandó mensaje: «${uno(['Se me poncharon las dos llantas. Y la de repuesto.', 'Me quedé dormido viendo un video de cómo limpiar campanas.', 'Mi gato se comió las llaves.', 'Estoy en camino. (No está en camino.)'])}»`), 1200);
   if (M.pedido) setTimeout(() => M && M.fase === 'prep' && M.pedido && decir(M.cliente, M.pedido.txt), 1800);
+  if (S.fase === 'empresa' && iDucto() >= 0 && azar(.3)) M.objeto = 'pendiente';
   if (orden.jefe) {
     const J = JEFES[orden.jefe]; M.cliente = { n: L(...J.quien), color: '#e9e9e9' };
     M.jefe = { id: orden.jefe, v: orden.jefe === 'tele' ? 60 : 0, min: 100, strikes: 0, ok: 0, mal: 0, prox: 25, rev: null, nd: 0, limpio: 0, tick: 0, susto: rnd(18, 28), sustos: 0 };
@@ -3871,6 +3880,13 @@ function tickTurno(dt) {
         carta('Un casete viejo', '«Don Rigo · Grandes éxitos · 1987». Ahora Radio Grasa FM tiene una canción nueva: el corrido original, cantado por él mismo. Desafina con mucho sentimiento.', [{ t: 'Guardarlo', prim: true, f: () => { cerrarCarta(); limpiarMarcas(); M.caseteMarca = true; } }], { bloquea: true });
       });
     }
+    if (M.objeto === 'pendiente' && M.etapa === 'lavar' && M.zona === iDucto() && M.enZona > 2.5 && !M.ev) {
+      M.objeto = 'visto';
+      const b = document.createElement('button'); b.className = 'blanco brillo'; b.innerHTML = `✨<small>${L('¿Y esto?', 'What\'s this?')}</small>`; b.style.left = rnd(25, 75) + '%'; b.style.top = rnd(25, 55) + '%';
+      b.onclick = () => { b.remove(); if (M && M.fase === 'turno') hallarObjeto(); };
+      $('#blancos').appendChild(b); tono(1800, .15, .04, 'sine', 2400);
+      setTimeout(() => b.isConnected && b.remove(), 7000);
+    }
     if (M.pedido && M.pedido.id === 'antes3' && !M.aviso3 && M.t / M.dur * 480 >= 270) { M.aviso3 = true; decir(M.cliente, '¡Ya son las dos y media! El panadero llega a las tres, ¿eh?'); }
     if (M.duelo) tickDuelo(dt);
     if (M.jefe) tickJefe(dt, z);
@@ -4238,6 +4254,33 @@ function rival(ordenes, avisos) {
 // Los clientes que se lleva El Cuñado se pueden recuperar ganándole un duelo en su cocina.
 function perdido(c) { S.perdidos = [...(S.perdidos || []).filter(x => x.id !== c.id), c].slice(-5); }
 // Una noche nueva: órdenes, clientes que se van, candidatos, llamadas.
+// Cosas encontradas dentro de los ductos: se coleccionan en el álbum. Algunas hay que devolverlas (y eso trae un trabajo).
+const OBJETOS = [
+  { id: 'dentadura', ico: '🦷', n: ['Una dentadura postiza', 'A set of dentures'], d: ['Completa. Sonriendo. Nadie la ha reclamado desde 2003.', 'Complete. Smiling. Nobody has claimed it since 2003.'] },
+  { id: 'anillo', ico: '💍', n: ['Un anillo de compromiso', 'An engagement ring'], d: ['Grabado por dentro: «Para Lucha, 1979». Alguien lo está buscando desde hace mucho.', 'Engraved inside: "For Lucha, 1979". Someone has been looking for it for a long time.'], dueno: ['Doña Lucha', 'Doña Lucha'], k: 'fonda' },
+  { id: 'carta', ico: '✉️', n: ['Una carta de 1987', 'A letter from 1987'], d: ['«Querido Ramiro: si encuentras esto, la receta secreta está…» El resto, ilegible por la grasa.', '"Dear Ramiro: if you find this, the secret recipe is…" The rest is unreadable from the grease.'], dueno: ['Don Ramiro', 'Don Ramiro'], k: 'pizza' },
+  { id: 'lentes', ico: '🕶️', n: ['Los lentes de sol de Don Rigo', 'Don Rigo\'s sunglasses'], d: ['Los perdió en 1998 y culpó a Beto durante veinte años. Beto era inocente. Esta vez.', 'He lost them in 1998 and blamed Beto for twenty years. Beto was innocent. This time.'], rigo: true },
+  { id: 'loteria', ico: '🎟️', n: ['Un boleto de lotería', 'A lottery ticket'], d: ['Del sorteo de la semana pasada. Revisas los números…', 'From last week\'s draw. You check the numbers…'], loteria: true },
+  { id: 'moneda', ico: '🪙', n: ['Una moneda de 1910', 'A coin from 1910'], d: ['Un coleccionista del barrio te la quiere comprar. Tú prefieres el álbum.', 'A collector in the neighborhood wants to buy it. You prefer the album.'] },
+  { id: 'juguete', ico: '🧸', n: ['Un juguete de cajita feliz de 1995', 'A 1995 kids-meal toy'], d: ['Todavía en su bolsa. Beto dice que vale una fortuna. Beto dice muchas cosas.', 'Still in its bag. Beto says it\'s worth a fortune. Beto says a lot of things.'] },
+  { id: 'llave', ico: '🗝️', n: ['Una llave antigua', 'An old key'], d: ['No abre nada que conozcas. Todavía.', 'It opens nothing you know of. Yet.'] },
+  { id: 'cuchara', ico: '🥄', n: ['Una cuchara de palo', 'A wooden spoon'], d: ['Tiene grabado «Abuela». El chef se pone a llorar cuando se la enseñas.', 'It has "Grandma" carved into it. The chef starts crying when you show him.'] },
+  { id: 'placa', ico: '📛', n: ['Un gafete de empleado del mes', 'An employee-of-the-month badge'], d: ['«Cuñado · Limpiezas El Cuñado · Marzo 2011». Él mismo se lo dio.', '"Cuñado · Limpiezas El Cuñado · March 2011". He gave it to himself.'] },
+  { id: 'foto', ico: '🖼️', n: ['Una foto de boda', 'A wedding photo'], d: ['Los novios posan frente a una campana recién limpia. Era otra época.', 'The couple poses in front of a freshly cleaned hood. Different times.'] },
+  { id: 'casco', ico: '⛑️', n: ['Un casco con iniciales «D.R.»', 'A helmet with initials "D.R."'], d: ['El primer casco de Don Rigo. Tiene una abolladura con forma de mapache.', 'Don Rigo\'s very first helmet. It has a raccoon-shaped dent.'] },
+];
+const objeto = id => OBJETOS.find(x => x.id === id);
+function hallarObjeto() {
+  S.objetos = S.objetos || [];
+  const nuevos = OBJETOS.filter(x => !S.objetos.includes(x.id)), o = nuevos.length ? uno(nuevos) : null;
+  if (!o) { M.propinaMod += .02; return resultado(L('Algo brilla en el ducto', 'Something shines in the duct'), L('Una tapa de refresco. Ya tienes todo lo interesante de los ductos de esta ciudad.', 'A bottle cap. You already have everything interesting in this city\'s ducts.'), M.comp, L('La guardo para Beto.', 'I\'ll keep it for Beto.')); }
+  S.objetos.push(o.id); M.album.push(L(...o.n)); sDing();
+  let extra = '';
+  if (o.loteria) { const p = azar(.35) ? 500 : 0; S.dinero += p; extra = p ? L(' ¡Premiado! $500 para la empresa.', ' A winner! $500 for the company.') : L(' Ni un número. Pero ahora es de colección.', ' Not a single number. But now it\'s a collectible.'); }
+  if (o.rigo) { S.dinero += 300; extra = L(' Se los mandas a Don Rigo por paquetería. Te deposita $300 «para el envío».', ' You mail them to Don Rigo. He deposits $300 "for shipping".'); }
+  if (o.dueno) { S.devolver = o.id; extra = L(` Mañana buscas a ${o.dueno[0]} para devolvérselo.`, ` Tomorrow you'll look for ${o.dueno[1]} to give it back.`); }
+  resultado(`${o.ico} ${L(...o.n)}`, L(...o.d) + extra, M.comp, L(...uno([['¡Al álbum!', 'Into the album!'], ['Esto es mejor que la grasa.', 'This beats grease.'], ['¿Cuántas cosas habrá en los ductos de esta ciudad?', 'How many things are hiding in this city\'s ducts?']])));
+}
 // Historias de tus compañeros: tres capítulos cada una, uno cada pocas noches, con decisiones. El final se nota en el juego.
 const ARCOS = {
   beto: { t: ['Beto quiere su propio negocio', 'Beto wants his own business'], medalla: 'h_beto',
@@ -4313,6 +4356,11 @@ function prepararNoche() {
     const o = genOrden(S.recomienda.cocina); o.origen = 'Recomendación'; o.pago = Math.round(o.pago * 1.1 / 10) * 10; ordenes.push(o);
     avisos.push(L(`📞 Llamó ${o.nombre}: dice que en ${S.recomienda.de} les hablaron muy bien de ti. Pagan un 10 % más.`, `📞 ${o.nombre} called: ${S.recomienda.de} told them great things about you. They pay 10% more.`));
     S.recomienda = null;
+  }
+  if (S.devolver && objeto(S.devolver) && S.fase === 'empresa') {
+    const ob = objeto(S.devolver), o = genOrden(cocinasHasta(S.etapa).includes(ob.k) ? ob.k : 'cafe'); o.devolver = ob.id; o.pedido = null; o.nombre = L(`La cocina de ${ob.dueno[0]}`, `${ob.dueno[1]}'s kitchen`); ordenes.unshift(o);
+    avisos.push(L(`🎁 Encontraste a ${ob.dueno[0]}: tiene una cocina y te espera esta noche. Llévale ${L(...ob.n).toLowerCase()}.`, `🎁 You found ${ob.dueno[1]}: they have a kitchen and are waiting for you tonight. Bring ${L(...ob.n).toLowerCase()}.`));
+    S.devolver = null;
   }
   rival(ordenes, avisos);
   if (S.noticia) { avisos.push(`📻 En la radio: ${S.noticia}`); S.noticiaRadio = S.noticia; S.noticia = null; }
@@ -4600,7 +4648,7 @@ function tarjetaOrden(o, i) {
   if (i !== H.sel) return tarjetaCorta(o, i);
   const faltanAyud = o.ayud - H.ayud.length;
   return `<button class="orden ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${i === H.sel}">
-    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.jefe ? `<span class="chip jefe">${JEFES[o.jefe].ico} ${L('Trabajo jefe', 'Boss job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
+    <div class="chips">${o.leccion ? `<span class="chip naranja">${esc(L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]))}</span>` : ''}${o.finde ? `<span class="chip naranja">🏆 ${L('Reto de fin de semana', 'Weekend challenge')} · ${L(FINDE_DIAS[o.finde - 1], EN.dias[o.finde - 1])}</span>` : ''}${o.clienteId ? `<span class="chip ok">${L('Cliente fijo · le toca hoy', 'Regular client · due today')}</span>` : ''}${o.origen ? `<span class="chip">${esc(L(o.origen, EN.origen[o.origen]))}</span>` : ''}${o.raro ? `<span class="chip naranja">${L('Cliente raro', 'Weird client')}</span>` : ''}${o.campanas > 1 ? `<span class="chip naranja">${L('Trabajo grande', 'Big job')}</span>` : ''}${o.contrato ? `<span class="chip naranja">📜 ${L('Contrato difícil', 'Tough contract')}</span>` : ''}${o.devolver ? `<span class="chip ok">🎁 ${L('Devolver', 'Return')}: ${esc(L(...objeto(o.devolver).n))}</span>` : ''}${o.jefe ? `<span class="chip jefe">${JEFES[o.jefe].ico} ${L('Trabajo jefe', 'Boss job')}</span>` : ''}${o.duelo ? `<span class="chip mal">${o.recupera ? L('Revancha: recupera al cliente', 'Rematch: win the client back') : L('Duelo con El Cuñado', 'Duel with El Cuñado')}</span>` : ''}${o.clienteId && (S.clientes.find(c => c.id === o.clienteId) || {}).amenazado ? `<span class="chip mal">${L('El Cuñado lo tienta: saca B o mejor', 'El Cuñado is tempting them: get a B or better')}</span>` : ''}${o.pedido ? `<span class="chip naranja">${esc(L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]))}</span>` : ''}<span class="chip">${nCocina(o.cocina)}</span><span class="chip">NFPA 96: ${L(C.frec, EN.frec[C.frec])}</span>${Object.keys(o.suciedad || {}).filter(t => o.suciedad[t] > 0).map(t => `<span class="chip suc-${t}">${L(NOMBRE_SUC[t], EN.suc[t])}</span>`).join('')}</div>
     <h3>${esc(o.nombre)}</h3>${o.leccion ? `<span class="pista">${esc(L(LECCIONES[o.leccion].txt, EN.leccion[o.leccion][1]))}</span>` : ''}${(() => { const c = o.clienteId && S.clientes.find(x => x.id === o.clienteId), h = c && HISTORIAS[c.historia]; return h && (c.cap || 0) < h.caps.length ? `<span class="nota" style="color:#c6a0ff">📖 ${esc(TRAD(h.n))}: ${L('capítulo', 'chapter')} ${(c.cap || 0) + 1} ${L('de', 'of')} ${h.caps.length}</span>` : ''; })()}
     <div class="fila"><span class="nota">${o.campanas > 1 ? o.campanas + L(' campanas · ', ' hoods · ') : ''}${L(`${TIPO_CAMPANA[o.hood.tipo]} de ${o.hood.ancho.toFixed(1)} m · ${FORMA_DUCTO[o.ducto.forma]} de ${o.ducto.largo} m · ${o.filtros} filtros`, `${EN.campana[o.hood.tipo]}, ${o.hood.ancho.toFixed(1)} m · ${EN.ducto[o.ducto.forma]}, ${o.ducto.largo} m · ${o.filtros} filters`)} · ${o.micras.toLocaleString('es-MX')} µm</span><span class="pago">${dinero(o.pago)}</span></div>
     ${o.pedido ? `<span class="pedido"><b>${esc(TRAD(pedido(o.pedido).quien))}:</b> «${esc(TRAD(pedido(o.pedido).txt))}»${pedido(o.pedido).premio ? ` <i>${L('Si cumples', 'If you deliver')}: +${Math.round(pedido(o.pedido).premio * 100)} %.</i>` : ''}</span>` : ''}
@@ -4886,6 +4934,8 @@ function vLogros() {
     <div class="datos">${dato(L('Mejor nota', 'Best grade'), r.nota || '—', r.pts ? r.pts + ' pts' : '')}${dato(L('Mejor noche', 'Best night'), S.mejor ? dinero(S.mejor) : '—')}${dato(L('Inspector más temprano', 'Earliest inspector'), r.fin !== undefined ? hora(r.fin) : '—')}${dato(L('Combo más largo', 'Longest combo'), r.combo || 0)}${dato(L('Aprobadas', 'Passed'), S.aprobados)}${r.duelos ? dato(L('Duelos ganados', 'Duels won'), r.duelos) : ''}</div>
     ${S.notas.length ? `<div class="notas">${S.notas.slice(-12).map(n => `<span style="--c:${COL_NOTA[n]}">${n}</span>`).join('')}</div>` : ''}
     ${vAlbum()}
+    <h2 class="sec">${L('Cosas encontradas', 'Found things')} · ${(S.objetos || []).length} ${L('de', 'of')} ${OBJETOS.length}</h2>
+    <div class="objetos">${OBJETOS.map(x => (S.objetos || []).includes(x.id) ? `<div class="obj" title="${esc(L(...x.d))}"><span>${x.ico}</span><b>${esc(L(...x.n))}</b></div>` : `<div class="obj no"><span>?</span><b>${L('Sigue buscando en los ductos', 'Keep searching the ducts')}</b></div>`).join('')}</div>
     <h2 class="sec">${L('Medallas', 'Medals')} · ${ganadas} ${L('de', 'of')} ${MEDALLAS.length}</h2>
     <div class="medallas">${MEDALLAS.map(m => tarjetaMedalla(m)).join('')}</div>
     <h2 class="sec">${L('Estilo de la empresa', 'Company style')} · ${S.estrellas || 0} ★</h2>
@@ -5145,6 +5195,9 @@ function pantallaParte() {
       S.findes = (S.findes || 0) + 1; S.finde = null;
     } else finde = { t: L(`Reto de fin de semana · ${FINDE_DIAS[o.finde - 1]} superado`, `Weekend challenge · ${EN.dias[o.finde - 1]} done`), txt: L(`Nota ${n}. Mañana, ${FINDE_DIAS[o.finde].toLowerCase()}: otra cocina gigante.`, `Grade ${n}. Tomorrow, ${EN.dias[o.finde]}: another giant kitchen.`) };
   } else if (S.finde && !aprendiz && S.finde.noche === S.noche) { finde = { t: L('Reto de fin de semana perdido', 'Weekend challenge lost'), txt: L('Esta noche hiciste otro trabajo y la cocina gigante del reto se quedó esperando.', 'You did another job tonight and the challenge\'s giant kitchen was left waiting.') }; S.finde = null; }
+  if (o.devolver && !aprendiz && objeto(o.devolver)) {
+    const ob = objeto(o.devolver), v = r10(o.pago * .3); lineas.push([L(`${ob.dueno[0]} recuperó ${L(...ob.n).toLowerCase()} (regalo de agradecimiento)`, `${ob.dueno[1]} got back ${L(...ob.n).toLowerCase()} (thank-you gift)`), v]); neto += v; rep += 3;
+  }
   // La Gran Licitación: tu nota contra la de El Cuñado
   let licit = null;
   if (o.licit && S.licit && !aprendiz) {
@@ -5246,6 +5299,8 @@ function pantallaParte() {
   if (jefe && jefe.supera) dar('j_' + jefe.id);
   if (M.bombero) dar('bombero');
   if (licit && S.licitGanada === S.noche) dar('licitacion');
+  if ((S.objetos || []).length >= 6) dar('objetos6');
+  if ((S.objetos || []).length >= OBJETOS.length) dar('objetos');
   if (Object.keys(JEFES).every(id => (S.jefes || {})[id])) dar('jefes');
   if ((S.contratos || 0) >= 5) dar('contratos5');
   if (racha >= 10) dar('racha10');
