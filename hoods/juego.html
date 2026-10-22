@@ -4525,7 +4525,7 @@ const LICIT = [
   { k: 'estadio', jefe: 'inspector', n: ['Estadio Municipal', 'Municipal Stadium'] },
   { k: 'convenciones', jefe: 'tele', n: ['Palacio Municipal · en vivo', 'City Hall · live'] },
 ];
-const LICIT_ENTRADA = 10000, LICIT_PREMIO = 15000, PRECIO_CUNADO = 30000, CUNADO_PTS = [74, 80, 85];   // El Cuñado se juega la empresa: saca B alta, A y A al final
+const LICIT_ENTRADA = 10000, LICIT_PREMIO = 15000, PRECIO_CUNADO = 30000, CUNADO_PTS = [72, 78, 83];   // El Cuñado se juega la empresa: B alta, A y A; cada licitación perdida le cuesta 3 puntos
 const licitLista = () => S.fase === 'empresa' && S.etapa >= 4 && !S.licitGanada && !S.finde && (!S.licitPerdida || S.noche >= S.licitPerdida + 7);
 function ordenLicit(paso) {
   const d = LICIT[paso], o = genOrden(d.k); o.licit = paso + 1; o.jefe = d.jefe; o.firmado = true; o.ayud = 0; o.duelo = false; o.pedido = null; o.nombre = L(...d.n); o.pago = r10(o.pago * 1.4);
@@ -5293,15 +5293,15 @@ function pantallaParte() {
   // La Gran Licitación: tu nota contra la de El Cuñado
   let licit = null;
   if (o.licit && S.licit && !aprendiz) {
-    const el = clamp(Math.round(CUNADO_PTS[o.licit - 1] + rnd(-6, 6)), 40, 95), gano = aprobado && pts > el;
+    const el = clamp(Math.round(CUNADO_PTS[o.licit - 1] - 3 * Math.min(3, S.licitIntentos || 0) + rnd(-5, 5)), 40, 95), gano = aprobado && pts > el;
     S.licit.res[o.licit - 1] = { yo: n, el: nota(el), gano }; S.licit.paso = o.licit; S.licit.ultima = S.noche;
     const g = S.licit.res.filter(r => r.gano).length, p = S.licit.res.filter(r => !r.gano).length;
     if (g >= 2) {
       lineas.push([L('Premio de la Gran Licitación', 'Grand Tender prize'), LICIT_PREMIO]); neto += LICIT_PREMIO; rep += 10; S.licitGanada = S.noche; S.licit = null;
       licit = { t: L('¡Ganaste la Gran Licitación!', 'You won the Grand Tender!'), txt: L(`Todas las cocinas de la ciudad son tuyas. ${RIVAL} no contesta el teléfono. Mañana te va a llamar él… para venderte su empresa.`, `Every kitchen in the city is yours. ${RIVAL} isn't answering his phone. Tomorrow he'll call you… to sell you his company.`) };
     } else if (p >= 2) {
-      S.licitPerdida = S.noche; S.licit = null;
-      licit = { t: L('Perdiste la Gran Licitación', 'You lost the Grand Tender'), txt: L(`${RIVAL} se llevó la ciudad… por ahora. La licitación vuelve a abrirse en una semana.`, `${RIVAL} took the city… for now. The tender opens again in a week.`) };
+      S.licitPerdida = S.noche; S.licit = null; S.licitIntentos = (S.licitIntentos || 0) + 1;
+      licit = { t: L('Perdiste la Gran Licitación', 'You lost the Grand Tender'), txt: L(`${RIVAL} se llevó la ciudad… por ahora. Defenderla le salió carísimo: la próxima vez llega más cansado. La licitación vuelve a abrirse en una semana.`, `${RIVAL} took the city… for now. Defending it cost him a fortune: next time he'll be more worn out. The tender opens again in a week.`) };
     } else licit = { t: L(`Gran Licitación · noche ${o.licit} de 3`, `Grand Tender · night ${o.licit} of 3`), txt: L(`Tú: ${n}. ${RIVAL}: ${nota(el)}. ${gano ? '¡Esta noche es tuya!' : 'Esta se la llevó él.'} Mañana sigue: ${L(...LICIT[o.licit].n)}.`, `You: ${n}. ${RIVAL}: ${nota(el)}. ${gano ? 'Tonight is yours!' : 'He took this one.'} It continues tomorrow: ${L(...LICIT[o.licit].n)}.`) };
   }
   // El equipo B, en su propio trabajo
