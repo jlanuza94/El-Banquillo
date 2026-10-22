@@ -399,6 +399,20 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .creditos { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; text-align: left; font-size: 14px; margin-top: 8px; }
 .creditos span { color: var(--tenue); text-align: right; } .creditos b { font-family: var(--f-cond); font-size: 16px; }
 .final .acciones { justify-content: center; }
+body.revisando .hud-abajo, body.revisando .chat, body.revisando .cinta { display: none !important; }
+.revision { position: absolute; left: var(--lado-i); right: var(--lado-d); bottom: max(14px, env(safe-area-inset-bottom, 0px)); max-width: 520px; margin: 0 auto; background: rgba(17,25,33,.94); border: 2px solid var(--linea); border-radius: 12px; padding: 10px 12px; display: grid; gap: 6px; pointer-events: auto; }
+.rev-tit { font-family: var(--f-cond); letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); font-size: 13px; }
+.rev-filas { display: grid; gap: 3px; }
+.rev-fila { display: grid; grid-template-columns: 1fr auto 26px; gap: 8px; align-items: center; font-size: 14px; opacity: .45; }
+.rev-fila.vista { opacity: 1; } .rev-fila em { font-style: normal; font-family: var(--f-mono); font-size: 12.5px; color: var(--tenue); }
+.rev-fila i { font-style: normal; font-family: var(--f-display); font-size: 18px; text-align: center; }
+.rev-fila i.ok { color: var(--ok); animation: sello .3s ease-out; } .rev-fila i.mal { color: var(--mal); animation: sello .3s ease-out; } .rev-fila i.brillo { color: #ffd23f; text-shadow: 0 0 8px rgba(255,210,63,.7); }
+@keyframes sello { from { transform: scale(2.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.rev-dice { font-style: italic; font-size: 14px; color: var(--acero); min-height: 1.4em; }
+.revision small { color: var(--tenue); font-size: 11px; justify-self: end; }
+.rev-veredicto { justify-self: center; font-family: var(--f-display); font-size: 26px; padding: 2px 14px; border: 3px solid currentColor; border-radius: 6px; transform: rotate(-6deg); animation: sello .35s ease-out; }
+.rev-veredicto.ok { color: var(--ok); } .rev-veredicto.mal { color: var(--mal); }
+.meta-final { font-size: 12.5px; color: #ffd23f; background: rgba(255,210,63,.08); border: 1px solid rgba(255,210,63,.3); border-radius: 6px; padding: 4px 8px; line-height: 1.35; }
 .contrato { display: grid; gap: 3px; background: rgba(255,210,63,.08); border: 1px dashed #ffd23f88; border-radius: 6px; padding: 8px 10px; font-size: 14px; }
 .contrato b { font-family: var(--f-cond); letter-spacing: .05em; text-transform: uppercase; font-size: 14px; color: #ffd23f; }
 .contrato i { color: var(--acero); }
@@ -608,6 +622,7 @@ a.btn { display: inline-block; text-decoration: none; }
       </div>
       <div class="zonas" id="zonas"></div>
     </div>
+    <div class="revision" id="revision" hidden></div>
   </div>
   <button class="falta" id="faltaI" aria-label="Mover la vista a la izquierda: falta algo por ahí" hidden></button>
   <button class="falta" id="faltaD" aria-label="Mover la vista a la derecha: falta algo por ahí" hidden></button>
@@ -3968,7 +3983,8 @@ function tickTurno(dt) {
     }
     // Desastres programados
     // Nunca seguidos; al final del turno solo las consecuencias de lo que pasó (gas, luz, bolsa, tubería), que van primero.
-    if (!M.ev && M.etapa === 'lavar' && M.t - (M.ultEvT ?? -99) > M.dur * .08) {
+    // Respiro: nada en los primeros 20 s, como mínimo ~24 s entre imprevistos y nunca en mitad de un combo.
+    if (!M.ev && M.etapa === 'lavar' && M.t > 20 && M.t - (M.ultEvT ?? -99) > Math.max(M.dur * .08, 24) && !(M.combo >= 3 && performance.now() - M.ultSuelta < ventanaCombo())) {
       const toca = e => !M.hechos.has(e) && (e.zona === -1 ? M.t >= e.en : e.zona === M.zona && M.enZona >= e.en);
       const e = M.eventos.find(e => toca(e) && EV_CAUSADOS.includes(e.tipo)) || (M.t < M.dur * .88 && M.eventos.find(toca));
       if (e) lanzarEvento(e);
@@ -4047,7 +4063,7 @@ $('#robotBtn').addEventListener('click', () => {
 $('#zonas').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b && !b.disabled && M && M.fase === 'turno' && M.etapa !== 'pelar' && !M.ev) irZona(+b.dataset.z); });
 $('#siguiente').addEventListener('click', () => {
   if (!M || M.fase !== 'turno' || M.ev) return;
-  if (M.etapa === 'migdalear') return terminarTurno();
+  if (M.etapa === 'migdalear') return revisionInspector();
   if (M.zona < ultZona()) irZona(M.zona + 1); else confirmarFin();
 });
 function irZona(i) {
@@ -4055,6 +4071,50 @@ function irZona(i) {
   if (Z[i].bloq > M.t) { ayuda(L(`${Z[i].n}: todavía está ocupada. Sigue con otra zona.`, `${Z[i].n}: still blocked. Keep going with another zone.`), 3); tono(200, .1, .06, 'square'); return; }
   M.zona = i; M.enZona = 0; M.combo = 0; M.trazo = null; irVista(Z[i].vista); pintarHud(false); pintarCombo();
   if (i === iDucto() && !M.eventos.some(e => e.tipo === 'techo')) decir(M.comp, 'Yo subo al techo. Tú métete en el ducto. Si ves luz al final, no vayas hacia ella.');
+}
+// ---- La revisión del inspector: al llamarlo recorre cada zona, la mide, le pone su sello y da el veredicto.
+const DICHOS_INSP = {
+  espejo: [['Me estoy viendo los pelos de la nariz. Impecable.', 'I can see my nose hairs in it. Spotless.'], ['Esto brilla más que mi placa.', 'This shines brighter than my badge.'], ['Metal desnudo. Hace años que no veía esto.', 'Bare metal. I haven\'t seen this in years.']],
+  pasa: [['Pasa. No me emociono, pero pasa.', 'It passes. I\'m not thrilled, but it passes.'], ['Dentro de norma. Siguiente.', 'Within code. Next.'], ['Aceptable. Mi suegra lo dejaría peor.', 'Acceptable. My mother-in-law would do worse.']],
+  justo: [['Por poquito. Le faltó una pasada.', 'So close. One more pass needed.'], ['Casi. Casi no es aprobado.', 'Almost. Almost isn\'t a pass.']],
+  falla: [['Esto no pasa. Aquí todavía se puede freír un huevo.', 'This fails. You could still fry an egg in here.'], ['¿Esto es grasa o arte moderno? No pasa.', 'Is this grease or modern art? Fail.'], ['No pasa. Y lo anoto con pluma, no con lápiz.', 'Fail. And I\'m writing it in pen, not pencil.']],
+};
+function revisionInspector() {
+  if (!M || M.fase !== 'turno') return;
+  M.fase = 'revision'; cerrarRueda(); M.trazo = null; M.presionado = false; chorro(false); cerrarCarta();
+  document.body.classList.add('revisando');
+  const el = $('#revision'), lento = Z.length > 5 ? 600 : 900, filas = Z.map((z, i) => ({ z, i, m: micras(z) }));
+  const camp = Z.filter(z => z.id === 'campana'); let cel = 0, pul = 0;
+  for (const z of camp) for (const s of z.sfs) for (let i = 0; i < s.pol.length; i++) { cel++; if (s.pol[i] > .6) pul++; }
+  el.hidden = false;
+  el.innerHTML = `<b class="rev-tit">🔍 ${L('El inspector revisa', 'The inspector checks')}</b><div class="rev-filas">${filas.map(f => `<div class="rev-fila" data-r="${f.i}"><span>${esc(f.z.n)}</span><em>…</em><i></i></div>`).join('')}</div><p class="rev-dice"></p><small>${L('Toca para saltar', 'Tap to skip')}</small>`;
+  let k = 0, fin = false, t = 0;
+  const terminar = () => { if (fin) return; fin = true; clearTimeout(t); el.hidden = true; el.onclick = null; document.body.classList.remove('revisando'); if (M && M.fase === 'revision') { M.fase = 'turno'; terminarTurno(); } };
+  el.onclick = terminar;
+  const dice = txt => { el.querySelector('.rev-dice').textContent = `«${txt}»`; };
+  const paso = () => {
+    if (fin || !M) return;
+    if (k >= filas.length) {
+      const ok = filas.every(f => f.m <= LIMITE), espejo = ok && filas.every(f => f.m <= 50);
+      el.insertAdjacentHTML('beforeend', `<div class="rev-veredicto ${ok ? 'ok' : 'mal'}">${ok ? (espejo ? L('METAL DESNUDO', 'BARE METAL') : L('APROBADO', 'PASSED')) : L('NO PASA', 'FAILED')}</div>`);
+      dice(ok ? (espejo ? L('Metal desnudo en toda la cocina. Esto lo voy a contar en mi casa.', 'Bare metal in the whole kitchen. I\'m telling my family about this.') : L('Aprobado. Firmo aquí y me voy a dormir.', 'Passed. I sign here and go to bed.')) : L('No pasa. Lo siento: la norma es la norma.', 'Failed. Sorry: the code is the code.'));
+      ok ? [523, 659, 784].forEach((f, i) => tono(f, .25, .07, 'triangle', null, i * .1)) : tono(160, .5, .1, 'square');
+      vibrar(ok ? [40, 40, 80] : 200);
+      t = setTimeout(terminar, 1600); return;
+    }
+    const f = filas[k++]; irVista(f.z.vista);
+    t = setTimeout(() => {
+      if (fin) return;
+      const fila = el.querySelector(`[data-r="${f.i}"]`), ok = f.m <= LIMITE, tipo = f.m <= 50 ? 'espejo' : ok ? 'pasa' : f.m <= LIMITE * 1.4 ? 'justo' : 'falla';
+      fila.querySelector('em').textContent = `${f.m.toLocaleString('es-MX')} µm${f.z.id === 'campana' && cel ? ` · ${L('migdaleado', 'polished')} ${Math.round(pul / cel * 100)} %` : ''}`;
+      const sello = fila.querySelector('i'); sello.textContent = ok ? '✓' : '✗'; sello.className = ok ? (tipo === 'espejo' ? 'ok brillo' : 'ok') : 'mal';
+      fila.classList.add('vista');
+      dice(L(...uno(DICHOS_INSP[tipo])));
+      tono(ok ? 880 : 220, .12, .08, ok ? 'triangle' : 'square'); rafaga(.06, 1800, .08, 'bandpass');
+      t = setTimeout(paso, lento * .55);
+    }, lento * .6);
+  };
+  paso();
 }
 function confirmarFin() {
   const faltan = Z.filter(z => micras(z) > LIMITE).length;
@@ -4345,7 +4405,7 @@ function hallarObjeto() {
   S.objetos = S.objetos || [];
   const nuevos = OBJETOS.filter(x => !S.objetos.includes(x.id)), o = nuevos.length ? uno(nuevos) : null;
   if (!o) { M.propinaMod += .02; return resultado(L('Algo brilla en el ducto', 'Something shines in the duct'), L('Una tapa de refresco. Ya tienes todo lo interesante de los ductos de esta ciudad.', 'A bottle cap. You already have everything interesting in this city\'s ducts.'), M.comp, L('La guardo para Beto.', 'I\'ll keep it for Beto.')); }
-  S.objetos.push(o.id); M.album.push(L(...o.n)); sDing();
+  S.objetos.push(o.id); M.album.push(L(...o.n)); M.objHallado = true; if (!S.album.includes(L(...o.n))) S.album.push(L(...o.n)); guardar(); sDing();   // se guarda ya: si se cierra el juego, no se pierde
   let extra = '';
   if (o.loteria) { const p = azar(.35) ? 500 : 0; S.dinero += p; extra = p ? L(' ¡Premiado! $500 para la empresa.', ' A winner! $500 for the company.') : L(' Ni un número. Pero ahora es de colección.', ' Not a single number. But now it\'s a collectible.'); }
   if (o.rigo) { S.dinero += 300; extra = L(' Se los mandas a Don Rigo por paquetería. Te deposita $300 «para el envío».', ' You mail them to Don Rigo. He deposits $300 "for shipping".'); }
@@ -4540,7 +4600,7 @@ function licitHoy() {
 function tarjetaLicit() {
   if (S.final) return `<div class="retos licit"><b>🏆 ${L('Modo libre', 'Free mode')}</b><span>${L('Ganaste la ciudad y compraste Limpiezas El Cuñado. Sigue jugando todo lo que quieras.', 'You won the city and bought Limpiezas El Cuñado. Keep playing as long as you like.')}</span><div class="acciones"><button class="btn peq" id="verFinal">${L('Ver el final otra vez', 'Watch the ending again')}</button></div></div>`;
   if (S.licitGanada) return `<div class="orden licit"><span class="chip naranja">🏁 ${L('El final', 'The ending')}</span><h3>${L('Limpiezas El Cuñado está en venta', 'Limpiezas El Cuñado is for sale')}</h3>
-    <p class="nota">${L(`Después de perder la licitación, El Cuñado te llamó. Con la voz quebrada. Vende la empresa, las camionetas y «el secreto de su desengrasante» (es jabón de trastes). Cómprala y termina la historia.`, `After losing the tender, El Cuñado called you. Voice cracking. He's selling the company, the vans and "his secret degreaser" (it's dish soap). Buy it and finish the story.`)}</p>
+    <p class="nota">${L(`El Cuñado perdió la licitación contra ti y te llamó con la voz quebrada. Vende la empresa, las camionetas y «el secreto de su desengrasante» (es jabón de trastes). Cómprala y termina la historia.`, `El Cuñado lost the tender to you and called you, voice cracking. He's selling the company, the vans and "his secret degreaser" (it's dish soap). Buy it and finish the story.`)}</p>
     <div class="acciones"><button class="btn prim" id="comprarCunado" ${S.dinero < PRECIO_CUNADO ? 'disabled' : ''}>${L('Comprar', 'Buy')} · ${dinero(PRECIO_CUNADO)}</button></div>${S.dinero < PRECIO_CUNADO ? `<span class="nota">${L('Te faltan', 'You need')} ${dinero(PRECIO_CUNADO - S.dinero)}${L('.', ' more.')}</span>` : ''}</div>`;
   if (S.licit) return `<div class="retos licit"><b>🏛️ ${L('La Gran Licitación', 'The Grand Tender')} · ${S.licit.paso + 1} ${L('de', 'of')} 3</b>${LICIT.map((d, i) => { const r = S.licit.res[i]; return `<span class="${r ? (r.gano ? 'ok' : 'mal') : ''}">${r ? (r.gano ? '★' : '✗') : '☆'} ${esc(L(...d.n))}${r ? ` · ${L('tú', 'you')} ${r.yo} · ${RIVAL} ${r.el}` : ''}</span>`; }).join('')}<small>${L('Gana 2 de 3 noches a El Cuñado (mejor nota que la suya) y la ciudad es tuya.', 'Beat El Cuñado on 2 of 3 nights (a better grade than his) and the city is yours.')}</small></div>`;
   if (S.fase !== 'empresa' || S.etapa < 4) return '';
@@ -4664,6 +4724,19 @@ function furgo(nombre, color, et) {
 }
 
 const ICO_TAB = { noche: '🌙', clientes: '📇', cuadrilla: '👷', taller: '🔧', logros: '🏆' };
+// La meta de la campaña, siempre a la vista: qué falta para la siguiente etapa y, al final, para la Gran Licitación.
+function metaFinal() {
+  if (S.fase !== 'empresa') return '';
+  if (S.final) return `🏆 ${L('Modo libre: la ciudad es tuya', 'Free mode: the city is yours')}`;
+  const sig = ETAPAS[S.etapa + 1];
+  if (sig) {
+    const falta = [S.rep < sig.rep && L(`${sig.rep - S.rep} de reputación`, `${sig.rep - S.rep} reputation`), S.dinero < sig.compra && dinero(sig.compra - S.dinero)].filter(Boolean);
+    return `🏛️ ${L('Camino a la Gran Licitación', 'Road to the Grand Tender')} · ${S.etapa + 1}/5 · ${falta.length ? L(`para «${nEtapa(S.etapa + 1)}» te falta ${falta.join(' y ')}`, `for "${nEtapa(S.etapa + 1)}" you need ${falta.join(' and ')}`) : L(`¡ya puedes pasar a «${nEtapa(S.etapa + 1)}»!`, `you can move up to "${nEtapa(S.etapa + 1)}"!`)}`;
+  }
+  if (S.licitGanada) return `🏁 ${L(`Compra Limpiezas El Cuñado (${dinero(PRECIO_CUNADO)}) y termina la historia`, `Buy Limpiezas El Cuñado (${dinero(PRECIO_CUNADO)}) and finish the story`)}`;
+  if (S.licit) return `🏛️ ${L(`Gran Licitación en curso · noche ${S.licit.paso + 1} de 3`, `Grand Tender in progress · night ${S.licit.paso + 1} of 3`)}`;
+  return `🏛️ ${L(`La Gran Licitación está abierta (${dinero(LICIT_ENTRADA)})`, `The Grand Tender is open (${dinero(LICIT_ENTRADA)})`)}`;
+}
 function cabecera() {
   const need = xpNivel(S.nivel), aprendiz = S.fase === 'aprendiz';
   return `<div class="cab">${aprendiz ? '<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div>'
@@ -4673,7 +4746,7 @@ function cabecera() {
       <div class="dato"><i>${L('Tu dinero', 'Your money')}</i><b>${dinero(S.dinero)}</b></div>
       <div class="dato"><i>${L(`Reputación${aprendiz ? ' de Grasa Brava' : ''}`, `${aprendiz ? 'Grasa Brava ' : ''}Reputation`)}</i><b>${S.rep}</b><small>${fama(S.rep)} · ${L('pagos', 'pay')} ×${multPago().toFixed(2)}</small></div>
       <button class="dato nivel" id="abrirArbol"><i>${L('Nivel', 'Level')}</i><b>${S.nivel}${S.puntos ? ` <span class="puntos">⭐${S.puntos}</span>` : ''}</b><div class="barra" title="${L('Experiencia', 'Experience')}"><div style="width:${clamp(S.xp / need, 0, 1) * 100}%"></div></div></button>
-    </div></div>`;
+    </div>${metaFinal() ? `<div class="meta-final">${metaFinal()}</div>` : ''}</div>`;
 }
 
 function pantallaCamioneta() {
@@ -5444,7 +5517,7 @@ function pantallaParte() {
   if (evals.length) cola.unshift(() => pantallaEvaluar(evals));
   guardar();
   M.nota = n; M.nombre = o.nombre; M.nocheParte = S.noche - 1;
-  S.llamada = llamadaRadio({ n, nombre: o.nombre, aprobado, gana: ganaDuelo, perdioDuelo: d && !ganaDuelo, desastre: M.danos.some(x => x.dinero >= 60), jefe, bombero: M.bombero, objeto: M.album.length > 0, espejo });
+  S.llamada = llamadaRadio({ n, nombre: o.nombre, aprobado, gana: ganaDuelo, perdioDuelo: d && !ganaDuelo, desastre: M.danos.some(x => x.dinero >= 60), jefe, bombero: M.bombero, objeto: !!M.objHallado, espejo });
   S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
   setTimeout(() => vibrar(n === 'F' ? 350 : n === 'A+' || n === 'A' ? [100, 50, 100, 50, 160] : [100, 50, 100]), 250);
   const desastre = M.danos.some(x => x.dinero >= 60);
