@@ -1,7 +1,7 @@
 // Pruebas de Hood Cleaners. Uso: node hoods/pruebas/casos.cjs [parte-del-nombre]
 // Abren el juego construido en Chromium y comprueban que lo importante sigue funcionando y que no hay errores.
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -318,6 +318,27 @@ caso('duelo 2.0: sin apuesta, El Cuñado se confía y gana', async () => {
   await terminarDuelo(p); await p.waitForSelector('.nota-grande', { timeout: 60000 });
   const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
   afirmar(/Duelo perdido · \d–2/i.test(t) && !/Apuesta/.test(t) && /la mitad/.test(t), 'el parte del duelo perdido no es correcto: ' + (t.match(/Duelo[^\n]*\n?[^\n]*/) || [t.slice(0, 200)])[0]);
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('de arriba abajo: el ducto escurre sobre la campana limpia, y cada suciedad suena distinto', async () => {
+  const p = await abrir(partida({ compPref: 'solo', aj: { asist: true, sonido: true, ahorro: true } }));
+  await jugarNoche(p, { cocina: 'burger', durante: () => {
+    const Z = __hc.Z, M = __hc.M, ic = Z.findIndex(z => z.id === 'campana'), id = Z.findIndex(z => z.id === 'ducto'), c = Z[ic];
+    const r = {};
+    // campana sucia: trabajar el ducto no la toca
+    __hc.irZona(id); const m0 = __hc.micras(c); for (let i = 0; i < 5; i++) __hc.escurrirDucto(1.3); r.sucia = __hc.micras(c) === m0;
+    // campana limpia: se vuelve a manchar, con aviso, y con tope
+    c.sfs.forEach(s => s.d.fill(0)); for (let i = 0; i < 5; i++) __hc.escurrirDucto(1.3); r.mancha = __hc.micras(c); r.aviso = !!M.avisoEscurre;
+    for (let i = 0; i < 40; i++) { if (__hc.micras(c) > __hc.LIMITE) c.sfs.forEach(s => s.d.fill(0)); __hc.escurrirDucto(1.3); } r.tope = c.reens;
+    // trabajando la campana no escurre nada
+    c.sfs.forEach(s => s.d.fill(0)); __hc.irZona(ic); __hc.escurrirDucto(5); r.enCampana = __hc.micras(c);
+    // sonidos: cada tipo pasa por su rama y el contador se vacía
+    for (const k of [0, 1, 2, 3]) { __hc.TIPO_Q[k] = 1; __hc.sonidoRaspa(); } r.vacio = __hc.TIPO_Q.every(x => x === 0); r.audio = !!__hc.A.ctx;
+    window.__ducto = r;
+  } });
+  const r = await p.evaluate(() => window.__ducto);
+  afirmar(r.sucia && r.mancha > 0 && r.aviso && r.tope === 8 && r.enCampana === 0 && r.vacio && r.audio, 'el escurrido o los sonidos no funcionan: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
