@@ -1152,13 +1152,13 @@ const TIPO_CAMPANA = { caja: 'Campana de caja', inclinada: 'Campana inclinada', 
 const FORMA_DUCTO = { cuadrado: 'ducto cuadrado', redondo: 'ducto redondo', ancho: 'ducto ancho y bajo' };
 
 const COMPANEROS = {
-  beto: { n: 'Beto', apodo: 'el Primo', color: '#ffd23f', etapa: 0, fuerza: 1.25, sueldo: 110, rasgo: 'Rápido. Rompe cosas con total seguridad.',
+  beto: { n: 'Beto', apodo: 'el Primo', color: '#ffd23f', etapa: 0, fuerza: 1.25, sueldo: 100, rasgo: 'Rápido. Rompe cosas con total seguridad.',
     frases: ['Tranquilo, sé lo que hago.', '¿Esto se desenchufa o se jala?', 'Yo una vez limpié un ducto con una escoba. Bueno, la mitad.', 'Esa mancha tiene forma de mi ex.', 'Si algo truena, yo no estaba.'],
     bien: 'Quedó tan limpio que me da miedo tocarlo. Y eso que yo toco todo.', mal: 'El inspector no entiende el arte moderno.', desastre: 'Esa tubería ya venía rota. Yo solo la terminé.' },
-  lupe: { n: 'Lupe', apodo: 'la veterana', color: '#7fd3e6', etapa: 1, fuerza: 1.0, sueldo: 160, rasgo: 'Trabajo perfecto. No confía en nadie.',
+  lupe: { n: 'Lupe', apodo: 'la veterana', color: '#7fd3e6', etapa: 1, fuerza: 1.0, sueldo: 130, rasgo: 'Trabajo perfecto. No confía en nadie.',
     frases: ['Diez años en esto y nunca vi una campana tan triste.', 'Te faltó una esquina. No, la otra.', 'No me mires, yo no fui. Nunca soy yo.', 'Esta grasa tiene más antigüedad que yo en la empresa.'],
     bien: 'Aceptable. No se lo digas a nadie, pero aceptable.', mal: 'Te lo dije. Bueno, no te lo dije. Pero lo pensé fuerte.', desastre: 'Voy a anotar esto en mi libreta de cosas que no fueron culpa mía.' },
-  chuy: { n: 'Chuy', apodo: 'el Grande', color: '#69c97a', etapa: 2, fuerza: 1.55, sueldo: 190, rasgo: 'Fuerza bruta. Se duerme en cualquier superficie plana.',
+  chuy: { n: 'Chuy', apodo: 'el Grande', color: '#69c97a', etapa: 2, fuerza: 1.55, sueldo: 120, rasgo: 'Fuerza bruta. Se duerme en cualquier superficie plana.',
     frases: ['Esto pesa poquito. Lo cargo yo.', '¿Ya es de día? ¿No? Ah.', 'Yo de niño quería ser almohada.', 'Qué buena siesta haría en ese ducto.'],
     bien: 'Buen turno. Me voy a dormir en la camioneta, despiértame en el próximo semáforo.', mal: 'Yo vi todo limpio. Bueno, vi con los ojos cerrados.', desastre: 'Me perdí lo mejor. Estaba descansando la vista.' },
 };
@@ -1387,8 +1387,8 @@ const PRECIO_SEDE = [2000, 5000, 9000];
 const vansTotal = () => 1 + ((S && S.eq && S.eq.flota) || 0);
 const etapaLista = sig => S.rep >= sig.rep && vansTotal() >= (sig.vans || 1);
 // El personal de la sede: cuántas camionetas pide, cuánto cuesta contratarlo y su sueldo por noche.
-const PERSONAL = { almacen: { vans: 2, precio: 2000, sueldo: 150 }, mantenimiento: { vans: 2, precio: 2500, sueldo: 200 }, formacion: { vans: 3, precio: 5000, sueldo: 250 },
-  angelica: { vans: 4, precio: 3000, sueldo: 220 }, oficina: { vans: 5, precio: 8000, sueldo: 300 }, planificacion: { vans: 7, precio: 10000, sueldo: 350 }, admin: { vans: 8, precio: 12000, sueldo: 350 } };
+const PERSONAL = { almacen: { vans: 2, precio: 2000, sueldo: 200 }, mantenimiento: { vans: 2, precio: 2500, sueldo: 250 }, formacion: { vans: 3, precio: 5000, sueldo: 400 },
+  angelica: { vans: 4, precio: 3000, sueldo: 300 }, oficina: { vans: 5, precio: 8000, sueldo: 350 }, planificacion: { vans: 7, precio: 10000, sueldo: 350 }, admin: { vans: 8, precio: 12000, sueldo: 350 } };
 const MANT_VAN = 70;   // mantenimiento por noche de cada camioneta extra
 const precioSala = id => sede(id) === 0 ? PERSONAL[id].precio : PRECIO_SEDE[sede(id)];
 const contratado = id => id === 'admin' ? !!S.admin : id === 'angelica' ? !!S.angelica : sede(id) >= 1;
@@ -1404,7 +1404,15 @@ const CURSOS = {
 };
 // Leads de campo: un técnico con experiencia que dirige el equipo de una camioneta. Desde Contratista y con 5 camionetas;
 // el técnico necesita sus 2 cursos y 10 noches. Uno por camioneta extra. Cuesta ascenderlo y cobra más.
-const LEAD = { etapa: 3, vans: 5, noches: 10, precio: 1000, extra: 150, calidad: .12, fuerza: 1.15 };
+const LEAD = { etapa: 3, vans: 5, noches: 10, precio: 1000, extra: 30, calidad: .12, fuerza: 1.15 };
+// Sueldo por turno de un técnico, como en la vida real: entra ganando $90–100 según lo bueno que sea, sube $10 cada
+// 10 noches de experiencia (hasta +$30) y un Lead cobra $30 más. c.mult guarda aumentos (historia, director en el puerto).
+const sueldoInicial = (fuerza, cuidado, puntual) => clamp(Math.round((90 + (fuerza - .95) * 20 + ((cuidado || 3) + (puntual || 3) - 6) * 1.2) / 5) * 5, 90, 100);
+function ajustarSueldo(c) {
+  if (c.sueldoBase == null) c.sueldoBase = sueldoInicial(c.base || c.fuerza || 1, c.cuidado, c.puntual);
+  c.sueldo = Math.round((c.sueldoBase + Math.min(30, Math.floor((c.noches || 0) / 10) * 10) + (c.lead ? LEAD.extra : 0)) * (c.mult || 1) / 5) * 5;
+}
+function sumarNoche(c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); ajustarSueldo(c); }
 const leads = () => (S.cuadrilla || []).filter(c => c.lead);
 const maxLeads = () => (S.eq && S.eq.flota) || 0;
 const esLead = g => !!(g && (g.lead || (g.id && (S.cuadrilla || []).some(c => c.id === g.id && c.lead))));
@@ -1860,6 +1868,11 @@ function completar(s) {
     s.puntos = Math.max(0, (s.nivel || 1) - 1 - Object.values(s.hab).reduce((a, n) => a + n, 0));
   }
   // Subida de sueldos (fase 4): los ayudantes que ya estaban también ganan un 20 % más, una sola vez.
+  if (!s.sueldos3) {   // v114: sueldos de técnicos con la escala real
+    const todos = [...(s.cuadrilla || []), ...(s.candidatos || []), ...Object.values(s.ciudades || {}).flatMap(c => [...((c && c.cuadrilla) || []), ...((c && c.candidatos) || [])])];
+    for (const c of todos) if (c && c.sueldo) { c.sueldoBase = null; c.mult = c.director || c.mano ? AUMENTO : 1; ajustarSueldo(c); }
+    s.sueldos3 = true; s.sueldos2 = true;
+  }
   if (!s.sueldos2) { for (const c of [...(s.cuadrilla || []), ...(s.candidatos || [])]) if (c.sueldo) c.sueldo = Math.round(c.sueldo * 1.2 / 5) * 5; s.sueldos2 = true; }
   s.medallas = s.medallas || {}; s.secretos = s.secretos || {}; s.rec = s.rec || {}; s.look = s.look || {}; s.notas = s.notas || [];
   if (s.aj.radio === undefined) s.aj.radio = true;
@@ -5217,7 +5230,7 @@ function genCandidatos(n = 3) {
   return [...fijos, ...gen].slice(0, n).map(([n, rasgo, frase, tipo, esp]) => {
     const fuerza = +rnd(.6, 1.3).toFixed(2), cuidado = 1 + Math.floor(Math.random() * 5), puntual = 1 + Math.floor(Math.random() * 5), animo = 3;
     // Los buenos piden más: el sueldo sale de las tres medidas.
-    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: Math.min(5, (tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado) + hab('cuadrillas')), puntual, animo, entrevistado: false, sueldo: Math.round((35 + fuerza * 70 + (cuidado + puntual) * 6) * 1.2 / 5) * 5, color: uno(COLORES), noches: 0 });
+    return perfil({ id: S.sigId++, n, rasgo, frase, tipo, esp, fuerza, base: fuerza, cuidado: Math.min(5, (tipo === 'serio' ? Math.max(4, cuidado) : tipo === 'lio' ? Math.min(2, cuidado) : cuidado) + hab('cuadrillas')), puntual, animo, entrevistado: false, sueldo: sueldoInicial(fuerza, cuidado, puntual), color: uno(COLORES), noches: 0 });
   });
 }
 // La competencia: la empresa del cuñado del alcalde roba órdenes o baja precios.
@@ -5420,7 +5433,7 @@ const HIST_AYUD = {
       ops: [{ t: ['Pagarle el curso', 'Pay for the course'], pide: 300, f: c => { S.dinero -= 300; c.becado = true; return ['{n} te da las gracias con un apretón de manos muy formal. Casi una reverencia.', '{n} thanks you with a very formal handshake. Almost a bow.']; } },
         { t: ['Que lo pague con sus ahorros', 'Let them pay for it'], f: () => ['«Entendido.» Saca una libreta y apunta algo. No ves qué.', '"Understood." They take out a notebook and write something down. You can\'t see what.'] }] },
     { txt: c => c.becado ? ['{n} aprobó el curso con diez. Llega con un diploma enmarcado y una propuesta para organizar la camioneta.', '{n} passed the course with top marks. They bring a framed diploma and a plan to organize the van.'] : ['{n} aprobó el curso pagándolo solo. Otras empresas ya le están llamando.', '{n} passed the course on their own dime. Other companies are already calling.'],
-      ops: [{ t: c => c.becado ? ['Que organice los equipos', 'Let them organize the teams'] : ['Subirle el sueldo un 10 %', 'Give them a 10% raise'], f: c => { c.cursos = c.cursos || []; if (!c.cursos.includes('coordina')) c.cursos.push('coordina'); if (!c.becado) c.sueldo = Math.round(c.sueldo * 1.1 / 5) * 5; return ['{n} ahora tiene el curso de Coordinación: su equipo trabaja más ordenado.', '{n} now has the Coordination course: their team works more orderly.']; } },
+      ops: [{ t: c => c.becado ? ['Que organice los equipos', 'Let them organize the teams'] : ['Subirle el sueldo un 10 %', 'Give them a 10% raise'], f: c => { c.cursos = c.cursos || []; if (!c.cursos.includes('coordina')) c.cursos.push('coordina'); if (!c.becado) { c.mult = (c.mult || 1) * 1.1; ajustarSueldo(c); } return ['{n} ahora tiene el curso de Coordinación: su equipo trabaja más ordenado.', '{n} now has the Coordination course: their team works more orderly.']; } },
         { t: c => c.becado ? ['Colgar el diploma en la sede', 'Hang the diploma at HQ'] : ['Desearle suerte', 'Wish them luck'], f: c => { if (c.becado) { S.rep = clamp(S.rep + 2, 0, 100); return ['Los clientes que pasan por la sede ven el diploma. +2 de reputación.', 'Clients passing through HQ see the diploma. +2 reputation.']; } c.animo = clamp((c.animo || 3) - 1, 1, 5); return ['{n} se queda… por ahora. Pero el teléfono le sigue sonando.', '{n} stays… for now. But their phone keeps ringing.']; } }] },
   ],
   normal: [
@@ -5852,10 +5865,10 @@ function fundarPuerto(camino, e) {
     respaldar('antes de Puerto Fritanga');
     const g = genteLegado(), dir = g.find(x => x.k === e.director), mano = g.find(x => x.k === e.mano), ficha = x => ({ ...x, sueldo: Math.round(x.sueldo * AUMENTO / 5) * 5 });
     S.aumentos = S.aumentos || {};
-    if (dir.comp) S.aumentos[dir.comp] = AUMENTO; else { const c = S.cuadrilla.find(x => x.id === dir.id); c.sueldo = Math.round(c.sueldo * AUMENTO / 5) * 5; c.director = true; }
+    if (dir.comp) S.aumentos[dir.comp] = AUMENTO; else { const c = S.cuadrilla.find(x => x.id === dir.id); c.mult = (c.mult || 1) * AUMENTO; ajustarSueldo(c); c.director = true; }
     let cuadrilla2 = [], fijos2 = [], comp2 = 'solo';
     if (mano.comp) { S.aumentos[mano.comp] = AUMENTO; S.fijos = S.fijos.filter(x => x !== mano.comp); if (S.compPref === mano.comp) S.compPref = dir.comp || 'solo'; fijos2 = [mano.comp]; comp2 = mano.comp; }
-    else { const c = S.cuadrilla.find(x => x.id === mano.id); S.cuadrilla = S.cuadrilla.filter(x => x !== c); c.sueldo = Math.round(c.sueldo * AUMENTO / 5) * 5; c.prueba = false; c.mano = true; cuadrilla2 = [c]; }
+    else { const c = S.cuadrilla.find(x => x.id === mano.id); S.cuadrilla = S.cuadrilla.filter(x => x !== c); c.mult = (c.mult || 1) * AUMENTO; ajustarSueldo(c); c.prueba = false; c.mano = true; cuadrilla2 = [c]; }
     const mud = e.mudanza || {}, costeMud = MUDANZA.reduce((a, m) => a + (mud[m.id] ? m.p : 0), 0);
     if (costeMud > S.dinero) throw new Error('mudanza');
     S.dinero -= costeMud;
@@ -6680,7 +6693,7 @@ function vCuadrilla() {
   const angelica = `<p class="nota">${S.angelica ? L('Angélica coordina tus equipos desde la oficina de la sede (Taller).', 'Angélica coordinates your teams from the HQ office (Shop).') : L('Angélica (coordinación) ahora se contrata en la oficina de la sede, en el Taller.', 'Angélica (coordination) is now hired at the HQ office, in the Shop.')}</p>`;
   const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0], c.n)}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? L('Pasó la prueba', 'Passed the trial') : L(`A prueba · ${c.noches} de 3 noches`, `On trial · ${c.noches} of 3 nights`)}</span>` : ''}<span>${esc(TRAD(c.rasgo))} ${dinero(c.sueldo)} ${L('por noche', 'per night')}${c.prueba ? L(' (a prueba cobra el 80 %)', ' (80% pay while on trial)') : ''} · ${c.noches} ${L('noches', 'nights')}${c.fuerza > c.base + .01 ? ` · ${L('con experiencia', 'experience')}: +${Math.round((c.fuerza - c.base) * 100)} ${L('de fuerza', 'strength')}` : ''}</span>${medidas(c)}${chipsPerfil(c)}${(c.cursos || []).length ? `<span class="chips-perfil">${c.cursos.map(k => `<span class="chip ok">🎓 ${L(...CURSOS[k].n)}</span>`).join('')}</span>` : ''}</div>
     ${c.lead ? `<span class="chips-perfil"><span class="chip lead">⭐ Lead · ${L('dirige su camioneta', 'runs their van')} · +${dinero(LEAD.extra)}</span></span>` : ''}
-    <div class="botones">${!c.lead && !c.prueba && S.fase === 'empresa' && S.etapa >= LEAD.etapa ? (faltaLead(c).length ? `<button class="btn peq" disabled title="${esc(L('Le falta: ', 'Missing: ') + faltaLead(c).join(', '))}">⭐ ${L('Lead', 'Lead')} · ${L('falta', 'needs')} ${esc(faltaLead(c)[0])}</button>` : `<button class="btn prim peq" data-lead="${c.id}" ${S.dinero < LEAD.precio ? 'disabled' : ''}>⭐ ${L('Ascender a Lead', 'Promote to Lead')} ${dinero(LEAD.precio)}</button>`) : ''}${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}${!c.prueba && sede('formacion') > (c.cursos || []).length ? `<button class="btn peq" data-formar="${c.id}">🎓 ${L('Formar', 'Train')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div>${cursoAbierto === c.id ? `<div class="cursos">${Object.entries(CURSOS).filter(([k]) => !(c.cursos || []).includes(k)).map(([k, cu]) => `<button class="btn peq" data-curso="${c.id}|${k}" ${S.dinero < precioCurso(c) ? 'disabled' : ''}><b>${L(...cu.n)}</b><small>${L(...cu.d)}</small></button>`).join('')}<small class="nota">${L(`Cada curso cuesta ${dinero(precioCurso(c))}. Máximo 2 por persona.`, `Each course costs ${dinero(precioCurso(c))}. Up to 2 per person.`)}</small></div>` : ''}</div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
+    <div class="botones">${!c.lead && !c.prueba && S.fase === 'empresa' && S.etapa >= LEAD.etapa ? (faltaLead(c).length ? `<button class="btn peq" disabled title="${esc(L('Le falta: ', 'Missing: ') + faltaLead(c).join(', '))}">⭐ ${L('Lead', 'Lead')} · ${L('falta', 'needs')} ${esc(faltaLead(c)[0])}</button>` : `<button class="btn prim peq" data-lead="${c.id}" ${S.dinero < LEAD.precio ? 'disabled' : ''}>⭐ ${L('Ascender a Lead', 'Promote to Lead')} ${dinero(LEAD.precio)} · +${dinero(LEAD.extra)}</button>`) : ''}${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}${!c.prueba && sede('formacion') > (c.cursos || []).length ? `<button class="btn peq" data-formar="${c.id}">🎓 ${L('Formar', 'Train')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div>${cursoAbierto === c.id ? `<div class="cursos">${Object.entries(CURSOS).filter(([k]) => !(c.cursos || []).includes(k)).map(([k, cu]) => `<button class="btn peq" data-curso="${c.id}|${k}" ${S.dinero < precioCurso(c) ? 'disabled' : ''}><b>${L(...cu.n)}</b><small>${L(...cu.d)}</small></button>`).join('')}<small class="nota">${L(`Cada curso cuesta ${dinero(precioCurso(c))}. Máximo 2 por persona.`, `Each course costs ${dinero(precioCurso(c))}. Up to 2 per person.`)}</small></div>` : ''}</div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0], c.n)}<div><b>${esc(c.n)}</b><span>${esc(TRAD(c.rasgo))} ${L('Pide', 'Asks for')} ${dinero(c.sueldo)} ${L('por noche', 'per night')}.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">${L('Bueno en', 'Good at')} ${L(ESPECIAL[c.esp], EN.esp[c.esp])}</span><span class="chip">${L('Carácter: ¿? (entrevístalo)', 'Personality: ? (interview them)')}</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.resp ? c.resp.map(TRAD).join(' ') : c.respuesta)}»</span>` : ''}</div>
     <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">${L('Entrevistar', 'Interview')}</button>`}<button class="btn prim peq" data-contratar="${c.id}">${L('Contratar', 'Hire')}</button></div></div>`).join('') || `<p class="nota">${L('Nadie por ahora. Vuelve en un par de noches.', 'Nobody right now. Check back in a couple of nights.')}</p>`;
   const lideres = S.fase === 'empresa' && S.etapa >= LEAD.etapa ? `<p class="nota">⭐ ${L(`Leads de campo: ${leads().length} de ${maxLeads()} (uno por camioneta extra). Un equipo con Lead aprueba más, saca más A y en los trabajos gigantes rinde un 15 % más.`, `Field Leads: ${leads().length} of ${maxLeads()} (one per extra van). A team with a Lead passes more, gets more A's and works 15% better on giant jobs.`)}</p>` : '';
@@ -6927,7 +6940,7 @@ function enlazar() {
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
   P.querySelectorAll('[data-esc]').forEach(b => b.onclick = () => { escSel = b.dataset.esc; tono(600, .04, .03, 'triangle'); pantallaCamioneta(); });
   P.querySelectorAll('[data-lead]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.lead); if (!c || c.lead || faltaLead(c).length || S.dinero < LEAD.precio) return;
-    S.dinero -= LEAD.precio; c.lead = S.noche; c.sueldo += LEAD.extra; c.animo = Math.min(5, (c.animo || 3) + 1); sDing(); vibrar([40, 40, 80]);
+    S.dinero -= LEAD.precio; c.lead = S.noche; ajustarSueldo(c); c.animo = Math.min(5, (c.animo || 3) + 1); sDing(); vibrar([40, 40, 80]);
     S.hoy.avisos.push(L(`⭐ ${c.n} es Lead de campo. Se compró una libreta, una pluma y una actitud nueva. Dirige su camioneta desde hoy.`, `⭐ ${c.n} is now a field Lead. Bought a notebook, a pen and a whole new attitude. Runs their van from today.`)); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-personal]').forEach(b => b.onclick = () => { const id = b.dataset.personal, pe = PERSONAL[id]; if (S.dinero < pe.precio || contratado(id) || vansTotal() < pe.vans) return; S.dinero -= pe.precio; if (id === 'admin') S.admin = S.noche; else S.angelica = true; sDing(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-sede]').forEach(b => b.onclick = () => { const id = b.dataset.sede, p = precioSala(id); if (!p || S.dinero < p || (!sede(id) && vansTotal() < PERSONAL[id].vans)) return; S.sede = { ...(S.sede || {}), [id]: sede(id) + 1 }; S.dinero -= p; sCaja(); sDing(); guardar(); pantallaCamioneta(); });
@@ -7166,7 +7179,7 @@ function pantallaParte() {
   for (const a of o.ayudan || []) {
     const g = a.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean), v = -(g.reduce((t, c) => t + r10(c.sueldo * (c.prueba ? .8 : 1) * sueldoMult()), 0) + r10((a.comp ? COMPANEROS[a.comp].sueldo : 0) * sueldoMult()) + gasolina());
     lineas.push([L(`Equipo ${a.k} (te ayudó): sueldos y gasolina`, `Team ${a.k} (helped you): wages and gas`), v]); neto += v;
-    for (const c of g) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); }
+    for (const c of g) sumarNoche(c);
   }
   // Para la evaluación: cómo trabajó cada equipo.
   const evals = [...BS.map(B => ({ t: `${L('Equipo', 'Team')} ${B.k} · ${B.o.nombre}`, nota: B.aprobado ? (B.notaA ? 'A' : 'B') : 'D', bien: B.aprobado, gente: B.gente, txt: B.cosas.map(TRAD).join(' ') })),
@@ -7259,9 +7272,9 @@ function pantallaParte() {
   S.noche++;
   for (const a of M.album) if (!S.album.includes(a)) S.album.push(a);
   if (M.huella) { S.huellas = S.huellas || []; S.huellas.push({ n: M.huella, c: o.nombre }); if (S.huellas.length > 80) S.huellas.shift(); }
-  for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }   // la experiencia se nota
+  for (const e of M.equipo) { const c = S.cuadrilla.find(x => x.id === e.id); if (c) sumarNoche(c); }   // la experiencia se nota
   for (const B of BS) {
-    for (const g of B.gente) { const c = g.id && S.cuadrilla.find(x => x.id === g.id); if (c) { c.noches++; c.fuerza = +Math.min((c.base || c.fuerza) * 1.3, c.fuerza + .02).toFixed(2); } }
+    for (const g of B.gente) { const c = g.id && S.cuadrilla.find(x => x.id === g.id); if (c) sumarNoche(c); }
     const cb = B.o.clienteId && S.clientes.find(c => c.id === B.o.clienteId);
     if (cb) { if (B.aprobado) { cb.proxima = S.noche + FREC[COCINAS[cb.cocina].frec]; cb.visitas++; } else S.clientes = S.clientes.filter(c => c !== cb); }
   }
