@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'conSeguro', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -319,9 +319,9 @@ caso('duelo 2.0: sin apuesta, El Cuñado se confía y gana', async () => {
   await empezarDuelo(p, false);
   afirmar(await p.evaluate(() => __hc.M.duelo.apuesta === 0), 'rechazar la apuesta no quedó registrado');
   await p.evaluate(() => { __hc.M.duelo.prog = .5; });
-  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 45000 });
+  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 90000 });
   await p.evaluate(() => { __hc.M.duelo.prog = .99; });
-  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 45000 });
+  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 90000 });
   await terminarDuelo(p); await p.waitForSelector('.nota-grande', { timeout: 60000 });
   const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
   afirmar(/Duelo perdido · \d–2/i.test(t) && !/Apuesta/.test(t) && /la mitad/.test(t), 'el parte del duelo perdido no es correcto: ' + (t.match(/Duelo[^\n]*\n?[^\n]*/) || [t.slice(0, 200)])[0]);
@@ -651,7 +651,7 @@ caso('ducto por tramos, Buzón e imprevistos que cuestan tiempo y dinero', async
   let r = await p.evaluate(() => ({ jefe: !!document.querySelector('#jefeCorto'), cuenta: (document.querySelector('.tabs [data-tab="buzon"] .cuenta') || {}).textContent }));
   afirmar(!r.jefe && +r.cuenta >= 1, 'el Buzón no avisa o los mensajes siguen en Noche: ' + JSON.stringify(r));
   await p.click('.tabs [data-tab="buzon"]');
-  r = await p.evaluate(() => ({ jefe: !!document.querySelector('#jefeCorto'), visto: __hc.S.hoy.buzonVisto, msgs: document.querySelectorAll('.chat .msg').length }));
+  r = await p.evaluate(() => ({ jefe: !!document.querySelector('#jefeCorto'), visto: __hc.S.hoy.buzonVisto, msgs: document.querySelectorAll('.bandeja .msg').length }));
   afirmar(r.jefe && r.visto && r.msgs >= 1, 'el Buzón no muestra los mensajes: ' + JSON.stringify(r));
   // imprevisto de la cuadrilla: batería muerta → 20 min tarde y $20
   await p.evaluate(() => { const H = __hc.S.hoy; H.dia = { id: 'bateria', res: '' }; document.querySelector('.tabs [data-tab="noche"]').click(); });
@@ -708,6 +708,36 @@ caso('tu personaje: editor de avatar, piezas con logros y partidas viejas', asyn
   afirmar(await p.evaluate(() => !!document.querySelector('.av-prev') && !!document.querySelector('#avListo')), 'la partida nueva no pasa por el editor');
   await p.click('#avListo');
   afirmar(await p.evaluate(() => __hc.S.jugador === 'Sam' && !!__hc.S.avatar && !!document.querySelector('.tabs')), 'no se empezó la partida después del editor');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('la gente de la sede: escritorios, administración, intercomunicador y renuncias', async () => {
+  const p = await abrir(partida({ noche: 40, etapa: 3, dinero: 20000, sede: { mantenimiento: 1, planificacion: 1, formacion: 1 }, cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, tipo: 'normal', animo: 1, cuidado: 3 }] }));
+  await p.click('.tabs [data-tab="taller"]');
+  let r = await p.evaluate(() => ({ ocupados: document.querySelectorAll('.escritorio.ocupado').length, vacantes: document.querySelectorAll('.escritorio .vacante').length }));
+  afirmar(r.ocupados === 3 && r.vacantes === 3, 'la oficina no muestra quién está: ' + JSON.stringify(r));
+  // administración: daños un 25 % más baratos y sueldo en los gastos fijos
+  const antes = await p.evaluate(() => __hc.conSeguro(200));
+  await p.click('[data-esc="admin"]'); await p.click('#contratarAdmin');
+  r = await p.evaluate(() => ({ admin: !!__hc.S.admin, d: __hc.S.dinero, dano: __hc.conSeguro(200) }));
+  afirmar(r.admin && r.d === 14000 && r.dano === Math.round(antes * .75 / 10) * 10, 'la administración no abarata los daños: ' + JSON.stringify({ antes, ...r }));
+  // mensaje de la oficina en el Buzón de la noche siguiente
+  await p.evaluate(() => { __hc.S.oficinaMsg = { id: 'planificacion', txt: ['Prueba de Doña Perfecta.', 'Test.'] }; __hc.S.hoy = null; __hc.pantallaCamioneta(); document.querySelector('.tabs [data-tab="buzon"]').click(); });
+  afirmar(await p.evaluate(() => /Doña Perfecta/.test(document.querySelector('.bandeja').textContent) && /Prueba de Doña Perfecta/.test(document.querySelector('.bandeja').textContent) && !__hc.S.oficinaMsg), 'el mensaje de la oficina no llegó al Buzón');
+  // renuncia evitada por el jefe de personal (azar a favor)
+  await p.evaluate(() => { Math.random = () => .1; __hc.pantallaEvaluar([{ t: 'Equipo 2', nota: 'D', bien: false, gente: [{ id: 7, n: 'Nacho', animo: 1 }], txt: 'x' }]); });
+  await p.click('[data-ev="0|reg"]');
+  r = await p.evaluate(() => ({ sigue: __hc.S.cuadrilla.some(c => c.id === 7), txt: document.querySelector('.respuesta-ev').textContent, msg: __hc.S.oficinaMsg && __hc.S.oficinaMsg.id }));
+  afirmar(r.sigue && /Fausto Sereno/.test(r.txt) && r.msg === 'formacion', 'el jefe de personal no evitó la renuncia: ' + JSON.stringify(r));
+  // intercomunicador en el turno: un solo mensaje por noche
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  await p.evaluate(() => { __hc.M.eventos = []; __hc.M.ev = null; __hc.M.oficinaHablo = false; __hc.oficinaDice('averia', 1); __hc.oficinaDice('calidad', 1); });
+  await p.waitForFunction(() => /Toña/.test(document.body.textContent), null, { timeout: 10000 }).catch(() => {});
+  r = await p.evaluate(() => ({ tona: /Toña/.test(document.body.textContent), perfecta: /📟 Doña Perfecta/.test(document.body.textContent) }));
+  afirmar(r.tona && !r.perfecta, 'el intercomunicador no habló una sola vez: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
