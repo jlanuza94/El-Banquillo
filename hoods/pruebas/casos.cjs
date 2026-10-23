@@ -332,13 +332,14 @@ caso('duelo 2.0: sin apuesta, El Cuñado se confía y gana', async () => {
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
-caso('de arriba abajo: el ducto escurre sobre la campana limpia, y cada suciedad suena distinto', async () => {
+caso('de arriba abajo: el ducto escurre sobre la campana (jabón si está sucia, grasa si ya estaba limpia), y cada suciedad suena distinto', async () => {
   const p = await abrir(partida({ compPref: 'solo', aj: { asist: true, sonido: true, ahorro: true } }));
   await jugarNoche(p, { cocina: 'burger', durante: () => {
     const Z = __hc.Z, M = __hc.M, ic = Z.findIndex(z => z.id === 'campana'), id = Z.findIndex(z => z.id === 'ducto'), c = Z[ic];
     const r = {};
-    // campana sucia: trabajar el ducto no la toca
-    __hc.irZona(id); const m0 = __hc.micras(c); for (let i = 0; i < 5; i++) __hc.escurrirDucto(1.3); r.sucia = __hc.micras(c) === m0;
+    // campana sucia: el agua con jabón del ducto la moja y le empieza a ablandar la grasa
+    __hc.irZona(id); const empapadas = () => c.sfs.reduce((a, s) => a + s.soak.filter(x => x >= 0 && x <= 20).length, 0), e0 = empapadas();
+    for (let i = 0; i < 5; i++) __hc.escurrirDucto(1.3); r.sucia = empapadas() > e0 && c.sfs.some(s => s.mojado) && !!M.avisoJabon;
     // campana limpia: se vuelve a manchar, con aviso, y con tope
     c.sfs.forEach(s => s.d.fill(0)); for (let i = 0; i < 5; i++) __hc.escurrirDucto(1.3); r.mancha = __hc.micras(c); r.aviso = !!M.avisoEscurre;
     for (let i = 0; i < 40; i++) { if (__hc.micras(c) > __hc.LIMITE) c.sfs.forEach(s => s.d.fill(0)); __hc.escurrirDucto(1.3); } r.tope = c.reens;
@@ -349,7 +350,7 @@ caso('de arriba abajo: el ducto escurre sobre la campana limpia, y cada suciedad
     window.__ducto = r;
   } });
   const r = await p.evaluate(() => window.__ducto);
-  afirmar(r.sucia && r.mancha > 0 && r.aviso && r.tope === 8 && r.enCampana === 0 && r.vacio && r.audio, 'el escurrido o los sonidos no funcionan: ' + JSON.stringify(r));
+  afirmar(r.sucia && r.mancha > 0 && r.aviso && r.tope === 12 && r.enCampana === 0 && r.vacio && r.audio, 'el escurrido o los sonidos no funcionan: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
