@@ -60,6 +60,9 @@ jobs:
           "$BT/aapt2" dump badging $APK | grep -E "^package|^sdkVersion|^targetSdk|^application-label:|launchable" >> check.txt
           unzip -l $APK | grep -E "assets/(index.html|three.min.js)" >> check.txt
           grep -q "assets/three.min.js" check.txt
+          # Las voces del locutor (assets/voz/): cuántos mp3 lleva el APK.
+          echo "voces mp3: $(unzip -l $APK | grep -c 'assets/voz/.*\.mp3$' || true)" >> check.txt
+          unzip -l $APK | grep -q "assets/voz/es/"
           echo "::notice title=APK comprobado::$(sed ':a;N;$!ba;s/\n/%0A/g' check.txt)"
       - name: Publicar
         env: { GH_TOKEN: '${{ github.token }}' }

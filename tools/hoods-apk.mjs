@@ -1,6 +1,6 @@
 // Prepara los archivos del APK de Hood Cleaners (android-hoods/): el juego compilado y three.js
 // dentro de la app, para jugar sin conexión. Ejecuta antes `node tools/build.mjs`.
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, mkdirSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,4 +15,7 @@ mkdirSync(ASSETS, { recursive: true });
 const version = Number(process.env.VERSION_CODE) || 0;
 writeFileSync(join(ASSETS, 'index.html'), html.replace(`<script src="${CDN}"></script>`, `<script>window.HC_VERSION = ${version};</script><script src="three.min.js"></script>`));
 copyFileSync(join(ROOT, 'node_modules', 'three', 'build', 'three.min.js'), join(ASSETS, 'three.min.js'));
-console.log('android-hoods/app/src/main/assets: index.html y three.min.js listos');
+// Las voces del locutor van dentro del APK, en assets/voz/<idioma>/<id>.mp3 (el juego las carga con <audio>).
+rmSync(join(ASSETS, 'voz'), { recursive: true, force: true });
+cpSync(join(ROOT, 'dist', 'hoods', 'voz'), join(ASSETS, 'voz'), { recursive: true });
+console.log('android-hoods/app/src/main/assets: index.html, three.min.js y voz/ listos');
