@@ -187,6 +187,7 @@ body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } 
 .escritorio .mesa { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; border-radius: 6px 6px 3px 3px; background: linear-gradient(#a0784f, #7c5a3a); box-shadow: 0 4px 0 #4e3825, inset 0 2px 0 rgba(255,255,255,.18); display: grid; place-items: center; align-content: center; gap: 0; padding: 0 4px; }
 .escritorio .mesa b { font-family: var(--f-cond); font-size: 11.5px; letter-spacing: .02em; color: #fff7ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-shadow: 0 1px 1px rgba(0,0,0,.5); }
 .escritorio .mesa i { font-style: normal; font-size: 9px; color: #ffd38a; letter-spacing: 1px; }
+.escritorio .vacante.bloq { background: #3a4652; color: #cfd8de; }
 .escritorio:not(.ocupado) .mesa { filter: saturate(.5) brightness(.8); }
 .escritorio[aria-pressed="true"] .mesa { box-shadow: 0 4px 0 #4e3825, 0 0 0 2px var(--hivis), 0 0 14px rgba(255,138,31,.5); }
 .esc-det { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; background: rgba(20,30,40,.82); border: 1px solid var(--hivis); border-radius: 12px; padding: 10px; margin-top: 10px; }
@@ -1021,7 +1022,7 @@ function tarjetaYo(partes) {
 const gasolina = () => [35, 35, 50, 70][(S && S.eq.camioneta) || 1];
 // Gastos fijos de la empresa por noche: renta del local según la etapa y mantenimiento de cada camioneta extra.
 const RENTA = [0, 25, 50, 90, 140];
-const gastosFijos = () => S.fase === 'empresa' ? RENTA[S.etapa] + 40 * (S.eq.flota || 0) + (S.admin ? ADMIN.sueldo : 0) : 0;
+const gastosFijos = () => S.fase === 'empresa' ? RENTA[S.etapa] + MANT_VAN * (S.eq.flota || 0) + sueldosOficina() : 0;
 // Ciudades: cada empresa vive en la suya. La ciudad activa usa los campos normales de S; la otra queda guardada en S.ciudades.
 const CIUDADES = {
   1: { n: ['Ciudad Comal', 'Comal City'], rival: 'Limpiezas El Cuñado' },
@@ -1068,9 +1069,9 @@ const QUIEN_CUNADO = { n: 'El Cuñado', color: '#d7382b' };
 const ETAPAS = [
   { n: 'Camioneta vieja', txt: 'Tú solo y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías. Beto espera a que puedas pagarle y cabe un ayudante del barrio.' },
   { n: 'Taller propio', rep: 20, compra: 1500, txt: 'Alquilas un taller. Llegan los woks y los asadores, Lupe busca trabajo, compras camionetas más grandes (y más camionetas) para más ayudantes y te anuncias en redes.' },
-  { n: 'Oficina con fax', rep: 40, compra: 4000, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy busca trabajo (despierto, casi siempre).' },
-  { n: 'Contratista de confianza', rep: 60, compra: 12000, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
-  { n: 'Leyenda de la grasa', rep: 85, compra: 25000, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad. Y se abre la Gran Licitación: el final de la historia.' },
+  { n: 'Oficina con fax', rep: 40, compra: 4000, vans: 2, txt: 'Oficina de verdad. Hoteles, comedores industriales y licitaciones. Chuy busca trabajo (despierto, casi siempre).' },
+  { n: 'Contratista de confianza', rep: 60, compra: 12000, vans: 4, txt: 'Los estadios te llaman a ti. El cuñado del alcalde ya no te saluda.' },
+  { n: 'Leyenda de la grasa', rep: 85, compra: 25000, vans: 6, txt: 'Tu camioneta sale en las noticias. Eres la empresa de campanas más famosa de la ciudad. Y se abre la Gran Licitación: el final de la historia.' },
 ];
 const FAMA = [[0, 'Desconocidos'], [20, 'Del barrio'], [40, 'Recomendados'], [60, 'De confianza'], [80, 'Leyenda de la grasa']];
 const fama = r => { const i = FAMA.filter(f => r >= f[0]).length - 1; return L(FAMA[i][1], EN.fama[i]); };
@@ -1375,6 +1376,15 @@ const SEDE = {
   oficina: { ico: '🗂️', n: ['Oficina', 'Office'], d: ['Nivel 1: un candidato más. Nivel 2: un trabajo más cada noche. Nivel 3: al negociar aceptan un 10 % más.', 'Level 1: one more candidate. Level 2: one more job each night. Level 3: clients accept 10% more when negotiating.'] },
 };
 const PRECIO_SEDE = [2000, 5000, 9000];
+// Para crecer de etapa también hacen falta camionetas (la tuya cuenta): así la empresa crece de verdad y la partida dura más.
+const vansTotal = () => 1 + ((S && S.eq && S.eq.flota) || 0);
+const etapaLista = sig => S.rep >= sig.rep && vansTotal() >= (sig.vans || 1);
+// El personal de la sede: cuántas camionetas pide, cuánto cuesta contratarlo y su sueldo por noche.
+const PERSONAL = { almacen: { vans: 2, precio: 2000, sueldo: 120 }, mantenimiento: { vans: 2, precio: 2500, sueldo: 150 }, formacion: { vans: 3, precio: 5000, sueldo: 200 },
+  oficina: { vans: 5, precio: 8000, sueldo: 250 }, planificacion: { vans: 7, precio: 10000, sueldo: 300 }, admin: { vans: 8, precio: 12000, sueldo: 300 } };
+const MANT_VAN = 70;   // mantenimiento por noche de cada camioneta extra
+const precioSala = id => sede(id) === 0 ? PERSONAL[id].precio : PRECIO_SEDE[sede(id)];
+const sueldosOficina = () => S && S.fase === 'empresa' ? Object.keys(PERSONAL).filter(id => id === 'admin' ? S.admin : sede(id) >= 1).reduce((a, id) => a + PERSONAL[id].sueldo, 0) : 0;
 const sede = id => (S.sede || {})[id] || 0;
 // Cursos para los ayudantes: 2 por persona. Mejoran sus medidas sin borrar su carácter (el lío sigue siendo lío).
 const CURSOS = {
@@ -6017,7 +6027,7 @@ const ENCARGADOS = {
   admin: { n: 'Lic. Teodoro Nervios', puesto: ['Administración', 'Admin'], rasgo: ['Contador al borde de un ataque. Pelea multas y daños: cuestan un 25 % menos.', 'Accountant on the edge of a breakdown. Fights fines and damages: they cost 25% less.'],
     av: { piel: 1, pelo: 4, colorPelo: 2, rostro: 0, lentes: 1, casco: 8, uniforme: '#1d1f22', expresion: 3, detalle: 2, ini: 'N' } },
 };
-const ADMIN = { precio: 6000, sueldo: 120, ahorro: .25 };
+const ADMIN = { ahorro: .25 };
 const caraEnc = (id, clase = '') => `<div class="cara con-cara ${clase}" style="background:#24343f" title="${esc(ENCARGADOS[id].n)}">${avatarSVG(ENCARGADOS[id].av)}</div>`;
 const encargadoActivo = id => S.fase === 'empresa' && (id === 'admin' ? !!S.admin : sede(id) >= 1);
 const DICHOS_OFI = {
@@ -6175,7 +6185,8 @@ function metaFinal() {
   if (S.final) return `🏆 ${L('Modo libre: la ciudad es tuya', 'Free mode: the city is yours')}`;
   const sig = ETAPAS[S.etapa + 1];
   if (sig) {
-    const falta = [S.rep < sig.rep && L(`${sig.rep - S.rep} de reputación`, `${sig.rep - S.rep} reputation`), S.dinero < precioEtapa(sig) && dinero(precioEtapa(sig) - S.dinero)].filter(Boolean);
+    const fv = (sig.vans || 1) - vansTotal();
+    const falta = [S.rep < sig.rep && L(`${sig.rep - S.rep} de reputación`, `${sig.rep - S.rep} reputation`), fv > 0 && L(`${fv} ${fv === 1 ? 'camioneta' : 'camionetas'}`, `${fv} ${fv === 1 ? 'van' : 'vans'}`), S.dinero < precioEtapa(sig) && dinero(precioEtapa(sig) - S.dinero)].filter(Boolean);
     return `🏛️ ${L('Camino a la Gran Licitación', 'Road to the Grand Tender')} · ${S.etapa + 1}/5 · ${falta.length ? L(`para «${nEtapa(S.etapa + 1)}» te falta ${falta.join(' y ')}`, `for "${nEtapa(S.etapa + 1)}" you need ${falta.join(' and ')}`) : L(`¡ya puedes pasar a «${nEtapa(S.etapa + 1)}»!`, `you can move up to "${nEtapa(S.etapa + 1)}"!`)}`;
   }
   if (S.licitGanada) return `🏁 ${L('Termina la misión de la Residencia Oficial y espera una visita importante', 'Finish the Official Residence mission and wait for an important visitor')}`;
@@ -6292,12 +6303,12 @@ function extrasOrden(o, i) {
   return b.length ? `<div class="tras-orden">${b.join(' ')}</div>` : '';
 }
 function tarjetaEtapa(sig) {
-  const listo = S.rep >= sig.rep, falta = precioEtapa(sig) - S.dinero;
+  const listo = etapaLista(sig), falta = precioEtapa(sig) - S.dinero, fv = (sig.vans || 1) - vansTotal();
   const i = ETAPAS.indexOf(sig);
   return `<div class="rango"><div class="fila"><b>${L('Siguiente etapa', 'Next stage')}: ${nEtapa(i)}</b><span class="pago">${dinero(precioEtapa(sig))}</span></div>
     <span class="nota">${esc(tEtapa(i))}</span>
     ${listo ? `<div class="acciones"><button class="btn prim" id="saltar" ${falta > 0 ? 'disabled' : ''}>${L('Dar el salto', 'Level up')}</button></div>${falta > 0 ? `<span class="nota">${L('Te faltan', 'You need')} ${dinero(falta)}${L('.', ' more.')}</span>` : ''}`
-      : `<span class="aviso">${L(`Necesitas reputación ${sig.rep} (tienes ${S.rep}).`, `You need ${sig.rep} reputation (you have ${S.rep}).`)}</span>`}</div>`;
+      : `<span class="aviso">${[S.rep < sig.rep ? L(`Necesitas reputación ${sig.rep} (tienes ${S.rep}).`, `You need ${sig.rep} reputation (you have ${S.rep}).`) : '', fv > 0 ? L(`Necesitas ${sig.vans} camionetas (tienes ${vansTotal()}): cómpralas en el Taller.`, `You need ${sig.vans} vans (you have ${vansTotal()}): buy them in the Shop.`) : ''].filter(Boolean).join(' ')}</span>`}</div>`;
 }
 
 const PLEG = {};   // qué secciones plegables tienes abiertas
@@ -6399,7 +6410,7 @@ function vNoche() {
   const irBuzon = nb ? `<button class="ir-buzon" data-tab="buzon"><span>📬</span><b>${L('Buzón', 'Inbox')}</b><small>${resumenBuzon()}</small><i>›</i></button>` : '';
   return `${aviso}${diaHtml}${irBuzon}${yoP.linea}
 
-    ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
+    ${sig && etapaLista(sig) ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
     ${H.ordenes.length ? `<div class="carrusel">${H.ordenes.map((x, i) => `<div class="carr-item">${tarjetaCorta(x, i)}${i !== H.sel ? extrasOrden(x, i) : ''}</div>`).join('')}</div>${H.ordenes[H.sel] ? tarjetaOrden(H.ordenes[H.sel], H.sel) + extrasOrden(H.ordenes[H.sel], H.sel) : ''}` : '' || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
     <h2 class="sec">${aprendiz ? L('Tu compañero esta noche', 'Your partner tonight') : L('Con quién vas', 'Who goes with you')}</h2>
@@ -6413,7 +6424,7 @@ function vNoche() {
       <div class="companeros compacto">${S.cuadrilla.map(c => `<button class="comp" data-a="${c.id}" aria-pressed="${H.ayud.includes(c.id)}">${cara(c.color, c.n[0], c.n)}<div><b>${esc(c.n)}</b><span>${ESPECIAL[c.esp] ? L(ESPECIAL[c.esp], EN.esp[c.esp]) + ' · ' : ''}${dinero(c.sueldo)}</span></div></button>`).join('')}</div>` : ''}
     ${vEquipoB()}
     ${aprendiz ? plegable('tablero', `🗓️ ${L('Horario de Grasa Brava', 'Grasa Brava schedule')}`, 'Angélica', tableroRigo(), S.noche <= 1) : plegable('retos', `🎯 ${L('Retos y metas', 'Challenges & goals')}`, [H.retos && H.retos.length ? `☆ ${H.retos.length}` : '', S.mis ? `📞 ${S.mis.lista.filter(x => x.hecho).length}/${S.mis.lista.length}` : '', S.finde ? `🏆 ${S.finde.paso + 1}/3` : '', sig ? `⬆ ${S.rep}/${sig.rep}` : ''].filter(Boolean).join(' · '),
-      (sig && S.rep < sig.rep ? tarjetaEtapa(sig) : '') + (H.retos && H.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${H.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}<small>${L(`Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.`, `Each one gives a star. You have ${S.estrellas || 0} ★.`)}</small></div>` : '') + tarjetaMisiones() + (H.findeOferta ? '' : tarjetaFinde()))}
+      (sig && !etapaLista(sig) ? tarjetaEtapa(sig) : '') + (H.retos && H.retos.length ? `<div class="retos"><b>${L('Retos de esta noche', 'Tonight\'s challenges')}</b>${H.retos.map(id => `<span>☆ ${esc(tReto(reto(id)))}</span>`).join('')}<small>${L(`Cada uno da una estrella. Llevas ${S.estrellas || 0} ★.`, `Each one gives a star. You have ${S.estrellas || 0} ★.`)}</small></div>` : '') + tarjetaMisiones() + (H.findeOferta ? '' : tarjetaFinde()))}
     ${!aprendiz && H.findeOferta ? tarjetaFinde() : ''}
     ${aprendiz ? '' : tarjetaLicit()}
     ${aprendiz ? '' : plegable('mapa', `🗺️ ${L('La ciudad esta noche', 'The city tonight')}`, `${H.ordenes.length} ${L('trabajos', 'jobs')}`, mapaCiudad())}
@@ -6608,21 +6619,22 @@ function vSede() {
   const escritorio = id => {
     const E = ENCARGADOS[id], ok = encargadoActivo(id), nv = id === 'admin' ? (S.admin ? 1 : 0) : sede(id), max = id === 'admin' ? 1 : 3, ico = id === 'admin' ? '🧾' : SEDE[id].ico;
     return `<button class="escritorio ${ok ? 'ocupado' : ''}" data-esc="${id}" aria-pressed="${escSel === id}">
-      <span class="silla"></span>${ok ? `<span class="quien">${avatarSVG(E.av)}</span>` : `<span class="vacante">${L('SE BUSCA', 'HIRING')}</span>`}
+      <span class="silla"></span>${ok ? `<span class="quien">${avatarSVG(E.av)}</span>` : vansTotal() < PERSONAL[id].vans ? `<span class="vacante bloq">🔒 ${PERSONAL[id].vans} 🚐</span>` : `<span class="vacante">${L('SE BUSCA', 'HIRING')}</span>`}
       <span class="mesa"><b>${ico} ${esc(L(...E.puesto))}</b><i>${'●'.repeat(nv)}${'○'.repeat(max - nv)}</i></span></button>`;
   };
   const det = id => {
     const E = ENCARGADOS[id], ok = encargadoActivo(id);
-    if (id === 'admin') return `<div class="esc-det">${ok ? caraEnc(id) : '<div class="cara vacia">🧾</div>'}<div><b>${ok ? esc(E.n) : L('Administración (vacante)', 'Admin (vacant)')}</b><span>${L(...E.rasgo)}</span><small>${L(`Sueldo: ${dinero(ADMIN.sueldo)} por noche.`, `Salary: ${dinero(ADMIN.sueldo)} per night.`)}</small></div>
-      ${ok ? `<span class="chip ok">${L('Contratado', 'Hired')}</span>` : `<button class="btn prim peq" id="contratarAdmin" ${S.dinero < ADMIN.precio ? 'disabled' : ''}>${L('Contratar', 'Hire')} ${dinero(ADMIN.precio)}</button>`}</div>`;
-    const e = SEDE[id], nv = sede(id), p = PRECIO_SEDE[nv];
-    return `<div class="esc-det">${ok ? caraEnc(id) : `<div class="cara vacia">${e.ico}</div>`}<div><b>${ok ? `${esc(E.n)} · ${L(...e.n)}` : L(...e.n)} <span class="rangos">${'●'.repeat(nv)}${'○'.repeat(3 - nv)}</span></b>${ok ? `<span class="cita-enc">${L(...E.rasgo)}</span>` : `<span class="nota">${L(`Al abrir la sala llega ${E.n} (${L(...E.puesto).toLowerCase()}).`, `Opening the room brings in ${E.n} (${L(...E.puesto).toLowerCase()}).`)}</span>`}<span>${L(...e.d)}</span></div>
-      ${p ? `<button class="btn prim peq" data-sede="${id}" ${S.dinero < p ? 'disabled' : ''}>${nv ? L('Mejorar', 'Upgrade') : L('Abrir', 'Open')} ${dinero(p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`;
+    if (id === 'admin') return `<div class="esc-det">${ok ? caraEnc(id) : '<div class="cara vacia">🧾</div>'}<div><b>${ok ? esc(E.n) : L('Administración (vacante)', 'Admin (vacant)')}</b><span>${L(...E.rasgo)}</span><small>${L(`Pide ${PERSONAL.admin.vans} camionetas · sueldo ${dinero(PERSONAL.admin.sueldo)} por noche.`, `Needs ${PERSONAL.admin.vans} vans · salary ${dinero(PERSONAL.admin.sueldo)} per night.`)}</small></div>
+      ${ok ? `<span class="chip ok">${L('Contratado', 'Hired')}</span>` : vansTotal() < PERSONAL.admin.vans ? `<span class="chip">🔒 ${PERSONAL.admin.vans} ${L('camionetas', 'vans')}</span>` : `<button class="btn prim peq" id="contratarAdmin" ${S.dinero < PERSONAL.admin.precio ? 'disabled' : ''}>${L('Contratar', 'Hire')} ${dinero(PERSONAL.admin.precio)}</button>`}</div>`;
+    const e = SEDE[id], nv = sede(id), p = nv < 3 ? precioSala(id) : 0, pe = PERSONAL[id], faltanV = !nv && vansTotal() < pe.vans;
+    return `<div class="esc-det">${ok ? caraEnc(id) : `<div class="cara vacia">${e.ico}</div>`}<div><b>${ok ? `${esc(E.n)} · ${L(...e.n)}` : L(...e.n)} <span class="rangos">${'●'.repeat(nv)}${'○'.repeat(3 - nv)}</span></b>${ok ? `<span class="cita-enc">${L(...E.rasgo)}</span>` : `<span class="nota">${L(`Al abrir la sala llega ${E.n} (${L(...E.puesto).toLowerCase()}).`, `Opening the room brings in ${E.n} (${L(...E.puesto).toLowerCase()}).`)}</span>`}<span>${L(...e.d)}</span><small>${nv ? L(`Sueldo: ${dinero(pe.sueldo)} por noche.`, `Salary: ${dinero(pe.sueldo)} per night.`) : L(`Pide ${pe.vans} camionetas · contratar ${dinero(pe.precio)} · sueldo ${dinero(pe.sueldo)} por noche.`, `Needs ${pe.vans} vans · hire ${dinero(pe.precio)} · salary ${dinero(pe.sueldo)} per night.`)}</small></div>
+      ${faltanV ? `<span class="chip">🔒 ${pe.vans} ${L('camionetas', 'vans')}</span>` : p ? `<button class="btn prim peq" data-sede="${id}" ${S.dinero < p ? 'disabled' : ''}>${nv ? L('Mejorar', 'Upgrade') : L('Contratar', 'Hire')} ${dinero(p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`;
   };
   return `<h2 class="sec">${L('Tu sede', 'Your headquarters')} · ${total}/15</h2>
     <div class="oficina-vista"><div class="ventana-ofi"></div><div class="vitrina-ofi" title="${L('Vitrina de medallas', 'Medal case')}">${medallas ? '🏅'.repeat(Math.min(medallas, 8)) + (medallas > 8 ? `<small>+${medallas - 8}</small>` : '') : `<small>${L('vitrina vacía', 'empty case')}</small>`}</div>
       <div class="escritorios">${ids.map(escritorio).join('')}</div></div>
     ${det(escSel)}
+    <p class="nota">${L(`Tienes ${vansTotal()} ${vansTotal() === 1 ? 'camioneta' : 'camionetas'}. Sueldos de la oficina: ${dinero(sueldosOficina())} por noche.`, `You have ${vansTotal()} ${vansTotal() === 1 ? 'van' : 'vans'}. Office salaries: ${dinero(sueldosOficina())} per night.`)}</p>
     <p class="nota">${L('Cada persona de la sede te avisa por el intercomunicador cuando pasa algo importante: como mucho un mensaje en el turno y otro en el Buzón.', 'Everyone at HQ pings you on the intercom when something important happens: at most one message during the shift and one in the Inbox.')}</p>`;
 }
 // La pared del taller con las huellas de Beto: una por cada campana que «firmó».
@@ -6809,7 +6821,7 @@ function enlazar() {
     if (k === 'combo') sCombo(3);
     pantallaCamioneta();
   });
-  const sj = $('#saltar'); if (sj) sj.onclick = () => { const sig = ETAPAS[S.etapa + 1]; S.dinero -= precioEtapa(sig); S.etapa++; guardar(); cola = [subirEtapa]; siguiente(); };
+  const sj = $('#saltar'); if (sj) sj.onclick = () => { const sig = ETAPAS[S.etapa + 1]; if (!etapaLista(sig) || S.dinero < precioEtapa(sig)) return; S.dinero -= precioEtapa(sig); S.etapa++; guardar(); cola = [subirEtapa]; siguiente(); };
   P.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
     const m = MARKETING.find(x => x.id === b.dataset.m);
     S.dinero -= m.p; H.llamadas--;
@@ -6832,8 +6844,8 @@ function enlazar() {
   const org = $('#organizar'); if (org) org.onclick = () => { H.angelica = organizar(); tono(880, .1, .08, 'triangle'); guardar(); pantallaCamioneta(); };
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
   P.querySelectorAll('[data-esc]').forEach(b => b.onclick = () => { escSel = b.dataset.esc; tono(600, .04, .03, 'triangle'); pantallaCamioneta(); });
-  const ca = $('#contratarAdmin'); if (ca) ca.onclick = () => { if (S.dinero < ADMIN.precio || S.admin) return; S.dinero -= ADMIN.precio; S.admin = S.noche; sDing(); guardar(); pantallaCamioneta(); };
-  P.querySelectorAll('[data-sede]').forEach(b => b.onclick = () => { const id = b.dataset.sede, p = PRECIO_SEDE[sede(id)]; if (!p || S.dinero < p) return; S.sede = { ...(S.sede || {}), [id]: sede(id) + 1 }; S.dinero -= p; sCaja(); sDing(); guardar(); pantallaCamioneta(); });
+  const ca = $('#contratarAdmin'); if (ca) ca.onclick = () => { if (S.dinero < PERSONAL.admin.precio || S.admin || vansTotal() < PERSONAL.admin.vans) return; S.dinero -= PERSONAL.admin.precio; S.admin = S.noche; sDing(); guardar(); pantallaCamioneta(); };
+  P.querySelectorAll('[data-sede]').forEach(b => b.onclick = () => { const id = b.dataset.sede, p = precioSala(id); if (!p || S.dinero < p || (!sede(id) && vansTotal() < PERSONAL[id].vans)) return; S.sede = { ...(S.sede || {}), [id]: sede(id) + 1 }; S.dinero -= p; sCaja(); sDing(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-curso]').forEach(b => b.onclick = () => {
     const [id, k] = b.dataset.curso.split('|'), c = S.cuadrilla.find(x => x.id === +id), p = c && precioCurso(c);
     if (!c || S.dinero < p || (c.cursos || []).length >= 2 || (c.cursos || []).includes(k)) return;
@@ -6976,10 +6988,10 @@ function pantallaParte() {
     ? [[L('Sueldo de la noche', 'Night\'s wage'), SUELDO_APRENDIZ], [L('Bono por aprobar', 'Passing bonus'), aprobado ? 40 : 0], [L('Propina', 'Tip'), propina], [L('Propina extra por el pedido especial', 'Extra tip for the special request'), extraPed], ...M.danos.map(x => [TRAD(x.t) + (x.dinero ? L(' (lo paga Don Rigo)', ' (Don Rigo pays)') : ''), null])]
     : [[`${aprobado ? L('Pago del trabajo', 'Job payment') : L('Pago parcial', 'Partial payment')}${M.descuento ? L(' (con el descuento prometido al gerente)', ' (with the discount promised to the manager)') : ''}${tacos < 1 ? L(' (la otra mitad, en tacos)', ' (the other half, in tacos)') : ''}${d && !ganaDuelo ? L(' (la mitad: ganó El Cuñado)', ' (half: El Cuñado won)') : ''}`, cobro],
       ...(tacos < 1 ? [[L('120 tacos de pastor', '120 al pastor tacos'), null]] : []), [L(`Bono de racha (${racha} noches aprobadas seguidas)`, `Streak bonus (${racha} passed nights in a row)`), bonoRacha], [L('Propina', 'Tip'), propina], [pedOk ? L('Extra por cumplir el pedido especial', 'Bonus for the special request') : L('Descuento por no cumplir el pedido', 'Discount for missing the request'), extraPed],
-      ...M.danos.map(x => [TRAD(x.t) + (x.dinero && EQ().seguro ? L(' (el seguro paga la mitad)', ' (insurance pays half)') : ''), x.dinero ? -conSeguro(x.dinero) : null]), [L('Sueldos de la cuadrilla', 'Crew wages'), -sueldos], ...(S.admin ? [[L('Sueldo del Lic. Nervios (administración)', 'Lic. Nervios\' salary (admin)'), -ADMIN.sueldo]] : []), [L('Gasolina', 'Gas'), -gasolina()],
+      ...M.danos.map(x => [TRAD(x.t) + (x.dinero && EQ().seguro ? L(' (el seguro paga la mitad)', ' (insurance pays half)') : ''), x.dinero ? -conSeguro(x.dinero) : null]), [L('Sueldos de la cuadrilla', 'Crew wages'), -sueldos], ...(sueldosOficina() ? [[L('Sueldos de la oficina', 'Office salaries'), -sueldosOficina()]] : []), [L('Gasolina', 'Gas'), -gasolina()],
       [L('Materiales (desengrasante, plástico y cinta)', 'Supplies (degreaser, plastic and tape)'), -materiales()],
       ...(RENTA[S.etapa] ? [[L(`Renta del local (${nEtapa(S.etapa).toLowerCase()})`, `Rent (${nEtapa(S.etapa).toLowerCase()})`), -RENTA[S.etapa]]] : []),
-      ...(S.eq.flota ? [[L(`Mantenimiento de camionetas (${S.eq.flota})`, `Van upkeep (${S.eq.flota})`), -40 * S.eq.flota]] : [])];
+      ...(S.eq.flota ? [[L(`Mantenimiento de camionetas (${S.eq.flota})`, `Van upkeep (${S.eq.flota})`), -MANT_VAN * S.eq.flota]] : [])];
   const imp = M.orden.imprevisto;
   if (imp) lineas.push([L(`Imprevisto antes de salir: ${imp.t}`, `Before heading out: ${imp.t}`) + ` (${[imp.min ? L(`${imp.min} min tarde`, `${imp.min} min late`) : '', imp.gasto ? L(`${dinero(imp.gasto)} ya pagados`, `${dinero(imp.gasto)} already paid`) : ''].filter(Boolean).join(', ')})`, null]);
   if (d && d.apuesta) lineas.push([ganaDuelo ? L('Apuesta ganada a El Cuñado', 'Bet won against El Cuñado') : L('Apuesta perdida con El Cuñado', 'Bet lost to El Cuñado'), ganaDuelo ? d.apuesta : -d.apuesta]);
