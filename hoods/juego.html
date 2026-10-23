@@ -126,13 +126,13 @@ body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } 
 .tramo-btn.falta-tr { border-color: var(--hivis); box-shadow: 0 0 0 1px var(--hivis), 0 0 12px rgba(255,138,31,.55); animation: falta 1s ease-in-out infinite alternate; }
 .ir-buzon { display: grid; grid-template-columns: auto auto 1fr auto; gap: 8px; align-items: center; width: 100%; text-align: left; color: inherit; font: inherit; background: rgba(255,138,31,.1); border: 1px solid var(--hivis); border-radius: 10px; padding: 9px 12px; }
 .ir-buzon span { font-size: 20px; } .ir-buzon b { font-family: var(--f-cond); font-size: 16px; letter-spacing: .04em; text-transform: uppercase; } .ir-buzon small { color: var(--tenue); font-size: 13px; } .ir-buzon i { font-style: normal; font-size: 22px; color: var(--hivis); }
-.chat { display: grid; gap: 8px; }
+.bandeja { display: grid; gap: 8px; }
 .msg { display: grid; grid-template-columns: 36px 1fr; gap: 8px; align-items: start; }
 .msg .cara { width: 36px; height: 36px; }
 .msg-ico { font-style: normal; font-size: 22px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--panel-solido); }
 .msg > div { background: rgba(20,30,40,.82); border: 1px solid rgba(255,255,255,.09); border-radius: 4px 14px 14px 14px; padding: 7px 11px 8px; }
 .msg b { display: block; font-family: var(--f-cond); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
-.chat.viejo { opacity: .75; margin-top: 6px; } .chat-noche { color: var(--tenue); font-size: 12px; }
+.bandeja.viejo { opacity: .75; margin-top: 6px; } .chat-noche { color: var(--tenue); font-size: 12px; }
 .costo-dia { display: block; margin-top: 4px; color: var(--hivis); font-family: var(--f-mono); font-size: 12.5px; }
 .cab { position: relative; }
 .av-btn { position: absolute; top: 0; right: 0; z-index: 2; padding: 0; border: 2px solid var(--hivis); border-radius: 50%; background: none; width: 46px; height: 46px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
@@ -172,6 +172,28 @@ body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } 
 .av-listo { position: sticky; bottom: 0; padding: 10px 0 max(6px, env(safe-area-inset-bottom, 0px)); background: linear-gradient(rgba(13,20,27,0), rgba(13,20,27,.96) 35%); }
 .av-listo .btn { width: 100%; }
 .cara-yo.en-parte { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--hivis); flex: none; align-self: center; }
+.oficina-vista { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--linea); padding: 54px 8px 10px;
+  background: linear-gradient(#2a3540 0 46px, #4a3b2e 46px 49px, transparent 49px), repeating-linear-gradient(90deg, #3b3027 0 38px, #352b23 38px 40px); }
+.ventana-ofi { position: absolute; left: 14px; top: 8px; width: 92px; height: 32px; border-radius: 4px; border: 3px solid #556270; background: linear-gradient(#0d1a2c, #1f3350); box-shadow: inset 0 0 0 1px #0b1117; }
+.ventana-ofi::after { content: "✦  ·  ✦"; position: absolute; inset: 0; display: grid; place-items: center; color: #cfe3ff; font-size: 9px; opacity: .7; }
+.vitrina-ofi { position: absolute; right: 12px; top: 8px; height: 30px; min-width: 70px; max-width: 58%; padding: 2px 8px; border-radius: 4px; border: 2px solid #8c7357; background: rgba(255,255,255,.06); display: flex; align-items: center; gap: 1px; font-size: 14px; overflow: hidden; }
+.vitrina-ofi small { font-size: 11px; color: var(--tenue); margin-left: 4px; }
+.escritorios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 8px; }
+.escritorio { position: relative; font: inherit; color: inherit; background: none; border: 0; padding: 0; height: 104px; display: block; }
+.escritorio .silla { position: absolute; left: 50%; bottom: 34px; width: 46px; height: 40px; margin-left: -23px; border-radius: 10px 10px 4px 4px; background: #23303a; box-shadow: inset 0 -6px 0 #1a242c; }
+.escritorio .quien { position: absolute; left: 50%; bottom: 30px; width: 62px; height: 62px; margin-left: -31px; border-radius: 50% 50% 8px 8px; overflow: hidden; }
+.escritorio .quien svg { width: 100%; height: 100%; display: block; }
+.escritorio .vacante { position: absolute; left: 50%; bottom: 52px; transform: translateX(-50%) rotate(-4deg); font-family: var(--f-cond); font-weight: 700; font-size: 11px; letter-spacing: .06em; color: #1a1208; background: #f2e6c8; padding: 2px 6px; border-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,.4); white-space: nowrap; }
+.escritorio .mesa { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; border-radius: 6px 6px 3px 3px; background: linear-gradient(#a0784f, #7c5a3a); box-shadow: 0 4px 0 #4e3825, inset 0 2px 0 rgba(255,255,255,.18); display: grid; place-items: center; align-content: center; gap: 0; padding: 0 4px; }
+.escritorio .mesa b { font-family: var(--f-cond); font-size: 11.5px; letter-spacing: .02em; color: #fff7ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-shadow: 0 1px 1px rgba(0,0,0,.5); }
+.escritorio .mesa i { font-style: normal; font-size: 9px; color: #ffd38a; letter-spacing: 1px; }
+.escritorio:not(.ocupado) .mesa { filter: saturate(.5) brightness(.8); }
+.escritorio[aria-pressed="true"] .mesa { box-shadow: 0 4px 0 #4e3825, 0 0 0 2px var(--hivis), 0 0 14px rgba(255,138,31,.5); }
+.esc-det { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; background: rgba(20,30,40,.82); border: 1px solid var(--hivis); border-radius: 12px; padding: 10px; margin-top: 10px; }
+.esc-det .cara { width: 52px; height: 52px; border-radius: 50%; }
+.esc-det .cara.vacia { display: grid; place-items: center; font-size: 24px; background: #2b3946; }
+.esc-det > div > span, .esc-det small { display: block; font-size: 13px; color: var(--tenue); margin-top: 2px; }
+.esc-det .cita-enc { color: var(--acero); font-style: italic; }
 /* Barra de zonas compacta: una sola tira con nombre y µm en una línea y una línea de energía debajo. */
 .zonas { gap: 0; background: rgba(13,20,27,.82); border: 1px solid var(--linea); border-radius: 10px; padding: 3px; }
 .zonas button { background: none; border: 0; border-radius: 7px; padding: 3px 6px 4px; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 4px; position: relative; }
@@ -999,7 +1021,7 @@ function tarjetaYo(partes) {
 const gasolina = () => [35, 35, 50, 70][(S && S.eq.camioneta) || 1];
 // Gastos fijos de la empresa por noche: renta del local según la etapa y mantenimiento de cada camioneta extra.
 const RENTA = [0, 25, 50, 90, 140];
-const gastosFijos = () => S.fase === 'empresa' ? RENTA[S.etapa] + 40 * (S.eq.flota || 0) : 0;
+const gastosFijos = () => S.fase === 'empresa' ? RENTA[S.etapa] + 40 * (S.eq.flota || 0) + (S.admin ? ADMIN.sueldo : 0) : 0;
 // Ciudades: cada empresa vive en la suya. La ciudad activa usa los campos normales de S; la otra queda guardada en S.ciudades.
 const CIUDADES = {
   1: { n: ['Ciudad Comal', 'Comal City'], rival: 'Limpiezas El Cuñado' },
@@ -1010,7 +1032,7 @@ const precioEtapa = e => Math.round(e.compra * (ciudad() === 2 ? 2.5 : 1));   //
 // Lo que es de la empresa (se queda en su ciudad). Todo lo demás es del jugador y viaja con él: nivel, habilidades,
 // medallas, álbum, apariencias, objetos, récords y las herramientas personales.
 const CAMPOS_EMPRESA = ['empresa', 'etapa', 'rep', 'dinero', 'clientes', 'perdidos', 'cuadrilla', 'candidatos', 'fijos', 'compPref', 'sede', 'vanMej', 'kits', 'tuneo', 'angelica', 'finde', 'findeOfrecido',
-  'licit', 'licitGanada', 'licitPerdida', 'licitIntentos', 'mis', 'deuda', 'cunado', 'resena', 'recomienda', 'devolver', 'noticia', 'noticiaRadio', 'abierta', 'racha', 'hoy', 'jefeNoche', 'final', 'hitosRep'];
+  'licit', 'licitGanada', 'licitPerdida', 'licitIntentos', 'mis', 'deuda', 'cunado', 'resena', 'recomienda', 'devolver', 'noticia', 'noticiaRadio', 'abierta', 'racha', 'hoy', 'jefeNoche', 'final', 'hitosRep', 'admin', 'oficinaMsg'];
 const EQ_EMPRESA = ['camioneta', 'flota', 'seguro', 'planta'];
 const ciudad = () => (S && S.ciudad) || 1;
 const nCiudad = (k = ciudad()) => L(...CIUDADES[k].n);
@@ -4020,6 +4042,7 @@ const CRISIS = {
 const zonasMias = () => Z.filter(z => !z.crew && micras(z) > LIMITE);
 EVENTOS.hidroRota = () => {
   if (!EQ().hidro || M.hidroRota) return;
+  oficinaDice('averia', .8);
   tono(140, .5, .08, 'sawtooth', 70);
   const arregla = M.comp.solo ? null : M.orden.comp === 'lupe' || M.orden.comp === 'chuy' ? M.comp : null;
   carta(L('¡Se ponchó la manguera!', 'The hose burst!'), L('La hidro escupe agua por todos lados menos por la boquilla. Mientras no la arreglen, toca rasqueta y espuma.', 'The washer sprays everywhere except out of the nozzle. Until it gets fixed, it\'s scraper and foam.'), [
@@ -4150,7 +4173,7 @@ EVENTOS.truco = () => {
 EVENTOS.crisis = () => {
   const ops = Object.keys(CRISIS).filter(k => k !== 'extraviado' || M.crews).sort(() => Math.random() - .5);
   if (M.crews && azar(.5)) ops.unshift('extraviado');
-  for (const k of ops) if (CRISIS[k]() !== false) return;
+  for (const k of ops) if (CRISIS[k]() !== false) { oficinaDice('crisis'); return; }
 };
 // Secreto: a veces el mapache es DORADO.
 function mapacheDorado() {
@@ -4798,6 +4821,7 @@ function tickTurno(dt) {
   animarGente(dt);
   if (M.ayudaT > 0 && (M.ayudaT -= dt) <= 0) $('#ayuda').textContent = '';
   vigilarAtasco(dt, z);
+  if (!M.calidadVista && M.etapa === 'lavar' && M.t / M.dur > .85) { M.calidadVista = true; if (Z.some(q => micras(q) > LIMITE * 1.4)) oficinaDice('calidad', .9); }
   if ((M.fotoT = (M.fotoT ?? 10) - dt) <= 0) { M.fotoT = 10; guardarTurno(); }
   const pr = M.prioridad;
   if (pr && !pr.fin) {
@@ -5455,6 +5479,8 @@ function prepararNoche() {
     : (S.noche === S.abierta ? `Primera noche de ${S.empresa.nombre}. Yo estaré pescando. No me llames. Bueno, llámame si hay mapache.` : uno(RIGO_CONSEJOS));
   for (const o of ordenes) o.firmado = S.fase === 'aprendiz' || !!o.clienteId;   // los de Don Rigo y los clientes fijos ya tienen contrato
   S.hoy = { noche: S.noche, espumaExtra, ordenes, sel: 0, comp, ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2 + Math.floor((S.eq.flota || 0) / 2), avisos, frase, resultado: '' };
+  if (!S.oficinaMsg && S.fase === 'empresa') { if (sede('oficina') >= 2 && azar(.5)) oficinaManana('ventas'); else if (azar(.2)) oficinaManana('almacen'); }
+  if (S.oficinaMsg) { S.hoy.oficina = S.oficinaMsg; S.oficinaMsg = null; }
   S.hoy.retos = S.fase === 'aprendiz' && S.noche === 1 ? [] : RETOS.filter(r => !r.si || r.si()).sort(() => Math.random() - .5).slice(0, 3).map(r => r.id);
   // Lo que pasa de día: una de cada dos noches, algo en la camioneta.
   const dias = DIAS.filter(d => !d.solo || d.solo(S));
@@ -5962,7 +5988,7 @@ function avatarSVG(a) {
     + (det === 'audifonos' ? `<path d="M30 49q-5 12 2 24M70 49q5 12-2 24" stroke="#f2f2f2" stroke-width="1.3" fill="none"/><circle cx="30.5" cy="48" r="2.3" fill="#f2f2f2"/><circle cx="69.5" cy="48" r="2.3" fill="#f2f2f2"/>` : '');
   const oro = casco && !esHex(a.casco) && (AV.casco[a.casco] || [])[2];
   const sombrero = casco ? `<path d="M27 36c0-16 10-25 23-25s23 9 23 25z" fill="${casco}"/><path d="M50 11v25" stroke="${tono2(casco, -.18)}" stroke-width="5"/><path d="M38 14q-6 8-7 20" stroke="${tono2(casco, .35)}" stroke-width="2.2" fill="none" opacity=".7"/><rect x="21" y="33.5" width="58" height="5.5" rx="2.7" fill="${tono2(casco, -.08)}"/>${oro ? '<path d="M33 18l3 4M64 16l-2 4" stroke="#fff" stroke-width="2" opacity=".85"/>' : ''}` : '';
-  const ini = esc((jugador() || '?').trim()[0] || '?').toUpperCase();
+  const ini = esc(a.ini || (jugador() || '?').trim()[0] || '?').toUpperCase();
   return `<svg viewBox="12 7 76 76" aria-hidden="true">${atras}`
     + `<path d="M8 100c3-17 16-24 42-24s39 7 42 24z" fill="${ropa}"/>`
     + `<path d="M22 100c2-11 9-18 20-21l8 9 8-9c11 3 18 10 20 21z" fill="${tono2(ropa, -.25)}" opacity=".55"/>`
@@ -5975,6 +6001,61 @@ function avatarSVG(a) {
     + `${vello}${boca}${lentes}${detalle}${sombrero}</svg>`;
 }
 const caraYo = (clase = '') => `<div class="cara con-cara cara-yo ${clase}" style="background:#24343f" title="${esc(jugador())}">${avatarSVG()}</div>`;
+// ---- La gente de la sede: cada sala tiene a alguien a cargo, con cara, nombre y frases. Hablan por el intercomunicador:
+// como mucho un mensaje durante el turno y otro en el Buzón de la noche siguiente, y solo cuando pasa algo.
+const ENCARGADOS = {
+  oficina: { n: 'Rogelio «el Trato»', puesto: ['Ventas', 'Sales'], rasgo: ['Traje brillante, sonrisa de comercial de colchones. Consigue clientes que nadie más querría.', 'Shiny suit, mattress-ad smile. Lands clients nobody else would want.'],
+    av: { piel: 1, pelo: 0, colorPelo: 0, rostro: 1, lentes: 0, casco: 8, uniforme: '#c9a227', expresion: 2, detalle: 0, ini: 'R' } },
+  mantenimiento: { n: 'Toña «la Tuerca»', puesto: ['Mecánica', 'Mechanic'], rasgo: ['Diagnostica motores por el ruido. Le habla a la hidro con cariño y a Beto con desconfianza.', 'Diagnoses engines by ear. Talks sweetly to the pressure washer and suspiciously to Beto.'],
+    av: { piel: 3, pelo: 5, colorPelo: 1, rostro: 0, lentes: 0, casco: 1, uniforme: '#5a6570', expresion: 1, detalle: 1, ini: 'T' } },
+  formacion: { n: 'Fausto Sereno', puesto: ['Jefe de personal', 'Head of staff'], rasgo: ['Fue instructor de yoga. Calma a cualquiera en tres respiraciones. Evita la mitad de las renuncias.', 'Former yoga instructor. Calms anyone down in three breaths. Prevents half of all resignations.'],
+    av: { piel: 2, pelo: 6, colorPelo: 5, rostro: 2, lentes: 1, casco: 8, uniforme: '#7fae8c', expresion: 1, detalle: 0, ini: 'F' } },
+  planificacion: { n: 'Doña Perfecta', puesto: ['Control de calidad', 'Quality control'], rasgo: ['Revisa cada campana con una linterna y una ceja levantada. Odia a El Cuñado desde 1994.', 'Inspects every hood with a flashlight and one raised eyebrow. Has hated El Cuñado since 1994.'],
+    av: { piel: 0, pelo: 2, colorPelo: 5, rostro: 0, lentes: 2, casco: 8, uniforme: '#6b2f5a', expresion: 2, detalle: 0, ini: 'P' } },
+  almacen: { n: 'Panchito', puesto: ['Almacén', 'Storeroom'], rasgo: ['Sabe dónde está cada bote de desengrasante. No sabe dónde dejó su lápiz (lo tiene en la oreja).', 'Knows where every can of degreaser is. Doesn\'t know where his pencil is (it\'s on his ear).'],
+    av: { piel: 4, pelo: 3, colorPelo: 0, rostro: 4, lentes: 0, casco: 8, uniforme: '#a7744a', expresion: 3, detalle: 3, ini: 'P' } },
+  admin: { n: 'Lic. Teodoro Nervios', puesto: ['Administración', 'Admin'], rasgo: ['Contador al borde de un ataque. Pelea multas y daños: cuestan un 25 % menos.', 'Accountant on the edge of a breakdown. Fights fines and damages: they cost 25% less.'],
+    av: { piel: 1, pelo: 4, colorPelo: 2, rostro: 0, lentes: 1, casco: 8, uniforme: '#1d1f22', expresion: 3, detalle: 2, ini: 'N' } },
+};
+const ADMIN = { precio: 6000, sueldo: 120, ahorro: .25 };
+const caraEnc = (id, clase = '') => `<div class="cara con-cara ${clase}" style="background:#24343f" title="${esc(ENCARGADOS[id].n)}">${avatarSVG(ENCARGADOS[id].av)}</div>`;
+const encargadoActivo = id => S.fase === 'empresa' && (id === 'admin' ? !!S.admin : sede(id) >= 1);
+const DICHOS_OFI = {
+  averia: ['mantenimiento', [['Jefe, esa manguera llevaba tres parches míos. Le pido perdón a ella, no a usted.', 'Boss, that hose had three of my patches. I apologize to it, not to you.'],
+    ['Escuché el «pfff» desde el taller. Mañana le pongo una abrazadera de las buenas. De las que no se compran en la tienda de a peso.', 'I heard the "pfff" from the shop. Tomorrow it gets a proper clamp. Not the dollar-store kind.'],
+    ['No la patee. Las mangueras sienten. Bueno, no, pero yo sí.', 'Don\'t kick it. Hoses have feelings. Well, no, but I do.']]],
+  crisis: ['formacion', [['Respira. Ya hablé con tu gente. Tres inhalaciones y un taco. Todo bajo control.', 'Breathe. I already talked to your people. Three breaths and a taco. All under control.'],
+    ['Alguien de tu equipo estaba al borde. Le puse música de ballenas por el radio. Funcionó. Creo.', 'Someone on your team was on the edge. I played whale sounds on the radio. It worked. I think.'],
+    ['Jefe, el estrés es grasa del alma. Pero no la limpies con hidro.', 'Boss, stress is grease of the soul. Don\'t pressure-wash it though.']]],
+  calidad: ['planificacion', [['Criatura, si llamas al inspector con esa zona así, me da el patatús. Una pasada más, por el amor de Dios.', 'Dear, if you call the inspector with that zone like that, I\'ll faint. One more pass, for heaven\'s sake.'],
+    ['Veo grasa desde aquí. Y estoy en la oficina. Imagínate el inspector.', 'I can see grease from here. And I\'m at the office. Imagine the inspector.'],
+    ['Así no se entrega un trabajo. Así lo entregaría El Cuñado.', 'That\'s not how you hand in a job. That\'s how El Cuñado would.']]],
+  aplus: ['planificacion', [['Revisé las fotos de anoche. Ni una mancha. Me voy a permitir sonreír. Ya. Suficiente.', 'I checked last night\'s photos. Not one smudge. I\'ll allow myself a smile. There. Enough.'],
+    ['A+. Lo imprimí y lo pegué en el refrigerador de la oficina. Al lado del recibo de luz.', 'A+. I printed it and stuck it on the office fridge. Next to the electric bill.'],
+    ['Le mandé tu parte a El Cuñado. Por error. Sin querer. Con copia a su mamá.', 'I sent your report to El Cuñado. By accident. Unintentionally. Cc\'ing his mom.']]],
+  dano: ['admin', [['Jefe, ¡¿otra vez?! Ya peleé la factura con el seguro. Nos ahorramos una parte. Mi gastritis no.', 'Boss, AGAIN?! I already fought the bill with the insurance. We saved some. My ulcer didn\'t.'],
+    ['El daño de anoche ya está en mi hoja de cálculo. En rojo. En negritas. Subrayado.', 'Last night\'s damage is in my spreadsheet. In red. Bold. Underlined.'],
+    ['Logré que lo cobraran como «mantenimiento preventivo». No pregunte cómo. Fue legal. Casi seguro.', 'I got them to bill it as "preventive maintenance". Don\'t ask how. It was legal. Almost certainly.']]],
+  renuncia: ['formacion', [['Alguien de tu gente iba a renunciar. Lo invité a un café y a respirar. Se queda. Felicítalo de vez en cuando, ¿sí?', 'Someone on your team was going to quit. I bought them coffee and taught them to breathe. They\'re staying. Praise them once in a while, okay?']]],
+  ventas: ['oficina', [['Jefe, le conseguí un cliente nuevo para hoy. Paga bien. Solo pidió que no le hablen de fútbol. Ni de su exesposa.', 'Boss, I got you a new client for tonight. Pays well. Only asked that nobody mention soccer. Or his ex-wife.'],
+    ['Trabajo extra en la lista. El dueño dice que su campana «tiene historia». Yo diría que tiene costra.', 'Extra job on the list. The owner says his hood "has history". I\'d say it has crust.'],
+    ['Cerré trato con un restaurante nuevo. Firmé con mi pluma de la suerte. Bueno, era la de Panchito.', 'Closed a deal with a new restaurant. Signed with my lucky pen. Well, it was Panchito\'s.']]],
+  almacen: ['almacen', [['Llegaron 40 botes de desengrasante. Pedí 4. Ahora tenemos una pared de desengrasante. Bonita, eso sí.', '40 cans of degreaser arrived. I ordered 4. Now we have a degreaser wall. Pretty, though.'],
+    ['Alguien se llevó la cinta canela otra vez. Sospecho de Beto. O de un mapache. O de Beto disfrazado de mapache.', 'Someone took the duct tape again. I suspect Beto. Or a raccoon. Or Beto dressed as a raccoon.']]],
+};
+// Durante el turno: un solo mensaje por noche, sin tapar nada (espera a que no haya una tarjeta abierta).
+function oficinaDice(clave, prob = .6) {
+  const d = DICHOS_OFI[clave]; if (!d || !M || M.oficinaHablo || !encargadoActivo(d[0]) || !azar(prob)) return;
+  M.oficinaHablo = true;
+  const E = ENCARGADOS[d[0]], txt = L(...uno(d[1]));
+  const intenta = (k = 0) => { if (!M || M.fase !== 'turno') return; if (M.ev && k < 20) return setTimeout(() => intenta(k + 1), 1500); tono(1320, .05, .04, 'square'); tono(1760, .05, .04, 'square', null, .08); decir({ n: `📟 ${E.n}`, color: '#9fb4c2' }, txt); };
+  setTimeout(intenta, 900);
+}
+// Para el Buzón de la noche siguiente (también uno solo; gana el primero que pase).
+function oficinaManana(clave) {
+  const d = DICHOS_OFI[clave]; if (!d || S.oficinaMsg || !encargadoActivo(d[0])) return;
+  S.oficinaMsg = { id: d[0], txt: uno(d[1]) };
+}
 // Creador de personaje: vista previa fija arriba, pestañas por parte del cuerpo, cada opción dibujada con tu propio
 // personaje en miniatura y colores libres (además de los sugeridos).
 const AV_TABS = [
@@ -6281,7 +6362,8 @@ function mensajesHoy() {
   const H = S.hoy;
   const de = S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : buhoRevelado() ? L('Don Rigo, desde la cabina de Radio Grasa FM', 'Don Rigo, from the Radio Grasa FM booth') : L('Don Rigo «el Muchachón»', 'Don Rigo "el Muchachón"');
   const frase = TRAD(String(H.frase).replace(/^Desde el lago: (pesqué una bota.*)?/, (m, bota) => bota ? RIGO_CONSEJOS[1] : 'Don Rigo: '));
-  return [{ id: 'jefeCorto', de, cara: cara('#b9a27a', 'R', 'Don Rigo'), txt: frase }, ...H.avisos.map(a => ({ de: L('Noticias del barrio', 'Neighborhood news'), ico: '📻', txt: TRAD(a) }))];
+  const of = H.oficina && ENCARGADOS[H.oficina.id] ? [{ de: `📟 ${ENCARGADOS[H.oficina.id].n} · ${L(...ENCARGADOS[H.oficina.id].puesto)}`, cara: caraEnc(H.oficina.id), txt: L(...H.oficina.txt) }] : [];
+  return [{ id: 'jefeCorto', de, cara: cara('#b9a27a', 'R', 'Don Rigo'), txt: frase }, ...of, ...H.avisos.map(a => ({ de: L('Noticias del barrio', 'Neighborhood news'), ico: '📻', txt: TRAD(a) }))];
 }
 const cuentaBuzon = () => S.hoy ? itemsBuzon().filter(x => x.pend).length + (S.hoy.buzonVisto ? 0 : mensajesHoy().length) : 0;
 function resumenBuzon() {
@@ -6298,8 +6380,8 @@ function vBuzon() {
   const msg = m => `<div class="msg"${m.id ? ` id="${m.id}"` : ''}>${m.cara || `<i class="msg-ico">${m.ico}</i>`}<div><b>${esc(m.de)}</b><span>${esc(m.txt)}</span></div></div>`;
   return `${buzon(itemsBuzon())}
     <h2 class="sec">💬 ${L('Mensajes de esta noche', 'Tonight\'s messages')} · ${L('noche', 'night')} ${S.noche}</h2>
-    <div class="chat">${ms.map(msg).join('')}</div>
-    ${viejos.length ? plegable('archivo', `🗂️ ${L('Noches anteriores', 'Earlier nights')}`, `${viejos.length}`, viejos.map(x => `<div class="chat viejo"><small class="chat-noche">${L('Noche', 'Night')} ${x.noche}</small>${x.ms.map(m => msg({ ...m, cara: m.ico ? '' : cara('#b9a27a', 'R', 'Don Rigo') })).join('')}</div>`).join('')) : ''}`;
+    <div class="bandeja">${ms.map(msg).join('')}</div>
+    ${viejos.length ? plegable('archivo', `🗂️ ${L('Noches anteriores', 'Earlier nights')}`, `${viejos.length}`, viejos.map(x => `<div class="bandeja viejo"><small class="chat-noche">${L('Noche', 'Night')} ${x.noche}</small>${x.ms.map(m => msg({ ...m, cara: m.ico ? '' : cara('#b9a27a', 'R', 'Don Rigo') })).join('')}</div>`).join('')) : ''}`;
 }
 function vNoche() {
   const H = S.hoy, aprendiz = S.fase === 'aprendiz', plazas = PLAZAS[S.eq.camioneta];
@@ -6439,7 +6521,7 @@ function organizar() {
   const quedan = plan.length;
   return `${uno(ANGELICA.frases)} ${armados} ${armados === 1 ? 'equipo sale' : 'equipos salen'} esta noche.${sinGente ? ` Me falta gente para ${sinGente} ${sinGente === 1 ? 'equipo' : 'equipos'}: contrata más.` : ''}${quedan && !sinGente ? ` Hay ${quedan} ${quedan === 1 ? 'trabajo firmado' : 'trabajos firmados'} sin camioneta: compra más camionetas.` : ''}`;
 }
-const conSeguro = d => S.fase === 'empresa' && EQ().seguro ? r10(d / 2) : d;   // con seguro, cada daño cuesta la mitad
+const conSeguro = d => { let x = S.fase === 'empresa' && EQ().seguro ? r10(d / 2) : d; if (S.fase === 'empresa' && S.admin) x = r10(x * (1 - ADMIN.ahorro)); return x; };   // con seguro, cada daño cuesta la mitad; con el Lic. Nervios, un 25 % menos
 function resolverB(b) {
   const o = b.orden, gente = [...(b.comp ? [{ ...COMPANEROS[b.comp], id: null }] : []), ...b.ayud.map(id => S.cuadrilla.find(c => c.id === id)).filter(Boolean)];
   const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), dif = o.micras / 1800 * o.campanas * (1 + o.filtros / 8) * (o.ayud > b.ayud.length ? 1.5 : 1);
@@ -6516,12 +6598,32 @@ function vCuadrilla() {
     <p class="nota">${L(`El anuncio trae candidatos nuevos ya. Tienes ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'ayudante' : 'ayudantes'}${hayB() ? ` y ${(S.eq.flota || 0) + 1} camionetas: para llenarlas todas necesitas unos ${((S.eq.flota || 0) + 1) * 3}` : ''}.`, `The ad brings new candidates right away. You have ${S.cuadrilla.length} ${S.cuadrilla.length === 1 ? 'helper' : 'helpers'}${hayB() ? ` and ${(S.eq.flota || 0) + 1} vans: to fill them all you need about ${((S.eq.flota || 0) + 1) * 3}` : ''}.`)}</p>`;
 }
 
+// La sede como una oficina con escritorios: al principio vacíos; cada sala que abres sienta a alguien en el suyo.
+let escSel = null;
 function vSede() {
   if (S.fase !== 'empresa' || S.etapa < 1) return S.fase === 'empresa' ? `<p class="nota">${L('La sede (almacén, mantenimiento, formación, planificación y oficina) se abre con el taller propio.', 'The headquarters (storeroom, maintenance, training, planning and office) opens with your own workshop.')}</p>` : '';
   const medallas = Object.keys(S.medallas || {}).length, total = Object.values(S.sede || {}).reduce((a, n) => a + n, 0);
+  const ids = [...Object.keys(SEDE), 'admin'];
+  if (!ids.includes(escSel)) escSel = ids.find(id => encargadoActivo(id)) || ids[0];
+  const escritorio = id => {
+    const E = ENCARGADOS[id], ok = encargadoActivo(id), nv = id === 'admin' ? (S.admin ? 1 : 0) : sede(id), max = id === 'admin' ? 1 : 3, ico = id === 'admin' ? '🧾' : SEDE[id].ico;
+    return `<button class="escritorio ${ok ? 'ocupado' : ''}" data-esc="${id}" aria-pressed="${escSel === id}">
+      <span class="silla"></span>${ok ? `<span class="quien">${avatarSVG(E.av)}</span>` : `<span class="vacante">${L('SE BUSCA', 'HIRING')}</span>`}
+      <span class="mesa"><b>${ico} ${esc(L(...E.puesto))}</b><i>${'●'.repeat(nv)}${'○'.repeat(max - nv)}</i></span></button>`;
+  };
+  const det = id => {
+    const E = ENCARGADOS[id], ok = encargadoActivo(id);
+    if (id === 'admin') return `<div class="esc-det">${ok ? caraEnc(id) : '<div class="cara vacia">🧾</div>'}<div><b>${ok ? esc(E.n) : L('Administración (vacante)', 'Admin (vacant)')}</b><span>${L(...E.rasgo)}</span><small>${L(`Sueldo: ${dinero(ADMIN.sueldo)} por noche.`, `Salary: ${dinero(ADMIN.sueldo)} per night.`)}</small></div>
+      ${ok ? `<span class="chip ok">${L('Contratado', 'Hired')}</span>` : `<button class="btn prim peq" id="contratarAdmin" ${S.dinero < ADMIN.precio ? 'disabled' : ''}>${L('Contratar', 'Hire')} ${dinero(ADMIN.precio)}</button>`}</div>`;
+    const e = SEDE[id], nv = sede(id), p = PRECIO_SEDE[nv];
+    return `<div class="esc-det">${ok ? caraEnc(id) : `<div class="cara vacia">${e.ico}</div>`}<div><b>${ok ? `${esc(E.n)} · ${L(...e.n)}` : L(...e.n)} <span class="rangos">${'●'.repeat(nv)}${'○'.repeat(3 - nv)}</span></b>${ok ? `<span class="cita-enc">${L(...E.rasgo)}</span>` : `<span class="nota">${L(`Al abrir la sala llega ${E.n} (${L(...E.puesto).toLowerCase()}).`, `Opening the room brings in ${E.n} (${L(...E.puesto).toLowerCase()}).`)}</span>`}<span>${L(...e.d)}</span></div>
+      ${p ? `<button class="btn prim peq" data-sede="${id}" ${S.dinero < p ? 'disabled' : ''}>${nv ? L('Mejorar', 'Upgrade') : L('Abrir', 'Open')} ${dinero(p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`;
+  };
   return `<h2 class="sec">${L('Tu sede', 'Your headquarters')} · ${total}/15</h2>
-    <p class="nota">${L(`Vitrina: ${medallas ? '🏅'.repeat(Math.min(medallas, 12)) + (medallas > 12 ? ` +${medallas - 12}` : '') : 'vacía (gana medallas para llenarla)'}`, `Trophy case: ${medallas ? '🏅'.repeat(Math.min(medallas, 12)) + (medallas > 12 ? ` +${medallas - 12}` : '') : 'empty (win medals to fill it)'}`)}</p>
-    ${Object.entries(SEDE).map(([id, e]) => { const nv = sede(id), p = PRECIO_SEDE[nv]; return `<div class="persona"><div class="cara" style="background:#2b3946;font-size:22px">${e.ico}</div><div><b>${L(...e.n)} <span class="rangos">${'●'.repeat(nv)}${'○'.repeat(3 - nv)}</span></b><span>${L(...e.d)}</span></div>${p ? `<button class="btn prim peq" data-sede="${id}" ${S.dinero < p ? 'disabled' : ''}>${L('Nivel', 'Level')} ${nv + 1} · ${dinero(p)}</button>` : `<span class="chip ok">${L('Al máximo', 'Maxed out')}</span>`}</div>`; }).join('')}`;
+    <div class="oficina-vista"><div class="ventana-ofi"></div><div class="vitrina-ofi" title="${L('Vitrina de medallas', 'Medal case')}">${medallas ? '🏅'.repeat(Math.min(medallas, 8)) + (medallas > 8 ? `<small>+${medallas - 8}</small>` : '') : `<small>${L('vitrina vacía', 'empty case')}</small>`}</div>
+      <div class="escritorios">${ids.map(escritorio).join('')}</div></div>
+    ${det(escSel)}
+    <p class="nota">${L('Cada persona de la sede te avisa por el intercomunicador cuando pasa algo importante: como mucho un mensaje en el turno y otro en el Buzón.', 'Everyone at HQ pings you on the intercom when something important happens: at most one message during the shift and one in the Inbox.')}</p>`;
 }
 // La pared del taller con las huellas de Beto: una por cada campana que «firmó».
 function paredBeto() {
@@ -6729,6 +6831,8 @@ function enlazar() {
   const fa = $('#ficharAngelica'); if (fa) fa.onclick = () => { S.dinero -= ANGELICA.adelanto; S.angelica = true; sCaja(); guardar(); pantallaCamioneta(); };
   const org = $('#organizar'); if (org) org.onclick = () => { H.angelica = organizar(); tono(880, .1, .08, 'triangle'); guardar(); pantallaCamioneta(); };
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
+  P.querySelectorAll('[data-esc]').forEach(b => b.onclick = () => { escSel = b.dataset.esc; tono(600, .04, .03, 'triangle'); pantallaCamioneta(); });
+  const ca = $('#contratarAdmin'); if (ca) ca.onclick = () => { if (S.dinero < ADMIN.precio || S.admin) return; S.dinero -= ADMIN.precio; S.admin = S.noche; sDing(); guardar(); pantallaCamioneta(); };
   P.querySelectorAll('[data-sede]').forEach(b => b.onclick = () => { const id = b.dataset.sede, p = PRECIO_SEDE[sede(id)]; if (!p || S.dinero < p) return; S.sede = { ...(S.sede || {}), [id]: sede(id) + 1 }; S.dinero -= p; sCaja(); sDing(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-curso]').forEach(b => b.onclick = () => {
     const [id, k] = b.dataset.curso.split('|'), c = S.cuadrilla.find(x => x.id === +id), p = c && precioCurso(c);
@@ -6872,7 +6976,7 @@ function pantallaParte() {
     ? [[L('Sueldo de la noche', 'Night\'s wage'), SUELDO_APRENDIZ], [L('Bono por aprobar', 'Passing bonus'), aprobado ? 40 : 0], [L('Propina', 'Tip'), propina], [L('Propina extra por el pedido especial', 'Extra tip for the special request'), extraPed], ...M.danos.map(x => [TRAD(x.t) + (x.dinero ? L(' (lo paga Don Rigo)', ' (Don Rigo pays)') : ''), null])]
     : [[`${aprobado ? L('Pago del trabajo', 'Job payment') : L('Pago parcial', 'Partial payment')}${M.descuento ? L(' (con el descuento prometido al gerente)', ' (with the discount promised to the manager)') : ''}${tacos < 1 ? L(' (la otra mitad, en tacos)', ' (the other half, in tacos)') : ''}${d && !ganaDuelo ? L(' (la mitad: ganó El Cuñado)', ' (half: El Cuñado won)') : ''}`, cobro],
       ...(tacos < 1 ? [[L('120 tacos de pastor', '120 al pastor tacos'), null]] : []), [L(`Bono de racha (${racha} noches aprobadas seguidas)`, `Streak bonus (${racha} passed nights in a row)`), bonoRacha], [L('Propina', 'Tip'), propina], [pedOk ? L('Extra por cumplir el pedido especial', 'Bonus for the special request') : L('Descuento por no cumplir el pedido', 'Discount for missing the request'), extraPed],
-      ...M.danos.map(x => [TRAD(x.t) + (x.dinero && EQ().seguro ? L(' (el seguro paga la mitad)', ' (insurance pays half)') : ''), x.dinero ? -conSeguro(x.dinero) : null]), [L('Sueldos de la cuadrilla', 'Crew wages'), -sueldos], [L('Gasolina', 'Gas'), -gasolina()],
+      ...M.danos.map(x => [TRAD(x.t) + (x.dinero && EQ().seguro ? L(' (el seguro paga la mitad)', ' (insurance pays half)') : ''), x.dinero ? -conSeguro(x.dinero) : null]), [L('Sueldos de la cuadrilla', 'Crew wages'), -sueldos], ...(S.admin ? [[L('Sueldo del Lic. Nervios (administración)', 'Lic. Nervios\' salary (admin)'), -ADMIN.sueldo]] : []), [L('Gasolina', 'Gas'), -gasolina()],
       [L('Materiales (desengrasante, plástico y cinta)', 'Supplies (degreaser, plastic and tape)'), -materiales()],
       ...(RENTA[S.etapa] ? [[L(`Renta del local (${nEtapa(S.etapa).toLowerCase()})`, `Rent (${nEtapa(S.etapa).toLowerCase()})`), -RENTA[S.etapa]]] : []),
       ...(S.eq.flota ? [[L(`Mantenimiento de camionetas (${S.eq.flota})`, `Van upkeep (${S.eq.flota})`), -40 * S.eq.flota]] : [])];
@@ -7095,6 +7199,8 @@ function pantallaParte() {
   guardar();
   M.nota = n; M.nombre = o.nombre; M.nocheParte = S.noche - 1;
   S.llamada = llamadaRadio({ n, nombre: o.nombre, aprobado, gana: ganaDuelo, perdioDuelo: d && !ganaDuelo, desastre: M.danos.some(x => x.dinero >= 60), jefe, bombero: M.bombero, objeto: !!M.objHallado, espejo });
+  if (n === 'A+' || (n === 'A' && azar(.3))) oficinaManana('aplus');
+  if (danos >= 100) oficinaManana('dano');
   if (!o.residencia || !S.noticia) S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
   const vozExito = (n === 'A' || n === 'A+') && S.aj.radio && S.aj.voz !== false;
   if (vozExito) setTimeout(() => hablarRadio('buho-exito'), 900);
@@ -7184,7 +7290,9 @@ function pantallaEvaluar(items) {
       }
     }
     else txt = L('Asienten y se van a la camioneta.', 'They nod and head to the truck.');
-    for (const c of ayud) if (c.animo <= 0) { S.cuadrilla = S.cuadrilla.filter(x => x !== c); se.push(c.n); }
+    const salvados = [];
+    for (const c of ayud) if (c.animo <= 0) { if (encargadoActivo('formacion') && azar(.5)) { c.animo = 1; salvados.push(c.n); continue; } S.cuadrilla = S.cuadrilla.filter(x => x !== c); se.push(c.n); }
+    if (salvados.length) { txt += L(` ${salvados.join(' y ')} ${salvados.length > 1 ? 'iban a renunciar' : 'iba a renunciar'}, pero Fausto Sereno ${salvados.length > 1 ? 'los' : 'le'} invitó un café y ${salvados.length > 1 ? 'se quedan' : 'se queda'}.`, ` ${salvados.join(' and ')} ${salvados.length > 1 ? 'were' : 'was'} about to quit, but Fausto Sereno bought coffee and they're staying.`); oficinaManana('renuncia'); }
     if (k === 'reg' && ayud.some(c => c.animo === 1 && !se.includes(c.n))) txt += L(' Con el ánimo por los suelos van a llegar tarde más seguido.', ' With morale on the floor they\'ll be late more often.');
     if (se.length) txt += L(` ${se.join(' y ')} ${se.length > 1 ? 'renunciaron' : 'renunció'}. ${se.length > 1 ? 'Dejaron sus rasquetas' : 'Dejó la rasqueta'} en tu escritorio.`, ` ${se.join(' and ')} quit. ${se.length > 1 ? 'They left their scrapers' : 'Left the scraper'} on your desk.`);
     caja.querySelector('.respuesta-ev').textContent = txt; guardar();
