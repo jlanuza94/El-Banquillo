@@ -5219,7 +5219,7 @@ function generarOrdenes() {
   return out;
 }
 // Más gente para cuando la empresa crece: nombres y manías combinados al azar.
-const NOMBRES_GEN = ['Lalo', 'Mari', 'Pepe', 'Chela', 'Toñita', 'Rulo', 'Gaby', 'Paco', 'Lucha', 'Neto', 'Fer', 'Juanita', 'Beto Jr.', 'Chabelo', 'Moni', 'Güicho', 'Lety', 'Rafa', 'Tere', 'El Chino', 'La Güera', 'Panchito', 'Doña Cuca', 'Kike'];
+const NOMBRES_GEN = ['Lalo', 'Mari', 'Pepe', 'Chela', 'Toñita', 'Rulo', 'Gaby', 'Paco', 'Lucha', 'Neto', 'Fer', 'Juanita', 'Beto Jr.', 'Chabelo', 'Moni', 'Güicho', 'Lety', 'Rafa', 'Tere', 'El Chino', 'La Güera', 'Doña Cuca', 'Kike'];
 const MANIAS_GEN = [['Trae su propia música. Mala.', 'Pongan algo bueno, ¿no?'], ['Fue campeón de lucha libre infantil.', '¡Yo con la grasa me rifo dos de tres caídas!'], ['Le tiene miedo a las alturas.', 'Yo el techo no. El suelo sí.'],
   ['Habla con las campanas.', 'Tranquila, bonita, ya casi.'], ['Estudió química dos semanas.', 'Esto es pura saponificación, jefe.'], ['Siempre tiene hambre.', '¿Alguien trajo tortas?'], ['Es primo de alguien del ayuntamiento.', 'Si quieres te consigo un permiso. O dos.'],
   ['Colecciona tapas de refresco.', 'Encontré una de 1998 en el ducto.'], ['Hace transmisiones en vivo.', '¡Ya somos catorce viendo!'], ['Muy supersticioso.', 'No raspes en sentido contrario, trae mala suerte.']];
@@ -5627,14 +5627,14 @@ function ordenLicit(paso) {
   const d = LICIT[paso], o = genOrden(d.k); o.licit = paso + 1; o.jefe = d.jefe; o.firmado = true; o.ayud = 0; o.duelo = false; o.pedido = null; o.nombre = L(...d.n); o.pago = r10(o.pago * 1.4);
   return o;
 }
-// El estadio de fútbol: Rogelio (Ventas) lo consigue cuando ya eres Contratista. Es un contrato de 5 noches seguidas
+// El estadio de fútbol: Charlienaro (Ventas) lo consigue cuando ya eres Contratista. Es un contrato de 5 noches seguidas
 // (un sector por noche, 4 campanas cada uno: 20 en total) en el que va toda tu gente; esas noches no hay otros trabajos.
 // Paga al menos $50,000 (10,000 por sector) y un bono del club si apruebas casi todo. Hay que aceptarlo en 5 noches.
 const ESTADIO_PLAZO = 5, ESTADIO_VANS = 4, ESTADIO_PAGO = 10000, ESTADIO_BONO = 8000;
 const SECTORES = [['Tribuna Norte', 'North Stand'], ['Tribuna Sur', 'South Stand'], ['Cabecera Oriente', 'East End'], ['Cabecera Poniente', 'West End'], ['Palcos VIP', 'VIP Boxes']];
 function ordenEstadio(k) {
   const o = genOrden('futbol'); o.estadio = true; o.sector = k; o.firmado = true; o.duelo = false; o.pedido = null; o.contrato = null; o.jefe = null;
-  o.nombre = `${L('Estadio Monumental', 'Monumental Stadium')} · ${L(...SECTORES[k])}`; o.pago = ESTADIO_PAGO; o.origen = L('Lo consiguió Rogelio', 'Landed by Rogelio');
+  o.nombre = `${L('Estadio Monumental', 'Monumental Stadium')} · ${L(...SECTORES[k])}`; o.pago = ESTADIO_PAGO; o.origen = L('Lo consiguió Charlienaro', 'Landed by Charlienaro');
   if (k === 4) o.eventos = [...new Set([...(o.eventos || []), 'gerente'])];   // el presidente del club se asoma a los palcos
   return o;
 }
@@ -5643,11 +5643,11 @@ function estadioHoy() {
   if (!S.estadio) {
     if (S.etapa < 3 || !encargadoActivo('oficina')) return;
     S.estadio = { noche: S.noche };
-    H.avisos.unshift(L(`📟 Rogelio «el Trato»: «¡Jefe! Conseguí el Estadio Monumental. Cinco tribunas, veinte campanas, cocinas que no se limpian desde que ganaron el último campeonato (hace 11 años). Son 5 noches seguidas con toda la gente, y pagan mínimo $50,000. Tenemos ${ESTADIO_PLAZO} noches para aceptar; si no, se lo dan a El Cuñado.»`, `📟 Rogelio "el Trato": "Boss! I landed the Monumental Stadium. Five stands, twenty hoods, kitchens not cleaned since they won the last championship (11 years ago). It's 5 nights in a row with everyone, and they pay at least $50,000. We have ${ESTADIO_PLAZO} nights to accept; otherwise it goes to El Cuñado."`));
+    H.avisos.unshift(L(`📟 Charlienaro: «¡Jefe! Conseguí el Estadio Monumental. Cinco tribunas, veinte campanas, cocinas que no se limpian desde que ganaron el último campeonato (hace 11 años). Son 5 noches seguidas con toda la gente, y pagan mínimo $50,000. Tenemos ${ESTADIO_PLAZO} noches para aceptar; si no, se lo dan a El Cuñado.»`, `📟 Charlienaro "el Trato": "Boss! I landed the Monumental Stadium. Five stands, twenty hoods, kitchens not cleaned since they won the last championship (11 years ago). It's 5 nights in a row with everyone, and they pay at least $50,000. We have ${ESTADIO_PLAZO} nights to accept; otherwise it goes to El Cuñado."`));
   }
   const e = S.estadio; if (e.hecho || e.perdido) return;
   if (e.paso === undefined) {
-    if (S.noche >= e.noche + ESTADIO_PLAZO) { e.perdido = S.noche; H.avisos.unshift(L('📟 Rogelio: «Se nos fue el estadio. El Cuñado lo agarró y salió en la tele. Con su bigote.»', '📟 Rogelio: "We lost the stadium. El Cuñado took it and was on TV. Mustache and all."')); }
+    if (S.noche >= e.noche + ESTADIO_PLAZO) { e.perdido = S.noche; H.avisos.unshift(L('📟 Charlienaro: «Se nos fue el estadio. El Cuñado lo agarró y salió en la tele. Con su bigote.»', '📟 Charlienaro: "We lost the stadium. El Cuñado took it and was on TV. Mustache and all."')); }
     return;
   }
   if (H.ordenes.length === 1 && H.ordenes[0].estadio) return;
@@ -5657,7 +5657,7 @@ function tarjetaEstadio() {
   const e = S.estadio; if (!e || e.hecho || e.perdido || S.fase !== 'empresa') return '';
   if (e.paso !== undefined) return `<div class="retos licit"><b>⚽ ${L('Estadio Monumental', 'Monumental Stadium')} · ${L('noche', 'night')} ${e.paso + 1} ${L('de', 'of')} 5</b>${SECTORES.map((sc, i) => { const r = (e.res || [])[i]; return `<span class="${r ? (r.ok ? 'ok' : 'mal') : ''}">${r ? (r.ok ? '★' : '✗') : '☆'} ${L(...sc)}${r ? ` · ${r.nota}` : ''}</span>`; }).join('')}<span>${L('Esta semana toda tu gente está en el estadio: no hay otros trabajos.', 'This week all your people are at the stadium: no other jobs.')}</span></div>`;
   const quedan = e.noche + ESTADIO_PLAZO - S.noche, puede = vansTotal() >= ESTADIO_VANS;
-  return `<div class="orden licit"><span class="chip naranja">⚽ ${L('Lo consiguió Rogelio', 'Landed by Rogelio')} · ${L(`quedan ${quedan} noches para aceptar`, `${quedan} nights left to accept`)}</span><h3>${L('El Estadio Monumental', 'The Monumental Stadium')}</h3>
+  return `<div class="orden licit"><span class="chip naranja">⚽ ${L('Lo consiguió Charlienaro', 'Landed by Charlienaro')} · ${L(`quedan ${quedan} noches para aceptar`, `${quedan} nights left to accept`)}</span><h3>${L('El Estadio Monumental', 'The Monumental Stadium')}</h3>
     <p class="nota">${L(`5 noches seguidas, un sector por noche: ${SECTORES.map(x => x[0]).join(', ')}. 4 campanas por noche (20 en total). Va toda tu gente y esas noches no hay otros trabajos. Pago: ${dinero(ESTADIO_PAGO)} por sector (${dinero(ESTADIO_PAGO * 5)}) y ${dinero(ESTADIO_BONO)} de bono del club si apruebas 4 de 5.`, `5 nights in a row, one sector per night: ${SECTORES.map(x => x[1]).join(', ')}. 4 hoods per night (20 total). Everyone goes and there are no other jobs those nights. Pay: ${dinero(ESTADIO_PAGO)} per sector (${dinero(ESTADIO_PAGO * 5)}) plus a ${dinero(ESTADIO_BONO)} club bonus if you pass 4 of 5.`)}</p>
     ${S.licit ? `<span class="aviso">${L('Primero termina la Gran Licitación.', 'Finish the Grand Tender first.')}</span>` : puede ? `<div class="acciones"><button class="btn prim" id="estadioSi">${L('Aceptar el contrato', 'Accept the contract')}</button></div>` : `<span class="aviso">${L(`Necesitas ${ESTADIO_VANS} camionetas para mover a tanta gente (tienes ${vansTotal()}).`, `You need ${ESTADIO_VANS} vans to move that many people (you have ${vansTotal()}).`)}</span>`}</div>`;
 }
@@ -5690,7 +5690,7 @@ function tarjetaLicit() {
   if (S.licit) return `<div class="retos licit"><b>🏛️ ${L('La Gran Licitación', 'The Grand Tender')} · ${S.licit.paso + 1} ${L('de', 'of')} 3</b>${LICIT.map((d, i) => { const r = S.licit.res[i]; return `<span class="${r ? (r.gano ? 'ok' : 'mal') : ''}">${r ? (r.gano ? '★' : '✗') : '☆'} ${esc(L(...d.n))}${r ? ` · ${L('tú', 'you')} ${r.yo} · ${RIVAL} ${r.el}` : ''}</span>`; }).join('')}<small>${L('Gana 2 de 3 noches a El Cuñado (mejor nota que la suya) y la ciudad es tuya.', 'Beat El Cuñado on 2 of 3 nights (a better grade than his) and the city is yours.')}</small></div>`;
   if (S.fase !== 'empresa' || S.etapa < 4) return '';
   if (!licitRequisitos() && !S.licitGanada) return `<div class="retos licit"><b>🏛️ ${L('La Gran Licitación', 'The Grand Tender')}</b><span>${L('El ayuntamiento solo acepta empresas grandes y con control de calidad. Para inscribirte necesitas:', 'The city only accepts big companies with quality control. To sign up you need:')}</span>
-    <span class="${vansTotal() >= 8 ? 'ok' : ''}">${vansTotal() >= 8 ? '☑' : '☐'} ${L(`8 camionetas (tienes ${vansTotal()})`, `8 vans (you have ${vansTotal()})`)}</span><span class="${encargadoActivo('planificacion') ? 'ok' : ''}">${encargadoActivo('planificacion') ? '☑' : '☐'} ${L('Doña Perfecta en control de calidad (oficina de la sede)', 'Doña Perfecta in quality control (HQ office)')}</span></div>`;
+    <span class="${vansTotal() >= 8 ? 'ok' : ''}">${vansTotal() >= 8 ? '☑' : '☐'} ${L(`8 camionetas (tienes ${vansTotal()})`, `8 vans (you have ${vansTotal()})`)}</span><span class="${encargadoActivo('planificacion') ? 'ok' : ''}">${encargadoActivo('planificacion') ? '☑' : '☐'} ${L('Doña Elsy en control de calidad (oficina de la sede)', 'Doña Elsy in quality control (HQ office)')}</span></div>`;
   if (!licitLista()) return S.finde ? `<p class="nota">${L('La Gran Licitación te espera cuando termines el reto de fin de semana.', 'The Grand Tender is waiting for you once the weekend challenge is over.')}</p>`
     : `<p class="nota">${L(`La Gran Licitación vuelve a abrirse la noche ${S.licitPerdida + 7}.`, `The Grand Tender opens again on night ${S.licitPerdida + 7}.`)}</p>`;
   return `<div class="orden licit"><span class="chip naranja">🏛️ ${L('El final', 'The ending')}</span><h3>${L('La Gran Licitación de la ciudad', 'The city\'s Grand Tender')}</h3>
@@ -6088,16 +6088,16 @@ const caraYo = (clase = '') => `<div class="cara con-cara cara-yo ${clase}" styl
 // ---- La gente de la sede: cada sala tiene a alguien a cargo, con cara, nombre y frases. Hablan por el intercomunicador:
 // como mucho un mensaje durante el turno y otro en el Buzón de la noche siguiente, y solo cuando pasa algo.
 const ENCARGADOS = {
-  oficina: { n: 'Rogelio «el Trato»', puesto: ['Ventas', 'Sales'], rasgo: ['Traje brillante, sonrisa de comercial de colchones. Consigue clientes que nadie más querría.', 'Shiny suit, mattress-ad smile. Lands clients nobody else would want.'],
-    av: { piel: 1, pelo: 0, colorPelo: 0, rostro: 1, lentes: 0, casco: 8, uniforme: '#c9a227', expresion: 2, detalle: 0, ini: 'R' } },
-  mantenimiento: { n: 'Toña «la Tuerca»', puesto: ['Mecánica', 'Mechanic'], rasgo: ['Diagnostica motores por el ruido. Le habla a la hidro con cariño y a Beto con desconfianza.', 'Diagnoses engines by ear. Talks sweetly to the pressure washer and suspiciously to Beto.'],
-    av: { piel: 3, pelo: 5, colorPelo: 1, rostro: 0, lentes: 0, casco: 1, uniforme: '#5a6570', expresion: 1, detalle: 1, ini: 'T' } },
+  oficina: { n: 'Charlienaro', puesto: ['Ventas', 'Sales'], rasgo: ['Charlienaro. Así, todo junto. Traje brillante, sonrisa de comercial de colchones. Consigue clientes que nadie más querría.', 'Charlienaro. All one word. Shiny suit, mattress-ad smile. Lands clients nobody else would want.'],
+    av: { piel: 1, pelo: 0, colorPelo: 0, rostro: 1, lentes: 0, casco: 8, uniforme: '#c9a227', expresion: 2, detalle: 0, ini: 'C' } },
+  mantenimiento: { n: 'Claunoche', puesto: ['Mecánica', 'Mechanic'], rasgo: ['Sus papás iban a ponerle Claudia, pero nació a las tres de la mañana: Claunoche. Diagnostica motores por el ruido y le habla a la hidro con cariño.', 'Her parents were going to name her Claudia (as in «clau-día», day), but she was born at 3 a.m.: Claunoche. Diagnoses engines by ear and talks sweetly to the pressure washer.'],
+    av: { piel: 3, pelo: 5, colorPelo: 1, rostro: 0, lentes: 0, casco: 1, uniforme: '#5a6570', expresion: 1, detalle: 1, ini: 'C' } },
   formacion: { n: 'Fausto Sereno', puesto: ['Jefe de personal', 'Head of staff'], rasgo: ['Fue instructor de yoga. Calma a cualquiera en tres respiraciones. Evita la mitad de las renuncias.', 'Former yoga instructor. Calms anyone down in three breaths. Prevents half of all resignations.'],
     av: { piel: 2, pelo: 6, colorPelo: 5, rostro: 2, lentes: 1, casco: 8, uniforme: '#7fae8c', expresion: 1, detalle: 0, ini: 'F' } },
-  planificacion: { n: 'Doña Perfecta', puesto: ['Control de calidad', 'Quality control'], rasgo: ['Revisa cada campana con una linterna y una ceja levantada. Odia a El Cuñado desde 1994.', 'Inspects every hood with a flashlight and one raised eyebrow. Has hated El Cuñado since 1994.'],
-    av: { piel: 0, pelo: 2, colorPelo: 5, rostro: 0, lentes: 2, casco: 8, uniforme: '#6b2f5a', expresion: 2, detalle: 0, ini: 'P' } },
-  almacen: { n: 'Panchito', puesto: ['Almacén', 'Storeroom'], rasgo: ['Sabe dónde está cada bote de desengrasante. No sabe dónde dejó su lápiz (lo tiene en la oreja).', 'Knows where every can of degreaser is. Doesn\'t know where his pencil is (it\'s on his ear).'],
-    av: { piel: 4, pelo: 3, colorPelo: 0, rostro: 4, lentes: 0, casco: 8, uniforme: '#a7744a', expresion: 3, detalle: 3, ini: 'P' } },
+  planificacion: { n: 'Doña Elsy', puesto: ['Control de calidad', 'Quality control'], rasgo: ['Revisa cada campana con una linterna y una ceja levantada. Odia a El Cuñado desde 1994.', 'Inspects every hood with a flashlight and one raised eyebrow. Has hated El Cuñado since 1994.'],
+    av: { piel: 0, pelo: 2, colorPelo: 5, rostro: 0, lentes: 2, casco: 8, uniforme: '#6b2f5a', expresion: 2, detalle: 0, ini: 'E' } },
+  almacen: { n: 'El Guapo', puesto: ['Almacén', 'Storeroom'], rasgo: ['Así le dicen desde siempre y nadie sabe su verdadero nombre, ni él lo dice. Sabe dónde está cada bote de desengrasante. No sabe dónde dejó su lápiz (lo tiene en la oreja).', 'Everyone calls him El Guapo (the Handsome One) and nobody knows his real name; he won\'t say. Knows where every can of degreaser is. Doesn\'t know where his pencil is (it\'s on his ear).'],
+    av: { piel: 4, pelo: 3, colorPelo: 0, rostro: 4, lentes: 0, casco: 8, uniforme: '#a7744a', expresion: 3, detalle: 3, ini: 'G' } },
   angelica: { n: 'Angélica', puesto: ['Coordinación', 'Coordination'], rasgo: ['Organiza los equipos de cada noche con una carpeta de colores. Con ella tus equipos trabajan mejor.', 'Organizes every night\'s teams with a color-coded binder. Your teams work better with her.'],
     av: { piel: 2, pelo: 1, colorPelo: 1, rostro: 0, lentes: 0, casco: 8, uniforme: '#e58fbf', expresion: 1, detalle: 0, ini: 'A' } },
   admin: { n: 'Lic. Teodoro Nervios', puesto: ['Administración', 'Admin'], rasgo: ['Contador al borde de un ataque. Pelea multas y daños: cuestan un 25 % menos.', 'Accountant on the edge of a breakdown. Fights fines and damages: they cost 25% less.'],
@@ -6125,7 +6125,7 @@ const DICHOS_OFI = {
   renuncia: ['formacion', [['Alguien de tu gente iba a renunciar. Lo invité a un café y a respirar. Se queda. Felicítalo de vez en cuando, ¿sí?', 'Someone on your team was going to quit. I bought them coffee and taught them to breathe. They\'re staying. Praise them once in a while, okay?']]],
   ventas: ['oficina', [['Jefe, le conseguí un cliente nuevo para hoy. Paga bien. Solo pidió que no le hablen de fútbol. Ni de su exesposa.', 'Boss, I got you a new client for tonight. Pays well. Only asked that nobody mention soccer. Or his ex-wife.'],
     ['Trabajo extra en la lista. El dueño dice que su campana «tiene historia». Yo diría que tiene costra.', 'Extra job on the list. The owner says his hood "has history". I\'d say it has crust.'],
-    ['Cerré trato con un restaurante nuevo. Firmé con mi pluma de la suerte. Bueno, era la de Panchito.', 'Closed a deal with a new restaurant. Signed with my lucky pen. Well, it was Panchito\'s.']]],
+    ['Cerré trato con un restaurante nuevo. Firmé con mi pluma de la suerte. Bueno, era la del Guapo.', 'Closed a deal with a new restaurant. Signed with my lucky pen. Well, it was El Guapo\'s.']]],
   almacen: ['almacen', [['Llegaron 40 botes de desengrasante. Pedí 4. Ahora tenemos una pared de desengrasante. Bonita, eso sí.', '40 cans of degreaser arrived. I ordered 4. Now we have a degreaser wall. Pretty, though.'],
     ['Alguien se llevó la cinta canela otra vez. Sospecho de Beto. O de un mapache. O de Beto disfrazado de mapache.', 'Someone took the duct tape again. I suspect Beto. Or a raccoon. Or Beto dressed as a raccoon.']]],
 };
