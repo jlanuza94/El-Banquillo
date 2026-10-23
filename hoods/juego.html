@@ -87,6 +87,42 @@ body.ahorro .zonas button[aria-pressed="true"] { animation: none; }
 .btn.robot { background: #2a3d4a; border-color: #7fd3e6; color: #bfeefa; }
 .zonas button.revisar { border-color: var(--grasa); box-shadow: 0 0 0 1px var(--grasa); }
 .zonas button.prioridad { border-color: #ffd23f; box-shadow: 0 0 0 1px #ffd23f; }
+/* v106: menú con fondo de ladrillo de noche y paneles de cristal. */
+.pantalla[data-vista="menu"] { background:
+  radial-gradient(circle at 88% -4%, rgba(255,170,80,.2), rgba(255,170,80,0) 42%),
+  linear-gradient(rgba(9,13,18,.55), rgba(9,13,18,.86) 34%, rgba(9,13,18,.93)),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Crect width='120' height='60' fill='%23140e0c'/%3E%3Crect x='1' y='1' width='57' height='27' rx='2' fill='%233a231d'/%3E%3Crect x='61' y='1' width='57' height='27' rx='2' fill='%23331f1a'/%3E%3Crect x='-29' y='31' width='57' height='27' rx='2' fill='%232f1c18'/%3E%3Crect x='31' y='31' width='57' height='27' rx='2' fill='%233d2620'/%3E%3Crect x='91' y='31' width='57' height='27' rx='2' fill='%232f1c18'/%3E%3C/svg%3E") 0 0 / 120px 60px; }
+.pantalla[data-vista="menu"] :is(.orden, .cita, .barrio, .buzon-item, .dato, .jefe, .van-mej > div) { background: rgba(20,30,40,.78); border-color: rgba(255,255,255,.09); box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 6px 18px rgba(0,0,0,.25); }
+.pantalla[data-vista="menu"] .buzon-item.pend { border-color: var(--hivis); }
+body.vidrio .pantalla[data-vista="menu"] :is(.orden, .cita, .barrio, .buzon-item) { background: rgba(20,30,40,.62); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+/* La camioneta de la cabecera en ralentí: tiembla un poquito y echa humito por el escape. */
+.cab .furgo { overflow: visible; animation: ralenti .34s ease-in-out infinite alternate; }
+@keyframes ralenti { from { transform: translateY(0); } to { transform: translateY(-1.5px); } }
+.furgo .bocanada { display: none; }
+.cab .furgo .bocanada { display: inline; animation: bocanada 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.cab .furgo .bocanada + .bocanada { animation-delay: .9s; }
+@keyframes bocanada { from { transform: translate(0, 0) scale(.4); opacity: .55; } to { transform: translate(-16px, -10px) scale(1.6); opacity: 0; } }
+body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } body.ahorro .cab .furgo .bocanada { display: none; }
+/* Nueva partida: la camioneta afuera de Grasa Brava, de noche, y Don Rigo en globo de cómic. */
+.escena-nombre { position: relative; height: 170px; border-radius: 12px; overflow: hidden; border: 1px solid var(--linea);
+  background: radial-gradient(1px 1px at 12% 18%, #fff, transparent), radial-gradient(1px 1px at 33% 9%, #cfe3ff, transparent), radial-gradient(1.5px 1.5px at 71% 14%, #fff, transparent), radial-gradient(1px 1px at 90% 30%, #cfe3ff, transparent),
+  linear-gradient(#0a1424, #16233a 30%, #10161c 30%, transparent 32%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Crect width='120' height='60' fill='%23140e0c'/%3E%3Crect x='1' y='1' width='57' height='27' rx='2' fill='%233a231d'/%3E%3Crect x='61' y='1' width='57' height='27' rx='2' fill='%23331f1a'/%3E%3Crect x='-29' y='31' width='57' height='27' rx='2' fill='%232f1c18'/%3E%3Crect x='31' y='31' width='57' height='27' rx='2' fill='%233d2620'/%3E%3Crect x='91' y='31' width='57' height='27' rx='2' fill='%232f1c18'/%3E%3C/svg%3E") 0 0 / 80px 40px; }
+.escena-nombre::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px; background: linear-gradient(#2a3036, #1a1f24); border-top: 2px solid #3c444b; }
+.escena-nombre .neon { position: absolute; left: 50%; top: 58px; transform: translateX(-50%); font-family: var(--f-display); font-size: 21px; letter-spacing: .06em; color: #ffb36b; white-space: nowrap;
+  text-shadow: 0 0 4px #ff8a1f, 0 0 12px #ff8a1f, 0 0 24px rgba(255,138,31,.6); animation: neon 5s steps(1) infinite; }
+@keyframes neon { 0%, 41%, 44%, 100% { opacity: 1; } 42%, 43.5% { opacity: .35; } }
+.escena-nombre .farol { position: absolute; right: 26px; bottom: 26px; width: 4px; height: 110px; background: #4a535b; }
+.escena-nombre .farol::before { content: ""; position: absolute; left: -10px; top: -4px; width: 24px; height: 8px; border-radius: 4px; background: #ffe2a8; box-shadow: 0 0 18px 6px rgba(255,210,140,.55); }
+.escena-nombre .farol::after { content: ""; position: absolute; left: -46px; top: 4px; width: 96px; height: 106px; background: linear-gradient(rgba(255,214,150,.22), rgba(255,214,150,0)); clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); }
+.escena-nombre .furgo { position: absolute; left: 50%; bottom: 8px; width: 150px; margin-left: -95px; }
+.jefe.globo { background: none; border: 0; padding: 0; grid-template-columns: 52px 1fr; align-items: end; gap: 14px; }
+.jefe.globo .cara { width: 52px; height: 52px; }
+.jefe.globo > div { position: relative; background: #fffdf5; color: #15110d; border: 3px solid #111; border-radius: 18px; padding: 10px 13px 11px; box-shadow: 4px 4px 0 rgba(0,0,0,.55); font-size: 16px; line-height: 1.35; min-height: 3.6em; }
+.jefe.globo > div::before { content: ""; position: absolute; left: -17px; bottom: 12px; border: 9px solid transparent; border-right: 15px solid #111; border-left: 0; }
+.jefe.globo > div::after { content: ""; position: absolute; left: -11px; bottom: 15px; border: 6px solid transparent; border-right: 10px solid #fffdf5; border-left: 0; }
+.jefe.globo b { color: #b3261e; margin-bottom: 2px; }
+.maquina.escribiendo::after { content: "▌"; animation: cursor .6s steps(1) infinite; color: #b3261e; }
+@keyframes cursor { 50% { opacity: 0; } }
 /* Barra de zonas compacta: una sola tira con nombre y µm en una línea y una línea de energía debajo. */
 .zonas { gap: 0; background: rgba(13,20,27,.82); border: 1px solid var(--linea); border-radius: 10px; padding: 3px; }
 .zonas button { background: none; border: 0; border-radius: 7px; padding: 3px 6px 4px; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 4px; position: relative; }
@@ -5728,7 +5764,7 @@ function mapaCiudad() {
 // ------------------------------------------------------------------ pantallas
 
 const P = $('#pantalla');
-function pantalla(html) { P.innerHTML = `<div class="hoja">${html}</div>`; P.hidden = false; P.scrollTop = 0; }
+function pantalla(html) { P.innerHTML = `<div class="hoja">${html}</div>`; P.hidden = false; P.scrollTop = 0; delete P.dataset.vista; }
 // Retratos dibujados en SVG: los personajes principales tienen los suyos y el resto sale de su nombre (siempre la misma cara).
 const PIELES = ['#f1c7a1', '#dcaa80', '#bf8660', '#8f5c3d'], PELOS = ['#1d1a17', '#3b2a1e', '#6b4a2b', '#9c9c9c', '#b9772f'];
 const hashCara = t => { let h = 2166136261; for (const ch of String(t)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
@@ -5798,6 +5834,7 @@ function furgo(nombre, color, et) {
     ${tun('dados') ? '<path d="M158 30v8" stroke="#0b1117" stroke-width="1"/><rect x="153" y="37" width="6" height="6" fill="#ff5fa2" stroke="#0b1117"/><rect x="159" y="39" width="6" height="6" fill="#fff" stroke="#0b1117"/>' : ''}
     ${tun('bocina') ? '<path d="M176 40l8-4v10z" fill="#ffd23f" stroke="#0b1117" stroke-width="1.2"/>' : ''}
     ${S.perro ? '<g transform="translate(150 33)"><path d="M0 12q0-10 9-10t9 10z" fill="#c8a27a" stroke="#0b1117" stroke-width="1.5"/><path d="M1 6l-3 7M17 6l3 7" stroke="#7a5a3a" stroke-width="4" stroke-linecap="round"/><circle cx="6" cy="7" r="1.3" fill="#0b1117"/><circle cx="12" cy="7" r="1.3" fill="#0b1117"/><ellipse cx="9" cy="10" rx="2" ry="1.3" fill="#0b1117"/></g>' : ''}
+    <circle class="bocanada" cx="6" cy="72" r="5" fill="#aab3ba"/><circle class="bocanada" cx="6" cy="72" r="4" fill="#aab3ba"/>
     <rect x="10" y="74" width="212" height="8" rx="3" fill="#2b3238"/>
     ${[52, 182].map(x => `<g class="rueda" style="transform-origin:${x}px 84px"><circle cx="${x}" cy="84" r="14" fill="#1c1c1c" stroke="${tun('rines') ? '#f4f8fb' : '#8f9aa3'}" stroke-width="4"/>${tun('rines') ? `<circle cx="${x}" cy="84" r="8" fill="#dfe6ec" stroke="#8f9aa3"/>` : ''}<path d="M${x} 74v20M${x - 10} 84h20" stroke="${tun('rines') ? '#9aa6b0' : '#5d6870'}" stroke-width="2.5"/></g>`).join('')}
     <text x="77" y="53" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="17" fill="#fff" stroke="#0b1117" stroke-width="3" paint-order="stroke"${largo ? ' textLength="122" lengthAdjust="spacingAndGlyphs"' : ''}>${esc(nombre.toUpperCase())}</text>
@@ -5852,7 +5889,8 @@ function pantallaCamioneta() {
     <div class="lado-main"><div class="mini-cab">${S.empresa ? `<b>${esc(S.empresa.nombre)}</b>` : '<b>Hood Cleaners</b>'}<span>🌙 ${S.noche}</span><span data-caja-mini>${dinero(S.dinero)}</span><span>⭐ ${S.rep}</span></div><nav class="tabs abajo" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}${id === 'logros' && manualNuevos().length ? `<span class="cuenta">${manualNuevos().length}</span>` : ''}</button>`).join('')}</nav>
     <div class="tab-cont ${enMenu && !mismaTab ? (TABS_ACT.indexOf(tab) >= TABS_ACT.indexOf(P.dataset.tab) ? 'entra-der' : 'entra-izq') : ''}">${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}</div>
     <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div></div>`);
-  P.dataset.tab = tab; TABS_ACT = tabs.map(t => t[0]);
+  P.dataset.tab = tab; P.dataset.vista = 'menu'; TABS_ACT = tabs.map(t => t[0]);
+  document.body.classList.toggle('vidrio', !S.aj.ahorro && VIDRIO_OK);
   document.body.classList.toggle('ahorro', !!S.aj.ahorro);
   menuVivo();
   if (mismaTab) P.scrollTop = yAntes;
@@ -5941,6 +5979,8 @@ const PLEG = {};   // qué secciones plegables tienes abiertas
 const plegable = (id, titulo, resumen, html, abierto = false) => html ? `<details class="plegable" data-pl="${id}" ${(PLEG[id] ?? abierto) ? 'open' : ''}><summary>${titulo}${resumen ? `<small>${resumen}</small>` : ''}</summary><div class="dentro">${html}</div></details>` : '';
 // ---- El menú vivo (celular): cabecera que se encoge, deslizar entre pestañas, dinero que cuenta y vibración suave.
 let TABS_ACT = [], dineroMostrado = null, menuIniciado = false;
+// Desenfoque de cristal de verdad solo en celulares con fuerza (es de lo más caro de pintar); los demás, cristal «falso».
+const VIDRIO_OK = (() => { try { return CSS.supports('backdrop-filter', 'blur(2px)') && (navigator.hardwareConcurrency || 4) >= 6 && (navigator.deviceMemory || 4) >= 4; } catch (e) { return false; } })();
 function menuVivo() {
   // El carrusel arranca mostrando el trabajo elegido.
   const car = P.querySelector('.carrusel'), sel = car && car.querySelector('[aria-pressed="true"]');
@@ -7004,13 +7044,28 @@ window.hcActualizacion = (estado, pct) => {
   else { b.disabled = false; b.textContent = L('Reintentar', 'Try again'); if (t) t.innerHTML = L(`No se pudo instalar desde aquí. <a href="${APK_URL}">Descárgala con el navegador</a> e instálala encima.`, `Couldn't install from here. <a href="${APK_URL}">Download it with the browser</a> and install it over this one.`); }
 };
 
+// Texto que se escribe letra por letra (al tocarlo sale completo). En modo ahorro o con «reducir movimiento», de golpe.
+const maquina = t => `<span class="maquina" data-txt="${esc(t)}" aria-label="${esc(t)}">${esc(t)}</span>`;
+function escribirMaquina() {
+  const quieto = (S && S.aj.ahorro) || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  P.querySelectorAll('.maquina').forEach(el => {
+    if (quieto) return;
+    const t = el.dataset.txt; let n = 0;
+    el.textContent = ''; el.classList.add('escribiendo');
+    const fin = () => { clearInterval(iv); el.textContent = t; el.classList.remove('escribiendo'); };
+    const iv = setInterval(() => { if (!el.isConnected) return clearInterval(iv); n += 1; el.textContent = t.slice(0, n); if (n >= t.length) fin(); }, 26);
+    (el.closest('.globo') || el).addEventListener('click', fin, { once: true });
+  });
+}
 // nueva = true empieza otra partida; false solo pone nombre a la que ya hay.
 function pantallaNombre(nueva_) {
   pantalla(`<div class="rotulo">${nueva_ ? L('Nueva partida', 'New game') : L('Tu nombre', 'Your name')}</div>
-    <div class="jefe">${cara('#b9a27a', 'R', 'Don Rigo')}<div><b>${L('Don Rigo «el Muchachón»', 'Don Rigo "el Muchachón"')}</b>${L('Soy Don Rigo, pero en el barrio todos me dicen el Muchachón. ¿Y tú quién eres? Habla fuerte, que el extractor hace ruido.', 'I\'m Don Rigo, but around here everyone calls me el Muchachón. And who are you? Speak up, the exhaust fan is loud.')}</div></div>
+    <div class="escena-nombre" aria-hidden="true"><div class="neon">GRASA BRAVA</div><div class="farol"></div>${furgo('Grasa Brava', '#2e9e5b', 0)}</div>
+    <div class="jefe globo">${cara('#b9a27a', 'R', 'Don Rigo')}<div><b>${L('Don Rigo «el Muchachón»', 'Don Rigo "el Muchachón"')}</b>${maquina(L('Soy Don Rigo, pero en el barrio todos me dicen el Muchachón. ¿Y tú quién eres? Habla fuerte, que el extractor hace ruido.', 'I\'m Don Rigo, but around here everyone calls me el Muchachón. And who are you? Speak up, the exhaust fan is loud.'))}</div></div>
     <label class="campo"><span>${L('Tu nombre', 'Your name')}</span><input id="nombreJug" maxlength="18" autocomplete="off" spellcheck="false" value="${nueva_ ? '' : esc(S.jugador || '')}"></label>
     ${nueva_ && guardada ? `<p class="aviso">${L(`Se borra la partida guardada${S.jugador ? ' de ' + esc(S.jugador) : ''} (noche ${S.noche}).`, `This deletes the saved game${S.jugador ? ' of ' + esc(S.jugador) : ''} (night ${S.noche}).`)}</p>` : ''}
     <div class="acciones"><button class="btn prim" id="empezarJ">${nueva_ ? L('Empezar', 'Start') : L('Seguir', 'Continue')}</button><button class="btn" id="volverJ">${L('Volver', 'Back')}</button></div>`);
+  escribirMaquina();
   const inp = $('#nombreJug'), ok = $('#empezarJ');
   const val = () => { ok.disabled = !inp.value.trim(); };
   inp.oninput = val; val();

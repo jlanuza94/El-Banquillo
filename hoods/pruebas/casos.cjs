@@ -354,8 +354,8 @@ caso('El Cuñado desde el principio y el menú con caras e iconos', async () => 
   afirmar(!p.errores.length, p.errores[0]); await p.close();
   // primeras noches de la empresa: reseñas falsas, cartel en la camioneta y primer duelo escrito
   p = await abrir(partida({ noche: 21, abierta: 20, hoy: null, cunado: null }));
-  r = await p.evaluate(() => { const out = { resenas: 0, cartel: false, primer: 0 }; for (let i = 0; i < 12; i++) { __hc.S.hoy = null; __hc.S.cartel = null; delete __hc.S.primerDuelo; __hc.pantallaCamioneta(); const H = __hc.S.hoy; if (/Reseña|oyente|En redes/.test(H.avisos.join(' '))) out.resenas++; if (__hc.S.cartel) out.cartel = true; if (H.ordenes.some(o => o.primerDuelo)) out.primer++; } return out; });
-  afirmar(r.resenas >= 1 && r.cartel && r.primer === 12, 'no salen las reseñas, el cartel o el primer duelo: ' + JSON.stringify(r));
+  r = await p.evaluate(() => { const out = { resenas: 0, cartel: false, primer: 0 }; for (let i = 0; i < 30; i++) { __hc.S.hoy = null; __hc.S.cartel = null; delete __hc.S.primerDuelo; __hc.pantallaCamioneta(); const H = __hc.S.hoy; if (/Reseña|oyente|En redes/.test(H.avisos.join(' '))) out.resenas++; if (__hc.S.cartel) out.cartel = true; if (H.ordenes.some(o => o.primerDuelo)) out.primer++; } return out; });
+  afirmar(r.resenas >= 1 && r.cartel && r.primer === 30, 'no salen las reseñas, el cartel o el primer duelo: ' + JSON.stringify(r));
   await p.evaluate(() => { __hc.S.cartel = 21; __hc.pantallaCamioneta(); });
   await p.click('#quitarCartel');
   afirmar(await p.evaluate(() => !__hc.S.cartel && !document.querySelector('#quitarCartel')), 'no se pudo quitar el cartel');
