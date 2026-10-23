@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -787,6 +787,27 @@ caso('el estadio de Rogelio, Angélica en la oficina y la nómina', async () => 
   await p.click('.tabs [data-tab="cuadrilla"]');
   const t = await p.evaluate(() => document.querySelector('[data-pl="nomina"]').textContent);
   afirmar(/Técnicos/.test(t) && /Oficina/.test(t) && /\$520/.test(t), 'la nómina no está completa: ' + t.slice(0, 200));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('Leads de campo: requisitos, ascenso, sueldo y equipo que rinde más', async () => {
+  const tec = (id, n, cursos, noches) => ({ id, n, rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches, tipo: 'normal', cuidado: 3, puntual: 3, animo: 3, cursos });
+  const p = await abrir(partida({ noche: 60, etapa: 3, rep: 70, dinero: 5000, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 4 }, fijos: ['beto'], cuadrilla: [tec(7, 'Nacho', ['acabado', 'coordina'], 12), tec(8, 'Rosa', ['seguridad'], 20)] }));
+  await p.click('.tabs [data-tab="cuadrilla"]');
+  let r = await p.evaluate(() => ({ nacho: !!document.querySelector('[data-lead="7"]'), rosa: !!document.querySelector('[data-lead="8"]'), rosaFalta: [...document.querySelectorAll('button[disabled]')].some(b => /Lead · falta sus 2 cursos/.test(b.textContent)) }));
+  afirmar(r.nacho && !r.rosa && r.rosaFalta, 'los requisitos de Lead no se aplican: ' + JSON.stringify(r));
+  const s0 = await p.evaluate(() => __hc.S.cuadrilla.find(x => x.id === 7).sueldo);
+  await p.click('[data-lead="7"]');
+  r = await p.evaluate(() => { const c = __hc.S.cuadrilla.find(x => x.id === 7); return { lead: !!c.lead, sueldo: c.sueldo, d: __hc.S.dinero, chip: /⭐ Lead/.test(document.querySelector('.tab-cont').textContent) }; });
+  afirmar(r.lead && r.sueldo === s0 + 150 && r.d === 4000 && r.chip, 'el ascenso no funcionó: ' + JSON.stringify(r));
+  // su equipo rinde más: con la suerte fija, el mismo trabajo pasa con Lead y no sin él
+  r = await p.evaluate(() => {
+    const o = __hc.genOrden('cafe'); o.micras = 2600; o.pedido = null; o.garantia = false;
+    Math.random = () => .55;
+    const con = __hc.resolverB({ orden: o, comp: null, ayud: [7], k: 2 }), sin = __hc.resolverB({ orden: o, comp: null, ayud: [8], k: 2 });
+    return { con: con.aprobado, sin: sin.aprobado, txt: con.cosas.join(' ') };
+  });
+  afirmar(/Lead/.test(r.txt) && (r.con || !r.sin), 'el Lead no ayuda a su equipo: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
