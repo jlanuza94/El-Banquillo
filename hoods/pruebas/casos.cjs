@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -677,6 +677,29 @@ caso('ducto por tramos, Buzón e imprevistos que cuestan tiempo y dinero', async
   await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); })); M.t = M.dur * .6; __hc.terminarTurno(); });
   await p.waitForSelector('.nota-grande', { timeout: 60000 });
   afirmar(await p.evaluate(() => /Imprevisto antes de salir: Batería muerta \(20 min tarde, \$20 ya pagados\)/.test(document.querySelector('#pantalla').innerText)), 'el parte no cuenta el imprevisto');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('tu personaje: editor de avatar, piezas con logros y partidas viejas', async () => {
+  // partida vieja sin avatar: sale uno automático en la cabecera
+  let p = await abrir(partida({ noche: 12, medallas: {} }));
+  afirmar(await p.evaluate(() => !__hc.S.avatar && !!document.querySelector('#miAvatar svg')), 'la partida vieja no tiene cara en la cabecera');
+  await p.click('#miAvatar');
+  let r = await p.evaluate(() => ({ sol: document.querySelector('[data-av="lentes:3"]').disabled, oro: document.querySelector('[data-av="casco:7"]').disabled, rizado: document.querySelector('[data-av="pelo:3"]').disabled }));
+  afirmar(r.sol && r.oro && !r.rizado, 'las piezas de logros no están bloqueadas: ' + JSON.stringify(r));
+  await p.click('[data-av="pelo:3"]'); await p.click('[data-av="piel:5"]'); await p.click('[data-av="uniforme:2"]'); await p.click('#avListo');
+  r = await p.evaluate(() => ({ a: __hc.S.avatar, menu: !!document.querySelector('.tabs') }));
+  afirmar(r.a && r.a.pelo === 3 && r.a.piel === 5 && r.a.uniforme === 2 && r.menu, 'el avatar no se guardó: ' + JSON.stringify(r));
+  await p.click('.tabs [data-tab="taller"]');
+  afirmar(await p.evaluate(() => !!document.querySelector('#editarAv')), 'no se puede cambiar desde el Taller');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+  // partida nueva: después del nombre viene el editor
+  p = await abrir(partida({ noche: 3 }));
+  await p.evaluate(() => __hc.pantallaNombre(true));
+  await p.fill('#nombreJug', 'Sam'); await p.click('#empezarJ');
+  afirmar(await p.evaluate(() => !!document.querySelector('.av-prev') && !!document.querySelector('#avListo')), 'la partida nueva no pasa por el editor');
+  await p.click('#avListo');
+  afirmar(await p.evaluate(() => __hc.S.jugador === 'Sam' && !!__hc.S.avatar && !!document.querySelector('.tabs')), 'no se empezó la partida después del editor');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
