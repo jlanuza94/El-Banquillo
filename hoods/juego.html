@@ -134,6 +134,26 @@ body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } 
 .msg b { display: block; font-family: var(--f-cond); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
 .chat.viejo { opacity: .75; margin-top: 6px; } .chat-noche { color: var(--tenue); font-size: 12px; }
 .costo-dia { display: block; margin-top: 4px; color: var(--hivis); font-family: var(--f-mono); font-size: 12.5px; }
+.cab { position: relative; }
+.av-btn { position: absolute; top: 0; right: 0; z-index: 2; padding: 0; border: 2px solid var(--hivis); border-radius: 50%; background: none; width: 46px; height: 46px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+.av-btn .cara { width: 100%; height: 100%; border-radius: 50%; }
+.cab .empresa, .cab > .rotulo { padding-right: 52px; }
+.cara-yo svg { transform: none; }
+.yo-av { display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; align-items: center; background: rgba(20,30,40,.78); border: 1px solid var(--linea); border-radius: 10px; padding: 8px 10px; margin-bottom: 12px; }
+.yo-av .cara { width: 48px; height: 48px; border-radius: 50%; }
+.yo-av span { display: block; color: var(--tenue); font-size: 13px; }
+.av-prev { width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 40%, #3a5160, #1a262f); border: 3px solid var(--hivis); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+.av-prev svg { width: 100%; height: 100%; display: block; }
+.av-fila { display: grid; gap: 6px; }
+.av-fila > b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
+.av-fila > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.av-op { position: relative; font: inherit; font-size: 14px; color: var(--acero); background: var(--panel); border: 2px solid var(--linea); border-radius: 999px; padding: 6px 12px; min-height: 36px; }
+.av-op.color { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; }
+.av-op.color i { width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+.av-op[aria-pressed="true"] { border-color: var(--hivis); box-shadow: 0 0 0 2px rgba(255,138,31,.35); color: #fff; }
+.av-op:disabled { opacity: .45; }
+.av-op b { position: absolute; right: -4px; top: -6px; font-size: 11px; }
+.cara-yo.en-parte { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--hivis); flex: none; align-self: center; }
 /* Barra de zonas compacta: una sola tira con nombre y µm en una línea y una línea de energía debajo. */
 .zonas { gap: 0; background: rgba(13,20,27,.82); border: 1px solid var(--linea); border-radius: 10px; padding: 3px; }
 .zonas button { background: none; border: 0; border-radius: 7px; padding: 3px 6px 4px; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 4px; position: relative; }
@@ -404,7 +424,7 @@ details.plegable > .dentro { display: grid; gap: 10px; padding: 0 10px 10px; }
 .duelo .barra.rival div { background: var(--mal); }
 
 /* Parte: nota, medallas, fotos */
-.parte-cab { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.parte-cab { display: grid; grid-template-columns: auto auto 1fr; gap: 14px; align-items: center; }
 .nota-grande { width: 78px; height: 78px; border-radius: 12px; border: 3px solid var(--c); color: var(--c); background: var(--panel); display: grid; place-items: center; font-family: var(--f-display); font-size: 38px; animation: sello .5s ease-out; }
 @keyframes sello { 0% { transform: scale(2.2) rotate(-12deg); opacity: 0; } 70% { transform: scale(.92) rotate(3deg); opacity: 1; } 100% { transform: none; } }
 .medallas { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; }
@@ -2294,11 +2314,11 @@ const piezas = {};
 const VISTAS = {};
 
 // Una persona sencilla con brazos: los de la cuadrilla raspan, el gerente mira el reloj, El Cuñado presume su uniforme.
-function persona(color, tipo) {
+function persona(color, tipo, op = {}) {
   const gerente = tipo === true || tipo === 'gerente', cunado = tipo === 'cunado';
   const g = new T.Group();
-  const piel = new T.MeshStandardMaterial({ color: 0xc8956b, roughness: .8 });
-  const ropa = new T.MeshStandardMaterial({ color: gerente ? 0xeeeeee : cunado ? 0xb3261e : 0x29425a, roughness: .9 });
+  const piel = new T.MeshStandardMaterial({ color: op.piel || 0xc8956b, roughness: .8 });
+  const ropa = new T.MeshStandardMaterial({ color: op.ropa || (gerente ? 0xeeeeee : cunado ? 0xb3261e : 0x29425a), roughness: .9 });
   const pierna = new T.MeshStandardMaterial({ color: cunado ? 0x3a1210 : 0x1d2228, roughness: .9 });
   const p1 = new T.Mesh(new T.CylinderGeometry(.07, .07, .8, 8), pierna); p1.position.set(-.09, .4, 0); g.add(p1);
   const p2 = p1.clone(); p2.position.x = .09; g.add(p2);
@@ -2727,6 +2747,7 @@ function construirNoche(orden) {
   piezas.gente = [];
   const equipo = orden ? orden.equipo : [{ color: COMPANEROS.beto.color }];
   equipo.forEach((m, i) => { const p = persona(m.principal && look('casco').c ? look('casco').c : m.color, false); p.position.set(-lineW / 2 - .8 + (i % 2) * .5, 0, .2 + i * .45); p.rotation.y = .6; mundo.add(p); piezas.gente.push(p); });
+  piezas.lineW = lineW; piezas.yo = null; aplicarYo3D();
   piezas.gerente = persona(0, true); piezas.gerente.position.set(2.9, 0, 1.3); piezas.gerente.rotation.y = -1; piezas.gerente.visible = !!(orden && orden.eventos.includes('gerente')); mundo.add(piezas.gerente);
   piezas.rival = null;
   if (orden && orden.duelo) { piezas.rival = persona('#b3261e', 'cunado'); piezas.rival.position.set(Math.min(lineW / 2 + .7, 3.1), 0, .45); mundo.add(piezas.rival); }
@@ -5856,6 +5877,111 @@ function caraSVG(nombre) {
   const ancho = esp === 'chuy' ? 13 : 11;
   return `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 40q2-9 14-9t14 9z" fill="rgba(0,0,0,.25)"/>${pre}<ellipse cx="20" cy="22" rx="${ancho}" ry="12" fill="${piel}"/><ellipse cx="${20 - ancho}" cy="23" rx="1.8" ry="2.6" fill="${piel}"/><ellipse cx="${20 + ancho}" cy="23" rx="1.8" ry="2.6" fill="${piel}"/>${ojos}${boca}${post}</svg>`;
 }
+// ---- Tu personaje: avatar que eliges al empezar (y cambias en el Taller). Sirve para cualquiera: no hay que elegir género.
+const AV = {
+  piel: ['#f6d2b3', '#f1c7a1', '#dcaa80', '#bf8660', '#8f5c3d', '#5f3b28'],
+  pelo: [['corto', 'Corto', 'Short'], ['largo', 'Largo', 'Long'], ['chongo', 'Chongo', 'Bun'], ['rizado', 'Rizado', 'Curly'], ['rapado', 'Rapado', 'Buzz cut'], ['coleta', 'Coleta', 'Ponytail'], ['sin', 'Sin pelo', 'Bald']],
+  colorPelo: ['#1d1a17', '#3b2a1e', '#6b4a2b', '#b9772f', '#e0c068', '#9c9c9c', '#c0392b', '#3a7bd5'],
+  rostro: [['nada', 'Nada', 'Nothing'], ['bigote', 'Bigote', 'Mustache'], ['barba', 'Barba', 'Beard'], ['pecas', 'Pecas', 'Freckles'], ['tresdias', 'Barba de 3 días', '3-day stubble']],
+  expresion: [['serio', 'Serio', 'Serious'], ['media', 'Media sonrisa', 'Half smile'], ['confiado', 'Ceja arriba', 'Raised brow'], ['cansado', 'Turno de 12 h', '12-hour shift']],
+  detalle: [['nada', 'Nada', 'Nothing'], ['grasa', 'Mancha de grasa', 'Grease smudge'], ['curita', 'Curita', 'Band-aid'], ['lapiz', 'Lápiz en la oreja', 'Pencil on ear'], ['audifonos', 'Audífonos', 'Earbuds', 'combo']],
+  lentes: [['nada', 'Sin lentes', 'No glasses'], ['redondos', 'Redondos', 'Round'], ['cuadrados', 'Cuadrados', 'Square'], ['sol', 'De sol', 'Sunglasses', 'notaA']],
+  casco: [['#ffd23f'], ['#ff8a1f'], ['#f4f6f8'], ['#2a9df4'], ['#2e9e5b'], ['#ff7ab8'], ['#2a2a2e', 'duelo'], ['#ffcc33', 'espejo', 'oro'], [null]],
+  uniforme: ['#29425a', '#5a6570', '#2e6b4a', '#7a2638', '#1d1f22', '#c25a12'],
+};
+const AV_N = { expresion: ['Cara que pones', 'Expression'], detalle: ['Detalle', 'Detail'], piel: ['Piel', 'Skin'], pelo: ['Peinado', 'Hair'], colorPelo: ['Color de pelo', 'Hair color'], rostro: ['Barba, bigote o pecas', 'Facial hair & freckles'], lentes: ['Lentes', 'Glasses'], casco: ['Casco', 'Hard hat'], uniforme: ['Uniforme', 'Uniform'] };
+const MEDALLA_AV = { combo: ['Llega a un combo grande', 'Reach a big combo'], notaA: ['Saca una A', 'Get an A'], duelo: ['Gánale un duelo a El Cuñado', 'Beat El Cuñado in a duel'], espejo: ['Deja todo como espejo', 'Leave everything mirror-clean'] };
+// Partidas viejas: un personaje que sale del nombre (siempre el mismo) hasta que lo cambies.
+function avatarDe() {
+  if (S.avatar) return { expresion: 0, detalle: 0, ...S.avatar };
+  const h = hashCara(S.jugador || 'Hood');
+  return { piel: h % 6, pelo: (h >> 3) % 6, colorPelo: (h >> 6) % 4, rostro: (h >> 9) % 4 === 1 ? 1 : 0, lentes: (h >> 11) % 4 === 0 ? 1 : 0, casco: 0, uniforme: 0, expresion: 0, detalle: 0 };
+}
+const avLibre = (k, i) => { const op = AV[k][i], m = Array.isArray(op) ? (k === 'casco' ? op[1] : op[3]) : null; return !m || !!(S.medallas && S.medallas[m]); };
+// Estilo de ilustración (no de caricatura): mandíbula, cuello, cejas, ojeras de turno nocturno y el chaleco reflejante.
+// El humor va en los detalles: la mancha de grasa, la curita, el lápiz en la oreja.
+const tono2 = (hex, f) => { const n = parseInt(hex.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255].map(v => Math.round(clamp(f < 0 ? v * (1 + f) : v + (255 - v) * f, 0, 255))); return '#' + c.map(v => v.toString(16).padStart(2, '0')).join(''); };
+function avatarSVG(a) {
+  a = a || avatarDe();
+  const piel = AV.piel[a.piel] || AV.piel[1], sombra = tono2(piel, -.22), pelo = AV.colorPelo[a.colorPelo] || AV.colorPelo[0], ceja = tono2(pelo, -.15);
+  const est = (AV.pelo[a.pelo] || AV.pelo[0])[0], casco = (AV.casco[a.casco] || AV.casco[0])[0], ropa = AV.uniforme[a.uniforme] || AV.uniforme[0];
+  const r = (AV.rostro[a.rostro] || AV.rostro[0])[0], l = (AV.lentes[a.lentes] || AV.lentes[0])[0];
+  const ex = (AV.expresion[a.expresion] || AV.expresion[0])[0], det = (AV.detalle[a.detalle] || AV.detalle[0])[0];
+  const tapa = !!casco;
+  let atras = '', delante = '';
+  if (est === 'largo') atras = `<path d="M27 46C25 22 37 13 50 13s25 9 23 33l3 30H64l-1-22H37l-1 22H24z" fill="${pelo}"/>`;
+  if (est === 'coleta') atras = `<path d="M66 30c12 4 14 20 8 32-2-8-5-13-10-16z" fill="${pelo}"/>`;
+  if (est === 'chongo' && !tapa) atras = `<ellipse cx="50" cy="12" rx="9" ry="7.5" fill="${pelo}"/>`;
+  if (!tapa || est === 'largo' || est === 'coleta') {
+    if (est === 'corto') delante = `<path d="M29 42c-1-17 9-26 21-26 13 0 22 8 21 24-4-8-10-11-19-11-7 0-12-3-14-6-2 6-6 12-9 19z" fill="${pelo}"/>`;
+    if (est === 'largo' || est === 'coleta' || est === 'chongo') delante = `<path d="M29 42c-1-17 9-26 21-26s22 9 21 26c-3-8-9-14-21-15-10 1-17 6-21 15z" fill="${pelo}"/>`;
+    if (est === 'rizado') delante = `<g fill="${pelo}">${[[31, 34], [35, 25], [42, 19], [50, 17], [58, 19], [65, 25], [69, 34], [38, 29], [62, 29], [50, 24]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7"/>`).join('')}</g>`;
+    if (est === 'rapado') delante = `<path d="M30 40c0-15 9-22 20-22s20 7 20 22c-4-7-11-10-20-10s-16 3-20 10z" fill="${pelo}" opacity=".5"/>`;
+  }
+  // Ojos según la cara que pongas: cansado (párpado caído), confiado (una ceja arriba), media sonrisa, serio.
+  const parp = ex === 'cansado' ? 2.2 : 0;
+  const ojo = (x) => `<path d="M${x - 5} 45q5-4 10 0q-5 3.5-10 0z" fill="#f4efe6"/><circle cx="${x}" cy="${45 + parp * .2}" r="2.3" fill="#2a1d15"/><circle cx="${x + .7}" cy="${44.3}" r=".6" fill="#fff"/>${parp ? `<path d="M${x - 5.3} 44.2q5.3-3.6 10.6 0v-1.6h-10.6z" fill="${piel}"/>` : ''}<path d="M${x - 5} 45q5-4 10 0" stroke="${tono2(piel, -.45)}" stroke-width="1.1" fill="none"/>`;
+  const ojos = l === 'sol' ? '' : ojo(41) + ojo(59) + `<path d="M37 49.5q4 2 8 0M55 49.5q4 2 8 0" stroke="${sombra}" stroke-width="1" fill="none" opacity="${ex === 'cansado' ? .9 : .45}"/>`;
+  const cejas = ex === 'confiado' ? `<path d="M35 39q6-3.5 11-1" stroke="${ceja}" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M54 35.5q6-4 11 0" stroke="${ceja}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`
+    : ex === 'cansado' ? `<path d="M35 39.5q6-1.5 11 .5M54 40q6-2 11-.5" stroke="${ceja}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`
+    : `<path d="M35 39q6-2.5 11-.5M54 38.5q6-2 11 .5" stroke="${ceja}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  const boca = ex === 'media' ? `<path d="M44 60q6 2.5 12-1.5" stroke="#6b2f26" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+    : ex === 'confiado' ? `<path d="M44 60.5q5 .5 9-.5q2-.5 3.5-2.5" stroke="#6b2f26" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+    : ex === 'cansado' ? `<path d="M45 61q5-1.5 10 0" stroke="#6b2f26" stroke-width="1.8" fill="none" stroke-linecap="round"/>`
+    : `<path d="M44.5 60.5h11" stroke="#6b2f26" stroke-width="1.8" stroke-linecap="round"/>`;
+  const vello = (r === 'barba' ? `<path d="M31 47c0 14 7 24 19 24s19-10 19-24c-2 7-5 10-8 10-3-3-6-4-11-4s-8 1-11 4c-3 0-6-3-8-10z" fill="${pelo}"/>` : '')
+    + (r === 'tresdias' ? `<path d="M32 50c1 12 8 19 18 19s17-7 18-19c-3 6-8 8-18 8s-15-2-18-8z" fill="${pelo}" opacity=".28"/>` : '')
+    + (r === 'bigote' || r === 'barba' ? `<path d="M41 56.5q9-5 18 0q-4 3-9 1q-5 2-9-1z" fill="${pelo}"/>` : '')
+    + (r === 'pecas' ? `<g fill="${tono2(piel, -.35)}" opacity=".7">${[[36, 51], [39, 53], [35, 54], [64, 51], [61, 53], [65, 54], [47, 49], [53, 49]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".9"/>`).join('')}</g>` : '');
+  const lentes = (l === 'redondos' ? `<g fill="none" stroke="#2b2b2b" stroke-width="1.6"><circle cx="41" cy="45" r="6.5"/><circle cx="59" cy="45" r="6.5"/><path d="M47.5 45h5M34.5 44l-4-1M65.5 44l4-1"/></g>` : '')
+    + (l === 'cuadrados' ? `<g fill="none" stroke="#2b2b2b" stroke-width="1.6"><rect x="34" y="40" width="13.5" height="10" rx="2"/><rect x="52.5" y="40" width="13.5" height="10" rx="2"/><path d="M47.5 44.5h5M34 43.5l-4-1M66 43.5l4-1"/></g>` : '')
+    + (l === 'sol' ? `<g fill="#14181b" stroke="#14181b" stroke-width="1.4"><path d="M33 41h14.5v3.5q-1 6-7.3 6T33 44.5z"/><path d="M52.5 41H67v3.5q-1 6-7.2 6T52.5 44.5z"/><path d="M47.5 43h5M33 42.5l-3-1M67 42.5l3-1" fill="none"/></g><path d="M36 43.5l4-1.2" stroke="#fff" stroke-width="1.2" opacity=".55"/>` : '');
+  const detalle = (det === 'grasa' ? `<path d="M60 55q5-2 8 1q-2 3-6 2.5q-3 .5-2-3.5z" fill="#2b1a0c" opacity=".75"/><path d="M28 86q4-3 7 0" stroke="#2b1a0c" stroke-width="2.4" opacity=".6"/>` : '')
+    + (det === 'curita' ? `<g transform="rotate(-18 58 31)"><rect x="51" y="28.5" width="14" height="5" rx="2.5" fill="#e8c39a" stroke="#c9a173" stroke-width=".6"/><rect x="56" y="28.5" width="4" height="5" fill="#d9b088"/><circle cx="53.5" cy="31" r=".5" fill="#c9a173"/><circle cx="62.5" cy="31" r=".5" fill="#c9a173"/></g>` : '')
+    + (det === 'lapiz' ? `<g transform="rotate(-62 70 44)"><rect x="60" y="42" width="20" height="3.6" fill="#f2c230"/><path d="M80 42l4.5 1.8-4.5 1.8z" fill="#e8c9a0"/><rect x="58" y="42" width="2.5" height="3.6" fill="#e78a9b"/></g>` : '')
+    + (det === 'audifonos' ? `<path d="M30 49q-5 12 2 24M70 49q5 12-2 24" stroke="#f2f2f2" stroke-width="1.3" fill="none"/><circle cx="30.5" cy="48" r="2.3" fill="#f2f2f2"/><circle cx="69.5" cy="48" r="2.3" fill="#f2f2f2"/>` : '');
+  const oro = casco && (AV.casco[a.casco] || [])[2];
+  const sombrero = casco ? `<path d="M27 36c0-16 10-25 23-25s23 9 23 25z" fill="${casco}"/><path d="M50 11v25" stroke="${tono2(casco, -.18)}" stroke-width="5"/><path d="M38 14q-6 8-7 20" stroke="${tono2(casco, .35)}" stroke-width="2.2" fill="none" opacity=".7"/><rect x="21" y="33.5" width="58" height="5.5" rx="2.7" fill="${tono2(casco, -.08)}"/>${oro ? '<path d="M33 18l3 4M64 16l-2 4" stroke="#fff" stroke-width="2" opacity=".85"/>' : ''}` : '';
+  const ini = esc((jugador() || '?').trim()[0] || '?').toUpperCase();
+  return `<svg viewBox="12 7 76 76" aria-hidden="true">${atras}`
+    + `<path d="M8 100c3-17 16-24 42-24s39 7 42 24z" fill="${ropa}"/>`
+    + `<path d="M22 100c2-11 9-18 20-21l8 9 8-9c11 3 18 10 20 21z" fill="${tono2(ropa, -.25)}" opacity=".55"/>`
+    + `<path d="M17 88h18M65 88h18" stroke="#dfe7ea" stroke-width="3.2"/><rect x="58" y="77" width="12" height="6.5" rx="1.2" fill="#eef2f4"/><text x="64" y="82.2" font-size="6" font-weight="700" text-anchor="middle" fill="#1d2a33" font-family="Barlow Condensed, sans-serif">${ini}</text>`
+    + `<path d="M42 64v14q8 6 16 0V64z" fill="${sombra}"/>`
+    + `<ellipse cx="30" cy="47" rx="3.6" ry="5.5" fill="${sombra}"/><ellipse cx="70" cy="47" rx="3.6" ry="5.5" fill="${sombra}"/>`
+    + `<path d="M30 44c0-17 9-27 20-27s20 10 20 27c0 15-8 26-20 27-12-1-20-12-20-27z" fill="${piel}"/>`
+    + `<path d="M59 19c8 4 11 13 11 25 0 15-8 26-20 27 9-4 14-14 14-27 0-11-2-19-5-25z" fill="${sombra}" opacity=".45"/>`
+    + `${delante}${cejas}${ojos}<path d="M50 46q-2.5 6-1.5 8.5q1.5 1.2 4 .2" stroke="${tono2(piel, -.38)}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`
+    + `${vello}${boca}${lentes}${detalle}${sombrero}</svg>`;
+}
+const caraYo = (clase = '') => `<div class="cara con-cara cara-yo ${clase}" style="background:#24343f" title="${esc(jugador())}">${avatarSVG()}</div>`;
+function pantallaAvatar(listo, nueva_) {
+  const A = { ...avatarDe() };
+  const opcion = (k, i) => {
+    const op = AV[k][i], libre = avLibre(k, i), m = Array.isArray(op) ? (k === 'casco' ? op[1] : op[3]) : null;
+    const color = typeof op === 'string' ? op : k === 'casco' ? op[0] : null;
+    const cont = color ? `<i style="background:${color}"></i>` : k === 'casco' ? '🚫' : `${L(op[1], op[2])}`;
+    const titulo = !libre && m ? L(`Se gana: ${MEDALLA_AV[m][0]}`, `Unlock: ${MEDALLA_AV[m][1]}`) : (k === 'casco' && !color ? L('Sin casco', 'No hard hat') : '');
+    return `<button class="av-op ${color ? 'color' : ''}" data-av="${k}:${i}" aria-pressed="${A[k] === i}" ${libre ? '' : 'disabled'} title="${esc(titulo)}">${cont}${libre ? '' : '<b>🔒</b>'}</button>`;
+  };
+  pantalla(`<div class="rotulo">${L('Tu personaje', 'Your character')}<span>${esc(jugador())}</span></div>
+    <div class="av-prev">${avatarSVG(A)}</div>
+    ${Object.keys(AV).map(k => `<div class="av-fila"><b>${L(...AV_N[k])}</b><div>${AV[k].map((_, i) => opcion(k, i)).join('')}</div></div>`).join('')}
+    <p class="nota">${L('Algunas piezas se ganan con logros (🔒). Puedes cambiarlo cuando quieras en el Taller.', 'Some pieces are earned with awards (🔒). You can change it anytime in the Shop.')}</p>
+    <div class="acciones"><button class="btn prim" id="avListo">${nueva_ ? L('¡A trabajar!', 'Let\'s work!') : L('Listo', 'Done')}</button><button class="btn" id="avAzar">🎲 ${L('Al azar', 'Random')}</button></div>`);
+  const pintar = () => { P.querySelector('.av-prev').innerHTML = avatarSVG(A); P.querySelectorAll('[data-av]').forEach(b => { const [k, i] = b.dataset.av.split(':'); b.setAttribute('aria-pressed', A[k] === +i); }); };
+  P.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { const [k, i] = b.dataset.av.split(':'); A[k] = +i; tono(660 + 40 * +i, .05, .04, 'triangle'); vibrar(8); pintar(); });
+  $('#avAzar').onclick = () => { for (const k of Object.keys(AV)) { const libres = AV[k].map((_, i) => i).filter(i => avLibre(k, i)); A[k] = uno(libres); } tono(880, .06, .05, 'triangle'); pintar(); };
+  $('#avListo').onclick = () => { S.avatar = { ...A }; guardar(); aplicarYo3D(); sDing(); listo(); };
+}
+// Tu muñeco en la cocina, con tu piel, tu uniforme y tu casco.
+function aplicarYo3D() {
+  if (!mundo) return;
+  if (piezas.yo) { mundo.remove(piezas.yo); piezas.yo = null; }
+  const a = avatarDe(), casco = (AV.casco[a.casco] || AV.casco[0])[0];
+  const p = persona(casco || AV.colorPelo[a.colorPelo], false, { piel: AV.piel[a.piel], ropa: AV.uniforme[a.uniforme] });
+  p.position.set(-(piezas.lineW || 2) / 2 - 1.35, 0, 1.05); p.rotation.y = .75; mundo.add(p); piezas.yo = p;
+}
 const cara = (col, letra, nombre) => `<div class="cara con-cara" style="background:${col}" title="${esc(nombre || '')}">${caraSVG(nombre || letra + col)}</div>`;
 let tab = 'noche';
 
@@ -5918,7 +6044,7 @@ function metaFinal() {
 }
 function cabecera() {
   const need = xpNivel(S.nivel), aprendiz = S.fase === 'aprendiz';
-  return `<div class="cab">${aprendiz ? `<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div><div class="calle-aprendiz" title="${L('Una camioneta roja, siempre estacionada al fondo de la calle', 'A red van, always parked at the end of the street')}">${furgo('Grasa Brava', '#2e9e5b', 0)}${furgo('El Cuñado', '#d7382b', 0).replace('class="furgo"', 'class="furgo roja"')}</div>`
+  return `<div class="cab"><button class="av-btn" id="miAvatar" aria-label="${L('Tu personaje', 'Your character')}">${caraYo()}</button>${aprendiz ? `<div class="rotulo">Hood Cleaners<span>The Night Shift</span></div><div class="calle-aprendiz" title="${L('Una camioneta roja, siempre estacionada al fondo de la calle', 'A red van, always parked at the end of the street')}">${furgo('Grasa Brava', '#2e9e5b', 0)}${furgo('El Cuñado', '#d7382b', 0).replace('class="furgo"', 'class="furgo roja"')}</div>`
       : `<div class="empresa">${S.cartel && ciudad() === 1 ? `<button class="cartel-cunado" id="quitarCartel" title="${L('Quitar el cartel', 'Remove the sticker')}">${esc(RIVAL).toUpperCase()}</button>` : ''}${furgo(S.empresa.nombre, S.empresa.color, S.etapa)}<div class="rotulo">${esc(S.empresa.nombre)}<span>${nEtapa(S.etapa)}</span></div></div>`}
     <div class="datos">
       <div class="dato"><i>${L('Noche', 'Night')}</i><b>${S.noche}</b>${aprendiz ? `<small>${L('Aprendiz', 'Apprentice')}: ${Math.min(S.noche, APRENDIZ)} ${L('de', 'of')} ${APRENDIZ}</small>` : ''}</div>
@@ -5955,6 +6081,8 @@ function pantallaCamioneta() {
   else if (enMenu) { const nav = P.querySelector('.tabs'); if (nav && yAntes > nav.offsetTop) P.scrollTop = nav.offsetTop - 8; }   // al cambiar de pestaña: a su principio, no al de la pantalla
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
+  $('#miAvatar').onclick = () => pantallaAvatar(pantallaCamioneta);
+  const ea = $('#editarAv'); if (ea) ea.onclick = () => pantallaAvatar(pantallaCamioneta);
   $('#abrirArbol').onclick = () => pantallaArbol(pantallaCamioneta);   // la frase larga se abre al tocarla
   enlazar();
 }
@@ -6343,6 +6471,10 @@ function paredBeto() {
     <p class="nota">${L('Beto deja su mano en cada campana que limpia contigo. Dice que es su firma. El inspector ya se acostumbró.', 'Beto leaves his hand on every hood he cleans with you. He says it\'s his signature. The inspector got used to it.')}</p>`;
 }
 function vTaller() {
+  const yoCard = `<div class="persona yo-av">${caraYo()}<div><b>${esc(jugador())}</b><span>${L('Tu personaje: piel, peinado, lentes, casco y uniforme.', 'Your character: skin, hair, glasses, hard hat and uniform.')}</span></div><button class="btn peq" id="editarAv">${L('Cambiar', 'Change')}</button></div>`;
+  return yoCard + vTallerCosas();
+}
+function vTallerCosas() {
   const bloqueadas = S.fase === 'empresa' ? [[L('Cañón de espuma y rasqueta eléctrica', 'Foam cannon and electric scraper'), 1], [L('Hidrolavadora de vapor y robot de ductos', 'Steam pressure washer and duct robot'), 2], [L('Turbo para el robot', 'Robot turbo'), 3]].filter(([, e]) => S.etapa < e) : [];
   if (S.fase === 'aprendiz') return `<div class="cita"><b>Don Rigo</b>${L('Las herramientas son mías y son las mejores: rasqueta de carburo, hidrolavadora, migdaleadora orbital, de todo. Disfrútalas mientras trabajes conmigo. Cuando tengas tu empresa, te compras las tuyas.', 'The tools are mine and they are the best: carbide scraper, pressure washer, orbital polisher, everything. Enjoy them while you work for me. When you have your own company, you buy your own.')}</div>`;
   const items = TIENDA.filter(t => t.ok(S));
@@ -6912,7 +7044,7 @@ function pantallaParte() {
   const nLook = (k, g, op) => `${L(g.n, EN.look[k])}: ${L(op.n, EN.look[op.id])}`;
   const desbloq = [...nuevas.flatMap(id => Object.entries(LOOK).flatMap(([k, g]) => g.ops.filter(op => op.m === id).map(op => nLook(k, g, op)))),
     ...Object.entries(LOOK).flatMap(([k, g]) => g.ops.filter(op => op.e && op.e > estrellasAntes && op.e <= S.estrellas).map(op => nLook(k, g, op)))];
-  pantalla(`<div class="parte-cab"><div class="nota-grande" style="--c:${COL_NOTA[n]}" aria-label="Nota ${n}">${n}</div>
+  pantalla(`<div class="parte-cab">${caraYo('en-parte')}<div class="nota-grande" style="--c:${COL_NOTA[n]}" aria-label="Nota ${n}">${n}</div>
       <div class="rotulo">${aprobado ? (espejo ? L('Metal desnudo', 'Bare metal') : L('Aprobado', 'Passed')) : L('No pasa', 'Failed')}<span>${L('Parte de', 'Report for')} ${esc(o.nombre)}</span></div></div>
     ${vozExito ? `<p class="pista voz-radio">📻 Radio Grasa FM: «${esc(textoVoz('buho-exito'))}»</p>` : ''}
     ${records.length ? `<div class="chips">${records.map(r => `<span class="chip naranja">${L('¡Récord!', 'Record!')} ${esc(r)}</span>`).join('')}</div>` : ''}
@@ -7163,7 +7295,8 @@ function pantallaNombre(nueva_) {
   ok.onclick = () => {
     const n = inp.value.trim(); if (!n) return;
     if (nueva_) { nueva(); tab = 'noche'; }
-    S.jugador = n; guardar(); pantallaCamioneta();
+    S.jugador = n; guardar();
+    if (nueva_) pantallaAvatar(pantallaCamioneta, true); else pantallaCamioneta();
   };
   $('#volverJ').onclick = pantallaInicio;
 }
