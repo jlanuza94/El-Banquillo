@@ -44,7 +44,7 @@ async function abrir(save, { idioma = 'es', continuar = true } = {}) {
 // Juega la noche elegida: prepara, limpia por código hasta dejarla como se pida y llama al inspector (sin la revisión animada).
 async function jugarNoche(p, { cocina = 'burger', limpio = 1, orden = null, preparar = true, durante = null } = {}) {
   await p.evaluate(([cocina, orden]) => { const H = __hc.S.hoy; if (cocina) { const o = __hc.genOrden(cocina); o.firmado = true; o.pedido = null; o.duelo = false; o.ayud = 0; H.ordenes = [o]; H.sel = 0; } else if (orden !== null) H.sel = orden;
-    H.ordenes[H.sel].firmado = true; H.ordenes[H.sel].eventos = []; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); }, [cocina, orden]);
+    H.ordenes[H.sel].firmado = true; H.ordenes[H.sel].eventos = []; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); }, [cocina, orden]);
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   if (preparar) await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }

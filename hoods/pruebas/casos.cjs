@@ -1,6 +1,8 @@
 // Pruebas de Hood Cleaners. Uso: node hoods/pruebas/casos.cjs [parte-del-nombre]
 // Abren el juego construido en Chromium y comprueban que lo importante sigue funcionando y que no hay errores.
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
+// El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
+const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
 global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
 
 caso('arranque y menú en español e inglés', async () => {
@@ -44,7 +46,7 @@ caso('partida vieja sin campos nuevos', async () => {
 
 caso('turno a medias: se guarda y se retoma', async () => {
   const p = await abrir(partida());
-  await p.evaluate(() => { const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; const H = __hc.S.hoy; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.guardar(); __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; const H = __hc.S.hoy; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.guardar(); __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
   await p.evaluate(() => { __hc.M.eventos = []; Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });   // la app se va al fondo
@@ -56,7 +58,7 @@ caso('turno a medias: se guarda y se retoma', async () => {
 
 caso('revisión del inspector y parte', async () => {
   const p = await abrir(partida());
-  await p.evaluate(() => { const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; const H = __hc.S.hoy; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; const H = __hc.S.hoy; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
   await p.evaluate(() => { const M = __hc.M; M.eventos = []; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.sucio = true; })); M.etapa = 'migdalear'; __hc.pintarHud(true); document.querySelector('#siguiente').click(); });
@@ -109,7 +111,7 @@ caso('la Residencia Oficial: seguridad, éxito y contratos de gobierno', async (
   for (const [idioma, limpio] of [['es', 1], ['en', .3]]) {
     const p = await abrir(base, { idioma });
     afirmar(await p.evaluate(() => !!__hc.S.hoy.ordenes[0].residencia), 'no apareció la misión tras la licitación');
-    await p.evaluate(() => { const H = __hc.S.hoy; H.sel = 0; H.dia = null; H.historia = null; __hc.guardar(); __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+    await p.evaluate(() => { const H = __hc.S.hoy; H.sel = 0; H.dia = null; H.historia = null; __hc.guardar(); __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
     await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
     await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
     for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
@@ -138,7 +140,7 @@ caso('la Residencia Oficial: seguridad, éxito y contratos de gobierno', async (
 
 caso('tu vida: estilo, gastos en el parte y renta semanal', async () => {
   const p = await abrir(partida({ noche: 20 }));
-  await p.click('[data-tab="cuadrilla"]'); await p.click('[data-vida="lujo"]'); await p.click('[data-tab="noche"]');
+  await p.click('.tabs [data-tab="cuadrilla"]'); await p.click('[data-vida="lujo"]'); await p.click('.tabs [data-tab="noche"]');
   afirmar(await p.evaluate(() => __hc.S.vida === 'lujo'), 'no se guardó el estilo de vida');
   let r = await jugarNoche(p, { cocina: 'cafe' });
   afirmar(/Tu vida \(de lujo\)[^\n]*\s+−\$200/.test(r.texto), 'falta el gasto diario de lujo en el parte');
@@ -148,9 +150,9 @@ caso('tu vida: estilo, gastos en el parte y renta semanal', async () => {
   afirmar(/semanal\)?\s+−\$700/.test(r.texto), 'falta la renta semanal en la noche 28');
   // dolor de muela: la noche rinde menos
   await p.evaluate(() => { __hc.pantallaCamioneta(); const H = __hc.S.hoy; H.dia = { id: 'muela', res: '' }; __hc.pantallaCamioneta(); });
-  await p.click('[data-tab="noche"]'); await p.evaluate(() => document.querySelector('[data-dia="1"]').click());
+  await p.click('.tabs [data-tab="noche"]'); await p.evaluate(() => document.querySelector('[data-dia="1"]').click());
   afirmar(await p.evaluate(() => __hc.S.hoy.muela === true), 'aguantar la muela no quedó marcado');
-  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   afirmar(await p.evaluate(() => Math.abs(__hc.M.vida - 1.09 * .9) < .001), 'la muela y el estilo no afectan la fuerza: ' + await p.evaluate(() => __hc.M.vida));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -185,7 +187,7 @@ caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', asy
   afirmar(await p.evaluate(() => /Puerto Fritanga/.test(document.querySelector('.meta-final').innerText)), 'la cabecera no habla de Puerto Fritanga');
   const t = await jugarNoche(p, { cocina: 'cafe' });
   afirmar(/Dividendos de Ciudad Comal \(dirige Lupe\)/.test(t.texto), 'no llegaron los dividendos al parte');
-  await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('[data-tab="noche"]');
+  await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('.tabs [data-tab="noche"]');
   await p.click('#viajar'); await p.click('#siViajar');
   const v = await p.evaluate(() => ({ c: __hc.ciudad(), d: __hc.S.dinero, f: __hc.S.fijos, carta: !!document.querySelector('#comprador') }));
   afirmar(v.c === 1 && Math.abs(v.d - 25500) <= 300 && v.f.includes('lupe') && !v.carta, 'volver a Ciudad Comal no funcionó: ' + JSON.stringify(v));
@@ -225,6 +227,7 @@ caso('el Búho de la radio: pistas y la revelación de Don Rigo', async () => {
   await p.evaluate(() => { __hc.S.etapa = 4; __hc.S.licitGanada = 22; __hc.pantallaCamioneta(); });
   afirmar(await p.evaluate(() => /soy yo\. Rigo/.test(document.querySelector('.buho').innerText) && /Tester/.test(document.querySelector('.buho').innerText)), 'la tarjeta de la revelación no está o no usa el nombre del jugador');
   await p.click('#buhoOk');
+  await p.click('.tabs [data-tab="buzon"]');
   const r = await p.evaluate(() => ({ b: __hc.S.buho, chip: document.querySelector('#jefeCorto').innerText, carta: !!document.querySelector('#buhoOk'), album: __hc.S.album }));
   afirmar(r.b && r.b.revelado === 24 && /cabina de Radio Grasa FM/i.test(r.chip) && !/desde el lago:/i.test(r.chip) && !r.carta && r.album.some(a => /Búho/.test(a)), 'la revelación no se guardó: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -240,10 +243,10 @@ caso('la huella de Beto: en la campana, en el parte del inspector y en la pared 
   vista = await p.evaluate(() => window.__huella);
   afirmar(vista.comp === 'beto' && vista.M === 20 && vista.vis, 'Beto no dejó la huella al quedar limpia la campana: ' + JSON.stringify(vista));
   afirmar(await p.evaluate(() => (__hc.S.huellas || []).length === 1 && __hc.S.huellas[0].n === 20), 'la huella no se apuntó: ' + await p.evaluate(() => JSON.stringify([__hc.S.huellas, __hc.S.noche, __hc.M && __hc.M.huella])));
-  await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('[data-tab="taller"]');
+  await p.evaluate(() => __hc.pantallaCamioneta()); await p.click('.tabs [data-tab="taller"]');
   afirmar(await p.evaluate(() => document.querySelectorAll('.pared-beto span').length === 1), 'la pared del taller no muestra la huella');
   // sin Beto no hay huella
-  await p.click('[data-tab="noche"]'); await p.evaluate(() => { __hc.S.hoy.comp = 'lupe'; });
+  await p.click('.tabs [data-tab="noche"]'); await p.evaluate(() => { __hc.S.hoy.comp = 'lupe'; });
   await jugarNoche(p, { cocina: 'cafe', durante: () => { const z = __hc.Z.find(z => z.id === 'campana'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); } });
   afirmar(await p.evaluate(() => __hc.S.huellas.length === 1), 'apareció una huella sin Beto');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -252,7 +255,7 @@ caso('la huella de Beto: en la campana, en el parte del inspector y en la pared 
 caso('objetos con historia: se tocan en la preparación y cambian en la siguiente visita', async () => {
   const p = await abrir(partida());
   const visita = async () => {
-    await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.nombre = 'Café La Esquina'; o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+    await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.nombre = 'Café La Esquina'; o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
     await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
     return p.evaluate(() => ({ n: document.querySelectorAll('.marca.recuerdo').length, rot: __hc.piezas.recuerdos.map(r => +r.mesh.rotation.z.toFixed(2)) }));
   };
@@ -277,7 +280,7 @@ caso('objetos con historia: se tocan en la preparación y cambian en la siguient
 
 // Duelo 2.0: apuesta, hitos (2 de 3) y El Cuñado que reacciona a tu ritmo.
 async function empezarDuelo(p, apostar) {
-  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0 && document.querySelector('.carta[role=dialog] [data-i]'), null, { timeout: 90000 });
   const txt = await p.evaluate(() => document.querySelector('.carta[role=dialog]').innerText);
   await p.evaluate(i => document.querySelector(`.carta[role=dialog] [data-i="${i}"]`).click(), apostar ? 0 : 1);
@@ -362,7 +365,7 @@ caso('El Cuñado desde el principio y el menú con caras e iconos', async () => 
   r = await p.evaluate(() => ({ ico: document.querySelectorAll('.ico-cocina').length, caras: document.querySelectorAll('.cara svg').length, primer: /El Cuñado lo quiere/.test(document.body.innerText) }));
   afirmar(r.ico >= 2 && r.caras >= 3, 'faltan iconos de cocina o caras: ' + JSON.stringify(r));
   // el primer duelo empieza con su escena, sin apuesta
-  await p.evaluate(() => { const H = __hc.S.hoy; const i = H.ordenes.findIndex(o => o.primerDuelo); H.sel = i; H.ordenes[i].firmado = true; H.ordenes[i].eventos = []; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const i = H.ordenes.findIndex(o => o.primerDuelo); H.sel = i; H.ordenes[i].firmado = true; H.ordenes[i].eventos = []; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => document.querySelector('.carta[role=dialog]'), null, { timeout: 90000 });
   const t = await p.evaluate(() => document.querySelector('.carta[role=dialog]').innerText);
   afirmar(/camioneta roja ya está estacionada/.test(t) && !/apuesto/.test(t), 'el primer duelo no tiene su escena: ' + t);
@@ -371,7 +374,7 @@ caso('El Cuñado desde el principio y el menú con caras e iconos', async () => 
 
 caso('tutorial compacto y barras de progreso de las zonas', async () => {
   const p = await abrir(partida({ fase: 'aprendiz', etapa: 0, empresa: null, noche: 1, compPref: 'beto', fijos: [], hoy: null }));
-  await p.evaluate(() => { const H = __hc.S.hoy; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
@@ -395,19 +398,19 @@ caso('tutorial compacto y barras de progreso de las zonas', async () => {
 
 caso('en qué gastar: caprichos con historia e inversiones en Ciudad Comal', async () => {
   const p = await abrir(partida({ etapa: 3, dinero: 80000, noche: 21, sueldos2: true }));
-  await p.click('[data-tab="taller"]');
+  await p.click('.tabs [data-tab="taller"]');
   afirmar(await p.evaluate(() => document.querySelectorAll('[data-capricho]').length === 4), 'no salen los caprichos en el taller');
-  for (const id of ['casa', 'tigres', 'radio', 'taqueria']) { await p.click('[data-tab="taller"]'); await p.click(`[data-capricho="${id}"]`); await p.click('#volverCap'); }
+  for (const id of ['casa', 'tigres', 'radio', 'taqueria']) { await p.click('.tabs [data-tab="taller"]'); await p.click(`[data-capricho="${id}"]`); await p.click('#volverCap'); }
   let r = await p.evaluate(() => ({ d: __hc.S.dinero, c: Object.keys(__hc.S.compras), rep: __hc.S.rep, album: __hc.S.album.length }));
   afirmar(r.d === 80000 - 77000 && r.c.length === 4 && r.rep >= 43 && r.album >= 4, 'los caprichos no se cobraron o no hicieron efecto: ' + JSON.stringify(r));
   await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
   afirmar(await p.evaluate(() => __hc.S.hoy.ordenes.some(o => o.origen === 'Radio')), 'el programa de Don Rigo no trae un trabajo más');
-  await p.evaluate(() => { __hc.S.noche = 28; }); await p.click('[data-tab="noche"]');
+  await p.evaluate(() => { __hc.S.noche = 28; }); await p.click('.tabs [data-tab="noche"]');
   const t = await jugarNoche(p, { cocina: 'cafe' });
   afirmar(/cenas en la taquería de Beto/.test(t.texto) && /de tu casa \(semanal\)/.test(t.texto), 'el parte no refleja la casa o la taquería');
   // inversiones (camino B, ya en el puerto): se pagan con la caja de Ciudad Comal y suben los dividendos
   await p.evaluate(() => { const S = __hc.S; S.legado = { camino: 'B', noche: 20, director: { n: 'Lupe', comp: 'lupe' }, mano: { n: 'Beto', comp: 'beto' } }; __hc.viajar(2, { empresa: { nombre: 'Puerto', color: '#2e9e5b' }, etapa: 1, rep: 10, dinero: 3000, clientes: [], perdidos: [], cuadrilla: [], candidatos: [], fijos: ['beto'], compPref: 'beto', abierta: S.noche, hoy: null, eq: { camioneta: 2 } }); S.ciudades[1].dinero = 20000; __hc.pantallaCamioneta(); });
-  await p.click('[data-tab="taller"]'); await p.click('[data-invertir="flota"]');
+  await p.click('.tabs [data-tab="taller"]'); await p.click('[data-invertir="flota"]');
   r = await p.evaluate(() => ({ c1: __hc.S.ciudades[1].dinero, d: __hc.S.dinero, inv: __hc.S.legado.inversiones }));
   afirmar(r.c1 === 10000 && r.d === 3000 && r.inv.flota, 'la inversión no se pagó con la caja de Ciudad Comal: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -415,7 +418,7 @@ caso('en qué gastar: caprichos con historia e inversiones en Ciudad Comal', asy
 
 caso('duelo que termina antes de arrancar el marcador', async () => {
   const p = await abrir(partida({ compPref: 'solo' }));
-  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => s.d.fill(0))); M.t = M.dur * .5; M.fase = 'turno'; __hc.terminarTurno(); });
   await p.waitForSelector('.nota-grande', { timeout: 60000 });
@@ -424,7 +427,7 @@ caso('duelo que termina antes de arrancar el marcador', async () => {
 
 caso('soplete y gel: cada uno con su ventaja y su punto débil', async () => {
   const p = await abrir(partida({ etapa: 2, compPref: 'solo', eq: { rasqueta: 2, hidro: true, camioneta: 2, flota: 0, soplete: true, gel: true } }));
-  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('asador'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('asador'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
@@ -464,7 +467,7 @@ caso('la saga de El Cuñado: siete capítulos con decisiones y consecuencias', a
   const capitulo = async (prep, op) => {
     await p.evaluate(prep);
     await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
-    await p.evaluate(() => document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }));
+    await alBuzon(p);
     const t = await p.evaluate(() => { const c = document.querySelector('.saga'); return c ? c.innerText : null; });
     if (t === null) throw new Error('no apareció el capítulo: ' + await p.evaluate(() => JSON.stringify(__hc.S.saga)));
     await p.click(`[data-saga="${op}"]`);
@@ -491,7 +494,7 @@ caso('la saga de El Cuñado: siete capítulos con decisiones y consecuencias', a
 });
 caso('la saga: el favor de la carretera regala los filtros en el siguiente duelo', async () => {
   const p = await abrir(partida({ compPref: 'solo', saga: { cap: 4, next: 99, respeto: 3, favor: true } }));
-  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   await p.evaluate(() => { const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   await p.waitForTimeout(1500); await p.evaluate(() => { const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); });
@@ -508,13 +511,14 @@ caso('tu vida jugable: desgaste, qué haces al salir, efectos, gripa y muebles',
   let r = await p.evaluate(() => ({ ...__hc.S.yo }));
   afirmar(r.descanso === 62 && r.pendiente, 'la noche no cansó o no quedó pendiente la decisión: ' + JSON.stringify(r));
   await p.evaluate(() => __hc.pantallaCamioneta());
+  await alBuzon(p);
   afirmar(await p.evaluate(() => document.querySelectorAll('[data-despues]').length === 5), 'no salen las opciones de después del turno');
   await p.click('[data-despues="mama"]');
-  r = await p.evaluate(() => ({ ...__hc.S.yo, d: __hc.S.dinero, card: !!document.querySelector('[data-despues]'), linea: !!document.querySelector('.yo-linea') }));
+  r = await p.evaluate(() => { const card = !!document.querySelector('[data-despues]'); document.querySelector('.tabs [data-tab="noche"]').click(); return { ...__hc.S.yo, d: __hc.S.dinero, card, linea: !!document.querySelector('.yo-linea') }; });
   afirmar(!r.pendiente && r.descanso === 90 && !r.card && r.linea, 'visitar a mamá no hizo efecto: ' + JSON.stringify(r));
   // cansado: menos fuerza en el turno
   await p.evaluate(() => { __hc.S.yo.descanso = 10; });
-  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   afirmar(await p.evaluate(() => Math.abs(__hc.M.vida - 1.03 * .8) < .001), 'el cansancio no baja la fuerza: ' + await p.evaluate(() => __hc.M.vida));
   await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); })); M.t = M.dur * .6; M.fase = 'turno'; __hc.terminarTurno(); });
@@ -523,8 +527,9 @@ caso('tu vida jugable: desgaste, qué haces al salir, efectos, gripa y muebles',
   await p.evaluate(() => { __hc.S.yo.salud = 10; __hc.S.hoy = null; __hc.pantallaCamioneta(); });
   const pend = await p.evaluate(() => !!__hc.S.yo.pendiente);
   await p.evaluate(() => { const H = __hc.S.hoy; H.gripa = null; const o = __hc.genOrden('cafe'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); });
+  await alBuzon(p);
   afirmar(await p.evaluate(() => !!document.querySelector('[data-gripa="doctor"]')), 'no sale la tarjeta de la gripa');
-  await p.evaluate(() => document.querySelector('#salir').click());
+  await p.evaluate(() => (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click());
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   r = await p.evaluate(() => ({ pend: __hc.S.yo.pendiente, ult: __hc.S.yo.ultimo.id, gripa: __hc.S.hoy.gripa }));
   afirmar(pend && !r.pend && r.ult === 'dormir' && r.gripa === 'trabajar', 'salir sin decidir no te mandó a dormir: ' + JSON.stringify(r));
@@ -532,9 +537,9 @@ caso('tu vida jugable: desgaste, qué haces al salir, efectos, gripa y muebles',
   await p.waitForSelector('.nota-grande', { timeout: 60000 });
   // muebles: la cama recupera más
   await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
-  await p.click('[data-tab="cuadrilla"]'); await p.click('[data-mueble="cama"]');
+  await p.click('.tabs [data-tab="cuadrilla"]'); await p.click('[data-mueble="cama"]');
   const antes = await p.evaluate(() => __hc.S.yo.descanso);
-  await p.click('[data-tab="noche"]'); await p.click('[data-despues="dormir"]');
+  await p.click('.tabs [data-tab="buzon"]'); await p.click('[data-despues="dormir"]');
   const desp = await p.evaluate(() => __hc.S.yo.descanso);
   afirmar(await p.evaluate(() => !!__hc.S.yo.muebles.cama) && desp - antes >= 42 + 15 - 1 || desp === 100, 'la cama no ayuda a descansar: ' + antes + ' → ' + desp);
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -545,7 +550,7 @@ caso('arreglos: el turno de un trabajo gigante se guarda y se retoma, y el cálc
   // el cálculo de «Te quedas unos…» menciona el contrato y la racha
   const est = await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.contrato = { conds: ['espejo'], quien: 'protocolo' }; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; H.saga = null; __hc.pantallaCamioneta(); return document.querySelector('.estimado').innerText; });
   afirmar(/si cumples el contrato/.test(est) && /bono de racha/.test(est), 'el cálculo no menciona los bonos: ' + est);
-  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('plaza'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.ayud = []; H.equipos = []; __hc.guardar(); __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('plaza'); o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.ayud = []; H.equipos = []; __hc.guardar(); __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
   await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   for (let i = 0; i < 20 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
@@ -560,16 +565,16 @@ caso('arreglos: el turno de un trabajo gigante se guarda y se retoma, y el cálc
 
 caso('el manual de Don Rigo: páginas según el progreso, avisos e insignia', async () => {
   const p = await abrir(partida({ fase: 'aprendiz', etapa: 0, empresa: null, noche: 1, compPref: 'beto', fijos: [], hoy: null }));
-  let r = await p.evaluate(() => ({ n: __hc.S.manual && Object.keys(__hc.S.manual.avisado).length, badge: (document.querySelector('[data-tab="logros"] .cuenta') || {}).textContent }));
+  let r = await p.evaluate(() => ({ n: __hc.S.manual && Object.keys(__hc.S.manual.avisado).length, badge: (document.querySelector('.tabs [data-tab="logros"] .cuenta') || {}).textContent }));
   afirmar(r.n === 2 && r.badge === '2', 'de aprendiz deberían verse 2 páginas nuevas: ' + JSON.stringify(r));
   await p.evaluate(() => { const S = __hc.S; S.fase = 'empresa'; S.etapa = 3; S.empresa = { nombre: 'Prueba', color: '#2e9e5b' }; S.noche = 20; S.abierta = 10; S.hoy = null; __hc.pantallaCamioneta(); });
-  r = await p.evaluate(() => ({ avisos: __hc.S.hoy.avisos.filter(a => /manual/.test(a)).length, badge: +(document.querySelector('[data-tab="logros"] .cuenta') || {}).textContent }));
+  r = await p.evaluate(() => ({ avisos: __hc.S.hoy.avisos.filter(a => /manual/.test(a)).length, badge: +(document.querySelector('.tabs [data-tab="logros"] .cuenta') || {}).textContent }));
   afirmar(r.avisos === 1 && r.badge >= 6, 'no se añadieron páginas al avanzar: ' + JSON.stringify(r));
-  await p.click('[data-tab="logros"]');
+  await p.click('.tabs [data-tab="logros"]');
   const antes = r.badge;
   await p.evaluate(() => { const d = document.querySelector('[data-pl="man-vida"]'); d.open = true; });
   await p.waitForTimeout(300);
-  r = await p.evaluate(() => ({ visto: !!__hc.S.manual.visto.vida, badge: +(document.querySelector('[data-tab="logros"] .cuenta') || {}).textContent, txt: document.querySelector('[data-pl="man-vida"] .manual-txt').innerText }));
+  r = await p.evaluate(() => ({ visto: !!__hc.S.manual.visto.vida, badge: +(document.querySelector('.tabs [data-tab="logros"] .cuenta') || {}).textContent, txt: document.querySelector('[data-pl="man-vida"] .manual-txt').innerText }));
   afirmar(r.visto && r.badge === antes - 1 && /Descanso/.test(r.txt), 'abrir una página no la marcó como leída: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
@@ -579,7 +584,7 @@ caso('historias de los ayudantes y la freidora', async () => {
   const p = await abrir(partida({ dinero: 3000, compPref: 'solo', fijos: [], cuadrilla: [ay(7, 'Nacho', 'normal')], saga: { cap: 7 }, clientes: [] }));
   // capítulo 1 y 2 de la historia de Nacho (carácter normal: la abuela)
   const cap = async (noche, op) => { await p.evaluate(n => { __hc.S.noche = n; __hc.S.hoy = null; for (let k = 0; k < 20 && !__hc.S.hoy?.ayudHist; k++) { __hc.S.hoy = null; __hc.pantallaCamioneta(); } }, noche);
-    await p.evaluate(() => document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }));
+    await alBuzon(p);
     const t = await p.evaluate(() => (document.querySelector('[data-ayh]') || {}).closest ? document.querySelector('[data-ayh]').closest('.orden').innerText : null);
     if (!t) throw new Error('no apareció la historia del ayudante (noche ' + noche + ')'); await p.click(`[data-ayh="${op}"]`); return t; };
   let t = await cap(21, 1);
@@ -597,12 +602,12 @@ caso('historias de los ayudantes y la freidora', async () => {
 
 caso('el menú no salta arriba al tocar algo', async () => {
   const p = await abrir(partida({ dinero: 5000 }));
-  await p.click('[data-tab="cuadrilla"]');
+  await p.click('.tabs [data-tab="cuadrilla"]');
   const y0 = await p.evaluate(() => { const P = document.querySelector('#pantalla'); P.scrollTop = 600; return P.scrollTop; });
-  await p.click('[data-vida="comodo"]');
+  await p.evaluate(() => document.querySelector('[data-vida="comodo"]').click());   // sin el scroll automático de Playwright
   const y1 = await p.evaluate(() => document.querySelector('#pantalla').scrollTop);
   afirmar(y0 > 300 && Math.abs(y1 - y0) < 5, 'el menú saltó al tocar: ' + y0 + ' → ' + y1);
-  await p.click('[data-tab="taller"]');
+  await p.click('.tabs [data-tab="taller"]');
   const y2 = await p.evaluate(() => { const P = document.querySelector('#pantalla'), nav = P.querySelector('.tabs'); return [P.scrollTop, nav.offsetTop]; });
   afirmar(y2[0] <= y2[1], 'al cambiar de pestaña no se fue al principio de la pestaña: ' + y2);
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -611,6 +616,7 @@ caso('el menú no salta arriba al tocar algo', async () => {
 caso('Don Rigo «el Muchachón» ya no habla desde el lago (también en partidas viejas)', async () => {
   const p = await abrir(partida({ hoy: null }));
   await p.evaluate(() => { __hc.S.hoy.frase = 'Desde el lago: pesqué una bota. Igual que mi primer cliente. ¿Cómo va la empresa?'; __hc.pantallaCamioneta(); });
+  await p.click('.tabs [data-tab="buzon"]');
   const t = await p.evaluate(() => document.querySelector('#jefeCorto').textContent);
   afirmar(/Muchachón/.test(t) && !/lago/i.test(t), 'el aviso de Don Rigo sigue con el lago: ' + t);
   afirmar(!/lago/i.test(await p.evaluate(() => document.body.innerText)), 'queda un lago en el menú');
@@ -636,6 +642,41 @@ caso('voz del locutor: suena si hay mp3 y, si no, todo sigue en texto', async ()
   afirmar(/voz\/es\/buho-revelacion\.mp3$/.test(r.src || '') && r.pausa === false, 'la revelación no suena: ' + JSON.stringify(r));
   await p.evaluate(() => { __hc.VOZ.actual.pause(); __hc.VOZ.actual = null; __hc.S.aj.voz = false; __hc.hablarRadio('com-tigre'); });
   afirmar(await p.evaluate(() => __hc.VOZ.actual === null), 'sonó la voz con el ajuste apagado');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('ducto por tramos, Buzón e imprevistos que cuestan tiempo y dinero', async () => {
+  const p = await abrir(partida({ dinero: 3000, noche: 20, hoy: null, cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, tipo: 'normal' }] }));
+  // Buzón: los mensajes de Don Rigo y del barrio ya no están en Noche
+  let r = await p.evaluate(() => ({ jefe: !!document.querySelector('#jefeCorto'), cuenta: (document.querySelector('.tabs [data-tab="buzon"] .cuenta') || {}).textContent }));
+  afirmar(!r.jefe && +r.cuenta >= 1, 'el Buzón no avisa o los mensajes siguen en Noche: ' + JSON.stringify(r));
+  await p.click('.tabs [data-tab="buzon"]');
+  r = await p.evaluate(() => ({ jefe: !!document.querySelector('#jefeCorto'), visto: __hc.S.hoy.buzonVisto, msgs: document.querySelectorAll('.chat .msg').length }));
+  afirmar(r.jefe && r.visto && r.msgs >= 1, 'el Buzón no muestra los mensajes: ' + JSON.stringify(r));
+  // imprevisto de la cuadrilla: batería muerta → 20 min tarde y $20
+  await p.evaluate(() => { const H = __hc.S.hoy; H.dia = { id: 'bateria', res: '' }; document.querySelector('.tabs [data-tab="noche"]').click(); });
+  const txt = await p.evaluate(() => document.querySelector('.orden.dia').textContent);
+  afirmar(/(Nacho|Lupe|Beto|Chuy) dejó la radio/.test(txt), 'el imprevisto no dice quién fue: ' + txt);
+  const d0 = await p.evaluate(() => __hc.S.dinero);
+  await p.click('[data-dia="0"]');
+  r = await p.evaluate(() => ({ dia: __hc.S.hoy.dia, retraso: __hc.S.hoy.retraso, costo: (document.querySelector('.costo-dia') || {}).textContent }));
+  afirmar(r.dia.gasto === 20 && r.dia.min === 20 && r.retraso === 20 && /20 min/.test(r.costo || ''), 'el imprevisto no cobró tiempo y dinero: ' + JSON.stringify(r));
+  afirmar(await p.evaluate(() => __hc.S.dinero) === d0 - 20, 'no se descontó el dinero');
+  // ducto largo: 3 tramos y se avanza con el botón
+  await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('cafe'); o.ducto = { forma: 'cuadrado', largo: 2.3 }; o.firmado = true; o.pedido = null; o.duelo = false; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  afirmar(await p.evaluate(() => __hc.M.prepMin === 20), 'el turno no empezó 20 minutos tarde');
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  await p.evaluate(() => { __hc.M.eventos = []; __hc.M.ev = null; [...document.querySelectorAll('#zonas button')].find(x => /ducto/i.test(x.textContent)).click(); });
+  r = await p.evaluate(() => { const z = __hc.Z[__hc.M.zona]; return { n: z.tramos.length, k: z.vista.tramo, visible: !document.querySelector('#trAvanza').hidden }; });
+  afirmar(r.n === 3 && r.k === 0 && r.visible, 'el ducto no está por tramos: ' + JSON.stringify(r));
+  await p.click('#trAvanza'); await p.click('#trAvanza');
+  r = await p.evaluate(() => ({ k: __hc.Z[__hc.M.zona].vista.tramo, fin: document.querySelector('#trAvanza').disabled }));
+  afirmar(r.k === 2 && r.fin, 'no se avanza por los tramos: ' + JSON.stringify(r));
+  await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => { s.d.fill(0); s.pol.fill(.8); })); M.t = M.dur * .6; __hc.terminarTurno(); });
+  await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  afirmar(await p.evaluate(() => /Imprevisto antes de salir: Batería muerta \(20 min tarde, \$20 ya pagados\)/.test(document.querySelector('#pantalla').innerText)), 'el parte no cuenta el imprevisto');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
