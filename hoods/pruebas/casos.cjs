@@ -69,7 +69,7 @@ caso('revisión del inspector y parte', async () => {
 });
 
 caso('la Gran Licitación se gana y se llega al final', async () => {
-  // sin 8 camionetas ni Doña Perfecta, todavía no deja inscribirse
+  // sin 8 camionetas ni Doña Elsy, todavía no deja inscribirse
   let p = await abrir(partida({ etapa: 4, rep: 90, dinero: 45000, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 3 }, fijos: ['beto', 'lupe', 'chuy'] }));
   afirmar(await p.evaluate(() => !document.querySelector('#licitSi') && /8 camionetas/.test(document.querySelector('.licit').textContent)), 'la licitación no pide los requisitos');
   await p.close();
@@ -733,8 +733,8 @@ caso('la gente de la sede: escritorios, administración, intercomunicador y renu
   r = await p.evaluate(() => ({ boton: !!document.querySelector('[data-sede="oficina"]'), candado: /🔒 5/.test(document.querySelector('.esc-det').textContent) }));
   afirmar(!r.boton && r.candado, 'Ventas se puede contratar sin las 5 camionetas: ' + JSON.stringify(r));
   // mensaje de la oficina en el Buzón de la noche siguiente
-  await p.evaluate(() => { __hc.S.oficinaMsg = { id: 'planificacion', txt: ['Prueba de Doña Perfecta.', 'Test.'] }; __hc.S.hoy = null; __hc.pantallaCamioneta(); document.querySelector('.tabs [data-tab="buzon"]').click(); });
-  afirmar(await p.evaluate(() => /Doña Perfecta/.test(document.querySelector('.bandeja').textContent) && /Prueba de Doña Perfecta/.test(document.querySelector('.bandeja').textContent) && !__hc.S.oficinaMsg), 'el mensaje de la oficina no llegó al Buzón');
+  await p.evaluate(() => { __hc.S.oficinaMsg = { id: 'planificacion', txt: ['Prueba de Doña Elsy.', 'Test.'] }; __hc.S.hoy = null; __hc.pantallaCamioneta(); document.querySelector('.tabs [data-tab="buzon"]').click(); });
+  afirmar(await p.evaluate(() => /Doña Elsy/.test(document.querySelector('.bandeja').textContent) && /Prueba de Doña Elsy/.test(document.querySelector('.bandeja').textContent) && !__hc.S.oficinaMsg), 'el mensaje de la oficina no llegó al Buzón');
   // renuncia evitada por el jefe de personal (azar a favor)
   await p.evaluate(() => { Math.random = () => .1; __hc.pantallaEvaluar([{ t: 'Equipo 2', nota: 'D', bien: false, gente: [{ id: 7, n: 'Nacho', animo: 1 }], txt: 'x' }]); });
   await p.click('[data-ev="0|reg"]');
@@ -746,8 +746,8 @@ caso('la gente de la sede: escritorios, administración, intercomunicador y renu
   await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
   await p.evaluate(() => { __hc.M.eventos = []; __hc.M.ev = null; __hc.M.oficinaHablo = false; __hc.oficinaDice('averia', 1); __hc.oficinaDice('calidad', 1); });
-  await p.waitForFunction(() => /Toña/.test(document.body.textContent), null, { timeout: 10000 }).catch(() => {});
-  r = await p.evaluate(() => ({ tona: /Toña/.test(document.body.textContent), perfecta: /📟 Doña Perfecta/.test(document.body.textContent) }));
+  await p.waitForFunction(() => /Claunoche/.test(document.body.textContent), null, { timeout: 10000 }).catch(() => {});
+  r = await p.evaluate(() => ({ tona: /Claunoche/.test(document.body.textContent), perfecta: /📟 Doña Elsy/.test(document.body.textContent) }));
   afirmar(r.tona && !r.perfecta, 'el intercomunicador no habló una sola vez: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
@@ -762,11 +762,11 @@ caso('crecer de etapa pide camionetas', async () => {
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
-caso('el estadio de Rogelio, Angélica en la oficina y la nómina', async () => {
+caso('el estadio de Charlienaro, Angélica en la oficina y la nómina', async () => {
   const p = await abrir(partida({ noche: 50, etapa: 3, rep: 70, dinero: 30000, hoy: null, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 5 }, sede: { oficina: 1 }, fijos: ['beto', 'lupe'], cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, tipo: 'normal' }] }));
-  // Rogelio consigue el estadio: aviso y tarjeta para aceptar
+  // Charlienaro consigue el estadio: aviso y tarjeta para aceptar
   let r = await p.evaluate(() => ({ e: __hc.S.estadio, boton: !!document.querySelector('#estadioSi'), aviso: __hc.S.hoy.avisos.join(' ') }));
-  afirmar(r.e && r.boton && /Estadio Monumental/.test(r.aviso) && /\$50,000/.test(r.aviso), 'Rogelio no consiguió el estadio: ' + JSON.stringify(r));
+  afirmar(r.e && r.boton && /Estadio Monumental/.test(r.aviso) && /\$50,000/.test(r.aviso), 'Charlienaro no consiguió el estadio: ' + JSON.stringify(r));
   // al aceptar: solo hay un trabajo, gigante, de 4 campanas y $10,000
   await p.click('#estadioSi');
   r = await p.evaluate(() => { const H = __hc.S.hoy; return { n: H.ordenes.length, o: H.ordenes[0] && { est: H.ordenes[0].estadio, gig: H.ordenes[0].gigante, c: H.ordenes[0].campanas, pago: H.ordenes[0].pago, nombre: H.ordenes[0].nombre } }; });
