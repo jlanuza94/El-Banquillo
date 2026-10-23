@@ -64,6 +64,8 @@ async function buildApp() {
   // En la web es instalable: en iPhone, Compartir → «Agregar a inicio» lo abre a pantalla completa y sin conexión.
   const hc = read('hoods/juego.html'), hv = createHash('sha256').update(hc).digest('hex').slice(0, 10);
   for (const f of readdirSync(join(ROOT, 'hoods', 'web'))) cpSync(join(ROOT, 'hoods', 'web', f), join(DIST, 'hoods', f));
+  // Voces grabadas del locutor (mp3): el juego las busca en voz/<idioma>/<id>.mp3.
+  cpSync(join(ROOT, 'hoods', 'voz'), join(DIST, 'hoods', 'voz'), { recursive: true });
   writeFileSync(join(DIST, 'hoods', 'manifest.webmanifest'), JSON.stringify({
     name: 'Hood Cleaners: The Night Shift', short_name: 'Hood Cleaners', lang: 'es', start_url: './', scope: './', display: 'fullscreen',
     background_color: '#131d26', theme_color: '#131d26',

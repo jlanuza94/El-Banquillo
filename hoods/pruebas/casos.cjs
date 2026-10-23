@@ -1,7 +1,7 @@
 // Pruebas de Hood Cleaners. Uso: node hoods/pruebas/casos.cjs [parte-del-nombre]
 // Abren el juego construido en Chromium y comprueban que lo importante sigue funcionando y que no hay errores.
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -614,6 +614,28 @@ caso('Don Rigo «el Muchachón» ya no habla desde el lago (también en partidas
   const t = await p.evaluate(() => document.querySelector('#jefeCorto').textContent);
   afirmar(/Muchachón/.test(t) && !/lago/i.test(t), 'el aviso de Don Rigo sigue con el lago: ' + t);
   afirmar(!/lago/i.test(await p.evaluate(() => document.body.innerText)), 'queda un lago en el menú');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('voz del locutor: suena si hay mp3 y, si no, todo sigue en texto', async () => {
+  const pend = { noche: 24, rep: 45, etapa: 4, licitGanada: 22 };
+  // sin archivos de voz (como en claude.ai): no aparece «Escuchar» y no hay errores
+  let p = await abrir(partida(pend));
+  await p.evaluate(() => { __hc.S.aj.sonido = true; __hc.pantallaCamioneta(); });
+  await p.waitForTimeout(1500);
+  afirmar(await p.evaluate(() => !!document.querySelector('#buhoOk') && document.querySelector('#buhoVoz').hidden), 'apareció «Escuchar» sin archivo de voz');
+  afirmar(await p.evaluate(() => __hc.COMERCIALES[0] === __hc.VOZ_RADIO.find(v => v.id === 'com-tigre').es), 'el comercial grabado no coincide con el de la radio');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+  // con el mp3: aparece «Escuchar», suena, y el ajuste «Voz del locutor» la apaga
+  p = await abrir(partida(pend));
+  await p.route('**/voz/es/*.mp3', r => r.fulfill({ path: require('path').join(__dirname, 'voz-prueba.mp3'), contentType: 'audio/mpeg' }));
+  await p.evaluate(() => { __hc.VOZ.cache.clear(); __hc.S.aj.sonido = true; __hc.pantallaCamioneta(); });   // la primera carga fue antes de tener el mp3
+  await p.waitForFunction(() => !document.querySelector('#buhoVoz').hidden, null, { timeout: 10000 });
+  await p.click('#buhoVoz'); await p.waitForTimeout(300);
+  const r = await p.evaluate(() => ({ src: __hc.VOZ.actual && __hc.VOZ.actual.src, pausa: __hc.VOZ.actual && __hc.VOZ.actual.paused }));
+  afirmar(/voz\/es\/buho-revelacion\.mp3$/.test(r.src || '') && r.pausa === false, 'la revelación no suena: ' + JSON.stringify(r));
+  await p.evaluate(() => { __hc.VOZ.actual.pause(); __hc.VOZ.actual = null; __hc.S.aj.voz = false; __hc.hablarRadio('com-tigre'); });
+  afirmar(await p.evaluate(() => __hc.VOZ.actual === null), 'sonó la voz con el ajuste apagado');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 

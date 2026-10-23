@@ -1,0 +1,10 @@
+Voces grabadas de Radio Grasa FM (español). Un mp3 por frase, con el nombre exacto del id:
+
+  buho-apertura.mp3    Buenas noches, madrugadores. Aquí El Búho, en Radio Grasa FM. Arranca el turno de la noche.
+  com-tigre.mp3        Desengrasantes El Tigre: si no quita la grasa, le devolvemos su dinero… o le damos un taco.
+  buho-exito.mp3       ¡Increíble! El inspector salió silbando de esta cocina. ¡Así se hace, leyenda!
+  buho-revelacion.mp3  ¿Me reconoces? Soy yo, Rigo. Estuve todo este tiempo en la radio.
+
+Formato recomendado: mp3 mono, 48-64 kbps, 44.1 kHz, con el efecto de radio vieja ya aplicado.
+Si falta un archivo, esa frase sale solo en texto. Las de inglés van en ../en/ con los mismos nombres.
+La lista de frases está en VOZ_RADIO, dentro de hoods/juego.html.

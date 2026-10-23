@@ -1,0 +1,2 @@
+English voice lines for Radio Grasa FM. Same file names as ../es/ (see ../es/LEEME.txt and VOZ_RADIO in hoods/juego.html).
+If a file is missing, that line is shown as text only.
