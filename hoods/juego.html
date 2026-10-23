@@ -199,6 +199,7 @@ body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } 
 .nom-fila { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.08); font-size: 14px; }
 .nom-fila b { font-family: var(--f-mono); } .nom-fila small { color: var(--tenue); }
 .nom-fila.total { border-bottom: 0; font-weight: 700; color: var(--hivis); }
+.chip.lead { background: rgba(255,210,63,.16); color: #ffd23f; border-color: #ffd23f; }
 /* Barra de zonas compacta: una sola tira con nombre y µm en una línea y una línea de energía debajo. */
 .zonas { gap: 0; background: rgba(13,20,27,.82); border: 1px solid var(--linea); border-radius: 10px; padding: 3px; }
 .zonas button { background: none; border: 0; border-radius: 7px; padding: 3px 6px 4px; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 4px; position: relative; }
@@ -1401,6 +1402,21 @@ const CURSOS = {
   fuerza: { n: ['Herramientas industriales', 'Industrial tools'], d: ['+10 % de fuerza.', '+10% strength.'] },
   coordina: { n: ['Coordinación', 'Coordination'], d: ['Organiza a su equipo: +3 % de aprobar y más calidad en gigantes.', 'Organizes their team: +3% to pass and better quality on giant jobs.'] },
 };
+// Leads de campo: un técnico con experiencia que dirige el equipo de una camioneta. Desde Contratista y con 5 camionetas;
+// el técnico necesita sus 2 cursos y 10 noches. Uno por camioneta extra. Cuesta ascenderlo y cobra más.
+const LEAD = { etapa: 3, vans: 5, noches: 10, precio: 1000, extra: 150, calidad: .12, fuerza: 1.15 };
+const leads = () => (S.cuadrilla || []).filter(c => c.lead);
+const maxLeads = () => (S.eq && S.eq.flota) || 0;
+const esLead = g => !!(g && (g.lead || (g.id && (S.cuadrilla || []).some(c => c.id === g.id && c.lead))));
+function faltaLead(c) {
+  const f = [];
+  if (S.etapa < LEAD.etapa) f.push(L('ser Contratista de confianza', 'be a Trusted Contractor'));
+  if (vansTotal() < LEAD.vans) f.push(L(`${LEAD.vans} camionetas`, `${LEAD.vans} vans`));
+  if ((c.cursos || []).length < 2) f.push(L('sus 2 cursos', 'both courses'));
+  if ((c.noches || 0) < LEAD.noches) f.push(L(`${LEAD.noches} noches trabajadas`, `${LEAD.noches} nights worked`));
+  if (leads().length >= maxLeads()) f.push(L('una camioneta sin Lead', 'a van without a Lead'));
+  return f;
+}
 const precioCurso = c => Math.round(((c.cursos || []).length ? 1500 : 600) * (sede('formacion') >= 3 ? .7 : 1));
 const conCurso = (gente, k) => gente.filter(g => g && g.cursos && g.cursos.includes(k)).length;
 // Mejoras de cada camioneta extra, además del kit: iluminación (menos accidentes) y organización (mejor calidad).
@@ -3337,6 +3353,7 @@ function escenaReparto() {
         return { ...c, zonas: Z.map((z, i) => reparto[i] === k ? i : -1).filter(i => i >= 0), zona: null, t: rnd(.2, .6), fallos: 0, ok: 0,
           cal: clamp(.9 + .025 * (cuid - 3) + .02 * (an - 3) + .03 * c.kit + .01 * sede('planificacion') + .012 * conCurso(c.gente, 'coordina') + .006 * conCurso(c.gente, 'acabado') + .015 * (c.k ? vanMej(c.k - 2, 'orden') : 0) + .03 * hab('capacita') + rnd(-.04, .03), .8, .995), fuerza: c.gente.reduce((a, g) => a + g.fuerza, 0) };
       });
+      for (const c of M.crews) { const ld = c.gente.find(esLead); if (ld) { c.lead = ld.n; c.fuerza *= LEAD.fuerza; c.cal = Math.min(.995, c.cal + .03); } }
       for (const c of M.crews) for (const i of c.zonas) Z[i].crew = c;
       prepEl.hidden = true; arrancarTurno();
     };
@@ -6586,13 +6603,15 @@ function resolverB(b) {
   const ayudG = gente.filter(g => g.animo), animo = ayudG.length ? ayudG.reduce((a, g) => a + g.animo, 0) / ayudG.length : 3;
   let p = .2 + fuerza / dif * .45 + kit((b.k || 2) - 2) * .08 + vanMej((b.k || 2) - 2, 'orden') * .04 + .02 * conCurso(gente, 'acabado') + .03 * conCurso(gente, 'coordina') + (animo - 3) * .05 + (S.angelica ? .05 : 0) + .05 * hab('capacita');
   const cosas = []; let dano = 0;
-  const kv = (b.k || 2) - 2, torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08 * (1 - .35 * vanMej(kv, 'luz'))));
+  const kv = (b.k || 2) - 2, conLead = gente.some(esLead), torpe = gente.find(g => g.cuidado && azar((5 - g.cuidado) * .08 * (1 - .35 * vanMej(kv, 'luz')) * (conLead ? .6 : 1)));
   if (torpe) { dano += uno([20, 40]); cosas.push(`${torpe.n} tiró algo que no debía.`); }
+  const lead = gente.find(esLead);
+  if (lead) { p += LEAD.calidad; cosas.push(L(`⭐ ${lead.n} dirigió el equipo como Lead: nadie se sentó hasta terminar.`, `⭐ ${lead.n} ran the team as Lead: nobody sat down until it was done.`)); }
   if (b.comp === 'lupe') { p += .15; cosas.push('Lupe revisó cada esquina dos veces. Y a los ayudantes, tres.'); }
   if (b.comp === 'beto' && azar(.4)) { dano = uno([40, 80, 120]); cosas.push(uno(['Beto rompió una lámpara del techo con la escalera.', 'Beto confundió el desengrasante con el refresco del chef.', 'Beto se quedó encerrado en la cámara fría veinte minutos.'])); }
   if (b.comp === 'chuy' && azar(.35)) { p -= .25; cosas.push('Chuy se durmió en el ducto. Lo despertó el gerente a las cinco.'); }
   p = clamp(p, .05, .95);
-  const aprobado = azar(p), notaA = aprobado && azar(p * .7);
+  const aprobado = azar(p), notaA = aprobado && azar(Math.min(.95, p * .7 + (lead ? .1 : 0)));
   if (o.pedido) cosas.push(aprobado ? 'Cumplieron el pedido especial del cliente.' : 'Se les olvidó el pedido especial. El cliente no está contento.');
   if (!cosas.length) cosas.push(uno(['Trabajaron callados, como profesionales. Raro, pero bien.', 'Pusieron cumbia y limpiaron a buen ritmo.', 'El gerente les invitó un café. Dicen que estaba bueno.']));
   const lineas = [[`Equipo B en ${o.nombre}${aprobado ? '' : ' (no pasó: pago parcial)'}`, aprobado ? o.pago : r10(o.pago * .4)], ['Equipo B: sueldos', -gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1) * sueldoMult()), 0)], ['Equipo B: gasolina', -gasolina()]];
@@ -6660,10 +6679,12 @@ function vCuadrilla() {
   const flota = S.eq.flota || 0;
   const angelica = `<p class="nota">${S.angelica ? L('Angélica coordina tus equipos desde la oficina de la sede (Taller).', 'Angélica coordinates your teams from the HQ office (Shop).') : L('Angélica (coordinación) ahora se contrata en la oficina de la sede, en el Taller.', 'Angélica (coordination) is now hired at the HQ office, in the Shop.')}</p>`;
   const mios = S.cuadrilla.map(c => `<div class="persona">${cara(c.color, c.n[0], c.n)}<div><b>${esc(c.n)}</b>${c.prueba ? ` <span class="chip naranja">${c.noches >= 3 ? L('Pasó la prueba', 'Passed the trial') : L(`A prueba · ${c.noches} de 3 noches`, `On trial · ${c.noches} of 3 nights`)}</span>` : ''}<span>${esc(TRAD(c.rasgo))} ${dinero(c.sueldo)} ${L('por noche', 'per night')}${c.prueba ? L(' (a prueba cobra el 80 %)', ' (80% pay while on trial)') : ''} · ${c.noches} ${L('noches', 'nights')}${c.fuerza > c.base + .01 ? ` · ${L('con experiencia', 'experience')}: +${Math.round((c.fuerza - c.base) * 100)} ${L('de fuerza', 'strength')}` : ''}</span>${medidas(c)}${chipsPerfil(c)}${(c.cursos || []).length ? `<span class="chips-perfil">${c.cursos.map(k => `<span class="chip ok">🎓 ${L(...CURSOS[k].n)}</span>`).join('')}</span>` : ''}</div>
-    <div class="botones">${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}${!c.prueba && sede('formacion') > (c.cursos || []).length ? `<button class="btn peq" data-formar="${c.id}">🎓 ${L('Formar', 'Train')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div>${cursoAbierto === c.id ? `<div class="cursos">${Object.entries(CURSOS).filter(([k]) => !(c.cursos || []).includes(k)).map(([k, cu]) => `<button class="btn peq" data-curso="${c.id}|${k}" ${S.dinero < precioCurso(c) ? 'disabled' : ''}><b>${L(...cu.n)}</b><small>${L(...cu.d)}</small></button>`).join('')}<small class="nota">${L(`Cada curso cuesta ${dinero(precioCurso(c))}. Máximo 2 por persona.`, `Each course costs ${dinero(precioCurso(c))}. Up to 2 per person.`)}</small></div>` : ''}</div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
+    ${c.lead ? `<span class="chips-perfil"><span class="chip lead">⭐ Lead · ${L('dirige su camioneta', 'runs their van')} · +${dinero(LEAD.extra)}</span></span>` : ''}
+    <div class="botones">${!c.lead && !c.prueba && S.fase === 'empresa' && S.etapa >= LEAD.etapa ? (faltaLead(c).length ? `<button class="btn peq" disabled title="${esc(L('Le falta: ', 'Missing: ') + faltaLead(c).join(', '))}">⭐ ${L('Lead', 'Lead')} · ${L('falta', 'needs')} ${esc(faltaLead(c)[0])}</button>` : `<button class="btn prim peq" data-lead="${c.id}" ${S.dinero < LEAD.precio ? 'disabled' : ''}>⭐ ${L('Ascender a Lead', 'Promote to Lead')} ${dinero(LEAD.precio)}</button>`) : ''}${c.prueba && c.noches >= 3 ? `<button class="btn prim peq" data-fijo="${c.id}">${L('Dejarlo fijo', 'Make permanent')}</button>` : ''}${!c.prueba && sede('formacion') > (c.cursos || []).length ? `<button class="btn peq" data-formar="${c.id}">🎓 ${L('Formar', 'Train')}</button>` : ''}<button class="btn peq" data-despedir="${c.id}">${L('Despedir', 'Fire')}</button></div>${cursoAbierto === c.id ? `<div class="cursos">${Object.entries(CURSOS).filter(([k]) => !(c.cursos || []).includes(k)).map(([k, cu]) => `<button class="btn peq" data-curso="${c.id}|${k}" ${S.dinero < precioCurso(c) ? 'disabled' : ''}><b>${L(...cu.n)}</b><small>${L(...cu.d)}</small></button>`).join('')}<small class="nota">${L(`Cada curso cuesta ${dinero(precioCurso(c))}. Máximo 2 por persona.`, `Each course costs ${dinero(precioCurso(c))}. Up to 2 per person.`)}</small></div>` : ''}</div>`).join('') || `<p class="nota">${L('Aún no tienes ayudantes.', 'You have no helpers yet.')}</p>`;
   const cand = S.candidatos.map(c => `<div class="persona">${cara(c.color, c.n[0], c.n)}<div><b>${esc(c.n)}</b><span>${esc(TRAD(c.rasgo))} ${L('Pide', 'Asks for')} ${dinero(c.sueldo)} ${L('por noche', 'per night')}.</span>${medidas(c)}${c.entrevistado ? chipsPerfil(c) : `<span class="chips-perfil"><span class="chip">${L('Bueno en', 'Good at')} ${L(ESPECIAL[c.esp], EN.esp[c.esp])}</span><span class="chip">${L('Carácter: ¿? (entrevístalo)', 'Personality: ? (interview them)')}</span></span>`}${c.respuesta ? `<span class="respuesta">«${esc(c.resp ? c.resp.map(TRAD).join(' ') : c.respuesta)}»</span>` : ''}</div>
     <div class="botones">${c.entrevistado ? '' : `<button class="btn peq" data-entrevista="${c.id}">${L('Entrevistar', 'Interview')}</button>`}<button class="btn prim peq" data-contratar="${c.id}">${L('Contratar', 'Hire')}</button></div></div>`).join('') || `<p class="nota">${L('Nadie por ahora. Vuelve en un par de noches.', 'Nobody right now. Check back in a couple of nights.')}</p>`;
-  return `${nomina()}${vVida()}${companeros}<h2 class="sec">${L('Coordinación', 'Coordination')}</h2>${angelica}<h2 class="sec">${L(`Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta`, `Helpers · ${plazas} ${plazas === 1 ? 'fits' : 'fit'} in the van`)}</h2>${mios}${S.etapa < 1 ? `<p class="pista">${L('En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.', 'Only one helper fits in the old van. With your own workshop you can buy bigger vans and more vans, and then you can fill whole teams.')}</p>` : ''}
+  const lideres = S.fase === 'empresa' && S.etapa >= LEAD.etapa ? `<p class="nota">⭐ ${L(`Leads de campo: ${leads().length} de ${maxLeads()} (uno por camioneta extra). Un equipo con Lead aprueba más, saca más A y en los trabajos gigantes rinde un 15 % más.`, `Field Leads: ${leads().length} of ${maxLeads()} (one per extra van). A team with a Lead passes more, gets more A's and works 15% better on giant jobs.`)}</p>` : '';
+  return `${nomina()}${vVida()}${companeros}<h2 class="sec">${L('Coordinación', 'Coordination')}</h2>${angelica}${lideres}<h2 class="sec">${L(`Ayudantes · ${plazas === 1 ? 'cabe 1' : 'caben ' + plazas} en la camioneta`, `Helpers · ${plazas} ${plazas === 1 ? 'fits' : 'fit'} in the van`)}</h2>${mios}${S.etapa < 1 ? `<p class="pista">${L('En la camioneta vieja solo cabe un ayudante. Con el taller propio compras camionetas más grandes y más camionetas, y entonces sí, a llenar equipos.', 'Only one helper fits in the old van. With your own workshop you can buy bigger vans and more vans, and then you can fill whole teams.')}</p>` : ''}
     <p class="nota">${L('Los ayudantes limpian solos durante el turno y cobran solo las noches que salen. Los trabajos grandes piden ayudantes. <b>Fuerza</b>: cuánto limpian (y sube con la experiencia). <b>Cuidado</b>: menos accidentes. <b>Puntualidad</b>: que lleguen. Entrevista antes de contratar: hasta entonces no sabes su cuidado ni su puntualidad. Los nuevos entran a prueba 3 noches cobrando el 80 %.', 'Helpers clean on their own during the shift and only get paid on the nights they go out. Big jobs need helpers. <b>Strength</b>: how much they clean (it grows with experience). <b>Care</b>: fewer accidents. <b>Punctuality</b>: whether they show up. Interview before hiring: until then you don\'t know their care or punctuality. New hires start with a 3-night trial at 80% pay.')}</p>
     <h2 class="sec">${L('Buscan trabajo · cambian cada 3 noches', 'Looking for work · changes every 3 nights')}</h2>${cand}
     <div class="acciones"><button class="btn" id="anuncioEmpleo" ${S.dinero < 60 ? 'disabled' : ''}>${L('Poner anuncio de empleo', 'Post a job ad')} (${dinero(60)})</button></div>
@@ -6905,6 +6926,9 @@ function enlazar() {
   const org = $('#organizar'); if (org) org.onclick = () => { H.angelica = organizar(); tono(880, .1, .08, 'triangle'); guardar(); pantallaCamioneta(); };
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
   P.querySelectorAll('[data-esc]').forEach(b => b.onclick = () => { escSel = b.dataset.esc; tono(600, .04, .03, 'triangle'); pantallaCamioneta(); });
+  P.querySelectorAll('[data-lead]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.lead); if (!c || c.lead || faltaLead(c).length || S.dinero < LEAD.precio) return;
+    S.dinero -= LEAD.precio; c.lead = S.noche; c.sueldo += LEAD.extra; c.animo = Math.min(5, (c.animo || 3) + 1); sDing(); vibrar([40, 40, 80]);
+    S.hoy.avisos.push(L(`⭐ ${c.n} es Lead de campo. Se compró una libreta, una pluma y una actitud nueva. Dirige su camioneta desde hoy.`, `⭐ ${c.n} is now a field Lead. Bought a notebook, a pen and a whole new attitude. Runs their van from today.`)); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-personal]').forEach(b => b.onclick = () => { const id = b.dataset.personal, pe = PERSONAL[id]; if (S.dinero < pe.precio || contratado(id) || vansTotal() < pe.vans) return; S.dinero -= pe.precio; if (id === 'admin') S.admin = S.noche; else S.angelica = true; sDing(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-sede]').forEach(b => b.onclick = () => { const id = b.dataset.sede, p = precioSala(id); if (!p || S.dinero < p || (!sede(id) && vansTotal() < PERSONAL[id].vans)) return; S.sede = { ...(S.sede || {}), [id]: sede(id) + 1 }; S.dinero -= p; sCaja(); sDing(); guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-curso]').forEach(b => b.onclick = () => {
