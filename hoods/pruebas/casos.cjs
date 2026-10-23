@@ -259,7 +259,7 @@ caso('objetos con historia: se tocan en la preparación y cambian en la siguient
   let v = await visita();
   afirmar(v.n === 3 && v.rot[0] !== 0, 'no aparecen los 3 objetos torcidos: ' + JSON.stringify(v));
   await p.evaluate(() => document.querySelector('.marca.recuerdo').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
-  await p.waitForTimeout(2500);
+  await p.waitForFunction(() => __hc.S.recuerdos && __hc.S.recuerdos['Café La Esquina'], null, { timeout: 20000 }).catch(() => {});
   afirmar(await p.evaluate(() => __hc.M.escena === 0 && __hc.M.recVistos.has(0) && __hc.S.recuerdos['Café La Esquina'].v[0] === 1), 'tocar la foto no la apuntó o hizo pasar de pantalla');
   afirmar(await p.evaluate(() => /1978/.test(document.body.innerText)), 'no se ve la historia de la foto');
   await p.evaluate(() => document.querySelector('.carta button').click());
@@ -464,6 +464,7 @@ caso('la saga de El Cuñado: siete capítulos con decisiones y consecuencias', a
   const capitulo = async (prep, op) => {
     await p.evaluate(prep);
     await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+    await p.evaluate(() => document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }));
     const t = await p.evaluate(() => { const c = document.querySelector('.saga'); return c ? c.innerText : null; });
     if (t === null) throw new Error('no apareció el capítulo: ' + await p.evaluate(() => JSON.stringify(__hc.S.saga)));
     await p.click(`[data-saga="${op}"]`);
@@ -578,6 +579,7 @@ caso('historias de los ayudantes y la freidora', async () => {
   const p = await abrir(partida({ dinero: 3000, compPref: 'solo', fijos: [], cuadrilla: [ay(7, 'Nacho', 'normal')], saga: { cap: 7 }, clientes: [] }));
   // capítulo 1 y 2 de la historia de Nacho (carácter normal: la abuela)
   const cap = async (noche, op) => { await p.evaluate(n => { __hc.S.noche = n; __hc.S.hoy = null; for (let k = 0; k < 20 && !__hc.S.hoy?.ayudHist; k++) { __hc.S.hoy = null; __hc.pantallaCamioneta(); } }, noche);
+    await p.evaluate(() => document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }));
     const t = await p.evaluate(() => (document.querySelector('[data-ayh]') || {}).closest ? document.querySelector('[data-ayh]').closest('.orden').innerText : null);
     if (!t) throw new Error('no apareció la historia del ayudante (noche ' + noche + ')'); await p.click(`[data-ayh="${op}"]`); return t; };
   let t = await cap(21, 1);
@@ -603,6 +605,15 @@ caso('el menú no salta arriba al tocar algo', async () => {
   await p.click('[data-tab="taller"]');
   const y2 = await p.evaluate(() => { const P = document.querySelector('#pantalla'), nav = P.querySelector('.tabs'); return [P.scrollTop, nav.offsetTop]; });
   afirmar(y2[0] <= y2[1], 'al cambiar de pestaña no se fue al principio de la pestaña: ' + y2);
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('Don Rigo «el Muchachón» ya no habla desde el lago (también en partidas viejas)', async () => {
+  const p = await abrir(partida({ hoy: null }));
+  await p.evaluate(() => { __hc.S.hoy.frase = 'Desde el lago: pesqué una bota. Igual que mi primer cliente. ¿Cómo va la empresa?'; __hc.pantallaCamioneta(); });
+  const t = await p.evaluate(() => document.querySelector('#jefeCorto').textContent);
+  afirmar(/Muchachón/.test(t) && !/lago/i.test(t), 'el aviso de Don Rigo sigue con el lago: ' + t);
+  afirmar(!/lago/i.test(await p.evaluate(() => document.body.innerText)), 'queda un lago en el menú');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
