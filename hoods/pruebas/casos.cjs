@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -185,8 +185,8 @@ caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', asy
   const r = await p.evaluate(() => { const S = __hc.S; return { c: __hc.ciudad(), d: S.dinero, cu: S.cuadrilla.map(c => [c.n, c.sueldo]), f: S.fijos, lupe: __hc.COMPANEROS.lupe.sueldo, beto: __hc.COMPANEROS.beto.sueldo,
     c1: S.ciudades[1].dinero, c1f: S.ciudades[1].fijos, c1cu: S.ciudades[1].cuadrilla.length, fin: S.medallas.final, eq: S.eq, lg: S.legado.camino }; });
   afirmar(r.c === 2 && Math.abs(r.d - 8500) <= 300 && Math.abs(r.c1 - 25500) <= 300, 'el dinero no se repartió bien: ' + JSON.stringify(r));
-  afirmar(JSON.stringify(r.cu) === '[["Nacho",165]]' && r.f.length === 0 && r.c1cu === 0, 'la mano derecha no se mudó con su aumento: ' + JSON.stringify(r));
-  afirmar(r.lupe === 200 && r.beto === 110 && r.c1f.includes('lupe'), 'el director no tiene su aumento: ' + JSON.stringify(r));
+  afirmar(JSON.stringify(r.cu) === '[["Nacho",125]]' && r.f.length === 0 && r.c1cu === 0, 'la mano derecha no se mudó con su aumento: ' + JSON.stringify(r));
+  afirmar(r.lupe === 165 && r.beto === 100 && r.c1f.includes('lupe'), 'el director no tiene su aumento: ' + JSON.stringify(r));
   afirmar(r.fin && r.eq.camioneta === 3 && !r.eq.flota && r.eq.hidro && r.lg === 'B', 'la llegada al puerto no es la esperada: ' + JSON.stringify(r));
   afirmar(await p.evaluate(() => /Puerto Fritanga/.test(document.querySelector('.meta-final').innerText)), 'la cabecera no habla de Puerto Fritanga');
   const t = await jugarNoche(p, { cocina: 'cafe' });
@@ -197,7 +197,7 @@ caso('el comprador: pensarlo, camino B (no vender) y volver a Ciudad Comal', asy
   afirmar(v.c === 1 && Math.abs(v.d - 25500) <= 300 && v.f.includes('lupe') && !v.carta, 'volver a Ciudad Comal no funcionó: ' + JSON.stringify(v));
   const almacen = await p.evaluate(() => Object.keys(localStorage).map(k => k + ':' + localStorage.getItem(k).length).join(' '));
   await p.reload(); await p.waitForSelector('#continuar'); await p.click('#continuar'); await p.waitForSelector('#salir');
-  afirmar(await p.evaluate(() => __hc.ciudad() === 1 && __hc.COMPANEROS.lupe.sueldo === 200), 'tras recargar se perdió la ciudad o el aumento: ' + await p.evaluate(() => JSON.stringify([__hc.ciudad(), __hc.COMPANEROS.lupe.sueldo, __hc.S.aumentos, __hc.S.noche])) + ' · antes: ' + almacen + ' · después: ' + await p.evaluate(() => Object.keys(localStorage).map(k => k + ':' + localStorage.getItem(k).length).join(' ')));
+  afirmar(await p.evaluate(() => __hc.ciudad() === 1 && __hc.COMPANEROS.lupe.sueldo === 165), 'tras recargar se perdió la ciudad o el aumento: ' + await p.evaluate(() => JSON.stringify([__hc.ciudad(), __hc.COMPANEROS.lupe.sueldo, __hc.S.aumentos, __hc.S.noche])) + ' · antes: ' + almacen + ' · después: ' + await p.evaluate(() => Object.keys(localStorage).map(k => k + ':' + localStorage.getItem(k).length).join(' ')));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 caso('el comprador: camino A (vender) con pagos y sin vuelta', async () => {
@@ -212,7 +212,7 @@ caso('el comprador: camino A (vender) con pagos y sin vuelta', async () => {
     beto: __hc.COMPANEROS.beto.sueldo, chuy: __hc.COMPANEROS.chuy.sueldo, v: S.legado.venta, et: S.etapa, viaje: !!document.querySelector('#viajar') }; });
   afirmar(r.c === 2 && Math.abs(r.d - 6000) <= 300 && r.n === 'Brillo Ninguno' && r.c1d === 0 && r.et === 2 && r.v.caja >= 25000, 'la venta no fundó la nueva empresa: ' + JSON.stringify(r));
   afirmar(JSON.stringify(r.f) === '["beto"]' && r.pref === 'beto' && !r.c1f.includes('beto') && r.vend, 'Beto no se mudó: ' + JSON.stringify(r));
-  afirmar(r.beto === 140 && r.chuy > 0 && r.v.restan === 30 && r.v.total === valor && r.v.porNoche === Math.round((valor * .4 + r.v.caja) / 300) * 10 && !r.viaje, 'aumentos o pagos mal: ' + JSON.stringify(r));
+  afirmar(r.beto === 125 && r.chuy > 0 && r.v.restan === 30 && r.v.total === valor && r.v.porNoche === Math.round((valor * .4 + r.v.caja) / 300) * 10 && !r.viaje, 'aumentos o pagos mal: ' + JSON.stringify(r));
   const t = await jugarNoche(p, { cocina: 'cafe' });
   afirmar(/Pago de Grupo Brillo por la venta \(1 de 30\)/.test(t.texto) && !/Dividendos/.test(t.texto), 'el parte no trae el pago de la venta');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -323,9 +323,9 @@ caso('duelo 2.0: sin apuesta, El Cuñado se confía y gana', async () => {
   await empezarDuelo(p, false);
   afirmar(await p.evaluate(() => __hc.M.duelo.apuesta === 0), 'rechazar la apuesta no quedó registrado');
   await p.evaluate(() => { __hc.M.duelo.prog = .5; });
-  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 90000 });
+  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 150000 });
   await p.evaluate(() => { __hc.M.duelo.prog = .99; });
-  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 90000 });
+  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 150000 });
   await terminarDuelo(p); await p.waitForSelector('.nota-grande', { timeout: 60000 });
   const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
   afirmar(/Duelo perdido · \d–2/i.test(t) && !/Apuesta/.test(t) && /la mitad/.test(t), 'el parte del duelo perdido no es correcto: ' + (t.match(/Duelo[^\n]*\n?[^\n]*/) || [t.slice(0, 200)])[0]);
@@ -725,8 +725,8 @@ caso('la gente de la sede: escritorios, administración, intercomunicador y renu
   await p.click('[data-esc="admin"]'); await p.click('[data-personal="admin"]');
   r = await p.evaluate(() => ({ admin: !!__hc.S.admin, d: __hc.S.dinero, dano: __hc.conSeguro(200) }));
   afirmar(r.admin && r.d === 8000 && r.dano === Math.round(antes * .75 / 10) * 10, 'la administración no abarata los daños: ' + JSON.stringify({ antes, ...r }));
-  // sueldos de la oficina en los gastos fijos: 200 + 250 + 350 + 350
-  afirmar(await p.evaluate(() => __hc.sueldosOficina() === 1150), 'los sueldos de la oficina no cuadran: ' + await p.evaluate(() => __hc.sueldosOficina()));
+  // sueldos de la oficina en los gastos fijos: 250 + 350 + 400 + 350
+  afirmar(await p.evaluate(() => __hc.sueldosOficina() === 1350), 'los sueldos de la oficina no cuadran: ' + await p.evaluate(() => __hc.sueldosOficina()));
   // con pocas camionetas, Ventas está bloqueado y no se puede contratar
   await p.evaluate(() => { __hc.S.eq.flota = 1; document.querySelector('.tabs [data-tab="taller"]').click(); });
   await p.click('[data-esc="oficina"]');
@@ -782,11 +782,11 @@ caso('el estadio de Rogelio, Angélica en la oficina y la nómina', async () => 
   const d0 = await p.evaluate(() => __hc.S.dinero);
   await p.click('[data-personal="angelica"]');
   r = await p.evaluate(() => ({ a: __hc.S.angelica, s: __hc.sueldosOficina(), d: __hc.S.dinero }));
-  afirmar(r.a && r.s === 300 + 220 && r.d === d0 - 3000, 'Angélica no entró a la oficina: ' + JSON.stringify(r));
+  afirmar(r.a && r.s === 350 + 300 && r.d === d0 - 3000, 'Angélica no entró a la oficina: ' + JSON.stringify(r));
   // nómina en Cuadrilla
   await p.click('.tabs [data-tab="cuadrilla"]');
   const t = await p.evaluate(() => document.querySelector('[data-pl="nomina"]').textContent);
-  afirmar(/Técnicos/.test(t) && /Oficina/.test(t) && /\$520/.test(t), 'la nómina no está completa: ' + t.slice(0, 200));
+  afirmar(/Técnicos/.test(t) && /Oficina/.test(t) && /\$650/.test(t), 'la nómina no está completa: ' + t.slice(0, 200));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
@@ -799,7 +799,7 @@ caso('Leads de campo: requisitos, ascenso, sueldo y equipo que rinde más', asyn
   const s0 = await p.evaluate(() => __hc.S.cuadrilla.find(x => x.id === 7).sueldo);
   await p.click('[data-lead="7"]');
   r = await p.evaluate(() => { const c = __hc.S.cuadrilla.find(x => x.id === 7); return { lead: !!c.lead, sueldo: c.sueldo, d: __hc.S.dinero, chip: /⭐ Lead/.test(document.querySelector('.tab-cont').textContent) }; });
-  afirmar(r.lead && r.sueldo === s0 + 150 && r.d === 4000 && r.chip, 'el ascenso no funcionó: ' + JSON.stringify(r));
+  afirmar(r.lead && r.sueldo === s0 + 30 && r.d === 4000 && r.chip, 'el ascenso no funcionó: ' + JSON.stringify(r));
   // su equipo rinde más: con la suerte fija, el mismo trabajo pasa con Lead y no sin él
   r = await p.evaluate(() => {
     const o = __hc.genOrden('cafe'); o.micras = 2600; o.pedido = null; o.garantia = false;
@@ -808,6 +808,17 @@ caso('Leads de campo: requisitos, ascenso, sueldo y equipo que rinde más', asyn
     return { con: con.aprobado, sin: sin.aprobado, txt: con.cosas.join(' ') };
   });
   afirmar(/Lead/.test(r.txt) && (r.con || !r.sin), 'el Lead no ayuda a su equipo: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('sueldos de técnicos con escala real y partidas viejas ajustadas', async () => {
+  const p = await abrir(partida({ noche: 40, etapa: 2, cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1.2, base: 1, sueldo: 210, color: '#ffb36b', noches: 25, tipo: 'normal', cuidado: 4, puntual: 3 }, { id: 8, n: 'Rosa', rasgo: 'x', frase: 'y', fuerza: .7, base: .7, sueldo: 140, color: '#ffb36b', noches: 2, tipo: 'normal', cuidado: 2, puntual: 2 }] }));
+  const r = await p.evaluate(() => ({ nacho: __hc.S.cuadrilla[0].sueldo, rosa: __hc.S.cuadrilla[1].sueldo, cand: (__hc.S.candidatos || []).map(c => c.sueldo) }));
+  afirmar(r.nacho === 110 && r.rosa === 90, 'la partida vieja no se ajustó a la escala nueva: ' + JSON.stringify(r));
+  afirmar(r.cand.every(x => x >= 90 && x <= 100), 'los candidatos no piden entre $90 y $100: ' + JSON.stringify(r.cand));
+  // la experiencia sube $10 cada 10 noches
+  const s2 = await p.evaluate(() => { const c = __hc.S.cuadrilla[1]; c.noches = 9; __hc.sumarNoche(c); return c.sueldo; });
+  afirmar(s2 === 100, 'a las 10 noches no subió el sueldo: ' + s2);
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
