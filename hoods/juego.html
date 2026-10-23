@@ -142,17 +142,35 @@ body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } 
 .yo-av { display: grid; grid-template-columns: 48px 1fr auto; gap: 10px; align-items: center; background: rgba(20,30,40,.78); border: 1px solid var(--linea); border-radius: 10px; padding: 8px 10px; margin-bottom: 12px; }
 .yo-av .cara { width: 48px; height: 48px; border-radius: 50%; }
 .yo-av span { display: block; color: var(--tenue); font-size: 13px; }
-.av-prev { width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 40%, #3a5160, #1a262f); border: 3px solid var(--hivis); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+.av-cab { position: sticky; top: calc(-1 * max(16px, env(safe-area-inset-top, 0px))); z-index: 6; display: grid; grid-template-columns: 128px 1fr; gap: 14px; align-items: center; margin: 0 -8px; padding: max(12px, env(safe-area-inset-top, 0px)) 10px 10px; background: linear-gradient(rgba(13,20,27,.98), rgba(13,20,27,.94)); border-bottom: 1px solid var(--linea); }
+.av-prev { width: 128px; height: 128px; border-radius: 50%; overflow: hidden; background: radial-gradient(circle at 50% 35%, #3d5666, #172129); border: 3px solid var(--hivis); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
 .av-prev svg { width: 100%; height: 100%; display: block; }
-.av-fila { display: grid; gap: 6px; }
-.av-fila > b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
-.av-fila > div { display: flex; flex-wrap: wrap; gap: 6px; }
-.av-op { position: relative; font: inherit; font-size: 14px; color: var(--acero); background: var(--panel); border: 2px solid var(--linea); border-radius: 999px; padding: 6px 12px; min-height: 36px; }
-.av-op.color { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; }
-.av-op.color i { width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
-.av-op[aria-pressed="true"] { border-color: var(--hivis); box-shadow: 0 0 0 2px rgba(255,138,31,.35); color: #fff; }
-.av-op:disabled { opacity: .45; }
-.av-op b { position: absolute; right: -4px; top: -6px; font-size: 11px; }
+.av-quien .rotulo { font-size: clamp(22px, 6vw, 30px); }
+.av-herr { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.av-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: rgba(20,30,40,.85); border: 1px solid var(--linea); border-radius: 12px; padding: 4px; }
+.av-tabs button { font: inherit; color: var(--tenue); background: none; border: 0; border-radius: 9px; padding: 6px 2px 5px; display: grid; justify-items: center; gap: 1px; font-family: var(--f-cond); font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; }
+.av-tabs button i { font-style: normal; font-size: 20px; }
+.av-tabs button[aria-selected="true"] { background: rgba(255,138,31,.18); color: #fff; box-shadow: inset 0 0 0 1px var(--hivis); }
+.av-panel { display: grid; gap: 14px; }
+.av-sec { display: grid; gap: 8px; }
+.av-sec > b { font-family: var(--f-cond); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
+.av-minis { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.av-mini { position: relative; font: inherit; color: var(--acero); background: rgba(20,30,40,.8); border: 2px solid var(--linea); border-radius: 12px; padding: 6px 4px 5px; display: grid; justify-items: center; gap: 3px; }
+.av-mini .av-cara { width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #24343f; display: block; }
+.av-mini .av-cara svg { width: 100%; height: 100%; display: block; }
+.av-mini small { font-size: 11.5px; line-height: 1.1; text-align: center; color: var(--tenue); }
+.av-mini[aria-pressed="true"] { border-color: var(--hivis); background: rgba(255,138,31,.12); }
+.av-mini[aria-pressed="true"] small { color: #fff; }
+.av-mini:disabled { opacity: .45; } .av-mini b { position: absolute; right: 4px; top: 3px; font-size: 12px; }
+.av-colores { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.av-sw { width: 38px; height: 38px; border-radius: 50%; border: 3px solid rgba(255,255,255,.12); background: var(--c); padding: 0; box-shadow: inset 0 0 0 2px rgba(0,0,0,.25); }
+.av-sw[aria-pressed="true"], .av-sw.libre.activo { border-color: var(--hivis); box-shadow: 0 0 0 2px rgba(255,138,31,.35); }
+.av-sw.libre { position: relative; display: grid; place-items: center; background: conic-gradient(#ff5f5f, #ffd23f, #5fdc6a, #3ad1ff, #7b5cd6, #ff5fa2, #ff5f5f); overflow: hidden; }
+.av-sw.libre.activo { background: var(--c); }
+.av-sw.libre input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+.av-sw.libre span { font-size: 15px; pointer-events: none; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.av-listo { position: sticky; bottom: 0; padding: 10px 0 max(6px, env(safe-area-inset-bottom, 0px)); background: linear-gradient(rgba(13,20,27,0), rgba(13,20,27,.96) 35%); }
+.av-listo .btn { width: 100%; }
 .cara-yo.en-parte { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--hivis); flex: none; align-self: center; }
 /* Barra de zonas compacta: una sola tira con nombre y µm en una línea y una línea de energía debajo. */
 .zonas { gap: 0; background: rgba(13,20,27,.82); border: 1px solid var(--linea); border-radius: 10px; padding: 3px; }
@@ -5897,14 +5915,16 @@ function avatarDe() {
   const h = hashCara(S.jugador || 'Hood');
   return { piel: h % 6, pelo: (h >> 3) % 6, colorPelo: (h >> 6) % 4, rostro: (h >> 9) % 4 === 1 ? 1 : 0, lentes: (h >> 11) % 4 === 0 ? 1 : 0, casco: 0, uniforme: 0, expresion: 0, detalle: 0 };
 }
+const esHex = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+const colorAv = (k, v, def) => esHex(v) ? v : k === 'casco' ? ((AV.casco[v] || AV.casco[def || 0])[0]) : (AV[k][v] || AV[k][def || 0]);
 const avLibre = (k, i) => { const op = AV[k][i], m = Array.isArray(op) ? (k === 'casco' ? op[1] : op[3]) : null; return !m || !!(S.medallas && S.medallas[m]); };
 // Estilo de ilustración (no de caricatura): mandíbula, cuello, cejas, ojeras de turno nocturno y el chaleco reflejante.
 // El humor va en los detalles: la mancha de grasa, la curita, el lápiz en la oreja.
 const tono2 = (hex, f) => { const n = parseInt(hex.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255].map(v => Math.round(clamp(f < 0 ? v * (1 + f) : v + (255 - v) * f, 0, 255))); return '#' + c.map(v => v.toString(16).padStart(2, '0')).join(''); };
 function avatarSVG(a) {
   a = a || avatarDe();
-  const piel = AV.piel[a.piel] || AV.piel[1], sombra = tono2(piel, -.22), pelo = AV.colorPelo[a.colorPelo] || AV.colorPelo[0], ceja = tono2(pelo, -.15);
-  const est = (AV.pelo[a.pelo] || AV.pelo[0])[0], casco = (AV.casco[a.casco] || AV.casco[0])[0], ropa = AV.uniforme[a.uniforme] || AV.uniforme[0];
+  const piel = colorAv('piel', a.piel, 1), sombra = tono2(piel, -.22), pelo = colorAv('colorPelo', a.colorPelo), ceja = tono2(pelo, -.15);
+  const est = (AV.pelo[a.pelo] || AV.pelo[0])[0], casco = a.casco === 8 ? null : colorAv('casco', a.casco), ropa = colorAv('uniforme', a.uniforme);
   const r = (AV.rostro[a.rostro] || AV.rostro[0])[0], l = (AV.lentes[a.lentes] || AV.lentes[0])[0];
   const ex = (AV.expresion[a.expresion] || AV.expresion[0])[0], det = (AV.detalle[a.detalle] || AV.detalle[0])[0];
   const tapa = !!casco;
@@ -5940,7 +5960,7 @@ function avatarSVG(a) {
     + (det === 'curita' ? `<g transform="rotate(-18 58 31)"><rect x="51" y="28.5" width="14" height="5" rx="2.5" fill="#e8c39a" stroke="#c9a173" stroke-width=".6"/><rect x="56" y="28.5" width="4" height="5" fill="#d9b088"/><circle cx="53.5" cy="31" r=".5" fill="#c9a173"/><circle cx="62.5" cy="31" r=".5" fill="#c9a173"/></g>` : '')
     + (det === 'lapiz' ? `<g transform="rotate(-62 70 44)"><rect x="60" y="42" width="20" height="3.6" fill="#f2c230"/><path d="M80 42l4.5 1.8-4.5 1.8z" fill="#e8c9a0"/><rect x="58" y="42" width="2.5" height="3.6" fill="#e78a9b"/></g>` : '')
     + (det === 'audifonos' ? `<path d="M30 49q-5 12 2 24M70 49q5 12-2 24" stroke="#f2f2f2" stroke-width="1.3" fill="none"/><circle cx="30.5" cy="48" r="2.3" fill="#f2f2f2"/><circle cx="69.5" cy="48" r="2.3" fill="#f2f2f2"/>` : '');
-  const oro = casco && (AV.casco[a.casco] || [])[2];
+  const oro = casco && !esHex(a.casco) && (AV.casco[a.casco] || [])[2];
   const sombrero = casco ? `<path d="M27 36c0-16 10-25 23-25s23 9 23 25z" fill="${casco}"/><path d="M50 11v25" stroke="${tono2(casco, -.18)}" stroke-width="5"/><path d="M38 14q-6 8-7 20" stroke="${tono2(casco, .35)}" stroke-width="2.2" fill="none" opacity=".7"/><rect x="21" y="33.5" width="58" height="5.5" rx="2.7" fill="${tono2(casco, -.08)}"/>${oro ? '<path d="M33 18l3 4M64 16l-2 4" stroke="#fff" stroke-width="2" opacity=".85"/>' : ''}` : '';
   const ini = esc((jugador() || '?').trim()[0] || '?').toUpperCase();
   return `<svg viewBox="12 7 76 76" aria-hidden="true">${atras}`
@@ -5955,31 +5975,70 @@ function avatarSVG(a) {
     + `${vello}${boca}${lentes}${detalle}${sombrero}</svg>`;
 }
 const caraYo = (clase = '') => `<div class="cara con-cara cara-yo ${clase}" style="background:#24343f" title="${esc(jugador())}">${avatarSVG()}</div>`;
+// Creador de personaje: vista previa fija arriba, pestañas por parte del cuerpo, cada opción dibujada con tu propio
+// personaje en miniatura y colores libres (además de los sugeridos).
+const AV_TABS = [
+  ['pelo', '💇', ['Pelo', 'Hair'], [['pelo', 'mini'], ['colorPelo', 'color']]],
+  ['cara', '🙂', ['Cara', 'Face'], [['expresion', 'mini'], ['rostro', 'mini']]],
+  ['piel', '🎨', ['Piel', 'Skin'], [['piel', 'color']]],
+  ['ropa', '🦺', ['Ropa', 'Gear'], [['casco', 'mini'], ['uniforme', 'color']]],
+  ['extras', '🕶️', ['Extras', 'Extras'], [['lentes', 'mini'], ['detalle', 'mini']]],
+];
+let avTab = 'pelo';
 function pantallaAvatar(listo, nueva_) {
-  const A = { ...avatarDe() };
-  const opcion = (k, i) => {
+  const A = { ...avatarDe() }, hist = [];
+  const cambiar = (k, v) => { if (A[k] === v) return; hist.push({ ...A }); A[k] = v; };
+  const opcionMini = (k, i) => {
     const op = AV[k][i], libre = avLibre(k, i), m = Array.isArray(op) ? (k === 'casco' ? op[1] : op[3]) : null;
-    const color = typeof op === 'string' ? op : k === 'casco' ? op[0] : null;
-    const cont = color ? `<i style="background:${color}"></i>` : k === 'casco' ? '🚫' : `${L(op[1], op[2])}`;
-    const titulo = !libre && m ? L(`Se gana: ${MEDALLA_AV[m][0]}`, `Unlock: ${MEDALLA_AV[m][1]}`) : (k === 'casco' && !color ? L('Sin casco', 'No hard hat') : '');
-    return `<button class="av-op ${color ? 'color' : ''}" data-av="${k}:${i}" aria-pressed="${A[k] === i}" ${libre ? '' : 'disabled'} title="${esc(titulo)}">${cont}${libre ? '' : '<b>🔒</b>'}</button>`;
+    const nombre = k === 'casco' ? (i === 8 ? L('Sin casco', 'No hard hat') : '') : L(op[1], op[2]);
+    const pista = !libre && m ? L(`Se gana: ${MEDALLA_AV[m][0]}`, `Unlock: ${MEDALLA_AV[m][1]}`) : nombre;
+    return `<button class="av-mini" data-av="${k}:${i}" aria-pressed="${A[k] === i}" ${libre ? '' : 'disabled'} title="${esc(pista)}"><span class="av-cara">${avatarSVG({ ...A, [k]: i })}</span>${nombre ? `<small>${esc(nombre)}</small>` : ''}${libre ? '' : '<b>🔒</b>'}</button>`;
   };
-  pantalla(`<div class="rotulo">${L('Tu personaje', 'Your character')}<span>${esc(jugador())}</span></div>
-    <div class="av-prev">${avatarSVG(A)}</div>
-    ${Object.keys(AV).map(k => `<div class="av-fila"><b>${L(...AV_N[k])}</b><div>${AV[k].map((_, i) => opcion(k, i)).join('')}</div></div>`).join('')}
-    <p class="nota">${L('Algunas piezas se ganan con logros (🔒). Puedes cambiarlo cuando quieras en el Taller.', 'Some pieces are earned with awards (🔒). You can change it anytime in the Shop.')}</p>
-    <div class="acciones"><button class="btn prim" id="avListo">${nueva_ ? L('¡A trabajar!', 'Let\'s work!') : L('Listo', 'Done')}</button><button class="btn" id="avAzar">🎲 ${L('Al azar', 'Random')}</button></div>`);
-  const pintar = () => { P.querySelector('.av-prev').innerHTML = avatarSVG(A); P.querySelectorAll('[data-av]').forEach(b => { const [k, i] = b.dataset.av.split(':'); b.setAttribute('aria-pressed', A[k] === +i); }); };
-  P.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { const [k, i] = b.dataset.av.split(':'); A[k] = +i; tono(660 + 40 * +i, .05, .04, 'triangle'); vibrar(8); pintar(); });
-  $('#avAzar').onclick = () => { for (const k of Object.keys(AV)) { const libres = AV[k].map((_, i) => i).filter(i => avLibre(k, i)); A[k] = uno(libres); } tono(880, .06, .05, 'triangle'); pintar(); };
+  const opcionColor = (k) => {
+    const lista = k === 'casco' ? [] : AV[k];
+    const actual = colorAv(k, A[k]);
+    return `<div class="av-colores">${lista.map((c, i) => `<button class="av-sw" data-av="${k}:${i}" aria-pressed="${A[k] === i}" style="--c:${c}" aria-label="${c}"></button>`).join('')}
+      <label class="av-sw libre ${esHex(A[k]) ? 'activo' : ''}" style="--c:${actual}" title="${L('Otro color', 'Any color')}"><input type="color" data-avc="${k}" value="${actual}"><span>🎨</span></label></div>`;
+  };
+  const panel = () => {
+    const t = AV_TABS.find(x => x[0] === avTab);
+    return t[3].map(([k, tipo]) => `<div class="av-sec"><b>${L(...AV_N[k])}</b>${tipo === 'mini' ? `<div class="av-minis">${AV[k].map((_, i) => opcionMini(k, i)).join('')}</div>${k === 'casco' ? opcionColor('casco') : ''}` : opcionColor(k)}</div>`).join('');
+  };
+  pantalla(`<div class="av-cab">
+      <div class="av-prev">${avatarSVG(A)}</div>
+      <div class="av-quien"><div class="rotulo">${L('Tu personaje', 'Your character')}<span>${esc(jugador())}</span></div>
+        <div class="av-herr"><button class="btn peq" id="avAzar">🎲 ${L('Al azar', 'Random')}</button><button class="btn peq" id="avAtras" disabled>↺ ${L('Deshacer', 'Undo')}</button></div></div>
+    </div>
+    <nav class="av-tabs">${AV_TABS.map(([id, ico, n]) => `<button data-avt="${id}" aria-selected="${avTab === id}"><i>${ico}</i>${L(...n)}</button>`).join('')}</nav>
+    <div class="av-panel" id="avPanel">${panel()}</div>
+    <p class="nota">${L('Las piezas con 🔒 se ganan con medallas. Puedes cambiar todo cuando quieras tocando tu cara arriba en el menú.', 'Pieces with 🔒 are earned with medals. Change anything anytime by tapping your face at the top of the menu.')}</p>
+    <div class="av-listo"><button class="btn prim" id="avListo">${nueva_ ? L('¡A trabajar!', 'Let\'s work!') : L('Listo', 'Done')}</button></div>`);
+  const pintar = (todo) => {
+    P.querySelector('.av-prev').innerHTML = avatarSVG(A);
+    if (todo) { $('#avPanel').innerHTML = panel(); enlazarPanel(); P.querySelectorAll('[data-avt]').forEach(b => b.setAttribute('aria-selected', b.dataset.avt === avTab)); }
+    else {
+      P.querySelectorAll('[data-av]').forEach(b => { const [k, i] = b.dataset.av.split(':'); b.setAttribute('aria-pressed', A[k] === +i); });
+      P.querySelectorAll('.av-mini').forEach(b => { const [k, i] = b.dataset.av.split(':'); b.querySelector('.av-cara').innerHTML = avatarSVG({ ...A, [k]: +i }); });
+      P.querySelectorAll('[data-avc]').forEach(inp => { const k = inp.dataset.avc, lab = inp.parentElement; lab.classList.toggle('activo', esHex(A[k])); lab.style.setProperty('--c', colorAv(k, A[k])); });
+    }
+    $('#avAtras').disabled = !hist.length;
+  };
+  const enlazarPanel = () => {
+    P.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { const [k, i] = b.dataset.av.split(':'); cambiar(k, +i); tono(660 + 30 * +i, .05, .04, 'triangle'); vibrar(8); pintar(); });
+    P.querySelectorAll('[data-avc]').forEach(inp => { inp.oninput = () => { const k = inp.dataset.avc; if (!esHex(A[k])) hist.push({ ...A }); A[k] = inp.value; pintar(); }; });
+  };
+  enlazarPanel();
+  P.querySelectorAll('[data-avt]').forEach(b => b.onclick = () => { avTab = b.dataset.avt; tono(520, .04, .03, 'triangle'); pintar(true); });
+  $('#avAzar').onclick = () => { hist.push({ ...A }); for (const k of Object.keys(AV)) { const libres = AV[k].map((_, i) => i).filter(i => avLibre(k, i)); A[k] = uno(libres); } tono(880, .06, .05, 'triangle'); pintar(); };
+  $('#avAtras').onclick = () => { if (!hist.length) return; Object.assign(A, hist.pop()); pintar(); };
   $('#avListo').onclick = () => { S.avatar = { ...A }; guardar(); aplicarYo3D(); sDing(); listo(); };
 }
 // Tu muñeco en la cocina, con tu piel, tu uniforme y tu casco.
 function aplicarYo3D() {
   if (!mundo) return;
   if (piezas.yo) { mundo.remove(piezas.yo); piezas.yo = null; }
-  const a = avatarDe(), casco = (AV.casco[a.casco] || AV.casco[0])[0];
-  const p = persona(casco || AV.colorPelo[a.colorPelo], false, { piel: AV.piel[a.piel], ropa: AV.uniforme[a.uniforme] });
+  const a = avatarDe(), casco = a.casco === 8 ? null : colorAv('casco', a.casco);
+  const p = persona(casco || colorAv('colorPelo', a.colorPelo), false, { piel: colorAv('piel', a.piel, 1), ropa: colorAv('uniforme', a.uniforme) });
   p.position.set(-(piezas.lineW || 2) / 2 - 1.35, 0, 1.05); p.rotation.y = .75; mundo.add(p); piezas.yo = p;
 }
 const cara = (col, letra, nombre) => `<div class="cara con-cara" style="background:${col}" title="${esc(nombre || '')}">${caraSVG(nombre || letra + col)}</div>`;
