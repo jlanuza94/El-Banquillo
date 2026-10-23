@@ -822,5 +822,32 @@ caso('sueldos de técnicos con escala real y partidas viejas ajustadas', async (
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
+caso('historias de la oficina: el Guapo, Doña Elsy, la posada y los clientes raros', async () => {
+  const tec = (id, n) => ({ id, n, rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 100, color: '#ffb36b', noches: 12, tipo: 'normal', cuidado: 3, puntual: 3, animo: 3 });
+  const p = await abrir(partida({ noche: 60, etapa: 3, rep: 60, dinero: 9000, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 6 }, sede: { almacen: 1, planificacion: 1, formacion: 1, oficina: 1 }, cuadrilla: [tec(7, 'Nacho'), tec(8, 'Rosa')], saga: { cap: 7, respeto: 0 } }));
+  const capitulo = async (k, op) => {
+    await p.evaluate(k => { const S = __hc.S; S.ofi = S.ofi || {}; S.hoy.historia = null; S.hoy.ayudHist = null; S.hoy.saga = null; S.hoy.ofiRes = null; S.hoy.ofi = { k, cap: k === 'guapo' ? S.ofi.guapo || 0 : k === 'elsy' ? S.ofi.elsy || 0 : 0, c: 7 }; __hc.pantallaCamioneta(); }, k);
+    await alBuzon(p);
+    const t = await p.evaluate(() => (document.querySelector('[data-ofi]') || {}).closest ? document.querySelector('[data-ofi]').closest('.orden').innerText : null);
+    if (!t) throw new Error('no apareció la historia de la oficina ' + k);
+    await p.click(`[data-ofi="${op}"]`); return t;
+  };
+  let t = '';
+  for (let i = 0; i < 4; i++) t = await capitulo('guapo', 0);
+  let r = await p.evaluate(() => ({ g: __hc.S.ofi.guapo, med: !!__hc.S.medallas.guapo, res: __hc.S.hoy.ofiRes }));
+  afirmar(/pastel|cake/i.test(t) && r.g === 4 && r.med && /EUSTAQUIO/.test(r.res), 'el misterio del Guapo no se resolvió: ' + JSON.stringify(r));
+  await capitulo('elsy', 0); await capitulo('elsy', 1);
+  r = await p.evaluate(() => ({ e: __hc.S.ofi.elsy, resp: __hc.S.saga.respeto }));
+  afirmar(r.e === 2 && r.resp === -1, 'la historia de Doña Elsy no avanzó o no movió el respeto del Cuñado: ' + JSON.stringify(r));
+  const d0 = await p.evaluate(() => __hc.S.dinero);
+  await capitulo('posada', 0);
+  r = await p.evaluate(() => ({ d: __hc.S.dinero, a: __hc.S.cuadrilla.map(c => c.animo), n: __hc.S.cuadrilla.length + __hc.S.fijos.length }));
+  afirmar(d0 - r.d === 150 * r.n && r.a.every(a => a === 5), 'la posada no cobró o no animó: ' + JSON.stringify({ d0, ...r }));
+  // clientes raros de Charlienaro: contrato con condición y paga más
+  r = await p.evaluate(() => { for (let i = 0; i < 40; i++) { __hc.S.hoy = null; __hc.pantallaCamioneta(); const o = __hc.S.hoy.ordenes.find(o => o.raroCh); if (o) return { quien: o.contrato.quien, conds: o.contrato.conds }; } return null; });
+  afirmar(r && r.quien === 'raro' && r.conds.length === 1, 'Charlienaro no trajo clientes raros: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
 if (require.main === module) correr(process.argv[2]).then(mal => process.exit(mal ? 1 : 0));
 module.exports = { correr };

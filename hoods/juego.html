@@ -1038,7 +1038,7 @@ const precioEtapa = e => Math.round(e.compra * (ciudad() === 2 ? 2.5 : 1));   //
 // Lo que es de la empresa (se queda en su ciudad). Todo lo demás es del jugador y viaja con él: nivel, habilidades,
 // medallas, álbum, apariencias, objetos, récords y las herramientas personales.
 const CAMPOS_EMPRESA = ['empresa', 'etapa', 'rep', 'dinero', 'clientes', 'perdidos', 'cuadrilla', 'candidatos', 'fijos', 'compPref', 'sede', 'vanMej', 'kits', 'tuneo', 'angelica', 'finde', 'findeOfrecido',
-  'licit', 'licitGanada', 'licitPerdida', 'licitIntentos', 'mis', 'deuda', 'cunado', 'resena', 'recomienda', 'devolver', 'noticia', 'noticiaRadio', 'abierta', 'racha', 'hoy', 'jefeNoche', 'final', 'hitosRep', 'admin', 'oficinaMsg', 'estadio'];
+  'licit', 'licitGanada', 'licitPerdida', 'licitIntentos', 'mis', 'deuda', 'cunado', 'resena', 'recomienda', 'devolver', 'noticia', 'noticiaRadio', 'abierta', 'racha', 'hoy', 'jefeNoche', 'final', 'hitosRep', 'admin', 'oficinaMsg', 'estadio', 'ofi'];
 const EQ_EMPRESA = ['camioneta', 'flota', 'seguro', 'planta'];
 const ciudad = () => (S && S.ciudad) || 1;
 const nCiudad = (k = ciudad()) => L(...CIUDADES[k].n);
@@ -1467,7 +1467,16 @@ const CONTRATANTES = [
 ];
 const MULT_CONTRATO = 1.7, PENA_CONTRATO = .3;
 const PROTOCOLO = ['El jefe de protocolo', 'The head of protocol', 'Mañana hay cena de Estado. La campana principal saldrá en las fotos: la quiero como espejo. Y ni un rasguño en la vajilla.', 'Tomorrow there\'s a state dinner. The main hood will be in the photos: I want it like a mirror. And not a single scratch on the china.'];
-const contratante = c => c.quien === 'protocolo' ? PROTOCOLO : CONTRATANTES[c.quien] || CONTRATANTES[0];
+const contratante = c => c.quien === 'protocolo' ? PROTOCOLO : c.quien === 'raro' ? (RAROS.find(r => r[4] === c.raro) || RAROS[0]) : CONTRATANTES[c.quien] || CONTRATANTES[0];
+// Los clientes raros que consigue Charlienaro: pagan un 40 % más, pero con una condición rarísima (que sí se revisa).
+const RAROS = [
+  ['El dueño de la taquería «El Silencio»', 'The owner of «El Silencio» taquería', 'Mi abuela duerme arriba y tiene el oído de un murciélago. Nada de hidrolavadora o no les pago.', 'My grandma sleeps upstairs and has bat ears. No pressure washer or I don\'t pay.', 'silencio'],
+  ['La chef supersticiosa', 'The superstitious chef', 'Si algo se rompe en mi cocina, es de mala suerte por siete años. Ni un solo daño. Ni uno.', 'If anything breaks in my kitchen, it\'s seven years of bad luck. Not a single damage. Not one.', 'sinDanos'],
+  ['El gerente que se duerme temprano', 'The manager who goes to bed early', 'Yo cierro cuando ustedes acaban. Y me quiero dormir. Llamen al inspector antes de las tres.', 'I lock up when you finish. And I want to sleep. Call the inspector before three.', 'antes3'],
+  ['El influencer de las parrillas', 'The grill influencer', 'Voy a grabar mi reflejo en la campana para mis seguidores. Si no me veo, no hay video. Ni pago.', 'I\'m filming my reflection in the hood for my followers. If I can\'t see myself, no video. No pay.', 'espejo'],
+  ['La señora de los tamales', 'The tamale lady', 'Mi difunto esposo era gasero. Quiero ver que cierran el gas y cubren todo como Dios manda.', 'My late husband was a gas man. I want to see the gas shut and everything covered properly.', 'prep'],
+  ['El crítico gastronómico', 'The food critic', 'Escribo de todo lo que veo. Si no sacan A, también lo escribo.', 'I write about everything I see. If you don\'t get an A, I\'ll write that too.', 'notaA'],
+];
 // Trabajos jefe: noches únicas con su propia regla. Salen de vez en cuando; los que no has superado salen antes.
 const JEFES = {
   tele: { ico: '📺', n: ['En vivo: «Cocina con Fuego»', 'Live: "Cooking with Fire"'], quien: ['El productor', 'The producer'], cocinas: ['burger', 'pizza'], mult: 1.5,
@@ -1548,6 +1557,8 @@ const MEDALLAS = [
   { id: 'j_hospital', n: 'Silencio, por favor', d: 'Limpia la cocina del hospital sin tres regaños.', ico: '🏥' },
   { id: 'j_inspector', n: 'Bajo la lupa', d: 'Aprueba con el inspector sorpresa (más palomitas que taches).', ico: '🔍' },
   { id: 'jefes', n: 'Leyenda de la noche', d: 'Supera todos los trabajos jefe.', ico: '👑' },
+  { id: 'guapo', n: 'El verdadero nombre', d: 'Descubriste cómo se llama El Guapo. No se lo digas a nadie.', ico: '🪪', secreto: true },
+  { id: 'elsy', n: 'Asunto de 1994', d: 'Terminaste la historia de Doña Elsy y El Cuñado.', ico: '📰' },
   { id: 'dorado', n: 'El mapache dorado', d: 'Lo viste. Nadie te va a creer.', ico: '✪', secreto: true },
   { id: 'casete', n: 'La cinta perdida', d: 'Encontraste el casete de Don Rigo en un ducto.', ico: '▭', secreto: true },
   { id: 'himno', n: 'Oído absoluto', d: 'Encontraste la canción secreta de la radio.', ico: '♫', secreto: true },
@@ -5202,6 +5213,11 @@ function generarOrdenes() {
     o.pedido = null; o.micras = Math.round(o.micras * 1.25 / 50) * 50;   // los contratos difíciles vienen con más grasa
   }
   if (S.fase === 'empresa') { const f = fechaHoy(), D = S.diario && S.diario.fecha === f ? S.diario : null; if (!D || D.intentos < 3) out.push(ordenDiaria(f)); }
+  if (S.fase === 'empresa' && encargadoActivo('oficina') && azar(.35)) {
+    const libres2 = out.filter(o => !o.clienteId && !o.contrato && !o.duelo && !o.gigante && !o.jefe && !o.estadio);
+    const raros = RAROS.filter(r => !condicion(r[4]).si || condicion(r[4]).si());
+    if (libres2.length && raros.length) { const o = uno(libres2), r = uno(raros); o.contrato = { conds: [r[4]], quien: 'raro', raro: r[4] }; o.pedido = null; o.pago = r10(o.pago * 1.4); o.raroCh = true; }
+  }
   if (S.fase === 'empresa' && S.gobierno && azar(.35)) {
     const lugar = uno(GOBIERNO), o = genOrden(COCINAS[lugar[2]] && COCINAS[lugar[2]].etapa <= S.etapa ? lugar[2] : 'cafe');
     o.gobierno = true; o.nombre = L(lugar[0], lugar[1]); o.pago = r10(o.pago * 1.5); o.pedido = null; o.duelo = false;
@@ -5555,6 +5571,7 @@ function prepararNoche() {
       const c = S.cuadrilla.find(x => !x.prueba && (x.noches || 0) >= 4 && (!x.hist || (x.hist.cap < 2 && S.noche >= x.hist.next)));
       if (c) { c.hist = c.hist || { cap: 0, next: 0 }; S.hoy.ayudHist = c.id; }
     }
+    elegirOfiHist();
   }
   guardar();
 }
@@ -6316,7 +6333,7 @@ function pantallaCamioneta() {
 
 // Los trabajos que no eliges se ven en una tarjeta corta; el elegido se abre con todos sus detalles.
 function tarjetaCorta(o, i) {
-  const chip = o.estadio ? `⚽ ${L('Estadio', 'Stadium')} · ${L('noche', 'night')} ${(o.sector || 0) + 1}/5` : o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.primerDuelo ? L('¡El Cuñado lo quiere!', 'El Cuñado wants it!') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.gigante ? L('Gigante', 'Giant') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.diario ? '📅 ' + L('Reto del día', 'Daily challenge') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
+  const chip = o.raroCh ? '🤵 ' + L('Cliente raro de Charlienaro', 'Charlienaro\'s weird client') : o.estadio ? `⚽ ${L('Estadio', 'Stadium')} · ${L('noche', 'night')} ${(o.sector || 0) + 1}/5` : o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.primerDuelo ? L('¡El Cuñado lo quiere!', 'El Cuñado wants it!') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.gigante ? L('Gigante', 'Giant') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.diario ? '📅 ' + L('Reto del día', 'Daily challenge') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
   return `<button class="orden corta ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${S.hoy && i === S.hoy.sel}">
     <div class="fila"><h3>${icoCocina(o.cocina)}${esc(o.nombre)}</h3><span class="pago">${dinero(o.pago)}</span></div>
     <span class="nota">${chip ? `<b class="chip-txt ${o.duelo ? 'mal' : ''}">${esc(chip)}</b> · ` : ''}${nCocina(o.cocina)}${o.campanas > 1 ? ` · ${o.campanas} ${L('campanas', 'hoods')}` : ''} · ${o.micras.toLocaleString('es-MX')} µm${o.firmado ? '' : ` · <i>${L('sin firmar', 'not signed')}</i>`}</span>
@@ -6434,6 +6451,81 @@ function buzon(items) {
   return `<div class="buzon"><div class="buzon-cab">📬 ${L('Novedades', 'News')}${pend ? ` <span class="cuenta">${pend}</span>` : ''}</div>
     ${items.map(x => `<details class="buzon-item ${x.pend ? 'pend' : ''}" data-bz="${x.id}" ${(BZ[x.id] ?? (x.id === primera || x.id === bzReciente)) ? 'open' : ''}><summary><span class="bz-ico">${x.ico}</span><b>${esc(x.t)}</b>${x.pend ? '<i class="punto"></i>' : '<i class="hecho">✓</i>'}</summary>${x.html}</details>`).join('')}</div>`;
 }
+// ---- Historias de la oficina: el misterio del Guapo, Doña Elsy y El Cuñado (1994), la posada y los cumpleaños.
+// Como mucho una por noche, en el Buzón, cuando no hay otra historia.
+const OFI_HIST = {
+  guapo: { quien: 'almacen', caps: [
+    { t: ['La credencial vieja', 'The old ID badge'], txt: () => ['Ordenando el almacén encuentras una credencial vieja del Guapo. El nombre está tapado con cinta canela. Solo se alcanza a leer «…aquio».', 'Tidying the storeroom you find an old badge of El Guapo\'s. The name is covered with duct tape. All you can read is «…aquio».'],
+      ops: [{ t: ['Despegar la cinta', 'Peel off the tape'], f: () => ['El Guapo aparece de la nada: «Eso es propiedad federal, jefe». Te la quita con una sonrisa. Pista 1 de 4.', 'El Guapo appears out of nowhere: "That\'s federal property, boss." Takes it back with a smile. Clue 1 of 4.'] },
+        { t: ['Dejarla donde estaba', 'Leave it where it was'], f: () => ['Respetas su misterio. Desde el pasillo, El Guapo te guiña un ojo. Pista 1 de 4.', 'You respect the mystery. From the hallway, El Guapo winks at you. Clue 1 of 4.'] }] },
+    { t: ['Una llamada para «Tachito»', 'A call for "Tachito"'], txt: () => ['Suena el teléfono de la oficina. Una señora pregunta: «¿Está mi Tachito? Dígale que ya está su caldo». El Guapo se pone rojo desde el almacén.', 'The office phone rings. A lady asks: "Is my Tachito there? Tell him his soup is ready." El Guapo turns red from the storeroom.'],
+      ops: [{ t: ['Pasarle la llamada', 'Put the call through'], f: () => ['«Sí, mamá. No, mamá. Ya voy, mamá.» Tachito… digo, El Guapo, se va temprano. Pista 2 de 4.', '"Yes, mom. No, mom. Coming, mom." Tachito… I mean, El Guapo, leaves early. Clue 2 of 4.'] },
+        { t: ['Tomar el recado', 'Take a message'], f: () => ['Le dejas un papelito: «Tu caldo ya está». Él lo lee, lo dobla y lo guarda en la cartera. Pista 2 de 4.', 'You leave him a note: "Your soup is ready." He reads it, folds it and puts it in his wallet. Clue 2 of 4.'] }] },
+    { t: ['El recibo de la tintorería', 'The dry-cleaning receipt'], txt: () => ['Entre las facturas hay un recibo de tintorería: «Saco gris, a nombre de E. P. B.». El Guapo jura que no es suyo. Pero el saco gris sí.', 'Among the invoices there\'s a dry-cleaning receipt: "Gray jacket, name: E. P. B." El Guapo swears it isn\'t his. The gray jacket is, though.'],
+      ops: [{ t: ['Preguntarle qué es la «E»', 'Ask him what the "E" stands for'], f: () => ['«Elegante», dice sin parpadear. Pista 3 de 4.', '"Elegant," he says without blinking. Clue 3 of 4.'] },
+        { t: ['Pagar el recibo ($25)', 'Pay the receipt ($25)'], pide: 25, f: () => { S.dinero -= 25; return ['El Guapo recoge su saco y te lo agradece con una reverencia. Pista 3 de 4.', 'El Guapo picks up his jacket and thanks you with a bow. Clue 3 of 4.']; } }] },
+    { t: ['El pastel', 'The cake'], txt: () => ['Es el cumpleaños del Guapo. Doña Elsy compró pastel, pero el betún solo dice «FELIZ CUMPLE, GUAPO». Nadie se atrevió. Al soplar las velas se le cae la cartera…', 'It\'s El Guapo\'s birthday. Doña Elsy bought a cake, but the frosting just says "HAPPY BIRTHDAY, GUAPO". Nobody dared. As he blows out the candles, his wallet falls…'],
+      ops: [{ t: ['Recoger la cartera', 'Pick up the wallet'], f: () => ['La credencial dice: EUSTAQUIO PONCIANO BARRAGÁN. Él te mira. Tú lo miras. «Ni una palabra, jefe.» Pista 4 de 4: misterio resuelto.', 'The ID says: EUSTAQUIO PONCIANO BARRAGÁN. He looks at you. You look at him. "Not a word, boss." Clue 4 of 4: mystery solved.'] },
+        { t: ['Voltear para otro lado', 'Look the other way'], f: () => ['Volteas, pero Claunoche no: «¡EUSTAQUIO!». Toda la oficina se entera. Él suspira: «Ya qué». Misterio resuelto.', 'You look away, but Claunoche doesn\'t: "EUSTAQUIO!" The whole office finds out. He sighs: "Oh well." Mystery solved.'] }] },
+  ], fin: () => { S.medallas.guapo = S.medallas.guapo || S.noche; const al = L('El cumpleaños de Eustaquio (El Guapo)', 'Eustaquio\'s birthday (El Guapo)'); if (!S.album.includes(al)) S.album.push(al); } },
+  elsy: { quien: 'planificacion', caps: [
+    { t: ['El recorte de 1994', 'The 1994 clipping'], txt: () => ['Doña Elsy tiene pegado en su escritorio un recorte de 1994: «Joven limpiador, descalificado del Concurso Regional de Campanas por pintar la suya de plateado». El joven del bigote es El Cuñado. La jueza: Elsy.', 'Doña Elsy has a 1994 clipping on her desk: "Young cleaner disqualified from the Regional Hood Contest for painting his hood silver." The young man with the mustache is El Cuñado. The judge: Elsy.'],
+      ops: [{ t: ['Preguntarle qué pasó', 'Ask her what happened'], f: () => ['«Pintó la campana para que pareciera migdaleada. Le pasé el dedo: plateado. Lo descalifiqué y nunca me lo perdonó.»', '"He painted the hood to make it look polished. I ran my finger over it: silver. I disqualified him and he never forgave me."'] },
+        { t: ['No meterte', 'Stay out of it'], f: () => ['Doña Elsy despega el recorte, lo mira un rato y lo vuelve a pegar. Más derecho.', 'Doña Elsy peels off the clipping, stares at it a while and sticks it back. Straighter.'] }] },
+    { t: ['Visita con flores', 'A visit with flowers'], txt: () => ['El Cuñado se presenta en tu oficina con un ramo de flores… para Doña Elsy. «Treinta años, Elsy. ¿Me vas a perdonar o no?»', 'El Cuñado shows up at your office with a bouquet… for Doña Elsy. "Thirty years, Elsy. Are you going to forgive me or not?"'],
+      ops: [{ t: ['Dejarlo pasar', 'Let him in'], f: () => { respeto(1); return ['Hablan diez minutos. Al salir, El Cuñado te da la mano. Doña Elsy: «Sigue siendo un tramposo. Pero ya no pinta.»', 'They talk for ten minutes. On the way out, El Cuñado shakes your hand. Doña Elsy: "He\'s still a cheat. But he doesn\'t paint anymore."']; } },
+        { t: ['Cerrarle la puerta', 'Shut the door'], f: () => { respeto(-1); return ['El Cuñado deja las flores en la puerta. Doña Elsy las pone en agua. «No por él. Por las flores.»', 'El Cuñado leaves the flowers at the door. Doña Elsy puts them in water. "Not for him. For the flowers."']; } }] },
+    { t: ['La revancha de Doña Elsy', 'Doña Elsy\'s rematch'], txt: () => ['Doña Elsy quiere ir a revisar, con su linterna, el próximo trabajo de El Cuñado. «Solo para ver si sigue pintando.»', 'Doña Elsy wants to go inspect El Cuñado\'s next job with her flashlight. "Just to see if he\'s still painting."'],
+      ops: [{ t: ['«Vaya, Doña Elsy»', '"Go for it, Doña Elsy"'], f: () => { S.rep = clamp(S.rep + 3, 0, 100); return ['Encontró grasa en tres esquinas y lo contó en Radio Grasa FM. Todo el barrio se enteró. +3 de reputación.', 'She found grease in three corners and told Radio Grasa FM. The whole neighborhood heard. +3 reputation.']; } },
+        { t: ['«Mejor déjelo en paz»', '"Better leave him alone"'], f: () => { respeto(1); return ['Doña Elsy suspira: «Tiene razón, jefe. Pero si vuelve a pintar de plateado, lo descalifico otra vez».', 'Doña Elsy sighs: "You\'re right, boss. But if he paints silver again, I\'ll disqualify him again."']; } }] },
+  ], fin: () => { S.medallas.elsy = S.medallas.elsy || S.noche; const al = L('Doña Elsy y el recorte de 1994', 'Doña Elsy and the 1994 clipping'); if (!S.album.includes(al)) S.album.push(al); } },
+  posada: { quien: 'formacion', caps: [
+    { t: ['La posada de la empresa', 'The company holiday party'], txt: () => [`Fausto propone la posada de fin de año: «La gente trabajó duro. Un poco de ponche y piñata, y vuelven con otra energía».`, `Fausto proposes the end-of-year party: "People worked hard. A little punch and a piñata, and they come back with new energy."`],
+      ops: [{ t: () => [`Posada en grande (${dinero(posadaPrecio(150))})`, `Big party (${dinero(posadaPrecio(150))})`], pide: () => posadaPrecio(150), f: () => { S.dinero -= posadaPrecio(150); animarTodos(2); return ['Mariachi, piñata con forma de campana y ponche hasta la madrugada. Tu gente vuelve feliz (+2 de ánimo).', 'Mariachi, a hood-shaped piñata and punch till dawn. Your people come back happy (+2 morale).']; } },
+        { t: () => [`Posada sencilla (${dinero(posadaPrecio(60))})`, `Simple party (${dinero(posadaPrecio(60))})`], pide: () => posadaPrecio(60), f: () => { S.dinero -= posadaPrecio(60); animarTodos(1); return ['Tamales, ponche y una bocina. Nadie se queja (+1 de ánimo).', 'Tamales, punch and a speaker. Nobody complains (+1 morale).']; } },
+        { t: ['Este año no hay posada', 'No party this year'], f: () => { animarTodos(-1); return ['Fausto respira hondo. Tu gente no dice nada, pero se nota (−1 de ánimo).', 'Fausto takes a deep breath. Your people say nothing, but it shows (−1 morale).']; } }] },
+  ], fin: () => { S.ofi.posada = S.noche; }, repite: true },
+  cumple: { quien: null, caps: [
+    { t: () => [`El cumpleaños de ${cumpleQuien().n}`, `${cumpleQuien().n}'s birthday`], txt: () => [`Hoy cumple años ${cumpleQuien().n}. Llegó temprano «por si acaso».`, `Today is ${cumpleQuien().n}'s birthday. They came in early "just in case".`],
+      ops: [{ t: ['Pastel y mañanitas ($50)', 'Cake and a song ($50)'], pide: 50, f: () => { S.dinero -= 50; animar(cumpleQuien(), 2); return ['Le cantan las mañanitas en la camioneta, desafinados. Está feliz (+2 de ánimo).', 'They sing to them in the van, off-key. They\'re happy (+2 morale).']; } },
+        { t: ['Una tarjeta firmada por todos', 'A card signed by everyone'], f: () => { animar(cumpleQuien(), 1); return ['Beto firmó dos veces. Igual le gusta (+1 de ánimo).', 'Beto signed twice. They like it anyway (+1 morale).']; } },
+        { t: ['Seguir trabajando', 'Keep working'], f: () => { animar(cumpleQuien(), -1); return ['Nadie dice nada. Se nota un poco triste (−1 de ánimo).', 'Nobody says anything. They look a bit sad (−1 morale).']; } }] },
+  ], fin: () => { S.ofi.cumple = S.noche; }, repite: true },
+};
+const posadaPrecio = p => p * Math.max(1, S.cuadrilla.length + S.fijos.length);
+const animar = (c, n) => { if (c) c.animo = clamp((c.animo || 3) + n, 1, 5); };
+const animarTodos = n => S.cuadrilla.forEach(c => animar(c, n));
+const cumpleQuien = () => S.cuadrilla.find(c => c.id === (S.hoy.ofi || {}).c) || S.cuadrilla[0] || { n: 'Beto' };
+const ofiTxt = v => L(...(typeof v === 'function' ? v() : v));
+function elegirOfiHist() {
+  const H = S.hoy; if (S.fase !== 'empresa' || H.historia || H.ayudHist || (H.saga !== undefined && H.saga !== null)) return;
+  const O = S.ofi = S.ofi || { guapo: 0, elsy: 0, next: 0 };
+  if (S.noche < (O.next || 0) || !azar(.45)) return;
+  const pos = [];
+  if (encargadoActivo('almacen') && (O.guapo || 0) < 4) pos.push('guapo');
+  if (encargadoActivo('planificacion') && (O.elsy || 0) < 3) pos.push('elsy');
+  if (encargadoActivo('formacion') && S.cuadrilla.length >= 2 && S.noche - (O.posada || 0) >= 30) pos.push('posada');
+  if (S.cuadrilla.length && S.noche - (O.cumple || 0) >= 12) pos.push('cumple');
+  if (!pos.length) return;
+  const k = uno(pos); H.ofi = { k, cap: k === 'guapo' ? O.guapo || 0 : k === 'elsy' ? O.elsy || 0 : 0, c: k === 'cumple' ? uno(S.cuadrilla).id : null };
+}
+function tarjetaOfi() {
+  const H = S.hoy, h = H.ofi; if (!h || !OFI_HIST[h.k]) return '';
+  const D = OFI_HIST[h.k], C = D.caps[h.cap], quien = D.quien && ENCARGADOS[D.quien];
+  const total = D.repite ? 0 : D.caps.length;
+  return `<div class="orden dia historia-comp"><span class="chip">🏢 ${L('En la oficina', 'At the office')}${total ? ` · ${h.cap + 1} ${L('de', 'of')} ${total}` : ''}</span><div class="fila-cara">${quien ? caraEnc(D.quien) : ''}<h3>${esc(ofiTxt(C.t))}</h3></div><p>${esc(ofiTxt(C.txt))}</p>
+    ${H.ofiRes ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(H.ofiRes)}</div>`
+      : `<div class="opciones">${C.ops.map((op, i) => { const pide = typeof op.pide === 'function' ? op.pide() : op.pide; return `<button class="btn" data-ofi="${i}" ${pide && S.dinero < pide ? 'disabled' : ''}>${esc(ofiTxt(op.t))}</button>`; }).join('')}</div>`}</div>`;
+}
+function elegirOfi(i) {
+  const H = S.hoy, h = H.ofi; if (!h || H.ofiRes) return;
+  const D = OFI_HIST[h.k], op = D.caps[h.cap].ops[i], pide = typeof op.pide === 'function' ? op.pide() : op.pide; if (pide && S.dinero < pide) return;
+  audio(); H.ofiRes = L(...op.f());
+  const O = S.ofi; O.next = S.noche + 3;
+  if (h.k === 'guapo' || h.k === 'elsy') { O[h.k] = h.cap + 1; if (O[h.k] >= D.caps.length) D.fin(); }
+  else D.fin();
+  tono(600, .12, .08, 'triangle'); guardar(); pantallaCamioneta();
+}
 // ---- Buzón: los mensajes del día (Don Rigo, noticias del barrio) y las decisiones de la historia, fuera de la pestaña Noche.
 function itemsBuzon() {
   const Hs = S.hoy, aprendiz = S.fase === 'aprendiz', yoP = tarjetaYo(true);
@@ -6443,6 +6535,7 @@ function itemsBuzon() {
     { id: 'saga', ico: '🎭', t: Hs.saga !== undefined && Hs.saga !== null ? L(...SAGA[Hs.saga].t) : '', pend: !Hs.sagaRes, html: tarjetaSaga() },
     { id: 'arco', ico: '📖', t: Hs.historia ? L(...ARCOS[Hs.historia].t) : '', pend: !Hs.historiaRes, html: aprendiz ? '' : tarjetaArco() },
     { id: 'ayud', ico: '📖', t: (S.cuadrilla.find(x => x.id === Hs.ayudHist) || {}).n || '', pend: !Hs.ayudRes, html: aprendiz ? '' : tarjetaAyud() },
+    { id: 'ofi', ico: '🏢', t: Hs.ofi && OFI_HIST[Hs.ofi.k] ? ofiTxt(OFI_HIST[Hs.ofi.k].caps[Hs.ofi.cap].t) : '', pend: !Hs.ofiRes, html: aprendiz ? '' : tarjetaOfi() },
   ].filter(x => x.html);
 }
 function mensajesHoy() {
@@ -6886,6 +6979,7 @@ function enlazar() {
   P.querySelectorAll('[data-despues]').forEach(b => b.onclick = () => { audio(); elegirDespues(b.dataset.despues); tono(620, .12, .06, 'triangle'); pantallaCamioneta(); });
   P.querySelectorAll('[data-gripa]').forEach(b => b.onclick = () => { audio(); if (b.dataset.gripa === 'doctor') { if (S.dinero < 150) return; S.dinero -= 150; yo().salud = clamp(yo().salud + 40, 0, 100); } H.gripa = b.dataset.gripa; guardar(); pantallaCamioneta(); });
   P.querySelectorAll('[data-mueble]').forEach(b => b.onclick = () => { const m = MUEBLES.find(x => x.id === b.dataset.mueble); if (!m || mueble(m.id) || S.dinero < m.p) return; audio(); S.dinero -= m.p; yo().muebles[m.id] = S.noche; tono(700, .12, .06, 'triangle'); guardar(); pantallaCamioneta(); });
+  P.querySelectorAll('[data-ofi]').forEach(b => b.onclick = () => elegirOfi(+b.dataset.ofi));
   P.querySelectorAll('[data-ayh]').forEach(b => b.onclick = () => {
     const c = S.cuadrilla.find(x => x.id === H.ayudHist); if (!c || H.ayudRes) return;
     const C = (HIST_AYUD[c.tipo] || HIST_AYUD.normal)[c.hist.cap], op = C.ops[+b.dataset.ayh]; if (op.pide && S.dinero < op.pide) return;
