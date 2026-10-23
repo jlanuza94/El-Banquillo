@@ -685,11 +685,19 @@ caso('tu personaje: editor de avatar, piezas con logros y partidas viejas', asyn
   let p = await abrir(partida({ noche: 12, medallas: {} }));
   afirmar(await p.evaluate(() => !__hc.S.avatar && !!document.querySelector('#miAvatar svg')), 'la partida vieja no tiene cara en la cabecera');
   await p.click('#miAvatar');
-  let r = await p.evaluate(() => ({ sol: document.querySelector('[data-av="lentes:3"]').disabled, oro: document.querySelector('[data-av="casco:7"]').disabled, rizado: document.querySelector('[data-av="pelo:3"]').disabled }));
+  const tabAv = async t => p.click(`[data-avt="${t}"]`);
+  await tabAv('extras'); const sol = await p.evaluate(() => document.querySelector('[data-av="lentes:3"]').disabled);
+  await tabAv('ropa'); const oro = await p.evaluate(() => document.querySelector('[data-av="casco:7"]').disabled);
+  await tabAv('pelo'); const rizado = await p.evaluate(() => document.querySelector('[data-av="pelo:3"]').disabled);
+  let r = { sol, oro, rizado };
   afirmar(r.sol && r.oro && !r.rizado, 'las piezas de logros no están bloqueadas: ' + JSON.stringify(r));
-  await p.click('[data-av="pelo:3"]'); await p.click('[data-av="piel:5"]'); await p.click('[data-av="uniforme:2"]'); await p.click('#avListo');
+  await p.click('[data-av="pelo:3"]'); await tabAv('piel'); await p.click('[data-av="piel:5"]'); await tabAv('ropa'); await p.click('[data-av="uniforme:2"]'); await p.click('[data-av="casco:8"]');   // sin casco: se ve el pelo
+  // color libre para el pelo y deshacer
+  await tabAv('pelo'); await p.evaluate(() => { const i = document.querySelector('[data-avc="colorPelo"]'); i.value = '#8e44ad'; i.dispatchEvent(new Event('input')); });
+  afirmar(await p.evaluate(() => document.querySelector('.av-prev').innerHTML.includes('#8e44ad')), 'el color libre no se ve en la vista previa');
+  await p.click('#avListo');
   r = await p.evaluate(() => ({ a: __hc.S.avatar, menu: !!document.querySelector('.tabs') }));
-  afirmar(r.a && r.a.pelo === 3 && r.a.piel === 5 && r.a.uniforme === 2 && r.menu, 'el avatar no se guardó: ' + JSON.stringify(r));
+  afirmar(r.a && r.a.pelo === 3 && r.a.piel === 5 && r.a.uniforme === 2 && r.a.colorPelo === '#8e44ad' && r.menu, 'el avatar no se guardó: ' + JSON.stringify(r));
   await p.click('.tabs [data-tab="taller"]');
   afirmar(await p.evaluate(() => !!document.querySelector('#editarAv')), 'no se puede cambiar desde el Taller');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
