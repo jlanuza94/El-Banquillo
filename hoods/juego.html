@@ -5991,36 +5991,25 @@ function mapaCiudad() {
 const P = $('#pantalla');
 function pantalla(html) { P.innerHTML = `<div class="hoja">${html}</div>`; P.hidden = false; P.scrollTop = 0; delete P.dataset.vista; }
 // Retratos dibujados en SVG: los personajes principales tienen los suyos y el resto sale de su nombre (siempre la misma cara).
-const PIELES = ['#f1c7a1', '#dcaa80', '#bf8660', '#8f5c3d'], PELOS = ['#1d1a17', '#3b2a1e', '#6b4a2b', '#9c9c9c', '#b9772f'];
 const hashCara = t => { let h = 2166136261; for (const ch of String(t)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
 const ESPECIALES_CARA = { 'Don Rigo': 'rigo', Beto: 'beto', Lupe: 'lupe', Chuy: 'chuy', 'El Cuñado': 'cunado', 'Angélica': 'angelica', 'Maximiliano Lustre': 'lustre', 'Monsieur Fritó': 'frito' };
+// Retratos con el mismo estilo que tu personaje. Los principales tienen el suyo; el resto sale de su nombre (siempre la misma cara).
+const RETRATOS = {
+  rigo: { piel: '#d6a27a', pelo: 4, colorPelo: 5, rostro: 1, lentes: 0, casco: 8, uniforme: '#6f7a55', expresion: 1, detalle: 0, gorro: 'pescador', gorroColor: '#a8956a', sinParche: true },
+  beto: { piel: 1, pelo: 3, colorPelo: 0, rostro: 4, lentes: 1, casco: 8, uniforme: '#29425a', expresion: 1, detalle: 1, ini: 'B' },
+  lupe: { piel: 2, pelo: 2, colorPelo: 0, rostro: 0, lentes: 0, casco: 8, uniforme: '#2a7f9e', expresion: 2, detalle: 3, ini: 'L' },
+  chuy: { piel: 3, pelo: 4, colorPelo: 0, rostro: 4, lentes: 0, casco: 4, uniforme: '#2e6b4a', expresion: 3, detalle: 0, ini: 'C' },
+  cunado: { piel: '#e2b48c', pelo: 0, colorPelo: 0, rostro: 1, lentes: 0, casco: 8, uniforme: '#b3261e', expresion: 2, detalle: 0, gorro: 'gorra', gorroColor: '#d7382b', gorroLetra: 'C', ini: 'C' },
+  angelica: { piel: 2, pelo: 1, colorPelo: 1, rostro: 0, lentes: 0, casco: 8, uniforme: '#e58fbf', expresion: 1, detalle: 0, ini: 'A' },
+  lustre: { piel: 0, pelo: 0, colorPelo: '#d8dde2', rostro: 0, lentes: 3, casco: 8, uniforme: '#2b2f36', expresion: 2, detalle: 0, traje: true, corbata: '#c9a227' },
+  frito: { piel: 1, pelo: 0, colorPelo: 1, rostro: 1, lentes: 0, casco: 8, uniforme: '#f4f6f8', expresion: 2, detalle: 0, gorro: 'chef', sinParche: true },
+};
 function caraSVG(nombre) {
-  const esp = ESPECIALES_CARA[nombre], h = hashCara(nombre), piel = esp === 'rigo' ? '#d6a27a' : esp === 'chuy' ? '#bf8660' : esp === 'cunado' ? '#e2b48c' : PIELES[h % 4];
-  const pelo = esp === 'lupe' ? '#2b2b2b' : esp === 'lustre' ? '#d8dde2' : PELOS[(h >> 3) % 5], estilo = esp ? -1 : (h >> 6) % 5;
-  const ojos = esp === 'chuy' ? '<path d="M14 22h4M22 22h4" stroke="#1a1a1a" stroke-width="1.6" stroke-linecap="round"/>' : '<circle cx="16" cy="22" r="1.5" fill="#1a1a1a"/><circle cx="24" cy="22" r="1.5" fill="#1a1a1a"/>';
-  const boca = esp === 'lupe' ? '<path d="M17 29h6" stroke="#5a2b22" stroke-width="1.4" stroke-linecap="round"/>' : esp === 'cunado' || esp === 'lustre' ? '<path d="M17 28q4 2 7-1" stroke="#5a2b22" stroke-width="1.4" fill="none" stroke-linecap="round"/>' : esp === 'beto' ? '<path d="M16 27q4 4 8 0z" fill="#5a2b22"/>' : '<path d="M17 28q3 2 6 0" stroke="#5a2b22" stroke-width="1.4" fill="none" stroke-linecap="round"/>';
-  let pre = '', post = '';
-  const lentes = c => `<g fill="none" stroke="${c}" stroke-width="1.3"><circle cx="16" cy="22" r="3.3"/><circle cx="24" cy="22" r="3.3"/><path d="M19.3 22h1.4"/></g>`;
-  const bigote = c => `<path d="M14.5 26.5q5.5-3 11 0q-2.5 2-5.5.6q-3 1.4-5.5-.6z" fill="${c}"/>`;
-  const gorra = c => `<path d="M9 18q1-10 11-10t11 10z" fill="${c}"/><path d="M20 18h15q-1 2-4 2H20z" fill="${c}" opacity=".85"/>`;
-  if (esp === 'rigo') post = bigote('#d9d9d9') + '<path d="M5 17h30q-2-3-6-3.5V9q-9-5-18 0v4.5Q7 14 5 17z" fill="#a8956a" stroke="#7a6a45" stroke-width=".8"/><path d="M11 13.5h18" stroke="#7a6a45" stroke-width="1.2"/>';
-  else if (esp === 'beto') { pre = '<path d="M8 21q-1-13 12-13t12 13q-2-5-4-4-2-3-4-1-3-3-5 0-3-2-4 1-3-1-4 4z" fill="#1d1a17"/>'; post = lentes('#2b2b2b'); }
-  else if (esp === 'lupe') { pre = '<circle cx="20" cy="7.5" r="4.5" fill="#2b2b2b"/><path d="M8.5 21q0-12 11.5-12t11.5 12q-4-7-11.5-7T8.5 21z" fill="#2b2b2b"/>'; post = '<path d="M13.5 18.5l4 1M26.5 18.5l-4 1" stroke="#2b2b2b" stroke-width="1.4" stroke-linecap="round"/><path d="M27 12l1.5 3" stroke="#9c9c9c" stroke-width="1"/>'; }
-  else if (esp === 'chuy') { pre = '<path d="M7.5 19q0-11 12.5-11t12.5 11q-3-4-12.5-4T7.5 19z" fill="#1d1a17"/>'; post = '<g fill="#5b3a26" opacity=".55"><circle cx="15" cy="29" r=".5"/><circle cx="18" cy="31" r=".5"/><circle cx="22" cy="31" r=".5"/><circle cx="25" cy="29" r=".5"/><circle cx="20" cy="32" r=".5"/></g><text x="30" y="12" font-size="7" fill="#fff" font-family="sans-serif">z</text>'; }
-  else if (esp === 'cunado') post = bigote('#1d1a17') + gorra('#d7382b') + '<circle cx="20" cy="13" r="2.4" fill="#fff"/><text x="20" y="14.4" font-size="3.6" text-anchor="middle" fill="#d7382b" font-family="sans-serif" font-weight="700">C</text>';
-  else if (esp === 'angelica') { pre = '<path d="M7 33q-1-25 13-25t13 25h-5q1-10-8-14-8 4-8 14z" fill="#3b2a1e"/>'; post = '<path d="M8.5 22q0-13 11.5-13t11.5 13" fill="none" stroke="#2b2b2b" stroke-width="1.6"/><rect x="6.5" y="20" width="3.5" height="5" rx="1.4" fill="#2b2b2b"/><path d="M8.5 25q1 4 6 4" stroke="#2b2b2b" stroke-width="1.2" fill="none"/>'; }
-  else if (esp === 'lustre') { pre = '<path d="M8.5 20q0-12 11.5-12t11.5 12q-1-4-3-5-5-3-17 1-2 1-3 4z" fill="#d8dde2"/>'; post = '<path d="M12.5 20.5h15v2.6q-2 2-4.5 0l-1.2-1h-3.6l-1.2 1q-2.5 2-4.5 0z" fill="#111"/>'; }
-  else if (esp === 'frito') post = '<path d="M11 13q0-9 9-9t9 9z" fill="#fff" stroke="#ddd"/><rect x="11" y="12" width="18" height="3" fill="#fff" stroke="#ddd"/>' + bigote('#3b2a1e');
-  else {
-    if (estilo === 0) pre = `<path d="M8.5 21q0-12 11.5-12t11.5 12q-4-7-11.5-7T8.5 21z" fill="${pelo}"/>`;
-    if (estilo === 1) pre = `<path d="M7.5 32q-1-23 12.5-23t12.5 23h-4q1-12-8.5-15-8.5 3-8.5 15z" fill="${pelo}"/>`;
-    if (estilo === 3) post += gorra(['#2a9df4', '#2e9e5b', '#f4a300', '#7b5cd6'][(h >> 9) % 4]);
-    if (estilo === 4) pre = `<path d="M8 22q-2-14 12-14 14 0 12 14l-2-6q-4-4-10-4t-10 4z" fill="${pelo}"/><circle cx="20" cy="7" r="3.5" fill="${pelo}"/>`;
-    if ((h >> 12) % 4 === 0) post += lentes('#2b2b2b');
-    if ((h >> 14) % 4 === 0 && estilo !== 1) post += bigote(pelo);
-  }
-  const ancho = esp === 'chuy' ? 13 : 11;
-  return `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 40q2-9 14-9t14 9z" fill="rgba(0,0,0,.25)"/>${pre}<ellipse cx="20" cy="22" rx="${ancho}" ry="12" fill="${piel}"/><ellipse cx="${20 - ancho}" cy="23" rx="1.8" ry="2.6" fill="${piel}"/><ellipse cx="${20 + ancho}" cy="23" rx="1.8" ry="2.6" fill="${piel}"/>${ojos}${boca}${post}</svg>`;
+  const esp = ESPECIALES_CARA[nombre];
+  if (esp && RETRATOS[esp]) return avatarSVG(RETRATOS[esp]);
+  const h = hashCara(nombre), h2 = hashCara(nombre + '·casco'), conCasco = h2 % 3 === 0;
+  return avatarSVG({ piel: h % 6, pelo: (h >> 3) % 7, colorPelo: (h >> 6) % 6, rostro: (h >> 9) % 5, lentes: (h >> 12) % 4 === 0 ? 1 + ((h >> 14) % 2) : 0, expresion: (h >> 15) % 4,
+    casco: conCasco ? (h2 >> 4) % 6 : 8, uniforme: AV.uniforme[(h >> 20) % 6], detalle: (h >> 23) % 6 === 0 ? 1 : 0, ini: String(nombre || '?').replace(/^(El |La |Don |Doña )/, '')[0] || '?' });
 }
 // ---- Tu personaje: avatar que eliges al empezar (y cambias en el Taller). Sirve para cualquiera: no hay que elegir género.
 const AV = {
@@ -6054,7 +6043,7 @@ function avatarSVG(a) {
   const est = (AV.pelo[a.pelo] || AV.pelo[0])[0], casco = a.casco === 8 ? null : colorAv('casco', a.casco), ropa = colorAv('uniforme', a.uniforme);
   const r = (AV.rostro[a.rostro] || AV.rostro[0])[0], l = (AV.lentes[a.lentes] || AV.lentes[0])[0];
   const ex = (AV.expresion[a.expresion] || AV.expresion[0])[0], det = (AV.detalle[a.detalle] || AV.detalle[0])[0];
-  const tapa = !!casco;
+  const tapa = !!casco || !!a.gorro;
   let atras = '', delante = '';
   if (est === 'largo') atras = `<path d="M27 46C25 22 37 13 50 13s25 9 23 33l3 30H64l-1-22H37l-1 22H24z" fill="${pelo}"/>`;
   if (est === 'coleta') atras = `<path d="M66 30c12 4 14 20 8 32-2-8-5-13-10-16z" fill="${pelo}"/>`;
@@ -6089,17 +6078,23 @@ function avatarSVG(a) {
     + (det === 'audifonos' ? `<path d="M30 49q-5 12 2 24M70 49q5 12-2 24" stroke="#f2f2f2" stroke-width="1.3" fill="none"/><circle cx="30.5" cy="48" r="2.3" fill="#f2f2f2"/><circle cx="69.5" cy="48" r="2.3" fill="#f2f2f2"/>` : '');
   const oro = casco && !esHex(a.casco) && (AV.casco[a.casco] || [])[2];
   const sombrero = casco ? `<path d="M27 36c0-16 10-25 23-25s23 9 23 25z" fill="${casco}"/><path d="M50 11v25" stroke="${tono2(casco, -.18)}" stroke-width="5"/><path d="M38 14q-6 8-7 20" stroke="${tono2(casco, .35)}" stroke-width="2.2" fill="none" opacity=".7"/><rect x="21" y="33.5" width="58" height="5.5" rx="2.7" fill="${tono2(casco, -.08)}"/>${oro ? '<path d="M33 18l3 4M64 16l-2 4" stroke="#fff" stroke-width="2" opacity=".85"/>' : ''}` : '';
+  // Sombreros de los personajes: el de pescador de Don Rigo, la gorra roja de El Cuñado y el gorro de chef.
+  const gc = a.gorroColor || '#a8956a';
+  const gorro = a.gorro === 'pescador' ? `<path d="M30 30c1-12 9-18 20-18s19 6 20 18z" fill="${gc}"/><path d="M31 27h38" stroke="${tono2(gc, -.3)}" stroke-width="2.5"/><path d="M16 33q34-9 68 0q-34 7-68 0z" fill="${tono2(gc, -.12)}"/>`
+    : a.gorro === 'gorra' ? `<path d="M29 33c0-14 9-21 21-21s21 7 21 21z" fill="${gc}"/><path d="M50 33h27q-2 5-9 5H50z" fill="${tono2(gc, -.2)}"/><circle cx="50" cy="22" r="5.2" fill="#fff"/><text x="50" y="25" font-size="7.5" font-weight="800" text-anchor="middle" fill="${gc}" font-family="Barlow Condensed, sans-serif">${esc(a.gorroLetra || 'C')}</text>`
+    : a.gorro === 'chef' ? `<path d="M33 30c-7-3-6-15 3-15 1-7 13-9 16-2 6-5 16 0 13 8 7 1 6 11 0 11z" fill="#fbfbf8" stroke="#d6d8d9" stroke-width="1"/><rect x="33" y="27" width="34" height="7" rx="2" fill="#f1f2ef" stroke="#d6d8d9" stroke-width="1"/>` : '';
   const ini = esc(a.ini || (jugador() || '?').trim()[0] || '?').toUpperCase();
   return `<svg viewBox="12 7 76 76" aria-hidden="true">${atras}`
     + `<path d="M8 100c3-17 16-24 42-24s39 7 42 24z" fill="${ropa}"/>`
     + `<path d="M22 100c2-11 9-18 20-21l8 9 8-9c11 3 18 10 20 21z" fill="${tono2(ropa, -.25)}" opacity=".55"/>`
-    + `<path d="M17 88h18M65 88h18" stroke="#dfe7ea" stroke-width="3.2"/><rect x="58" y="77" width="12" height="6.5" rx="1.2" fill="#eef2f4"/><text x="64" y="82.2" font-size="6" font-weight="700" text-anchor="middle" fill="#1d2a33" font-family="Barlow Condensed, sans-serif">${ini}</text>`
+    + (a.traje ? `<path d="M50 77l-9-2 9 25 9-25z" fill="#f4f6f8"/><path d="M50 79l-2.5 4 2.5 15 2.5-15z" fill="${a.corbata || '#a8322b'}"/>`
+      : a.sinParche ? '' : `<path d="M17 88h18M65 88h18" stroke="#dfe7ea" stroke-width="3.2"/><rect x="58" y="77" width="12" height="6.5" rx="1.2" fill="#eef2f4"/><text x="64" y="82.2" font-size="6" font-weight="700" text-anchor="middle" fill="#1d2a33" font-family="Barlow Condensed, sans-serif">${ini}</text>`)
     + `<path d="M42 64v14q8 6 16 0V64z" fill="${sombra}"/>`
     + `<ellipse cx="30" cy="47" rx="3.6" ry="5.5" fill="${sombra}"/><ellipse cx="70" cy="47" rx="3.6" ry="5.5" fill="${sombra}"/>`
     + `<path d="M30 44c0-17 9-27 20-27s20 10 20 27c0 15-8 26-20 27-12-1-20-12-20-27z" fill="${piel}"/>`
     + `<path d="M59 19c8 4 11 13 11 25 0 15-8 26-20 27 9-4 14-14 14-27 0-11-2-19-5-25z" fill="${sombra}" opacity=".45"/>`
     + `${delante}${cejas}${ojos}<path d="M50 46q-2.5 6-1.5 8.5q1.5 1.2 4 .2" stroke="${tono2(piel, -.38)}" stroke-width="1.3" fill="none" stroke-linecap="round"/>`
-    + `${vello}${boca}${lentes}${detalle}${sombrero}</svg>`;
+    + `${vello}${boca}${lentes}${detalle}${sombrero}${gorro}</svg>`;
 }
 const caraYo = (clase = '') => `<div class="cara con-cara cara-yo ${clase}" style="background:#24343f" title="${esc(jugador())}">${avatarSVG()}</div>`;
 // ---- La gente de la sede: cada sala tiene a alguien a cargo, con cara, nombre y frases. Hablan por el intercomunicador:
