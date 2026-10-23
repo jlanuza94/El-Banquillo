@@ -123,6 +123,17 @@ body.ahorro .cab .furgo, body.ahorro .cab .furgo .bocanada { animation: none; } 
 .jefe.globo b { color: #b3261e; margin-bottom: 2px; }
 .maquina.escribiendo::after { content: "▌"; animation: cursor .6s steps(1) infinite; color: #b3261e; }
 @keyframes cursor { 50% { opacity: 0; } }
+.tramo-btn.falta-tr { border-color: var(--hivis); box-shadow: 0 0 0 1px var(--hivis), 0 0 12px rgba(255,138,31,.55); animation: falta 1s ease-in-out infinite alternate; }
+.ir-buzon { display: grid; grid-template-columns: auto auto 1fr auto; gap: 8px; align-items: center; width: 100%; text-align: left; color: inherit; font: inherit; background: rgba(255,138,31,.1); border: 1px solid var(--hivis); border-radius: 10px; padding: 9px 12px; }
+.ir-buzon span { font-size: 20px; } .ir-buzon b { font-family: var(--f-cond); font-size: 16px; letter-spacing: .04em; text-transform: uppercase; } .ir-buzon small { color: var(--tenue); font-size: 13px; } .ir-buzon i { font-style: normal; font-size: 22px; color: var(--hivis); }
+.chat { display: grid; gap: 8px; }
+.msg { display: grid; grid-template-columns: 36px 1fr; gap: 8px; align-items: start; }
+.msg .cara { width: 36px; height: 36px; }
+.msg-ico { font-style: normal; font-size: 22px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--panel-solido); }
+.msg > div { background: rgba(20,30,40,.82); border: 1px solid rgba(255,255,255,.09); border-radius: 4px 14px 14px 14px; padding: 7px 11px 8px; }
+.msg b { display: block; font-family: var(--f-cond); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--tenue); }
+.chat.viejo { opacity: .75; margin-top: 6px; } .chat-noche { color: var(--tenue); font-size: 12px; }
+.costo-dia { display: block; margin-top: 4px; color: var(--hivis); font-family: var(--f-mono); font-size: 12.5px; }
 /* Barra de zonas compacta: una sola tira con nombre y µm en una línea y una línea de energía debajo. */
 .zonas { gap: 0; background: rgba(13,20,27,.82); border: 1px solid var(--linea); border-radius: 10px; padding: 3px; }
 .zonas button { background: none; border: 0; border-radius: 7px; padding: 3px 6px 4px; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 4px; position: relative; }
@@ -752,7 +763,7 @@ a.btn { display: inline-block; text-decoration: none; }
       <div class="combo-med" id="comboMed" hidden><b></b><span class="pasos-c"></span><span class="ventana"><span></span></span></div>
       <div class="mandos">
         <div class="info"><div class="barra-herr" id="barraHerr"></div><span class="ayuda" id="ayuda">Elige la herramienta abajo y haz pasadas cortas sobre la grasa.</span>
-          <div class="botones-hud"><button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button><button class="btn peq robot" id="robotBtn" style="pointer-events:auto" hidden>🤖 Mandar el robot</button></div></div>
+          <div class="botones-hud"><button class="btn peq tramo-btn" id="trAtras" style="pointer-events:auto" hidden>◂</button><button class="btn peq tramo-btn" id="trAvanza" style="pointer-events:auto" hidden></button><button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button><button class="btn peq robot" id="robotBtn" style="pointer-events:auto" hidden>🤖 Mandar el robot</button></div></div>
         <button class="herr-btn" id="herrBtn" aria-label="Herramienta: mantén pulsado para la rueda"></button>
       </div>
       <div class="zonas" id="zonas"></div>
@@ -1491,6 +1502,9 @@ Object.assign(EN_TXT, { 'El cumpleaños de tu mamá': 'Your mom\'s birthday', 'H
   'El partido': 'The match', 'Tus amigos te invitan a ver la final en el bar de la esquina. «Es la final, compadre».': 'Your friends invite you to watch the final at the corner bar. "It\'s the final, buddy".',
   'Ir al partido': 'Go to the match', '−$40 · llegas 15 min tarde, pero contento': '−$40 · you arrive 15 min late, but happy', 'Ganó tu equipo. Llegas tarde, ronco y feliz.': 'Your team won. You arrive late, hoarse and happy.',
   'Mejor trabajar': 'Better work', 'Lo ves por el celular en la camioneta. Pierde tu equipo. Mejor ni hubieras visto.': 'You watch it on your phone in the van. Your team loses. You shouldn\'t have watched.' });
+// Quién de la cuadrilla tuvo el descuido (siempre la misma persona en la misma noche).
+function culpable(s) { const g = [...(s.cuadrilla || []).map(c => c.n), ...(s.fijos || []).map(id => COMPANEROS[id] && COMPANEROS[id].n).filter(Boolean)]; return g.length ? g[s.noche % g.length] : null; }
+const txtDia = v => typeof v === 'function' ? v() : TRAD(v);
 const DIAS = [
   { id: 'mama', t: 'El cumpleaños de tu mamá', txt: 'Hoy cumple años tu mamá. Ya te mandó tres audios preguntando si vas a ir a comer.', ops: [
     { t: 'Comer con ella y llevarle regalo', d: '−$60 · sales contento: rindes más esta noche', f: H => { S.dinero -= 60; H.contento = true; return 'Te dio de comer tanto que casi no cabes en el uniforme. Sales feliz.'; } },
@@ -1528,6 +1542,16 @@ const DIAS = [
   { id: 'arrancon', t: 'Semáforo en rojo', txt: `La camioneta de ${RIVAL} se para junto a la tuya. El Cuñado acelera dos veces y te guiña un ojo.`, ops: [
     { t: '¡Arrancón!', d: 'Por el honor de la empresa', f: () => { if (azar(tun('aleron') ? .85 : .5)) { S.rep = clamp(S.rep + 2, 0, 100); return tun('aleron') ? '¡Ganaste! El alerón hizo su trabajo. Nadie sabe cómo. +2 de reputación.' : '¡Ganaste! La camioneta vieja tiene más corazón que motor. +2 de reputación.'; } S.dinero -= 30; return 'La camioneta se apagó a media calle. El Cuñado se rió. Empujarla costó $30 en refrescos.'; } },
     { t: 'Ignorarlo con dignidad', d: 'Mirada al frente', f: () => 'Lo ignoras. Por el retrovisor, ves que El Cuñado se cala en la siguiente esquina. Justicia divina.' }] },
+  // Descuidos de la cuadrilla: cuestan tiempo o dinero a la empresa, nunca salen gratis.
+  { id: 'bateria', solo: s => s.fase === 'empresa' && culpable(s), t: () => L('Batería muerta', 'Dead battery'), txt: () => L(`${culpable(S)} dejó la radio de la camioneta prendida toda la tarde «para que no se aburriera». La batería está muerta.`, `${culpable(S)} left the van's radio on all afternoon "so it wouldn't get bored". The battery is dead.`), ops: [
+    { t: () => L('Pasarle corriente con un taxi', 'Jump-start it with a taxi'), d: () => L('−$20 · llegas 20 min tarde', '−$20 · you arrive 20 min late'), f: H => { S.dinero -= 20; H.retraso = 20; return L('El taxista cobró veinte pesos y un consejo: «Cambie esa batería, joven». Llegas tarde.', 'The taxi driver charged twenty bucks and gave free advice: "Change that battery". You arrive late.'); } },
+    { t: () => L('Batería nueva en la refaccionaria', 'New battery from the parts store'), d: () => L('−$160 · llegas a tiempo', '−$160 · on time'), f: () => { S.dinero -= 160; return L('Batería nueva y la radio confiscada hasta nuevo aviso.', 'New battery, and the radio is confiscated until further notice.'); } }] },
+  { id: 'gasolina', solo: s => s.fase === 'empresa' && culpable(s), t: () => L('Tanque vacío', 'Empty tank'), txt: () => L(`${culpable(S)} usó la camioneta para ir por tortas al otro lado de la ciudad. El tanque está en cero.`, `${culpable(S)} took the van across town for sandwiches. The tank is empty.`), ops: [
+    { t: () => L('Ir a pie con un bidón', 'Walk over with a gas can'), d: () => L('−$25 · llegas 25 min tarde', '−$25 · you arrive 25 min late'), f: H => { S.dinero -= 25; H.retraso = 25; return L('Diez cuadras con un bidón. Llegas tarde y oliendo a gasolinera.', 'Ten blocks with a gas can. You arrive late, smelling like a gas station.'); } },
+    { t: () => L('Gasolina a domicilio', 'Fuel delivery'), d: () => L('−$70 · llegas 5 min tarde', '−$70 · 5 min late'), f: H => { S.dinero -= 70; H.retraso = 5; return L('Llega una moto con un bidón y una sonrisa cara.', 'A motorbike shows up with a gas can and an expensive smile.'); } }] },
+  { id: 'llaves', solo: s => s.fase === 'empresa' && culpable(s), t: () => L('¿Y las llaves?', 'Where are the keys?'), txt: () => L(`${culpable(S)} jura que dejó las llaves de la camioneta «en un lugar seguro». No recuerda cuál.`, `${culpable(S)} swears the van keys are "somewhere safe". Can't remember where.`), ops: [
+    { t: () => L('Buscarlas entre todos', 'Everyone looks for them'), d: () => L('Llegas 30 min tarde', 'You arrive 30 min late'), f: H => { H.retraso = 30; return L('Estaban en el refri. Junto al queso. Nadie quiere hablar de eso.', 'They were in the fridge. Next to the cheese. Nobody wants to talk about it.'); } },
+    { t: () => L('Llamar al cerrajero', 'Call a locksmith'), d: () => L('−$110 · llegas 10 min tarde', '−$110 · 10 min late'), f: H => { S.dinero -= 110; H.retraso = 10; return L('El cerrajero abre en un minuto y cobra por una hora.', 'The locksmith opens it in a minute and charges for an hour.'); } }] },
   { id: 'donas', t: 'Regalo de una clienta', txt: 'Una clienta te deja una caja de donas: «Por la campana de la otra vez, quedó preciosa».', ops: [
     { t: 'Guardarlas para el gerente', d: 'Esta noche tendrá más paciencia', f: H => { H.donas = true; return 'Las donas viajan en el asiento del copiloto, con el cinturón puesto.'; } },
     { t: 'Comérselas ya', d: '+25 de experiencia', f: () => { S.xp += 25; return 'Desayuno de campeones. Te comiste cuatro y dices que fue una.'; } }] },
@@ -2731,7 +2755,16 @@ function construirNoche(orden) {
     const canasta = add(new T.CylinderGeometry(.13, .12, .2, 14, 1, true), new T.MeshStandardMaterial({ color: 0x8c8c8c, metalness: .8, roughness: .45, wireframe: true }), tx + .48, .1, tz + .1);
     tinaFreidora = { sfs, vista: { ...vista(new T.Vector3(tx, base, tz), new T.Vector3(0, 1.7, .9), tw + .35, .95, 1.6, 58), alt: { dMax: 1.8, hfMin: 46, fovMax: 90 } } };
   }
-  ductos.forEach((d, i) => Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', vista: { ...vista(new T.Vector3(d.dx, dY, dZ0 - dL), new T.Vector3(0, 0, 1), 1, dL + .45, dL + .45, 80), alt: { hfMin: 66, fovMax: 108, dMin: dL - .05, dMax: dL - .05 }, acostado: { dMin: dL - .05, dMax: dL - .05 } } }));
+  // El ducto se limpia por tramos: la cámara se mete a un tramo a la vez y lo encuadra entero (piso, paredes y techo),
+  // en vez de mirar todo el túnel desde la boca (lo de cerca salía enorme y cortado, y el fondo diminuto).
+  const nTr = dL <= 1.2 ? 1 : dL <= 1.9 ? 2 : 3, seg = dL / nTr;
+  ductos.forEach((d, i) => {
+    const tramos = Array.from({ length: nTr }, (_, k) => {
+      const zA = dZ0 - k * seg, zB = zA - seg;
+      return { ...vista(new T.Vector3(d.dx, dY, zB), new T.Vector3(0, 0, 1), 1, seg, seg, 80), alt: { hfMin: 66, fovMax: 108 }, ductoFit: { seg, an: mitadAncho, al: mitadAlto }, tramo: k, zA, zB };
+    });
+    Z.push({ id: 'ducto', n: nD > 1 ? `${L('Ducto', 'Duct')} ${i + 1}` : L('Ducto', 'Duct'), sfs: d.sfs, duct: { dx: d.dx, z0: dZ0, z1: dZ0 - dL, piso: dY - mitadAlto }, redondo: duc.forma === 'redondo', tramos, vista: tramos[0] });
+  });
   if (tinaFreidora) Z.push({ id: 'freidora', n: L('Freidora', 'Fryer'), sfs: tinaFreidora.sfs, vista: tinaFreidora.vista });
   for (const z of Z) { z.inicial = z.sfs.reduce((a, s) => a + s.inicial, 0); z.meshes = z.sfs.map(s => s.mesh); }
   // La caja de lo que hay que lavar en cada campana: la cámara la encuadra entera en el hueco que deja el HUD.
@@ -2757,7 +2790,9 @@ function moverCamara(dt) {
   const lado = !prepEl.hidden && prepEl.firstElementChild && prepEl.firstElementChild.getBoundingClientRect();
   const libre = lado && lado.width < innerWidth * .6 ? clamp((innerWidth - lado.right) / innerWidth, .4, 1) : 1;
   const hf = 2 * Math.atan(Math.tan(fov * Math.PI / 360) * cam.aspect * libre);
-  const dist = clamp(v.ancho / 2 / Math.tan(hf / 2), alt && alt.dMin || v.dMin, (alt && alt.dMax || v.dMax) * (libre < 1 ? 1.6 : 1));
+  let dist = clamp(v.ancho / 2 / Math.tan(hf / 2), alt && alt.dMin || v.dMin, (alt && alt.dMax || v.dMax) * (libre < 1 ? 1.6 : 1));
+  // Tramo del ducto: la cámara se aleja de la boca del tramo justo lo necesario para que el contorno quepa en la pantalla.
+  if (v.ductoFit) { const f = v.ductoFit, hq = !lado && huecoLibre(); dist = f.seg + Math.max(f.an / Math.tan(hf / 2), f.al / (Math.tan(fov * Math.PI / 360) * (hq ? hq.fh : 1))); }
   v.vis = 2 * dist * Math.tan(hf / 2);
   v.maxPan = Math.max(0, (v.ancho - v.vis) / 2);
   v.pan = clamp(v.pan || 0, -v.maxPan, v.maxPan);
@@ -2893,10 +2928,32 @@ function enHueco(w) {
   const x = (pv.x + 1) / 2 * innerWidth, y = (1 - pv.y) / 2 * innerHeight, h = huecoLibre();
   return pv.z < 1 && x > 20 && x < innerWidth - 20 && y > (h ? h.cy - h.fh * innerHeight / 2 : 60) && y < (h ? h.cy + h.fh * innerHeight / 2 : innerHeight - 160);
 }
+// Tramos del ducto: botones para avanzar y volver; el que lleva a donde falta grasa parpadea.
+function irTramo(k) {
+  const z = Z[M.zona]; if (!z || !z.tramos) return;
+  k = clamp(k, 0, z.tramos.length - 1); if (z.vista === z.tramos[k]) return;
+  z.vista = z.tramos[k]; irVista(z.vista); M.trazo = null; tono(520 + k * 90, .06, .03, 'triangle'); pintarTramos();
+}
+function pintarTramos() {
+  const z = M && Z[M.zona], n = z && z.tramos ? z.tramos.length : 0, at = $('#trAtras'), av = $('#trAvanza');
+  if (!at) return;
+  at.hidden = av.hidden = n < 2;
+  if (n < 2) return;
+  const k = z.vista.tramo;
+  at.disabled = k === 0; av.disabled = k === n - 1;
+  av.textContent = k === n - 1 ? L(`Tramo ${k + 1}/${n}`, `Section ${k + 1}/${n}`) : L(`Avanzar ▸ ${k + 1}/${n}`, `Go deeper ▸ ${k + 1}/${n}`);
+  at.setAttribute('aria-label', L('Volver al tramo anterior', 'Back to the previous section'));
+}
+$('#trAtras').onclick = () => { audio(); irTramo(Z[M.zona].vista.tramo - 1); };
+$('#trAvanza').onclick = () => { audio(); irTramo(Z[M.zona].vista.tramo + 1); };
 function ponerAqui(dt) {
   const el = $('#aqui');
   if (M && M.aquiForzado > 0) M.aquiForzado -= dt;
   if (!M || !M.aqui || M.ev || $('#hud').hidden) { el.hidden = true; return; }
+  // En el ducto, si lo que falta está en otro tramo, parpadea el botón que lleva hacia allá.
+  const zt = Z[M.zona], vt = zt && zt.tramos && zt.vista;
+  const haciaTr = vt ? (M.aqui.z > vt.zA + .02 ? -1 : M.aqui.z < vt.zB - .02 ? 1 : 0) : 0;
+  $('#trAtras').classList.toggle('falta-tr', haciaTr < 0); $('#trAvanza').classList.toggle('falta-tr', haciaTr > 0);
   const dentro = enHueco(M.aqui), x = (pv.x + 1) / 2 * innerWidth, y = (1 - pv.y) / 2 * innerHeight;
   el.hidden = !dentro;
   // Si ya estás raspando cerca de la marca, se desvanece para no tapar.
@@ -3084,6 +3141,7 @@ function empezarTurno(orden) {
   escenaPrep(0);
   radioEncender(true);
   for (const e of M.faltan) setTimeout(() => M && decir(M.comp, `${e.n} no llegó. Mandó mensaje: «${uno(['Se me poncharon las dos llantas. Y la de repuesto.', 'Me quedé dormido viendo un video de cómo limpiar campanas.', 'Mi gato se comió las llaves.', 'Estoy en camino. (No está en camino.)'])}»`), 1200);
+  if (orden.imprevisto && orden.imprevisto.min) setTimeout(() => M && decir({ n: L('Llegas tarde', 'You\'re late'), color: '#ff8a1f' }, L(`⏰ ${orden.imprevisto.t}: empiezas ${orden.imprevisto.min} minutos tarde. El reloj ya corre.`, `⏰ ${orden.imprevisto.t}: you start ${orden.imprevisto.min} minutes late. The clock is already running.`)), 700);
   if (M.pedido) setTimeout(() => M && M.fase === 'prep' && M.pedido && decir(M.cliente, M.pedido.txt), 1800);
   if (S.fase === 'empresa' && iDucto() >= 0 && azar(.3)) M.objeto = 'pendiente';
   if (orden.jefe) {
@@ -4715,6 +4773,7 @@ function tickTurno(dt) {
 function pintarHud(todo) {
   $('#reloj').textContent = hora(clamp(M.t / M.dur, 0, 1) * 480);
   $('#tbar').style.width = `${clamp(1 - M.t / M.dur, 0, 1) * 100}%`;
+  if (todo || ($('#trAvanza').hidden !== !(Z[M.zona] && Z[M.zona].tramos && Z[M.zona].tramos.length > 1))) pintarTramos();
   if (todo) {
     const zs = $('#zonas'); zs.style.gridTemplateColumns = `repeat(${Math.min(Z.length, 4)}, minmax(0, 1fr))`; zs.style.setProperty('--nz', Z.length);
     zs.innerHTML = Z.map((z, i) => `<button data-z="${i}"><b>${z.n}</b><span><em></em><i></i></span><u class="prog"><s></s></u></button>`).join(''); pintarHerrBtn();
@@ -5841,7 +5900,7 @@ function furgo(nombre, color, et) {
   </svg>`;
 }
 
-const ICO_TAB = { noche: '🌙', clientes: '📇', cuadrilla: '👷', taller: '🔧', logros: '🏆' };
+const ICO_TAB = { buzon: '📬', noche: '🌙', clientes: '📇', cuadrilla: '👷', taller: '🔧', logros: '🏆' };
 // La meta de la campaña, siempre a la vista: qué falta para la siguiente etapa y, al final, para la Gran Licitación.
 function metaFinal() {
   if (S.fase !== 'empresa') return '';
@@ -5871,7 +5930,7 @@ function cabecera() {
 
 function pantallaCamioneta() {
   // Si ya estabas en el menú y en la misma pestaña, al volver a dibujarlo te quedas donde estabas (antes saltaba arriba).
-  const enMenu = !P.hidden && !!P.querySelector('.lado-cab'), mismaTab = enMenu && P.dataset.tab === tab, yAntes = P.scrollTop;
+  const enMenu = !P.hidden && !!P.querySelector('.lado-cab'), mismaTab = enMenu && P.dataset.pestana === tab, yAntes = P.scrollTop;
   if (RADIO.on) radioEncender(false);
   ponerAlDia();
   M = null; limpiarMarcas(); prepEl.hidden = true; $('#hud').hidden = true; aplicarLook();
@@ -5881,15 +5940,14 @@ function pantallaCamioneta() {
   findeHoy(); licitHoy(); residenciaHoy(); misionesHoy();
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
-  const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros y álbum', 'Awards & album')]] : [['noche', L('Noche', 'Night')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
+  const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['buzon', L('Buzón', 'Inbox')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]] : [['noche', L('Noche', 'Night')], ['buzon', L('Buzón', 'Inbox')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
+  if (tab === 'buzon' && !H.buzonVisto) { H.buzonVisto = true; guardar(); }
   if (!tabs.some(t => t[0] === tab)) tab = 'noche';
-  pantalla(`<div class="lado-cab">${cabecera()}
-    <button class="barrio" id="jefeCorto" aria-expanded="false"><div class="linea">${cara('#b9a27a', 'R', 'Don Rigo')}<div><b>${S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : (buhoRevelado() ? L('Don Rigo, desde la cabina de Radio Grasa FM', 'Don Rigo, from the Radio Grasa FM booth') : L('Don Rigo «el Muchachón»', 'Don Rigo "el Muchachón"'))}</b><span>${esc(TRAD(String(H.frase).replace(/^Desde el lago: (pesqué una bota.*)?/, (m, bota) => bota ? RIGO_CONSEJOS[1] : 'Don Rigo: ')))}</span></div></div>
-    ${H.avisos.length ? `<div class="linea"><i class="ico-radio">📻</i><div><b>${L('Noticias del barrio', 'Neighborhood news')}</b><span>${esc(H.avisos.map(TRAD).join(' '))}</span></div></div>` : ''}${TRAD(H.frase).length + H.avisos.map(TRAD).join(' ').length > 110 ? `<small class="mas">${L('Toca para leer todo', 'Tap to read it all')}</small>` : ''}</button></div>
-    <div class="lado-main"><div class="mini-cab">${S.empresa ? `<b>${esc(S.empresa.nombre)}</b>` : '<b>Hood Cleaners</b>'}<span>🌙 ${S.noche}</span><span data-caja-mini>${dinero(S.dinero)}</span><span>⭐ ${S.rep}</span></div><nav class="tabs abajo" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}${id === 'logros' && manualNuevos().length ? `<span class="cuenta">${manualNuevos().length}</span>` : ''}</button>`).join('')}</nav>
-    <div class="tab-cont ${enMenu && !mismaTab ? (TABS_ACT.indexOf(tab) >= TABS_ACT.indexOf(P.dataset.tab) ? 'entra-der' : 'entra-izq') : ''}">${({ noche: vNoche, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}</div>
+  pantalla(`<div class="lado-cab">${cabecera()}</div>
+    <div class="lado-main"><div class="mini-cab">${S.empresa ? `<b>${esc(S.empresa.nombre)}</b>` : '<b>Hood Cleaners</b>'}<span>🌙 ${S.noche}</span><span data-caja-mini>${dinero(S.dinero)}</span><span>⭐ ${S.rep}</span></div><nav class="tabs abajo" role="tablist">${tabs.map(([id, n]) => `<button role="tab" data-tab="${id}" aria-selected="${tab === id}"><i aria-hidden="true">${ICO_TAB[id]}</i>${n}${id === 'clientes' && debidos ? `<span class="cuenta">${debidos}</span>` : ''}${id === 'buzon' && cuentaBuzon() ? `<span class="cuenta">${cuentaBuzon()}</span>` : ''}${id === 'logros' && manualNuevos().length ? `<span class="cuenta">${manualNuevos().length}</span>` : ''}</button>`).join('')}</nav>
+    <div class="tab-cont ${enMenu && !mismaTab ? (TABS_ACT.indexOf(tab) >= TABS_ACT.indexOf(P.dataset.pestana) ? 'entra-der' : 'entra-izq') : ''}">${({ noche: vNoche, buzon: vBuzon, clientes: vClientes, cuadrilla: vCuadrilla, taller: vTaller, logros: vLogros })[tab]()}</div>
     <div class="acciones"><button class="btn" id="ajustes">${L('Ajustes', 'Settings')}</button></div></div>`);
-  P.dataset.tab = tab; P.dataset.vista = 'menu'; TABS_ACT = tabs.map(t => t[0]);
+  P.dataset.pestana = tab; P.dataset.vista = 'menu'; TABS_ACT = tabs.map(t => t[0]);
   document.body.classList.toggle('vidrio', !S.aj.ahorro && VIDRIO_OK);
   document.body.classList.toggle('ahorro', !!S.aj.ahorro);
   menuVivo();
@@ -5897,7 +5955,6 @@ function pantallaCamioneta() {
   else if (enMenu) { const nav = P.querySelector('.tabs'); if (nav && yAntes > nav.offsetTop) P.scrollTop = nav.offsetTop - 8; }   // al cambiar de pestaña: a su principio, no al de la pantalla
   P.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; pantallaCamioneta(); });
   $('#ajustes').onclick = () => pantallaAjustes(false);
-  $('#jefeCorto').onclick = () => { const b = $('#jefeCorto'); b.classList.toggle('abierto'); b.setAttribute('aria-expanded', b.classList.contains('abierto')); };
   $('#abrirArbol').onclick = () => pantallaArbol(pantallaCamioneta);   // la frase larga se abre al tocarla
   enlazar();
 }
@@ -6022,6 +6079,41 @@ function buzon(items) {
   return `<div class="buzon"><div class="buzon-cab">📬 ${L('Novedades', 'News')}${pend ? ` <span class="cuenta">${pend}</span>` : ''}</div>
     ${items.map(x => `<details class="buzon-item ${x.pend ? 'pend' : ''}" data-bz="${x.id}" ${(BZ[x.id] ?? (x.id === primera || x.id === bzReciente)) ? 'open' : ''}><summary><span class="bz-ico">${x.ico}</span><b>${esc(x.t)}</b>${x.pend ? '<i class="punto"></i>' : '<i class="hecho">✓</i>'}</summary>${x.html}</details>`).join('')}</div>`;
 }
+// ---- Buzón: los mensajes del día (Don Rigo, noticias del barrio) y las decisiones de la historia, fuera de la pestaña Noche.
+function itemsBuzon() {
+  const Hs = S.hoy, aprendiz = S.fase === 'aprendiz', yoP = tarjetaYo(true);
+  return [
+    { id: 'despues', ico: '🌙', t: L('Al salir del turno', 'After the shift'), pend: true, html: yoP.despues },
+    { id: 'gripa', ico: '🤒', t: L('Gripa', 'Flu'), pend: Hs.gripa === null, html: yoP.gripa },
+    { id: 'saga', ico: '🎭', t: Hs.saga !== undefined && Hs.saga !== null ? L(...SAGA[Hs.saga].t) : '', pend: !Hs.sagaRes, html: tarjetaSaga() },
+    { id: 'arco', ico: '📖', t: Hs.historia ? L(...ARCOS[Hs.historia].t) : '', pend: !Hs.historiaRes, html: aprendiz ? '' : tarjetaArco() },
+    { id: 'ayud', ico: '📖', t: (S.cuadrilla.find(x => x.id === Hs.ayudHist) || {}).n || '', pend: !Hs.ayudRes, html: aprendiz ? '' : tarjetaAyud() },
+  ].filter(x => x.html);
+}
+function mensajesHoy() {
+  const H = S.hoy;
+  const de = S.fase === 'aprendiz' ? L('Don Rigo, por la radio', 'Don Rigo, on the radio') : buhoRevelado() ? L('Don Rigo, desde la cabina de Radio Grasa FM', 'Don Rigo, from the Radio Grasa FM booth') : L('Don Rigo «el Muchachón»', 'Don Rigo "el Muchachón"');
+  const frase = TRAD(String(H.frase).replace(/^Desde el lago: (pesqué una bota.*)?/, (m, bota) => bota ? RIGO_CONSEJOS[1] : 'Don Rigo: '));
+  return [{ id: 'jefeCorto', de, cara: cara('#b9a27a', 'R', 'Don Rigo'), txt: frase }, ...H.avisos.map(a => ({ de: L('Noticias del barrio', 'Neighborhood news'), ico: '📻', txt: TRAD(a) }))];
+}
+const cuentaBuzon = () => S.hoy ? itemsBuzon().filter(x => x.pend).length + (S.hoy.buzonVisto ? 0 : mensajesHoy().length) : 0;
+function resumenBuzon() {
+  const d = itemsBuzon().filter(x => x.pend).length, m = S.hoy.buzonVisto ? 0 : mensajesHoy().length;
+  return [d ? L(`${d} ${d === 1 ? 'decisión' : 'decisiones'}`, `${d} ${d === 1 ? 'decision' : 'decisions'}`) : '', m ? L(`${m} ${m === 1 ? 'mensaje nuevo' : 'mensajes nuevos'}`, `${m} new ${m === 1 ? 'message' : 'messages'}`) : ''].filter(Boolean).join(' · ');
+}
+function vBuzon() {
+  const H = S.hoy, ms = mensajesHoy();
+  // Los mensajes de cada noche se archivan (las últimas 10 noches).
+  const A = S.archivoBuzon = (S.archivoBuzon || []).filter(x => x.noche !== S.noche);
+  A.push({ noche: S.noche, ms: ms.map(m => ({ de: m.de, txt: m.txt, ico: m.ico || '' })) });
+  while (A.length > 10) A.shift();
+  const viejos = A.filter(x => x.noche < S.noche).reverse();
+  const msg = m => `<div class="msg"${m.id ? ` id="${m.id}"` : ''}>${m.cara || `<i class="msg-ico">${m.ico}</i>`}<div><b>${esc(m.de)}</b><span>${esc(m.txt)}</span></div></div>`;
+  return `${buzon(itemsBuzon())}
+    <h2 class="sec">💬 ${L('Mensajes de esta noche', 'Tonight\'s messages')} · ${L('noche', 'night')} ${S.noche}</h2>
+    <div class="chat">${ms.map(msg).join('')}</div>
+    ${viejos.length ? plegable('archivo', `🗂️ ${L('Noches anteriores', 'Earlier nights')}`, `${viejos.length}`, viejos.map(x => `<div class="chat viejo"><small class="chat-noche">${L('Noche', 'Night')} ${x.noche}</small>${x.ms.map(m => msg({ ...m, cara: m.ico ? '' : cara('#b9a27a', 'R', 'Don Rigo') })).join('')}</div>`).join('')) : ''}`;
+}
 function vNoche() {
   const H = S.hoy, aprendiz = S.fase === 'aprendiz', plazas = PLAZAS[S.eq.camioneta];
   const o = H.ordenes[H.sel], bloqueada = o && (o.ayud > H.ayud.length || !o.firmado);
@@ -6031,18 +6123,12 @@ function vNoche() {
   const aviso = op ? `<div class="orden dia retomar"><span class="chip naranja">${L('Turno a medias', 'Unfinished shift')}</span><h3>${esc(op.nombre)} · ${L('se quedó a las', 'stopped at')} ${hora(clamp(pend.t / (pend.dur || TURNO_S), 0, 1) * 480)}</h3><p>${L('Se cerró el juego a mitad del trabajo. Puedes retomarlo donde iba.', 'The game closed mid-job. You can pick it up where you left off.')}</p>
       <div class="opciones"><button class="btn prim" id="retomar">${L('Retomar el turno', 'Resume the shift')}</button><button class="btn" id="descartar">${L('Empezar de nuevo', 'Start over')}</button></div></div>` : '';
   const yoP = tarjetaYo(true), Hs = S.hoy;
-  const diaHtml = dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(TRAD(dia.t))}</h3><p>${esc(TRAD(dia.txt))}</p>
-      ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(TRAD(H.dia.res))}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(TRAD(op.t))}<small>${esc(TRAD(op.d))}</small></button>`).join('')}</div>`}</div>` : '';
-  const novedades = buzon([
-    { id: 'retomar', ico: '⏸️', t: L('Turno a medias', 'Unfinished shift'), pend: true, html: aviso },
-    { id: 'despues', ico: '🌙', t: L('Al salir del turno', 'After the shift'), pend: true, html: yoP.despues },
-    { id: 'gripa', ico: '🤒', t: L('Gripa', 'Flu'), pend: Hs.gripa === null, html: yoP.gripa },
-    { id: 'dia', ico: '🚐', t: dia ? TRAD(dia.t) : '', pend: !!(dia && !H.dia.res), html: diaHtml },
-    { id: 'saga', ico: '🎭', t: Hs.saga !== undefined && Hs.saga !== null ? L(...SAGA[Hs.saga].t) : '', pend: !Hs.sagaRes, html: tarjetaSaga() },
-    { id: 'arco', ico: '📖', t: Hs.historia ? L(...ARCOS[Hs.historia].t) : '', pend: !Hs.historiaRes, html: aprendiz ? '' : tarjetaArco() },
-    { id: 'ayud', ico: '📖', t: (S.cuadrilla.find(x => x.id === Hs.ayudHist) || {}).n || '', pend: !Hs.ayudRes, html: aprendiz ? '' : tarjetaAyud() },
-  ]);
-  return `${novedades}${yoP.linea}
+  const diaHtml = dia ? `<div class="orden dia"><span class="chip naranja">${L('Antes de salir', 'Before heading out')}</span><h3>${esc(txtDia(dia.t))}</h3><p>${esc(txtDia(dia.txt))}</p>
+      ${H.dia.res ? `<div class="cita"><b>${L('Qué pasó', 'What happened')}</b>${esc(TRAD(H.dia.res))}${H.dia.gasto || H.dia.min ? `<small class="costo-dia">${[H.dia.min ? `⏰ −${H.dia.min} min ${L('de turno', 'of shift')}` : '', H.dia.gasto ? `💸 −${dinero(H.dia.gasto)}` : ''].filter(Boolean).join(' · ')}</small>` : ''}</div>` : `<div class="opciones">${dia.ops.map((op, i) => `<button class="btn" data-dia="${i}">${esc(txtDia(op.t))}<small>${esc(txtDia(op.d))}</small></button>`).join('')}</div>`}</div>` : '';
+  // En Noche solo queda lo que cambia esta noche (turno a medias y lo de antes de salir); lo demás llega al Buzón.
+  const nb = cuentaBuzon();
+  const irBuzon = nb ? `<button class="ir-buzon" data-tab="buzon"><span>📬</span><b>${L('Buzón', 'Inbox')}</b><small>${resumenBuzon()}</small><i>›</i></button>` : '';
+  return `${aviso}${diaHtml}${irBuzon}${yoP.linea}
 
     ${sig && S.rep >= sig.rep ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
@@ -6390,7 +6476,7 @@ function enlazar() {
     const conGente = e => gen(e) >= 2;
     const equipos = eqs.filter(({ e }) => typeof e.o === 'number' && e.o !== H.sel && H.ordenes[e.o] && H.ordenes[e.o].firmado && gen(e) >= sugerido(H.ordenes[e.o])).map(({ e, k }) => ({ orden: H.ordenes[e.o], comp: e.comp, ayud: [...e.ayud], k }));
     const ayudan = o.gigante ? eqs.filter(({ e }) => e.o === 'mio' && conGente(e)).map(({ e, k }) => ({ comp: e.comp, ayud: [...e.ayud], k })).slice(0, o.finde || o.residencia ? 2 : 99) : [];
-    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, animo: !!H.animo, donas: !!H.donas, contento: !!H.contento, muela: !!H.muela, retos: H.retos || [], equipos, ayudan, espumaExtra: H.espumaExtra || 0 });
+    empezarTurno({ ...o, comp: H.comp, equipo, retraso: H.retraso || 0, imprevisto: H.dia && H.dia.res && (H.dia.gasto || H.dia.min) ? { t: txtDia((DIAS.find(x => x.id === H.dia.id) || {}).t || ''), gasto: H.dia.gasto || 0, min: H.dia.min || 0 } : null, animo: !!H.animo, donas: !!H.donas, contento: !!H.contento, muela: !!H.muela, retos: H.retos || [], equipos, ayudan, espumaExtra: H.espumaExtra || 0 });
   };
   P.querySelectorAll('[data-capricho]').forEach(b => b.onclick = () => { audio(); comprarCapricho(b.dataset.capricho); });
   P.querySelectorAll('[data-invertir]').forEach(b => b.onclick = () => { audio(); invertir(b.dataset.invertir); });
@@ -6421,7 +6507,9 @@ function enlazar() {
   });
   P.querySelectorAll('[data-dia]').forEach(b => b.onclick = () => {
     audio(); const dia = DIAS.find(x => x.id === H.dia.id);
-    H.dia.res = dia.ops[+b.dataset.dia].f(H); tono(600, .12, .08, 'triangle'); guardar(); pantallaCamioneta();
+    const antes = S.dinero, rAntes = H.retraso || 0;
+    H.dia.res = dia.ops[+b.dataset.dia].f(H); H.dia.gasto = Math.max(0, antes - S.dinero); H.dia.min = (H.retraso || 0) - rAntes;
+    tono(600, .12, .08, 'triangle'); guardar(); pantallaCamioneta();
   });
   P.querySelectorAll('[data-look]').forEach(b => b.onclick = () => {
     const [k, id] = b.dataset.look.split(':'); S.look[k] = id; aplicarLook(); guardar(); tono(880, .08, .06, 'triangle');
@@ -6597,6 +6685,8 @@ function pantallaParte() {
       [L('Materiales (desengrasante, plástico y cinta)', 'Supplies (degreaser, plastic and tape)'), -materiales()],
       ...(RENTA[S.etapa] ? [[L(`Renta del local (${nEtapa(S.etapa).toLowerCase()})`, `Rent (${nEtapa(S.etapa).toLowerCase()})`), -RENTA[S.etapa]]] : []),
       ...(S.eq.flota ? [[L(`Mantenimiento de camionetas (${S.eq.flota})`, `Van upkeep (${S.eq.flota})`), -40 * S.eq.flota]] : [])];
+  const imp = M.orden.imprevisto;
+  if (imp) lineas.push([L(`Imprevisto antes de salir: ${imp.t}`, `Before heading out: ${imp.t}`) + ` (${[imp.min ? L(`${imp.min} min tarde`, `${imp.min} min late`) : '', imp.gasto ? L(`${dinero(imp.gasto)} ya pagados`, `${dinero(imp.gasto)} already paid`) : ''].filter(Boolean).join(', ')})`, null]);
   if (d && d.apuesta) lineas.push([ganaDuelo ? L('Apuesta ganada a El Cuñado', 'Bet won against El Cuñado') : L('Apuesta perdida con El Cuñado', 'Bet lost to El Cuñado'), ganaDuelo ? d.apuesta : -d.apuesta]);
   if (S.legado && ciudad() === 2 && !aprendiz) {
     const lg = S.legado;
