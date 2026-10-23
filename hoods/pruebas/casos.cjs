@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'conSeguro', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'conSeguro', 'sueldosOficina', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -712,7 +712,7 @@ caso('tu personaje: editor de avatar, piezas con logros y partidas viejas', asyn
 });
 
 caso('la gente de la sede: escritorios, administración, intercomunicador y renuncias', async () => {
-  const p = await abrir(partida({ noche: 40, etapa: 3, dinero: 20000, sede: { mantenimiento: 1, planificacion: 1, formacion: 1 }, cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, tipo: 'normal', animo: 1, cuidado: 3 }] }));
+  const p = await abrir(partida({ noche: 40, etapa: 3, dinero: 20000, eq: { rasqueta: 2, hidro: true, camioneta: 2, flota: 7 }, sede: { mantenimiento: 1, planificacion: 1, formacion: 1 }, cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, tipo: 'normal', animo: 1, cuidado: 3 }] }));
   await p.click('.tabs [data-tab="taller"]');
   let r = await p.evaluate(() => ({ ocupados: document.querySelectorAll('.escritorio.ocupado').length, vacantes: document.querySelectorAll('.escritorio .vacante').length }));
   afirmar(r.ocupados === 3 && r.vacantes === 3, 'la oficina no muestra quién está: ' + JSON.stringify(r));
@@ -720,7 +720,14 @@ caso('la gente de la sede: escritorios, administración, intercomunicador y renu
   const antes = await p.evaluate(() => __hc.conSeguro(200));
   await p.click('[data-esc="admin"]'); await p.click('#contratarAdmin');
   r = await p.evaluate(() => ({ admin: !!__hc.S.admin, d: __hc.S.dinero, dano: __hc.conSeguro(200) }));
-  afirmar(r.admin && r.d === 14000 && r.dano === Math.round(antes * .75 / 10) * 10, 'la administración no abarata los daños: ' + JSON.stringify({ antes, ...r }));
+  afirmar(r.admin && r.d === 8000 && r.dano === Math.round(antes * .75 / 10) * 10, 'la administración no abarata los daños: ' + JSON.stringify({ antes, ...r }));
+  // sueldos de la oficina en los gastos fijos: 150 + 200 + 300 + 300
+  afirmar(await p.evaluate(() => __hc.sueldosOficina() === 950), 'los sueldos de la oficina no cuadran: ' + await p.evaluate(() => __hc.sueldosOficina()));
+  // con pocas camionetas, Ventas está bloqueado y no se puede contratar
+  await p.evaluate(() => { __hc.S.eq.flota = 1; document.querySelector('.tabs [data-tab="taller"]').click(); });
+  await p.click('[data-esc="oficina"]');
+  r = await p.evaluate(() => ({ boton: !!document.querySelector('[data-sede="oficina"]'), candado: /🔒 5/.test(document.querySelector('.esc-det').textContent) }));
+  afirmar(!r.boton && r.candado, 'Ventas se puede contratar sin las 5 camionetas: ' + JSON.stringify(r));
   // mensaje de la oficina en el Buzón de la noche siguiente
   await p.evaluate(() => { __hc.S.oficinaMsg = { id: 'planificacion', txt: ['Prueba de Doña Perfecta.', 'Test.'] }; __hc.S.hoy = null; __hc.pantallaCamioneta(); document.querySelector('.tabs [data-tab="buzon"]').click(); });
   afirmar(await p.evaluate(() => /Doña Perfecta/.test(document.querySelector('.bandeja').textContent) && /Prueba de Doña Perfecta/.test(document.querySelector('.bandeja').textContent) && !__hc.S.oficinaMsg), 'el mensaje de la oficina no llegó al Buzón');
@@ -738,6 +745,16 @@ caso('la gente de la sede: escritorios, administración, intercomunicador y renu
   await p.waitForFunction(() => /Toña/.test(document.body.textContent), null, { timeout: 10000 }).catch(() => {});
   r = await p.evaluate(() => ({ tona: /Toña/.test(document.body.textContent), perfecta: /📟 Doña Perfecta/.test(document.body.textContent) }));
   afirmar(r.tona && !r.perfecta, 'el intercomunicador no habló una sola vez: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('crecer de etapa pide camionetas', async () => {
+  const p = await abrir(partida({ noche: 30, etapa: 1, rep: 50, dinero: 20000, eq: { rasqueta: 2, hidro: true, camioneta: 2, flota: 0 } }));
+  let r = await p.evaluate(() => ({ lista: __hc.etapaLista(__hc.ETAPAS[2]), saltar: !!document.querySelector('#saltar'), meta: document.querySelector('.meta-final, .cab').textContent }));
+  afirmar(!r.lista && !r.saltar, 'se puede subir a «Oficina con fax» con una sola camioneta: ' + JSON.stringify(r));
+  await p.evaluate(() => { __hc.S.eq.flota = 1; __hc.pantallaCamioneta(); });
+  r = await p.evaluate(() => ({ lista: __hc.etapaLista(__hc.ETAPAS[2]), saltar: !!document.querySelector('#saltar') }));
+  afirmar(r.lista && r.saltar, 'con 2 camionetas no deja subir de etapa: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
