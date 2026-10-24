@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -767,17 +767,20 @@ caso('el estadio de Charlienaro, Angélica en la oficina y la nómina', async ()
   const p = await abrir(partida({ noche: 50, etapa: 3, rep: 70, dinero: 30000, hoy: null, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 5 }, sede: { oficina: 1 }, fijos: ['beto', 'lupe'], cuadrilla: [{ id: 7, n: 'Nacho', rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 130, color: '#ffb36b', noches: 12, tipo: 'normal' }] }));
   // Charlienaro consigue el estadio: aviso y tarjeta para aceptar
   let r = await p.evaluate(() => ({ e: __hc.S.estadio, boton: !!document.querySelector('#estadioSi'), aviso: __hc.S.hoy.avisos.join(' ') }));
-  afirmar(r.e && r.boton && /Estadio Monumental/.test(r.aviso) && /\$50,000/.test(r.aviso), 'Charlienaro no consiguió el estadio: ' + JSON.stringify(r));
-  // al aceptar: solo hay un trabajo, gigante, de 4 campanas y $10,000
+  afirmar(r.e && r.boton && /Estadio Monumental/.test(r.aviso) && /\$60,000/.test(r.aviso) && /treinta campanas/.test(r.aviso), 'Charlienaro no consiguió el estadio: ' + JSON.stringify(r));
+  // al aceptar: solo hay un trabajo, gigante, de 4 campanas (más 2 de la brigada) y $12,000
   await p.click('#estadioSi');
   r = await p.evaluate(() => { const H = __hc.S.hoy; return { n: H.ordenes.length, o: H.ordenes[0] && { est: H.ordenes[0].estadio, gig: H.ordenes[0].gigante, c: H.ordenes[0].campanas, pago: H.ordenes[0].pago, nombre: H.ordenes[0].nombre } }; });
-  afirmar(r.n === 1 && r.o.est && r.o.gig && r.o.c === 4 && r.o.pago === 10000 && /Tribuna Norte/.test(r.o.nombre), 'la primera noche del estadio no es correcta: ' + JSON.stringify(r));
+  afirmar(r.n === 1 && r.o.est && r.o.gig && r.o.c === 4 && r.o.pago === 12000 && /Tribuna Norte/.test(r.o.nombre), 'la primera noche del estadio no es correcta: ' + JSON.stringify(r));
   // cinco noches seguidas; la última paga el bono del club
   let parte = '';
   for (let k = 0; k < 5; k++) { const x = await jugarNoche(p, { cocina: null, orden: 0 }); parte = x.texto; await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); }); }
   r = await p.evaluate(() => ({ e: __hc.S.estadio, otros: __hc.S.hoy.ordenes.some(o => o.estadio) }));
   afirmar(r.e.hecho && r.e.res.length === 5 && !r.otros, 'el estadio no terminó en 5 noches: ' + JSON.stringify(r.e));
   afirmar(/Bono del club/.test(parte), 'no se pagó el bono del club');
+  afirmar(/Brigada del estadio \(\d+ personas?/.test(parte) && /Brigada del estadio: sueldos y gasolina/.test(parte), 'la brigada no salió en el parte: ' + parte.slice(0, 600));
+  r = await p.evaluate(() => __hc.S.estadio.res.map(x => x.extra));
+  afirmar(r.length === 5 && r.every(x => x >= 0 && x <= 2), 'la brigada no anotó sus campanas: ' + JSON.stringify(r));
   // Angélica se contrata en la oficina y cobra sueldo de oficina
   await p.click('.tabs [data-tab="taller"]'); await p.click('[data-esc="angelica"]');
   const d0 = await p.evaluate(() => __hc.S.dinero);
@@ -880,6 +883,19 @@ caso('Angélica reparte los trabajos y el reporte de la semana', async () => {
   await p.evaluate(() => document.querySelector('#reporteOk').click());
   r = await p.evaluate(() => __hc.S.hoy.reporteVisto);
   afirmar(r === true, 'el reporte no se marcó como leído');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('campana de verdad: lámparas que se ensucian, bajantes y filtros moteados', async () => {
+  const p = await abrir(partida({ noche: 30, etapa: 2 }));
+  await p.evaluate(() => { const H = __hc.S.hoy, o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = false; o.ayud = 0; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  let r = await p.evaluate(() => { const z = __hc.Z.find(z => z.id === 'campana'); __hc.M.eventos = []; __hc.pintarHud(); return { vidrio: !!z.vidrio, luces: __hc.lucesCampana.filter(l => l.userData.vidrio).length, i: __hc.lucesCampana[0].intensity, op: z.vidrio.halos[0].material.opacity }; });
+  afirmar(r.vidrio && r.luces >= 1 && r.i < .5, 'la campana no tiene lámparas o empiezan limpias: ' + JSON.stringify(r));
+  r = await p.evaluate(() => { const z = __hc.Z.find(z => z.id === 'campana'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); return { i: __hc.lucesCampana[0].intensity, op: z.vidrio.halos[0].material.opacity }; });
+  afirmar(r.i > .8 && r.op > .5, 'limpiar la campana no aclaró las lámparas: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 

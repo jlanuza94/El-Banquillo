@@ -2182,6 +2182,9 @@ const cielo = new T.HemisphereLight(0xcfe3ff, 0x3a2d1e, .26); escena.add(cielo);
 const fluor = new T.DirectionalLight(0xe6f2ff, .28); fluor.position.set(1, 4, 2); escena.add(fluor);
 const foco = new T.SpotLight(0xffd6a0, 1.8, 7, .95, .65, 1.4); foco.position.set(0, 2.95, 1.3); escena.add(foco); escena.add(foco.target);
 const nocheAzul = new T.PointLight(0x4a6cff, .5, 9, 1.5); nocheAzul.position.set(-3, 2.2, 3); escena.add(nocheAzul);
+// Las lámparas a prueba de vapor de la campana: dos luces cálidas que se colocan en cada cocina.
+const lucesCampana = [0, 1].map(() => { const l = new T.PointLight(0xffd59a, 0, 2.6, 2); escena.add(l); return l; });
+const TX_HALO = texCanvas(lienzo(64, 64, (g, w, h) => { const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,226,170,.9)'); gr.addColorStop(.35, 'rgba(255,200,120,.35)'); gr.addColorStop(1, 'rgba(255,190,110,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }));
 
 // Entorno para los reflejos del acero: un cuarto gris con tubos fluorescentes.
 (function entorno() {
@@ -2221,6 +2224,14 @@ TX.bafles = texCanvas(lienzo(256, 256, (g, w, h) => {
   g.strokeStyle = '#6b757d'; g.lineWidth = 16; g.strokeRect(8, 8, w - 16, h - 16);
   g.strokeStyle = '#c4ccd2'; g.lineWidth = 2; g.strokeRect(15, 15, w - 30, h - 30);
   g.fillStyle = '#3a4148'; for (const x of [70, 186]) { g.fillRect(x - 16, 2, 32, 9); }
+  // el asa en forma de C de cada filtro
+  g.strokeStyle = '#2c3237'; g.lineWidth = 7; g.beginPath(); g.arc(w / 2, h / 2, 22, Math.PI * .35, Math.PI * 1.65); g.stroke();
+  g.strokeStyle = '#e9eef2'; g.lineWidth = 3; g.beginPath(); g.arc(w / 2, h / 2, 22, Math.PI * .35, Math.PI * 1.65); g.stroke();
+}));
+// Los mismos bafles con los puntitos de grasa quemada que se ven en los filtros de verdad (se van al lavarlos).
+TX.baflesSucio = texCanvas(lienzo(256, 256, (g, w, h) => {
+  g.drawImage(TX.bafles.image, 0, 0);
+  for (let i = 0; i < 1600; i++) { const r = Math.random() ** 3 * 1.6 + .4; g.fillStyle = `rgba(${18 + Math.random() * 20 | 0},${12 + Math.random() * 12 | 0},6,${.25 + Math.random() * .45})`; g.beginPath(); g.arc(16 + Math.random() * (w - 32), 16 + Math.random() * (h - 32), r, 0, 7); g.fill(); }
 }));
 TX.azulejo = texCanvas(lienzo(256, 256, (g, w, h) => {
   g.fillStyle = '#d9d4c8'; g.fillRect(0, 0, w, h); g.strokeStyle = '#a8a294'; g.lineWidth = 3;
@@ -2652,6 +2663,10 @@ function construirNoche(orden) {
   for (const x of [-1.8, 1.8]) add(new T.BoxGeometry(1.2, .04, .12), new T.MeshBasicMaterial({ color: 0xf4fbff }), x, 2.98, 1.4);
 
   foco.target.position.set(0, hY0 + .2, hZ0 + .3); foco.position.set(0, 2.95, hZ1 + 1.4); nocheAzul.visible = !S.aj.ahorro;
+  lucesCampana.forEach(l => { l.intensity = 0; l.userData.vidrio = null; });
+  // Paneles de acero en la pared, entre la línea y la campana (y hasta los lados), con sus juntas.
+  add(new T.PlaneGeometry(lineW + .3, hY0 - .9 + .05), matAcero, 0, (hY0 + .9) / 2, -.992);
+  for (let k = 0; k <= Math.round((lineW + .3) / .9); k++) add(new T.BoxGeometry(.006, hY0 - .9, .004), matOscuro, -(lineW + .3) / 2 + k * (lineW + .3) / Math.round((lineW + .3) / .9), (hY0 + .9) / 2, -.988);
   // Letrero del restaurante
   const nombre = orden ? orden.nombre : S.empresa ? S.empresa.nombre : 'Grasa Brava Servicios';
   const letrero = texCanvas(lienzo(512, 128, (g, w, h) => {
@@ -2776,7 +2791,7 @@ function construirNoche(orden) {
     // y de vuelta, limpios, al terminar) y el sistema contra incendios con sus boquillas.
     const nFil = Math.max(2, Math.round((hW - .2) / .5)), anchoF = (hW - .16) / nFil, alto = Math.min(.42, hood.alto * .7);
     const banco = new T.Group(); banco.position.set(cx, hY0 + alto / 2 * .7 + .04, hZ0 + .2); banco.rotation.x = -.62; mundo.add(banco);
-    const matFiltroSucio = new T.MeshStandardMaterial({ map: TX.bafles, color: 0x6b5330, metalness: .6, roughness: .55 }), matFiltroLimpio = new T.MeshStandardMaterial({ map: TX.bafles, metalness: .85, roughness: .28 });
+    const matFiltroSucio = new T.MeshStandardMaterial({ map: TX.baflesSucio, color: 0x6b5330, metalness: .6, roughness: .55 }), matFiltroLimpio = new T.MeshStandardMaterial({ map: TX.bafles, metalness: .85, roughness: .28 });
     const filtrosHood = [];
     for (let k = 0; k < nFil; k++) { const m = new T.Mesh(new T.PlaneGeometry(anchoF - .015, alto), matFiltroSucio); m.position.x = -hW / 2 + .08 + anchoF * (k + .5); banco.add(m); filtrosHood.push(m); }
     for (const yy of [-alto / 2 - .01, alto / 2 + .01]) { const r = new T.Mesh(new T.BoxGeometry(hW - .1, .025, .04), matAcero); r.position.y = yy; banco.add(r); }
@@ -2789,7 +2804,45 @@ function construirNoche(orden) {
       add(new T.ConeGeometry(.022, .035, 10, 1, true), new T.MeshStandardMaterial({ color: 0xdedede, metalness: .9, roughness: .2, side: T.DoubleSide }), nxp, hY1 - .155, hZ0 + hood.fondo * .55);
     }
     piezas.bancos = piezas.bancos || []; piezas.bancos.push({ banco, filtros: filtrosHood, limpio: matFiltroLimpio });
-    campanas.push({ cx, sfs, gotas, huella, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
+    // Bajantes del sistema contra incendios: un tubo que baja del techo con su boquilla encima de cada aparato,
+    // y el tubo de cobre que sale por un lado de la campana hacia la pared.
+    for (let k = 0; k < nSlots; k++) {
+      const ax = -lineW / 2 + slotW * (k + .5); if (ax < cx - hW / 2 + .12 || ax > cx + hW / 2 - .12) continue;
+      const zB = hZ1 - .16, largo = hood.alto + .12;
+      add(new T.CylinderGeometry(.011, .011, largo, 8), matTubo, ax, hY1 - largo / 2, zB);
+      add(new T.CylinderGeometry(.02, .02, .045, 6), matRemache, ax, hY1 - largo + .01, zB);
+      add(new T.ConeGeometry(.018, .03, 8, 1, true), matRemache, ax, hY1 - largo - .025, zB).rotation.x = Math.PI;
+      add(new T.CylinderGeometry(.022, .022, .02, 6), matOscuro, ax, hY1 - .01, zB);
+    }
+    add(new T.CylinderGeometry(.012, .012, hY0 - 1.15, 8), matTubo, cx + hW / 2 + .06, (hY0 + 1.15) / 2, hZ0 + .06);
+    add(new T.CylinderGeometry(.012, .012, .1, 8), matTubo, cx + hW / 2 + .03, hY0 + .01, hZ0 + .06).rotation.z = Math.PI / 2;
+    // Tuercas y varillas con las que cuelga la campana del techo.
+    for (const sx of [-1, 1]) {
+      add(new T.CylinderGeometry(.02, .02, .018, 6), matOscuro, cx + sx * hW * .3, hY1 - .009, hZ - .05);
+      add(new T.CylinderGeometry(.008, .008, 3 - hY1, 6), matOscuro, cx + sx * (hW / 2 - .1), (hY1 + 3) / 2, hZ0 + .12);
+    }
+    // Lámparas a prueba de vapor: frascos de vidrio que cuelgan o paneles cuadrados empotrados (según la cocina).
+    // El vidrio se ensucia con la campana: luz amarillenta y opaca que vuelve a brillar al limpiarla.
+    const frasco = orden ? (orden.nombre.length + campanas.length) % 2 === 0 : true;
+    const matVidrio = new T.MeshStandardMaterial({ color: 0xfff6e6, emissive: 0xffe2b0, emissiveIntensity: 1.2, transparent: true, opacity: .88, roughness: .15, metalness: 0 });
+    const nL = hW > 1.6 ? 2 : 1, focos = [];
+    for (let k = 0; k < nL; k++) {
+      const lx = cx + (nL === 1 ? -hW * .18 : (k ? 1 : -1) * hW * .27), lz = hZ0 + hood.fondo * .72;
+      if (frasco) {
+        add(new T.CylinderGeometry(.055, .06, .045, 14), matOscuro, lx, hY1 - .022, lz);
+        add(new T.CylinderGeometry(.045, .045, .1, 14), matVidrio, lx, hY1 - .095, lz);
+        add(new T.SphereGeometry(.045, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), matVidrio, lx, hY1 - .145, lz);
+      } else {
+        add(new T.BoxGeometry(.3, .016, .22), matOscuro, lx, hY1 - .008, lz);
+        add(new T.BoxGeometry(.26, .012, .18), matVidrio, lx, hY1 - .016, lz);
+      }
+      const halo = new T.Sprite(new T.SpriteMaterial({ map: TX_HALO, transparent: true, depthWrite: false, blending: T.AdditiveBlending, opacity: .55 }));
+      halo.scale.setScalar(frasco ? .32 : .45); halo.position.set(lx, hY1 - (frasco ? .12 : .03), lz); mundo.add(halo);
+      focos.push({ pos: new T.Vector3(lx, hY1 - .2, lz), halo });
+    }
+    for (const f of focos) { const l = lucesCampana.find(x => !x.userData.vidrio); if (l) { l.position.copy(f.pos); l.userData.vidrio = matVidrio; l.visible = !S.aj.ahorro; } }
+    campanas.push({ cx, sfs, gotas, huella, vidrio: { mat: matVidrio, halos: focos.map(f => f.halo) }, labio: { cx, hW, y: hY0, z0: hZ0, z1: hZ1 } });
+    ensuciarVidrio(campanas[campanas.length - 1].vidrio, 1);
   }
   patronSf = null;
 
@@ -2867,7 +2920,7 @@ function construirNoche(orden) {
   VISTAS.frente = vista(new T.Vector3(0, hY0 - .05, hZ1), new T.Vector3(0, -.15, 1), span + .5, 1.6, 3.4, 60);
   VISTAS.pelar = vista(new T.Vector3(0, (hY0 + 1.05) / 2, (hZ1 - .35) / 2), new T.Vector3(0, .1, 1), Math.max(span, lineW) + .4, 1.9, 3.6, 60);
   Z = gruposF.map((g, i) => ({ id: 'filtros', n: gruposF.length > 1 ? `${L('Filtros', 'Filters')} ${'ABCD'[i]}` : L('Filtros', 'Filters'), sfs: g.sfs, vista: vista(new T.Vector3(g.lx, 0, g.lonaZ), new T.Vector3(0, 1.6, 1.0), g.lonaW + .2, 1.7, 3.2, 55) }));
-  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, labio: c.labio, huella: c.huella,
+  campanas.forEach((c, i) => Z.push({ id: 'campana', n: nC > 1 ? `${L('Campana', 'Hood')} ${i + 1}` : L('Campana', 'Hood'), sfs: c.sfs, gotas: c.gotas, vidrio: c.vidrio, labio: c.labio, huella: c.huella,
     vista: { ...vista(new T.Vector3(c.cx, hY0 + hood.alto * .6, hZ0 + hood.fondo * .45), new T.Vector3(0, -.85, .5), hW + .2, 1.15, 1.6, 74), alt: { dMax: 2.0, hfMin: 54, fovMax: 100, dir: new T.Vector3(0, -.6, .8).normalize() } } }));
   piezas.robot = null;
   // Freidora (en las cocinas que fríen): la tina se vacía y se talla por dentro, con aceite viejo y costra quemada.
@@ -4285,6 +4338,12 @@ function mapacheDorado() {
   ], { bloquea: true });
 }
 const SVG_CUCA = '<svg viewBox="0 0 60 60" width="64" height="64"><g stroke="#2a1608" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M22 24 9 15M21 32 6 32M22 40 10 50M38 24 51 15M39 32 54 32M38 40 50 50"/><path d="M27 12 19 1M33 12 41 1" stroke-width="1.6"/></g><ellipse cx="30" cy="34" rx="11" ry="18" fill="#7a4314" stroke="#2a1608" stroke-width="2"/><ellipse cx="30" cy="15" rx="7.5" ry="5.5" fill="#4a250a"/><path d="M30 19v31" stroke="#2a1608" stroke-width="1.6"/><circle cx="26" cy="27" r="2.5" fill="#fff" opacity=".35"/></svg>';
+// El vidrio de las lámparas: con grasa (f = 1) da luz amarilla y opaca; limpio (f = 0) brilla.
+function ensuciarVidrio(v, f) {
+  v.mat.color.setRGB(1 - .45 * f, .96 - .5 * f, .9 - .7 * f); v.mat.emissive.setRGB(1 - .35 * f, .88 - .42 * f, .69 - .58 * f); v.mat.emissiveIntensity = 1.25 - .7 * f; v.mat.opacity = .88 + .1 * f;
+  for (const h of v.halos) h.material.opacity = .6 - .4 * f;
+  for (const l of lucesCampana) if (l.userData.vidrio === v.mat) l.intensity = .9 - .6 * f;
+}
 // Director de eventos. Siempre pasa lo que tú provocas (gas, luz, bolsa), la tubería que rompe un descuidado y lo que
 // anunciaba la tarjeta del trabajo. Las sorpresas y las crisis se limitan a un presupuesto por noche según la etapa,
 // prefiriendo las que no salieron en las últimas noches. Al lanzarlos, se dejan respirar y no empiezan al final del turno.
@@ -4943,6 +5002,7 @@ function pintarHud(todo) {
   Z.forEach((z, i) => {
     const b = $('#zonas').children[i], m = micras(z), ok = m <= LIMITE;
     if (z.gotas) { const f = clamp(1 - pctZona(z) * 1.25, 0, 1); for (const g of z.gotas) { g.scale.y = Math.max(.01, f); g.position.y = z.labio.y - g.userData.largo * f / 2; g.visible = f > .02; } }
+    if (z.vidrio) ensuciarVidrio(z.vidrio, clamp(1 - pctZona(z) * 1.25, 0, 1));
     b.setAttribute('aria-pressed', i === M.zona); b.classList.toggle('listo', ok);
     const resta = ok ? 1 : 1 - clamp(pctZona(z) / Math.max(.05, 1 - LIMITE / M.orden.micras), 0, 1), pr = b.querySelector('.prog s');
     if (pr) { pr.style.width = (resta * 100).toFixed(1) + '%'; pr.style.background = ok ? 'var(--ok)' : `hsl(${Math.round((1 - resta) * 45)}, 85%, 55%)`; }
@@ -5687,9 +5747,21 @@ function ordenLicit(paso) {
   return o;
 }
 // El estadio de fútbol: Charlienaro (Ventas) lo consigue cuando ya eres Contratista. Es un contrato de 5 noches seguidas
-// (un sector por noche, 4 campanas cada uno: 20 en total) en el que va toda tu gente; esas noches no hay otros trabajos.
-// Paga al menos $50,000 (10,000 por sector) y un bono del club si apruebas casi todo. Hay que aceptarlo en 5 noches.
-const ESTADIO_PLAZO = 5, ESTADIO_VANS = 4, ESTADIO_PAGO = 10000, ESTADIO_BONO = 8000;
+// (un sector por noche, 6 campanas cada uno: 30 en total) en el que va toda tu gente; esas noches no hay otros trabajos.
+// Tú y tu camioneta limpian 4 campanas; la brigada (el resto de tu gente) limpia las otras 2 del sector.
+// Paga $60,000 (12,000 por sector) y un bono del club si apruebas casi todo. Hay que aceptarlo en 5 noches.
+const ESTADIO_PLAZO = 5, ESTADIO_VANS = 4, ESTADIO_PAGO = 12000, ESTADIO_BONO = 8000, ESTADIO_CAMP = 6, ESTADIO_BRIGADA = 2, ESTADIO_REPETIR = 800;
+// La brigada del estadio: todos los que no van en tu camioneta. Cuanta más fuerza y con un Lead, más campanas pasan.
+function brigadaEstadio() {
+  const H = S.hoy, enVan = new Set(H.ayud);
+  const gente = [...S.fijos.filter(id => id !== H.comp).map(id => ({ ...COMPANEROS[id], id: null })), ...S.cuadrilla.filter(c => !enVan.has(c.id))];
+  const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), lead = gente.some(esLead);
+  const p = clamp(.3 + fuerza * .12 + (lead ? LEAD.calidad : 0) + (S.angelica ? .05 : 0), .1, .95);
+  const ok = gente.length ? Array.from({ length: ESTADIO_BRIGADA }, () => azar(p)).filter(Boolean).length : 0;
+  const sueldos = gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1) * sueldoMult()), 0), vans = Math.max(1, Math.ceil(gente.length / 4));
+  return { gente, ok, sueldos, vans, lead };
+}
+const campanasEstadio = e => (e.res || []).reduce((a, r) => a + (r.ok ? ESTADIO_CAMP - ESTADIO_BRIGADA : 0) + (r.extra || 0), 0);
 const SECTORES = [['Tribuna Norte', 'North Stand'], ['Tribuna Sur', 'South Stand'], ['Cabecera Oriente', 'East End'], ['Cabecera Poniente', 'West End'], ['Palcos VIP', 'VIP Boxes']];
 function ordenEstadio(k) {
   const o = genOrden('futbol'); o.estadio = true; o.sector = k; o.firmado = true; o.duelo = false; o.pedido = null; o.contrato = null; o.jefe = null;
@@ -5702,7 +5774,7 @@ function estadioHoy() {
   if (!S.estadio) {
     if (S.etapa < 3 || !encargadoActivo('oficina')) return;
     S.estadio = { noche: S.noche };
-    H.avisos.unshift(L(`📟 Charlienaro: «¡Jefe! Conseguí el Estadio Monumental. Cinco tribunas, veinte campanas, cocinas que no se limpian desde que ganaron el último campeonato (hace 11 años). Son 5 noches seguidas con toda la gente, y pagan mínimo $50,000. Tenemos ${ESTADIO_PLAZO} noches para aceptar; si no, se lo dan a El Cuñado.»`, `📟 Charlienaro "el Trato": "Boss! I landed the Monumental Stadium. Five stands, twenty hoods, kitchens not cleaned since they won the last championship (11 years ago). It's 5 nights in a row with everyone, and they pay at least $50,000. We have ${ESTADIO_PLAZO} nights to accept; otherwise it goes to El Cuñado."`));
+    H.avisos.unshift(L(`📟 Charlienaro: «¡Jefe! Conseguí el Estadio Monumental. Cinco tribunas, treinta campanas, cocinas que no se limpian desde que ganaron el último campeonato (hace 11 años). Son 5 noches seguidas con toda la gente, y pagan ${dinero(ESTADIO_PAGO * 5)}. Tenemos ${ESTADIO_PLAZO} noches para aceptar; si no, se lo dan a El Cuñado.»`, `📟 Charlienaro "el Trato": "Boss! I landed the Monumental Stadium. Five stands, thirty hoods, kitchens not cleaned since they won the last championship (11 years ago). It's 5 nights in a row with everyone, and they pay ${dinero(ESTADIO_PAGO * 5)}. We have ${ESTADIO_PLAZO} nights to accept; otherwise it goes to El Cuñado."`));
   }
   const e = S.estadio; if (e.hecho || e.perdido) return;
   if (e.paso === undefined) {
@@ -5714,10 +5786,10 @@ function estadioHoy() {
 }
 function tarjetaEstadio() {
   const e = S.estadio; if (!e || e.hecho || e.perdido || S.fase !== 'empresa') return '';
-  if (e.paso !== undefined) return `<div class="retos licit"><b>⚽ ${L('Estadio Monumental', 'Monumental Stadium')} · ${L('noche', 'night')} ${e.paso + 1} ${L('de', 'of')} 5</b>${SECTORES.map((sc, i) => { const r = (e.res || [])[i]; return `<span class="${r ? (r.ok ? 'ok' : 'mal') : ''}">${r ? (r.ok ? '★' : '✗') : '☆'} ${L(...sc)}${r ? ` · ${r.nota}` : ''}</span>`; }).join('')}<span>${L('Esta semana toda tu gente está en el estadio: no hay otros trabajos.', 'This week all your people are at the stadium: no other jobs.')}</span></div>`;
+  if (e.paso !== undefined) return `<div class="retos licit"><b>⚽ ${L('Estadio Monumental', 'Monumental Stadium')} · ${L('noche', 'night')} ${e.paso + 1} ${L('de', 'of')} 5</b>${SECTORES.map((sc, i) => { const r = (e.res || [])[i]; return `<span class="${r ? (r.ok ? 'ok' : 'mal') : ''}">${r ? (r.ok ? '★' : '✗') : '☆'} ${L(...sc)}${r ? ` · ${r.nota} · ${(r.ok ? ESTADIO_CAMP - ESTADIO_BRIGADA : 0) + (r.extra || 0)}/${ESTADIO_CAMP}` : ''}</span>`; }).join('')}<span>🧽 ${L(`Campanas limpias: ${campanasEstadio(e)} de ${ESTADIO_CAMP * 5}. Tú limpias 4 por noche; la brigada (el resto de tu gente) limpia las otras 2.`, `Hoods cleaned: ${campanasEstadio(e)} of ${ESTADIO_CAMP * 5}. You clean 4 a night; the brigade (the rest of your people) cleans the other 2.`)}</span><span>${L('Esta semana toda tu gente está en el estadio: no hay otros trabajos.', 'This week all your people are at the stadium: no other jobs.')}</span></div>`;
   const quedan = e.noche + ESTADIO_PLAZO - S.noche, puede = vansTotal() >= ESTADIO_VANS;
   return `<div class="orden licit"><span class="chip naranja">⚽ ${L('Lo consiguió Charlienaro', 'Landed by Charlienaro')} · ${L(`quedan ${quedan} noches para aceptar`, `${quedan} nights left to accept`)}</span><h3>${L('El Estadio Monumental', 'The Monumental Stadium')}</h3>
-    <p class="nota">${L(`5 noches seguidas, un sector por noche: ${SECTORES.map(x => x[0]).join(', ')}. 4 campanas por noche (20 en total). Va toda tu gente y esas noches no hay otros trabajos. Pago: ${dinero(ESTADIO_PAGO)} por sector (${dinero(ESTADIO_PAGO * 5)}) y ${dinero(ESTADIO_BONO)} de bono del club si apruebas 4 de 5.`, `5 nights in a row, one sector per night: ${SECTORES.map(x => x[1]).join(', ')}. 4 hoods per night (20 total). Everyone goes and there are no other jobs those nights. Pay: ${dinero(ESTADIO_PAGO)} per sector (${dinero(ESTADIO_PAGO * 5)}) plus a ${dinero(ESTADIO_BONO)} club bonus if you pass 4 of 5.`)}</p>
+    <p class="nota">${L(`5 noches seguidas, un sector por noche: ${SECTORES.map(x => x[0]).join(', ')}. ${ESTADIO_CAMP} campanas por noche (${ESTADIO_CAMP * 5} en total): tú y tu camioneta limpian 4 y el resto de tu gente, en brigada, las otras 2. Va toda tu gente y esas noches no hay otros trabajos; la brigada cobra su sueldo y su gasolina. Pago: ${dinero(ESTADIO_PAGO)} por sector (${dinero(ESTADIO_PAGO * 5)}) y ${dinero(ESTADIO_BONO)} de bono del club si apruebas 4 de 5.`, `5 nights in a row, one sector per night: ${SECTORES.map(x => x[1]).join(', ')}. ${ESTADIO_CAMP} hoods per night (${ESTADIO_CAMP * 5} total): you and your van clean 4 and the rest of your people, as a brigade, the other 2. Everyone goes and there are no other jobs those nights; the brigade is paid wages and gas. Pay: ${dinero(ESTADIO_PAGO)} per sector (${dinero(ESTADIO_PAGO * 5)}) plus a ${dinero(ESTADIO_BONO)} club bonus if you pass 4 of 5.`)}</p>
     ${S.licit ? `<span class="aviso">${L('Primero termina la Gran Licitación.', 'Finish the Grand Tender first.')}</span>` : puede ? `<div class="acciones"><button class="btn prim" id="estadioSi">${L('Aceptar el contrato', 'Accept the contract')}</button></div>` : `<span class="aviso">${L(`Necesitas ${ESTADIO_VANS} camionetas para mover a tanta gente (tienes ${vansTotal()}).`, `You need ${ESTADIO_VANS} vans to move that many people (you have ${vansTotal()}).`)}</span>`}</div>`;
 }
 function residenciaHoy() {
@@ -6770,7 +6842,7 @@ function quienLleva(i) {
 // El botón grande de Angélica: tú eliges tu trabajo y ella reparte los demás (luego puedes cambiar lo que quieras).
 function botonReparto() {
   const H = S.hoy;
-  if (S.fase !== 'empresa' || !S.angelica || !hayB() || !H.ordenes.length) return '';
+  if (S.fase !== 'empresa' || !S.angelica || !hayB() || !H.ordenes.length || H.ordenes.some(o => o.estadio)) return '';   // en el estadio va toda la gente junta
   const eqs = equiposHoy(), con = eqs.filter(e => e.o !== null && e.o !== undefined).length, libres = trabajosLibres();
   return `<div class="reparto"><button class="btn ${con ? '' : 'prim'}" id="repartir">📋 ${con ? L('Que Angélica reparta de nuevo', 'Let Angélica reassign') : L('Que Angélica reparta', 'Let Angélica assign')}</button><small>${L(`Tú eliges tu trabajo; ella manda a tus ${eqs.length} ${eqs.length === 1 ? 'equipo' : 'equipos'} a los demás. ${con}/${eqs.length} con trabajo${libres ? ` · ${libres} ${libres === 1 ? 'trabajo firmado libre' : 'trabajos firmados libres'}` : ''}.`, `You pick your job; she sends your ${eqs.length} ${eqs.length === 1 ? 'team' : 'teams'} to the rest. ${con}/${eqs.length} assigned${libres ? ` · ${libres} free signed ${libres === 1 ? 'job' : 'jobs'}` : ''}.`)}</small></div>`;
 }
@@ -7280,6 +7352,13 @@ function pantallaParte() {
   const imp = M.orden.imprevisto;
   if (imp) lineas.push([L(`Imprevisto antes de salir: ${imp.t}`, `Before heading out: ${imp.t}`) + ` (${[imp.min ? L(`${imp.min} min tarde`, `${imp.min} min late`) : '', imp.gasto ? L(`${dinero(imp.gasto)} ya pagados`, `${dinero(imp.gasto)} already paid`) : ''].filter(Boolean).join(', ')})`, null]);
   const estadioBono = o.estadio && S.estadio && S.estadio.paso === 4 && [...(S.estadio.res || []), { ok: aprobado }].filter(x => x.ok).length >= 4;
+  const brig = o.estadio && !aprendiz ? brigadaEstadio() : null;
+  if (brig) {
+    lineas.push([L(`Brigada del estadio (${brig.gente.length} ${brig.gente.length === 1 ? 'persona' : 'personas'}${brig.lead ? ', con Lead' : ''}): ${brig.ok} de ${ESTADIO_BRIGADA} campanas extra aprobadas`, `Stadium brigade (${brig.gente.length} ${brig.gente.length === 1 ? 'person' : 'people'}${brig.lead ? ', with a Lead' : ''}): ${brig.ok} of ${ESTADIO_BRIGADA} extra hoods passed`), null]);
+    if (brig.gente.length) lineas.push([L('Brigada del estadio: sueldos y gasolina', 'Stadium brigade: wages and gas'), -(brig.sueldos + gasolina() * brig.vans)]);
+    if (brig.ok < ESTADIO_BRIGADA) lineas.push([L(`El club descuenta las campanas extra que no pasaron (${ESTADIO_BRIGADA - brig.ok})`, `The club deducts the extra hoods that failed (${ESTADIO_BRIGADA - brig.ok})`), -ESTADIO_REPETIR * (ESTADIO_BRIGADA - brig.ok)]);
+    for (const c of brig.gente) if (c.id) sumarNoche(c);
+  }
   if (estadioBono) lineas.push([L('Bono del club: el Estadio Monumental quedó listo para el clásico', 'Club bonus: the Monumental Stadium is ready for the derby'), ESTADIO_BONO]);
   if (d && d.apuesta) lineas.push([ganaDuelo ? L('Apuesta ganada a El Cuñado', 'Bet won against El Cuñado') : L('Apuesta perdida con El Cuñado', 'Bet lost to El Cuñado'), ganaDuelo ? d.apuesta : -d.apuesta]);
   if (S.legado && ciudad() === 2 && !aprendiz) {
@@ -7502,7 +7581,7 @@ function pantallaParte() {
     S.album.push(L('El Estadio Monumental antes del clásico', 'The Monumental Stadium before the derby'));
     S.oficinaMsg = { id: 'oficina', txt: estadioBono ? ['Jefe, el estadio quedó de campeonato. El presidente del club nos regaló dos boletos. Uno es para mí. El otro también.', 'Boss, the stadium came out championship-grade. The club president gave us two tickets. One is for me. So is the other.'] : ['Jefe, el estadio no quedó como queríamos. Pero cobramos lo nuestro. Y un balón firmado. Por el utilero.', 'Boss, the stadium didn\'t turn out as we wanted. But we got paid. And a signed ball. By the kit man.'] };
   }
-  if (o.estadio && S.estadio) { const e = S.estadio; e.res = [...(e.res || []), { nota: n, ok: aprobado }]; e.paso++; if (e.paso >= 5) { e.hecho = S.noche; delete e.paso; } }
+  if (o.estadio && S.estadio) { const e = S.estadio; e.res = [...(e.res || []), { nota: n, ok: aprobado, extra: brig ? brig.ok : 0 }]; e.paso++; if (e.paso >= 5) { e.hecho = S.noche; delete e.paso; } }
   if (n === 'A+' || (n === 'A' && azar(.3))) oficinaManana('aplus');
   if (danos >= 100) oficinaManana('dano');
   if (!o.residencia || !S.noticia) S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
