@@ -5747,9 +5747,21 @@ function ordenLicit(paso) {
   return o;
 }
 // El estadio de fútbol: Charlienaro (Ventas) lo consigue cuando ya eres Contratista. Es un contrato de 5 noches seguidas
-// (un sector por noche, 4 campanas cada uno: 20 en total) en el que va toda tu gente; esas noches no hay otros trabajos.
-// Paga al menos $50,000 (10,000 por sector) y un bono del club si apruebas casi todo. Hay que aceptarlo en 5 noches.
-const ESTADIO_PLAZO = 5, ESTADIO_VANS = 4, ESTADIO_PAGO = 10000, ESTADIO_BONO = 8000;
+// (un sector por noche, 6 campanas cada uno: 30 en total) en el que va toda tu gente; esas noches no hay otros trabajos.
+// Tú y tu camioneta limpian 4 campanas; la brigada (el resto de tu gente) limpia las otras 2 del sector.
+// Paga $60,000 (12,000 por sector) y un bono del club si apruebas casi todo. Hay que aceptarlo en 5 noches.
+const ESTADIO_PLAZO = 5, ESTADIO_VANS = 4, ESTADIO_PAGO = 12000, ESTADIO_BONO = 8000, ESTADIO_CAMP = 6, ESTADIO_BRIGADA = 2, ESTADIO_REPETIR = 800;
+// La brigada del estadio: todos los que no van en tu camioneta. Cuanta más fuerza y con un Lead, más campanas pasan.
+function brigadaEstadio() {
+  const H = S.hoy, enVan = new Set(H.ayud);
+  const gente = [...S.fijos.filter(id => id !== H.comp).map(id => ({ ...COMPANEROS[id], id: null })), ...S.cuadrilla.filter(c => !enVan.has(c.id))];
+  const fuerza = gente.reduce((a, g) => a + g.fuerza, 0), lead = gente.some(esLead);
+  const p = clamp(.3 + fuerza * .12 + (lead ? LEAD.calidad : 0) + (S.angelica ? .05 : 0), .1, .95);
+  const ok = gente.length ? Array.from({ length: ESTADIO_BRIGADA }, () => azar(p)).filter(Boolean).length : 0;
+  const sueldos = gente.reduce((a, g) => a + r10((g.sueldo || 0) * (g.prueba ? .8 : 1) * sueldoMult()), 0), vans = Math.max(1, Math.ceil(gente.length / 4));
+  return { gente, ok, sueldos, vans, lead };
+}
+const campanasEstadio = e => (e.res || []).reduce((a, r) => a + (r.ok ? ESTADIO_CAMP - ESTADIO_BRIGADA : 0) + (r.extra || 0), 0);
 const SECTORES = [['Tribuna Norte', 'North Stand'], ['Tribuna Sur', 'South Stand'], ['Cabecera Oriente', 'East End'], ['Cabecera Poniente', 'West End'], ['Palcos VIP', 'VIP Boxes']];
 function ordenEstadio(k) {
   const o = genOrden('futbol'); o.estadio = true; o.sector = k; o.firmado = true; o.duelo = false; o.pedido = null; o.contrato = null; o.jefe = null;
@@ -5762,7 +5774,7 @@ function estadioHoy() {
   if (!S.estadio) {
     if (S.etapa < 3 || !encargadoActivo('oficina')) return;
     S.estadio = { noche: S.noche };
-    H.avisos.unshift(L(`📟 Charlienaro: «¡Jefe! Conseguí el Estadio Monumental. Cinco tribunas, veinte campanas, cocinas que no se limpian desde que ganaron el último campeonato (hace 11 años). Son 5 noches seguidas con toda la gente, y pagan mínimo $50,000. Tenemos ${ESTADIO_PLAZO} noches para aceptar; si no, se lo dan a El Cuñado.»`, `📟 Charlienaro "el Trato": "Boss! I landed the Monumental Stadium. Five stands, twenty hoods, kitchens not cleaned since they won the last championship (11 years ago). It's 5 nights in a row with everyone, and they pay at least $50,000. We have ${ESTADIO_PLAZO} nights to accept; otherwise it goes to El Cuñado."`));
+    H.avisos.unshift(L(`📟 Charlienaro: «¡Jefe! Conseguí el Estadio Monumental. Cinco tribunas, treinta campanas, cocinas que no se limpian desde que ganaron el último campeonato (hace 11 años). Son 5 noches seguidas con toda la gente, y pagan ${dinero(ESTADIO_PAGO * 5)}. Tenemos ${ESTADIO_PLAZO} noches para aceptar; si no, se lo dan a El Cuñado.»`, `📟 Charlienaro "el Trato": "Boss! I landed the Monumental Stadium. Five stands, thirty hoods, kitchens not cleaned since they won the last championship (11 years ago). It's 5 nights in a row with everyone, and they pay ${dinero(ESTADIO_PAGO * 5)}. We have ${ESTADIO_PLAZO} nights to accept; otherwise it goes to El Cuñado."`));
   }
   const e = S.estadio; if (e.hecho || e.perdido) return;
   if (e.paso === undefined) {
@@ -5774,10 +5786,10 @@ function estadioHoy() {
 }
 function tarjetaEstadio() {
   const e = S.estadio; if (!e || e.hecho || e.perdido || S.fase !== 'empresa') return '';
-  if (e.paso !== undefined) return `<div class="retos licit"><b>⚽ ${L('Estadio Monumental', 'Monumental Stadium')} · ${L('noche', 'night')} ${e.paso + 1} ${L('de', 'of')} 5</b>${SECTORES.map((sc, i) => { const r = (e.res || [])[i]; return `<span class="${r ? (r.ok ? 'ok' : 'mal') : ''}">${r ? (r.ok ? '★' : '✗') : '☆'} ${L(...sc)}${r ? ` · ${r.nota}` : ''}</span>`; }).join('')}<span>${L('Esta semana toda tu gente está en el estadio: no hay otros trabajos.', 'This week all your people are at the stadium: no other jobs.')}</span></div>`;
+  if (e.paso !== undefined) return `<div class="retos licit"><b>⚽ ${L('Estadio Monumental', 'Monumental Stadium')} · ${L('noche', 'night')} ${e.paso + 1} ${L('de', 'of')} 5</b>${SECTORES.map((sc, i) => { const r = (e.res || [])[i]; return `<span class="${r ? (r.ok ? 'ok' : 'mal') : ''}">${r ? (r.ok ? '★' : '✗') : '☆'} ${L(...sc)}${r ? ` · ${r.nota} · ${(r.ok ? ESTADIO_CAMP - ESTADIO_BRIGADA : 0) + (r.extra || 0)}/${ESTADIO_CAMP}` : ''}</span>`; }).join('')}<span>🧽 ${L(`Campanas limpias: ${campanasEstadio(e)} de ${ESTADIO_CAMP * 5}. Tú limpias 4 por noche; la brigada (el resto de tu gente) limpia las otras 2.`, `Hoods cleaned: ${campanasEstadio(e)} of ${ESTADIO_CAMP * 5}. You clean 4 a night; the brigade (the rest of your people) cleans the other 2.`)}</span><span>${L('Esta semana toda tu gente está en el estadio: no hay otros trabajos.', 'This week all your people are at the stadium: no other jobs.')}</span></div>`;
   const quedan = e.noche + ESTADIO_PLAZO - S.noche, puede = vansTotal() >= ESTADIO_VANS;
   return `<div class="orden licit"><span class="chip naranja">⚽ ${L('Lo consiguió Charlienaro', 'Landed by Charlienaro')} · ${L(`quedan ${quedan} noches para aceptar`, `${quedan} nights left to accept`)}</span><h3>${L('El Estadio Monumental', 'The Monumental Stadium')}</h3>
-    <p class="nota">${L(`5 noches seguidas, un sector por noche: ${SECTORES.map(x => x[0]).join(', ')}. 4 campanas por noche (20 en total). Va toda tu gente y esas noches no hay otros trabajos. Pago: ${dinero(ESTADIO_PAGO)} por sector (${dinero(ESTADIO_PAGO * 5)}) y ${dinero(ESTADIO_BONO)} de bono del club si apruebas 4 de 5.`, `5 nights in a row, one sector per night: ${SECTORES.map(x => x[1]).join(', ')}. 4 hoods per night (20 total). Everyone goes and there are no other jobs those nights. Pay: ${dinero(ESTADIO_PAGO)} per sector (${dinero(ESTADIO_PAGO * 5)}) plus a ${dinero(ESTADIO_BONO)} club bonus if you pass 4 of 5.`)}</p>
+    <p class="nota">${L(`5 noches seguidas, un sector por noche: ${SECTORES.map(x => x[0]).join(', ')}. ${ESTADIO_CAMP} campanas por noche (${ESTADIO_CAMP * 5} en total): tú y tu camioneta limpian 4 y el resto de tu gente, en brigada, las otras 2. Va toda tu gente y esas noches no hay otros trabajos; la brigada cobra su sueldo y su gasolina. Pago: ${dinero(ESTADIO_PAGO)} por sector (${dinero(ESTADIO_PAGO * 5)}) y ${dinero(ESTADIO_BONO)} de bono del club si apruebas 4 de 5.`, `5 nights in a row, one sector per night: ${SECTORES.map(x => x[1]).join(', ')}. ${ESTADIO_CAMP} hoods per night (${ESTADIO_CAMP * 5} total): you and your van clean 4 and the rest of your people, as a brigade, the other 2. Everyone goes and there are no other jobs those nights; the brigade is paid wages and gas. Pay: ${dinero(ESTADIO_PAGO)} per sector (${dinero(ESTADIO_PAGO * 5)}) plus a ${dinero(ESTADIO_BONO)} club bonus if you pass 4 of 5.`)}</p>
     ${S.licit ? `<span class="aviso">${L('Primero termina la Gran Licitación.', 'Finish the Grand Tender first.')}</span>` : puede ? `<div class="acciones"><button class="btn prim" id="estadioSi">${L('Aceptar el contrato', 'Accept the contract')}</button></div>` : `<span class="aviso">${L(`Necesitas ${ESTADIO_VANS} camionetas para mover a tanta gente (tienes ${vansTotal()}).`, `You need ${ESTADIO_VANS} vans to move that many people (you have ${vansTotal()}).`)}</span>`}</div>`;
 }
 function residenciaHoy() {
@@ -6830,7 +6842,7 @@ function quienLleva(i) {
 // El botón grande de Angélica: tú eliges tu trabajo y ella reparte los demás (luego puedes cambiar lo que quieras).
 function botonReparto() {
   const H = S.hoy;
-  if (S.fase !== 'empresa' || !S.angelica || !hayB() || !H.ordenes.length) return '';
+  if (S.fase !== 'empresa' || !S.angelica || !hayB() || !H.ordenes.length || H.ordenes.some(o => o.estadio)) return '';   // en el estadio va toda la gente junta
   const eqs = equiposHoy(), con = eqs.filter(e => e.o !== null && e.o !== undefined).length, libres = trabajosLibres();
   return `<div class="reparto"><button class="btn ${con ? '' : 'prim'}" id="repartir">📋 ${con ? L('Que Angélica reparta de nuevo', 'Let Angélica reassign') : L('Que Angélica reparta', 'Let Angélica assign')}</button><small>${L(`Tú eliges tu trabajo; ella manda a tus ${eqs.length} ${eqs.length === 1 ? 'equipo' : 'equipos'} a los demás. ${con}/${eqs.length} con trabajo${libres ? ` · ${libres} ${libres === 1 ? 'trabajo firmado libre' : 'trabajos firmados libres'}` : ''}.`, `You pick your job; she sends your ${eqs.length} ${eqs.length === 1 ? 'team' : 'teams'} to the rest. ${con}/${eqs.length} assigned${libres ? ` · ${libres} free signed ${libres === 1 ? 'job' : 'jobs'}` : ''}.`)}</small></div>`;
 }
@@ -7340,6 +7352,13 @@ function pantallaParte() {
   const imp = M.orden.imprevisto;
   if (imp) lineas.push([L(`Imprevisto antes de salir: ${imp.t}`, `Before heading out: ${imp.t}`) + ` (${[imp.min ? L(`${imp.min} min tarde`, `${imp.min} min late`) : '', imp.gasto ? L(`${dinero(imp.gasto)} ya pagados`, `${dinero(imp.gasto)} already paid`) : ''].filter(Boolean).join(', ')})`, null]);
   const estadioBono = o.estadio && S.estadio && S.estadio.paso === 4 && [...(S.estadio.res || []), { ok: aprobado }].filter(x => x.ok).length >= 4;
+  const brig = o.estadio && !aprendiz ? brigadaEstadio() : null;
+  if (brig) {
+    lineas.push([L(`Brigada del estadio (${brig.gente.length} ${brig.gente.length === 1 ? 'persona' : 'personas'}${brig.lead ? ', con Lead' : ''}): ${brig.ok} de ${ESTADIO_BRIGADA} campanas extra aprobadas`, `Stadium brigade (${brig.gente.length} ${brig.gente.length === 1 ? 'person' : 'people'}${brig.lead ? ', with a Lead' : ''}): ${brig.ok} of ${ESTADIO_BRIGADA} extra hoods passed`), null]);
+    if (brig.gente.length) lineas.push([L('Brigada del estadio: sueldos y gasolina', 'Stadium brigade: wages and gas'), -(brig.sueldos + gasolina() * brig.vans)]);
+    if (brig.ok < ESTADIO_BRIGADA) lineas.push([L(`El club descuenta las campanas extra que no pasaron (${ESTADIO_BRIGADA - brig.ok})`, `The club deducts the extra hoods that failed (${ESTADIO_BRIGADA - brig.ok})`), -ESTADIO_REPETIR * (ESTADIO_BRIGADA - brig.ok)]);
+    for (const c of brig.gente) if (c.id) sumarNoche(c);
+  }
   if (estadioBono) lineas.push([L('Bono del club: el Estadio Monumental quedó listo para el clásico', 'Club bonus: the Monumental Stadium is ready for the derby'), ESTADIO_BONO]);
   if (d && d.apuesta) lineas.push([ganaDuelo ? L('Apuesta ganada a El Cuñado', 'Bet won against El Cuñado') : L('Apuesta perdida con El Cuñado', 'Bet lost to El Cuñado'), ganaDuelo ? d.apuesta : -d.apuesta]);
   if (S.legado && ciudad() === 2 && !aprendiz) {
@@ -7562,7 +7581,7 @@ function pantallaParte() {
     S.album.push(L('El Estadio Monumental antes del clásico', 'The Monumental Stadium before the derby'));
     S.oficinaMsg = { id: 'oficina', txt: estadioBono ? ['Jefe, el estadio quedó de campeonato. El presidente del club nos regaló dos boletos. Uno es para mí. El otro también.', 'Boss, the stadium came out championship-grade. The club president gave us two tickets. One is for me. So is the other.'] : ['Jefe, el estadio no quedó como queríamos. Pero cobramos lo nuestro. Y un balón firmado. Por el utilero.', 'Boss, the stadium didn\'t turn out as we wanted. But we got paid. And a signed ball. By the kit man.'] };
   }
-  if (o.estadio && S.estadio) { const e = S.estadio; e.res = [...(e.res || []), { nota: n, ok: aprobado }]; e.paso++; if (e.paso >= 5) { e.hecho = S.noche; delete e.paso; } }
+  if (o.estadio && S.estadio) { const e = S.estadio; e.res = [...(e.res || []), { nota: n, ok: aprobado, extra: brig ? brig.ok : 0 }]; e.paso++; if (e.paso >= 5) { e.hecho = S.noche; delete e.paso; } }
   if (n === 'A+' || (n === 'A' && azar(.3))) oficinaManana('aplus');
   if (danos >= 100) oficinaManana('dano');
   if (!o.residencia || !S.noticia) S.noticia = noticiaDe(n, o.nombre, ganaDuelo ? 'duelo' : espejo ? 'espejo' : M.danos.some(x => x.dinero >= 60) ? 'desastre' : null);
