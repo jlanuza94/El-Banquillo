@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -847,6 +847,39 @@ caso('historias de la oficina: el Guapo, Doña Elsy, la posada y los clientes ra
   // clientes raros de Charlienaro: contrato con condición y paga más
   r = await p.evaluate(() => { for (let i = 0; i < 40; i++) { __hc.S.hoy = null; __hc.pantallaCamioneta(); const o = __hc.S.hoy.ordenes.find(o => o.raroCh); if (o) return { quien: o.contrato.quien, conds: o.contrato.conds }; } return null; });
   afirmar(r && r.quien === 'raro' && r.conds.length === 1, 'Charlienaro no trajo clientes raros: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('Angélica reparte los trabajos y el reporte de la semana', async () => {
+  const tec = (id, n, lead) => ({ id, n, rasgo: 'x', frase: 'y', fuerza: 1, base: 1, sueldo: 100, color: '#ffb36b', noches: 30, tipo: 'normal', cuidado: 3, puntual: 3, animo: 3, lead });
+  const p = await abrir(partida({ noche: 50, etapa: 3, rep: 60, dinero: 9000, angelica: true, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 2 }, fijos: ['beto', 'lupe'], cuadrilla: [tec(7, 'Nacho', true), tec(8, 'Rosa', true), tec(9, 'Toño'), tec(10, 'Pili'), tec(11, 'Memo'), tec(12, 'Lalo')] }));
+  // tú eliges el tuyo; los demás firmados quedan libres
+  await p.evaluate(() => { const H = __hc.S.hoy; H.ayud = []; H.comp = 'solo'; H.ordenes.forEach(o => { o.firmado = true; o.duelo = false; o.gigante = false; o.contrato = null; o.jefe = false; o.diario = false; }); while (H.ordenes.length < 4) { const o = __hc.genOrden('cafe'); o.firmado = true; H.ordenes.push(o); } H.sel = 0; __hc.pantallaCamioneta(); });
+  let r = await p.evaluate(() => ({ boton: !!document.querySelector('#repartir'), abierto: !!document.querySelector('[data-pl="equipos"][open]'), yo: document.querySelectorAll('.carr-item .lleva.yo').length, libres: __hc.trabajosLibres() }));
+  afirmar(r.boton && r.abierto && r.yo === 1 && r.libres >= 2, 'no sale el botón de Angélica o los equipos vacíos no se abren: ' + JSON.stringify(r));
+  await p.evaluate(() => document.querySelector('#repartir').click());
+  r = await p.evaluate(() => { const S = __hc.S; return { eqs: S.hoy.equipos.map(e => ({ o: e.o, leads: e.ayud.filter(id => S.cuadrilla.find(c => c.id === id).lead).length })), badges: [...document.querySelectorAll('.carr-item .lleva')].map(b => b.textContent.trim()) }; });
+  afirmar(r.eqs.every(e => e.o !== null && e.o !== 0 && e.leads === 1), 'Angélica no repartió un Lead por equipo o se metió en tu trabajo: ' + JSON.stringify(r));
+  afirmar(r.badges.some(b => /Equipo 2/.test(b)) && r.badges.some(b => /Equipo 3/.test(b)), 'el carrusel no dice quién lleva cada trabajo: ' + JSON.stringify(r.badges));
+  // el libro de cuentas clasifica las líneas, también las de los otros equipos
+  r = await p.evaluate(() => {
+    __hc.S.libro = [];
+    const B = { lineas: [['Equipo B en X', 900], ['Equipo B: sueldos', -200], ['Equipo B: gasolina', -60]] };
+    const lineas = [['Pago del trabajo', 1200], ['Sueldos de la cuadrilla', -300], ['Sueldos de la oficina', -350], ['Gasolina', -60], ['Materiales (desengrasante, plástico y cinta)', -45], ['Renta del local (taller)', -120], ['Mantenimiento de camionetas (2)', -140], ['Tu vida (normal): comida y transporte', -40], ['Lámpara rota', -80], Object.assign(['Equipo 2 en X · aprobado', 640], { eqB: B })];
+    const neto = lineas.reduce((a, l) => a + l[1], 0) - 100;   // 100 de un abono sin línea
+    __hc.anotarLibro(lineas, neto);
+    return { c: __hc.S.libro[0].c, neto };
+  });
+  const c = r.c;
+  afirmar(c.ingresos === 2100 && c.sueldos === -500 && c.oficina === -350 && c.gasolina === -120 && c.materiales === -45 && c.renta === -120 && c.camionetas === -140 && c.vida === -40 && c.otros === -180, 'el libro no clasificó bien: ' + JSON.stringify(r));
+  // a la mañana siguiente de la noche 56, el reporte en el Buzón con su gráfica de 7 barras
+  await p.evaluate(() => { const S = __hc.S; S.libro = []; for (let n = 50; n <= 56; n++) S.libro.push({ n, c: { ingresos: 1000 + n * 10, sueldos: -400 }, neto: 600 + n * 10 - (n === 53 ? 1500 : 0) }); S.noche = 57; S.hoy = null; __hc.pantallaCamioneta(); });
+  await alBuzon(p);
+  r = await p.evaluate(() => ({ barras: document.querySelectorAll('.graf-sem rect').length, txt: (document.querySelector('.reporte') || {}).textContent || '' }));
+  afirmar(r.barras === 7 && /Peor: la 53/.test(r.txt) && /Mejor noche: la 56/.test(r.txt), 'no salió el reporte semanal: ' + JSON.stringify(r));
+  await p.evaluate(() => document.querySelector('#reporteOk').click());
+  r = await p.evaluate(() => __hc.S.hoy.reporteVisto);
+  afirmar(r === true, 'el reporte no se marcó como leído');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 

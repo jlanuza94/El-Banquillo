@@ -567,6 +567,18 @@ button.orden[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--hivis), 0 
 .carr-item { flex: 0 0 min(72%, 260px); scroll-snap-align: start; display: grid; gap: 4px; align-content: start; }
 .carr-item .orden.corta { height: 100%; align-content: start; }
 .carr-item .orden.corta h3 { font-size: 17px; }
+.lleva { justify-self: start; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #2b3a46; color: #cfe3f0; }
+.lleva.yo { background: #f2b33d; color: #2a1a00; }
+.graf-sem { width: 100%; height: auto; margin: 6px 0; }
+.graf-sem line { stroke: #5d7180; stroke-width: 1; }
+.graf-sem text { fill: #9fb3c2; font-size: 10px; }
+.reporte .cuentas { display: grid; grid-template-columns: 1fr; gap: 3px; padding: 8px 10px; border-radius: 8px; background: #0003; }
+.reporte .cuentas .cta { display: flex; justify-content: space-between; gap: 8px; }
+.reporte .cuentas .total { border-top: 1px solid #5d7180; padding-top: 4px; margin-top: 2px; }
+.reporte .bien { color: #69c97a; } .reporte .mal { color: #e0645a; }
+.reparto { display: grid; gap: 4px; margin: 8px 0 4px; }
+.reparto .btn { width: 100%; }
+.reparto small { opacity: .8; }
 .carr-item .orden.corta .fila { display: grid; gap: 2px; }
 .carr-item .orden.corta .pago { font-size: 22px; }
 .mini-cab { display: none; }
@@ -5571,6 +5583,7 @@ function prepararNoche() {
     : (S.noche === S.abierta ? `Primera noche de ${S.empresa.nombre}. Yo estaré pescando. No me llames. Bueno, llámame si hay mapache.` : uno(RIGO_CONSEJOS));
   for (const o of ordenes) o.firmado = S.fase === 'aprendiz' || !!o.clienteId;   // los de Don Rigo y los clientes fijos ya tienen contrato
   S.hoy = { noche: S.noche, espumaExtra, ordenes, sel: 0, comp, ayud: S.cuadrilla.slice(0, PLAZAS[S.eq.camioneta]).map(c => c.id), llamadas: 2 + Math.floor((S.eq.flota || 0) / 2), avisos, frase, resultado: '' };
+  if (S.fase === 'empresa' && S.noche > 7 && (S.noche - 1) % 7 === 0 && (S.libro || []).some(x => x.n >= S.noche - 7)) S.hoy.reporte = { desde: S.noche - 7, hasta: S.noche - 1 };
   if (!S.oficinaMsg && S.fase === 'empresa') { if (sede('oficina') >= 2 && azar(.5)) oficinaManana('ventas'); else if (azar(.2)) oficinaManana('almacen'); }
   if (S.oficinaMsg) { S.hoy.oficina = S.oficinaMsg; S.oficinaMsg = null; }
   S.hoy.retos = S.fase === 'aprendiz' && S.noche === 1 ? [] : RETOS.filter(r => !r.si || r.si()).sort(() => Math.random() - .5).slice(0, 3).map(r => r.id);
@@ -6550,6 +6563,40 @@ function elegirOfi(i) {
   else D.fin();
   tono(600, .12, .08, 'triangle'); guardar(); pantallaCamioneta();
 }
+// ---- El libro de cuentas: cada noche, en qué se fue el dinero. Cada 7 noches, Angélica (o tú) hace el reporte de la semana.
+const CAT_LIBRO = [['oficina', /oficina|office/i], ['sueldos', /sueldo|wage/i], ['gasolina', /gasolina|\bgas\b/i], ['materiales', /materiales|supplies/i], ['camionetas', /camioneta|van upkeep/i], ['vida', /tu vida|your life|depa|tu casa|your house|rent, power/i], ['renta', /renta|rent/i]];
+const N_CAT = { ingresos: ['Ingresos', 'Income'], sueldos: ['Sueldos de técnicos', 'Crew wages'], oficina: ['Oficina', 'Office'], camionetas: ['Camionetas', 'Vans'], renta: ['Renta del local', 'Rent'], gasolina: ['Gasolina', 'Gas'], materiales: ['Materiales', 'Supplies'], vida: ['Tu vida', 'Your life'], otros: ['Daños y otros', 'Damage & other'] };
+function anotarLibro(lineas, neto) {
+  const c = {}, suma = (k, v) => { c[k] = (c[k] || 0) + v; };
+  for (const l of lineas.flatMap(l => l.eqB ? l.eqB.lineas : [l])) {
+    const v = l[1] || 0; if (!v) continue;
+    if (v > 0) { suma('ingresos', v); continue; }
+    const cat = CAT_LIBRO.find(([, re]) => re.test(l[0]));
+    suma(cat ? cat[0] : 'otros', v);
+  }
+  const resto = neto - Object.values(c).reduce((a, v) => a + v, 0);   // abonos y ajustes que no van en una línea
+  if (resto) suma(resto > 0 ? 'ingresos' : 'otros', resto);
+  S.libro = [...(S.libro || []), { n: S.noche, c, neto }].slice(-14);
+}
+function tarjetaReporte() {
+  const H = S.hoy; if (!H.reporte) return '';
+  const sem = (S.libro || []).filter(x => x.n >= H.reporte.desde && x.n <= H.reporte.hasta);
+  if (!sem.length) return '';
+  const tot = {}; sem.forEach(x => Object.entries(x.c).forEach(([k, v]) => tot[k] = (tot[k] || 0) + v));
+  const neto = sem.reduce((a, x) => a + x.neto, 0), ing = tot.ingresos || 0, gas = ing - neto;
+  const mejor = sem.reduce((a, x) => x.neto > a.neto ? x : a), peor = sem.reduce((a, x) => x.neto < a.neto ? x : a);
+  const max = Math.max(1, ...sem.map(x => Math.abs(x.neto))), W = 280, Hh = 120, bw = W / 7;
+  const barras = sem.map((x, i) => { const h = Math.abs(x.neto) / max * (Hh / 2 - 14), y = x.neto >= 0 ? Hh / 2 - h : Hh / 2;
+    return `<rect x="${i * bw + 6}" y="${y.toFixed(1)}" width="${bw - 12}" height="${Math.max(1, h).toFixed(1)}" rx="3" fill="${x.neto >= 0 ? '#69c97a' : '#e0645a'}"/><text x="${i * bw + bw / 2}" y="${Hh - 2}" text-anchor="middle">${x.n}</text>`; }).join('');
+  const filas = Object.keys(N_CAT).filter(k => k !== 'ingresos' && tot[k]).sort((a, b) => tot[a] - tot[b]).map(k => `<div class="cta"><span>${L(...N_CAT[k])}</span><b class="mal">${dinero(tot[k])}</b></div>`).join('');
+  const quien = S.angelica ? L('Angélica te dejó el reporte en el escritorio, con un post-it: «Léelo antes de comprar otra camioneta».', 'Angélica left the report on your desk, with a post-it: "Read it before buying another van."') : L('Hiciste las cuentas de la semana en una servilleta de la taquería.', 'You did the week\'s numbers on a taco-stand napkin.');
+  return `<div class="orden dia reporte"><span class="chip">📊 ${L(`Noches ${H.reporte.desde}–${H.reporte.hasta}`, `Nights ${H.reporte.desde}–${H.reporte.hasta}`)}</span><p>${esc(quien)}</p>
+    <svg class="graf-sem" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${L('Ganancia de cada noche', 'Profit per night')}"><line x1="0" x2="${W}" y1="${Hh / 2}" y2="${Hh / 2}"/>${barras}</svg>
+    <div class="cuentas"><div class="cta"><span>${L(...N_CAT.ingresos)}</span><b class="bien">${dinero(ing)}</b></div>${filas}
+    <div class="cta total"><span>${L('Ganancia de la semana', 'Profit this week')}</span><b class="${neto >= 0 ? 'bien' : 'mal'}">${dinero(neto)}</b></div></div>
+    <p class="nota">${L(`Mejor noche: la ${mejor.n} (${dinero(mejor.neto)}) · Peor: la ${peor.n} (${dinero(peor.neto)}) · Gastos: ${dinero(gas)}.`, `Best night: ${mejor.n} (${dinero(mejor.neto)}) · Worst: ${peor.n} (${dinero(peor.neto)}) · Costs: ${dinero(gas)}.`)}</p>
+    ${H.reporteVisto ? '' : `<div class="acciones"><button class="btn prim" id="reporteOk">${L('Entendido', 'Got it')}</button></div>`}</div>`;
+}
 // ---- Buzón: los mensajes del día (Don Rigo, noticias del barrio) y las decisiones de la historia, fuera de la pestaña Noche.
 function itemsBuzon() {
   const Hs = S.hoy, aprendiz = S.fase === 'aprendiz', yoP = tarjetaYo(true);
@@ -6559,6 +6606,7 @@ function itemsBuzon() {
     { id: 'saga', ico: '🎭', t: Hs.saga !== undefined && Hs.saga !== null ? L(...SAGA[Hs.saga].t) : '', pend: !Hs.sagaRes, html: tarjetaSaga() },
     { id: 'arco', ico: '📖', t: Hs.historia ? L(...ARCOS[Hs.historia].t) : '', pend: !Hs.historiaRes, html: aprendiz ? '' : tarjetaArco() },
     { id: 'ayud', ico: '📖', t: (S.cuadrilla.find(x => x.id === Hs.ayudHist) || {}).n || '', pend: !Hs.ayudRes, html: aprendiz ? '' : tarjetaAyud() },
+    { id: 'reporte', ico: '📊', t: L('Reporte de la semana', 'Weekly report'), pend: !Hs.reporteVisto, html: aprendiz ? '' : tarjetaReporte() },
     { id: 'ofi', ico: '🏢', t: Hs.ofi && OFI_HIST[Hs.ofi.k] ? ofiTxt(OFI_HIST[Hs.ofi.k].caps[Hs.ofi.cap].t) : '', pend: !Hs.ofiRes, html: aprendiz ? '' : tarjetaOfi() },
   ].filter(x => x.html);
 }
@@ -6605,7 +6653,7 @@ function vNoche() {
 
     ${sig && etapaLista(sig) ? tarjetaEtapa(sig) : ''}
     <h2 class="sec">${aprendiz ? L('Don Rigo te manda a', 'Don Rigo sends you to') : L('Elige el trabajo de esta noche', 'Pick tonight\'s job')}${aprendiz ? '' : ` · ${H.ordenes.length}`}</h2>
-    ${H.ordenes.length ? `<div class="carrusel">${H.ordenes.map((x, i) => `<div class="carr-item">${tarjetaCorta(x, i)}${i !== H.sel ? extrasOrden(x, i) : ''}</div>`).join('')}</div>${H.ordenes[H.sel] ? tarjetaOrden(H.ordenes[H.sel], H.sel) + extrasOrden(H.ordenes[H.sel], H.sel) : ''}` : '' || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
+    ${H.ordenes.length ? `<div class="carrusel">${H.ordenes.map((x, i) => `<div class="carr-item">${quienLleva(i)}${tarjetaCorta(x, i)}${i !== H.sel ? extrasOrden(x, i) : ''}</div>`).join('')}</div>${botonReparto()}${H.ordenes[H.sel] ? tarjetaOrden(H.ordenes[H.sel], H.sel) + extrasOrden(H.ordenes[H.sel], H.sel) : ''}` : '' || `<p class="nota">${L('No hay órdenes esta noche. Ve a «Clientes» y sal a buscarlos.', 'No jobs tonight. Go to "Clients" and find some.')}</p>`}
     <h2 class="sec">${aprendiz ? L('Tu compañero esta noche', 'Your partner tonight') : L('Con quién vas', 'Who goes with you')}</h2>
     <div class="companeros compacto">${(aprendiz ? Object.entries(COMPANEROS) : [['solo', SOLO], ...Object.entries(COMPANEROS)]).map(([id, c]) => {
       const falta = !aprendiz && id !== 'solo' && !S.fijos.includes(id);
@@ -6705,7 +6753,26 @@ function vEquipoB() {
         ${o ? `<span class="${gen < sugerido(o) ? 'aviso' : 'nota'}">${L(`Necesita ${sugerido(o)} ${sugerido(o) === 1 ? 'persona' : 'personas'} · llevas ${gen}.${gen < sugerido(o) ? ` Así no sale: le ${sugerido(o) - gen === 1 ? 'falta 1' : 'faltan ' + (sugerido(o) - gen)}.` : ' ¡Listo para salir!'}`, `Needs ${sugerido(o)} ${sugerido(o) === 1 ? 'person' : 'people'} · you have ${gen}.${gen < sugerido(o) ? ` It can't go out: ${sugerido(o) - gen} short.` : ' Ready to go!'}`)}</span>` : e.o === 'mio' ? `<span class="${gen < 2 ? 'aviso' : 'nota'}">${gen < 2 ? L('Para ayudarte necesita al menos 2 personas.', 'It needs at least 2 people to help you.') : L('Al empezar el turno tú repartes las zonas y luego revisas lo que entreguen.', 'When the shift starts you assign the zones and then check what they deliver.')}</span>` : ''}
         ${faltan ? `<span class="aviso">${L(`Ese trabajo pide ${o.ayud} ayudantes.`, `That job needs ${o.ayud} helpers.`)}</span>` : ''} <span class="nota">${L('Equipo de la camioneta', 'Van equipment')}: ${L(KITS[kit(k)].n, EN.kit[kit(k)][0]).toLowerCase()}.</span></div>`;
     }).join('')}
-    <p class="nota">${L('Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.', 'Each team takes one partner and up to 3 helpers. Lupe does fine work, Beto breaks things, Chuy may fall asleep; helpers count for their strength and care.')}</p>`, conTrabajo > 0 || !!S.angelica);
+    <p class="nota">${L('Cada equipo lleva un compañero y hasta 3 ayudantes. Lupe hace trabajos finos, Beto rompe cosas, Chuy puede dormirse; los ayudantes cuentan por su fuerza y su cuidado.', 'Each team takes one partner and up to 3 helpers. Lupe does fine work, Beto breaks things, Chuy may fall asleep; helpers count for their strength and care.')}</p>`, conTrabajo > 0 || !!S.angelica || (conTrabajo < eqs.length && trabajosLibres() > 0));
+}
+// Trabajos firmados que nadie lleva todavía (ni tú ni otro equipo).
+function trabajosLibres() {
+  const H = S.hoy, usadas = new Set([H.sel, ...equiposHoy().map(e => e.o)]);
+  return H.ordenes.filter((o, i) => o.firmado && !o.duelo && !o.gigante && !o.contrato && !o.jefe && !o.diario && !usadas.has(i)).length;
+}
+// Quién lleva cada trabajo: tú o el equipo N (se ve encima de cada tarjeta del carrusel).
+function quienLleva(i) {
+  const H = S.hoy; if (S.fase !== 'empresa') return '';
+  if (i === H.sel) return `<span class="lleva yo">🧑 ${L('Tú', 'You')}</span>`;
+  const k = hayB() ? equiposHoy().findIndex(e => e.o === i) : -1;
+  return k >= 0 ? `<span class="lleva">🚐 ${L('Equipo', 'Team')} ${k + 2}</span>` : '';
+}
+// El botón grande de Angélica: tú eliges tu trabajo y ella reparte los demás (luego puedes cambiar lo que quieras).
+function botonReparto() {
+  const H = S.hoy;
+  if (S.fase !== 'empresa' || !S.angelica || !hayB() || !H.ordenes.length) return '';
+  const eqs = equiposHoy(), con = eqs.filter(e => e.o !== null && e.o !== undefined).length, libres = trabajosLibres();
+  return `<div class="reparto"><button class="btn ${con ? '' : 'prim'}" id="repartir">📋 ${con ? L('Que Angélica reparta de nuevo', 'Let Angélica reassign') : L('Que Angélica reparta', 'Let Angélica assign')}</button><small>${L(`Tú eliges tu trabajo; ella manda a tus ${eqs.length} ${eqs.length === 1 ? 'equipo' : 'equipos'} a los demás. ${con}/${eqs.length} con trabajo${libres ? ` · ${libres} ${libres === 1 ? 'trabajo firmado libre' : 'trabajos firmados libres'}` : ''}.`, `You pick your job; she sends your ${eqs.length} ${eqs.length === 1 ? 'team' : 'teams'} to the rest. ${con}/${eqs.length} assigned${libres ? ` · ${libres} free signed ${libres === 1 ? 'job' : 'jobs'}` : ''}.`)}</small></div>`;
 }
 // Angélica arma los equipos: a cada trabajo firmado, la gente que pide (los más fuertes primero). En un gigante tuyo, dos equipos para ayudarte.
 function organizar() {
@@ -6720,7 +6787,8 @@ function organizar() {
     if (o === undefined) break;
     if ((comps.length ? 1 : 0) + gente.length < Math.min(n, 2)) { sinGente++; continue; }
     e.o = o; if (comps.length) e.comp = comps.shift();
-    while (e.ayud.length + (e.comp ? 1 : 0) < n && gente.length && e.ayud.length < 3) e.ayud.push(gente.shift().id);
+    const li = gente.findIndex(esLead); if (li >= 0) e.ayud.push(gente.splice(li, 1)[0].id);   // un Lead por equipo, mientras haya
+    while (e.ayud.length + (e.comp ? 1 : 0) < n && gente.length && e.ayud.length < 3) { const j = gente.findIndex(c => !esLead(c)); e.ayud.push(gente.splice(Math.max(0, j), 1)[0].id); }   // los Leads se guardan para los otros equipos
     if (e.ayud.length + (e.comp ? 1 : 0) < n) sinGente++; else armados++;
   }
   const quedan = plan.length;
@@ -7054,7 +7122,8 @@ function enlazar() {
     c.entrevistado = true; c.resp = [RESPUESTAS.cuidado[c.cuidado - 1], RESPUESTAS.puntual[c.puntual - 1], ({ lio: 'Conmigo nunca se aburre nadie. Los bomberos tampoco.', medio: 'Soy muy serio. Casi siempre. Bueno, a veces.', serio: 'Vengo a trabajar, no a hacer amigos.', normal: 'Yo hago lo que me digan, jefe.' })[c.tipo] || '']; c.respuesta = c.resp.join(' ');
     tono(660, .1, .06, 'triangle'); guardar(); pantallaCamioneta();
   });
-  const org = $('#organizar'); if (org) org.onclick = () => { H.angelica = organizar(); tono(880, .1, .08, 'triangle'); guardar(); pantallaCamioneta(); };
+  const rOk = $('#reporteOk'); if (rOk) rOk.onclick = () => { H.reporteVisto = true; guardar(); pantallaCamioneta(); };
+  for (const b of [$('#organizar'), $('#repartir')]) if (b) b.onclick = () => { H.angelica = organizar(); PLEG.equipos = true; tono(880, .1, .08, 'triangle'); guardar(); pantallaCamioneta(); };
   const ae = $('#anuncioEmpleo'); if (ae) ae.onclick = () => { S.dinero -= 60; S.candidatos = genCandidatos(4 + (S.eq.flota || 0)); sCaja(); guardar(); pantallaCamioneta(); };
   P.querySelectorAll('[data-esc]').forEach(b => b.onclick = () => { escSel = b.dataset.esc; tono(600, .04, .03, 'triangle'); pantallaCamioneta(); });
   P.querySelectorAll('[data-lead]').forEach(b => b.onclick = () => { const c = S.cuadrilla.find(x => x.id === +b.dataset.lead); if (!c || c.lead || faltaLead(c).length || S.dinero < LEAD.precio) return;
@@ -7289,7 +7358,7 @@ function pantallaParte() {
   // El equipo B, en su propio trabajo
   // Los otros equipos, cada uno en su trabajo: una línea con lo que dejó cada uno.
   const BS = (o.equipos || (o.equipoB ? [o.equipoB] : [])).map(resolverB);
-  BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = B.k || k + 2; B.neto = v; lineas.push([L(`Equipo ${B.k} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, `Team ${B.k} at ${B.o.nombre} · ${B.aprobado ? 'passed' : 'failed'}`), v]); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
+  BS.forEach((B, k) => { const v = B.lineas.reduce((a, l) => a + l[1], 0); B.k = B.k || k + 2; B.neto = v; lineas.push(Object.assign([L(`Equipo ${B.k} en ${B.o.nombre} · ${B.aprobado ? 'aprobado' : 'no pasó'}`, `Team ${B.k} at ${B.o.nombre} · ${B.aprobado ? 'passed' : 'failed'}`), v], { eqB: B })); neto += v; rep += B.rep; if (B.aprobado) S.aprobados++; });
   rep = clamp(rep, -15, 25);
   // Cuanta más fama, más cuesta subirla: así las etapas (20, 40, 60, 85) se ganan noche a noche y no en dos semanas.
   if (rep > 0 && !aprendiz) rep = Math.max(1, Math.round(rep * clamp(1.25 - S.rep / 110, .35, 1)));   // cuesta más subir arriba, pero sin estancarse
@@ -7338,6 +7407,7 @@ function pantallaParte() {
   const misHechas = aprendiz ? [] : avanzarMisiones({ aprobado, n, o, BS, danos: M.danos.length, gana: !!ganaDuelo, espejo, finMin, pedOk: !!(ped && !ped.tacos && pedOk) });
   for (const x of misHechas) { lineas.push([x.todo ? L('Don Rigo: ¡los tres retos de la semana!', 'Don Rigo: all three weekly challenges!') : `${L('Reto de Don Rigo', 'Don Rigo challenge')}: ${textoMision(x)}`, x.dinero]); neto += x.dinero; rep += x.rep; }
   if (S.deuda > 0 && neto > 0) { const abono = Math.min(S.deuda, r10(neto * .25)); S.deuda -= abono; neto -= abono; lineas.push([L(`Abono al préstamo de Don Rigo${S.deuda ? ` (quedan ${dinero(S.deuda)})` : ' (¡pagado!)'}`, `Payment on Don Rigo's loan${S.deuda ? ` (${dinero(S.deuda)} left)` : ' (paid off!)'}`), -abono]); }
+  if (!aprendiz) anotarLibro(lineas, neto);
   S.dinero += neto; S.rep = clamp(S.rep + rep, 0, 100); if (aprobado) S.aprobados++;
   for (const th of [40, 60, 80]) if (S.rep >= th && !(S.hitosRep || []).includes(th)) { S.hitosRep = [...(S.hitosRep || []), th]; S.puntos = (S.puntos || 0) + 1; lineas.push([L(`¡Reputación ${th}! +1 punto de habilidad`, `Reputation ${th}! +1 skill point`), null]); }
   // Récords
