@@ -8126,8 +8126,8 @@ function subirEtapa() {
 function redimensionar() { R.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
 addEventListener('resize', redimensionar);
 // Fotos del álbum: se copian del lienzo justo después de dibujar (sin guardar el búfer de WebGL).
-let fotoPend = null;
-function pedirFoto(seg, cb) { fotoPend = { t: seg, cb }; }
+const fotoPend = [];   // fotos pendientes: varias a la vez (las de evidencia y la del final) sin pisarse
+function pedirFoto(seg, cb) { fotoPend.push({ t: seg, cb }); }
 function instantanea() {
   try {
     const k = 360 / Math.max(canvas.width, canvas.height), w = Math.round(canvas.width * k), h = Math.round(canvas.height * k);
@@ -8233,7 +8233,7 @@ function bucle(ahora) {
   luces(dt, ahora); apagarPulsos(); radioTick(); moverTrozos(dt); titilar(ahora);
   for (const f of piezas.fusibles || []) if (f.alerta > 0) { f.alerta -= dt; f.mesh.material.emissiveIntensity = f.alerta > 0 && Math.sin(ahora / 90) > 0 ? .9 : 0; }   // el fusible parpadea al avisar
   R.render(escena, cam);
-  if (fotoPend && (fotoPend.t -= dt) <= 0) { const f = fotoPend; fotoPend = null; f.cb(instantanea()); }
+  for (let k = fotoPend.length - 1; k >= 0; k--) { const f = fotoPend[k]; if ((f.t -= dt) <= 0) { fotoPend.splice(k, 1); f.cb(instantanea()); } }
   requestAnimationFrame(bucle);
 }
 
