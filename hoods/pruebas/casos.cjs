@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo', 'manualDisponible', 'tipUnaVez'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -929,6 +929,23 @@ caso('fotos de evidencia con sello y el fusible de la línea de detección', asy
   await p.waitForSelector('.nota-grande', { timeout: 60000 });
   const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
   afirmar(/Fotos de evidencia/i.test(t) && /vio grasa en una de tus fotos/.test(t), 'el parte no muestra las fotos o el reclamo: ' + t.slice(0, 400));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('el manual de Don Rigo trae los sistemas nuevos y los avisos salen una sola vez', async () => {
+  const p = await abrir(partida({ noche: 40, etapa: 3, rep: 60, eq: { rasqueta: 2, hidro: true, camioneta: 3, flota: 2 }, estadio: { noche: 39 }, manual: { visto: {}, avisado: { limpiar: 1, prep: 1 } } }));
+  let r = await p.evaluate(() => __hc.manualDisponible().map(m => m.id));
+  const faltan = ['tramos', 'buzon', 'oficina', 'equipos', 'leads', 'cuentas', 'evidencia', 'incendios', 'estadio'].filter(id => !r.includes(id));
+  afirmar(!faltan.length, 'faltan páginas del manual: ' + faltan.join(', '));
+  // las páginas nuevas se avisan en el Buzón y se ven en Logros
+  r = await p.evaluate(() => __hc.S.hoy.avisos.join(' '));
+  afirmar(/manual con \d+ páginas nuevas/.test(r), 'no avisó de las páginas nuevas: ' + r.slice(0, 300));
+  await p.click('.tabs [data-tab="logros"]');
+  r = await p.evaluate(() => [...document.querySelectorAll('[data-pl^="man-"] summary')].map(x => x.textContent).join(' | '));
+  afirmar(/Fotos de evidencia/.test(r) && /sistema contra incendios/.test(r) && /Estadio Monumental/.test(r), 'el manual no muestra las páginas: ' + r.slice(0, 300));
+  // un aviso de primera vez solo sale una vez
+  r = await p.evaluate(() => [__hc.tipUnaVez('prueba', 'x'), __hc.tipUnaVez('prueba', 'x')]);
+  afirmar(r[0] === true && r[1] === false, 'el aviso de primera vez se repite: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
