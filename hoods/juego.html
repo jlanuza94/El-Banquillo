@@ -4657,7 +4657,7 @@ function tickDuelo(dt) {
   const d = M.duelo;
   if ((d.chk = (d.chk || 0) - dt) > 0) return;
   d.chk = .25;
-  d.hitos = d.hitos || {}; if (d.prog === undefined) { d.prog = 0; d.ultT = M.t; d.animo = 'normal'; pintarHitos();
+  d.hitos = d.hitos || {}; if (d.prog === undefined || !d.animo) { d.prog = d.prog || 0; d.ultT = d.ultT ?? M.t; d.animo = d.animo || 'normal'; pintarHitos();
     // Te debía una (la llanta de la carretera): te regala los filtros, una sola vez.
     if (S.saga && S.saga.favor && ciudad() === 1 && hitosDuelo().some(h => h[0] === 'filtros')) { S.saga.favor = false; ganarHito(d, 'filtros', 'tu'); decir(QUIEN_CUNADO, L('Los filtros son tuyos. Por lo de la llanta. Ya estamos a mano.', 'The filters are yours. For the tire thing. Now we\'re even.')); } }
   // Avance de El Cuñado: su ritmo depende de su ánimo; los contraataques y resbalones lo paran un rato.

@@ -283,6 +283,17 @@ caso('objetos con historia: se tocan en la preparación y cambian en la siguient
 });
 
 // Duelo 2.0: apuesta, hitos (2 de 3) y El Cuñado que reacciona a tu ritmo.
+// Espera una condición del duelo; si alguna carta lo pausa (un evento al azar), la cierra para que siga.
+async function esperarDuelo(p, cond, ms = 150000) {
+  const fin = Date.now() + ms;
+  while (Date.now() < fin) {
+    if (await p.evaluate(cond)) return;
+    await p.evaluate(() => { const M = __hc.M; if (M && M.ev && !M.duelo.ganador) { const b = [...document.querySelectorAll('.carta [data-i]')].pop(); b && b.click(); } });
+    await p.waitForTimeout(300);
+  }
+  const st = await p.evaluate(() => { const M = __hc.M, d = M.duelo; return { prog: d.prog, animo: d.animo, ganador: d.ganador, rivalFin: d.rivalFin, tuyo: d.tuyo, pausa: d.pausa, ev: !!M.ev, mpausa: M.pausa, fase: M.fase, etapa: M.etapa, t: M.t, dur: M.dur, carta: (document.querySelector('.carta') || {}).innerText }; });
+  throw new Error('el duelo no llegó a: ' + cond.toString().slice(0, 80) + ' ' + JSON.stringify(st));
+}
 async function empezarDuelo(p, apostar) {
   await p.evaluate(() => { const H = __hc.S.hoy; const o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); (document.querySelector('#salir') || (document.querySelector('.tabs [data-tab="noche"]').click(), document.querySelector('#salir'))).click(); });
   await p.waitForFunction(() => __hc.M && __hc.M.escena === 0 && document.querySelector('.carta[role=dialog] [data-i]'), null, { timeout: 90000 });
@@ -291,6 +302,7 @@ async function empezarDuelo(p, apostar) {
   await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
   await p.evaluate(() => { __hc.M.eventos = []; __hc.M.duelo.sab = 2; __hc.M.duelo.tropiezo = null; });
+  await p.waitForFunction(() => __hc.M.duelo.animo, null, { timeout: 30000 });   // el duelo ya arrancó
   return txt;
 }
 const terminarDuelo = p => p.evaluate(() => { const M = __hc.M; __hc.piezas.aparatos.forEach(a => { a.quitada = true; }); __hc.piezas.bolsas.forEach(b => { b.bajada = true; }); __hc.piezas.faldas.forEach(f => { f.pelada = true; });
@@ -303,13 +315,13 @@ caso('duelo 2.0: apuesta aceptada, hitos 2 de 3 y El Cuñado nervioso', async ()
   afirmar(x > 0, 'la apuesta aceptada no se guardó');
   // filtros limpios antes que él: punto para ti, y él se pone nervioso
   await p.evaluate(() => { __hc.Z.filter(z => z.id === 'filtros').forEach(z => z.sfs.forEach(s => s.d.fill(0))); });
-  await p.waitForFunction(() => __hc.M.duelo.hitos && __hc.M.duelo.hitos.filtros, null, { timeout: 20000 });
+  await esperarDuelo(p, () => __hc.M.duelo.hitos && __hc.M.duelo.hitos.filtros, 60000);
   let r = await p.evaluate(() => ({ h: __hc.M.duelo.hitos, hud: document.querySelector('#dHitos i.tu') !== null }));
   afirmar(r.h.filtros === 'tu' && r.hud, 'el hito de filtros no fue tuyo o no se ve: ' + JSON.stringify(r));
   await p.evaluate(() => { __hc.M.duelo.prog = .05; });
-  await p.waitForFunction(() => __hc.M.duelo.animo === 'nervioso', null, { timeout: 20000 });
+  await esperarDuelo(p, () => __hc.M.duelo.animo === 'nervioso', 60000);
   await p.evaluate(() => { __hc.Z.filter(z => z.id !== 'filtros').forEach(z => z.sfs.forEach(s => s.d.fill(0))); });
-  await p.waitForFunction(() => __hc.M.duelo.ganador, null, { timeout: 20000 });
+  await esperarDuelo(p, () => __hc.M.duelo.ganador, 60000);
   r = await p.evaluate(() => ({ g: __hc.M.duelo.ganador, h: __hc.M.duelo.hitos, a: __hc.M.duelo.animo }));
   afirmar(r.g === 'tu' && r.h.campana === 'tu', 'no ganaste el duelo 2–0: ' + JSON.stringify(r));
   const antes = await p.evaluate(() => __hc.S.dinero);
@@ -323,9 +335,9 @@ caso('duelo 2.0: sin apuesta, El Cuñado se confía y gana', async () => {
   await empezarDuelo(p, false);
   afirmar(await p.evaluate(() => __hc.M.duelo.apuesta === 0), 'rechazar la apuesta no quedó registrado');
   await p.evaluate(() => { __hc.M.duelo.prog = .5; });
-  await p.waitForFunction(() => __hc.M.duelo.animo === 'confiado', null, { timeout: 150000 });
+  await esperarDuelo(p, () => __hc.M.duelo.animo === 'confiado');
   await p.evaluate(() => { __hc.M.duelo.prog = .99; });
-  await p.waitForFunction(() => __hc.M.duelo.ganador === 'el', null, { timeout: 150000 });
+  await esperarDuelo(p, () => __hc.M.duelo.ganador === 'el');
   await terminarDuelo(p); await p.waitForSelector('.nota-grande', { timeout: 60000 });
   const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
   afirmar(/Duelo perdido · \d–2/i.test(t) && !/Apuesta/.test(t) && /la mitad/.test(t), 'el parte del duelo perdido no es correcto: ' + (t.match(/Duelo[^\n]*\n?[^\n]*/) || [t.slice(0, 200)])[0]);
@@ -504,7 +516,7 @@ caso('la saga: el favor de la carretera regala los filtros en el siguiente duelo
   await p.evaluate(() => { const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
   await p.waitForTimeout(1500); await p.evaluate(() => { const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); });
   for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); const c = document.querySelector('.carta[role=dialog] [data-i="1"]'); c && c.click(); }); await p.waitForTimeout(400); }
-  await p.waitForFunction(() => __hc.M.duelo.hitos && __hc.M.duelo.hitos.filtros, null, { timeout: 20000 });
+  await esperarDuelo(p, () => __hc.M.duelo.hitos && __hc.M.duelo.hitos.filtros, 60000);
   const r = await p.evaluate(() => ({ h: __hc.M.duelo.hitos.filtros, favor: __hc.S.saga.favor }));
   afirmar(r.h === 'tu' && r.favor === false, 'el favor no regaló los filtros: ' + JSON.stringify(r));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
@@ -922,7 +934,7 @@ caso('fotos de evidencia con sello y el fusible de la línea de detección', asy
   await p.evaluate(() => __hc.tomarFoto());
   await p.waitForTimeout(400);
   await p.evaluate(() => { __hc.Z.find(z => z.id === 'campana').sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); __hc.tomarFoto(); });
-  await p.waitForTimeout(600);
+  await p.waitForFunction(() => __hc.M.evidencia.length === 2 && __hc.M.evidencia.every(f => f.img), null, { timeout: 20000 });
   r = await p.evaluate(() => ({ boton: !document.querySelector('#fotoBtn').hidden, ev: __hc.M.evidencia.map(f => ({ ...f.ev, img: !!f.img })) }));
   afirmar(r.boton && r.ev.length === 2 && r.ev[0].sucia && !r.ev[1].sucia && r.ev.every(f => f.img && !f.mal), 'las fotos de evidencia no se evaluaron bien: ' + JSON.stringify(r));
   await p.evaluate(() => { __hc.M.eventos = []; __hc.terminarTurno(); });
