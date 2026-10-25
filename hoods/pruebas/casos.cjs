@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo', 'manualDisponible', 'tipUnaVez'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo', 'manualDisponible', 'tipUnaVez', 'generarOrdenes', 'acordarse', 'recordar'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -946,6 +946,27 @@ caso('el manual de Don Rigo trae los sistemas nuevos y los avisos salen una sola
   // un aviso de primera vez solo sale una vez
   r = await p.evaluate(() => [__hc.tipUnaVez('prueba', 'x'), __hc.tipUnaVez('prueba', 'x')]);
   afirmar(r[0] === true && r[1] === false, 'el aviso de primera vez se repite: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('clientes con memoria: se acuerdan de la última vez', async () => {
+  const p = await abrir(partida({ noche: 30, etapa: 2, rep: 50, dinero: 5000 }));
+  // un restaurante que quedó mal paga menos, uno encantado paga más, uno con daño vigila y uno con fotos sucias pide fotos
+  let r = await p.evaluate(() => {
+    const S = __hc.S; S.memoria = {};
+    const mk = (nombre, x) => { __hc.recordar(nombre, x); const o = __hc.genOrden('burger'); o.nombre = nombre; o.duelo = false; const p0 = o.pago; __hc.acordarse(o); return { r: o.recuerdo, f: o.pago / p0 }; };
+    return { mal: mk('Mal', { nota: 'D', ok: false }), bien: mk('Bien', { nota: 'A', ok: true }), dano: mk('Dano', { nota: 'B', ok: true, dano: 'Lámpara rota' }), fotos: mk('Fotos', { nota: 'B', ok: true, fotos: 'sucias' }), nada: mk('Nada', { nota: 'B', ok: true }) };
+  });
+  afirmar(r.mal.r === 'mal' && r.mal.f < .95 && r.bien.r === 'bien' && r.bien.f > 1.05 && r.dano.r === 'dano' && r.fotos.r === 'fotos' && !r.nada.r, 'los recuerdos no se aplican: ' + JSON.stringify(r));
+  // se ve en la tarjeta del trabajo
+  await p.evaluate(() => { const H = __hc.S.hoy, o = __hc.genOrden('burger'); o.nombre = 'Mal'; o.duelo = false; o.firmado = true; __hc.acordarse(o); H.ordenes = [o]; H.sel = 0; __hc.pantallaCamioneta(); });
+  r = await p.evaluate(() => [...document.querySelectorAll('.recuerdo')].map(x => x.textContent).join(' | '));
+  afirmar(/Se acuerda: la última vez quedó mal/.test(r) && /reconquistas/.test(r), 'la tarjeta no muestra el recuerdo: ' + r);
+  // al terminar, la cocina guarda esta noche y con una A se reconquista
+  const x = await jugarNoche(p, { cocina: null, orden: 0, limpio: 1 });
+  r = await p.evaluate(() => __hc.S.memoria.Mal);
+  afirmar(r && r.noche === 30 && r.ok && /^[A-D]/.test(r.nota), 'no se guardó el recuerdo de la noche: ' + JSON.stringify(r));
+  if (/A/.test(x.nota)) afirmar(/Lo reconquistaste/.test(x.texto), 'una A no reconquistó al cliente');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
