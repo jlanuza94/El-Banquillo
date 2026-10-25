@@ -723,6 +723,14 @@ a.btn { display: inline-block; text-decoration: none; }
 @keyframes gira { to { transform: rotate(360deg); } }
 .en-radio { font-family: var(--f-mono); font-size: 12px; color: #c6a0ff; }
 #vineta { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s; background: radial-gradient(ellipse 75% 60% at 50% 42%, rgba(0,0,0,0) 55%, rgba(4,8,12,.42) 100%); }
+.evidencia { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+.evidencia figure { margin: 0; display: grid; gap: 3px; }
+.evidencia img { width: 100%; border-radius: 6px; display: block; }
+.evidencia figcaption { font-size: 12px; font-weight: 700; } .evidencia .bien { color: #69c97a; } .evidencia .mal { color: #e0645a; }
+#flash { position: absolute; inset: 0; pointer-events: none; background: #fff; opacity: 0; }
+#flash.dispara { animation: flash .35s ease-out; }
+#flash.polvo { background: #efe9d8; animation: flash 3s ease-in; }
+@keyframes flash { from { opacity: .85; } to { opacity: 0; } }
 #oscuro { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at var(--x, 50%) var(--y, 45%), rgba(0,0,0,0) 0, rgba(0,0,0,.25) 90px, rgba(0,0,0,.94) 190px); }
 .retos { background: var(--panel); border: 1px solid #ffd23f55; border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; }
 .retos b { font-family: var(--f-cond); font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: #ffd23f; }
@@ -822,6 +830,7 @@ a.btn { display: inline-block; text-decoration: none; }
   <canvas id="gl" aria-label="Cocina en 3D: arrastra sobre la grasa para limpiar"></canvas>
   <div id="vineta" aria-hidden="true"></div>
   <div id="oscuro" aria-hidden="true"></div>
+  <div id="flash" aria-hidden="true"></div>
   <div class="vineta" aria-hidden="true"></div>
   <div id="marcas"></div>
   <div class="aqui" id="aqui" hidden><span></span></div>
@@ -841,7 +850,7 @@ a.btn { display: inline-block; text-decoration: none; }
       <div class="combo-med" id="comboMed" hidden><b></b><span class="pasos-c"></span><span class="ventana"><span></span></span></div>
       <div class="mandos">
         <div class="info"><div class="barra-herr" id="barraHerr"></div><span class="ayuda" id="ayuda">Elige la herramienta abajo y haz pasadas cortas sobre la grasa.</span>
-          <div class="botones-hud"><button class="btn peq tramo-btn" id="trAtras" style="pointer-events:auto" hidden>◂</button><button class="btn peq tramo-btn" id="trAvanza" style="pointer-events:auto" hidden></button><button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button><button class="btn peq robot" id="robotBtn" style="pointer-events:auto" hidden>🤖 Mandar el robot</button></div></div>
+          <div class="botones-hud"><button class="btn peq tramo-btn" id="trAtras" style="pointer-events:auto" hidden>◂</button><button class="btn peq tramo-btn" id="trAvanza" style="pointer-events:auto" hidden></button><button class="btn peq" id="fotoBtn" style="pointer-events:auto" hidden>📸</button><button class="btn peq" id="siguiente" style="pointer-events:auto">Siguiente zona</button><button class="btn peq robot" id="robotBtn" style="pointer-events:auto" hidden>🤖 Mandar el robot</button></div></div>
         <button class="herr-btn" id="herrBtn" aria-label="Herramienta: mantén pulsado para la rueda"></button>
       </div>
       <div class="zonas" id="zonas"></div>
@@ -2650,7 +2659,7 @@ function construirNoche(orden) {
   const hW = hood.ancho, hY0 = 1.95, hY1 = hY0 + hood.alto, hZ0 = -.95, hZ1 = hZ0 + hood.fondo, hZ = (hZ0 + hZ1) / 2;
   const sep = .5, span = nC * hW + (nC - 1) * sep, lineW = span + .2;
   const xs = Array.from({ length: nC }, (_, i) => (i - (nC - 1) / 2) * (hW + sep));
-  piezas.pilotos = []; piezas.aparatos = []; piezas.cintas = []; piezas.faldas = []; piezas.bolsas = []; piezas.recuerdos = []; piezas.bancos = [];
+  piezas.pilotos = []; piezas.aparatos = []; piezas.cintas = []; piezas.faldas = []; piezas.bolsas = []; piezas.recuerdos = []; piezas.bancos = []; piezas.fusibles = [];
 
   // Cuarto
   const suelo = add(new T.PlaneGeometry(9, 8), new T.MeshStandardMaterial({ map: TX.suelo, roughness: .7 }), 0, 0, 1); suelo.rotation.x = -Math.PI / 2;
@@ -2816,6 +2825,13 @@ function construirNoche(orden) {
     }
     add(new T.CylinderGeometry(.012, .012, hY0 - 1.15, 8), matTubo, cx + hW / 2 + .06, (hY0 + 1.15) / 2, hZ0 + .06);
     add(new T.CylinderGeometry(.012, .012, .1, 8), matTubo, cx + hW / 2 + .03, hY0 + .01, hZ0 + .06).rotation.z = Math.PI / 2;
+    // Línea de detección: el tubo delgado con sus fusibles (soportes blancos) en el techo, cerca del fondo.
+    const lineaD = add(new T.CylinderGeometry(.006, .006, hW - .2, 6), matOscuro, cx, hY1 - .045, hZ0 + .12); lineaD.rotation.z = Math.PI / 2;
+    for (const sx of [-.22, .22]) {
+      const fx = cx + sx * hW, soporte = add(new T.BoxGeometry(.06, .035, .03), new T.MeshStandardMaterial({ color: 0xf2f2ee, roughness: .4, emissive: 0xff2200, emissiveIntensity: 0 }), fx, hY1 - .045, hZ0 + .12);
+      add(new T.CylinderGeometry(.008, .008, .03, 6), matRemache, fx, hY1 - .07, hZ0 + .12);
+      piezas.fusibles.push({ pos: new T.Vector3(fx, hY1 - .05, hZ0 + .12), mesh: soporte, alerta: 0 });
+    }
     // Tuercas y varillas con las que cuelga la campana del techo.
     for (const sx of [-1, 1]) {
       add(new T.CylinderGeometry(.02, .02, .018, 6), matOscuro, cx + sx * hW * .3, hY1 - .009, hZ - .05);
@@ -3156,7 +3172,7 @@ const puntos = new T.Points(pGeo, new T.PointsMaterial({ size: .036, map: TX_PUN
 puntos.frustumCulled = false; escena.add(puntos);
 let pSig = 0;
 for (let i = 0; i < NP; i++) pPos[i * 3 + 1] = -99;
-const COL = { grasa: [.25, .14, .03], agua: [.65, .85, 1], espuma: [.95, .98, 1], humo: [.5, .5, .52], chispa: [1, .8, .3] };
+const COL = { polvo: [.96, .94, .86], grasa: [.25, .14, .03], agua: [.65, .85, 1], espuma: [.95, .98, 1], humo: [.5, .5, .52], chispa: [1, .8, .3] };
 function emitir(p, n, tipo, normal, fuerza = 1) {
   const c = COL[tipo];
   for (let k = 0; k < n; k++) {
@@ -3827,6 +3843,7 @@ canvas.addEventListener('pointermove', e => {
   const h = apuntar(e.clientX, e.clientY);
   M.apuntado = h; M.trazo.x = e.clientX; M.trazo.y = e.clientY;
   if (M.herr !== 'hidro' && M.herr !== 'soplete') aplicarTramo(M.trazo.ultimo, h);
+  if (h && M.herr === 'rasqueta' && M.etapa === 'lavar' && zonaAct().id === 'campana') rozarFusible(h.punto);
   M.trazo.ultimo = h;
 });
 function soltar(e) {
@@ -5027,12 +5044,81 @@ function pintarHud(todo) {
   });
   const g = $('#barraHerr .gasto'); if (g) g.textContent = `${Math.round(M.botella * 100)} %`;
   $('#siguiente').textContent = M.etapa === 'migdalear' ? L('Llamar al inspector', 'Call the inspector') : M.zona < ultZona() ? `${L('Ir a', 'Go to')} ${Z[M.zona + 1].n.toLowerCase()}` : L('Terminar de lavar', 'Finish washing');
+  const fb = $('#fotoBtn'); fb.hidden = M.etapa !== 'migdalear'; fb.textContent = `📸 ${L('Foto', 'Photo')} ${(M.evidencia || []).length}/${FOTOS_MAX}`; fb.disabled = (M.evidencia || []).length >= FOTOS_MAX;
   const z = zonaAct(), rb = $('#robotBtn');
   const aqui = M.robot && M.robot.z === z;
   rb.hidden = !(EQ().robot && M.etapa === 'lavar' && z.id === 'ducto' && (aqui ? M.robot.atorado || EQ().robotCam : !M.robot && micras(z) > LIMITE));
   rb.textContent = !aqui ? L('🤖 Mandar el robot', '🤖 Send the robot') : M.robot.atorado ? L('🔧 ¡Se atoró! Rescatarlo', '🔧 Stuck! Rescue it') : M.robotCam ? L('🎥 Vista normal', '🎥 Normal view') : L('🎥 Cámara del robot', '🎥 Robot camera');
   const pa = pasoActual(); if (M.pasoPintado !== pa) { M.pasoPintado = pa; $('#pasos').innerHTML = pasosHTML(pa); }
   Z.forEach((z, i) => { const b = $('#zonas').children[i]; b.disabled = M.etapa === 'migdalear' && z.id !== 'campana' || z.bloq > M.t; b.classList.toggle('prioridad', !!(M.prioridad && M.prioridad.z === z && !M.prioridad.fin)); });
+}
+// ---- Fotos de evidencia: al migdalear, hasta 3 fotos de la campana con su sello (noche, hora y dirección) para el cliente.
+// Lo que sale en la foto cuenta: si se ve grasa en alguna esquina, el cliente reclama.
+const FOTOS_MAX = 3, CALLES = ['Av. de la Manteca', 'Calle del Comal', 'Callejón del Sartén', 'Blvd. de los Tacos', 'Calle Freidora', 'Av. Chicharrón', 'Calle del Aceite Quemado', 'Privada de la Salsa'];
+function direccionFicticia(nombre) {
+  let h = 0; for (const c of nombre) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return `${100 + h % 2900} ${CALLES[h % CALLES.length]}, ${nCiudad()}`;
+}
+// La foto es un recorte 3:4 de la pantalla, un poco arriba del centro (donde queda la campana).
+const fotoMarco = () => { const cw = canvas.width, ch = canvas.height, w = Math.min(cw, ch * .75), h = Math.min(ch, w * 4 / 3), cy = clamp(ch * .45, h / 2, ch - h / 2); return { x: (cw - w) / 2, y: cy - h / 2, w, h, cw, ch }; };
+// Qué se ve en la foto: celdas de las superficies de la campana dentro del encuadre, y cuántas tienen grasa.
+function evaluarFoto() {
+  const F = fotoMarco(), x0 = F.x / F.cw * 2 - 1, x1 = (F.x + F.w) / F.cw * 2 - 1, y1 = 1 - F.y / F.ch * 2, y0 = 1 - (F.y + F.h) / F.ch * 2;
+  const z = zCampana(), v = new T.Vector3(); let vis = 0, sucias = 0;
+  cam.updateMatrixWorld();
+  for (const sf of z.sfs) {
+    if (!sf.mesh.geometry.parameters || sf.mesh.geometry.parameters.width === undefined) continue;
+    sf.mesh.updateMatrixWorld();
+    for (let y = 1; y < sf.ny; y += 3) for (let x = 1; x < sf.nx; x += 3) {
+      v.set((x / sf.nx - .5) * sf.w, (y / sf.ny - .5) * sf.h, 0).applyMatrix4(sf.mesh.matrixWorld).project(cam);
+      if (v.x < x0 || v.x > x1 || v.y < y0 || v.y > y1 || v.z > 1 || v.z < -1) continue;
+      vis++; if (sf.d[y * sf.nx + x] > .22) sucias++;
+    }
+  }
+  return { vis, sucia: vis >= 30 && sucias / vis > .04, mal: vis < 30 };
+}
+function sellar(img, cb) {
+  const im = new Image();
+  const F = fotoMarco(), k = im => im.width / F.cw;
+  im.onload = () => cb(lienzo(Math.round(F.w * k(im)), Math.round(F.h * k(im)), (g, w, h) => {
+    g.drawImage(im, F.x * k(im), F.y * k(im), w, h, 0, 0, w, h);
+    const t = [`${L('Noche', 'Night')} ${S.noche} · ${hora(clamp(M.t / M.dur, 0, 1) * 480)}`, direccionFicticia(M.orden.nombre), M.orden.nombre];
+    g.font = `600 ${Math.round(w / 22)}px Barlow, Arial, sans-serif`; g.textAlign = 'right'; g.fillStyle = '#fff'; g.shadowColor = '#000'; g.shadowBlur = 4;
+    t.forEach((x, i) => g.fillText(x, w - 8, h - 10 - (t.length - 1 - i) * w / 18, w - 16));
+  }).toDataURL('image/jpeg', .72));
+  im.onerror = () => cb(img);
+  im.src = img;
+}
+function destello(c) { const fl = $('#flash'); if (!fl) return; fl.className = ''; void fl.offsetWidth; fl.className = c; }
+function tomarFoto() {
+  if (!M || M.etapa !== 'migdalear' || (M.evidencia || []).length >= FOTOS_MAX) return;
+  audio(); const ev = evaluarFoto(), m = M; m.evidencia = [...(m.evidencia || []), { ev, img: null }];
+  const f = m.evidencia[m.evidencia.length - 1];
+  rafaga(.05, 4000, .14, 'highpass'); tono(1200, .04, .05, 'square', null, .05);
+  destello('dispara');
+  pedirFoto(0, img => { if (img) sellar(img, x => { f.img = x; }); });
+  ayuda(ev.mal ? L('En esa foto casi no se ve la campana. Encuádrala mejor.', 'You can barely see the hood in that photo. Frame it better.')
+    : ev.sucia ? L('Ojo: en la foto se alcanza a ver grasa. El cliente la va a ver.', 'Careful: some grease shows in the photo. The client will see it.')
+    : L('Buena foto: se ve limpia.', 'Good photo: it looks clean.'), 3);
+  pintarHud(false);
+}
+$('#fotoBtn').addEventListener('click', tomarFoto);
+// ---- El fusible de la línea de detección: si lo golpeas con la rasqueta se dispara el sistema contra incendios.
+function rozarFusible(p) {
+  if (!M || M.fusible || !piezas.fusibles) return;
+  for (const f of piezas.fusibles) {
+    const d = p.distanceTo(f.pos);
+    if (d < .2 && !M.avisoFusible) { M.avisoFusible = true; f.alerta = 3; ayuda(L('¡Cuidado! Ese es el fusible de la línea de detección. Si lo golpeas con la rasqueta se dispara el sistema contra incendios.', 'Careful! That is the detection line\'s fusible link. Hit it with the scraper and the fire system goes off.'), 5); }
+    if (d < .07 && M.avisoFusible && azar(.02)) { dispararSistema(f); return; }   // un roce justo encima, después del aviso
+  }
+}
+function dispararSistema(f) {
+  M.fusible = true;
+  emitir(f.pos.clone().setY(f.pos.y - .1), 160, 'polvo', new T.Vector3(0, -1, 0), 2.2); destello('polvo');
+  rafaga(1.4, 600, .3, 'lowpass'); tono(90, .8, .12, 'sawtooth', 60);
+  sumarTiempo(20); dano(L('Se disparó el sistema contra incendios: recarga y limpieza del polvo químico', 'The fire system went off: recharge and chemical powder cleanup'), 450, 3);
+  resultado(L('¡PSSSSHHH!', 'PSSSSHHH!'), L('Le diste al fusible con la rasqueta y se disparó el sistema contra incendios. Polvo químico por toda la cocina: 20 minutos limpiándolo y la recarga corre por tu cuenta.', 'You hit the fusible link with the scraper and the fire system went off. Chemical powder all over the kitchen: 20 minutes cleaning it and the recharge is on you.'),
+    M.comp.solo ? null : M.comp, L('Bueno… la cocina quedó a prueba de incendios. Y de nosotros.', 'Well… the kitchen is fireproof now. And us-proof.'));
 }
 $('#robotBtn').addEventListener('click', () => {
   if (!M || M.fase !== 'turno' || M.ev) return;
@@ -7359,6 +7445,12 @@ function pantallaParte() {
     if (brig.ok < ESTADIO_BRIGADA) lineas.push([L(`El club descuenta las campanas extra que no pasaron (${ESTADIO_BRIGADA - brig.ok})`, `The club deducts the extra hoods that failed (${ESTADIO_BRIGADA - brig.ok})`), -ESTADIO_REPETIR * (ESTADIO_BRIGADA - brig.ok)]);
     for (const c of brig.gente) if (c.id) sumarNoche(c);
   }
+  // Las fotos de evidencia: el cliente las ve. Limpias, dejan propina y reputación; con grasa, reclama.
+  const evid = (M.evidencia || []).filter(f => !f.ev.mal), evSucia = evid.filter(f => f.ev.sucia).length;
+  if (!aprendiz && evid.length) {
+    if (evSucia) { const v = r10(cobro * .08); lineas.push([L(`El cliente vio grasa en ${evSucia === 1 ? 'una de tus fotos' : evSucia + ' de tus fotos'} y pidió descuento`, `The client saw grease in ${evSucia === 1 ? 'one of your photos' : evSucia + ' of your photos'} and asked for a discount`), -v]); M.repExtra -= 2; }
+    else if (evid.length >= 2) { const v = r10(cobro * .05); lineas.push([L(`El cliente recibió tus ${evid.length} fotos de evidencia y quedó tranquilo`, `The client got your ${evid.length} evidence photos and is reassured`), v]); M.repExtra += 1; }
+  }
   if (estadioBono) lineas.push([L('Bono del club: el Estadio Monumental quedó listo para el clásico', 'Club bonus: the Monumental Stadium is ready for the derby'), ESTADIO_BONO]);
   if (d && d.apuesta) lineas.push([ganaDuelo ? L('Apuesta ganada a El Cuñado', 'Bet won against El Cuñado') : L('Apuesta perdida con El Cuñado', 'Bet lost to El Cuñado'), ganaDuelo ? d.apuesta : -d.apuesta]);
   if (S.legado && ciudad() === 2 && !aprendiz) {
@@ -7602,6 +7694,7 @@ function pantallaParte() {
     ${retosHechos.length ? `<div class="retos"><b>${L('Retos', 'Challenges')} · +${S.estrellas - estrellasAntes} ★ (${L('llevas', 'total')} ${S.estrellas})</b>${retosHechos.map(([r, ok]) => `<span class="${ok ? 'ok' : ''}">${ok ? '★' : '☆'} ${esc(tReto(r))}</span>`).join('')}</div>` : ''}
     ${racha > 2 ? `<p class="pista">${L(`¡Racha de ${racha} noches aprobadas!${aprendiz ? '' : ' Cada noche seguida paga un poco más.'}`, `${racha}-night passing streak!${aprendiz ? '' : ' Each night in a row pays a little more.'}`)}</p>` : ''}
     <div id="fotoParte"></div>
+    ${(M.evidencia || []).some(f => f.img) ? `<h2 class="sec">📸 ${L('Fotos de evidencia', 'Evidence photos')}</h2><div class="evidencia">${M.evidencia.filter(f => f.img).map(f => `<figure><img src="${f.img}" alt="${L('Foto de evidencia', 'Evidence photo')}"><figcaption class="${f.ev.sucia ? 'mal' : f.ev.mal ? '' : 'bien'}">${f.ev.mal ? L('No se ve la campana', 'Hood not visible') : f.ev.sucia ? L('Se ve grasa', 'Grease visible') : L('Limpia', 'Clean')}</figcaption></figure>`).join('')}</div>` : ''}
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % ${L('limpio', 'clean')}</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
       <span class="nota">${L(`El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.`, `The inspector measures with a grease comb: it passes at ${LIMITE} µm or less in each zone. Mirror polish: ${Math.round(pulido * 100)}%. Inspector at ${hora(finMin)}.`)}</span></div>
     ${porQue}
@@ -8023,6 +8116,7 @@ function bucle(ahora) {
   moverParticulas(dt);
   if (MARCAS.length) moverMarcas();
   luces(dt, ahora); apagarPulsos(); radioTick(); moverTrozos(dt); titilar(ahora);
+  for (const f of piezas.fusibles || []) if (f.alerta > 0) { f.alerta -= dt; f.mesh.material.emissiveIntensity = f.alerta > 0 && Math.sin(ahora / 90) > 0 ? .9 : 0; }   // el fusible parpadea al avisar
   R.render(escena, cam);
   if (fotoPend && (fotoPend.t -= dt) <= 0) { const f = fotoPend; fotoPend = null; f.cb(instantanea()); }
   requestAnimationFrame(bucle);

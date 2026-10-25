@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -896,6 +896,39 @@ caso('campana de verdad: lámparas que se ensucian, bajantes y filtros moteados'
   afirmar(r.vidrio && r.luces >= 1 && r.i < .5, 'la campana no tiene lámparas o empiezan limpias: ' + JSON.stringify(r));
   r = await p.evaluate(() => { const z = __hc.Z.find(z => z.id === 'campana'); z.sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); return { i: __hc.lucesCampana[0].intensity, op: z.vidrio.halos[0].material.opacity }; });
   afirmar(r.i > .8 && r.op > .5, 'limpiar la campana no aclaró las lámparas: ' + JSON.stringify(r));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('fotos de evidencia con sello y el fusible de la línea de detección', async () => {
+  const p = await abrir(partida({ noche: 30, etapa: 2 }));
+  await p.evaluate(() => { const H = __hc.S.hoy, o = __hc.genOrden('burger'); o.firmado = true; o.pedido = null; o.duelo = false; o.ayud = 0; o.eventos = []; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0, null, { timeout: 90000 });
+  await p.evaluate(() => { const P = __hc.piezas; P.pilotos.forEach(x => { x.off = true; }); P.luz.off = true; P.aparatos.forEach(a => { a.cubierto = true; }); P.cintas.forEach(c => { c.hecho = true; }); P.bolsas.forEach(b => { b.hecho = true; }); });
+  for (let i = 0; i < 16 && !(await p.evaluate(() => __hc.M.fase === 'turno')); i++) { await p.evaluate(() => { const b = document.querySelector('#prepSig'); b && b.click(); }); await p.waitForTimeout(400); }
+  // el fusible: primero avisa, después (justo encima) se dispara: tiempo, daño y reputación
+  let r = await p.evaluate(() => {
+    const M = __hc.M; M.eventos = []; __hc.irZona(__hc.Z.findIndex(z => z.id === 'campana'));
+    const f = __hc.piezas.fusibles[0], t0 = M.t; Math.random = () => .01;
+    __hc.rozarFusible(f.pos.clone().setY(f.pos.y + .15)); const avisado = M.avisoFusible && !M.fusible;
+    __hc.rozarFusible(f.pos.clone()); return { n: __hc.piezas.fusibles.length, avisado, disparo: M.fusible, dano: M.danos.some(d => /sistema contra incendios/.test(d.t) && d.dinero === 450), t: M.t > t0 };
+  });
+  afirmar(r.n >= 2 && r.avisado && r.disparo && r.dano && r.t, 'el fusible no avisó o no se disparó: ' + JSON.stringify(r));
+  await p.evaluate(() => { const b = [...document.querySelectorAll('.carta button')].pop(); b && b.click(); });
+  // fotos: sin botón al lavar; al migdalear, una con grasa y otra limpia; el cliente reclama la sucia
+  r = await p.evaluate(() => document.querySelector('#fotoBtn').hidden);
+  afirmar(r, 'el botón de foto sale antes de migdalear');
+  await p.evaluate(() => { __hc.Z.forEach(z => z.sfs.forEach((s, k) => { if (z.id !== 'campana' || k) s.d.fill(0); })); __hc.empezarMigdaleo(); });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => __hc.tomarFoto());
+  await p.waitForTimeout(400);
+  await p.evaluate(() => { __hc.Z.find(z => z.id === 'campana').sfs.forEach(s => s.d.fill(0)); __hc.pintarHud(); __hc.tomarFoto(); });
+  await p.waitForTimeout(600);
+  r = await p.evaluate(() => ({ boton: !document.querySelector('#fotoBtn').hidden, ev: __hc.M.evidencia.map(f => ({ ...f.ev, img: !!f.img })) }));
+  afirmar(r.boton && r.ev.length === 2 && r.ev[0].sucia && !r.ev[1].sucia && r.ev.every(f => f.img && !f.mal), 'las fotos de evidencia no se evaluaron bien: ' + JSON.stringify(r));
+  await p.evaluate(() => { __hc.M.eventos = []; __hc.terminarTurno(); });
+  await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  const t = await p.evaluate(() => document.querySelector('#pantalla').innerText);
+  afirmar(/Fotos de evidencia/i.test(t) && /vio grasa en una de tus fotos/.test(t), 'el parte no muestra las fotos o el reclamo: ' + t.slice(0, 400));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
