@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo', 'manualDisponible', 'tipUnaVez', 'generarOrdenes', 'acordarse', 'recordar'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo', 'manualDisponible', 'tipUnaVez', 'generarOrdenes', 'acordarse', 'recordar', 'raspar', 'cocinasHasta', 'U'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -979,6 +979,37 @@ caso('clientes con memoria: se acuerdan de la última vez', async () => {
   r = await p.evaluate(() => __hc.S.memoria.Mal);
   afirmar(r && r.noche === 30 && r.ok && /^[A-D]/.test(r.nota), 'no se guardó el recuerdo de la noche: ' + JSON.stringify(r));
   if (/A/.test(x.nota)) afirmar(/Lo reconquistaste/.test(x.texto), 'una A no reconquistó al cliente');
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('Puerto Fritanga: cocinas del muelle, salitre y caramelo', async () => {
+  const p = await abrir(partida({ noche: 40, etapa: 3, rep: 60, dinero: 9000 }));
+  // en Ciudad Comal no salen las cocinas del puerto
+  let r = await p.evaluate(() => __hc.cocinasHasta(4));
+  afirmar(!r.some(k => ['palapa', 'churreria', 'lonja', 'barco'].includes(k)), 'salen cocinas del puerto en Ciudad Comal: ' + r);
+  await p.evaluate(() => { const S = __hc.S; S.legado = { camino: 'B', noche: 39, director: { n: 'Lupe', comp: 'lupe' }, mano: { n: 'Beto', comp: 'beto' } }; __hc.viajar(2, { empresa: { nombre: 'Puerto', color: '#2e9e5b' }, etapa: 3, rep: 50, dinero: 9000, clientes: [], perdidos: [], cuadrilla: [], candidatos: [], fijos: ['beto'], compPref: 'beto', abierta: S.noche, hoy: null, eq: { camioneta: 2 } }); });
+  r = await p.evaluate(() => { const ks = __hc.cocinasHasta(3); let puerto = 0; for (let i = 0; i < 20; i++) { __hc.S.hoy = null; __hc.pantallaCamioneta(); puerto += __hc.S.hoy.ordenes.filter(o => ['palapa', 'churreria', 'lonja', 'barco'].includes(o.cocina)).length; } return { ks, puerto }; });
+  afirmar(['palapa', 'churreria', 'lonja', 'barco'].every(k => r.ks.includes(k)) && r.puerto > 5, 'en el puerto no salen sus cocinas: ' + JSON.stringify(r));
+  // una noche en cada cocina del muelle, sin errores; el salitre lo quita la hidro y el caramelo se quema con el soplete
+  for (const k of ['palapa', 'churreria', 'lonja', 'barco']) {
+    const x = await jugarNoche(p, { cocina: k, durante: k === 'barco' ? () => {
+      const Z = __hc.Z, sf = Z.flatMap(z => z.sfs).find(s => s.tipo && s.tipo.some(t => t === 4)); if (!sf) { window.__sal = 'sin salitre'; return; }
+      const i = sf.tipo.indexOf(4), gx = i % sf.nx + .5, gy = Math.floor(i / sf.nx) + .5; sf.d[i] = 1; const d0 = sf.d[i];
+      __hc.raspar(sf, gx, gy, .6, .1, 'hidro'); const conHidro = d0 - sf.d[i]; sf.d[i] = 1; sf.tipo[i] = 4;
+      __hc.raspar(sf, gx, gy, .6, .1, 'espuma'); __hc.raspar(sf, gx, gy, .6, .1, 'rasqueta'); const conRasqueta = 1 - sf.d[i];
+      window.__sal = { conHidro, conRasqueta, t4: __hc.U.t4.value };
+    } : k === 'churreria' ? () => {
+      const Z = __hc.Z, sf = Z.flatMap(z => z.sfs).find(s => s.tipo && s.tipo.some(t => t === 5)); if (!sf) { window.__car = 'sin caramelo'; return; }
+      Math.random = () => .1; const i = sf.tipo.indexOf(5); sf.d[i] = 1;
+      __hc.raspar(sf, i % sf.nx + .5, Math.floor(i / sf.nx) + .5, .6, .05, 'soplete');
+      window.__car = { quemado: sf.tipo[i] === 1, t4: __hc.U.t4.value };
+    } : null });
+    afirmar(/[A-D]/.test(x.nota), `la noche en ${k} no terminó: ` + x.nota);
+    await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  }
+  r = await p.evaluate(() => ({ sal: window.__sal, car: window.__car }));
+  afirmar(r.sal && r.sal.conHidro > r.sal.conRasqueta * 1.5 && r.sal.t4 === 0, 'el salitre no se comporta como debe: ' + JSON.stringify(r.sal));
+  afirmar(r.car && r.car.quemado && r.car.t4 === 1, 'el caramelo no se quema con el soplete: ' + JSON.stringify(r.car));
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
