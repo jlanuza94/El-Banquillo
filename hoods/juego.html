@@ -840,7 +840,7 @@ a.btn { display: inline-block; text-decoration: none; }
     <div class="hud-arriba">
       <div class="hud-fila"><span class="reloj" id="reloj">22:00</span><span class="cliente" id="cliente"></span><button class="btn-ico radio" id="radioBtn" aria-label="Radio Grasa FM" aria-pressed="true">FM</button><button class="btn-ico" id="centrar" aria-label="Recentrar la vista / Recenter view" hidden>⌖</button><button class="btn-ico" id="pausa" aria-label="Pausa / Pause">❚❚</button></div>
       <div class="tiempo"><div id="tbar" style="width:100%"></div></div>
-      <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span>El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><span class="hitos" id="dHitos"></span><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
+      <div class="duelo" id="duelo" hidden><span>Tú</span><div class="barra"><div id="dTu" style="width:0"></div></div><span id="dRivalN">El Cuñado</span><div class="barra rival"><div id="dRival" style="width:0"></div></div><span class="hitos" id="dHitos"></span><button class="btn peq" id="contra" hidden>¡Contraataque!</button></div>
       <div class="jefe-med" id="jefeMed" hidden><b></b><div class="barra"><div></div></div><small></small></div>
       <div class="pasos" id="pasos"></div>
       <div class="cinta" id="cinta" hidden><b>FM</b><div><span></span></div></div>
@@ -920,7 +920,7 @@ const EN = {
     bocina: ['"La Cucaracha" horn', 'Plays when you arrive. Clients smile: a little more tip.'], rines: ['Chrome rims', 'Clients think you are expensive: they pay you 3% more.'], neon: ['Underglow neon', 'Your crew sees the van from far away and shows up on time: fewer no-shows.'],
     aleron: ['Racing spoiler', 'Useless on a van. Except in street races against El Cuñado.'], escape: ['Loud exhaust', 'The neighbors hate it. So do the raccoons: they run before you arrive.'], masaje: ['Massage seats', 'Your crew arrives relaxed and cleans 5% faster.'],
     cafetera: ['Dashboard coffee maker', 'Chuy falls asleep half as often. Beto gets intense.'], megafono: ['Roof megaphone', 'You announce your arrival. El Cuñado gets nervous in duels.'] },
-  medalla: { primera: ['First of many', 'Pass your first inspection.'], notaA: ['Honor roll', 'Get an A on a shift.'], espejo: ['Bare metal', 'Every zone at 50 µm or less.'], rapido: ['Lightning', 'Pass before 3:00.'], limpio: ['Not a scratch', 'Pass with no damage at all.'],
+  medalla: { puerto: ['Captain of the port', 'Win the Fritanga Queen against Grupo Brillo.'], primera: ['First of many', 'Pass your first inspection.'], notaA: ['Honor roll', 'Get an A on a shift.'], espejo: ['Bare metal', 'Every zone at 50 µm or less.'], rapido: ['Lightning', 'Pass before 3:00.'], limpio: ['Not a scratch', 'Pass with no damage at all.'],
     combo: ['Elite scraper', 'Reach a ×3 combo.'], migdal: ['Master polisher', 'Polish 90% of the hood.'], gerente: ['Manager tamer', 'Pass with the manager there without him blowing up.'], mapache: ['Raccoon friend', 'Get the raccoon out the nice way.'],
     cuca: ['Roach hunter', 'Catch the giant cockroach.'], apagon: ['Cat eyes', 'Pass a night with a blackout.'], pedido: ['Picky client', 'Fulfill a special request.'], duelo: ['Bye, Cuñado', 'Win a duel against El Cuñado.'], diez: ['Veteran', 'Pass 10 inspections.'],
     fotos: ['Grease photographer', 'Collect 6 photos in the album.'], finde: ['Legendary weekend', 'Beat the weekend challenge: three giant jobs in a row.'], contrato: ['Fine print', 'Complete a tough contract.'], contratos5: ['Official supplier', 'Complete 5 tough contracts.'], racha10: ['Unstoppable', 'Pass 10 nights in a row.'], cunado5: ['El Cuñado\'s nightmare', 'Win 5 duels against El Cuñado.'],
@@ -1061,7 +1061,7 @@ const precioEtapa = e => Math.round(e.compra * (ciudad() === 2 ? 2.5 : 1));   //
 // Lo que es de la empresa (se queda en su ciudad). Todo lo demás es del jugador y viaja con él: nivel, habilidades,
 // medallas, álbum, apariencias, objetos, récords y las herramientas personales.
 const CAMPOS_EMPRESA = ['empresa', 'etapa', 'rep', 'dinero', 'clientes', 'perdidos', 'cuadrilla', 'candidatos', 'fijos', 'compPref', 'sede', 'vanMej', 'kits', 'tuneo', 'angelica', 'finde', 'findeOfrecido',
-  'licit', 'licitGanada', 'licitPerdida', 'licitIntentos', 'mis', 'deuda', 'cunado', 'resena', 'recomienda', 'devolver', 'noticia', 'noticiaRadio', 'abierta', 'racha', 'hoy', 'jefeNoche', 'final', 'hitosRep', 'admin', 'oficinaMsg', 'estadio', 'ofi', 'memoria'];
+  'licit', 'licitGanada', 'licitPerdida', 'licitIntentos', 'mis', 'deuda', 'cunado', 'resena', 'recomienda', 'devolver', 'noticia', 'noticiaRadio', 'abierta', 'racha', 'hoy', 'jefeNoche', 'final', 'hitosRep', 'admin', 'oficinaMsg', 'estadio', 'ofi', 'memoria', 'crucero', 'cruceroGanado', 'cruceroPerdido', 'cruceroIntentos'];
 const EQ_EMPRESA = ['camioneta', 'flota', 'seguro', 'planta'];
 const ciudad = () => (S && S.ciudad) || 1;
 const nCiudad = (k = ciudad()) => L(...CIUDADES[k].n);
@@ -1093,6 +1093,30 @@ function viajar(destino, nueva, sinRespaldo) {
   } catch (e) { S = completar(JSON.parse(antes)); RIVAL = CIUDADES[ciudad()].rival; return false; }
 }
 const QUIEN_CUNADO = { n: 'El Cuñado', color: '#d7382b' };
+// La Licenciada Pulcritud: la ejecutiva de Grupo Brillo en Puerto Fritanga. Máquinas carísimas, cero calle:
+// rápida en cocinas normales, pero el salitre y el caramelo del muelle la frenan. No sabotea: manda memorándums.
+const PULCRITUD = { n: 'Lic. Pulcritud', color: '#7fd0ff' };
+const DICHOS_PULCRITUD = {
+  inicio: [['Buenas noches. Traigo hidrolavadora de 4,000 PSI y un protocolo de 48 páginas. ¿Ustedes traen… cubetas?', 'Good evening. I brought a 4,000 PSI washer and a 48-page protocol. You brought… buckets?'], ['Grupo Brillo Total saluda a la competencia. Brevemente.', 'Grupo Brillo Total greets the competition. Briefly.']],
+  apuestaSi: [['Apuesta registrada. Mi contadora ya la tiene en el presupuesto.', 'Bet logged. My accountant already budgeted it.']],
+  apuestaNo: [['Prudente. Lo anoto en su expediente.', 'Prudent. I\'ll note it in your file.']],
+  hitoTu: [['Interesante. Lo voy a reportar a corporativo como «anomalía local».', 'Interesting. I\'ll report it to corporate as a "local anomaly".'], ['¿Cómo le quitaron eso sin máquina? Necesito un informe.', 'How did you get that off without a machine? I need a report.']],
+  hitoEl: [['Hito cumplido según protocolo. Siguiente punto de la agenda.', 'Milestone met per protocol. Next item on the agenda.']],
+  perdio: [['Esto… no estaba en la proyección trimestral.', 'This… was not in the quarterly projection.'], ['Voy a pedir una auditoría. A mí misma.', 'I\'m requesting an audit. Of myself.']],
+  termino: [['Terminado. Tiempo dentro del estándar corporativo. Buenas noches.', 'Done. Time within corporate standard. Good night.']],
+  animo: [['El salitre no venía en el manual de capacitación.', 'Sea salt was not in the training manual.'], ['Mi máquina dice que esto está limpio. Mis ojos dicen que no. Confío en la máquina.', 'My machine says it\'s clean. My eyes say it isn\'t. I trust the machine.'], ['¿Por qué se pega? ¿POR QUÉ SE PEGA?', 'Why does it stick? WHY DOES IT STICK?']],
+  tropiezo: [['Mi hidrolavadora de 4,000 PSI se tapó con salitre. Llamaré a soporte técnico.', 'My 4,000 PSI washer clogged with salt. I\'ll call tech support.']],
+  sabotaje: [['Disculpe: mi asistente tropezó con su cubeta. Le enviaré un memorándum de disculpa.', 'Pardon: my assistant tripped over your bucket. I\'ll send you an apology memo.']],
+  resbalon: [['Resbalé. No pasó nada. Esto no sale del cuarto.', 'I slipped. Nothing happened. This stays in the room.']],
+  chisme: [['En Brillo tenemos un KPI para esto. Ustedes van por debajo.', 'At Brillo we have a KPI for this. You\'re below it.'], ['El Cuñado me dijo que usted era bueno. El Cuñado dice muchas cosas.', 'El Cuñado told me you were good. El Cuñado says a lot of things.']],
+  contra: [['Esto es una práctica comercial desleal. Lo voy a poner en un correo.', 'This is an unfair business practice. I\'m putting it in an email.']],
+};
+const esPulcritud = () => !!(M && M.orden && M.orden.pulcritud);
+const rivalDuelo = () => esPulcritud() ? PULCRITUD : QUIEN_CUNADO;
+function decirRival(clave, txt) {
+  if (!esPulcritud()) return decir(QUIEN_CUNADO, txt);
+  const p = DICHOS_PULCRITUD[clave]; if (p) decir(PULCRITUD, L(...uno(p)).replace('{jugador}', jugador()));
+}
 // Las etapas de tu empresa: se pasa a la siguiente con reputación y pagando el salto.
 const ETAPAS = [
   { n: 'Camioneta vieja', txt: 'Tú solo y una camioneta que no arranca en subida. Cafeterías, pizzerías y hamburgueserías. Beto espera a que puedas pagarle y cabe un ayudante del barrio.' },
@@ -1587,6 +1611,7 @@ const MEDALLAS = [
   { id: 'estado', n: 'Limpieza de Estado', d: 'Saca A o A+ en la cocina de la Residencia Oficial.', ico: '🏛' },
   { id: 'licitacion', n: 'La ciudad es tuya', d: 'Gana la Gran Licitación.', ico: '🏛' },
   { id: 'final', n: 'Fin de la noche', d: 'Termina la campaña de Ciudad Comal.', ico: '🏁' },
+  { id: 'puerto', n: 'Capitán del puerto', d: 'Gana el Fritanga Queen contra Grupo Brillo.', ico: '⚓' },
   { id: 'bombero', n: 'Bombero de guardia', d: 'Apaga un fuego de grasa a tiempo.', ico: '🧯' },
   { id: 'j_tele', n: 'Estrella de la tele', d: 'Supera el programa en vivo con buen rating.', ico: '📺' },
   { id: 'j_embrujada', n: 'Cazafantasmas', d: 'Limpia la campana embrujada.', ico: '👻' },
@@ -3340,7 +3365,8 @@ function empezarTurno(orden) {
   M.faltan = faltan;   // las donas de la clienta, para el gerente
   if (M.pedido) M.cliente = { n: M.pedido.quien, color: '#e9e9e9' };
   // El duelo: El Cuñado limpia la misma cocina a la vez. Gana quien deje todo bajo el límite primero.
-  if (orden.duelo) M.duelo = { hitos: {}, tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22), tropiezo: azar(.35) ? M.dur * rnd(.25, .5) : null };
+  if (orden.duelo) M.duelo = { hitos: {}, tRival: M.dur * rnd(.58, .74) * (tun('megafono') ? 1.06 : 1) * (orden.pulcritud ? (COCINAS[orden.cocina].ciudad === 2 ? 1.15 : .9) : 1), tuyo: null, rivalFin: null, charlaT: rnd(14, 22), tropiezo: azar(.35) ? M.dur * rnd(.25, .5) : null };
+  $('#dRivalN').textContent = orden.pulcritud ? PULCRITUD.n : QUIEN_CUNADO.n;   // la Licenciada: rápida, salvo con el salitre y el caramelo del muelle
   // Desastres de la noche según la orden y el compañero; la preparación añade los suyos.
   // La tubería la puede romper cualquiera de la cuadrilla, salvo los más cuidadosos (Lupe y los serios). Beto, casi seguro.
   const prob = e => (e.principal ? ({ beto: arcoFin('beto') ? .45 : .75, chuy: .25 })[orden.comp] || 0 : e.tipo === 'serio' ? 0 : e.tipo === 'lio' ? .45 : e.tipo === 'medio' ? .25 : Math.max(0, 3 - (e.cuidado || 3)) * .1) * (hab('supervisor') ? .5 : 1);
@@ -3389,17 +3415,17 @@ function empezarTurno(orden) {
   if (orden.residencia) { M.fritoT = 25; setTimeout(() => M && M.fase === 'prep' && decir({ n: 'Monsieur Fritó', color: '#f2f2f2' }, L('Bienvenidos a mi cocina. Tienen hasta las seis. A las siete sirvo foie gras a doce embajadores.', 'Welcome to my kitchen. You have until six. At seven I serve foie gras to twelve ambassadors.')), 1200); }
   if (orden.contrato) { const q = contratante(orden.contrato); M.cliente = { n: L(q[0], q[1]), color: '#e9e9e9' }; setTimeout(() => M && M.fase === 'prep' && decir(M.cliente, L(`Le recuerdo el contrato: ${orden.contrato.conds.map(id => condicion(id).t[0].toLowerCase()).join('; ')}.`, `A reminder of the contract: ${orden.contrato.conds.map(id => condicion(id).t[1].toLowerCase()).join('; ')}.`)), 1800); }
   const hist = S.cunado && S.cunado.ultimo;
-  if (M.duelo && hist) setTimeout(() => M && decir(QUIEN_CUNADO, hist.gano === 'el' ? uno([L(`¿Te acuerdas de ${hist.donde}? Yo sí. Todos los días.`, `Remember ${hist.donde}? I do. Every day.`), L(`Otra vez tú. Te gané en ${hist.donde}, ¿o ya se te olvidó?`, `You again. I beat you at ${hist.donde}, or did you forget?`)]) : uno([L(`Lo de ${hist.donde} fue suerte. Hoy traigo rasqueta nueva.`, `${hist.donde} was luck. Today I brought a new scraper.`), L(`No he dormido desde que me ganaste en ${hist.donde}. Hoy me desquito.`, `I haven't slept since you beat me at ${hist.donde}. Payback time.`)])), 2400);
-  else if (M.duelo) setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
+  if (M.duelo && hist) setTimeout(() => M && decirRival('inicio', hist.gano === 'el' ? uno([L(`¿Te acuerdas de ${hist.donde}? Yo sí. Todos los días.`, `Remember ${hist.donde}? I do. Every day.`), L(`Otra vez tú. Te gané en ${hist.donde}, ¿o ya se te olvidó?`, `You again. I beat you at ${hist.donde}, or did you forget?`)]) : uno([L(`Lo de ${hist.donde} fue suerte. Hoy traigo rasqueta nueva.`, `${hist.donde} was luck. Today I brought a new scraper.`), L(`No he dormido desde que me ganaste en ${hist.donde}. Hoy me desquito.`, `I haven't slept since you beat me at ${hist.donde}. Payback time.`)])), 2400);
+  else if (M.duelo) setTimeout(() => M && decirRival('inicio', uno(['¿Ustedes otra vez? Vamos a ver quién deja esto brillando primero.', 'El cliente es mío. Ustedes vinieron de paseo.', 'Les doy ventaja: yo empiezo cuando acaben de poner el plástico. Mentira, ya empecé.'])), 3800);
   if (orden.primerDuelo) setTimeout(() => M && M.fase === 'prep' && !M.ev && carta(L('La camioneta roja', 'The red van'), L(`Cuando llegas, la camioneta roja ya está estacionada en la puerta. El Cuñado sale de la cocina limpiándose las manos en el pantalón: «Este cliente me llamó a mí primero. Bueno, yo lo llamé. Da igual: el que deje la cocina brillando se lo queda.» Duelo a tres hitos: quien termine antes los filtros, la campana y el ducto se lleva cada punto. Dos de tres.`, `When you arrive, the red van is already parked at the door. El Cuñado walks out of the kitchen wiping his hands on his pants: "This client called me first. Well, I called them. Whatever: whoever leaves the kitchen shining keeps it." A three-round duel: whoever finishes the filters, the hood and the duct first gets each point. Best of three.`), [{ t: L('¡A darle!', 'Let\'s go!'), prim: true, f: () => cerrarCarta() }]), 900);
   if (M.duelo && S.fase === 'empresa' && !orden.primerDuelo) { const x = Math.max(100, r10(orden.pago * .5)); if (S.dinero >= x) setTimeout(() => M && M.duelo && M.fase === 'prep' && !M.ev && proponerApuesta(x), 900); }
 }
 
 // La apuesta: antes de empezar, El Cuñado se juega dinero a que gana. Es proporcional al trabajo (la mitad del pago).
 function proponerApuesta(x) {
-  carta(L('El Cuñado quiere apostar', 'El Cuñado wants a bet'), L(`«Te apuesto ${dinero(x)} a que te gano. Dos de tres: filtros, campana y ducto. ¿O te da miedo, ${jugador()}?»`, `"I bet you ${dinero(x)} I beat you. Best of three: filters, hood and duct. Or are you scared, ${jugador()}?"`), [
-    { t: L(`Aceptar · ${dinero(x)}`, `Accept · ${dinero(x)}`), d: L('Si ganas el duelo, te lo paga. Si pierdes, se lo pagas tú.', 'Win the duel and he pays you. Lose and you pay him.'), prim: true, f: () => { M.duelo.apuesta = x; cerrarCarta(); decir(QUIEN_CUNADO, L('¡Trato hecho! Ya me estoy gastando tu dinero.', 'Deal! I\'m already spending your money.')); } },
-    { t: L('No apostar', 'No bet'), d: L('Sin riesgo. El Cuñado se burlará un poco.', 'No risk. El Cuñado will mock you a little.'), f: () => { M.duelo.apuesta = 0; cerrarCarta(); decir(QUIEN_CUNADO, uno([L('Gallina. Pío, pío.', 'Chicken. Cluck, cluck.'), L('Lo sabía. Mucha rasqueta y poca cartera.', 'I knew it. All scraper, no wallet.')])); } },
+  carta(L(`${rivalDuelo().n} quiere apostar`, `${rivalDuelo().n} wants a bet`), L(`«Te apuesto ${dinero(x)} a que te gano. Dos de tres: filtros, campana y ducto. ¿O te da miedo, ${jugador()}?»`, `"I bet you ${dinero(x)} I beat you. Best of three: filters, hood and duct. Or are you scared, ${jugador()}?"`), [
+    { t: L(`Aceptar · ${dinero(x)}`, `Accept · ${dinero(x)}`), d: L('Si ganas el duelo, te lo paga. Si pierdes, se lo pagas tú.', 'Win the duel and he pays you. Lose and you pay him.'), prim: true, f: () => { M.duelo.apuesta = x; cerrarCarta(); decirRival('apuestaSi', L('¡Trato hecho! Ya me estoy gastando tu dinero.', 'Deal! I\'m already spending your money.')); } },
+    { t: L('No apostar', 'No bet'), d: L(`Sin riesgo. ${rivalDuelo().n} se burlará un poco.`, `No risk. ${rivalDuelo().n} will mock you a little.`), f: () => { M.duelo.apuesta = 0; cerrarCarta(); decirRival('apuestaNo', uno([L('Gallina. Pío, pío.', 'Chicken. Cluck, cluck.'), L('Lo sabía. Mucha rasqueta y poca cartera.', 'I knew it. All scraper, no wallet.')])); } },
   ]);
 }
 // ---- preparación jugable: seguridad, cubrir la cocina y envolver la campana
@@ -3579,7 +3605,7 @@ function arrancarTurno() {
   if (M.orden.tuto) { M.tuto = 1; M.tutoZona = M.zona; decir(M.comp, L('Primera noche, ¿eh? Tranquilo. Te voy diciendo. Arriba sale lo que toca.', 'First night, huh? Relax. I\'ll walk you through it. What to do shows up at the top.')); }
   $('#hud').hidden = false; $('#hudAbajo').hidden = false;
   $('#cliente').textContent = M.orden.nombre;
-  $('#duelo').hidden = !M.duelo; $('#jefeMed').hidden = !M.jefe; pintarJefe(); pintarRadio();
+  $('#duelo').hidden = !M.duelo; $('#dRivalN').textContent = rivalDuelo().n; $('#jefeMed').hidden = !M.jefe; pintarJefe(); pintarRadio();
   if (M.duelo) { $('#contra').textContent = '⚡ Contraataque'; $('#contra').title = (CONTRA[M.orden.comp] || CONTRA.solo)[0]; }
   irVista(Z[0].vista);
   pintarHud(true);
@@ -4668,15 +4694,15 @@ function ganarHito(d, id, quien) {
   const p = puntosDuelo(d), total = hitosDuelo().length, nec = Math.floor(total / 2) + 1;
   if (quien === 'tu') {
     M.vida *= 1.06; sCombo(2); verCombo(L(`¡${nHito(id)} para ti!`, `${nHito(id)}: yours!`), true);
-    decir(QUIEN_CUNADO, uno([L('Eso fue suerte. La siguiente es mía.', 'That was luck. The next one is mine.'), L(`¿Ya acabaste ${nHito(id).toLowerCase()}? ¿Con qué, con magia?`, `Done with the ${nHito(id).toLowerCase()} already? What, magic?`)]));
+    decirRival('hitoTu', uno([L('Eso fue suerte. La siguiente es mía.', 'That was luck. The next one is mine.'), L(`¿Ya acabaste ${nHito(id).toLowerCase()}? ¿Con qué, con magia?`, `Done with the ${nHito(id).toLowerCase()} already? What, magic?`)]));
   } else {
-    tono(260, .3, .08, 'sawtooth', 160); verCombo(L(`${nHito(id)} para El Cuñado`, `${nHito(id)}: El Cuñado`), false);
-    decir(QUIEN_CUNADO, uno([L(`¡${nHito(id)} lista! Uno para el Cuñado, cero para ${jugador()}.`, `${nHito(id)} done! One for Cuñado, zero for ${jugador()}.`), L('Apunten: El Cuñado, campeón de este hito.', 'Write it down: El Cuñado, champion of this round.')]));
+    tono(260, .3, .08, 'sawtooth', 160); verCombo(L(`${nHito(id)} para ${rivalDuelo().n}`, `${nHito(id)}: ${rivalDuelo().n}`), false);
+    decirRival('hitoEl', uno([L(`¡${nHito(id)} lista! Uno para el Cuñado, cero para ${jugador()}.`, `${nHito(id)} done! One for Cuñado, zero for ${jugador()}.`), L('Apunten: El Cuñado, campeón de este hito.', 'Write it down: El Cuñado, champion of this round.')]));
   }
   ayuda(L(`Marcador: tú ${p.tu} · El Cuñado ${p.el}`, `Score: you ${p.tu} · El Cuñado ${p.el}`), 4);
   if (!d.ganador && (p.tu >= nec || p.el >= nec)) {
     d.ganador = p.tu >= nec ? 'tu' : 'el';
-    if (d.ganador === 'tu') { verCombo(L('¡GANASTE EL DUELO!', 'DUEL WON!'), true); sCaja(); setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¿Ya? ¿YA? Esto no se queda así.', 'Seguro hicieron trampa. Una rasqueta con turbo o algo.', 'Mi cuñado el alcalde se va a enterar de esto.'])), 1500); }
+    if (d.ganador === 'tu') { verCombo(L('¡GANASTE EL DUELO!', 'DUEL WON!'), true); sCaja(); setTimeout(() => M && decirRival('perdio', uno(['¿Ya? ¿YA? Esto no se queda así.', 'Seguro hicieron trampa. Una rasqueta con turbo o algo.', 'Mi cuñado el alcalde se va a enterar de esto.'])), 1500); }
     else { tono(400, .5, .1, 'sawtooth', 200); ayuda(L('El Cuñado ganó el duelo. Termina igual: el inspector todavía tiene que aprobar.', 'El Cuñado won the duel. Finish anyway: the inspector still has to pass it.'), 6); }
   }
   pintarHitos();
@@ -4696,14 +4722,14 @@ function tickDuelo(dt) {
   d.chk = .25;
   d.hitos = d.hitos || {}; if (d.prog === undefined || !d.animo) { d.prog = d.prog || 0; d.ultT = d.ultT ?? M.t; d.animo = d.animo || 'normal'; pintarHitos();
     // Te debía una (la llanta de la carretera): te regala los filtros, una sola vez.
-    if (S.saga && S.saga.favor && ciudad() === 1 && hitosDuelo().some(h => h[0] === 'filtros')) { S.saga.favor = false; ganarHito(d, 'filtros', 'tu'); decir(QUIEN_CUNADO, L('Los filtros son tuyos. Por lo de la llanta. Ya estamos a mano.', 'The filters are yours. For the tire thing. Now we\'re even.')); } }
+    if (S.saga && S.saga.favor && ciudad() === 1 && hitosDuelo().some(h => h[0] === 'filtros')) { S.saga.favor = false; ganarHito(d, 'filtros', 'tu'); decirRival('favor', L('Los filtros son tuyos. Por lo de la llanta. Ya estamos a mano.', 'The filters are yours. For the tire thing. Now we\'re even.')); } }
   // Avance de El Cuñado: su ritmo depende de su ánimo; los contraataques y resbalones lo paran un rato.
   const paso = Math.max(0, M.t - d.ultT); d.ultT = M.t;
   if (d.pausa > 0) d.pausa -= paso; else if (d.rivalFin === null) d.prog = Math.min(1, d.prog + paso * ANIMO_CUNADO[d.animo].vel / d.tRival);
   if (d.tuyo === null && Z.every(z => micras(z) <= LIMITE)) d.tuyo = M.t;
   if (d.rivalFin === null && d.prog >= 1) {
     d.rivalFin = M.t;
-    if (d.tuyo === null && !d.ganador) { tono(400, .5, .1, 'sawtooth', 200); decir(QUIEN_CUNADO, uno(['¡Terminé! ¿Les presto una rasqueta?', 'Listo. El cliente es mío. Ustedes sigan jugando a limpiar.'])); }
+    if (d.tuyo === null && !d.ganador) { tono(400, .5, .1, 'sawtooth', 200); decirRival('termino', uno(['¡Terminé! ¿Les presto una rasqueta?', 'Listo. El cliente es mío. Ustedes sigan jugando a limpiar.'])); }
   }
   const tu = d.tuyo !== null ? 1 : avanceTuyo(), el = d.prog;
   // Los hitos: tú los cierras al dejar todo el grupo bajo el límite; él, al llegar a su parte del trabajo.
@@ -4715,24 +4741,24 @@ function tickDuelo(dt) {
   const dif = tu - el, animo = dif > .15 ? 'nervioso' : dif < -.2 ? 'confiado' : d.animo === 'nervioso' && dif > .05 ? 'nervioso' : d.animo === 'confiado' && dif < -.08 ? 'confiado' : 'normal';
   if (animo !== d.animo && !d.ganador && d.rivalFin === null) {
     d.animo = animo; const fr = ANIMO_CUNADO[animo].frases;
-    if (fr.length && !M.ev) decir(QUIEN_CUNADO, L(...uno(fr)).replace('{jugador}', jugador()));
+    if (fr.length && !M.ev) decirRival('animo', L(...uno(fr)).replace('{jugador}', jugador()));
     $('#duelo').dataset.animo = animo;
   }
   // Nervioso se resbala más.
   if (d.animo === 'nervioso' && d.rivalFin === null && !d.pausa && !M.ev && azar(.012)) {
     d.pausa = M.dur * .035; tono(220, .3, .1, 'sawtooth', 110);
-    decir(QUIEN_CUNADO, uno([L('¡Aaay! Se me cayó la rasqueta. Dentro del ducto.', 'Aaah! Dropped my scraper. Inside the duct.'), L('¡Nadie vio eso! ¡NADIE!', 'Nobody saw that! NOBODY!')]));
+    decirRival('tropiezo', uno([L('¡Aaay! Se me cayó la rasqueta. Dentro del ducto.', 'Aaah! Dropped my scraper. Inside the duct.'), L('¡Nadie vio eso! ¡NADIE!', 'Nobody saw that! NOBODY!')]));
     ayuda(L('El Cuñado, nervioso, se resbaló. ¡Aprovecha!', 'El Cuñado, nervous, slipped. Take advantage!'), 4);
   }
   // Sabotajes: dos veces por noche, El Cuñado ensucia la zona que llevas más limpia (solo mientras el duelo sigue abierto).
-  if (!d.ganador && d.tuyo === null && d.rivalFin === null && !M.ev && M.etapa === 'lavar' && (d.sab || 0) < maxSabotajes() && el >= [.33, .66, .85][d.sab || 0]) {
+  if (!d.ganador && d.tuyo === null && d.rivalFin === null && !M.ev && M.etapa === 'lavar' && (d.sab || 0) < (esPulcritud() ? 0 : maxSabotajes()) && el >= [.33, .66, .85][d.sab || 0]) {
     d.sab = (d.sab || 0) + 1;
     const z = Z.reduce((a, b) => pctZona(b) > pctZona(a) ? b : a);
     if (pctZona(z) > .2 && micras(z) > LIMITE) {
       ensuciar(z, .35); for (const s of z.sfs) s.sucio = true;
       rafaga(.25, 300, .25, 'lowpass'); tono(180, .3, .1, 'sawtooth', 90);
       if (z === zonaAct()) for (const s of z.sfs) emitir(s.mesh.position, 25, 'grasa', s.normal || null, 1.5);
-      decir(QUIEN_CUNADO, uno(['¡Uy! Se me resbaló la cubeta… justo en tu ' + z.n.toLowerCase() + '.', 'Perdón, perdón. Fue el viento. Dentro de la cocina. Sí.', '¿Eso es grasa mía? Qué raro. Será tuya.']));
+      decirRival('sabotaje', uno(['¡Uy! Se me resbaló la cubeta… justo en tu ' + z.n.toLowerCase() + '.', 'Perdón, perdón. Fue el viento. Dentro de la cocina. Sí.', '¿Eso es grasa mía? Qué raro. Será tuya.']));
       ayuda(`¡Sabotaje! El Cuñado te ensució ${z.n.toLowerCase()}.`, 5);
       M.listoAvisado.delete(Z.indexOf(z));
     }
@@ -4740,7 +4766,7 @@ function tickDuelo(dt) {
   // A veces El Cuñado también la riega: se resbala con su propia espuma y pierde tiempo. Hay que aprovecharlo.
   if (d.tropiezo && M.t >= d.tropiezo && d.rivalFin === null && !d.ganador && !M.ev) {
     d.tropiezo = null; d.pausa = (d.pausa || 0) + M.dur * .07; tono(220, .3, .1, 'sawtooth', 110);
-    decir(QUIEN_CUNADO, uno([L('¡Aaay! ¿Quién puso espuma aquí? …Ah, fui yo.', 'Aaah! Who put foam here? …Oh, me.'), L('Nadie vio eso. NADIE.', 'Nobody saw that. NOBODY.')]));
+    decirRival('resbalon', uno([L('¡Aaay! ¿Quién puso espuma aquí? …Ah, fui yo.', 'Aaah! Who put foam here? …Oh, me.'), L('Nadie vio eso. NADIE.', 'Nobody saw that. NOBODY.')]));
     ayuda(L('¡El Cuñado se resbaló con su propia espuma! Aprovecha: va más lento.', 'El Cuñado slipped on his own foam! Take advantage: he\'s slower now.'), 5);
   }
   const bc = $('#contra'); if (bc) bc.hidden = !!d.contra || !!d.ganador || d.tuyo !== null || d.rivalFin !== null || M.etapa !== 'lavar';
@@ -4749,7 +4775,7 @@ function tickDuelo(dt) {
   if (RADIO.on && el - tu > .25 && !d.dj && !M.ev) { d.dj = true; decir(QUIEN_RADIO, 'Interrumpimos la transmisión: aquí El Cuñado. Esta canción va dedicada a los que van perdiendo. Saludos.'); }
   if ((d.charlaT -= .25) <= 0 && d.rivalFin === null && !d.ganador && !M.ev) {
     d.charlaT = rnd(18, 28);
-    decir(QUIEN_CUNADO, uno(el > tu ? ['Yo ya voy por el ducto. ¿Y ustedes?', 'Uy, qué lentos. ¿Les traigo un cafecito?', 'Mi rasqueta es importada. De Tijuana.'] : ['¿Cómo van tan rápido? ¿Eso es legal?', 'No me presionen, que me tiembla la rasqueta.', 'Voy atrás porque mi ayudante se fue al baño. Hace una hora.']));
+    decirRival('chisme', uno(el > tu ? ['Yo ya voy por el ducto. ¿Y ustedes?', 'Uy, qué lentos. ¿Les traigo un cafecito?', 'Mi rasqueta es importada. De Tijuana.'] : ['¿Cómo van tan rápido? ¿Eso es legal?', 'No me presionen, que me tiembla la rasqueta.', 'Voy atrás porque mi ayudante se fue al baño. Hace una hora.']));
   }
   $('#dTu').style.width = tu * 100 + '%'; $('#dRival').style.width = el * 100 + '%';
 }
@@ -4899,7 +4925,7 @@ function contraataque() {
   const d = M && M.duelo; if (!d || d.contra) return;
   const [, txt, k] = CONTRA[M.orden.comp] || CONTRA.solo;
   d.contra = true; d.pausa = (d.pausa || 0) + M.dur * k; sCombo(3);
-  ayuda((CONTRA[M.orden.comp] || CONTRA.solo)[0] + '. ' + txt, 6); setTimeout(() => M && decir(QUIEN_CUNADO, uno(['¡¿QUIÉN FUE?!', 'Esto es una guerra. Una guerra limpia. Bueno, sucia.', 'Me las van a pagar. En efectivo.'])), 600);
+  ayuda((CONTRA[M.orden.comp] || CONTRA.solo)[0] + '. ' + txt, 6); setTimeout(() => M && decirRival('contra', uno(['¡¿QUIÉN FUE?!', 'Esto es una guerra. Una guerra limpia. Bueno, sucia.', 'Me las van a pagar. En efectivo.'])), 600);
 }
 // Noche perfecta: todo limpio y sin daños antes de pelar.
 function fanfarria() {
@@ -5444,6 +5470,7 @@ function generarOrdenes() {
   if (!S.primerDuelo && !yaDuelos && S.fase === 'empresa' && ciudad() === 1 && S.noche >= S.abierta + 1 && libres.length) {
     const o = libres[0]; o.duelo = true; o.primerDuelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.4 / 10) * 10; S.primerDuelo = S.noche;
   } else if (S.noche >= S.abierta + 1 && libres.length && azar(.3)) { const o = uno(libres); o.duelo = true; o.pedido = null; o.pago = Math.round(o.pago * 1.4 / 10) * 10; }
+  if (ciudad() === 2) for (const o of out) if (o.duelo && !o.recupera && azar(.5)) o.pulcritud = true;   // en el puerto, a veces viene la Licenciada de Brillo
   const paraContrato = out.filter(o => !o.clienteId && o.campanas === 1 && !o.duelo && !o.gigante && !o.jefe);
   if (S.fase === 'empresa' && S.etapa >= 1 && S.rep >= 35 && paraContrato.length && azar(.45)) {
     const o = uno(paraContrato), pool = CONDICIONES.filter(c => !c.si || c.si()).sort(() => Math.random() - .5);
@@ -5968,6 +5995,58 @@ function licitHoy() {
   if (S.licit.ultima !== S.noche - 1) { H.avisos.push(L('Perdiste la Gran Licitación: no te presentaste a la siguiente prueba.', 'You lost the Grand Tender: you didn\'t show up for the next test.')); S.licit = null; S.licitPerdida = S.noche; return; }
   const o = ordenLicit(S.licit.paso); H.ordenes.unshift(o); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++; S.licit.noche = S.noche;
 }
+// ---- El final del puerto: el crucero «Fritanga Queen». Tres noches contra Grupo Brillo (la Lic. Pulcritud);
+// gana quien saque mejor nota en 2 de 3. Si ganas, Brillo se va del puerto y viene el epílogo de toda la partida.
+const CRUCERO = [
+  { k: 'comedor', n: ['Fritanga Queen · cocina de la tripulación', 'Fritanga Queen · crew galley'] },
+  { k: 'palapa', n: ['Fritanga Queen · buffet de cubierta', 'Fritanga Queen · deck buffet'] },
+  { k: 'hotel', n: ['Fritanga Queen · restaurante del capitán', 'Fritanga Queen · captain\'s restaurant'], jefe: 'inspector' },
+];
+const CRUCERO_ENTRADA = 20000, CRUCERO_PREMIO = 50000, PULCRITUD_PTS = [74, 80, 85];
+const cruceroListo = () => S.fase === 'empresa' && ciudad() === 2 && !!S.legado && S.etapa >= 4 && !S.cruceroGanado && !S.crucero && (!S.cruceroPerdido || S.noche >= S.cruceroPerdido + 7);
+function ordenCrucero(paso) {
+  const d = CRUCERO[paso], o = genOrden(d.k); o.crucero = paso + 1; o.firmado = true; o.ayud = 0; o.duelo = false; o.pedido = null; o.contrato = null; o.jefe = d.jefe || null;
+  o.nombre = L(...d.n); o.pago = r10(o.pago * 1.6); o.suciedad = { ...o.suciedad, salitre: Math.max(.25, (o.suciedad || {}).salitre || 0) };
+  return o;
+}
+function cruceroHoy() {
+  const H = S.hoy; if (!H || !S.crucero || H.ordenes.some(o => o.crucero)) return;
+  if (S.crucero.noche === S.noche) return;
+  if (S.crucero.ultima !== S.noche - 1) { H.avisos.push(L('Perdiste el Fritanga Queen: no llegaste a la siguiente noche. La Lic. Pulcritud ya mandó el comunicado de prensa.', 'You lost the Fritanga Queen: you missed the next night. Lic. Pulcritud already sent the press release.')); S.crucero = null; S.cruceroPerdido = S.noche; S.cruceroIntentos = (S.cruceroIntentos || 0) + 1; return; }
+  const o = ordenCrucero(S.crucero.paso); H.ordenes.unshift(o); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++; S.crucero.noche = S.noche;
+}
+function tarjetaCrucero() {
+  if (ciudad() !== 2) return '';
+  if (S.cruceroGanado) return `<div class="retos licit"><b>⚓ ${L('El puerto es tuyo', 'The port is yours')}</b><span>${L('Ganaste el Fritanga Queen y Grupo Brillo se fue del puerto. Sigue jugando todo lo que quieras.', 'You won the Fritanga Queen and Grupo Brillo left the port. Keep playing as long as you like.')}</span><div class="acciones"><button class="btn peq" id="verEpilogo">${L('Ver el epílogo otra vez', 'Watch the epilogue again')}</button></div></div>`;
+  if (S.crucero) return `<div class="retos licit"><b>🚢 Fritanga Queen · ${S.crucero.paso + 1} ${L('de', 'of')} 3</b>${CRUCERO.map((d, i) => { const r = S.crucero.res[i]; return `<span class="${r ? (r.gano ? 'ok' : 'mal') : ''}">${r ? (r.gano ? '★' : '✗') : '☆'} ${esc(L(...d.n).replace('Fritanga Queen · ', ''))}${r ? ` · ${L('tú', 'you')} ${r.yo} · Brillo ${r.el}` : ''}</span>`; }).join('')}<small>${L('Gana quien saque mejor nota en 2 de 3. No faltes ninguna noche.', 'Best grade on 2 of 3 wins. Don\'t miss a night.')}</small></div>`;
+  if (S.etapa < 4) return S.etapa >= 3 ? `<p class="nota">⚓ ${L('Dicen en el muelle que cuando seas la empresa más grande del puerto, Grupo Brillo te va a retar en el crucero más grande que ha atracado aquí.', 'They say on the pier that once you\'re the biggest company in port, Grupo Brillo will challenge you on the biggest cruise ship ever to dock here.')}</p>` : '';
+  if (!cruceroListo()) return `<p class="nota">${L(`El Fritanga Queen vuelve a atracar la noche ${S.cruceroPerdido + 7}.`, `The Fritanga Queen docks again on night ${S.cruceroPerdido + 7}.`)}</p>`;
+  return `<div class="orden licit"><span class="chip naranja">🚢 ${L('El final del puerto', 'The port finale')}</span><h3>${L('El crucero «Fritanga Queen»', 'The cruise ship "Fritanga Queen"')}</h3>
+    <p class="cita">${L('La Lic. Pulcritud: «Grupo Brillo Total le propone un ejercicio de competencia sana. El crucero más grande del Pacífico, tres cocinas, tres noches. Quien pierda, se va del puerto. Es una formalidad: ya imprimí el comunicado.»', 'Lic. Pulcritud: "Grupo Brillo Total proposes a healthy competition exercise. The biggest cruise ship in the Pacific, three kitchens, three nights. The loser leaves the port. It\'s a formality: I already printed the press release."')}</p>
+    <p class="nota">${L(`Tres noches seguidas: la cocina de la tripulación, el buffet de cubierta (salitre por todos lados) y el restaurante del capitán (con inspector). Gana quien saque mejor nota en 2 de 3. Inscripción: ${dinero(CRUCERO_ENTRADA)}. Premio: ${dinero(CRUCERO_PREMIO)} y el puerto.`, `Three nights in a row: the crew galley, the deck buffet (salt everywhere) and the captain's restaurant (with inspector). Best grade on 2 of 3 wins. Entry: ${dinero(CRUCERO_ENTRADA)}. Prize: ${dinero(CRUCERO_PREMIO)} and the port.`)}</p>
+    <div class="acciones"><button class="btn prim" id="cruceroSi" ${S.dinero < CRUCERO_ENTRADA ? 'disabled' : ''}>${L('Aceptar el reto', 'Accept the challenge')} · ${dinero(CRUCERO_ENTRADA)}</button></div></div>`;
+}
+// El epílogo de toda la partida: depende de si vendiste Ciudad Comal y de cómo te llevaste con El Cuñado.
+function pantallaFinPuerto() {
+  const lg = S.legado || {}, r = respetoCunado(), med = Object.keys(S.medallas || {}).length;
+  const comal = lg.camino === 'A'
+    ? L('Ciudad Comal ya no es tuya: la vendiste a Grupo Brillo. Pero Brillo, después de perder el puerto, vende todo y se va del país. Maximiliano Lustre te manda una tarjeta: «Usted es la única sinergia que nunca entendí».', 'Comal City isn\'t yours anymore: you sold it to Grupo Brillo. But after losing the port, Brillo sells everything and leaves the country. Maximiliano Lustre sends you a card: "You are the only synergy I never understood."')
+    : L(`Ahora tienes dos ciudades. ${lg.director ? lg.director.n : 'Tu director'} sigue al frente de Ciudad Comal y te manda fotos de cada campana que queda espejo. Son muchas fotos.`, `Now you have two cities. ${lg.director ? lg.director.n : 'Your director'} still runs Comal City and sends you a photo of every hood that comes out mirror-clean. That\'s a lot of photos.`);
+  const cunado = r >= 2
+    ? L('El Cuñado renunció a Brillo la misma noche. Tocó a tu puerta con su rasqueta vieja: «¿Tienen lugar para un Lead con experiencia en perder?». Lo contrataste. Es el mejor Lead que has tenido. No se lo digas.', 'El Cuñado quit Brillo that same night. He knocked on your door with his old scraper: "Got room for a Lead experienced in losing?" You hired him. He\'s the best Lead you\'ve ever had. Don\'t tell him.')
+    : r <= -2
+    ? L('El Cuñado se quedó sin trabajo y sin bigote (lo perdió en una apuesta). Una semana después abrió «Limpiezas El Cuñado 3: Ahora en Barco». La rivalidad nunca termina.', 'El Cuñado was left with no job and no mustache (he lost it in a bet). A week later he opened "Limpiezas El Cuñado 3: Now on a Boat." The rivalry never ends.')
+    : L('El Cuñado se quedó en el puerto vendiendo cocteles de camarón en la palapa del Profe Ostión. Dice que es más tranquilo. Cada noche, cuando pasas, te saluda con la rasqueta.', 'El Cuñado stayed in port selling shrimp cocktails at Profe Ostión\'s shack. He says it\'s more relaxing. Every night, when you drive by, he waves his scraper at you.');
+  pantalla(`<div class="final"><div class="rotulo">${L('El puerto es tuyo', 'The port is yours')}<span>Hood Cleaners · The Night Shift · ${L('Epílogo', 'Epilogue')}</span></div>
+    <p>${L('Grupo Brillo Total levantó sus carteles del malecón esa misma mañana. La Lic. Pulcritud pidió entrar de aprendiz con Don Rigo: «Quiero aprender lo que no viene en el manual». Don Rigo la puso a lavar filtros. Lleva tres semanas y dice que es lo más feliz que ha sido.', 'Grupo Brillo Total took down its boardwalk posters that same morning. Lic. Pulcritud asked to become Don Rigo\'s apprentice: "I want to learn what\'s not in the manual." Don Rigo put her on filter duty. Three weeks in, she says she\'s never been happier.')}</p>
+    <p>${comal}</p><p>${cunado}</p>
+    <p class="cita">📻 ${conNombres(L('Radio Grasa FM, último programa de la temporada: «Aquí El Búho de la Madrugada. Conocí a {jugador} cuando no sabía de qué lado se agarra una rasqueta. Hoy limpia barcos. Yo me voy a pescar. Bueno, a la radio. Bueno, a pescar con la radio. Buenas noches, Puerto Fritanga.»', 'Radio Grasa FM, last show of the season: "This is the Owl of the Small Hours. I met {jugador} when they didn\'t know which end of a scraper to hold. Today they clean ships. I\'m going fishing. Well, to the radio. Well, fishing with the radio. Good night, Port Fritanga."'))}</p>
+    <div class="datos"><div class="dato"><i>${L('Noches', 'Nights')}</i><b>${S.noche - 1}</b></div><div class="dato"><i>${L('Aprobadas', 'Passed')}</i><b>${S.aprobados}</b></div><div class="dato"><i>${L('Medallas', 'Medals')}</i><b>${med}</b></div><div class="dato"><i>${L('Tu dinero', 'Your money')}</i><b>${dinero(S.dinero)}</b></div></div>
+    <div class="creditos">${[[L('Dueño y fundador', 'Owner and founder'), esc(S.jugador || L('Tú', 'You'))], [L('El Búho (y maestro)', 'The Owl (and master)'), 'Don Rigo «el Muchachón»'], [L('Rival de toda la vida', 'Lifelong rival'), 'El Cuñado'], [L('Ejecutiva arrepentida', 'Reformed executive'), 'Lic. Pulcritud'], [L('Capitana', 'Captain'), 'Marea Brava'], [L('Churrero insomne', 'Sleepless churro maker'), 'Don Churro Ruiz'], [L('Coordinadora', 'Coordinator'), 'Angélica'], [L('Ventas', 'Sales'), 'Charlienaro'], [L('Planeación', 'Planning'), 'Doña Elsy'], [L('Almacén (nombre real desconocido)', 'Storeroom (real name unknown)'), 'El Guapo']].map(([a, b]) => `<span>${a}</span><b>${b}</b>`).join('')}</div>
+    <div class="acciones"><button class="btn prim" id="libre">${L('Seguir jugando', 'Keep playing')}</button></div></div>`);
+  [392, 523, 659, 784, 1046].forEach((f, i) => tono(f, .5, .08, 'triangle', null, i * .2));
+  $('#libre').onclick = () => { audio(); pantallaCamioneta(); };
+}
 const buhoPendiente = () => S.fase === 'empresa' && !buhoRevelado() && !!(S.licitGanada || S.licitPerdida || S.legado || S.final);
 function tarjetaBuho() {
   return `<div class="orden licit buho"><span class="chip naranja">📻 ${L('Radio Grasa FM interrumpe la transmisión', 'Radio Grasa FM interrupts the broadcast')}</span><h3>${L('El Búho tiene algo que confesar', 'The Owl has a confession')}</h3>
@@ -5979,7 +6058,7 @@ function tarjetaLicit() {
   if (compradorListo()) return `<div class="orden licit comprador"><span class="chip naranja">🚘 ${L('Visita inesperada', 'Unexpected visitor')}</span><h3>${L('Una limusina en la puerta del taller', 'A limousine outside the workshop')}</h3>
     <p class="nota">${L('Un señor de traje color perla baja con dos asistentes y un portafolios dorado. Pregunta por «el dueño de la empresa más limpia del país».', 'A man in a pearl-gray suit steps out with two assistants and a golden briefcase. He asks for "the owner of the cleanest company in the country".')}</p>
     <div class="acciones"><button class="btn prim" id="comprador">${L('Recibirlo', 'Meet him')}</button></div></div>`;
-  if (S.legado) return '';
+  if (S.legado) return tarjetaCrucero();
   if (S.final) return `<div class="retos licit"><b>🏆 ${L('Modo libre', 'Free mode')}</b><span>${L('Ganaste la ciudad y compraste Limpiezas El Cuñado. Sigue jugando todo lo que quieras.', 'You won the city and bought Limpiezas El Cuñado. Keep playing as long as you like.')}</span><div class="acciones"><button class="btn peq" id="verFinal">${L('Ver el final otra vez', 'Watch the ending again')}</button></div></div>`;
   if (S.licitGanada) return `<p class="nota">${S.residencia && S.residencia.hecha ? L(`🏛️ Ganaste la Gran Licitación. Maximiliano Lustre volverá la noche ${(S.comprador || {}).vuelve}.`, `🏛️ You won the Grand Tender. Maximiliano Lustre will be back on night ${(S.comprador || {}).vuelve}.`) : L('🏛️ Ganaste la Gran Licitación. Termina la misión de la Residencia Oficial: después, alguien muy importante vendrá a buscarte.', '🏛️ You won the Grand Tender. Finish the Official Residence mission: after that, someone very important will come looking for you.')}</p>`;
   if (S.licit) return `<div class="retos licit"><b>🏛️ ${L('La Gran Licitación', 'The Grand Tender')} · ${S.licit.paso + 1} ${L('de', 'of')} 3</b>${LICIT.map((d, i) => { const r = S.licit.res[i]; return `<span class="${r ? (r.gano ? 'ok' : 'mal') : ''}">${r ? (r.gano ? '★' : '✗') : '☆'} ${esc(L(...d.n))}${r ? ` · ${L('tú', 'you')} ${r.yo} · ${RIVAL} ${r.el}` : ''}</span>`; }).join('')}<small>${L('Gana 2 de 3 noches a El Cuñado (mejor nota que la suya) y la ciudad es tuya.', 'Beat El Cuñado on 2 of 3 nights (a better grade than his) and the city is yours.')}</small></div>`;
@@ -6589,7 +6668,7 @@ function pantallaCamioneta() {
   if (S.fase === 'aprendiz' && S.noche > APRENDIZ) return despido();
   if (!S.hoy || S.hoy.noche !== S.noche) { prepararNoche(); construirNoche(null); }
   else if (!mundo) construirNoche(null);
-  findeHoy(); licitHoy(); residenciaHoy(); estadioHoy(); misionesHoy();
+  findeHoy(); licitHoy(); cruceroHoy(); residenciaHoy(); estadioHoy(); misionesHoy();
   irVista(VISTA_GENERAL);
   const H = S.hoy, debidos = S.clientes.filter(c => c.proxima <= S.noche).length;
   const tabs = S.fase === 'aprendiz' ? [['noche', L('Esta noche', 'Tonight')], ['buzon', L('Buzón', 'Inbox')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]] : [['noche', L('Noche', 'Night')], ['buzon', L('Buzón', 'Inbox')], ['clientes', L('Clientes', 'Clients')], ['cuadrilla', L('Cuadrilla', 'Crew')], ['taller', L('Taller', 'Shop')], ['logros', L('Logros', 'Awards')]];
@@ -6615,7 +6694,7 @@ function pantallaCamioneta() {
 
 // Los trabajos que no eliges se ven en una tarjeta corta; el elegido se abre con todos sus detalles.
 function tarjetaCorta(o, i) {
-  const chip = o.raroCh ? '🤵 ' + L('Cliente raro de Charlienaro', 'Charlienaro\'s weird client') : o.estadio ? `⚽ ${L('Estadio', 'Stadium')} · ${L('noche', 'night')} ${(o.sector || 0) + 1}/5` : o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.primerDuelo ? L('¡El Cuñado lo quiere!', 'El Cuñado wants it!') : o.duelo ? L('Duelo', 'Duel') : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.gigante ? L('Gigante', 'Giant') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.diario ? '📅 ' + L('Reto del día', 'Daily challenge') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
+  const chip = o.raroCh ? '🤵 ' + L('Cliente raro de Charlienaro', 'Charlienaro\'s weird client') : o.estadio ? `⚽ ${L('Estadio', 'Stadium')} · ${L('noche', 'night')} ${(o.sector || 0) + 1}/5` : o.leccion ? L(LECCIONES[o.leccion].chip, EN.leccion[o.leccion][0]) : o.finde ? '🏆 ' + L('Reto de fin de semana', 'Weekend challenge') : o.clienteId ? L('Cliente fijo', 'Regular client') : o.primerDuelo ? L('¡El Cuñado lo quiere!', 'El Cuñado wants it!') : o.duelo ? (o.pulcritud ? L('Duelo contra la Lic. Pulcritud', 'Duel vs. Lic. Pulcritud') : L('Duelo', 'Duel')) : o.barato ? L('Precio de El Cuñado', 'Cuñado\'s price') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.gigante ? L('Gigante', 'Giant') : o.residencia ? '🏛️ ' + L('Misión de Estado', 'State mission') : o.contrato ? '📜 ' + L('Contrato difícil', 'Tough contract') : o.diario ? '📅 ' + L('Reto del día', 'Daily challenge') : o.jefe ? JEFES[o.jefe].ico + ' ' + L('Trabajo jefe', 'Boss job') : o.pedido ? L(pedido(o.pedido).chip, EN.pedidoChip[o.pedido]) : '';
   return `<button class="orden corta ${o.clienteId ? 'fijo' : ''}" data-o="${i}" aria-pressed="${S.hoy && i === S.hoy.sel}">
     <div class="fila"><h3>${icoCocina(o.cocina)}${esc(o.nombre)}</h3><span class="pago">${dinero(o.pago)}</span></div>
     <span class="nota">${chip ? `<b class="chip-txt ${o.duelo ? 'mal' : ''}">${esc(chip)}</b> · ` : ''}${nCocina(o.cocina)}${o.campanas > 1 ? ` · ${o.campanas} ${L('campanas', 'hoods')}` : ''} · ${o.micras.toLocaleString('es-MX')} µm${o.firmado ? '' : ` · <i>${L('sin firmar', 'not signed')}</i>`}</span>${chipRecuerdo(o)}
@@ -7239,7 +7318,7 @@ const MANUAL = [
   { id: 'final', ico: '🏛️', si: () => S.fase === 'empresa' && S.etapa >= 3, t: ['La Gran Licitación y lo que viene', 'The Grand Tender and what comes next'],
     txt: ['En la última etapa se abre la Gran Licitación: tres noches seguidas contra El Cuñado, gana el que saque mejor nota en dos. Después viene la Residencia Oficial… y una visita muy importante.', 'At the last stage the Grand Tender opens: three nights in a row against El Cuñado, whoever gets the better grade on two wins. Then comes the Official Residence… and a very important visitor.'] },
   { id: 'puerto', ico: '⚓', si: () => !!S.legado, t: ['Puerto Fritanga', 'Port Fritanga'],
-    txt: ['Cocinas del muelle: palapas, churrerías, la lonja y los barcos. El salitre (costra blanca) no se ablanda con espuma: el agua dulce de la hidro lo disuelve. El caramelo de los churros se pega a la rasqueta: agua caliente, y nada de soplete, que lo quema. Empiezas con poco y todo cuesta más. Si no vendiste, tu director te manda dividendos cada noche, puedes invertir en Ciudad Comal y volver cuando quieras con el botón ✈️. Si vendiste, te llegan los pagos de Grupo Brillo.', 'Pier kitchens: seafood shacks, churro stands, the fish market and boats. Sea salt crust (white) doesn\'t soften with foam: the washer\'s fresh water dissolves it. Churro caramel sticks to the scraper: hot water, and no torch, it burns it. You start small and everything costs more. If you didn\'t sell, your director sends dividends every night, you can invest in Comal City and go back with the ✈️ button. If you sold, Grupo Brillo\'s payments arrive.'] },
+    txt: ['Cocinas del muelle: palapas, churrerías, la lonja y los barcos. El salitre (costra blanca) no se ablanda con espuma: el agua dulce de la hidro lo disuelve. El caramelo de los churros se pega a la rasqueta: agua caliente, y nada de soplete, que lo quema. En los duelos a veces llega la Lic. Pulcritud de Grupo Brillo: rápida, pero el salitre y el caramelo la frenan. En la última etapa, Brillo te reta en el crucero «Fritanga Queen»: tres noches, gana quien saque mejor nota en 2. Empiezas con poco y todo cuesta más. Si no vendiste, tu director te manda dividendos cada noche, puedes invertir en Ciudad Comal y volver cuando quieras con el botón ✈️. Si vendiste, te llegan los pagos de Grupo Brillo.', 'Pier kitchens: seafood shacks, churro stands, the fish market and boats. Sea salt crust (white) doesn\'t soften with foam: the washer\'s fresh water dissolves it. Churro caramel sticks to the scraper: hot water, and no torch, it burns it. In duels Lic. Pulcritud from Grupo Brillo sometimes shows up: fast, but salt and caramel slow her down. At the last stage, Brillo challenges you on the "Fritanga Queen" cruise ship: three nights, best grade on 2 wins. You start small and everything costs more. If you didn\'t sell, your director sends dividends every night, you can invest in Comal City and go back with the ✈️ button. If you sold, Grupo Brillo\'s payments arrive.'] },
 ];
 const manualDisponible = () => MANUAL.filter(m => m.si());
 const manualNuevos = () => { const v = (S.manual && S.manual.visto) || {}; return manualDisponible().filter(m => !v[m.id]); };
@@ -7312,6 +7391,8 @@ function enlazar() {
   const vj = $('#viajar'); if (vj) vj.onclick = () => { audio(); pantallaViaje(); };
   const cc = $('#comprarCunado'); if (cc) cc.onclick = () => { if (S.dinero < PRECIO_CUNADO) return; audio(); S.dinero -= PRECIO_CUNADO; S.final = S.noche; S.medallas.final = S.noche; sCaja(); guardar(); pantallaFinal(); };
   const vf = $('#verFinal'); if (vf) vf.onclick = () => { audio(); pantallaFinal(); };
+  const ve = $('#verEpilogo'); if (ve) ve.onclick = () => { audio(); pantallaFinPuerto(); };
+  const cs = $('#cruceroSi'); if (cs) cs.onclick = () => { if (S.dinero < CRUCERO_ENTRADA || !cruceroListo()) return; audio(); S.dinero -= CRUCERO_ENTRADA; S.crucero = { paso: 0, res: [], noche: S.noche, ultima: null }; const o = ordenCrucero(0); H.ordenes.unshift(o); H.sel = 0; for (const e of H.equipos || []) if (typeof e.o === 'number') e.o++; sCaja(); guardar(); pantallaCamioneta(); };
   const fs = $('#findeSi'); if (fs) fs.onclick = () => { audio(); aceptarFinde(); sCaja(); guardar(); pantallaCamioneta(); };
   const fn = $('#findeNo'); if (fn) fn.onclick = () => { H.findeOferta = false; guardar(); pantallaCamioneta(); };
   const ret = $('#retomar'); if (ret) ret.onclick = () => { audio(); const t = turnoPendiente(); if (t) reanudarTurno(t); };
@@ -7638,6 +7719,20 @@ function pantallaParte() {
       licit = { t: L('Perdiste la Gran Licitación', 'You lost the Grand Tender'), txt: L(`${RIVAL} se llevó la ciudad… por ahora. Defenderla le salió carísimo: la próxima vez llega más cansado. La licitación vuelve a abrirse en una semana.`, `${RIVAL} took the city… for now. Defending it cost him a fortune: next time he'll be more worn out. The tender opens again in a week.`) };
     } else licit = { t: L(`Gran Licitación · noche ${o.licit} de 3`, `Grand Tender · night ${o.licit} of 3`), txt: L(`Tú: ${n}. ${RIVAL}: ${nota(el)}. ${gano ? '¡Esta noche es tuya!' : 'Esta se la llevó él.'} Mañana sigue: ${L(...LICIT[o.licit].n)}.`, `You: ${n}. ${RIVAL}: ${nota(el)}. ${gano ? 'Tonight is yours!' : 'He took this one.'} It continues tomorrow: ${L(...LICIT[o.licit].n)}.`) };
   }
+  // El Fritanga Queen: tu nota contra la de Grupo Brillo (la Lic. Pulcritud). El salitre la frena un poco.
+  let crucero = null;
+  if (o.crucero && S.crucero && !aprendiz) {
+    const el = clamp(Math.round(PULCRITUD_PTS[o.crucero - 1] - 3 * Math.min(3, S.cruceroIntentos || 0) - (respetoCunado() >= 2 ? 3 : 0) - 2 + rnd(-5, 5)), 40, 95), gano = aprobado && pts > el;
+    S.crucero.res[o.crucero - 1] = { yo: n, el: nota(el), gano }; S.crucero.paso = o.crucero; S.crucero.ultima = S.noche;
+    const g = S.crucero.res.filter(r => r.gano).length, p = S.crucero.res.filter(r => !r.gano).length;
+    if (g >= 2) {
+      lineas.push([L('Premio del Fritanga Queen', 'Fritanga Queen prize'), CRUCERO_PREMIO]); neto += CRUCERO_PREMIO; rep += 10; S.cruceroGanado = S.noche; S.crucero = null; S.medallas.puerto = S.medallas.puerto || S.noche;
+      crucero = { t: L('¡Ganaste el Fritanga Queen!', 'You won the Fritanga Queen!'), txt: L('Grupo Brillo Total se va del puerto. La Lic. Pulcritud rompió su comunicado de prensa en pedacitos muy ordenados.', 'Grupo Brillo Total is leaving the port. Lic. Pulcritud tore up her press release into very tidy little pieces.'), fin: true };
+    } else if (p >= 2) {
+      S.cruceroPerdido = S.noche; S.crucero = null; S.cruceroIntentos = (S.cruceroIntentos || 0) + 1;
+      crucero = { t: L('Perdiste el Fritanga Queen', 'You lost the Fritanga Queen'), txt: L('Brillo se queda el puerto… por ahora. El crucero vuelve en una semana, y la Licenciada ya se quedó sin presupuesto para horas extra.', 'Brillo keeps the port… for now. The ship comes back in a week, and the Licenciada is out of overtime budget.') };
+    } else crucero = { t: L(`Fritanga Queen · noche ${o.crucero} de 3`, `Fritanga Queen · night ${o.crucero} of 3`), txt: L(`Tú: ${n}. Brillo: ${nota(el)}. ${gano ? '¡Esta noche es tuya!' : 'Esta se la llevó Brillo.'} Mañana: ${L(...CRUCERO[o.crucero].n)}.`, `You: ${n}. Brillo: ${nota(el)}. ${gano ? 'Tonight is yours!' : 'Brillo took this one.'} Tomorrow: ${L(...CRUCERO[o.crucero].n)}.`) };
+  }
   // El equipo B, en su propio trabajo
   // Los otros equipos, cada uno en su trabajo: una línea con lo que dejó cada uno.
   const BS = (o.equipos || (o.equipoB ? [o.equipoB] : [])).map(resolverB);
@@ -7780,6 +7875,7 @@ function pantallaParte() {
   while (S.xp >= xpNivel(S.nivel)) { S.xp -= xpNivel(S.nivel); S.nivel++; subidas++; }
   if (subidas) { S.puntos = (S.puntos || 0) + subidas; cola.push(() => avisoNivel(subidas)); }
   if (aprendiz && S.noche > APRENDIZ) cola.push(despido);
+  if (crucero && crucero.fin) cola.push(pantallaFinPuerto);
   if (evals.length) cola.unshift(() => pantallaEvaluar(evals));
   guardar();
   M.nota = n; M.nombre = o.nombre; M.nocheParte = S.noche - 1;
@@ -7813,13 +7909,14 @@ function pantallaParte() {
     <div class="zonas-parte">${zonas.map(z => `<div class="fila"><span>${z.n} <span class="nota">· ${Math.round(z.pct * 100)} % ${L('limpio', 'clean')}</span></span><span class="chip num ${z.m <= LIMITE ? 'ok' : 'mal'}">${z.m.toLocaleString('es-MX')} µm</span></div>`).join('')}
       <span class="nota">${L(`El inspector mide con el peine de grasa: aprueba con ${LIMITE} µm o menos en cada zona. Migdaleado espejo: ${Math.round(pulido * 100)} %. Inspector a las ${hora(finMin)}.`, `The inspector measures with a grease comb: it passes at ${LIMITE} µm or less in each zone. Mirror polish: ${Math.round(pulido * 100)}%. Inspector at ${hora(finMin)}.`)}</span></div>
     ${porQue}
-    ${d ? `<div class="cita"><b>${ganaDuelo ? L('Duelo ganado', 'Duel won') : L('Duelo perdido', 'Duel lost')} · ${marcador.tu}–${marcador.el}</b>${hitosDuelo().map(([id]) => `${nHito(id)}: ${d.hitos[id] === 'tu' ? L('tuyo', 'yours') : 'El Cuñado'}`).join(' · ')}. ${ganaDuelo ? L('El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.', 'El Cuñado left without saying goodbye and forgot his scraper. It\'s yours now, as a souvenir.') : L('El cliente se queda con él y a ti te paga la mitad «por las molestias».', 'The client stays with him and pays you half "for your trouble".')}${d.apuesta ? ' ' + (ganaDuelo ? L(`Y te pagó la apuesta: ${dinero(d.apuesta)}, en billetes arrugados.`, `And he paid the bet: ${dinero(d.apuesta)}, in crumpled bills.`) : L(`Y le pagaste la apuesta: ${dinero(d.apuesta)}. La contó dos veces delante de ti.`, `And you paid him the bet: ${dinero(d.apuesta)}. He counted it twice in front of you.`)) : ''}</div>` : ''}
+    ${d ? `<div class="cita"><b>${ganaDuelo ? L('Duelo ganado', 'Duel won') : L('Duelo perdido', 'Duel lost')} · ${marcador.tu}–${marcador.el}</b>${hitosDuelo().map(([id]) => `${nHito(id)}: ${d.hitos[id] === 'tu' ? L('tuyo', 'yours') : rivalDuelo().n}`).join(' · ')}. ${ganaDuelo ? L('El Cuñado se fue sin despedirse y dejó su rasqueta. Ahora es tuya, de recuerdo.', 'El Cuñado left without saying goodbye and forgot his scraper. It\'s yours now, as a souvenir.') : L('El cliente se queda con él y a ti te paga la mitad «por las molestias».', 'The client stays with him and pays you half "for your trouble".')}${d.apuesta ? ' ' + (ganaDuelo ? L(`Y te pagó la apuesta: ${dinero(d.apuesta)}, en billetes arrugados.`, `And he paid the bet: ${dinero(d.apuesta)}, in crumpled bills.`) : L(`Y le pagaste la apuesta: ${dinero(d.apuesta)}. La contó dos veces delante de ti.`, `And you paid him the bet: ${dinero(d.apuesta)}. He counted it twice in front of you.`)) : ''}</div>` : ''}
     ${ped ? `<div class="cita"><b>${esc(TRAD(ped.quien))} · ${esc(L(ped.chip, EN.pedidoChip[ped.id]))}</b>${esc(TRAD(ped.tacos ? 'Los tacos están buenísimos. Te comiste doce antes de llegar a la camioneta.' : pedOk ? '¡Pedido cumplido! Te da las gracias con un abrazo que huele a cebolla.' : ped.mal))}</div>` : ''}
     ${misHechas.length ? `<div class="cita"><b>📞 ${L('Don Rigo «el Muchachón»', 'Don Rigo "el Muchachón"')}</b>${misHechas.some(x => x.todo) ? L('¡Los tres retos de la semana! Ya les conté a todos mis compadres. Bueno, al único que contesta.', 'All three weekly challenges! I told all my buddies. Well, the only one who picks up.') : uno([L('¿Ves? Te dije que podías. Bueno, no te dije. Pero lo pensé.', 'See? I told you you could. Well, I didn\'t tell you. But I thought it.'), L('Reto cumplido. Se me cayó la caña de la emoción.', 'Challenge done. I dropped my fishing rod from the excitement.'), L('Así se hace. Beto dice que él te enseñó. Yo no dije nada.', 'That\'s how it\'s done. Beto says he taught you. I said nothing.')])} ${esc(misHechas.filter(x => !x.todo).map(x => '★ ' + textoMision(x)).join(' '))}</div>` : ''}
     ${finde ? `<div class="cita historia"><b>🏆 ${esc(finde.t)}</b>${esc(finde.txt)}</div>` : ''}
     ${residencia ? `<div class="cita historia"><b>🏛️ ${L('La Residencia Oficial', 'The Official Residence')}</b>${esc(residencia)}</div>` : ''}
     ${diario ? `<div class="cita historia"><b>📅 ${L('Reto del día', 'Daily challenge')}</b>${esc(diario)}</div>` : ''}
     ${licit ? `<div class="cita historia"><b>🏛️ ${esc(licit.t)}</b>${esc(licit.txt)}</div>` : ''}
+    ${crucero ? `<div class="cita historia"><b>🚢 ${esc(crucero.t)}</b>${esc(crucero.txt)}</div>` : ''}
     ${capitulo ? `<div class="cita historia"><b>📖 ${esc(TRAD(capitulo.t))}</b>${esc(TRAD(capitulo.txt))}</div>` : ''}
     <div class="cita"><b>${L('El cliente', 'The client')}</b>${esc(TRAD(uno(aprobado ? CLIENTE_BIEN : CLIENTE_MAL)))}${notaCliente ? ' ' + esc(TRAD(notaCliente)) : ''}</div>
     <div class="cita"><b>${esc(M.comp.n)}</b>${esc(TRAD(desastre ? M.comp.desastre : aprobado ? M.comp.bien : M.comp.mal))}</div>

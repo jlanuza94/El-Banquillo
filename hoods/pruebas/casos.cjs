@@ -3,7 +3,7 @@
 const { abrir, partida, jugarNoche, caso, afirmar, correr } = require('./lib.cjs');
 // El Buzón: los mensajes y las decisiones de la historia ya no están en la pestaña Noche.
 const alBuzon = p => p.evaluate(() => { document.querySelector('.tabs [data-tab="buzon"]').click(); document.querySelectorAll('.buzon-item').forEach(d => { d.open = true; }); });
-global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo', 'manualDisponible', 'tipUnaVez', 'generarOrdenes', 'acordarse', 'recordar', 'raspar', 'cocinasHasta', 'U'];
+global.HC_EXPORTA = ['COMPANEROS', 'compradorListo', 'tasacion', 'escurrirDucto', 'sonidoRaspa', 'TIPO_Q', 'LIMITE', 'A', 'camT', 'raspar', 'multEspuma', 'herramientas', 'pantallaNombre', 'resolverB', 'sumarNoche', 'conSeguro', 'sueldosOficina', 'estadioHoy', 'etapaLista', 'ETAPAS', 'oficinaDice', 'pantallaEvaluar', 'hablarRadio', 'VOZ', 'VOZ_RADIO', 'COMERCIALES', 'anotarLibro', 'trabajosLibres', 'lucesCampana', 'tomarFoto', 'rozarFusible', 'empezarMigdaleo', 'manualDisponible', 'tipUnaVez', 'generarOrdenes', 'acordarse', 'recordar', 'raspar', 'cocinasHasta', 'U', 'pantallaFinPuerto', 'rivalDuelo'];
 
 caso('arranque y menú en español e inglés', async () => {
   for (const idioma of ['es', 'en']) {
@@ -1010,6 +1010,40 @@ caso('Puerto Fritanga: cocinas del muelle, salitre y caramelo', async () => {
   r = await p.evaluate(() => ({ sal: window.__sal, car: window.__car }));
   afirmar(r.sal && r.sal.conHidro > r.sal.conRasqueta * 1.5 && r.sal.t4 === 0, 'el salitre no se comporta como debe: ' + JSON.stringify(r.sal));
   afirmar(r.car && r.car.quemado && r.car.t4 === 1, 'el caramelo no se quema con el soplete: ' + JSON.stringify(r.car));
+  afirmar(!p.errores.length, p.errores[0]); await p.close();
+});
+
+caso('Puerto Fritanga: la Lic. Pulcritud en los duelos y el final del Fritanga Queen', async () => {
+  const p = await abrir(partida({ noche: 60, etapa: 4, rep: 80, dinero: 9000 }));
+  await p.evaluate(() => { const S = __hc.S; S.legado = { camino: 'B', noche: 50, director: { n: 'Lupe', comp: 'lupe' }, mano: { n: 'Beto', comp: 'beto' } }; S.saga = { cap: 7, respeto: 2 }; S.buho = { revelado: 50 }; __hc.viajar(2, { empresa: { nombre: 'Puerto', color: '#2e9e5b' }, etapa: 4, rep: 80, dinero: 60000, clientes: [], perdidos: [], cuadrilla: [], candidatos: [], fijos: ['beto'], compPref: 'beto', abierta: 40, hoy: null, eq: { camioneta: 2 } }); __hc.pantallaCamioneta(); });
+  // duelo contra la Licenciada: su nombre en el marcador y más lenta en una cocina del muelle
+  await p.evaluate(() => { const H = __hc.S.hoy, o = __hc.genOrden('lonja'); o.firmado = true; o.pedido = null; o.duelo = true; o.pulcritud = true; o.eventos = []; o.ayud = 0; H.ordenes = [o]; H.sel = 0; H.dia = null; H.historia = null; __hc.pantallaCamioneta(); document.querySelector('#salir').click(); });
+  await p.waitForFunction(() => __hc.M && __hc.M.escena === 0 && __hc.M.duelo, null, { timeout: 90000 });
+  let r = await p.evaluate(() => ({ n: __hc.rivalDuelo().n, hud: document.querySelector('#dRivalN').textContent, t: __hc.M.duelo.tRival / __hc.M.dur }));
+  afirmar(r.n === 'Lic. Pulcritud' && r.hud === 'Lic. Pulcritud' && r.t > .58 * 1.14, 'la Licenciada no es la rival o no la frena el muelle: ' + JSON.stringify(r));
+  await p.evaluate(() => { const M = __hc.M; __hc.Z.forEach(z => z.sfs.forEach(s => s.d.fill(0))); M.t = M.dur * .5; M.fase = 'turno'; __hc.terminarTurno(); });
+  await p.waitForSelector('.nota-grande', { timeout: 60000 });
+  await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  // el reto del crucero: se acepta, tres noches, y al ganar 2 viene el epílogo
+  r = await p.evaluate(() => ({ boton: !!document.querySelector('#cruceroSi'), txt: (document.querySelector('.orden.licit') || {}).textContent || '' }));
+  afirmar(r.boton && /Fritanga Queen/.test(r.txt), 'no sale el reto del crucero: ' + r.txt.slice(0, 200));
+  await p.evaluate(() => document.querySelector('#cruceroSi').click());
+  r = await p.evaluate(() => ({ c: __hc.S.crucero, o: __hc.S.hoy.ordenes[0] && { cr: __hc.S.hoy.ordenes[0].crucero, sal: __hc.S.hoy.ordenes[0].suciedad.salitre, n: __hc.S.hoy.ordenes[0].nombre } }));
+  afirmar(r.c && r.c.paso === 0 && r.o.cr === 1 && r.o.sal >= .25, 'aceptar el crucero no puso la primera noche: ' + JSON.stringify(r));
+  for (let k = 0; k < 3; k++) {
+    const hecho = await p.evaluate(() => !!__hc.S.cruceroGanado || !__hc.S.crucero);
+    if (hecho) break;
+    await jugarNoche(p, { cocina: null, orden: 0, limpio: 1 });
+    await p.evaluate(() => { __hc.S.hoy = null; __hc.pantallaCamioneta(); });
+  }
+  r = await p.evaluate(() => ({ g: __hc.S.cruceroGanado, med: __hc.S.medallas.puerto, c: __hc.S.crucero, perdido: __hc.S.cruceroPerdido }));
+  afirmar(r.g && r.med && !r.c, 'no se ganó el crucero con notas perfectas: ' + JSON.stringify(r));
+  // el epílogo: con buen respeto, El Cuñado pide trabajo; y en el puerto queda el botón para volver a verlo
+  r = await p.evaluate(() => { __hc.pantallaFinPuerto(); return document.querySelector('#pantalla').innerText; });
+  afirmar(/El puerto es tuyo/i.test(r) && /Lead con experiencia en perder/.test(r) && /dos ciudades/.test(r), 'el epílogo no refleja las decisiones: ' + r.slice(0, 300));
+  await p.evaluate(() => document.querySelector('#libre').click());
+  r = await p.evaluate(() => !!document.querySelector('#verEpilogo'));
+  afirmar(r, 'no queda el botón para volver a ver el epílogo');
   afirmar(!p.errores.length, p.errores[0]); await p.close();
 });
 
